@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Siege of the Hundred Towers</title>
+<title>Every Wall Falls</title>
 <style>
   :root{
     --stone-0:#1a1a1c;
@@ -206,11 +206,12 @@
   }
   @keyframes guidepulse{0%,100%{box-shadow:0 0 0 3px rgba(0,0,0,0.5),0 0 8px rgba(201,168,96,0.5);}50%{box-shadow:0 0 0 3px rgba(0,0,0,0.5),0 0 20px rgba(201,168,96,0.95);}}
   #guide-tip{
-    position:fixed; max-width:250px; pointer-events:none;
+    position:fixed; max-width:250px; pointer-events:auto; cursor:pointer;
     background:var(--stone-2); border:2px solid var(--bronze);
-    box-shadow:3px 3px 0 #000; padding:10px 12px;
+    box-shadow:3px 3px 0 #000; padding:10px 26px 10px 12px;
     font-size:12.5px; line-height:1.4; color:var(--ink); text-align:center;
   }
+  #guide-tip .closeX{top:2px; right:2px; padding:2px 5px; font-size:12px;}
   #build-pager{display:flex; align-items:stretch; gap:5px;}
   .pager-arrow{
     flex:0 0 34px; font-size:22px; font-weight:700; color:var(--bronze-hi);
@@ -496,6 +497,7 @@
   }
   .tut-wrap.show{display:flex;}
   .tut-card{
+    position:relative;
     width:min(88%,360px); max-height:80vh; overflow-y:auto;
     background:
       repeating-linear-gradient(0deg, rgba(0,0,0,0.10) 0 3px, transparent 3px 6px),
@@ -508,6 +510,14 @@
   .tut-title{font-size:22px; font-weight:700; color:#c8c3b6; margin-bottom:10px; text-shadow:-1px -1px 0 #6a6a6e, 1px 1px 0 #000;}
   .tut-text{font-size:13px; line-height:1.5; color:var(--ink-dim); margin:0 0 18px; text-align:left; white-space:pre-line;}
   .tut-skip{font-size:11px; color:var(--ink-dim); margin-top:12px; text-decoration:underline; opacity:.7;}
+  #lore-intro{position:fixed; z-index:200; background:rgba(6,6,7,.78);}
+  .history-note{
+    text-align:left; font-style:italic; font-size:12px; line-height:1.5;
+    color:var(--ink-dim); border-left:3px solid var(--bronze);
+    padding:8px 10px; margin:0 0 10px;
+    background:rgba(0,0,0,0.18);
+  }
+  .history-note b{color:var(--bronze-hi); font-style:normal;}
   #coach{
     position:absolute; left:50%; top:38%; transform:translate(-50%,0) scale(.96);
     width:min(80%,300px); z-index:70; display:none;
@@ -628,16 +638,16 @@
 
   <div id="guide">
     <div id="guide-ring"></div>
-    <div id="guide-tip"></div>
+    <div id="guide-tip"><button class="closeX" id="guideClose" aria-label="Close guide">✕</button><span id="guide-tip-text"></span></div>
   </div>
 
   <div id="title-screen">
     <div id="title-embers"></div>
-    <div class="eyebrow">Italia · 1250—1500</div>
-    <div class="title-over">Siege of the</div>
-    <h1>HUNDRED<br>TOWERS</h1>
+    <div class="eyebrow">c. 1180 BC — AD 1781</div>
+    <div class="title-over">From Troy to Yorktown</div>
+    <h1>EVERY WALL<br>FALLS</h1>
     <div class="rule"></div>
-    <div class="tagline">You are the army at the gates.</div>
+    <div class="tagline">Five wars. Three thousand years. One army at the gates.</div>
     <div id="title-buttons">
       <div class="title-btn" id="tap-start">Start Campaign</div>
       <div class="title-btn secondary" id="load-level">Load Level ⚙</div>
@@ -645,16 +655,16 @@
   </div>
 
   <div id="hud-top">
-    <div class="brand">HUNDRED TOWERS</div>
+    <div class="brand">EVERY WALL FALLS</div>
     <div class="hud-stat">
-      <div class="hud-label"><span>Rocca</span><b id="castleTxt">400/400</b></div>
+      <div class="hud-label"><span>Stronghold</span><b id="castleTxt">400/400</b></div>
       <div class="bar-track"><div class="bar-fill" id="castleFill" style="width:100%"></div></div>
     </div>
     <div class="hud-stat" style="flex:0 0 25%;">
       <div class="hud-label"><span id="musterLbl">Muster</span><b id="manaTxt">60/100</b></div>
       <div class="bar-track"><div class="bar-fill" id="manaFill" style="width:60%"></div></div>
     </div>
-    <div id="goldPill"><span id="goldTxt">40</span> fl.</div>
+    <div id="goldPill"><span id="goldTxt">40</span> gold</div>
   </div>
 
   <div id="stage">
@@ -668,7 +678,7 @@
 
   <div id="hud-bottom">
     <div id="reliefTimer">Relief army: <b id="timerTxt">2:00</b></div>
-    <div id="levelPill">1250 · Age of the Communes · Siege 1</div>
+    <div id="levelPill">Troy, c. 1180 BC · Siege 1</div>
     <div id="units"></div>
     <div id="bottom-row">
       <button class="action-btn" id="campBtn" style="display:none;">Build Supply Camp — <span id="campCost">20</span></button>
@@ -682,7 +692,7 @@
       <h2>Parley <span class="close">the siege waits</span></h2>
       <div class="pause-stats">
         <div class="pstat"><b id="stKilled">0</b><span>Fallen</span></div>
-        <div class="pstat"><b id="stBreach">0</b><span>Roccas taken</span></div>
+        <div class="pstat"><b id="stBreach">0</b><span>Strongholds taken</span></div>
         <div class="pstat"><b id="stDmg">0</b><span>Wall damage</span></div>
       </div>
       <div class="toggle-row"><span>Sound</span><div class="tog on" id="togSound"></div></div>
@@ -692,7 +702,7 @@
   </div>
   <div class="overlay" id="offer-overlay">
     <div class="sheet">
-      <h2 id="offerHead">Rocca taken!</h2>
+      <h2 id="offerHead">Stronghold taken!</h2>
       <div id="offerBody"></div>
       <button class="action-btn" id="offerSkip" style="margin-top:14px; width:100%;">March on →</button>
     </div>
@@ -701,15 +711,29 @@
   <div class="overlay" id="shop-overlay">
     <div class="sheet">
       <h2>The Quartermaster <span class="close">spoils of victory</span></h2>
-      <div class="shop-coins"><span class="coin"></span><span id="shopCoins">0</span> war-coins</div>
+      <div class="shop-coins"><span class="coin"></span><span id="shopCoins">0</span> coins</div>
       <div class="shop-note">Upgrades are permanent and carry to every future siege.</div>
       <div id="shopBody"></div>
-      <button class="action-btn" id="shopDone" style="margin-top:14px; width:100%;">To the next estate →</button>
+      <button class="action-btn" id="shopDone" style="margin-top:14px; width:100%;">To the next province →</button>
+    </div>
+  </div>
+
+  <div id="lore-intro" class="tut-wrap">
+    <div class="tut-card">
+      <button class="closeX" id="loreClose" aria-label="Close">✕</button>
+      <div class="tut-step">c. 1180 BC — AD 1781</div>
+      <p class="tut-text">For three thousand years, the story of war has been the story of walls — and of the armies that learned to break them.
+
+Ramp and tunnel, tower and trebuchet, mine and cannon. Five great ages of siegecraft lie ahead, and you will fight through all of them.
+
+You command the army at the gates. Every siege ahead was truly fought, and truly won. Because in the end — every wall falls.</p>
+      <button class="action-btn" id="loreBegin" style="width:100%;">To the walls</button>
     </div>
   </div>
 
   <div id="tutorial" class="tut-wrap">
     <div class="tut-card">
+      <button class="closeX" id="tutClose" aria-label="Close tutorial">✕</button>
       <div class="tut-step">How to lay siege</div>
       <p class="tut-text" id="tutText"></p>
       <button class="action-btn" id="tutNext" style="width:100%;">Begin the assault</button>
@@ -771,19 +795,19 @@
   }
 
   const UNIT_DEFS = {
-    grunt:  {name:'Militia Spearmen',        cost:14, cd:1.4, hp:90,  dmg:16, spd:52,  color:'#7a8f52', dark:'#414f2b', r:38, flying:false, weapon:'spear'},
+    grunt:  {name:'Spearmen',        cost:14, cd:1.4, hp:90,  dmg:16, spd:52,  color:'#7a8f52', dark:'#414f2b', r:38, flying:false, weapon:'spear'},
     // Crossbowmen shoot towers from a distance instead of walking into melee,
     // and carry a bit more padding — they're skirmishers, not sacrifices.
-    runner: {name:'Genoese Crossbowmen',     cost:11, cd:1.2, hp:62,  dmg:12, spd:100, color:'#d9c24a', dark:'#8a761f', r:30, flying:false, weapon:'crossbow', atkRange:105},
-    brute:  {name:'Condottieri Men-at-Arms', cost:34, cd:2.2, hp:320, dmg:42, spd:30,  color:'#8a2f2f', dark:'#4a1414', r:47, flying:false, unlockCost:70,  weapon:'sword'},
+    runner: {name:'Crossbowmen',     cost:11, cd:1.2, hp:62,  dmg:12, spd:100, color:'#d9c24a', dark:'#8a761f', r:30, flying:false, weapon:'crossbow', atkRange:105},
+    brute:  {name:'Men-at-Arms', cost:34, cd:2.2, hp:320, dmg:42, spd:30,  color:'#8a2f2f', dark:'#4a1414', r:47, flying:false, unlockCost:70,  weapon:'sword'},
     flyer:  {name:'Ladder Company',          cost:26, cd:1.8, hp:96,  dmg:22, spd:82,  color:'#6f8fae', dark:'#33465c', r:32, flying:true,  unlockCost:110, weapon:'ladder'},
     // ── New companies (unlock as the campaign deepens) ──
     // Counters splash artillery: enormous HP and a pavise that halves all damage.
-    shield: {name:'Pavise Shieldbearers',    cost:30, cd:2.6, hp:420, dmg:12, spd:34,  color:'#5f8a7a', dark:'#28453a', r:42, flying:false, unlockCost:90,  weapon:'pavise', armor:0.5,  minLevel:5},
+    shield: {name:'Shieldbearers',    cost:30, cd:2.6, hp:420, dmg:12, spd:34,  color:'#5f8a7a', dark:'#28453a', r:42, flying:false, unlockCost:90,  weapon:'pavise', armor:0.5,  minLevel:5},
     // Counters tower walls: bombs deal triple damage to towers and the wall, but they're fragile.
     sapper: {name:'Sappers',                 cost:24, cd:2.0, hp:70,  dmg:13, spd:60,  color:'#b07a3a', dark:'#5e3c16', r:34, flying:false, unlockCost:120, weapon:'bomb',   structMult:3, minLevel:7},
     // Counters attrition (the Seer, sweeps, long sieges): heals nearby soldiers.
-    monk:   {name:'Field Chirurgeons',       cost:22, cd:2.4, hp:110, dmg:6,  spd:55,  color:'#c8c3b6', dark:'#6a6456', r:34, flying:false, unlockCost:140, weapon:'staff',  healRate:9, healRadius:110, minLevel:10},
+    monk:   {name:'Field Medics',       cost:22, cd:2.4, hp:110, dmg:6,  spd:55,  color:'#c8c3b6', dark:'#6a6456', r:34, flying:false, unlockCost:140, weapon:'staff',  healRate:9, healRadius:110, minLevel:10},
   };
   const UNIT_ORDER = ['grunt','runner','brute','flyer','shield','sapper','monk'];
   function unitAvailable(key){ return state.level >= (UNIT_DEFS[key].minLevel||1); }
@@ -825,7 +849,7 @@
     siegeworks:{name:'Siege Works',  kind:'train',   on:'grass', trains:'flyer',   time:9,   upkeep:{wood:18},        cost:{wood:55,stone:30}, color:'#6f8fae', shape:'Tb',   unlock:4 },
     shieldhall:{name:'Shield Hall',  kind:'train',   on:'grass', trains:'shield',  time:11,  upkeep:{wood:10,stone:12},cost:{wood:50,stone:40}, color:'#5f8a7a', shape:'O',    unlock:5 },
     sapperden:{ name:'Sapper Den',   kind:'train',   on:'grass', trains:'sapper',  time:8,   upkeep:{wood:12,food:8}, cost:{wood:45,stone:25}, color:'#b07a3a', shape:'L3',   unlock:7 },
-    chapel:   { name:'Field Chapel', kind:'train',   on:'grass', trains:'monk',    time:10,  upkeep:{food:14},        cost:{wood:40,stone:35}, color:'#c8c3b6', shape:'I3',   unlock:10 },
+    chapel:   { name:'Field Hospital', kind:'train',   on:'grass', trains:'monk',    time:10,  upkeep:{food:14},        cost:{wood:40,stone:35}, color:'#c8c3b6', shape:'I3',   unlock:10 },
   };
   // Polyomino shapes as lists of [col,row] offsets (normalized to min 0,0).
   const SHAPES = {
@@ -1126,18 +1150,65 @@
   // ── Champions: boss defenders on every 4th siege ─────────────────────────────
   // A champion stands before the gate. The wall cannot be harmed while he lives;
   // every soldier who reaches the gate fights HIM instead. Each champion has a
-  // signature attack, and they cycle (with rising stats) every four boss sieges.
+  // signature attack. One guards each war's final siege — Tyre (L4), Masada (L8),
+  // Constantinople 1204 (L12), Xiangyang (L16), Yorktown (L20) — then they cycle.
   const BOSS_DEFS = [
-    {key:'warlord',   name:'The Iron Warlord',    color:'#8a2f2f', dark:'#3a1010', weapon:'sword',    ability:'sweep',
-     flavor:'his greatsword sweeps everyone near the gate — do not pile your whole host on him at once'},
-    {key:'bombardier',name:'Master Bombardier',   color:'#6a4a2a', dark:'#2e1c0e', weapon:'crossbow', ability:'mortar',
-     flavor:'he lobs mortar shells that burst among your troops — keep them spread across the lanes'},
-    {key:'seer',      name:'The Pale Seer',       color:'#6f8fae', dark:'#26364a', weapon:'spear',    ability:'slowpulse',
-     flavor:'his chilling chant saps and slows every soldier on the field — strike hard and fast'},
-    {key:'dread',     name:'The Dread Prince',    color:'#5a2a6a', dark:'#26102e', weapon:'sword',    ability:'all',
-     flavor:'he wields sweep, shell AND sorcery, and his wounds slowly close — overwhelm him quickly'},
+    {key:'seer',      name:'The Priest of Melqart',    color:'#6f8fae', dark:'#26364a', weapon:'spear',    ability:'slowpulse',
+     flavor:'his sea-rites sap and slow every soldier on the field — strike hard and fast'},
+    {key:'warlord',   name:'The Zealot King',          color:'#8a2f2f', dark:'#3a1010', weapon:'sword',    ability:'sweep',
+     flavor:'his blade sweeps everyone near the gate — do not pile your whole host on him at once'},
+    {key:'bombardier',name:'The Varangian Captain',    color:'#6a4a2a', dark:'#2e1c0e', weapon:'crossbow', ability:'mortar',
+     flavor:'he hurls Greek fire that bursts among your troops — keep them spread across the lanes'},
+    {key:'dread',     name:'The Governor of Xiangyang',color:'#5a2a6a', dark:'#26102e', weapon:'sword',    ability:'all',
+     flavor:'six years of war have taught him every trick — sweep, stone and sorcery — and his wounds slowly close'},
+    {key:'bombardier',name:'Lord Cornwallis',          color:'#a03636', dark:'#401212', weapon:'crossbow', ability:'mortar',
+     flavor:'his siege guns lob shells that burst among your troops — keep them spread across the lanes'},
   ];
   function isBossLevel(level){ return level>=4 && level%4===0; }
+
+  // ── Five wars through history, four sieges each ────────────────────────────
+  // A banner names each siege at its start; its story appears once it is won.
+  // Chapter finales (levels 4/8/12/16/20) are champion sieges — see BOSS_DEFS.
+  const BATTLES = [null,
+    // Chapter I — The Ancient World
+    {name:'Troy',           year:'c. 1180 BC', note:'The siege that began all siege stories. Ten years before the walls, the legend says — until the Greeks won not by force but by the ruse of the wooden horse.'},
+    {name:'Lachish',        year:'701 BC',  note:'Sennacherib of Assyria drove a great earthen ramp against the walls of Lachish and stormed the city — then carved the whole siege in stone on his palace walls at Nineveh.'},
+    {name:'Babylon',        year:'539 BC',  note:'Cyrus of Persia took the mightiest walls on earth almost without a blow: his engineers lowered the Euphrates, and his soldiers walked in along the riverbed.'},
+    {name:'Tyre',           year:'332 BC',  note:'Told the island city was impregnable, Alexander built a causeway half a mile across the sea and brought his towers to the walls. Tyre fell after seven months; the causeway is still there.'},
+    // Chapter II — Rome
+    {name:'Syracuse',       year:'212 BC',  note:'Archimedes\u2019 engines — great claws and stone-throwers — held the Romans at bay for two years, until soldiers scaled a weakly held wall by night during a festival.'},
+    {name:'Carthage',       year:'146 BC',  note:'Three years of siege ended a century of war. Scipio Aemilianus fought through the city street by street for six days; Carthage was razed and its people enslaved.'},
+    {name:'Alesia',         year:'52 BC',   note:'Caesar walled Vercingetorix in — then built a second wall facing outward and defeated the vast Gallic host sent to relieve him. Gaul fell with the fortress.'},
+    {name:'Masada',         year:'AD 73',   note:'The Tenth Legion built a great earthen ramp up the desert mesa. When the wall was breached, the defenders chose death over capture — the last siege of the war.'},
+    // Chapter III — The Crusades
+    {name:'Antioch',        year:'1098',    note:'The First Crusade starved before Antioch for eight months, then entered by the treachery of a tower guard — and at once stood siege in turn against the army sent to relieve the city.'},
+    {name:'Jerusalem',      year:'1099',    note:'The Crusaders built two great siege towers from the timber of dismantled ships and carried Jerusalem in a single assault. What followed inside the walls was remembered for centuries.'},
+    {name:'Acre',           year:'1191',    note:'For two years Acre was a double siege — Crusaders around the city, Saladin\u2019s army around the Crusaders — until the arrival of Richard the Lionheart tipped the scales.'},
+    {name:'Constantinople', year:'1204',    note:'The Fourth Crusade never reached the Holy Land. Instead it scaled the sea walls of Constantinople from the masts of its ships and sacked the greatest Christian city on earth.'},
+    // Chapter IV — The Mongol Storm
+    {name:'Zhongdu',        year:'1215',    note:'Genghis Khan starved the Jin capital into surrender — and from its fall the Mongols took something worth more than plunder: the siege engineers of China.'},
+    {name:'Samarkand',      year:'1220',    note:'The jewel of the Silk Road, held by a garrison of tens of thousands, fell to the Mongols within days. All Khwarezm learned what resistance would cost.'},
+    {name:'Baghdad',        year:'1258',    note:'H\u00fcleg\u00fc\u2019s engineers breached the walls in little more than a week, and five centuries of the Abbasid Caliphate ended. The city\u2019s great library was thrown into the Tigris.'},
+    {name:'Xiangyang',      year:'1273',    note:'The fortress that kept the Mongols out of southern China for six years fell only when giant counterweight trebuchets, built by Persian engineers, cracked its walls.'},
+    // Chapter V — The Age of Gunpowder
+    {name:'Constantinople', year:'1453',    note:'Mehmed\u2019s great bombards did what a thousand years of armies could not, battering the Theodosian Walls until the janissaries carried the breach. An empire of eleven centuries ended.'},
+    {name:'Tenochtitlan',   year:'1521',    note:'Cort\u00e9s besieged the island capital of the Aztecs with warships built on a mountainside and carried overland in pieces. After ninety-three days, the greatest city of the Americas fell.'},
+    {name:'Rhodes',         year:'1522',    note:'Suleiman brought a hundred thousand men and mined the walls of the Knights for six months. The garrison of a few thousand won honorable terms — and sailed away to Malta.'},
+    {name:'Yorktown',       year:'1781',    note:'The last great siege of the age. Washington\u2019s trenches and French guns closed on Cornwallis until surrender was the only wall left standing. Every wall falls.'},
+  ];
+  function battleFor(level){ return BATTLES[level] || null; }
+
+  // The five wars. A chapter banner (and, from Chapter II on, a one-time
+  // scene-setting coach note) plays when its first siege begins.
+  const CHAPTERS = [
+    {start:1,  name:'The Ancient World',    intro:'The first walls rose with the first cities — and armies have been solving them ever since. From the legend of Troy to Alexander at Tyre: the oldest art of war.'},
+    {start:5,  name:'Rome',                 intro:'No power broke walls like Rome. The ring-wall, the ramp, the slow arithmetic of hunger — from Syracuse to Masada, the legions proved that no fortress outlasts an empire\u2019s patience.'},
+    {start:9,  name:'The Crusades',         intro:'Two centuries of holy war turned the Levant into a landscape of castles. Siege towers at Jerusalem, treachery at Antioch — and in the end even Constantinople\u2019s great walls were stormed.'},
+    {start:13, name:'The Mongol Storm',     intro:'The horsemen of the steppe were supposed to be helpless before walls. Instead they gathered the world\u2019s engineers and broke every city from Beijing to Baghdad.'},
+    {start:17, name:'The Age of Gunpowder', intro:'The cannon ended the age of the high wall. From Constantinople\u2019s shattered ramparts to the trenches of Yorktown, the siege now belonged to powder, spade — and time.'},
+  ];
+  function chapterFor(level){ let c=null; for(const ch of CHAPTERS){ if(level>=ch.start) c=ch; } return c; }
+
   // ── Trebuchet counter-siege: past Siege 5, crowding one lane with more than
   //    TREB_LIMIT soldiers provokes a boulder volley that flattens the lane —
   //    killing troops AND smashing the defenders' own towers there.
@@ -1183,7 +1254,7 @@
     {key:'swift',   name:'Forced March',    desc:'+8% movement speed',         base:26, growth:1.4,  effectPer:0.08},
     {key:'ritual',  name:'Fresh Levies',    desc:'+1.2 muster / sec',          base:22, growth:1.32, effectPer:1.2},
     {key:'warcamp', name:'Larger Muster',   desc:'+20 max muster',             base:26, growth:1.32, effectPer:20},
-    {key:'plunder', name:'Plunder',         desc:'+15% florins from breaches', base:36, growth:1.34, effectPer:0.15},
+    {key:'plunder', name:'Plunder',         desc:'+15% gold from breaches', base:36, growth:1.34, effectPer:0.15},
   ];
   const MAX_UPGRADE_LEVEL = 8;
 
@@ -1421,7 +1492,7 @@
     highFx:!REDUCED_MOTION,
     // Debug/level-select custom overrides (null = use defaults)
     custom:null,   // {startLevel, wallMult, resMult, capMult, densityMult}
-    coins:0,       // war-coins earned from breaking sieges — spent in the shop
+    coins:0,       // coins earned from breaking sieges — spent in the shop
     shop:{ harvest:0, train:0, cap:0, shrink:0, drill:0 },  // persistent purchased upgrades
   };
 
@@ -1440,9 +1511,8 @@
     return 3;
   }
   function eraInfo(level){
-    const year = 1250 + (level-1)*14;
-    const names = ['Age of the Communes','Age of the Condottieri','Age of the Signori','Age of Gunpowder'];
-    return {year, era:names[eraIndex(level)]};
+    const bt = battleFor(level), ch = chapterFor(level);
+    return { year: bt ? bt.year : '', era: ch ? ch.name : '' };
   }
   function palette(){ return PALETTES[eraIndex(state.level)%PALETTES.length]; }
 
@@ -1781,7 +1851,7 @@
       if(!tileAcceptsBuild(t.terrain, type)) return {ok:false, why:'needs '+def.on};
     }
     // No-touch rule: a building may not sit edge-adjacent to another building.
-    // Applies from level 2 onward (level 1 stays forgiving for the tutorial).
+    // Applies from level 1 so the tutorial teaches the same rules the game plays by.
     if(noTouchActive()){
       for(const [dc,dr] of cells){
         const c=oc+dc, r=or+dr;
@@ -1797,7 +1867,7 @@
     }
     return {ok:true, cells};
   }
-  function noTouchActive(){ return state.mode==='conquest' && state.level>=2; }
+  function noTouchActive(){ return state.mode==='conquest'; }
   function tryPlaceAt(col,row){
     if(!state.estate || !state.selectedBuild) return;
     if(col<0||row<0||col>=GRID_COLS||row>=GRID_ROWS) return;
@@ -2347,15 +2417,16 @@
     {sel:'#palbtn-lumber',    tip:'Tap the Lumber Camp. Each building is a puzzle piece with a set shape.', on:'sel:lumber'},
     {sel:'#rotateBtn',        tip:'Tap Rotate to turn the piece. Every square of it must land on WOODS (dark green).', on:'place'},
     {sel:'#palbtn-farmhouse', tip:'Now the Farmhouse — it feeds your troops. It only fits on SOIL (brown furrows).', on:'sel:farmhouse'},
-    {sel:'#estate-wrap',      tip:'Green squares show a legal fit; red means it overhangs the wrong terrain. Tap to place.', on:'place'},
+    {sel:'#estate-wrap',      tip:'Green squares show a legal fit; red means wrong terrain or touching another building — pieces need a gap between them. Tap to place.', on:'place'},
     {sel:'#palbtn-quarrycamp',tip:'The Quarry gives stone for a Barracks. It fits only on ROCK (grey).', on:'sel:quarrycamp'},
     {sel:'#estate-wrap',      tip:'Rotate if needed, then drop it on the rock.', on:'place'},
     {sel:'#palbtn-barracks',  tip:'The Barracks trains spearmen and sits on GRASS.', on:'sel:barracks'},
-    {sel:'#estate-wrap',      tip:'Place it on open grass. Stuck? Undo a piece, or Reset for a fresh board.', on:'place'},
+    {sel:'#estate-wrap',      tip:'Place it on open grass, at least one square clear of your other buildings — no two buildings may touch. Stuck? Undo a piece, or Reset for a fresh board.', on:'place'},
     {sel:'#marchBtn',         tip:'Solve the supply puzzle — enough harvesters to feed your barracks — then March to Siege.', on:'done'},
   ];
   let guideStep=-1;
   let guideDoneThisRun=false;
+  let guideTipHidden=false; // player dismissed the current hint; next step will still appear
   function guideActive(){ return guideStep>=0 && guideStep<GUIDE_STEPS.length; }
   function startGuide(){
     // Show the tap-here coach marks once per fresh campaign. We guard with an
@@ -2363,6 +2434,7 @@
     // persistent localStorage flag, which previously blocked it permanently.
     if(guideDoneThisRun || guideActive()) return;
     guideStep=0;
+    guideTipHidden=false;
     document.getElementById('guide').classList.add('show');
     setTimeout(guidePosition, 60);
   }
@@ -2378,22 +2450,33 @@
     const el=document.querySelector(step.sel);
     const ring=document.getElementById('guide-ring');
     const tip=document.getElementById('guide-tip');
+    if(guideTipHidden){ ring.style.display='none'; tip.style.display='none'; return; }
+    tip.style.display='';
     if(!el){ ring.style.display='none'; return; }
     if(el.scrollIntoView) el.scrollIntoView({block:'nearest'});
     const r=el.getBoundingClientRect();
     ring.style.display='block';
     ring.style.left=(r.left-4)+'px'; ring.style.top=(r.top-4)+'px';
     ring.style.width=(r.width+8)+'px'; ring.style.height=(r.height+8)+'px';
-    tip.textContent=step.tip;
+    document.getElementById('guide-tip-text').textContent=step.tip;
     tip.style.left=Math.max(8, Math.min((window.innerWidth||360)-258, r.left+r.width/2-125))+'px';
     if(r.top>150){ tip.style.top='auto'; tip.style.bottom=((window.innerHeight||640)-r.top+8)+'px'; }
     else { tip.style.bottom='auto'; tip.style.top=(r.bottom+8)+'px'; }
   }
+  // Tapping the hint box (or its ✕) hides just this hint; the walkthrough
+  // stays active, so the next step's hint still appears when you reach it.
+  document.getElementById('guide-tip').addEventListener('pointerdown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    guideTipHidden=true;
+    guidePosition();
+  });
+
   function guideNotify(ev){
     if(!guideActive()) return;
     const step=GUIDE_STEPS[guideStep];
     if(step.on===ev){
       guideStep++;
+      guideTipHidden=false; // new step: show its hint even if the last one was dismissed
       if(guideStep>=GUIDE_STEPS.length){ endGuide(); return; }
       setTimeout(guidePosition, 60);
     }
@@ -2591,10 +2674,23 @@
   }
   function announceBossIfAny(){
     const b = state.boss;
-    if(!b || !b.alive) return;
-    showBanner('CHAMPION SIEGE — '+b.name+' guards the gate!', 2.8);
+    const bt = battleFor(state.level);
+    const ch = chapterFor(state.level);
+    if(!b || !b.alive){
+      if(ch && ch.start===state.level){
+        showBanner('— '+ch.name.toUpperCase()+' —', 2.0);
+        if(bt) setTimeout(()=>showBanner('SIEGE '+state.level+' — '+bt.name.toUpperCase()+', '+bt.year, 2.4), 2100);
+        // Chapter I's scene-setting lives on the title page; later wars get a coach note.
+        if(ch.start>1) setTimeout(()=>showCoach('era'+ch.start, ch.name+'. '+ch.intro), 900);
+      } else if(bt){
+        showBanner('SIEGE '+state.level+' — '+bt.name.toUpperCase()+', '+bt.year, 2.4);
+      }
+      return;
+    }
+    showBanner((bt ? bt.name.toUpperCase()+', '+bt.year : 'CHAMPION SIEGE')+' — '+b.name+' guards the gate!', 3.0);
     setTimeout(()=>{
       showCoach('boss',
+        (bt ? 'This is the siege of '+bt.name+' ('+bt.year+'). ' : '')+
         'A CHAMPION defends this fortress! The wall cannot be harmed while he stands — every soldier who reaches the gate (even the Ladder Company) fights HIM instead. Beware: '+b.def.flavor+'. Slay him and the gate itself will crack open.');
     }, 900);
   }
@@ -3091,7 +3187,7 @@
       AudioFX.fanfare();
       renderUnitButtons();
     } else {
-      spawnFloater(LOGICAL_W*0.5, LOGICAL_H*0.5, 'Need '+def.unlockCost+' florins', '#c23b34', 13);
+      spawnFloater(LOGICAL_W*0.5, LOGICAL_H*0.5, 'Need '+def.unlockCost+' gold', '#c23b34', 13);
     }
   }
 
@@ -3202,7 +3298,7 @@
       state.streakTimer -= dt;
       if(state.streakTimer<=0) state.breachStreak=0;
     }
-    // Field Chirurgeons mend nearby soldiers.
+    // Field Medics mend nearby soldiers.
     for(const h of state.monsters){
       if(!h.healRate || h.hp<=0) continue;
       for(const o of state.monsters){
@@ -3433,10 +3529,12 @@
     spawnSmoke(CASTLE_X0+CASTLE_W*0.5, LOGICAL_H*0.35, 16, -Math.PI/2);
     if(state.mode==='conquest'){
       const won=state.level;
-      // Award war-coins for the shop. Scales with level; +50% under Plunder.
+      // Award coins for the shop. Scales with level; +50% under Plunder.
       const coinReward = Math.round((10 + won*4) * goldMult());
       state.coins += coinReward;
-      showBanner('VICTORY!  Siege '+won+' is broken!  +'+coinReward+' coins', 2.6);
+      const bt = battleFor(won);
+      state._wonBattle = bt;
+      showBanner('VICTORY!  '+(bt ? bt.name+' has fallen!' : 'Siege '+won+' is broken!')+'  +'+coinReward+' coins', 2.6);
       setStreakText('The walls are yours');
       AudioFX.fanfare();
       for(let i=0;i<3;i++){
@@ -3450,13 +3548,15 @@
       return;
     }
     state.manaRegen += 0.4;
-    showBanner('VITTORIA! The Rocca is taken! +'+bonus+' florins', 1.6);
+    state._wonBattle = battleFor(state.level);
+    showBanner('VICTORY! '+(state._wonBattle ? state._wonBattle.name+' falls!' : 'The stronghold falls!')+' +'+bonus+' gold', 1.6);
     setStreakText('Siege '+state.level+' broken');
     state.paused = true;
-    setTimeout(()=>offerUpgrade('Rocca taken! Spoils of war await.', bonus), 1400);
+    setTimeout(()=>offerUpgrade('Stronghold taken! Spoils of war await.', bonus), 1400);
   }
 
   function relieveCastle(){
+    state._wonBattle = null;
     // Level 1 is a safe on-ramp in every mode — never allow a loss here.
     if(state.level===1){ state.started=true; return; }
     AudioFX.retreat();
@@ -4209,7 +4309,9 @@
     }
     document.getElementById('goldTxt').textContent = state.gold;
     const info=eraInfo(state.level);
-    document.getElementById('levelPill').textContent = info.year+' · '+info.era+' · Siege '+state.level;
+    const bt=battleFor(state.level);
+    document.getElementById('levelPill').textContent =
+      [bt ? bt.name+', '+info.year : info.era, 'Siege '+state.level].filter(Boolean).join(' · ');
     const relief = document.getElementById('reliefTimer');
     if(state.timerActive){
       const tl = Math.max(0, state.timeLeft);
@@ -4221,7 +4323,7 @@
       relief.innerHTML = 'Camp morale: <b id="timerTxt">'+m+'%</b> — hold off the enemy sorties';
       relief.classList.toggle('urgent', m<=30);
     } else if(state.level===1){
-      relief.innerHTML = 'Training siege — <b>you cannot lose</b>, so learn the ropes';
+      relief.innerHTML = 'The ten-year siege — <b>no relief is coming</b>. Take your time.';
       relief.classList.remove('urgent');
     } else {
       relief.innerHTML = 'No relief coming — press the assault';
@@ -4306,7 +4408,7 @@
       if(!state.unlocked[key]){
         const lock=document.createElement('div');
         lock.className='unit-lock';
-        lock.innerHTML='Locked<b>'+def.unlockCost+' florins</b>';
+        lock.innerHTML='Locked<b>'+def.unlockCost+' gold</b>';
         btn.appendChild(lock);
         btn.addEventListener('pointerdown', e=>{ e.preventDefault(); tryUnlock(key); });
       } else {
@@ -4413,18 +4515,24 @@
     document.getElementById('offerHead').textContent = headline;
     const body = document.getElementById('offerBody');
     body.innerHTML='';
+    if(state._wonBattle){
+      const h=document.createElement('div');
+      h.className='history-note';
+      h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b> — '+state._wonBattle.note;
+      body.appendChild(h);
+    }
     if(bonus>0){
       const note=document.createElement('div');
       note.className='offer-note';
-      note.textContent='+'+bonus+' florins plundered · muster reinforced';
+      note.textContent='+'+bonus+' gold plundered · muster reinforced';
       body.appendChild(note);
     }
     const treasury=document.createElement('div');
     treasury.className='offer-card';
     treasury.innerHTML=
       '<div class="offer-main"><div class="offer-name">War Chest</div>'+
-      '<div class="offer-sub">Spend florins on lasting upgrades, then press the assault.</div></div>'+
-      '<div class="offer-price" id="offerGold">'+state.gold+' fl.</div>';
+      '<div class="offer-sub">Spend gold on lasting upgrades, then press the assault.</div></div>'+
+      '<div class="offer-price" id="offerGold">'+state.gold+' gold</div>';
     body.appendChild(treasury);
     for(const u of UPGRADES){
       const lvl = state.upgrades[u.key]||0;
@@ -4437,7 +4545,7 @@
           ' <span style="color:var(--ink-dim); font-size:11px;">Lv '+lvl+'/'+MAX_UPGRADE_LEVEL+'</span></div>'+
         '<div class="offer-sub">'+u.desc+'</div></div>'+
         '<div class="offer-price" id="upbuy-'+u.key+'" style="'+(maxed?'opacity:.4;':'text-decoration:underline;')+'">'+
-          (maxed?'Max':(cost+' fl.'))+'</div>';
+          (maxed?'Max':(cost+' gold'))+'</div>';
       if(!maxed){
         card.addEventListener('pointerdown', e=>{ e.preventDefault(); buyUpgrade(u.key); });
       }
@@ -4446,6 +4554,7 @@
   }
   document.getElementById('offerSkip').addEventListener('pointerdown', e=>{
     e.preventDefault();
+    state._wonBattle=null;
     closeOverlay('offer-overlay');
     advanceSiege();
     state.paused=false;
@@ -4491,6 +4600,12 @@
     document.getElementById('shopCoins').textContent = state.coins;
     const body = document.getElementById('shopBody');
     body.innerHTML='';
+    if(state._wonBattle){
+      const h=document.createElement('div');
+      h.className='history-note';
+      h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b> — '+state._wonBattle.note;
+      body.appendChild(h);
+    }
     let lastCat=null;
     for(const item of SHOP_ITEMS){
       if(item.cat!==lastCat){
@@ -4523,6 +4638,7 @@
   }
   document.getElementById('shopDone').addEventListener('pointerdown', e=>{
     e.preventDefault();
+    state._wonBattle=null;
     closeOverlay('shop-overlay');
     state.paused=false;
     enterFarm();
@@ -4676,7 +4792,7 @@
     document.getElementById('mode-screen').classList.remove('show');
     if(mode==='conquest'){
       state.army={grunt:0, runner:0, brute:0, flyer:0, shield:0, sapper:0, monk:0};
-      // In conquest, troops are gated by their buildings, not florins.
+      // In conquest, troops are gated by their buildings, not gold.
       state.unlocked={grunt:true, runner:true, brute:true, flyer:true, shield:true, sapper:true, monk:true};
       state.level = (state.custom && state.custom.startLevel) ? state.custom.startLevel : 1;
       state.coins = 0;
@@ -4713,7 +4829,9 @@
     document.getElementById('tutorial').classList.add('show');
   }
   function endTutorial(){
-    document.getElementById('tutorial').classList.remove('show');
+    const tut = document.getElementById('tutorial');
+    if(!tut.classList.contains('show')) return;
+    tut.classList.remove('show');
     localStorage_setBool('assedio_tut_'+state.mode, true);
     if(state._pendingFarm){ state._pendingFarm=false; enterFarm(); return; }
     beginGame();
@@ -4726,7 +4844,7 @@
     if(state.level===1){
       setTimeout(()=>{
         showCoach('softlane',
-          "This first siege is a training ground — you cannot lose it, so experiment freely. Tap any ROW of the battlefield to choose your attack lane — the golden chevron marks the current one. The colored dots at the left edge of each row are the towers guarding it. Find the row with the single GREEN dot (an open path), tap it, then tap a soldier to send them charging in.");
+          "This is Troy — the siege that lasted ten years. No relief army will drive you off, so take your time and experiment freely. Tap any ROW of the battlefield to choose your attack lane — the golden chevron marks the current one. The colored dots at the left edge of each row are the towers guarding it. Find the row with the single GREEN dot (an open path), tap it, then tap a soldier to send them charging in.");
       }, 700);
     }
   }
@@ -4734,8 +4852,24 @@
     e.preventDefault();
     endTutorial();
   });
+  // Tapping anywhere on the tutorial overlay also dismisses it.
+  document.getElementById('tutorial').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    endTutorial();
+  });
   function localStorage_getBool(k){ try{ return localStorage.getItem(k)==='1'; }catch(_){ return false; } }
   function localStorage_setBool(k,v){ try{ localStorage.setItem(k, v?'1':'0'); }catch(_){ } }
+
+  // ── One-time scene-setting page over the title screen ───────────────────────
+  (function(){
+    const lore=document.getElementById('lore-intro');
+    if(!localStorage_getBool('ewf_lore_intro')) lore.classList.add('show');
+    lore.addEventListener('pointerdown', e=>{
+      e.preventDefault();
+      lore.classList.remove('show');
+      localStorage_setBool('ewf_lore_intro', true);
+    });
+  })();
 
   const coachEl = document.getElementById('coach');
   const coachTextEl = document.getElementById('coachText');
