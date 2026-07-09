@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#141416">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Every Wall Falls">
 <title>Every Wall Falls</title>
 <style>
   :root{
@@ -18,7 +23,7 @@
     --blood:#8f3128;
     --moss:#5f6b3a;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; touch-action:manipulation;}
   html,body{
     margin:0; padding:0; height:100%; background:#0a0a0b;
     font-family:'Trajan Pro','Optima','Palatino Linotype','Palatino',Georgia,serif;
@@ -122,49 +127,24 @@
   }
   .title-btn:active{ box-shadow: inset 2px 2px 6px rgba(0,0,0,0.7); }
   .title-btn.secondary{ color:var(--ink-dim); border-color:var(--stone-4); }
-  #title-buttons #tap-start{ animation:pulse 1.9s ease-in-out infinite; }
-  #levelselect-screen{
-    position:absolute; inset:0; z-index:112; display:none;
-    flex-direction:column; align-items:center; gap:10px;
-    padding:20px 16px calc(20px + env(safe-area-inset-bottom));
-    overflow-y:auto;
-    background:
-      repeating-linear-gradient(0deg, rgba(0,0,0,0.13) 0 2px, transparent 2px 4px),
-      #1e1e21;
+  .title-btn.pulse{ animation:pulse 1.9s ease-in-out infinite; }
+  .title-btn .btn-sub{ display:block; font-size:9.5px; letter-spacing:2px; color:var(--ink-dim); margin-top:3px; }
+  #titleMute{
+    position:absolute; top:calc(10px + env(safe-area-inset-top)); right:12px; z-index:5;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    font-size:19px; color:var(--bronze-hi);
+    background:var(--stone-2); border:2px solid var(--bronze);
+    box-shadow: inset 1px 1px 0 var(--stone-3), inset -1px -1px 0 var(--stone-0), 2px 2px 0 #000;
   }
-  #levelselect-screen.show{display:flex;}
-  #levelselect-screen .ls-title{
-    font-size:clamp(17px,5vw,24px); letter-spacing:3px; text-transform:uppercase;
-    color:#c8c3b6; text-shadow:-1px -1px 0 #6a6a6e, 1px 1px 0 #000; margin-bottom:2px;
+  #titleMute:active{ box-shadow:inset 2px 2px 6px rgba(0,0,0,0.7); }
+  .result-share{
+    white-space:pre-wrap; font-size:13.5px; line-height:1.6; color:var(--ink);
+    background:var(--stone-1); border:1px solid var(--stone-0);
+    box-shadow:inset 2px 2px 3px rgba(0,0,0,0.6), inset -1px -1px 0 var(--stone-3);
+    padding:12px 14px; margin:10px 0 4px; text-align:center;
   }
-  #levelselect-screen .ls-sub{ font-size:11px; color:var(--ink-dim); font-style:italic; margin-bottom:10px; text-align:center; }
-  .ls-card{
-    width:min(94%,440px);
-    background:var(--stone-2); border:1px solid var(--stone-0);
-    box-shadow:inset 1px 1px 0 var(--stone-3), inset -1px -1px 0 var(--stone-0);
-    padding:12px 14px;
-  }
-  .ls-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--stone-0); }
-  .ls-row:last-child{ border-bottom:none; }
-  .ls-lbl{ font-size:12.5px; color:var(--ink); flex:1; min-width:0; }
-  .ls-lbl small{ display:block; font-size:9.5px; color:var(--ink-dim); margin-top:2px; line-height:1.3; }
-  .ls-stepper{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
-  .ls-step-btn{
-    width:32px; height:32px; font-size:19px; font-weight:700; color:var(--bronze-hi);
-    background:var(--stone-3); border:1px solid var(--stone-0);
-    box-shadow:inset 1px 1px 0 var(--stone-4), inset -1px -1px 0 var(--stone-0);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .ls-step-btn:active{ box-shadow:inset 2px 2px 4px rgba(0,0,0,0.6); }
-  .ls-val{ min-width:64px; text-align:center; font-size:13px; font-weight:700; color:var(--bronze-hi); }
-  .ls-seg{ display:flex; gap:0; flex:0 0 auto; }
-  .ls-seg .seg{
-    font-size:11px; padding:8px 11px; color:var(--ink-dim);
-    background:var(--stone-3); border:1px solid var(--stone-0);
-  }
-  .ls-seg .seg.on{ color:var(--bronze-hi); background:var(--stone-4); box-shadow:inset 0 0 0 1px var(--bronze); }
-  #ls-start{ width:min(94%,440px); margin-top:6px; padding:14px; font-size:14px; letter-spacing:1px; }
-  .ls-back{ font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-dim); text-decoration:underline; margin-top:6px; }
+  .finale-chapters{ font-size:12px; color:var(--ink-dim); line-height:1.8; text-align:center; margin:8px 0; }
+  .finale-chapters b{ color:var(--bronze-hi); letter-spacing:1px; }
   #farm-screen{
     position:absolute; inset:0; z-index:95; display:none;
     flex-direction:column; gap:5px; padding:6px 6px calc(8px + env(safe-area-inset-bottom));
@@ -567,56 +547,6 @@
     <div class="mode-back" id="modeBack">back</div>
   </div>
 
-  <div id="levelselect-screen">
-    <div class="ls-title">Load Level</div>
-    <div class="ls-sub">Debug &amp; custom siege — Conquest campaign with your settings</div>
-
-    <div class="ls-card">
-      <div class="ls-row">
-        <div class="ls-lbl">Start level<small>Which siege to begin at (terrain &amp; towers)</small></div>
-        <div class="ls-stepper">
-          <div class="ls-step-btn" data-ls="level" data-dir="-1">−</div>
-          <div class="ls-val" id="lsLevel">1</div>
-          <div class="ls-step-btn" data-ls="level" data-dir="1">+</div>
-        </div>
-      </div>
-      <div class="ls-row">
-        <div class="ls-lbl">Wall HP<small>Fortress toughness multiplier</small></div>
-        <div class="ls-stepper">
-          <div class="ls-step-btn" data-ls="wall" data-dir="-1">−</div>
-          <div class="ls-val" id="lsWall">1.0×</div>
-          <div class="ls-step-btn" data-ls="wall" data-dir="1">+</div>
-        </div>
-      </div>
-      <div class="ls-row">
-        <div class="ls-lbl">Starting resources<small>Wood / stone / food you begin with</small></div>
-        <div class="ls-stepper">
-          <div class="ls-step-btn" data-ls="res" data-dir="-1">−</div>
-          <div class="ls-val" id="lsRes">1.0×</div>
-          <div class="ls-step-btn" data-ls="res" data-dir="1">+</div>
-        </div>
-      </div>
-      <div class="ls-row">
-        <div class="ls-lbl">Resource cap<small>Max of each resource you can bank</small></div>
-        <div class="ls-stepper">
-          <div class="ls-step-btn" data-ls="cap" data-dir="-1">−</div>
-          <div class="ls-val" id="lsCap">1.0×</div>
-          <div class="ls-step-btn" data-ls="cap" data-dir="1">+</div>
-        </div>
-      </div>
-      <div class="ls-row">
-        <div class="ls-lbl">Defender density<small>How many towers guard the walls</small></div>
-        <div class="ls-seg" id="lsDensity">
-          <div class="seg" data-dens="0.5">Sparse</div>
-          <div class="seg on" data-dens="1">Normal</div>
-          <div class="seg" data-dens="1.5">Heavy</div>
-        </div>
-      </div>
-    </div>
-
-    <button class="action-btn" id="ls-start">Begin custom siege →</button>
-    <div class="ls-back" id="ls-back">back</div>
-  </div>
 
   <div id="farm-screen">
     <div id="farm-res">
@@ -662,9 +592,11 @@
     <div class="rule"></div>
     <div class="tagline">Five wars. Three thousand years. One army at the gates.</div>
     <div id="title-buttons">
-      <div class="title-btn" id="tap-start">Start Campaign</div>
-      <div class="title-btn secondary" id="load-level">Load Level ⚙</div>
+      <div class="title-btn pulse" id="tap-continue" style="display:none;">Continue</div>
+      <div class="title-btn pulse" id="tap-start">Start Campaign</div>
+      <div class="title-btn secondary" id="tap-daily">Daily Siege<span class="btn-sub" id="dailySub">the same walls face every commander today</span></div>
     </div>
+    <div id="titleMute" aria-label="Toggle sound">🔊</div>
   </div>
 
   <div id="hud-top">
@@ -673,11 +605,11 @@
       <div class="hud-label"><span>Stronghold</span><b id="castleTxt">400/400</b></div>
       <div class="bar-track"><div class="bar-fill" id="castleFill" style="width:100%"></div></div>
     </div>
-    <div class="hud-stat" style="flex:0 0 25%;">
-      <div class="hud-label"><span id="musterLbl">Muster</span><b id="manaTxt">60/100</b></div>
-      <div class="bar-track"><div class="bar-fill" id="manaFill" style="width:60%"></div></div>
+    <div class="hud-stat" id="musterStat" style="flex:0 0 25%; display:none;">
+      <div class="hud-label"><span id="musterLbl">Host</span><b id="manaTxt"></b></div>
+      <div class="bar-track"><div class="bar-fill" id="manaFill" style="width:0%"></div></div>
     </div>
-    <div id="goldPill"><span id="goldTxt">40</span> gold</div>
+    <div id="goldPill"><span id="goldTxt">40</span> <span id="goldLbl">gold</span></div>
   </div>
 
   <div id="stage">
@@ -728,6 +660,29 @@
       <div class="shop-note">Upgrades are permanent and carry to every future siege.</div>
       <div id="shopBody"></div>
       <button class="action-btn" id="shopDone" style="margin-top:14px; width:100%;">To the next province →</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="daily-overlay">
+    <div class="sheet">
+      <h2 id="dailyResultTitle">The walls are yours</h2>
+      <div class="result-share" id="dailyResultBody"></div>
+      <button class="action-btn" id="dailyShare" style="margin-top:10px; width:100%;">Copy result to share</button>
+      <button class="action-btn" id="dailyRetry" style="margin-top:10px; width:100%;">Try again</button>
+      <button class="action-btn" id="dailyBack" style="margin-top:10px; width:100%;">Back to camp</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="finale-overlay">
+    <div class="sheet">
+      <h2>Every Wall Fell <span class="close">the chronicle is complete</span></h2>
+      <div class="finale-chapters">
+        <b>The Ancient World</b> · <b>Rome</b> · <b>The Crusades</b><br>
+        <b>The Mongol Storm</b> · <b>The Age of Gunpowder</b>
+      </div>
+      <div class="result-share" id="finaleStats"></div>
+      <p style="font-size:12.5px; line-height:1.6; color:var(--ink-dim); text-align:center; margin:8px 0 0;">Twenty sieges, five ages of war — and every wall fell before you. The chronicle is written, but the war never ends: the sieges ahead grow without limit. March for glory.</p>
+      <button class="action-btn" id="finaleGo" style="margin-top:14px; width:100%;">March on — Endless War →</button>
     </div>
   </div>
 
@@ -1246,8 +1201,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     {key:'vigor',   name:'Hardened Ranks',  desc:'+10% company max HP',        base:30, growth:1.42, effectPer:0.10},
     {key:'might',   name:'Tempered Steel',  desc:'+10% damage to the walls',   base:30, growth:1.42, effectPer:0.10},
     {key:'swift',   name:'Forced March',    desc:'+8% movement speed',         base:26, growth:1.4,  effectPer:0.08},
-    {key:'ritual',  name:'Fresh Levies',    desc:'+1.2 muster / sec',          base:22, growth:1.32, effectPer:1.2},
-    {key:'warcamp', name:'Larger Muster',   desc:'+20 max muster',             base:26, growth:1.32, effectPer:20},
+    {key:'ritual',  name:'War Chest',       desc:'+1.2 gold / sec war pay',    base:22, growth:1.32, effectPer:1.2},
     {key:'plunder', name:'Plunder',         desc:'+15% gold from breaches', base:36, growth:1.34, effectPer:0.15},
   ];
   const MAX_UPGRADE_LEVEL = 8;
@@ -1486,6 +1440,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     highFx:!REDUCED_MOTION,
     // Debug/level-select custom overrides (null = use defaults)
     custom:null,   // {startLevel, wallMult, resMult, capMult, densityMult}
+    daily:null,    // {day, seed, level} — set while playing the Daily Siege
     coins:0,       // coins earned from breaking sieges — spent in the shop
     shop:{ harvest:0, train:0, cap:0, shrink:0, drill:0 },  // persistent purchased upgrades
   };
@@ -1689,8 +1644,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if((state.army[key]||0) <= 0) return false;
       state.army[key]--;
     } else {
-      if(state.mana < def.cost) return false;
-      state.mana -= def.cost;
+      if(state.gold < def.cost) return false;
+      state.gold -= def.cost;
     }
     state.unitCd[key] = def.cd * deployCdMult();
     const lane = LANES[activeLane] || LANES[0];
@@ -3292,11 +3247,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
                  return {x:CASTLE_X0+ts.xf*CASTLE_W, y:ts.yf*LOGICAL_H}; })();
       state.particles.push({x:spot.x,y:spot.y,vx:(Math.random()-0.5)*8,vy:-14-Math.random()*14,life:1,color:'#e8a34a',r:1+Math.random()*1.6,ember:true});
     }
-    let regen = state.manaRegen;
-    if(state.mode==='supply'){
-      regen = state.campBaseRegen + state.camps.reduce((a,c)=>a + c.rate, 0);
+    // War pay: the old muster regen now arrives as gold, at the same pace.
+    if(state.mode!=='conquest'){
+      state._goldAcc = (state._goldAcc||0) + state.manaRegen*dt;
+      const g = Math.floor(state._goldAcc);
+      if(g>0){ state.gold += g; state._goldAcc -= g; }
     }
-    state.mana = Math.min(state.manaCap, state.mana + regen*dt);
     if(state.bannerTimer>0){
       state.bannerTimer -= dt;
       if(state.bannerTimer<=0) document.getElementById('banner').classList.remove('show');
@@ -3534,6 +3490,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.shake = 12; state.flash = 0.45; state.hitStop = 0.14;
     spawnParticles(CASTLE_X0+CASTLE_W*0.5, LOGICAL_H*0.4, '#f5c76a', 40, 220);
     spawnSmoke(CASTLE_X0+CASTLE_W*0.5, LOGICAL_H*0.35, 16, -Math.PI/2);
+    if(state.daily){
+      showBanner('VICTORY!  The walls are broken!', 1.6);
+      AudioFX.fanfare();
+      state.started=false;
+      setTimeout(()=>dailyFinish(true), 1300);
+      return;
+    }
     if(state.mode==='conquest'){
       const won=state.level;
       // Award coins for the shop. Scales with level; +50% under Plunder.
@@ -3559,8 +3522,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       state.flash = 0.5;
       state.level++;
       state.started=false;
-      // Show the shop after the victory beat, then head to the next estate.
-      setTimeout(()=>openShop(coinReward), 2200);
+      saveGame();
+      // Campaign finale after the twentieth siege; otherwise straight to the shop.
+      if(won===20){ setTimeout(()=>openFinale(coinReward), 2200); }
+      else { setTimeout(()=>openShop(coinReward), 2200); }
       return;
     }
     state.manaRegen += 0.4;
@@ -3573,6 +3538,15 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   function relieveCastle(){
     state._wonBattle = null;
+    if(state.daily){
+      AudioFX.retreat();
+      state.flash = 0.3; state.shake = 6;
+      state.monsters = []; state.projectiles = [];
+      state.started=false;
+      showBanner('The relief army arrives — your assault is repelled!');
+      setTimeout(()=>dailyFinish(false), 1300);
+      return;
+    }
     // Level 1 is a safe on-ramp in every mode — never allow a loss here.
     if(state.level===1){ state.started=true; return; }
     AudioFX.retreat();
@@ -3591,6 +3565,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   function advanceSiege(){
     state.level++;
+    saveGame();
     setupLevel();
     renderUnitButtons();
     renderLaneButtons();
@@ -4302,6 +4277,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   let goldBumpT=0;
   function bumpGold(){
+    if(state.mode==='conquest') return;   // pill shows coins there; they move at victory
     const el=document.getElementById('goldPill');
     const now=performance.now();
     if(now-goldBumpT<200) return;
@@ -4312,22 +4288,29 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function updateHUD(){
     document.getElementById('castleTxt').textContent = Math.max(0,Math.ceil(state.castleHP))+'/'+state.castleMaxHP;
     document.getElementById('castleFill').style.width = Math.max(0,100*state.castleHP/state.castleMaxHP)+'%';
-    const musterLbl = document.getElementById('musterLbl');
+    const musterStat = document.getElementById('musterStat');
     if(state.mode==='conquest'){
+      // Conquest fights with the host you mustered on the estate…
       const total = armyTotal();
-      if(musterLbl) musterLbl.textContent='Host';
+      musterStat.style.display = '';
       document.getElementById('manaTxt').textContent = total+' left';
       document.getElementById('manaFill').style.width = Math.min(100, total*6)+'%';
+      // …and its one treasure is coins: show the same currency the shop spends.
+      document.getElementById('goldTxt').textContent = state.coins;
+      document.getElementById('goldLbl').textContent = 'coins';
     } else {
-      if(musterLbl) musterLbl.textContent='Muster';
-      document.getElementById('manaTxt').textContent = Math.floor(state.mana)+'/'+state.manaCap;
-      document.getElementById('manaFill').style.width = (100*state.mana/state.manaCap)+'%';
+      // No muster bar: troops are bought with gold, and gold flows in steadily.
+      musterStat.style.display = 'none';
+      document.getElementById('goldTxt').textContent = state.gold;
+      document.getElementById('goldLbl').textContent = 'gold';
     }
-    document.getElementById('goldTxt').textContent = state.gold;
     const info=eraInfo(state.level);
     const bt=battleFor(state.level);
     document.getElementById('levelPill').textContent =
-      [bt ? bt.name+', '+info.year : info.era, 'Siege '+state.level].filter(Boolean).join(' · ');
+      state.daily
+        ? 'Daily Siege · '+state.daily.day
+        : [bt ? bt.name+', '+info.year : info.era,
+           state.level>20 ? 'Endless · Siege '+state.level : 'Siege '+state.level].filter(Boolean).join(' · ');
     const relief = document.getElementById('reliefTimer');
     if(state.timerActive){
       const tl = Math.max(0, state.timeLeft);
@@ -4358,7 +4341,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           const ab = document.getElementById('armybtn-'+key);
           if(ab) ab.textContent = have;
         } else {
-          btn.classList.toggle('disabled', state.mana < def.cost || onCd);
+          btn.classList.toggle('disabled', state.gold < def.cost || onCd);
         }
         const cdEl = document.getElementById('unitcd-'+key);
         if(cdEl){
@@ -4414,7 +4397,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       btn.className='unit-btn'; btn.id='unitbtn-'+key;
       const costLine = state.mode==='conquest'
         ? '<span id="armybtn-'+key+'">'+(state.army[key]||0)+'</span> ready'
-        : def.cost+' muster';
+        : def.cost+' gold';
       btn.innerHTML =
         '<canvas class="unit-icon" width="88" height="88"></canvas>'+
         '<div class="unit-name">'+def.name+'</div>'+
@@ -4472,6 +4455,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         if(o.id==='shop-overlay'){
           o.classList.remove('show'); state.paused=false; enterFarm(); return;
         }
+        if(o.id==='daily-overlay'){ dailyDismiss(); return; }
+        if(o.id==='finale-overlay'){ finaleContinue(); return; }
         o.classList.remove('show');
         if(o.id==='pause-overlay') state.paused=false;
       }
@@ -4497,8 +4482,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   });
   document.getElementById('togSound').addEventListener('pointerdown', function(e){
     e.preventDefault();
-    this.classList.toggle('on');
-    AudioFX.setEnabled(this.classList.contains('on'));
+    setSound(!this.classList.contains('on'));
   });
   document.getElementById('togFx').addEventListener('pointerdown', function(e){
     e.preventDefault();
@@ -4524,6 +4508,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(key==='ritual') state.manaRegen += u.effectPer;
     if(key==='warcamp') state.manaCap += u.effectPer;
     AudioFX.coin && AudioFX.coin();
+    saveGame();
     buildOfferSheet(document.getElementById('offerHead').textContent, 0);
     updateHUD();
   }
@@ -4540,7 +4525,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(bonus>0){
       const note=document.createElement('div');
       note.className='offer-note';
-      note.textContent='+'+bonus+' gold plundered · muster reinforced';
+      note.textContent='+'+bonus+' gold plundered';
       body.appendChild(note);
     }
     const treasury=document.createElement('div');
@@ -4608,6 +4593,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
     state.coins -= cost;
     state.shop[key] = lvl+1;
+    saveGame();
     AudioFX.coin && AudioFX.coin();
     AudioFX.fanfare && (key==='shrink') && AudioFX.fanfare();
     renderShop();
@@ -4655,6 +4641,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   document.getElementById('shopDone').addEventListener('pointerdown', e=>{
     e.preventDefault();
     state._wonBattle=null;
+    saveGame();
     closeOverlay('shop-overlay');
     state.paused=false;
     enterFarm();
@@ -4673,80 +4660,260 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
   })();
 
-  // Title now offers two choices: Start Campaign (normal) and Load Level (custom).
+  // ── Save system ─────────────────────────────────────────────────────────────
+  const SAVE_KEY = 'ewf_save_v1';
+  function saveGame(){
+    if(state.daily) return;              // the daily siege never touches the campaign save
+    try{
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        v:1, mode:state.mode, level:state.level, gold:state.gold, coins:state.coins,
+        manaRegen:state.manaRegen, manaCap:state.manaCap,
+        shop:state.shop, upgrades:state.upgrades, unlocked:state.unlocked, ts:Date.now(),
+      }));
+    }catch(_){ }
+  }
+  function loadSave(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return null;
+      const s = JSON.parse(raw);
+      return (s && s.level>=1) ? s : null;
+    }catch(_){ return null; }
+  }
+  function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(_){ } }
+  function continueCampaign(sv){
+    AudioFX.unlock();
+    state.daily = null;
+    state.custom = null;
+    state.mode = sv.mode || 'conquest';
+    state.level = sv.level;
+    state.gold = (sv.gold!=null) ? sv.gold : 40;
+    state.coins = sv.coins || 0;
+    if(sv.manaRegen) state.manaRegen = sv.manaRegen;
+    if(sv.manaCap) state.manaCap = sv.manaCap;
+    if(sv.shop) state.shop = Object.assign(state.shop, sv.shop);
+    if(sv.upgrades) state.upgrades = Object.assign(state.upgrades, sv.upgrades);
+    if(sv.unlocked) state.unlocked = Object.assign(state.unlocked, sv.unlocked);
+    document.getElementById('title-screen').classList.add('hidden');
+    guideDoneThisRun = true;             // returning commanders skip the hand-holding
+    if(state.mode==='conquest'){
+      state.army = {grunt:0, runner:0, brute:0, flyer:0, shield:0, sapper:0, monk:0};
+      state.unlocked = {grunt:true, runner:true, brute:true, flyer:true, shield:true, sapper:true, monk:true};
+      enterFarm();
+    } else {
+      if(state.mode==='supply'){ state.mana=40; state.camps=[]; } else { state.mana=60; }
+      setupLevel(); renderUnitButtons(); renderLaneButtons();
+      beginGame();
+    }
+    updateHUD();
+  }
+
+  // ── Daily Siege: one seeded battle per day, shared by every commander ──────
+  function dailyKey(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function dailySeed(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h>>>0;
+  }
+  function daysBetween(a,b){
+    const pa=a.split('-'), pb=b.split('-');
+    return Math.round((Date.UTC(+pb[0],+pb[1]-1,+pb[2]) - Date.UTC(+pa[0],+pa[1]-1,+pa[2]))/86400000);
+  }
+  function dailyState(){
+    try{
+      const raw = localStorage.getItem('ewf_daily');
+      const s = raw ? JSON.parse(raw) : {};
+      let streak = s.streak||0;
+      if(s.last && daysBetween(s.last, dailyKey())>1) streak = 0;   // missed a day — the fire goes out
+      return {last:s.last||null, streak, best:s.best||0, wonToday:s.last===dailyKey()};
+    }catch(_){ return {last:null, streak:0, best:0, wonToday:false}; }
+  }
+  function dailyRecordWin(){
+    const today = dailyKey();
+    const d = dailyState();
+    if(d.wonToday) return d;             // only the first win of the day feeds the streak
+    const streak = (d.last && daysBetween(d.last, today)===1) ? d.streak+1 : 1;
+    const rec = {last:today, streak, best:Math.max(streak, d.best)};
+    try{ localStorage.setItem('ewf_daily', JSON.stringify(rec)); }catch(_){ }
+    return {last:today, streak, best:rec.best, wonToday:true};
+  }
+  function startDaily(){
+    AudioFX.unlock();
+    const day = dailyKey(), seed = dailySeed('ewf-'+day);
+    state.mode = 'siege';
+    state.custom = null;
+    state.daily = {day, seed, level: 5 + (seed % 8)};   // sieges 5–12: real teeth, some days a champion
+    state.level = state.daily.level;
+    state.gold = 120;                     // the old muster pool and gold purse, merged
+    state.manaRegen = 9 + state.level*0.2; // now the rate of the gold trickle
+
+    state.upgrades = {vigor:0, might:0, swift:0, ritual:0, warcamp:0, plunder:0, drill:0};
+    state.unlocked = {grunt:true, runner:true, brute:true, flyer:true, shield:false, sapper:false, monk:false};
+    state.stats = {killed:0, breaches:0, dmgDealt:0};
+    document.getElementById('title-screen').classList.add('hidden');
+    // Everyone faces the same walls: pin Math.random to the day's seed while
+    // the battlefield is generated, then hand the dice back to fate.
+    const orig = Math.random, rng = mulberry32(seed);
+    Math.random = ()=>rng();
+    try{ setupLevel(); } finally { Math.random = orig; }
+    renderUnitButtons(); renderLaneButtons();
+    state.started = true;
+    state.timeLeft = state.timeLimit;
+    state.lastTickSec = -1;
+    showBanner('DAILY SIEGE — '+day, 2.2);
+    announceBossIfAny();
+    updateHUD();
+  }
+  function dailyFinish(won){
+    state.paused = true;
+    state.monsters = []; state.projectiles = [];
+    const used = Math.max(0, Math.round(state.timeLimit - state.timeLeft));
+    const mm = Math.floor(used/60), ss = used%60;
+    let d = dailyState();
+    if(won) d = dailyRecordWin();
+    const share =
+      'Every Wall Falls — Daily Siege '+state.daily.day+'\n'+
+      (won
+        ? '🏰 Walls broken in '+mm+':'+(ss<10?'0':'')+ss+' · '+state.stats.killed+' defenders slain'
+        : '🏳️ Assault repelled — the walls held')+
+      (d.streak>0 ? '\n🔥 Streak: '+d.streak+' day'+(d.streak>1?'s':'') : '');
+    state._dailyShare = share;
+    document.getElementById('dailyResultTitle').textContent = won ? 'The walls are yours' : 'The walls held';
+    document.getElementById('dailyResultBody').textContent = share;
+    document.getElementById('dailyRetry').style.display = won ? 'none' : '';
+    const shareBtn = document.getElementById('dailyShare');
+    shareBtn.textContent = 'Copy result to share';
+    openOverlay('daily-overlay');
+    if(won) AudioFX.fanfare();
+  }
+  function dailyDismiss(){
+    closeOverlay('daily-overlay');
+    state.daily = null;
+    state.paused = false; state.started = false;
+    document.getElementById('title-screen').classList.remove('hidden');
+    refreshTitleButtons();
+  }
+  document.getElementById('dailyShare').addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    const txt = state._dailyShare || '';
+    const done = ()=>{ this.textContent = 'Copied — go boast'; };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, ()=>{ window.prompt('Copy your result:', txt); });
+    } else { window.prompt('Copy your result:', txt); }
+  });
+  document.getElementById('dailyRetry').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    closeOverlay('daily-overlay');
+    state.paused = false;
+    startDaily();                        // same seed, same walls — no excuses
+  });
+  document.getElementById('dailyBack').addEventListener('pointerdown', e=>{
+    e.preventDefault(); dailyDismiss();
+  });
+
+  // ── Campaign finale (after Siege 20) ────────────────────────────────────────
+  function openFinale(coinReward){
+    state.paused = true;
+    state._finaleCoins = coinReward;
+    document.getElementById('finaleStats').textContent =
+      state.stats.killed+' defenders slain · '+state.stats.breaches+' strongholds taken · '+Math.round(state.stats.dmgDealt)+' wall damage';
+    AudioFX.fanfare();
+    openOverlay('finale-overlay');
+  }
+  function finaleContinue(){
+    closeOverlay('finale-overlay');
+    openShop(state._finaleCoins||0);
+  }
+  document.getElementById('finaleGo').addEventListener('pointerdown', e=>{
+    e.preventDefault(); finaleContinue();
+  });
+
+  // ── Title screen ────────────────────────────────────────────────────────────
+  function refreshTitleButtons(){
+    const sv = loadSave();
+    const cont = document.getElementById('tap-continue');
+    const start = document.getElementById('tap-start');
+    if(sv && sv.level>1){
+      cont.style.display = '';
+      cont.textContent = 'Continue — '+(sv.level>20 ? 'Endless, Siege '+sv.level : 'Siege '+sv.level);
+      start.classList.add('secondary'); start.classList.remove('pulse');
+      start.textContent = 'New Campaign';
+    } else {
+      cont.style.display = 'none';
+      start.classList.remove('secondary'); start.classList.add('pulse');
+      start.textContent = 'Start Campaign';
+    }
+    const d = dailyState();
+    document.getElementById('dailySub').textContent =
+      d.wonToday ? ('broken today · 🔥 '+d.streak+' day streak')
+      : (d.streak>0 ? ('🔥 '+d.streak+' day streak — keep it alive') : 'the same walls face every commander today');
+  }
+  document.getElementById('tap-continue').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    const sv = loadSave();
+    if(sv) continueCampaign(sv); else refreshTitleButtons();
+  });
   document.getElementById('tap-start').addEventListener('pointerdown', e=>{
     e.preventDefault();
+    const sv = loadSave();
+    if(sv && sv.level>1 && !window.confirm('Abandon your saved campaign (Siege '+sv.level+') and start anew?')) return;
+    clearSave();
     AudioFX.unlock();
+    state.daily = null;
     state.custom = null;               // normal campaign — no overrides
     document.getElementById('title-screen').classList.add('hidden');
     chooseMode('conquest');
   });
-  // ── Level-select / custom-settings screen ──
-  const LS = { level:1, wall:1.0, res:1.0, cap:1.0, dens:1.0 };
-  const LS_STEP = { wall:0.25, res:0.5, cap:0.5 };
-  const LS_RANGE = {
-    level:[1,20], wall:[0.25,4], res:[0.5,6], cap:[0.5,6],
-  };
-  function lsFmt(v){ return (Math.round(v*100)/100)+'×'; }
-  function lsRefresh(){
-    document.getElementById('lsLevel').textContent = LS.level;
-    document.getElementById('lsWall').textContent = lsFmt(LS.wall);
-    document.getElementById('lsRes').textContent = lsFmt(LS.res);
-    document.getElementById('lsCap').textContent = lsFmt(LS.cap);
-    document.querySelectorAll('#lsDensity .seg').forEach(el=>{
-      el.classList.toggle('on', parseFloat(el.dataset.dens)===LS.dens);
-    });
+  document.getElementById('tap-daily').addEventListener('pointerdown', e=>{
+    e.preventDefault(); startDaily();
+  });
+
+  // ── Sound: one switch, remembered ───────────────────────────────────────────
+  function setSound(on){
+    AudioFX.setEnabled(on);
+    document.getElementById('togSound').classList.toggle('on', on);
+    document.getElementById('titleMute').textContent = on ? '🔊' : '🔇';
+    localStorage_setBool('ewf_muted', !on);
   }
-  function openLevelSelect(){
-    AudioFX.unlock();
-    document.getElementById('title-screen').classList.add('hidden');
-    document.getElementById('levelselect-screen').classList.add('show');
-    lsRefresh();
-  }
-  function closeLevelSelect(){
-    document.getElementById('levelselect-screen').classList.remove('show');
-    document.getElementById('title-screen').classList.remove('hidden');
-  }
-  document.getElementById('load-level').addEventListener('pointerdown', e=>{
-    e.preventDefault(); openLevelSelect();
+  document.getElementById('titleMute').addEventListener('pointerdown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    setSound(!AudioFX.enabled);
   });
-  document.getElementById('ls-back').addEventListener('pointerdown', e=>{
-    e.preventDefault(); closeLevelSelect();
-  });
-  document.querySelectorAll('.ls-step-btn').forEach(btn=>{
-    btn.addEventListener('pointerdown', e=>{
-      e.preventDefault();
-      const key=btn.dataset.ls, dir=parseInt(btn.dataset.dir,10);
-      if(key==='level'){
-        LS.level = Math.max(LS_RANGE.level[0], Math.min(LS_RANGE.level[1], LS.level+dir));
-      } else {
-        const map={wall:'wall',res:'res',cap:'cap'};
-        const k=map[key]; const step=LS_STEP[k]; const rng=LS_RANGE[k];
-        LS[k] = Math.max(rng[0], Math.min(rng[1], Math.round((LS[k]+dir*step)*100)/100));
-      }
-      lsRefresh();
-    });
-  });
-  document.querySelectorAll('#lsDensity .seg').forEach(seg=>{
-    seg.addEventListener('pointerdown', e=>{
-      e.preventDefault();
-      LS.dens = parseFloat(seg.dataset.dens);
-      lsRefresh();
-    });
-  });
-  document.getElementById('ls-start').addEventListener('pointerdown', e=>{
-    e.preventDefault();
-    AudioFX.unlock();
-    state.custom = {
-      startLevel: LS.level,
-      wallMult: LS.wall,
-      resMult: LS.res,
-      capMult: LS.cap,
-      densityMult: LS.dens,
-    };
-    document.getElementById('levelselect-screen').classList.remove('show');
-    chooseMode('conquest');
-  });
+
+  // ── No double-tap zoom: pointer events drive the game; kill the gestures ───
+  document.addEventListener('gesturestart', e=>e.preventDefault());
+  document.addEventListener('dblclick', e=>e.preventDefault(), {passive:false});
+  let _lastTouchEnd = 0;
+  document.addEventListener('touchend', e=>{
+    const now = Date.now();
+    if(now - _lastTouchEnd < 320) e.preventDefault();
+    _lastTouchEnd = now;
+  }, {passive:false});
+
+  // ── Installable app: inline manifest + service worker when hosted ──────────
+  (function(){
+    try{
+      const icon = 'data:image/svg+xml,'+encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'+
+        '<rect width="100" height="100" fill="#141416"/>'+
+        '<path d="M16 84V42h8v-8h9v8h11v-8h12v8h11v-8h9v8h8v42z" fill="#9c7b3f"/>'+
+        '<rect x="42" y="60" width="16" height="24" fill="#0a0a0b"/></svg>');
+      const manifest = {
+        name:'Every Wall Falls', short_name:'Every Wall',
+        description:'Five wars. Three thousand years. One army at the gates.',
+        start_url:'.', display:'standalone',
+        background_color:'#0a0a0b', theme_color:'#141416', orientation:'portrait',
+        icons:[{src:icon, sizes:'any', type:'image/svg+xml', purpose:'any'}],
+      };
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(manifest));
+      document.head.appendChild(link);
+    }catch(_){ }
+  })();
   document.getElementById('modeSiege').addEventListener('pointerdown', e=>{
     e.preventDefault(); chooseMode('siege');
   });
@@ -4875,6 +5042,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   });
   function localStorage_getBool(k){ try{ return localStorage.getItem(k)==='1'; }catch(_){ return false; } }
   function localStorage_setBool(k,v){ try{ localStorage.setItem(k, v?'1':'0'); }catch(_){ } }
+
+  // Restore remembered settings and offer Continue if a campaign is saved.
+  if(localStorage_getBool('ewf_muted')) setSound(false);
+  refreshTitleButtons();
 
   // ── One-time scene-setting page over the title screen ───────────────────────
   (function(){
