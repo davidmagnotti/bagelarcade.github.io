@@ -249,12 +249,25 @@
   #rotateBtn{color:var(--bronze-hi);}
   #farm-army{display:grid; grid-template-columns:repeat(4,1fr); gap:5px;}
   .army-cell{
-    display:flex; flex-direction:row; align-items:center; justify-content:center; gap:4px; padding:4px 2px;
+    position:relative; cursor:pointer;
+    display:flex; flex-direction:row; align-items:center; justify-content:center; gap:4px; padding:5px 2px 4px;
     background:var(--stone-1); border:1px solid var(--stone-0);
     box-shadow:inset 2px 2px 3px rgba(0,0,0,0.5);
   }
+  .army-cell.deny{animation:denyflash .35s;}
+  @keyframes denyflash{
+    0%{box-shadow:inset 0 0 0 2px #c23b34;}
+    100%{box-shadow:inset 2px 2px 3px rgba(0,0,0,0.5);}
+  }
   .army-cell canvas{width:26px; height:26px;}
-  .army-count{font-size:15px; font-weight:700; color:var(--bronze-hi);}
+  .army-col{display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0;}
+  .army-count{font-size:15px; font-weight:700; color:var(--bronze-hi); line-height:1;}
+  .army-price{font-size:9px; color:var(--ink-dim); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:56px;}
+  .army-minus{
+    position:absolute; top:0; right:0; width:17px; height:17px; padding:0;
+    line-height:15px; text-align:center; font-size:13px; font-family:inherit;
+    color:var(--ink-dim); background:var(--stone-2); border:1px solid var(--stone-0);
+  }
   .army-nm{display:none;}
   #marchBtn{margin-top:3px; padding:13px; font-size:14px; letter-spacing:1px;}
   #title-embers{position:absolute; inset:0; pointer-events:none; overflow:hidden;}
@@ -549,7 +562,7 @@
     </div>
     <div class="mode-card" id="modeConquest">
       <div class="mode-name">Conquest</div>
-      <div class="mode-desc">Gather wood, stone and food. Raise buildings that train an army over time — then march that army to the walls and spend it in the siege.</div>
+      <div class="mode-desc">Pack your estate like a puzzle — every building pays out once, and no two of a kind may touch. Muster an army with the proceeds, then spend it at the walls.</div>
     </div>
     <div class="mode-back" id="modeBack">back</div>
   </div>
@@ -823,34 +836,29 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   const CAMP_DEF = { cost:20, rate:2.4, name:'Supply Camp' };
   const CAMP_MAX = 6;
 
-  const TILE = { grass:'grass', woods:'woods', rock:'rock', soil:'soil' };
-  const TERRAIN_COL = {
-    grass:'#6f8a3e', woods:'#24401c', rock:'#727880', soil:'#845e30',
-    // rich variants — visibly brighter, higher yield
-    densewoods:'#173a10', orerock:'#8f7d5a', fertile:'#a06a24',
-  };
-  // Yield multiplier a tile grants to a harvester placed on it.
-  const TERRAIN_MULT = {
-    grass:1, woods:1, rock:1, soil:1,
-    densewoods:1.8, orerock:1.8, fertile:1.8,
-  };
-  // Which base terrain a rich variant counts as (so harvesters accept it).
-  const TERRAIN_BASE = {
-    grass:'grass', woods:'woods', rock:'rock', soil:'soil',
-    densewoods:'woods', orerock:'rock', fertile:'soil',
-  };
+  // One terrain. RICH tiles are bonus squares: any building cell covering one
+  // counts double toward that building's payout.
+  const TERRAIN_COL = { grass:'#6f8a3e', rich:'#7d9c44' };
+  const TERRAIN_MULT = { grass:1, rich:2 };
+  // Buildings pay out ONCE, at placement. Harvesters grant a lump of resources
+  // (scaled by rich-tile coverage); trainers unlock their troop for purchase —
+  // tap the roster to muster soldiers at `price`. Extra trainers of the same
+  // kind make that troop cheaper.
   const PLACE_DEFS = {
-    lumber:   { name:'Lumber Camp',  kind:'harvest', on:'woods', produces:'wood',  rate:1.6, cost:{wood:10},          color:'#8a5a2c', shape:'S',    unlock:1 },
-    quarrycamp:{name:'Quarry',       kind:'harvest', on:'rock',  produces:'stone', rate:1.3, cost:{wood:15},          color:'#8b8f96', shape:'L3',   unlock:1 },
-    farmhouse:{ name:'Farmhouse',    kind:'harvest', on:'soil',  produces:'food',  rate:2.0, cost:{wood:12},          color:'#a8963f', shape:'T',    unlock:1 },
-    barracks: { name:'Barracks',     kind:'train',   on:'grass', trains:'grunt',   time:3.5, upkeep:{food:8},         cost:{wood:30,stone:15}, color:'#7a8f52', shape:'O',    unlock:1 },
-    range:    { name:'Archery Range',kind:'train',   on:'grass', trains:'runner',  time:5,   upkeep:{wood:6},         cost:{wood:40},          color:'#d9c24a', shape:'I3',   unlock:2 },
-    forge:    { name:'Forge',        kind:'train',   on:'grass', trains:'brute',   time:13,  upkeep:{food:16,stone:8},cost:{wood:45,stone:50}, color:'#8a2f2f', shape:'L4',   unlock:3 },
-    siegeworks:{name:'Siege Works',  kind:'train',   on:'grass', trains:'flyer',   time:9,   upkeep:{wood:18},        cost:{wood:55,stone:30}, color:'#6f8fae', shape:'Tb',   unlock:4 },
-    shieldhall:{name:'Shield Hall',  kind:'train',   on:'grass', trains:'shield',  time:11,  upkeep:{wood:10,stone:12},cost:{wood:50,stone:40}, color:'#5f8a7a', shape:'O',    unlock:5 },
-    sapperden:{ name:'Sapper Den',   kind:'train',   on:'grass', trains:'sapper',  time:8,   upkeep:{wood:12,food:8}, cost:{wood:45,stone:25}, color:'#b07a3a', shape:'L3',   unlock:7 },
-    chapel:   { name:'Field Hospital', kind:'train',   on:'grass', trains:'monk',    time:10,  upkeep:{food:14},        cost:{wood:40,stone:35}, color:'#c8c3b6', shape:'I3',   unlock:10 },
+    lumber:   { name:'Lumber Camp',  kind:'harvest', produces:'wood',  grant:{wood:60},  cost:{wood:10},          color:'#8a5a2c', shape:'S',    unlock:1 },
+    quarrycamp:{name:'Quarry',       kind:'harvest', produces:'stone', grant:{stone:45}, cost:{wood:15},          color:'#8b8f96', shape:'L3',   unlock:1 },
+    farmhouse:{ name:'Farmhouse',    kind:'harvest', produces:'food',  grant:{food:70},  cost:{wood:12},          color:'#a8963f', shape:'T',    unlock:1 },
+    barracks: { name:'Barracks',     kind:'train',   trains:'grunt',   cap:8, price:{food:18},           cost:{wood:30,stone:15}, color:'#7a8f52', shape:'O',    unlock:1 },
+    range:    { name:'Archery Range',kind:'train',   trains:'runner',  cap:8, price:{wood:14},           cost:{wood:40},          color:'#d9c24a', shape:'I3',   unlock:2 },
+    forge:    { name:'Forge',        kind:'train',   trains:'brute',   cap:5, price:{food:30,stone:18},  cost:{wood:45,stone:50}, color:'#8a2f2f', shape:'L4',   unlock:3 },
+    siegeworks:{name:'Siege Works',  kind:'train',   trains:'flyer',   cap:5, price:{wood:34},           cost:{wood:55,stone:30}, color:'#6f8fae', shape:'Tb',   unlock:4 },
+    shieldhall:{name:'Shield Hall',  kind:'train',   trains:'shield',  cap:5, price:{wood:20,stone:22}, cost:{wood:50,stone:40}, color:'#5f8a7a', shape:'O',    unlock:5 },
+    sapperden:{ name:'Sapper Den',   kind:'train',   trains:'sapper',  cap:5, price:{wood:22,food:16},   cost:{wood:45,stone:25}, color:'#b07a3a', shape:'L3',   unlock:7 },
+    chapel:   { name:'Field Hospital', kind:'train',   trains:'monk',    cap:4, price:{food:26},          cost:{wood:40,stone:35}, color:'#c8c3b6', shape:'I3',   unlock:10 },
   };
+  // Reverse maps: which trainer unlocks each unit, and each unit's base price.
+  const TRAINER_OF={}, UNIT_BASE_PRICE={};
+  for(const _k in PLACE_DEFS){ const _d=PLACE_DEFS[_k]; if(_d.kind==='train'){ TRAINER_OF[_d.trains]=_k; UNIT_BASE_PRICE[_d.trains]=_d.price; } }
   // Polyomino shapes as lists of [col,row] offsets (normalized to min 0,0).
   const SHAPES = {
     O:  [[0,0],[1,0],[0,1],[1,1]],          // 2x2 square
@@ -883,58 +891,74 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     for(const [c,r] of cells){ if(c+1>w)w=c+1; if(r+1>h)h=r+1; }
     return {w,h};
   }
-  function terrainBase(terr){ return TERRAIN_BASE[terr]||terr; }
-  function tileAcceptsBuild(terr, type){
-    const need = PLACE_DEFS[type].on;
-    return terrainBase(terr) === need;
-  }
   function buildUnlocked(type){ return state.level >= (PLACE_DEFS[type].unlock||1); }
+  // How many trainers of a unit's kind are on the board (0 = can't muster it yet).
+  function trainerCountFor(unit){
+    let n=0;
+    if(state.estate) for(const t of state.estate.tiles){
+      const b=t.building; if(b && PLACE_DEFS[b.type].kind==='train' && PLACE_DEFS[b.type].trains===unit) n++;
+    }
+    return n;
+  }
+  // Muster price is stable and budgetable: base price times the Drillmasters
+  // shop discount. Quantity is gated by trainer CAPACITY instead — each trainer
+  // houses a fixed number of its troop, so a bigger host needs more of them
+  // (and every extra one fights the same-kind rule for land).
+  function unitPrice(unit){
+    const base=UNIT_BASE_PRICE[unit]; if(!base) return {};
+    const out={};
+    for(const k in base){ out[k]=Math.max(1, Math.round(base[k]*trainDiscount())); }
+    return out;
+  }
+  function unitCap(unit){
+    const tr=TRAINER_OF[unit]; if(!tr) return 0;
+    return trainerCountFor(unit)*(PLACE_DEFS[tr].cap||0);
+  }
+  // Lump payouts grow gently with level so late boards aren't pure grind.
+  function levelYield(){ return 1 + (state.level-1)*0.03; }
   const PLACE_ORDER = ['lumber','quarrycamp','farmhouse','barracks','range','forge','siegeworks','shieldhall','sapperden','chapel'];
-  const GRID_COLS = 12, GRID_ROWS = 12;
+  // Board size varies by level (the land itself is the budget): authored levels
+  // define their own size via the farm map; generated levels use boardSizeFor().
+  let GRID_COLS = 12, GRID_ROWS = 12;
+  function boardSizeFor(level){ return Math.min(12, 10 + Math.floor(Math.max(0,level-6)/2)); }
 
   // ── Hand-authored conquest levels ────────────────────────────────────────────
-  // farm: 8 rows x 8 cols terrain map. Legend: . grass  W woods  R rock  S soil
+  // farm: square map; its dimensions ARE the board size (7×7 → 12×12 across the
+  // campaign — the land is the only budget). Legend: . grass  * rich (cells
+  // covering it count DOUBLE toward the building's payout). The puzzle is the
+  // same-kind rule + chasing rich tiles on ever-tighter ground.
   // require: buildings that MUST be placed before you can march (order-agnostic).
   // turrets: per-lane list of {xf,type}. xf is fraction across the field (0.24..0.86).
   // A lane may be [] (undefended). Lanes are top->bottom (0..3).
   const T_ARCHER='archer', T_CANNON='cannon', T_MAGE='mage', T_BOMBARD='bombard';
   const T_BALLISTA='ballista', T_CULVERIN='culverin';
   const CONQUEST_LEVELS = [
-    { // Level 1 — roomy. Woods 3x2 (fits S), soil 3x2 (fits T), rock 2x2 (fits L3),
-      //           plenty of grass for Barracks (O). One open lane, archers only.
+    { // Level 1 — a 7×7 croft. Two fat rich clusters any piece can cover; with
+      //           three required buildings the squeeze is felt immediately.
       farm:[
-        'WWWww...RR..',
-        'WWWww...RRr.',
-        'WWW.....RR..',
-        '............',
-        '..SSSss.....',
-        '..SSSss.....',
-        '..SSS.......',
-        '.......WWw..',
-        '.......WWw..',
-        '....RR......',
-        '....RR......',
-        '............',
+        '.......',
+        '.**....',
+        '.**....',
+        '.......',
+        '....**.',
+        '....**.',
+        '..*....',
       ],
       require:['lumber','farmhouse','barracks'],
       turrets:[ [], [{xf:0.5,type:T_ARCHER}], [{xf:0.4,type:T_ARCHER},{xf:0.68,type:T_ARCHER}], [{xf:0.55,type:T_ARCHER}] ],
       wallMult:1.0,
     },
-    { // Level 2 — introduces the mandatory Archery Range, and the first pieces that
-      //           must be ROTATED to fit (the woods and soil patches are vertical).
+    { // Level 2 — 8×8; rich tiles run in a loose diagonal, so covering several
+      //           means spacing same-kind camps along it. The rule starts to bite.
       farm:[
-        'Ww........RR',
-        'WWw.......Rr',
-        '.Ww.......RR',
-        '..W.........',
-        '......Ss....',
-        '.....SSs....',
-        '......Ss....',
-        '............',
-        '..rr........',
-        '..RR....ww..',
-        '........WW..',
-        '............',
+        '*.......',
+        '.*......',
+        '........',
+        '..**....',
+        '........',
+        '.....*..',
+        '......*.',
+        '.......*',
       ],
       require:['lumber','farmhouse','quarrycamp','barracks','range'],
       turrets:[
@@ -945,20 +969,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.565,
     },
-    { // Level 3 — every harvester now has to be rotated to fit its terrain.
+    { // Level 3 — 9×9 with a rich ring. No single piece can take much of it;
+      //           full value demands interleaving different kinds around it.
       farm:[
-        'Ww..........',
-        'WWw.......RR',
-        '.Ww......RRr',
-        '..........R.',
-        '............',
-        '.......Ss...',
-        '......SSs...',
-        '.......Ss...',
-        '............',
-        '..ww....rr..',
-        '..WW....RR..',
-        '............',
+        '.........',
+        '.........',
+        '...***...',
+        '..*...*..',
+        '..*...*..',
+        '...***...',
+        '.........',
+        '.*.....*.',
+        '.........',
       ],
       require:['lumber','farmhouse','quarrycamp','barracks','range'],
       turrets:[
@@ -969,20 +991,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.58,
     },
-    { // Level 4 — tighter; grass is scarcer so trainer placement is a real puzzle.
+    { // Level 4 — 10×10, riches pushed into the four corners. Chasing them all
+      //           drags same-kind camps apart; leaving some is the real trade-off.
       farm:[
-        'WWWww..RRRrr',
-        'WWWww..RRRrr',
-        'WWW....RRR..',
-        '...SSSss....',
-        '...SSSss....',
-        'wwW.........',
-        'WWW....SSSss',
-        'WWW....SSS..',
-        '.......SSS..',
-        '.rrR........',
-        '.RRR....ww..',
-        '........WW..',
+        '**......**',
+        '*........*',
+        '..........',
+        '..........',
+        '....**....',
+        '....**....',
+        '..........',
+        '..........',
+        '*........*',
+        '**......**',
       ],
       require:['lumber','farmhouse','quarrycamp','barracks','range','forge'],
       turrets:[
@@ -993,21 +1014,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.625,
     },
-    { // Level 5 — the wall of towers; bombards arrive. Terrain is generous so you
-      //           can build a big host, but every lane bites.
+    { // Level 5 — 10×10; the wall of towers, bombards arrive. A rich cross lets
+      //           a well-packed estate fund a big host, but every lane bites.
       farm:[
-        'WWWww..WWWww',
-        'WWWww..WWWww',
-        'WWW....WWW..',
-        '...SSSss....',
-        'rrR.SSSss...',
-        'RRR.........',
-        'RRR.SSSss.RR',
-        '....SSS...Rr',
-        '....SSS...RR',
-        '..ww........',
-        '..WW....ss..',
-        '........SS..',
+        '..........',
+        '....**....',
+        '....**....',
+        '..........',
+        '.*..**..*.',
+        '.*..**..*.',
+        '..........',
+        '....**....',
+        '....**....',
+        '..........',
       ],
       require:['lumber','farmhouse','quarrycamp','barracks','range','forge'],
       turrets:[
@@ -1037,51 +1056,25 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(level<=16) return ['cannon','bombard','culverin','ballista','mage'];
     return ['bombard','culverin','ballista','cannon','mage','bombard'];
   }
-  // Build a guaranteed-fittable 12x12 board with clustered terrain + rich variants.
-  function genBoard(rand){
-    const N=GRID_COLS*GRID_ROWS;
-    const RICH={woods:'w',rock:'r',soil:'s'};
-    const BASE={woods:'W',rock:'R',soil:'S'};
-    for(let attempt=0; attempt<400; attempt++){
-      const grid=new Array(N).fill('.');
-      const baseTerr=(i)=>{ const ch=grid[i]; return ch==='.'?'grass':({W:'woods',w:'woods',R:'rock',r:'rock',S:'soil',s:'soil'}[ch]); };
-      // stamp a rectangular-ish blob of a terrain of given area
-      function stampBlob(kind, wMin, wMax, hMin, hMax){
-        for(let tries=0; tries<60; tries++){
-          const w=wMin+Math.floor(rand()*(wMax-wMin+1));
-          const h=hMin+Math.floor(rand()*(hMax-hMin+1));
-          const c0=Math.floor(rand()*(GRID_COLS-w));
-          const r0=Math.floor(rand()*(GRID_ROWS-h));
-          let clear=true;
-          for(let r=r0;r<r0+h&&clear;r++)for(let c=c0;c<c0+w;c++){ if(grid[r*GRID_COLS+c]!=='.'){clear=false;break;} }
-          if(!clear) continue;
-          for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++){
-            // sprinkle rich variant on ~28% of the blob
-            grid[r*GRID_COLS+c]= (rand()<0.28)?RICH[kind]:BASE[kind];
-          }
-          return true;
-        }
-        return false;
-      }
-      // Ensure each resource terrain appears in enough size to fit its harvester
-      // shape (woods:S-4, rock:L-3, soil:T-4). Stamp 2-3 blobs of each for variety.
-      let ok=true;
-      const woodsBlobs=2+Math.floor(rand()*2), rockBlobs=2+Math.floor(rand()*2), soilBlobs=2+Math.floor(rand()*2);
-      for(let i=0;i<woodsBlobs;i++){ if(!stampBlob('woods',2,3,2,3)) {ok=false;break;} }
-      if(ok) for(let i=0;i<rockBlobs;i++){ if(!stampBlob('rock',2,3,2,2)) {ok=false;break;} }
-      if(ok) for(let i=0;i<soilBlobs;i++){ if(!stampBlob('soil',2,3,2,2)) {ok=false;break;} }
-      if(!ok) continue;
-      // Build tiles-like structure for fit checks
-      const tiles=grid.map(ch=>({terrain:TERRAIN_LEGEND[ch]||'grass', building:null, covered:null}));
-      const needFit=['lumber','quarrycamp','farmhouse','barracks','range','forge'];
-      if(needFit.every(t=>shapeFitsSomewhere(tiles,t))){
-        // convert to farm string rows
-        const rows=[];
-        for(let r=0;r<GRID_ROWS;r++){ rows.push(grid.slice(r*GRID_COLS,(r+1)*GRID_COLS).join('')); }
-        return rows;
-      }
+  // Build an all-grass size×size board scattered with rich tiles: a few small
+  // clusters (worth contorting a whole piece onto) plus lone singles (worth a
+  // corner of one). Every board is trivially placeable — the puzzle is packing.
+  function genBoard(size, rand){
+    const N=size*size;
+    const grid=new Array(N).fill('.');
+    const scale=N/144; // relative to a full 12×12
+    const clusters=Math.max(2, Math.round((2+Math.floor(rand()*2))*scale+0.5));
+    for(let i=0;i<clusters;i++){
+      const w=1+Math.floor(rand()*2), h=1+Math.floor(rand()*2);
+      const c0=Math.floor(rand()*(size-w));
+      const r0=Math.floor(rand()*(size-h));
+      for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r*size+c]='*';
     }
-    return null;
+    const singles=Math.max(2, Math.round((3+Math.floor(rand()*4))*scale));
+    for(let i=0;i<singles;i++){ grid[Math.floor(rand()*N)]='*'; }
+    const rows=[];
+    for(let r=0;r<size;r++){ rows.push(grid.slice(r*size,(r+1)*size).join('')); }
+    return rows;
   }
   function genTurrets(level, rand){
     const pool=genTurretPool(level);
@@ -1109,7 +1102,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function generateLevel(level){
     if(_genLevelCache[level]) return _genLevelCache[level];
     const rand=mulberry32(level*2654435761);
-    let farm=genBoard(rand);
+    let farm=genBoard(boardSizeFor(level), rand);
     if(!farm){ // fall back to hardest authored board if generation ever fails
       const def=CONQUEST_LEVELS[CONQUEST_LEVELS.length-1];
       _genLevelCache[level]={farm:def.farm.slice(), require:def.require.slice(), turrets:def.turrets, wallMult:def.wallMult, generated:true};
@@ -1129,8 +1122,9 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return generateLevel(level);
   }
   const TERRAIN_LEGEND={
-    '.':'grass','W':'woods','R':'rock','S':'soil',
-    'w':'densewoods','r':'orerock','s':'fertile',
+    '.':'grass','*':'rich',
+    // legacy map chars degrade gracefully (old saves / stray defs)
+    'W':'grass','R':'grass','S':'grass','w':'rich','r':'rich','s':'rich',
   };
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1744,11 +1738,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function armyTotal(){ return Object.values(state.army).reduce((a,b)=>a+b,0); }
 
   function genEstate(){
-    const N=GRID_COLS*GRID_ROWS;
     // Conquest uses hand-authored, fixed terrain per level so each is a crafted puzzle.
+    // The farm map's own dimensions set the board size — small estates early
+    // (the packing squeeze), bigger land as the campaign rewards you with it.
     if(state.mode==='conquest'){
       const def=levelDef(state.level);
-      if(def && def.farm && def.farm.length===GRID_ROWS){
+      if(def && def.farm && def.farm.length){
+        GRID_ROWS=def.farm.length;
+        GRID_COLS=def.farm[0].length;
         const tiles=[];
         for(let r=0;r<GRID_ROWS;r++){
           const row=def.farm[r];
@@ -1762,55 +1759,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         return;
       }
     }
-    // ── Fallback: procedural solvable board (non-conquest or missing def) ──
-    const carve=[
-      {type:'lumber',   terrain:'woods'},
-      {type:'quarrycamp',terrain:'rock'},
-      {type:'farmhouse',terrain:'soil'},
-    ];
-    for(let attempt=0; attempt<200; attempt++){
-      const tiles=[];
-      for(let i=0;i<N;i++) tiles.push({terrain:'grass', building:null, covered:null});
-      let ok=true;
-      const stampShape=(type, terrain)=>{
-        const rot=Math.floor(Math.random()*4);
-        const cells=shapeCells(type, rot);
-        const {w,h}=shapeExtent(cells);
-        const cands=[];
-        for(let r=0;r<=GRID_ROWS-h;r++)for(let c=0;c<=GRID_COLS-w;c++){
-          let fits=true;
-          for(const [dc,dr] of cells){ const ti=(r+dr)*GRID_COLS+(c+dc); if(tiles[ti].terrain!=='grass'){ fits=false; break; } }
-          if(fits) cands.push([c,r]);
-        }
-        if(!cands.length) return false;
-        const [c,r]=cands[Math.floor(Math.random()*cands.length)];
-        for(const [dc,dr] of cells){ tiles[(r+dr)*GRID_COLS+(c+dc)].terrain=terrain; }
-        return true;
-      };
-      for(const {type,terrain} of carve){ if(!stampShape(type,terrain)){ ok=false; break; } }
-      if(ok) for(const {type,terrain} of carve){ stampShape(type,terrain); }
-      if(!ok) continue;
-      if(!shapeFitsSomewhere(tiles,'barracks') || !shapeFitsSomewhere(tiles,'range')) continue;
-      state.estate={tiles, history:[], seq:0};
-      state.selectedBuild=null; state.rot=0;
-      return;
-    }
+    // ── Fallback: procedural board (non-conquest or missing def) ──
+    GRID_COLS=10; GRID_ROWS=10;
+    const N=GRID_COLS*GRID_ROWS;
     const tiles=[];
-    for(let i=0;i<N;i++) tiles.push({terrain:'grass', building:null, covered:null});
+    for(let i=0;i<N;i++) tiles.push({terrain:(Math.random()<0.06?'rich':'grass'), building:null, covered:null});
     state.estate={tiles, history:[], seq:0};
     state.selectedBuild=null; state.rot=0;
-  }
-  function shapeFitsSomewhere(tiles, type){
-    for(let rot=0;rot<4;rot++){
-      const cells=shapeCells(type,rot); const {w,h}=shapeExtent(cells);
-      const on=PLACE_DEFS[type].on;
-      for(let r=0;r<=GRID_ROWS-h;r++)for(let c=0;c<=GRID_COLS-w;c++){
-        let fits=true;
-        for(const [dc,dr] of cells){ const t=tiles[(r+dr)*GRID_COLS+(c+dc)]; if(terrainBase(t.terrain)!==on||t.building||t.covered!=null){ fits=false; break; } }
-        if(fits) return true;
-      }
-    }
-    return false;
   }
 
   function selectBuild(type){
@@ -1830,17 +1785,31 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // Given an anchor cell (col,row) the player tapped, find the placement origin so
   // the piece is centered-ish on the tap: we try the tapped cell as each of the
   // piece's cells and pick the first fully-valid fit; fall back to origin at tap.
+  // Resolve a tap into a placement: the piece must COVER the tapped tile, at
+  // the player's CURRENT rotation — rotation is always the player's call.
+  // If no arrangement of this rotation fits but another rotation would, the
+  // rejection says so ('rotate to fit') instead of leaving them guessing.
   function placementOrigin(type, rot, col, row){
     const cells=shapeCells(type, rot);
+    let why='no room here';
     for(const [ac,ar] of cells){
       const oc=col-ac, or=row-ar;
-      if(placementValid(type, rot, oc, or).ok) return {oc,or,cells};
+      const v=placementValid(type, rot, oc, or);
+      if(v.ok) return {ok:true, oc, or, cells, rot};
+      if(/same kind/.test(v.why)) why=v.why;   // most informative rejection wins
     }
-    // no valid anchor — return origin at tap for error feedback
-    return {oc:col, or:row, cells};
+    // would a different rotation fit here? (hint only — never auto-rotate)
+    if(why==='no room here'){
+      for(let dr=1; dr<4 && why==='no room here'; dr++){
+        const rcells=shapeCells(type,(rot+dr)%4);
+        for(const [ac,ar] of rcells){
+          if(placementValid(type,(rot+dr)%4, col-ac, row-ar).ok){ why='rotate to fit'; break; }
+        }
+      }
+    }
+    return {ok:false, oc:col, or:row, cells, rot, why};
   }
   function placementValid(type, rot, oc, or){
-    const def=PLACE_DEFS[type];
     const cells=shapeCells(type, rot);
     const foot=new Set(cells.map(([dc,dr])=>(or+dr)*GRID_COLS+(oc+dc)));
     for(const [dc,dr] of cells){
@@ -1848,51 +1817,70 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(c<0||r<0||c>=GRID_COLS||r>=GRID_ROWS) return {ok:false, why:'off grid'};
       const t=state.estate.tiles[r*GRID_COLS+c];
       if(t.building||t.covered!=null) return {ok:false, why:'occupied'};
-      if(!tileAcceptsBuild(t.terrain, type)) return {ok:false, why:'needs '+def.on};
     }
-    // No-touch rule: a building may not sit edge-adjacent to another building.
-    // Applies from level 1 so the tutorial teaches the same rules the game plays by.
-    if(noTouchActive()){
-      for(const [dc,dr] of cells){
-        const c=oc+dc, r=or+dr;
-        const nb=[[c-1,r],[c+1,r],[c,r-1],[c,r+1]];
-        for(const [nc,nr] of nb){
-          if(nc<0||nr<0||nc>=GRID_COLS||nr>=GRID_ROWS) continue;
-          const ni=nr*GRID_COLS+nc;
-          if(foot.has(ni)) continue;              // part of this same piece — fine
-          const nt=state.estate.tiles[ni];
-          if(nt.building || nt.covered!=null) return {ok:false, why:'must not touch'};
-        }
+    // THE rule: two buildings of the SAME kind may never touch edge-to-edge —
+    // camps of a kind compete for the same land. Different kinds may sit flush:
+    // wood/barracks/wood is legal, wood/wood is not. Diagonals never count.
+    for(const [dc,dr] of cells){
+      const c=oc+dc, r=or+dr;
+      for(const [nc,nr] of [[c-1,r],[c+1,r],[c,r-1],[c,r+1]]){
+        if(nc<0||nr<0||nc>=GRID_COLS||nr>=GRID_ROWS) continue;
+        const ni=nr*GRID_COLS+nc;
+        if(foot.has(ni)) continue;                // part of this same piece — fine
+        const nt=state.estate.tiles[ni];
+        const owner = nt.building ? nt.building
+                    : (nt.covered!=null ? state.estate.tiles[nt.covered].building : null);
+        if(owner && owner.type===type) return {ok:false, why:'same kind may not touch'};
       }
     }
     return {ok:true, cells};
   }
-  function noTouchActive(){ return state.mode==='conquest'; }
   function tryPlaceAt(col,row){
     if(!state.estate || !state.selectedBuild) return;
     if(col<0||row<0||col>=GRID_COLS||row>=GRID_ROWS) return;
-    const type=state.selectedBuild, def=PLACE_DEFS[type], rot=state.rot||0;
+    const type=state.selectedBuild, def=PLACE_DEFS[type];
     const fail=(msg)=>{ estateFlash(col,row,'#c23b34'); estateFloat(col,row,msg,'#e06a5a'); };
-    const {oc,or,cells}=placementOrigin(type, rot, col, row);
-    const v=placementValid(type, rot, oc, or);
-    if(!v.ok){ fail(v.why); return; }
+    const p=placementOrigin(type, state.rot||0, col, row);
+    if(!p.ok){ fail(p.why); return; }
     if(!resAfford(def.cost)){ fail('need '+costStr(def.cost)); return; }
-    if(buildingCount() >= slotsFor(state.level)){ fail('no slots — undo one'); return; }
+    const {oc,or,cells}=p;
+    const rot=p.rot;
     resPay(def.cost);
-    const anchorIdx=or*GRID_COLS+oc;
     const footprint = cells.map(([dc,dr])=>(or+dr)*GRID_COLS+(oc+dc));
+    // Anchor on the FIRST COVERED CELL, not the shape origin: some rotations
+    // (e.g. the S-shaped Lumber Camp) have no cell at their own origin, and
+    // anchoring there created a phantom "occupied" tile of empty-looking grass
+    // that rejected placements beside the notch (felt like "stone can't touch")
+    // and leaked on undo.
+    const anchorIdx=footprint[0];
+    const ac0=anchorIdx%GRID_COLS, ar0=(anchorIdx/GRID_COLS)|0;
     let _mult=0;
     for(const fi of footprint){ _mult += (TERRAIN_MULT[state.estate.tiles[fi].terrain]||1); }
     _mult = _mult/footprint.length;
-    state.estate.tiles[anchorIdx].building={
-      type, trainT:0, pop:1, rot, cells:cells.map(p=>[p[0],p[1]]), footprint,
+    const b={
+      type, pop:1, rot, cells:cells.map(p=>[p[0],p[1]]), footprint,
       yieldMult:_mult,
-      gained:{}, trained:0, paidUpkeep:{}, seq:(state.estate.seq=(state.estate.seq||0)+1)
+      gained:{}, seq:(state.estate.seq=(state.estate.seq||0)+1)
     };
+    state.estate.tiles[anchorIdx].building=b;
     for(const fi of footprint){ if(fi!==anchorIdx) state.estate.tiles[fi].covered=anchorIdx; }
     state.estate.history.push(anchorIdx);
+    // Harvesters pay out their entire yield ONCE, right now — scaled by rich-tile
+    // coverage, the harvest shop tier, and the level. Recorded in gained so Undo
+    // can take it back exactly.
+    if(def.kind==='harvest'){
+      const cap=resourceCap(state.level);
+      for(const k in def.grant){
+        let amt=Math.round(def.grant[k]*_mult*harvestMult()*levelYield());
+        const cur=state.resources[k]||0;
+        if(cur+amt > cap) amt=Math.max(0, cap-cur);
+        state.resources[k]=cur+amt;
+        b.gained[k]=(b.gained[k]||0)+amt;
+        estateFloat(ac0, ar0, '+'+amt+' '+k, '#7bbf5e');
+      }
+    }
     AudioFX.coin && AudioFX.coin();
-    estateFlash(oc,or,'#7bbf5e');
+    estateFlash(ac0,ar0,'#7bbf5e');
     state.selectedBuild=null; state.rot=0;
     renderPalette(); drawEstate(); updateFarmHUD();
     guideNotify('place');
@@ -1907,8 +1895,20 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const def=PLACE_DEFS[b.type];
     for(const k in def.cost){ state.resources[k]=(state.resources[k]||0)+def.cost[k]; }
     if(b.gained){ for(const k in b.gained){ state.resources[k]=(state.resources[k]||0)-b.gained[k]; } }
-    if(b.paidUpkeep){ for(const k in b.paidUpkeep){ state.resources[k]=(state.resources[k]||0)+b.paidUpkeep[k]; } }
-    if(b.trained && def.trains){ state.army[def.trains]=Math.max(0,(state.army[def.trains]||0)-b.trained); }
+    // Removing a trainer shrinks its troop's housing; any soldiers over the new
+    // capacity are disbanded with exact refunds off the paid stack.
+    if(def.kind==='train'){
+      const unit=def.trains;
+      let others=0;
+      for(const t of state.estate.tiles){ const ob=t.building; if(ob && ob!==b && ob.type===b.type) others++; }
+      const newCap=others*(def.cap||0);
+      const stack=(state.paidStack && state.paidStack[unit])||[];
+      while((state.army[unit]||0)>newCap && stack.length){
+        const p=stack.pop();
+        for(const k in p){ state.resources[k]=(state.resources[k]||0)+p[k]; }
+        state.army[unit]--;
+      }
+    }
     for(const k in state.resources){ if(state.resources[k]<0) state.resources[k]=0; }
     for(const fi of (b.footprint||[idx])){ const cov=state.estate.tiles[fi]; if(cov){ if(fi===idx) cov.building=null; else if(cov.covered===idx) cov.covered=null; } }
     const col=idx%GRID_COLS, row=(idx/GRID_COLS)|0;
@@ -1922,7 +1922,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // but restore the level's starting resources and clear the army built this visit.
     genEstate();
     state.resources = startingResources(state.level);
-    state.army={grunt:0, runner:0, brute:0, flyer:0};
+    state.army={};
+    state.paidStack={};
     state.selectedBuild=null; state.rot=0;
     AudioFX.retreat && AudioFX.retreat();
     renderPalette(); sizeEstateCanvas(); drawEstate(); updateFarmHUD();
@@ -1933,36 +1934,9 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   function farmTick(dt){
     if(!state.estate) return;
-    const tiles=state.estate.tiles;
-    for(let i=0;i<tiles.length;i++){
-      const b=tiles[i].building; if(!b) continue;
-      if(b.pop>0) b.pop-=dt*2;
-      const def=PLACE_DEFS[b.type];
-      const col=i%GRID_COLS, row=(i/GRID_COLS)|0;
-      if(def.kind==='harvest'){
-        const cap=resourceCap(state.level);
-        const cur=state.resources[def.produces]||0;
-        let amt=def.rate*(b.yieldMult||1)*harvestMult()*dt;
-        if(cur+amt > cap) amt = Math.max(0, cap-cur);   // clamp to per-level cap
-        state.resources[def.produces]=cur+amt;
-        b.gained[def.produces]=(b.gained[def.produces]||0)+amt;
-      } else {
-        b.trainT+=dt*trainSpeedMult();
-        b.stalled = (b.trainT>=def.time && !resAfford(def.upkeep));
-        if(b.trainT>=def.time){
-          if(resAfford(def.upkeep)){
-            resPay(def.upkeep);
-            for(const k in def.upkeep){ b.paidUpkeep[k]=(b.paidUpkeep[k]||0)+def.upkeep[k]; }
-            state.army[def.trains]=(state.army[def.trains]||0)+1;
-            b.trained=(b.trained||0)+1;
-            b.trainT=0;
-            estateFloat(col, row, '-'+costStr(def.upkeep), '#e0a83f');
-          } else {
-            b.trainT=def.time;
-          }
-        }
-      }
-    }
+    // Payouts are lump-sum at placement and troops are bought by tap, so the
+    // farm loop only animates: building "pop", flashes, and floaters.
+    for(const t of state.estate.tiles){ const b=t.building; if(b && b.pop>0) b.pop-=dt*2; }
     for(let i=estateFlashes.length-1;i>=0;i--){ estateFlashes[i].t-=dt; if(estateFlashes[i].t<=0) estateFlashes.splice(i,1); }
     for(let i=estateFloaters.length-1;i>=0;i--){ estateFloaters[i].t-=dt; if(estateFloaters[i].t<=0) estateFloaters.splice(i,1); }
     drawEstate();
@@ -2051,7 +2025,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       }
     }
     // rotating ghost preview at the last hovered/tapped cell
-    if(state.selectedBuild && buildingCount() < slotsFor(state.level)){
+    if(state.selectedBuild){
       const type=state.selectedBuild, rot=state.rot||0;
       const hov=state.hoverCell;
       const pulse=0.5+0.5*Math.sin(performance.now()/260);
@@ -2065,12 +2039,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           }
         }
       }
-      // strong ghost at the tapped/hovered origin
+      // strong ghost at the tapped/hovered origin — shows exactly what a tap
+      // would place at the CURRENT rotation; red means this rotation can't
+      // cover the tile (the tap's floater says 'rotate to fit' when that's why)
       if(hov){
-        const {oc,or,cells}=placementOrigin(type,rot,hov.col,hov.row);
-        const v=placementValid(type,rot,oc,or);
-        const col = v.ok ? 'rgba(123,191,94,0.5)' : 'rgba(194,59,52,0.45)';
-        const edge= v.ok ? 'rgba(180,245,150,0.95)' : 'rgba(245,140,120,0.95)';
+        const p=placementOrigin(type,rot,hov.col,hov.row);
+        const {oc,or,cells}=p;
+        const col = p.ok ? 'rgba(123,191,94,0.5)' : 'rgba(194,59,52,0.45)';
+        const edge= p.ok ? 'rgba(180,245,150,0.95)' : 'rgba(245,140,120,0.95)';
         const fset=new Set();
         for(const [dc,dr] of cells){ const c=oc+dc, r=or+dr; if(c>=0&&r>=0&&c<GRID_COLS&&r<GRID_ROWS) fset.add(r*GRID_COLS+c); }
         g.fillStyle=col;
@@ -2100,33 +2076,16 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
   }
   function drawTile(g,t,x,y,S){
-    const base=TERRAIN_COL[t.terrain];
-    const kind=terrainBase(t.terrain);          // woods/rock/soil/grass for decoration
-    const rich=(TERRAIN_MULT[t.terrain]||1)>1;  // is this a bonus tile?
-    g.fillStyle=base; g.fillRect(x,y,S,S);
+    const rich = t.terrain==='rich';
+    g.fillStyle=TERRAIN_COL[t.terrain]||TERRAIN_COL.grass; g.fillRect(x,y,S,S);
     g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(x,y,S,S*0.5);
     g.strokeStyle='rgba(0,0,0,0.28)'; g.lineWidth=1; g.strokeRect(x+0.5,y+0.5,S-1,S-1);
-    const cx=x+S/2, cy=y+S/2;
-    if(kind==='woods'){
-      const trees= rich
-        ? [[0.28,0.32,0.22],[0.66,0.28,0.20],[0.46,0.64,0.24],[0.22,0.70,0.17],[0.78,0.62,0.15]]
-        : [[0.30,0.34,0.20],[0.66,0.30,0.18],[0.48,0.66,0.22],[0.24,0.70,0.15]];
-      for(const [fx,fy,rr] of trees){
-        const tx=x+S*fx, ty=y+S*fy;
-        g.fillStyle= rich?'#0c1f08':'#132a0f'; g.beginPath(); g.arc(tx,ty,S*rr,0,Math.PI*2); g.fill();
-        g.fillStyle= rich?'#2e5820':'#39642a'; g.beginPath(); g.arc(tx-S*0.03,ty-S*0.03,S*rr*0.66,0,Math.PI*2); g.fill();
-        g.fillStyle= rich?'#5f9a44':'#4f8038'; g.beginPath(); g.arc(tx-S*0.05,ty-S*0.05,S*rr*0.32,0,Math.PI*2); g.fill();
+    if(rich){
+      // lush tufts so bonus land reads even before the sparkle badge
+      g.fillStyle='rgba(150,220,100,0.7)';
+      for(const [gx,gy] of [[0.28,0.34],[0.6,0.52],[0.4,0.72],[0.72,0.3]]){
+        g.beginPath(); g.arc(x+S*gx,y+S*gy,S*0.055,0,Math.PI*2); g.fill();
       }
-    } else if(kind==='rock'){
-      for(const [dx,dy,r] of [[-0.16,0.05,0.16],[0.14,-0.02,0.13],[0.02,0.2,0.11]]){
-        g.fillStyle= rich?'#7a6a44':'#565b61'; g.beginPath(); g.arc(cx+dx*S,cy+dy*S,r*S,0,Math.PI*2); g.fill();
-        g.fillStyle= rich?'#b89a63':'#7c828a'; g.beginPath(); g.arc(cx+dx*S-1,cy+dy*S-1,r*S*0.6,0,Math.PI*2); g.fill(); }
-    } else if(kind==='soil'){
-      g.strokeStyle='rgba(0,0,0,0.25)'; g.lineWidth=2;
-      for(let i=1;i<4;i++){ g.beginPath(); g.moveTo(x+S*0.15,y+S*i/4); g.lineTo(x+S*0.85,y+S*i/4); g.stroke(); }
-      if(rich){ g.fillStyle='rgba(120,200,90,0.7)';
-        for(const [gx,gy] of [[0.28,0.3],[0.6,0.5],[0.4,0.72],[0.72,0.28]]){
-          g.beginPath(); g.arc(x+S*gx,y+S*gy,S*0.05,0,Math.PI*2); g.fill(); } }
     } else {
       g.fillStyle='rgba(0,0,0,0.08)';
       g.beginPath(); g.arc(x+S*0.7,y+S*0.7,S*0.05,0,Math.PI*2); g.arc(x+S*0.3,y+S*0.4,S*0.04,0,Math.PI*2); g.fill();
@@ -2154,14 +2113,6 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     g.fillStyle='rgba(255,255,255,0.28)'; g.fillRect(cx-w/2,cy-w/2,w,w*0.3);
     g.fillStyle='rgba(0,0,0,0.3)'; g.fillRect(cx-w/2,cy+w*0.2,w,w*0.3);
     g.strokeStyle='rgba(0,0,0,0.6)'; g.lineWidth=1.5; g.strokeRect(cx-w/2,cy-w/2,w,w);
-    if(def.kind==='train'){
-      const p=Math.min(1,b.trainT/def.time);
-      g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=3;
-      g.beginPath(); g.arc(cx,cy,w*0.7,-Math.PI/2,-Math.PI/2+Math.PI*2); g.stroke();
-      g.strokeStyle = b.stalled ? '#c23b34' : '#7bbf5e'; g.lineWidth=3;
-      g.beginPath(); g.arc(cx,cy,w*0.7,-Math.PI/2,-Math.PI/2+p*Math.PI*2); g.stroke();
-      if(b.stalled){ g.fillStyle='#c23b34'; g.beginPath(); g.arc(cx,cy-w*0.7,3,0,Math.PI*2); g.fill(); }
-    }
   }
 
   function recommendedHost(level){
@@ -2182,9 +2133,26 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     _woodEl.style.color = state.resources.wood>=_cap-0.5 ? '#e0844a' : '';
     _stoneEl.style.color = state.resources.stone>=_cap-0.5 ? '#e0844a' : '';
     _foodEl.style.color = state.resources.food>=_cap-0.5 ? '#e0844a' : '';
-    for(const key of UNIT_ORDER){ const el=document.getElementById('armycount-'+key); if(el) el.textContent=state.army[key]||0; }
+    for(const key of UNIT_ORDER){
+      const n=state.army[key]||0, cap=unitCap(key);
+      const el=document.getElementById('armycount-'+key);
+      if(el) el.textContent = cap>0 ? (n+'/'+cap) : n;
+      const pel=document.getElementById('armyprice-'+key);
+      if(pel){
+        if(cap<=0){
+          pel.textContent='needs '+PLACE_DEFS[TRAINER_OF[key]].name;
+          pel.style.color='var(--ink-dim)';
+        } else if(n>=cap){
+          pel.textContent='+ '+PLACE_DEFS[TRAINER_OF[key]].name;   // housing full — build another
+          pel.style.color='#e0a83f';
+        } else {
+          const p=unitPrice(key);
+          pel.textContent=costStr(p);
+          pel.style.color=resAfford(p)?'#7bbf5e':'#c96a5a';
+        }
+      }
+    }
     const n=armyTotal(), rec=recommendedHost(state.level), min=minimumHost(state.level);
-    const used=buildingCount(), slots=slotsFor(state.level);
     const march=document.getElementById('marchBtn');
     if(march){
       const missing=missingRequired();
@@ -2245,12 +2213,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         +(!unlocked?' locked':(resAfford(def.cost)?'':' cant'));
       if(unlocked){
         const detail = def.kind==='harvest'
-          ? ('<span style="color:#7bbf5e">+'+def.rate.toFixed(1)+' '+def.produces+'</span>')
-          : ('<span style="color:#e0a83f">'+costStr(def.upkeep)+'/tr</span>');
+          ? ('<span style="color:#7bbf5e">+'+def.grant[def.produces]+' '+def.produces+' once</span>')
+          : ('<span style="color:#e0a83f">houses '+def.cap+' · '+costStr(unitPrice(def.trains))+' ea</span>');
         btn.innerHTML=
           '<canvas class="pal-shape" width="48" height="48"></canvas>'+
           '<div class="pal-nm">'+def.name+'</div>'+
-          '<div class="pal-cost">'+def.on+' · '+costStr(def.cost)+'</div>'+
+          '<div class="pal-cost">'+costStr(def.cost)+'</div>'+
           '<div class="pal-cost">'+detail+'</div>';
         // show at the live rotation if this piece is selected, else default
         drawShapeIcon(btn.querySelector('canvas'), type, sel?(state.rot||0):0);
@@ -2292,11 +2260,47 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const def=UNIT_DEFS[key];
       const cell=document.createElement('div');
       cell.className='army-cell';
-      cell.innerHTML='<canvas width="64" height="64"></canvas>'+
-        '<div class="army-count" id="armycount-'+key+'">0</div>';
+      cell.id='armycell-'+key;
+      cell.innerHTML='<button class="army-minus" id="armyminus-'+key+'" aria-label="disband one">−</button>'+
+        '<canvas width="64" height="64"></canvas>'+
+        '<div class="army-col">'+
+          '<div class="army-count" id="armycount-'+key+'">0</div>'+
+          '<div class="army-price" id="armyprice-'+key+'"></div>'+
+        '</div>';
       drawIconSprite(cell.querySelector('canvas').getContext('2d'), def);
+      cell.addEventListener('pointerdown', e=>{ e.preventDefault(); buyTroop(key); });
+      cell.querySelector('.army-minus').addEventListener('pointerdown', e=>{
+        e.preventDefault(); e.stopPropagation(); disbandTroop(key);
+      });
       wrap.appendChild(cell);
     }
+  }
+  // Tap a roster cell to muster one soldier with resources; tap − to refund one
+  // bought this visit (exact price paid, via the stack). Requires its trainer.
+  function buyTroop(key){
+    if(!unitAvailable(key)) return;
+    const cell=document.getElementById('armycell-'+key);
+    const deny=()=>{ if(cell){ cell.classList.remove('deny'); void cell.offsetWidth; cell.classList.add('deny'); } AudioFX.retreat && AudioFX.retreat(); };
+    if(trainerCountFor(key)<=0){ deny(); return; }
+    if((state.army[key]||0) >= unitCap(key)){ deny(); return; }   // housing full — build another trainer
+    const p=unitPrice(key);
+    if(!resAfford(p)){ deny(); return; }
+    resPay(p);
+    if(!state.paidStack) state.paidStack={};
+    (state.paidStack[key]=state.paidStack[key]||[]).push(p);
+    state.army[key]=(state.army[key]||0)+1;
+    AudioFX.coin && AudioFX.coin();
+    updateFarmHUD();
+    guideNotify('buy');
+  }
+  function disbandTroop(key){
+    const stack=state.paidStack && state.paidStack[key];
+    if(!stack || !stack.length || (state.army[key]||0)<=0) return;
+    const p=stack.pop();
+    for(const k in p){ state.resources[k]=(state.resources[k]||0)+p[k]; }
+    state.army[key]--;
+    AudioFX.retreat && AudioFX.retreat();
+    updateFarmHUD();
   }
   function renderFarm(){
     if(!state.estate) genEstate();
@@ -2311,12 +2315,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(level===1) return 5;            // gentle first siege — march with a small band
     return Math.max(8, Math.ceil(recommendedHost(level)*0.6));
   }
-  function slotsFor(level){ return 10 + level; }
-  function buildingCount(){ return state.estate ? state.estate.tiles.filter(t=>t.building).length : 0; }
+  // No slot cap: the land itself is the only build budget. Boards grow from
+  // 7×7 to 12×12 across the campaign, so the constraint stays visible on the map.
   function startingResources(level){
     // Sized so every level's REQUIRED buildings are affordable up front with headroom
-    // (L2 requires ~107 wood: lumber+farm+quarry+barracks+range). Harvesters then
-    // sustain training upkeep and let you build a bigger host.
+    // (L2 requires ~107 wood: lumber+farm+quarry+barracks+range). Camp payouts then
+    // fund the troop purchases; packing more camps buys a bigger host.
     const m = (state.custom && state.custom.resMult) || 1;
     return {
       wood: Math.round((120 + (level-1)*16) * m),
@@ -2333,8 +2337,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return Math.round(base * m * shopM);
   }
   // Shop-derived multipliers applied during the farm phase.
-  function harvestMult(){ return 1 + (state.shop.harvest||0)*0.15; }   // +15% per tier
-  function trainSpeedMult(){ return 1 + (state.shop.train||0)*0.15; }  // +15% faster per tier
+  function harvestMult(){ return 1 + (state.shop.harvest||0)*0.15; }   // +15% payout per tier
+  function trainDiscount(){ return Math.max(0.55, 1 - (state.shop.train||0)*0.07); } // −7% troop price per tier
   // Shape-shrink: each shrink tier removes the "last" cell from pieces larger than
   // this many cells, making big footprints easier to place. Tier1 shrinks 4-cell
   // pieces to 3; tier2 also shrinks 3-cell pieces to 2 (never below 2).
@@ -2374,6 +2378,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.palPage=0; state.rot=0; state.selectedBuild=null;
     genEstate();
     state.resources = startingResources(state.level);
+    // Each level's muster is self-contained: the army resets, so every board is
+    // a fresh, tunable puzzle. (Battle survivors already paid out as coins.)
+    state.army={};
+    state.paidStack={};                                   // troop purchases this visit (for refunds)
     document.getElementById('farm-screen').classList.add('show');
     renderFarm();
     // re-measure once layout settles (mobile viewport/safe-area can shift after paint)
@@ -2414,15 +2422,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
 
   const GUIDE_STEPS=[
-    {sel:'#palbtn-lumber',    tip:'Tap the Lumber Camp. Each building is a puzzle piece with a set shape.', on:'sel:lumber'},
-    {sel:'#rotateBtn',        tip:'Tap Rotate to turn the piece. Every square of it must land on WOODS (dark green).', on:'place'},
-    {sel:'#palbtn-farmhouse', tip:'Now the Farmhouse — it feeds your troops. It only fits on SOIL (brown furrows).', on:'sel:farmhouse'},
-    {sel:'#estate-wrap',      tip:'Green squares show a legal fit; red means wrong terrain or touching another building — pieces need a gap between them. Tap to place.', on:'place'},
-    {sel:'#palbtn-quarrycamp',tip:'The Quarry gives stone for a Barracks. It fits only on ROCK (grey).', on:'sel:quarrycamp'},
-    {sel:'#estate-wrap',      tip:'Rotate if needed, then drop it on the rock.', on:'place'},
-    {sel:'#palbtn-barracks',  tip:'The Barracks trains spearmen and sits on GRASS.', on:'sel:barracks'},
-    {sel:'#estate-wrap',      tip:'Place it on open grass, at least one square clear of your other buildings — no two buildings may touch. Stuck? Undo a piece, or Reset for a fresh board.', on:'place'},
-    {sel:'#marchBtn',         tip:'Solve the supply puzzle — enough harvesters to feed your barracks — then March to Siege.', on:'done'},
+    {sel:'#palbtn-lumber',    tip:'Tap the Lumber Camp. Every building is a puzzle piece that pays out ONCE, the moment you place it — placement is everything.', on:'sel:lumber'},
+    {sel:'#estate-wrap',      tip:'Tap the field to place it (Rotate turns the piece first). Cover the sparkling RICH tiles — each rich square it covers counts double.', on:'place'},
+    {sel:'#palbtn-farmhouse', tip:'Now the Farmhouse — it pays out food, which buys spearmen.', on:'sel:farmhouse'},
+    {sel:'#estate-wrap',      tip:'ONE RULE: two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush — wood/barracks/wood is fine, wood/wood is not.', on:'place'},
+    {sel:'#palbtn-barracks',  tip:'The Barracks houses 8 Spearmen. Want a bigger host? Build MORE barracks — each must keep clear of its twins.', on:'sel:barracks'},
+    {sel:'#estate-wrap',      tip:'Place it anywhere — even flush against your camps — as long as it never touches another Barracks.', on:'place'},
+    {sel:'#armycell-grunt',   tip:'Tap HERE to muster a spearman with your food (tap − to refund one). The count shows housing: 0/8.', on:'buy'},
+    {sel:'#marchBtn',         tip:'Short on troops? Undo and repack — a tighter estate pays for a bigger army. Then March to Siege.', on:'done'},
   ];
   let guideStep=-1;
   let guideDoneThisRun=false;
@@ -3530,11 +3537,20 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.mode==='conquest'){
       const won=state.level;
       // Award coins for the shop. Scales with level; +50% under Plunder.
-      const coinReward = Math.round((10 + won*4) * goldMult());
+      const baseReward = Math.round((10 + won*4) * goldMult());
+      // Thrift bonus: survivors muster out for +1 coin per 2, capped so it can
+      // at most double the reward. Troops never carry over — the next estate is
+      // a fresh puzzle — but conserving them in battle still pays.
+      const survivors = armyTotal();
+      const thrift = Math.min(baseReward, Math.floor(survivors/2));
+      const coinReward = baseReward + thrift;
+      state.army = {};
       state.coins += coinReward;
       const bt = battleFor(won);
       state._wonBattle = bt;
-      showBanner('VICTORY!  '+(bt ? bt.name+' has fallen!' : 'Siege '+won+' is broken!')+'  +'+coinReward+' coins', 2.6);
+      showBanner('VICTORY!  '+(bt ? bt.name+' has fallen!' : 'Siege '+won+' is broken!')
+        +'  +'+coinReward+' coins'
+        +(thrift>0 ? ' ('+survivors+' survivors muster out: +'+thrift+')' : ''), 2.6);
       setStreakText('The walls are yours');
       AudioFX.fanfare();
       for(let i=0;i<3;i++){
@@ -4563,11 +4579,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // ─────────────────────────── The Quartermaster (shop) ───────────────────────────
   // Repeatable upgrades escalate in cost; one-time upgrades are pricey but powerful.
   const SHOP_ITEMS = [
-    { key:'harvest', cat:'Economy', emoji:'🪓', name:'Faster Harvest',
-      desc:'+15% resource gathering, permanently.',
+    { key:'harvest', cat:'Economy', emoji:'🪓', name:'Richer Harvest',
+      desc:'+15% resource payout from every camp you place, permanently.',
       max:6, cost:(lvl)=> 12 + lvl*8 },
     { key:'train', cat:'Economy', emoji:'⚒️', name:'Drillmasters',
-      desc:'+15% troop training speed, permanently.',
+      desc:'Troops cost 7% less to muster, permanently.',
       max:6, cost:(lvl)=> 14 + lvl*9 },
     { key:'cap', cat:'Economy', emoji:'🛢️', name:'Deeper Stores',
       desc:'+50% resource storage cap, permanently.',
@@ -4819,10 +4835,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     'BUILD SUPPLY CAMPS with the button below. Each camp costs muster now but generates muster over time, and they stack.\n\n' +
     'The choice is yours every moment: spend muster on camps to grow your economy, or on troops to attack now. Pick a lane, then send your soldiers where the towers are thin.';
   const TUT_TEXT_CONQUEST =
-    'This is the Conquest campaign — build an estate, raise an army, then attack.\n\n' +
-    '1. HARVEST — the map has woods, rock and fertile soil. Select a Lumber Camp, Quarry or Farmhouse, then tap a matching tile to place it. It produces that resource over time.\n\n' +
-    '2. TRAIN — place a Barracks, Archery Range, Forge or Siege Works on grass. Each trains its troop over time, using your resources for upkeep.\n\n' +
-    '3. MARCH — when your army is ready, march to the siege. Your troops are finite — every soldier you deploy is spent — so build up before you attack.';
+    'This is the Conquest campaign — pack an estate, muster an army, then attack.\n\n' +
+    '1. BUILD — every building pays out ONCE, the moment it is placed. Camps grant wood, stone or food; sparkling RICH tiles count double for any building that covers them.\n\n' +
+    '2. THE ONE RULE — two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush. Packing the board well IS your economy.\n\n' +
+    '3. MUSTER & MARCH — a Barracks, Range or Forge HOUSES a set number of its troop; tap the roster to buy soldiers with your resources, and build more trainers to raise the ceiling. Each siege gets a fresh muster — troops never carry over, but survivors muster out for bonus coins — so pack, muster, then march.';
   function startTutorial(){
     if(localStorage_getBool('assedio_tut_'+state.mode)){ beginGame(); return; }
     document.getElementById('tutText').textContent = state.mode==='supply' ? TUT_TEXT_SUPPLY : TUT_TEXT;
