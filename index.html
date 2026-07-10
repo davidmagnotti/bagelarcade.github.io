@@ -793,8 +793,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   // One terrain. RICH tiles are bonus squares: any building cell covering one
   // counts double toward that building's payout.
-  const TERRAIN_COL = { grass:'#6f8a3e', rich:'#7d9c44' };
-  const TERRAIN_MULT = { grass:1, rich:2 };
+  const TERRAIN_COL = { grass:'#6f8a3e', rich:'#7d9c44', ocean:'#2c5a74' };
+  const TERRAIN_MULT = { grass:1, rich:2, ocean:0 };
   // Buildings pay out ONCE, at placement. Harvesters grant a lump of resources
   // (scaled by rich-tile coverage); trainers unlock their troop for purchase —
   // tap the roster to muster soldiers at `price`. Extra trainers of the same
@@ -1014,19 +1014,43 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // Build an all-grass size×size board scattered with rich tiles: a few small
   // clusters (worth contorting a whole piece onto) plus lone singles (worth a
   // corner of one). Every board is trivially placeable — the puzzle is packing.
-  function genBoard(size, rand){
+  function genBoard(size, rand, level){
     const N=size*size;
     const grid=new Array(N).fill('.');
+    // ── The coast (siege 6+): the campaign reaches the sea, and the sea takes
+    // its share of the land. A jagged coastline is carved along one random
+    // edge — unbuildable water that squeezes the packing puzzle tighter as the
+    // wars go on. (Future hook: fishing wharves can require touching '~'.)
+    if((level||0)>=6){
+      const maxD = level<=8 ? 2 : level<=12 ? 3 : 4;   // how far inland the water reaches
+      const cap = Math.floor(N*0.2);                    // the sea never claims more than a fifth
+      const edge = Math.floor(rand()*4);                // 0 top, 1 right, 2 bottom, 3 left
+      let d = Math.max(1, Math.round(maxD*0.6));        // random-walk depth: coves & headlands
+      let water = 0;
+      for(let i=0;i<size;i++){
+        const depth = Math.min(d, cap-water);           // budget runs dry → coast tapers to a headland
+        for(let k=0;k<depth;k++){
+          const idx = edge===0 ? k*size+i
+                    : edge===1 ? i*size+(size-1-k)
+                    : edge===2 ? (size-1-k)*size+i
+                    :            i*size+k;
+          grid[idx]='~'; water++;
+        }
+        const step = rand();
+        d += step<0.34 ? -1 : step<0.68 ? 0 : 1;
+        d = Math.max(0, Math.min(maxD, d));
+      }
+    }
     const scale=N/144; // relative to a full 12×12
     const clusters=Math.max(2, Math.round((2+Math.floor(rand()*2))*scale+0.5));
     for(let i=0;i<clusters;i++){
       const w=1+Math.floor(rand()*2), h=1+Math.floor(rand()*2);
       const c0=Math.floor(rand()*(size-w));
       const r0=Math.floor(rand()*(size-h));
-      for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r*size+c]='*';
+      for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++){ if(grid[r*size+c]==='.') grid[r*size+c]='*'; }
     }
     const singles=Math.max(2, Math.round((3+Math.floor(rand()*4))*scale));
-    for(let i=0;i<singles;i++){ grid[Math.floor(rand()*N)]='*'; }
+    for(let i=0;i<singles;i++){ const idx=Math.floor(rand()*N); if(grid[idx]==='.') grid[idx]='*'; }
     const rows=[];
     for(let r=0;r<size;r++){ rows.push(grid.slice(r*size,(r+1)*size).join('')); }
     return rows;
@@ -1057,7 +1081,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function generateLevel(level){
     if(_genLevelCache[level]) return _genLevelCache[level];
     const rand=mulberry32(level*2654435761);
-    let farm=genBoard(boardSizeFor(level), rand);
+    let farm=genBoard(boardSizeFor(level), rand, level);
     if(!farm){ // fall back to hardest authored board if generation ever fails
       const def=CONQUEST_LEVELS[CONQUEST_LEVELS.length-1];
       _genLevelCache[level]={farm:def.farm.slice(), require:def.require.slice(), turrets:def.turrets, wallMult:def.wallMult, generated:true};
@@ -1077,7 +1101,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return generateLevel(level);
   }
   const TERRAIN_LEGEND={
-    '.':'grass','*':'rich',
+    '.':'grass','*':'rich','~':'ocean',
     // legacy map chars degrade gracefully (old saves / stray defs)
     'W':'grass','R':'grass','S':'grass','w':'rich','r':'rich','s':'rich',
   };
@@ -1771,6 +1795,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const c=oc+dc, r=or+dr;
       if(c<0||r<0||c>=GRID_COLS||r>=GRID_ROWS) return {ok:false, why:'off grid'};
       const t=state.estate.tiles[r*GRID_COLS+c];
+      if(t.terrain==='ocean') return {ok:false, why:'open water'};
       if(t.building||t.covered!=null) return {ok:false, why:'occupied'};
     }
     // THE rule: two buildings of the SAME kind may never touch edge-to-edge —
@@ -2031,6 +2056,20 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
   }
   function drawTile(g,t,x,y,S){
+    if(t.terrain==='ocean'){
+      g.fillStyle=TERRAIN_COL.ocean; g.fillRect(x,y,S,S);
+      g.fillStyle='rgba(140,200,225,0.10)'; g.fillRect(x,y,S,S*0.45);
+      g.strokeStyle='rgba(0,0,0,0.35)'; g.lineWidth=1; g.strokeRect(x+0.5,y+0.5,S-1,S-1);
+      g.strokeStyle='rgba(185,222,238,0.55)'; g.lineWidth=Math.max(1,S*0.05); g.lineCap='round';
+      for(const [wx,wy] of [[0.28,0.34],[0.62,0.58],[0.38,0.8]]){
+        g.beginPath();
+        g.moveTo(x+S*(wx-0.11), y+S*wy);
+        g.quadraticCurveTo(x+S*wx, y+S*(wy-0.09), x+S*(wx+0.11), y+S*wy);
+        g.stroke();
+      }
+      g.lineCap='butt';
+      return;
+    }
     const rich = t.terrain==='rich';
     g.fillStyle=TERRAIN_COL[t.terrain]||TERRAIN_COL.grass; g.fillRect(x,y,S,S);
     g.fillStyle='rgba(255,255,255,0.05)'; g.fillRect(x,y,S,S*0.5);
@@ -2342,6 +2381,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // re-measure once layout settles (mobile viewport/safe-area can shift after paint)
     requestAnimationFrame(()=>{ sizeEstateCanvas(); drawEstate(); });
     if(state.level===1) startGuide();
+    // First landfall: the campaign has reached the sea.
+    if(state.estate.tiles.some(t=>t.terrain==='ocean') && !localStorage_getBool('ewf_coast')){
+      localStorage_setBool('ewf_coast', true);
+      setTimeout(()=>{
+        estateFloat(Math.floor(GRID_COLS/2), Math.min(GRID_ROWS-1, 2), 'The sea takes its share of the land', '#a8d8ec');
+        drawEstate();
+      }, 600);
+    }
   }
   function placedTypes(){
     const s=new Set();
