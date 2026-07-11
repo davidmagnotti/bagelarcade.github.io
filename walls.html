@@ -1840,6 +1840,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       })();
     }
     function grant(id){
+      if(state.daily && id!=='daily_won') return;   // the Daily stays quiet
       if(got[id]) return;
       const d=DEFS.find(x=>x.id===id); if(!d) return;
       got[id]=true; save(); toast(d);
@@ -2727,8 +2728,20 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       // gate and the wall can never drift apart (see conquestWallHP).
       state.castleMaxHP = conquestWallHP(state.level);
     } else {
-      const wallBase = state.level===1 ? 300 : 760;
-      state.castleMaxHP = Math.round(wallBase * Math.pow(1.27, state.level-1) * (0.55 + 0.45*ramp) * PACE.wall);
+      // Regen-economy modes (classic siege, survival, the Daily): the old
+      // 1.27^level exponential outran what the gold trickle could ever break.
+      // A level-10 Daily reached 13,000 HP against a 230-second clock. Linear
+      // growth matches the old curve through the early levels and tames the
+      // tail; the 1.75 here is fixed on purpose so conquest wall tuning
+      // (PACE.wall) can move without inflating these modes again.
+      if(state.daily){
+        // The Daily is a SPRINT: a wall a few hundred strong, everyone racing
+        // the same clock. The level picks the terrain and towers, not the bulk.
+        state.castleMaxHP = Math.round(440 + state.level*14);
+      } else {
+        const wallBase = state.level===1 ? 300 : 760;
+        state.castleMaxHP = Math.round(wallBase * (1 + 0.42*(state.level-1)) * (0.55 + 0.45*ramp) * 1.75);
+      }
     }
     // Champion sieges (every 4th level): a boss guards the gate. The wall itself
     // is thinner, but it cannot be harmed until the champion falls.
@@ -6575,13 +6588,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const day = dailyKey(), seed = dailySeed('ewf-'+day);
     state.mode = 'siege';
     state.custom = null;
-    state.daily = {day, seed, level: 5 + (seed % 8)};   // sieges 5–12: real teeth, some days a champion
+    // Land and coastal battlefields only: full naval sieges (9\u201312) need the
+    // harbor fleet, which the Daily's roster doesn't carry. 13\u201315 bring the
+    // coastal waterways for variety; 8 and 16 are champion days.
+    const LAND_DAYS=[5,6,7,8,13,14,15,16];
+    state.daily = {day, seed, level: LAND_DAYS[seed % LAND_DAYS.length]};
     state.level = state.daily.level;
     state.gold = 120;                     // the old muster pool and gold purse, merged
     state.manaRegen = 9 + state.level*0.2; // now the rate of the gold trickle
 
     state.upgrades = {vigor:0, might:0, swift:0, ritual:0, warcamp:0, plunder:0, drill:0};
-    state.unlocked = {grunt:true, runner:true, brute:true, flyer:true, shield:false, sapper:false, monk:false};
+    // Ships unlocked so coastal days (13+) can sail their waterways.
+    state.unlocked = {grunt:true, runner:true, brute:true, flyer:true, shield:true, sapper:true, monk:false};
     state.stats = {killed:0, breaches:0, dmgDealt:0};
     document.getElementById('title-screen').classList.add('hidden');
     // Everyone faces the same walls: pin Math.random to the day's seed while
@@ -6993,6 +7011,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   const coachShown = {};
   function coachSeen(id){ return coachShown[id] || localStorage_getBool('assedio_coach_'+id); }
   function showCoach(id, text){
+    if(state.daily) return;   // the Daily explains nothing: same walls, no interruptions
     if(coachActive || coachSeen(id) || !state.started) return;
     coachShown[id] = true;
     localStorage_setBool('assedio_coach_'+id, true);
