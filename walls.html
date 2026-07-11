@@ -26,7 +26,7 @@
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; touch-action:manipulation;}
   html,body{
     margin:0; padding:0; height:100%; background:#0a0a0b;
-    font-family:'Trajan Pro','Optima','Palatino Linotype','Palatino',Georgia,serif;
+    font-family:'Avenir Next','Avenir','Segoe UI','Helvetica Neue',Arial,sans-serif;
     color:var(--ink); overscroll-behavior:none; touch-action:manipulation;
   }
   #app{
@@ -155,13 +155,13 @@
   }
   #farm-screen.show{display:flex;}
   #farm-res{
-    display:flex; gap:8px; position:sticky; top:0; z-index:2;
-    padding:8px; background:var(--stone-2);
+    display:flex; gap:5px; position:sticky; top:0; z-index:2;
+    padding:8px 6px; background:var(--stone-2);
     border:1px solid var(--stone-0);
     box-shadow:inset 1px 1px 0 var(--stone-3), inset -1px -1px 0 var(--stone-0);
   }
-  .res-pill{flex:1; display:flex; align-items:center; justify-content:center; gap:5px; font-size:13px;}
-  .res-pill b{color:var(--ink); font-weight:700; font-size:15px;}
+  .res-pill{flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; gap:5px; font-size:13px; white-space:nowrap;}
+  .res-pill b{color:var(--ink); font-weight:600; font-size:15px;}
   .res-lbl{font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-dim);}
   .res-ico{width:13px; height:13px; display:inline-block; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4);}
   .res-wood{background:#8a5a2c;}
@@ -175,7 +175,9 @@
     position:relative; width:100%; background:#1a1a17;
     border:2px solid var(--stone-0);
     box-shadow:inset 2px 2px 6px rgba(0,0,0,0.7);
-    overflow:hidden;
+    /* safety net: if the readability floor still overflows on a tiny screen,
+       the board scrolls instead of hiding its bottom rows */
+    overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch;
   }
   #estate{display:block; margin:0 auto; touch-action:manipulation;}
   #guide{position:fixed; inset:0; z-index:120; display:none; pointer-events:none;}
@@ -355,7 +357,7 @@
   }
   .unit-btn:active{box-shadow:inset 2px 2px 4px rgba(0,0,0,0.7);}
   .unit-btn.disabled{opacity:.55;}
-  .unit-icon{width:48px; height:48px; display:block; filter:drop-shadow(1px 2px 1px rgba(0,0,0,.7));}
+  .unit-icon{width:58px; height:58px; display:block; filter:drop-shadow(1px 2px 1px rgba(0,0,0,.7));}
   .unit-name{font-size:10px; font-weight:700; letter-spacing:.2px; text-align:center; line-height:1.15;}
   .unit-cost{font-size:11px; font-weight:700; color:var(--bronze-hi); text-shadow:1px 1px 0 #000;}
   .unit-cd{
@@ -550,6 +552,39 @@
     width:150px; height:2px; margin:9px auto 0;
     background:linear-gradient(90deg, transparent, var(--bronze), transparent);
   }
+  #titleDev{
+    /* sits directly under the sound button, dimmed, a quiet testing door */
+    position:absolute; top:calc(62px + env(safe-area-inset-top)); right:12px; z-index:5;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:var(--ink-dim);
+    background:var(--stone-2); border:2px solid rgba(200,160,90,0.35);
+    box-shadow: inset 1px 1px 0 var(--stone-3), inset -1px -1px 0 var(--stone-0), 2px 2px 0 #000;
+    opacity:0.55; cursor:pointer; user-select:none; filter:grayscale(0.7);
+  }
+  #titleDev:hover{opacity:0.95; filter:none;}
+  /* these must open ABOVE the title screen (z-index 100) */
+  #dev-overlay, #confirm-overlay, #story-overlay{ z-index:130; }
+  .dev-note{
+    font-size:11.5px; line-height:1.5; color:var(--ink-dim);
+    background:rgba(200,160,90,0.08); border:1px solid rgba(200,160,90,0.25);
+    border-radius:8px; padding:7px 10px; margin-bottom:8px;
+  }
+  .dev-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; padding:7px 0; border-bottom:1px solid rgba(200,160,90,0.14);
+    font-size:13px; color:var(--ink-dim);
+  }
+  .dev-row input, .dev-row select{
+    background:#14100b; color:var(--ink); border:1px solid var(--bronze);
+    border-radius:6px; padding:6px 8px; font:inherit; width:150px;
+    /* 16px minimum: anything smaller makes iOS Safari zoom the page on focus */
+    font-size:16px;
+  }
+  .dev-seg button{
+    background:#14100b; color:var(--ink-dim); border:1px solid var(--bronze);
+    border-radius:6px; padding:6px 12px; font:inherit; font-size:12px; cursor:pointer;
+  }
+  .dev-seg button.on{ background:var(--bronze); color:#14100b; font-weight:700; }
   #featToast{
     position:absolute; top:10px; left:50%; transform:translate(-50%,-140%);
     z-index:34; pointer-events:none;
@@ -579,6 +614,29 @@
     margin:9px auto 0; max-width:78%;
     font-style:italic; font-size:12px; line-height:1.45; color:var(--ink-dim);
   }
+  .army-cell.locked{ opacity:.55; filter:saturate(.5); }
+  .army-cell.locked .army-minus{ visibility:hidden; }
+  /* Avenir Next renders heavier than the old faces: dial weights down a notch */
+  b, strong{ font-weight:600; }
+  h1{ font-weight:600; }
+  .action-btn, .title-btn, .unit-btn, .pal-btn, .buy-btn, .shop-buy{ font-weight:500; }
+  .army-count, .hud-label{ font-weight:600; }
+  /* Farm toast: quiet notice above the roster */
+  #farmToast{
+    position:fixed; left:50%; bottom:96px; transform:translate(-50%,12px);
+    background:var(--stone-1); border:1px solid var(--bronze);
+    color:var(--ink); padding:9px 14px; border-radius:8px;
+    font-size:13px; opacity:0; pointer-events:none; z-index:60;
+    transition:opacity .18s ease, transform .18s ease; max-width:82vw; text-align:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.5);
+  }
+  #farmToast.show{ opacity:1; transform:translate(-50%,0); }
+  .shop-cat-card .s-name{ font-size:14px; }
+  .s-afford{ color:#7bbf5e; }
+  .shop-back-btn{
+    width:100%; margin:2px 0 8px; padding:10px;
+    color:var(--bronze-hi); font-size:13px;
+  }
 </style>
 </head>
 <body>
@@ -588,26 +646,26 @@
     <div class="mode-title">Choose your campaign</div>
     <div class="mode-card" id="modeSiege">
       <div class="mode-name">Siege</div>
-      <div class="mode-desc">Muster gathers on its own. Pure tactical assault — pick lanes and break the walls.</div>
+      <div class="mode-desc">Your army gathers on its own. Pure tactical assault: pick lanes and break the walls.</div>
     </div>
     <div class="mode-card" id="modeSupply">
       <div class="mode-name">Supply Campaign</div>
-      <div class="mode-desc">Muster must be farmed. Build supply camps behind your lines, then balance growing your economy against pressing the attack.</div>
+      <div class="mode-desc">Supply must be farmed. Build supply camps behind your lines, then balance growing your economy against pressing the attack.</div>
     </div>
     <div class="mode-card" id="modeConquest">
       <div class="mode-name">Conquest</div>
-      <div class="mode-desc">Pack your estate like a puzzle — every building pays out once, and no two of a kind may touch. Muster an army with the proceeds, then spend it at the walls.</div>
+      <div class="mode-desc">Pack your estate like a puzzle. Every building pays out once, and no two of a kind may touch. Raise an army with the proceeds, then spend it at the walls.</div>
     </div>
     <div class="mode-back" id="modeBack">back</div>
   </div>
 
 
+  <div id="farmToast"></div>
   <div id="farm-screen">
     <div id="farm-res">
       <div class="res-pill"><span class="res-ico res-wood"></span><b id="resWood">0</b><span class="res-lbl">wood</span></div>
-      <div class="res-pill"><span class="res-ico res-stone"></span><b id="resStone">0</b><span class="res-lbl">stone</span></div>
       <div class="res-pill"><span class="res-ico res-food"></span><b id="resFood">0</b><span class="res-lbl">food</span></div>
-      <div class="res-pill"><span class="res-ico" style="background:radial-gradient(circle at 35% 35%, #f5d97a, #b8892f); border-radius:50%;"></span><b id="resCoins">0</b><span class="res-lbl">coins</span></div>
+      <div class="res-pill"><span class="res-ico res-stone"></span><b id="resStone">0</b><span class="res-lbl">stone</span></div>
     </div>
 
     <div id="estate-wrap">
@@ -640,7 +698,7 @@
 
   <div id="title-screen">
     <div id="title-embers"></div>
-    <div class="eyebrow">c. 1180 BC — AD 1781</div>
+    <div class="eyebrow">c. 1180 BC. AD 1781</div>
     <div class="title-over">From Troy to Yorktown</div>
     <h1>EVERY WALL<br>FALLS</h1>
     <div class="rule"></div>
@@ -651,6 +709,7 @@
       <div class="title-btn secondary" id="tap-daily">Daily Siege<span class="btn-sub" id="dailySub">the same walls face every commander today</span></div>
     </div>
     <div id="titleMute" aria-label="Toggle sound">🔊</div>
+    <div id="titleDev" aria-label="Open dev loader" title="Dev loader (testing)">🛠</div>
   </div>
 
   <div id="hud-top">
@@ -690,11 +749,50 @@
     <div id="levelPill">Troy, c. 1180 BC · Siege 1</div>
     <div id="units"></div>
     <div id="bottom-row">
-      <button class="action-btn" id="campBtn" style="display:none;">Build Supply Camp — <span id="campCost">20</span></button>
+      <button class="action-btn" id="campBtn" style="display:none;">Build Supply Camp, <span id="campCost">20</span></button>
       <button class="action-btn" id="pauseBtn">Pause</button>
     </div>
   </div>
 
+  <div class="overlay" id="story-overlay">
+    <div class="sheet">
+      <h2 id="storyTitle"></h2>
+      <div id="storyBody" style="font-size:13.5px; line-height:1.6; color:var(--ink-dim); margin:8px 0 4px;"></div>
+      <button class="action-btn" id="storyGo" style="margin-top:14px; width:100%;">Understood →</button>
+    </div>
+  </div>
+  <div class="overlay" id="confirm-overlay">
+    <div class="sheet">
+      <h2 id="confirmTitle">Are you sure?</h2>
+      <div id="confirmBody" style="font-size:13px; line-height:1.55; color:var(--ink-dim); margin:6px 0 4px;"></div>
+      <button class="action-btn" id="confirmYes" style="margin-top:14px; width:100%;">Yes</button>
+      <button class="action-btn" id="confirmNo" style="margin-top:8px; width:100%; opacity:0.75;">Cancel</button>
+    </div>
+  </div>
+  <div class="overlay" id="dev-overlay">
+    <div class="sheet">
+      <button class="closeX" data-close="dev-overlay">Close</button>
+      <h2>War Room <span class="close">dev loader</span></h2>
+      <div class="dev-note">For testing only. Loads a temporary game state, your real campaign save is untouched until the loaded run wins a siege.</div>
+      <div class="dev-row"><label>Siege</label><input type="number" id="devLevel" min="1" max="99" value="1"></div>
+      <div class="dev-row"><label>Mode</label>
+        <select id="devMode">
+          <option value="conquest-farm">Conquest, farm phase</option>
+          <option value="conquest-siege">Conquest, siege (stock army)</option>
+          <option value="siege">Classic siege</option>
+        </select>
+      </div>
+      <div class="dev-row"><label>Gold</label><input type="number" id="devGold" min="0" max="9999" value="60"></div>
+      <div class="dev-row"><label>Coins</label><input type="number" id="devCoins" min="0" max="9999" value="0"></div>
+      <div class="dev-row"><label>Shop</label>
+        <span class="dev-seg"><button id="devShopAll">All</button><button id="devShopNone" class="on">None</button></span>
+      </div>
+      <div class="dev-row"><label>War chest</label>
+        <span class="dev-seg"><button id="devUpAll">All</button><button id="devUpNone" class="on">None</button></span>
+      </div>
+      <button class="action-btn" id="devGo" style="margin-top:14px; width:100%;">Load →</button>
+    </div>
+  </div>
   <div class="overlay" id="pause-overlay">
     <div class="sheet">
       <button class="closeX" data-close="pause-overlay">Close</button>
@@ -747,20 +845,20 @@
         <b>The Mongol Storm</b> · <b>The Age of Gunpowder</b>
       </div>
       <div class="result-share" id="finaleStats"></div>
-      <p style="font-size:12.5px; line-height:1.6; color:var(--ink-dim); text-align:center; margin:8px 0 0;">Twenty sieges, five ages of war — and every wall fell before you. The chronicle is written, but the war never ends: the sieges ahead grow without limit. March for glory.</p>
-      <button class="action-btn" id="finaleGo" style="margin-top:14px; width:100%;">March on — Endless War →</button>
+      <p style="font-size:12.5px; line-height:1.6; color:var(--ink-dim); text-align:center; margin:8px 0 0;">Twenty sieges, five ages of war, and every wall fell before you. The chronicle is written, but the war never ends: the sieges ahead grow without limit. March for glory.</p>
+      <button class="action-btn" id="finaleGo" style="margin-top:14px; width:100%;">March on. Endless War →</button>
     </div>
   </div>
 
   <div id="lore-intro" class="tut-wrap">
     <div class="tut-card">
       <button class="closeX" id="loreClose" aria-label="Close">✕</button>
-      <div class="tut-step">c. 1180 BC — AD 1781</div>
-      <p class="tut-text">For three thousand years, the story of war has been the story of walls — and of the armies that learned to break them.
+      <div class="tut-step">c. 1180 BC. AD 1781</div>
+      <p class="tut-text">For three thousand years, the story of war has been the story of walls, and of the armies that learned to break them.
 
 Ramp and tunnel, tower and trebuchet, mine and cannon. Five great ages of siegecraft lie ahead, and you will fight through all of them.
 
-You command the army at the gates. Every siege ahead was truly fought, and truly won. Because in the end — every wall falls.</p>
+You command the army at the gates. Every siege ahead was truly fought, and truly won. Because in the end, every wall falls.</p>
       <button class="action-btn" id="loreBegin" style="width:100%;">To the walls</button>
     </div>
   </div>
@@ -829,12 +927,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
 
   const UNIT_DEFS = {
-    grunt:  {name:'Spearmen',        cost:14, cd:1.4, hp:90,  dmg:16, spd:52,  color:'#7a8f52', dark:'#414f2b', r:38, flying:false, weapon:'spear'},
+    grunt:  {name:'Spear Company',        cost:14, cd:1.4, hp:102,  dmg:16, spd:52,  color:'#7a8f52', dark:'#414f2b', r:38, flying:false, weapon:'spear'},
     // Crossbowmen shoot towers from a distance instead of walking into melee,
-    // and carry a bit more padding — they're skirmishers, not sacrifices.
-    runner: {name:'Crossbowmen',     cost:11, cd:1.2, hp:62,  dmg:12, spd:100, color:'#d9c24a', dark:'#8a761f', r:30, flying:false, weapon:'crossbow', atkRange:105},
-    brute:  {name:'Men-at-Arms', cost:34, cd:2.2, hp:320, dmg:42, spd:30,  color:'#8a2f2f', dark:'#4a1414', r:47, flying:false, unlockCost:70,  weapon:'sword'},
-    flyer:  {name:'Ladder Company',          cost:26, cd:1.8, hp:96,  dmg:22, spd:82,  color:'#6f8fae', dark:'#33465c', r:32, flying:true,  unlockCost:110, weapon:'ladder'},
+    // and carry a bit more padding, they're skirmishers, not sacrifices.
+    runner: {name:'Crossbow Company',     cost:11, cd:1.2, hp:72,  dmg:12, spd:100, color:'#d9c24a', dark:'#8a761f', r:30, flying:false, weapon:'crossbow', atkRange:105},
+    brute:  {name:'Heavy Infantry', cost:34, cd:2.2, hp:320, dmg:42, spd:30,  color:'#8a2f2f', dark:'#4a1414', r:47, flying:false, unlockCost:70,  weapon:'sword'},
+    flyer:  {name:'Ladder Company',          cost:26, cd:1.8, hp:110,  dmg:22, spd:82,  color:'#6f8fae', dark:'#33465c', r:32, flying:true,  unlockCost:110, weapon:'ladder'},
     // ── New companies (unlock as the campaign deepens) ──
     // Counters splash artillery: enormous HP and a pavise that halves all damage.
     shield: {name:'Shieldbearers',    cost:30, cd:2.6, hp:420, dmg:12, spd:34,  color:'#5f8a7a', dark:'#28453a', r:42, flying:false, unlockCost:90,  weapon:'pavise', armor:0.5,  minLevel:5},
@@ -843,8 +941,60 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // Counters attrition (the Seer, sweeps, long sieges): heals nearby soldiers.
     monk:   {name:'Field Medics',       cost:22, cd:2.4, hp:110, dmg:6,  spd:55,  color:'#c8c3b6', dark:'#6a6456', r:34, flying:false, unlockCost:140, weapon:'staff',  healRate:9, healRadius:110, minLevel:10},
   };
+  // ── Pacing knobs (one place to tune the whole feel of battle) ──────────────
+  // Faster marches make the screen lively; longer deploy cooldowns stop the
+  // early flood; tougher soldiers mean a single company can run the gauntlet;
+  // thicker walls keep the siege itself LONGER even as the action gets faster.
+  // cdFloor is the fix for "maxed upgrades make cooldowns feel unchanged":
+  // Drilled Companies discounts multiply UNDER the pace, so at full upgrades a
+  // Spearman was back to ~0.9s, the floor guarantees every deployment breathes.
+  // rebuild: destroyed enemy towers stay down longer, with the slower deploy
+  // stream, the old timers made them feel like they respawned instantly.
+  // hp raised 1.2→1.35: each company must survive longer under fire now that
+  // reinforcements arrive less often.
+  // dmg:2, troops hit twice as hard across the board, per playtest: with the
+  // slower deploy stream, each company's blows have to COUNT.
+  // wallHit / towerHit split where the doubled damage lands: blows against the
+  // stronghold itself are tempered (×0.7 → net 1.4× original), while blows
+  // against towers are sharpened (×1.4 → net 2.8×). Tearing down the defenses
+  // is the fast, rewarding part; the wall itself still takes a real siege.
+  // towerHp:1.7, with sharpened tower blows, heavies were two-shotting towers;
+  // this puts them back at 3–4 hits so killing one still feels like a small win.
+  // wall 1.25→1.75 (+40%) and towerHp 1.7→2.2 (+30%), per playtest, the
+  // doubled damage was still ending sieges faster than the pacing wants.
+  const PACE = { spd:1.25, cd:1.65, hp:1.35, dmg:2.0, wallHit:0.7, towerHit:1.4, towerHp:2.2, wall:2.0, cdFloor:1.2, rebuild:1.4 };
+  // wall 1.75→2.0: sieges were ending too fast. The minimum host derives from
+  // the wall (conquestWallHP), so the march gate stays honest as this scales.
+  // Naval sieges field only three hull classes and no medics, without help,
+  // the fleet bled out crossing the towers' fire before ever reaching the
+  // champion (felt hardest at Constantinople, Siege 12). A warship is sturdier
+  // than a marching company: hulls get extra health and hitting power.
+  const SHIP_STATS = { hp:1.35, dmg:1.15 };
+
   const UNIT_ORDER = ['grunt','runner','brute','flyer','shield','sapper','monk'];
-  function unitAvailable(key){ return state.level >= (UNIT_DEFS[key].minLevel||1); }
+  // Trimmed roster: Shieldbearers are cut outright, and Sappers no longer march
+  // on land, but at sea the Sapper IS the Fire Ship, the fleet's wall-breaker,
+  // so the naval roster keeps all three hulls.
+  const CUT_ON_LAND = new Set(['shield','sapper']);
+  function unitAvailable(key){
+    if(typeof navalNow==='function' && navalNow()){
+      return !!NAVAL_UNITS[key] && state.level >= NAVAL_UNITS[key].unlock;
+    }
+    if(HYBRID_SHIP_KEYS.has(key) && typeof hybridNow==='function' && hybridNow()) return true; // the coast's fleet
+    if(CUT_ON_LAND.has(key)) return false;
+    return state.level >= (UNIT_DEFS[key].minLevel||1);
+  }
+  function rosterOrder(){
+    if(typeof navalNow==='function' && navalNow()) return UNIT_ORDER;
+    if(typeof hybridNow==='function' && hybridNow()){
+      // In battle the selected lane decides what you can even see:
+      // a waterway shows only your two hulls, a land lane only foot companies.
+      if(state.started && activeLaneWet()) return UNIT_ORDER.filter(k=>HYBRID_SHIP_KEYS.has(k));
+      if(state.started) return UNIT_ORDER.filter(k=>!HYBRID_SHIP_KEYS.has(k));
+      return UNIT_ORDER;   // at the muster, the whole coastal host is visible
+    }
+    return UNIT_ORDER.filter(k=>!CUT_ON_LAND.has(k));
+  }
   // Reduced deploy cooldown: conquest buys it in the war-coin shop, the other
   // modes buy it between sieges ("Drilled Companies").
   function deployCdMult(){
@@ -859,8 +1009,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   // One terrain. RICH tiles are bonus squares: any building cell covering one
   // counts double toward that building's payout.
-  const TERRAIN_COL = { grass:'#6f8a3e', rich:'#7d9c44', ocean:'#2c5a74' };
-  const TERRAIN_MULT = { grass:1, rich:2, ocean:0 };
+  const TERRAIN_COL = { grass:'#6f8a3e', rich:'#7d9c44', ocean:'#2c5a74', hill:'#736c60', shoal:'#3d84a4' };
+  const TERRAIN_MULT = { grass:1, rich:2, ocean:0, hill:0, shoal:2 };
   // Buildings pay out ONCE, at placement. Harvesters grant a lump of resources
   // (scaled by rich-tile coverage); trainers unlock their troop for purchase —
   // tap the roster to muster soldiers at `price`. Extra trainers of the same
@@ -873,7 +1023,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     range:    { name:'Archery Range',kind:'train',   trains:'runner',  cap:8, price:{wood:14},           cost:{wood:40},          color:'#d9c24a', shape:'I3',   unlock:2 },
     forge:    { name:'Forge',        kind:'train',   trains:'brute',   cap:5, price:{food:30,stone:18},  cost:{wood:45,stone:50}, color:'#8a2f2f', shape:'L4',   unlock:3 },
     siegeworks:{name:'Siege Works',  kind:'train',   trains:'flyer',   cap:5, price:{wood:34},           cost:{wood:55,stone:30}, color:'#6f8fae', shape:'Tb',   unlock:4 },
-    shieldhall:{name:'Shield Hall',  kind:'train',   trains:'shield',  cap:5, price:{wood:20,stone:22}, cost:{wood:50,stone:40}, color:'#5f8a7a', shape:'O',    unlock:5 },
+    // Halved materials (price 20/22→10/11, cost 50/40→25/20): the galley is the
+    // sea's FIRST ship, and at old prices the harbor economy couldn't float a
+    // fleet before the towers ground it down.
+    shieldhall:{name:'Shield Hall',  kind:'train',   trains:'shield',  cap:5, price:{wood:10,stone:11}, cost:{wood:25,stone:20}, color:'#5f8a7a', shape:'O',    unlock:5 },
     sapperden:{ name:'Sapper Den',   kind:'train',   trains:'sapper',  cap:5, price:{wood:22,food:16},   cost:{wood:45,stone:25}, color:'#b07a3a', shape:'L3',   unlock:7 },
     chapel:   { name:'Field Hospital', kind:'train',   trains:'monk',    cap:4, price:{food:26},          cost:{wood:40,stone:35}, color:'#c8c3b6', shape:'I3',   unlock:10 },
   };
@@ -889,6 +1042,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     L3: [[0,0],[0,1],[1,1]],                // L-tromino
     I3: [[0,0],[1,0],[2,0]],                // I-tromino (3 in a row)
     L4: [[0,0],[0,1],[0,2],[1,2]],          // L-tetromino
+    I2: [[0,0],[1,0]],                      // 1x2 hull (fire ship)
+    I4: [[0,0],[1,0],[2,0],[3,0]],          // 1x4 hull (war galley)
   };
   function normalizeCells(cells){
     let mnc=Infinity,mnr=Infinity;
@@ -900,9 +1055,9 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return normalizeCells(cells.map(([c,r])=>[ -r, c ]));
   }
   function shapeCells(type, rot){
-    let cells = SHAPES[PLACE_DEFS[type].shape].map(p=>[p[0],p[1]]);
+    let cells = SHAPES[pShapeKey(type)].map(p=>[p[0],p[1]]);
     // Apply any purchased shape-shrink BEFORE rotating so the trimmed shape rotates cleanly.
-    if(typeof state!=='undefined' && state.shop && state.shop.shrink){ cells = shrinkCells(cells); }
+    if(typeof state!=='undefined' && state.shop && state.shop['shrink_'+type] && !(typeof navalNow==='function' && navalNow() && NAVAL_BUILD[type] && NAVAL_BUILD[type].shape)){ cells = shrinkCells(cells, type); } // hulls don't shrink
     rot = ((rot%4)+4)%4;
     for(let i=0;i<rot;i++) cells = rotateCells(cells);
     return normalizeCells(cells);
@@ -912,7 +1067,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     for(const [c,r] of cells){ if(c+1>w)w=c+1; if(r+1>h)h=r+1; }
     return {w,h};
   }
-  function buildUnlocked(type){ return state.level >= (PLACE_DEFS[type].unlock||1); }
+  function buildUnlocked(type){
+    if(typeof navalNow==='function' && navalNow()){
+      return !!NAVAL_BUILD[type] && state.level >= NAVAL_BUILD[type].unlock;
+    }
+    if(typeof hybridNow==='function' && hybridNow() && HYBRID_FLEET_BUILDS.has(type)) return true;
+    return state.level >= (PLACE_DEFS[type].unlock||1);
+  }
   // How many trainers of a unit's kind are on the board (0 = can't muster it yet).
   function trainerCountFor(unit){
     let n=0;
@@ -922,7 +1083,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return n;
   }
   // Muster price is stable and budgetable: base price times the Drillmasters
-  // shop discount. Quantity is gated by trainer CAPACITY instead — each trainer
+  // shop discount. Quantity is gated by trainer CAPACITY instead, each trainer
   // houses a fixed number of its troop, so a bigger host needs more of them
   // (and every extra one fights the same-kind rule for land).
   function unitPrice(unit){
@@ -937,7 +1098,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
   // Lump payouts grow gently with level so late boards aren't pure grind.
   function levelYield(){ return 1 + (state.level-1)*0.03; }
-  const PLACE_ORDER = ['lumber','quarrycamp','farmhouse','barracks','range','forge','siegeworks','shieldhall','sapperden','chapel'];
+  const PLACE_ORDER = ['lumber','farmhouse','quarrycamp','barracks','range','forge','siegeworks','shieldhall','sapperden','chapel'];
   // Board size varies by level (the land itself is the budget): authored levels
   // define their own size via the farm map; generated levels use boardSizeFor().
   let GRID_COLS = 12, GRID_ROWS = 12;
@@ -945,7 +1106,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   // ── Hand-authored conquest levels ────────────────────────────────────────────
   // farm: square map; its dimensions ARE the board size (7×7 → 12×12 across the
-  // campaign — the land is the only budget). Legend: . grass  * rich (cells
+  // campaign, the land is the only budget). Legend: . grass  * rich (cells
   // covering it count DOUBLE toward the building's payout). The puzzle is the
   // same-kind rule + chasing rich tiles on ever-tighter ground.
   // require: buildings that MUST be placed before you can march (order-agnostic).
@@ -954,7 +1115,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   const T_ARCHER='archer', T_CANNON='cannon', T_MAGE='mage', T_BOMBARD='bombard';
   const T_BALLISTA='ballista', T_CULVERIN='culverin';
   const CONQUEST_LEVELS = [
-    { // Level 1 — a 7×7 croft. Two fat rich clusters any piece can cover; with
+    { // Level 1, a 7×7 croft. Two fat rich clusters any piece can cover; with
       //           three required buildings the squeeze is felt immediately.
       farm:[
         '.......',
@@ -969,7 +1130,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       turrets:[ [], [{xf:0.5,type:T_ARCHER}], [{xf:0.4,type:T_ARCHER},{xf:0.68,type:T_ARCHER}], [{xf:0.55,type:T_ARCHER}] ],
       wallMult:1.0,
     },
-    { // Level 2 — 8×8; rich tiles run in a loose diagonal, so covering several
+    { // Level 2, 8×8; rich tiles run in a loose diagonal, so covering several
       //           means spacing same-kind camps along it. The rule starts to bite.
       farm:[
         '*.......',
@@ -990,7 +1151,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.565,
     },
-    { // Level 3 — 9×9 with a rich ring. No single piece can take much of it;
+    { // Level 3, 9×9 with a rich ring. No single piece can take much of it;
       //           full value demands interleaving different kinds around it.
       farm:[
         '.........',
@@ -1012,7 +1173,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.58,
     },
-    { // Level 4 — 10×10, riches pushed into the four corners. Chasing them all
+    { // Level 4, 10×10, riches pushed into the four corners. Chasing them all
       //           drags same-kind camps apart; leaving some is the real trade-off.
       farm:[
         '**......**',
@@ -1035,7 +1196,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ],
       wallMult:0.625,
     },
-    { // Level 5 — 10×10; the wall of towers, bombards arrive. A rich cross lets
+    { // Level 5, 10×10; the wall of towers, bombards arrive. A rich cross lets
       //           a well-packed estate fund a big host, but every lane bites.
       farm:[
         '..........',
@@ -1079,13 +1240,99 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
   // Build an all-grass size×size board scattered with rich tiles: a few small
   // clusters (worth contorting a whole piece onto) plus lone singles (worth a
-  // corner of one). Every board is trivially placeable — the puzzle is packing.
+  // corner of one). Every board is trivially placeable, the puzzle is packing.
   function genBoard(size, rand, level){
     const N=size*size;
     const grid=new Array(N).fill('.');
+    const theme = themeFor(level||0);
+    if(theme==='naval'){
+      // ── Harbor estate, inverted: the board IS the sea. Two working shores —
+      // ragged strips of land on opposite edges for timber and quarry, and
+      // everything else floats. Sparkling shoals in the open water pay double
+      // to whatever moors over them.
+      grid.fill('~');
+      // Two working shores. The sea keeps ~55–60% of the board, widened from
+      // the original 60–70% because the thin shores starved the wood-and-stone
+      // economy the fleet is built on (Siege 12's champion needs a real host).
+      // The champion siege itself gets the deepest shores of the arc.
+      const boss = isBossLevel(level);
+      const edges = rand()<0.5 ? [0,2] : [3,1];   // top+bottom or left+right shores
+      for(const edge of edges){
+        let d=2+Math.floor(rand()*2);
+        const maxD = 3 + (boss?1:0);
+        for(let i=0;i<size;i++){
+          for(let k=0;k<d;k++){
+            const idx = edge===0 ? k*size+i
+                      : edge===1 ? i*size+(size-1-k)
+                      : edge===2 ? (size-1-k)*size+i
+                      :            i*size+k;
+            grid[idx]='.';
+          }
+          const st=rand(); d+=st<0.34?-1:st<0.68?0:1; d=Math.max(2,Math.min(maxD,d));
+        }
+        // guaranteed pockets so the land camps always fit (two on champion shores)
+        const nPockets = boss?2:1;
+        for(let pk=0; pk<nPockets; pk++){
+          const p0=1+Math.floor(rand()*(size-4));
+          for(let a=0;a<3;a++)for(let k=0;k<3;k++){
+            const idx = edge===0 ? k*size+(p0+a)
+                      : edge===1 ? (p0+a)*size+(size-1-k)
+                      : edge===2 ? (size-1-k)*size+(p0+a)
+                      :            (p0+a)*size+k;
+            grid[idx]='.';
+          }
+        }
+      }
+      // a couple of rich land tiles on each shore for the camps
+      let landRich=0, guard=0;
+      while(landRich<3 && guard++<120){
+        const idx=Math.floor(rand()*N);
+        if(grid[idx]==='.'){ grid[idx]='*'; landRich++; }
+      }
+      // fishing shoals: small sparkling clusters out in open water, one more
+      // than before, so the water economy grows alongside the shores
+      let shoals=0; guard=0;
+      while(shoals<4 && guard++<160){
+        const w=1+Math.floor(rand()*2), h=1+Math.floor(rand()*2);
+        const c0=Math.floor(rand()*(size-w)), r0=Math.floor(rand()*(size-h));
+        let ok=true;
+        for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++){ if(grid[r*size+c]!=='~') ok=false; }
+        if(!ok) continue;
+        for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r*size+c]='%';
+        shoals++;
+      }
+      for(let i=0;i<3;i++){ const idx=Math.floor(rand()*N); if(grid[idx]==='~') grid[idx]='%'; }
+      const out=[]; for(let r=0;r<size;r++) out.push(grid.slice(r*size,(r+1)*size).join(''));
+      return out;
+    }
+    if(theme==='mountain'){
+      // ── Highland estate: no coast up here, instead, rocky hills nobody can
+      // build on break the open ground into awkward valleys (~13% of the land).
+      const blobs=3+Math.floor(rand()*2);
+      for(let i=0;i<blobs;i++){
+        const w=1+Math.floor(rand()*2), h=1+Math.floor(rand()*2);
+        const c0=1+Math.floor(rand()*(size-w-2)), r0=1+Math.floor(rand()*(size-h-2));
+        for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r*size+c]='^';
+      }
+      for(let i=0;i<Math.floor(size*0.7);i++){ const idx=Math.floor(rand()*N); if(grid[idx]==='.') grid[idx]='^'; }
+      // rich clusters on clear ground
+      let placed=0, guard=0;
+      while(placed<3 && guard++<80){
+        const w=1+Math.floor(rand()*2), h=1+Math.floor(rand()*2);
+        const c0=Math.floor(rand()*(size-w)), r0=Math.floor(rand()*(size-h));
+        let ok=true;
+        for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++){ if(grid[r*size+c]!=='.') ok=false; }
+        if(!ok) continue;
+        for(let r=r0;r<r0+h;r++)for(let c=c0;c<c0+w;c++) grid[r*size+c]='*';
+        placed++;
+      }
+      for(let i=0;i<4;i++){ const idx=Math.floor(rand()*N); if(grid[idx]==='.') grid[idx]='*'; }
+      const out=[]; for(let r=0;r<size;r++) out.push(grid.slice(r*size,(r+1)*size).join(''));
+      return out;
+    }
     // ── The coast (siege 6+): the campaign reaches the sea, and the sea takes
     // its share of the land. A jagged coastline is carved along one random
-    // edge — unbuildable water that squeezes the packing puzzle tighter as the
+    // edge, unbuildable water that squeezes the packing puzzle tighter as the
     // wars go on. (Future hook: fishing wharves can require touching '~'.)
     if((level||0)>=6){
       const maxD = level<=8 ? 2 : level<=12 ? 3 : 4;   // how far inland the water reaches
@@ -1142,6 +1389,30 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       slots.sort((a,b)=>a.xf-b.xf);
       lanes.push(slots);
     }
+    // ── Fairness budget (added after the difficulty sim) ─────────────────────
+    // The random draw could stack splash artillery across every approach: some
+    // seeds were 2× harder than their neighbors. Rule: the WEAKEST lane, with
+    // half-weight crossfire from its neighbors, must fit under a smooth curve.
+    // Overweight seeds get their hottest tower downgraded (bombard→cannon→…)
+    // until the budget holds, so every level keeps one honestly-breakable path.
+    const _dps = t=>TURRET_DEFS[t.type].dmg/TURRET_DEFS[t.type].rate;
+    const _laneDps = ln=>ln.reduce((a,t)=>a+_dps(t),0);
+    const _weakLane = ()=>{ let li=0; lanes.forEach((ln,i)=>{ if(_laneDps(ln)<_laneDps(lanes[li])) li=i; }); return li; };
+    const _weakThreat = ()=>{ const li=_weakLane();
+      return lanes.reduce((a,ln,i)=>a + (i===li?1:Math.abs(i-li)===1?0.5:0)*_laneDps(ln), 0); };
+    const _DOWN = {bombard:'cannon', ballista:'culverin', culverin:'mage', cannon:'archer', mage:'archer'};
+    const _budget = 26 + level*1.35;
+    let _guard = 40;
+    while(_weakThreat() > _budget && _guard-- > 0){
+      const li=_weakLane();
+      let pick=null, pickLane=-1, pv=-1;
+      lanes.forEach((ln,i)=>{ if(Math.abs(i-li)>1) return;
+        for(const t of ln){ const v=_dps(t)*(i===li?1:0.5); if(v>pv){pv=v; pick=t; pickLane=i;} } });
+      if(!pick) break;
+      if(_DOWN[pick.type]) pick.type=_DOWN[pick.type];
+      else if(lanes[pickLane].length>1) lanes[pickLane].splice(lanes[pickLane].indexOf(pick),1);
+      else break;
+    }
     return lanes;
   }
   function generateLevel(level){
@@ -1155,19 +1426,114 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
     const turrets=genTurrets(level, rand);
     // Require the full economy from L6 on (forge unlocks at L3, siegeworks at L4).
-    const require=['lumber','farmhouse','quarrycamp','barracks','range','forge'];
+    const require = themeFor(level)==='naval'
+      ? navalRequire(level)
+      : ['lumber','farmhouse','quarrycamp','barracks','range','forge'];
     // Wall multiplier tuned so recommendedHost breaks it with margin (validated by sim).
     const wallMult = 0.56 + Math.min(0.36, (level-5)*0.016);
     const def={farm, require, turrets, wallMult, generated:true};
     _genLevelCache[level]=def;
     return def;
   }
+  // ── Campaign terrain themes ─────────────────────────────────────────────────
+  // Sieges 9–12 (the Crusades) go to sea: harbor estates, waterway lanes, and a
+  // port to storm, the Varangian Captain at Constantinople is the water champion.
+  // Siege 16 climbs into the mountains: unbuildable hills and a granite fortress.
+  // The sea returns in the Endless War, but only where history fought there:
+  // Malta 1565 (22), La Rochelle 1628 (24, a sea champion), Gibraltar 1779 (27),
+  // Tenochtitlán's lake brigantines (38), Louisbourg's amphibious storm (46) —
+  // and about one in seven of the procedural sieges beyond the chronicle.
+  const NAVAL_RETURNS = new Set([22, 24, 27, 38, 46]);
+  function themeFor(level){
+    if(level>=9 && level<=12) return 'naval';
+    if(NAVAL_RETURNS.has(level)) return 'naval';
+    if(level>50 && (level-51)%7===3) return 'naval';
+    if(level===16) return 'mountain';
+    return null;
+  }
+  const NAVAL_LAND_ONLY = new Set(['lumber','quarrycamp']);
+  // ── The harbor economy: a deliberately SMALL roster that grows one hull per
+  // siege, the way the land palette did. Land camps keep their real names;
+  // the water builds are ships, long thin hulls with their own colors.
+  //   Siege 9:  Lumber Camp · Fishing Fleet · Quarry · War Galleys · Arrow Barques
+  //   Siege 10: + Fire Ships
+  const NAVAL_BUILD = {
+    lumber:    { unlock:9  },                                                     // land, unchanged
+    quarrycamp:{ unlock:9  },                                                     // land, unchanged
+    farmhouse: { unlock:9,  name:'Fishing Fleet', color:'#3f8fae', shape:'I3' },
+    shieldhall:{ unlock:9,  name:'War Galleys',   color:'#6a7f9a', shape:'I4' },
+    range:     { unlock:9,  name:'Arrow Barques',  color:'#c9a83f', shape:'I3' },
+    sapperden: { unlock:10, name:'Fire Ships',    color:'#c9652e', shape:'I2' },
+  };
+  // The Shieldbearer's retired slots carry the flagship: the Shield Hall is the
+  // War Galleys' moorage, the shield unit is the galley itself, its own
+  // building, its own pool, no borrowing from the spear line.
+  const NAVAL_UNITS = { shield:{name:'War Galley', unlock:9}, runner:{name:'Arrow Barque', unlock:9}, sapper:{name:'Fire Ship', unlock:10} };
+  // The galley re-tunes the old tank chassis into a warship: less raw bulk
+  // (armor already halves what it takes), far harder hitting, and quicker oars.
+  const GALLEY_TUNE = { hp:0.6, dmg:1.8, spd:1.35 };
+  function navalNow(){ return themeFor(state.level)==='naval'; }
+  // Coastal (hybrid) sieges: land theme, but the sea has taken part of the map.
+  // Those farms may moor FIRE SHIPS on their coastal water, the one naval
+  // build that has no land twin to collide with, deployable only into the
+  // battlefield's waterways.
+  function hybridNow(){
+    return !themeFor(state.level) && typeof computeWaterLanes==='function'
+      && state.level>=13 && computeWaterLanes(state.level).length>0;
+  }
+  const HYBRID_FLEET_BUILDS = new Set(['shieldhall','sapperden']);
+  function navalStyle(type){
+    if(NAVAL_BUILD[type] && (navalNow() || (hybridNow() && HYBRID_FLEET_BUILDS.has(type)))) return NAVAL_BUILD[type];
+    return null;
+  }
+  function pName(type){
+    const nb = navalStyle(type);
+    return (nb && nb.name) || PLACE_DEFS[type].name;
+  }
+  function pColor(type){
+    const nb = navalStyle(type);
+    return (nb && nb.color) || PLACE_DEFS[type].color;
+  }
+  function pShapeKey(type){
+    const nb = navalStyle(type);
+    return (nb && nb.shape) || PLACE_DEFS[type].shape;
+  }
+  function pUnlock(type){
+    if(hybridNow() && HYBRID_FLEET_BUILDS.has(type)) return 13;
+    const nb = navalNow() && NAVAL_BUILD[type];
+    return nb ? nb.unlock : PLACE_DEFS[type].unlock;
+  }
+  function palOrder(){
+    if(navalNow()) return PLACE_ORDER.filter(t=>NAVAL_BUILD[t]);
+    if(hybridNow()) return PLACE_ORDER;   // full land palette + both fleet moorings
+    return PLACE_ORDER.filter(t=>t!=='shieldhall' && t!=='sapperden');
+  }
+  function activeLaneWet(){
+    return typeof state!=='undefined' && !state.theme && state.waterLanes
+      && state.waterLanes.length>0 && typeof activeLane!=='undefined'
+      && state.waterLanes.includes(activeLane);
+  }
+  const HYBRID_SHIP_KEYS = new Set(['shield','sapper']);   // war galley + fire ship
+  function uName(key){
+    if(navalNow() && NAVAL_UNITS[key]) return NAVAL_UNITS[key].name;
+    if(hybridNow()){
+      if(key==='sapper') return 'Fire Ship';
+      if(key==='shield') return 'War Galley';
+    }
+    return UNIT_DEFS[key].name;
+  }
+  function navalRequire(level){
+    const req=['lumber','quarrycamp','farmhouse','shieldhall'];
+    if(level>=10) req.push('sapperden');
+    return req;
+  }
+
   function levelDef(level){
     if(level <= CONQUEST_LEVELS.length) return CONQUEST_LEVELS[level-1];
     return generateLevel(level);
   }
   const TERRAIN_LEGEND={
-    '.':'grass','*':'rich','~':'ocean',
+    '.':'grass','*':'rich','~':'ocean','^':'hill','%':'shoal',
     // legacy map chars degrade gracefully (old saves / stray defs)
     'W':'grass','R':'grass','S':'grass','w':'rich','r':'rich','s':'rich',
   };
@@ -1189,84 +1555,116 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // ── Champions: boss defenders on every 4th siege ─────────────────────────────
   // A champion stands before the gate. The wall cannot be harmed while he lives;
   // every soldier who reaches the gate fights HIM instead. Each champion has a
-  // signature attack. One guards each war's final siege — Tyre (L4), Masada (L8),
-  // Constantinople 1204 (L12), Xiangyang (L16), Yorktown (L20) — then they cycle.
+  // signature attack. One guards each war's final siege. Tyre (L4), Masada (L8),
+  // Constantinople 1204 (L12), Xiangyang (L16), Yorktown (L20), then they cycle.
   const BOSS_DEFS = [
     {key:'seer',      name:'The Priest of Melqart',    color:'#6f8fae', dark:'#26364a', weapon:'spear',    ability:'slowpulse',
-     flavor:'his sea-rites sap and slow every soldier on the field — strike hard and fast'},
+     flavor:'his sea-rites sap and slow every soldier on the field, strike hard and fast'},
     {key:'warlord',   name:'The Zealot King',          color:'#8a2f2f', dark:'#3a1010', weapon:'sword',    ability:'sweep',
-     flavor:'his blade sweeps everyone near the gate — do not pile your whole host on him at once'},
+     flavor:'his blade sweeps everyone near the gate, do not pile your whole host on him at once'},
     {key:'bombardier',name:'The Varangian Captain',    color:'#6a4a2a', dark:'#2e1c0e', weapon:'crossbow', ability:'mortar',
-     flavor:'he hurls Greek fire that bursts among your troops — keep them spread across the lanes'},
+     flavor:'he hurls Greek fire that bursts among your troops, keep them spread across the lanes'},
     {key:'dread',     name:'The Governor of Xiangyang',color:'#5a2a6a', dark:'#26102e', weapon:'sword',    ability:'all',
-     flavor:'six years of war have taught him every trick — sweep, stone and sorcery — and his wounds slowly close'},
+     flavor:'six years of war have taught him every trick, sweep, stone and sorcery, and his wounds slowly close'},
     {key:'bombardier',name:'Lord Cornwallis',          color:'#a03636', dark:'#401212', weapon:'crossbow', ability:'mortar',
-     flavor:'his siege guns lob shells that burst among your troops — keep them spread across the lanes'},
+     flavor:'his siege guns lob shells that burst among your troops, keep them spread across the lanes'},
     // ── Champions of the Endless War (Sieges 24, 28, …) ──
     {key:'pasha',     name:'The Iron Pasha',           color:'#3a6a5a', dark:'#122a20', weapon:'sword',    ability:'volley',
-     flavor:'his archers rake whichever lane you crowd — keep the host split and moving'},
+     flavor:'his archers rake whichever lane you crowd, keep the host split and moving'},
     {key:'marshal',   name:'The Marshal of the Breach',color:'#7a6a2a', dark:'#302810', weapon:'spear',    ability:'summon',
-     flavor:'at his horn the garrison pours out in force — never leave your camp unwatched'},
+     flavor:'at his horn the garrison pours out in force, never leave your camp unwatched'},
   ];
   function isBossLevel(level){ return level>=4 && level%4===0; }
 
   // ── Five wars through history, four sieges each ────────────────────────────
   // A banner names each siege at its start; its story appears once it is won.
-  // Chapter finales (levels 4/8/12/16/20) are champion sieges — see BOSS_DEFS.
+  // Chapter finales (levels 4/8/12/16/20) are champion sieges, see BOSS_DEFS.
   const BATTLES = [null,
-    // Chapter I — The Ancient World
-    {name:'Troy',           year:'c. 1180 BC', note:'The siege that began all siege stories. Ten years before the walls, the legend says — until the Greeks won not by force but by the ruse of the wooden horse.'},
-    {name:'Lachish',        year:'701 BC',  note:'Sennacherib of Assyria drove a great earthen ramp against the walls of Lachish and stormed the city — then carved the whole siege in stone on his palace walls at Nineveh.'},
+    // Chapter I. The Ancient World
+    {name:'Troy',           year:'c. 1180 BC', note:'The siege that began all siege stories. Ten years before the walls, the legend says, until the Greeks won not by force but by the ruse of the wooden horse.'},
+    {name:'Lachish',        year:'701 BC',  note:'Sennacherib of Assyria drove a great earthen ramp against the walls of Lachish and stormed the city, then carved the whole siege in stone on his palace walls at Nineveh.'},
     {name:'Babylon',        year:'539 BC',  note:'Cyrus of Persia took the mightiest walls on earth almost without a blow: his engineers lowered the Euphrates, and his soldiers walked in along the riverbed.'},
     {name:'Tyre',           year:'332 BC',  note:'Told the island city was impregnable, Alexander built a causeway half a mile across the sea and brought his towers to the walls. Tyre fell after seven months; the causeway is still there.'},
-    // Chapter II — Rome
-    {name:'Syracuse',       year:'212 BC',  note:'Archimedes\u2019 engines — great claws and stone-throwers — held the Romans at bay for two years, until soldiers scaled a weakly held wall by night during a festival.'},
+    // Chapter II. Rome
+    {name:'Syracuse',       year:'212 BC',  note:'Archimedes\u2019 engines, great claws and stone-throwers, held the Romans at bay for two years, until soldiers scaled a weakly held wall by night during a festival.'},
     {name:'Carthage',       year:'146 BC',  note:'Three years of siege ended a century of war. Scipio Aemilianus fought through the city street by street for six days; Carthage was razed and its people enslaved.'},
-    {name:'Alesia',         year:'52 BC',   note:'Caesar walled Vercingetorix in — then built a second wall facing outward and defeated the vast Gallic host sent to relieve him. Gaul fell with the fortress.'},
-    {name:'Masada',         year:'AD 73',   note:'The Tenth Legion built a great earthen ramp up the desert mesa. When the wall was breached, the defenders chose death over capture — the last siege of the war.'},
-    // Chapter III — The Crusades
-    {name:'Antioch',        year:'1098',    note:'The First Crusade starved before Antioch for eight months, then entered by the treachery of a tower guard — and at once stood siege in turn against the army sent to relieve the city.'},
-    {name:'Jerusalem',      year:'1099',    note:'The Crusaders built two great siege towers from the timber of dismantled ships and carried Jerusalem in a single assault. What followed inside the walls was remembered for centuries.'},
-    {name:'Acre',           year:'1191',    note:'For two years Acre was a double siege — Crusaders around the city, Saladin\u2019s army around the Crusaders — until the arrival of Richard the Lionheart tipped the scales.'},
+    {name:'Alesia',         year:'52 BC',   note:'Caesar walled Vercingetorix in, then built a second wall facing outward and defeated the vast Gallic host sent to relieve him. Gaul fell with the fortress.'},
+    {name:'Masada',         year:'AD 73',   note:'The Tenth Legion built a great earthen ramp up the desert mesa. When the wall was breached, the defenders chose death over capture, the last siege of the war.'},
+    // Chapter III. The Crusades
+    {name:'Lisbon',         year:'1147',    note:'A crusader fleet of nearly two hundred ships, blown into the Tagus on its way to the Holy Land, stayed to besiege Lisbon from the water, the Second Crusade\u2019s only real victory came by sea.'},
+    {name:'Acre',           year:'1191',    note:'For two years Acre was strangled from the sea, crusader galleys against Saladin\u2019s blockade-runners, until Richard the Lionheart\u2019s fleet swept the harbor and the city yielded.'},
+    {name:'Zara',           year:'1202',    note:'The Fourth Crusade\u2019s Venetian fleet stormed a Christian port to pay its passage, ships against sea-walls, and the Pope\u2019s excommunication behind them. The road to Constantinople began here.'},
     {name:'Constantinople', year:'1204',    note:'The Fourth Crusade never reached the Holy Land. Instead it scaled the sea walls of Constantinople from the masts of its ships and sacked the greatest Christian city on earth.'},
-    // Chapter IV — The Mongol Storm
-    {name:'Zhongdu',        year:'1215',    note:'Genghis Khan starved the Jin capital into surrender — and from its fall the Mongols took something worth more than plunder: the siege engineers of China.'},
+    // Chapter IV. The Mongol Storm
+    {name:'Zhongdu',        year:'1215',    note:'Genghis Khan starved the Jin capital into surrender, and from its fall the Mongols took something worth more than plunder: the siege engineers of China.'},
     {name:'Samarkand',      year:'1220',    note:'The jewel of the Silk Road, held by a garrison of tens of thousands, fell to the Mongols within days. All Khwarezm learned what resistance would cost.'},
     {name:'Baghdad',        year:'1258',    note:'H\u00fcleg\u00fc\u2019s engineers breached the walls in little more than a week, and five centuries of the Abbasid Caliphate ended. The city\u2019s great library was thrown into the Tigris.'},
     {name:'Xiangyang',      year:'1273',    note:'The fortress that kept the Mongols out of southern China for six years fell only when giant counterweight trebuchets, built by Persian engineers, cracked its walls.'},
-    // Chapter V — The Age of Gunpowder
+    // Chapter V. The Age of Gunpowder
     {name:'Constantinople', year:'1453',    note:'Mehmed\u2019s great bombards did what a thousand years of armies could not, battering the Theodosian Walls until the janissaries carried the breach. An empire of eleven centuries ended.'},
     {name:'Tenochtitlan',   year:'1521',    note:'Cort\u00e9s besieged the island capital of the Aztecs with warships built on a mountainside and carried overland in pieces. After ninety-three days, the greatest city of the Americas fell.'},
-    {name:'Rhodes',         year:'1522',    note:'Suleiman brought a hundred thousand men and mined the walls of the Knights for six months. The garrison of a few thousand won honorable terms — and sailed away to Malta.'},
+    {name:'Rhodes',         year:'1522',    note:'Suleiman brought a hundred thousand men and mined the walls of the Knights for six months. The garrison of a few thousand won honorable terms, and sailed away to Malta.'},
     {name:'Yorktown',       year:'1781',    note:'The last great siege of the age. Washington\u2019s trenches and French guns closed on Cornwallis until surrender was the only wall left standing. Every wall falls.'},
   ];
-  // Past Yorktown the war never ends — the great sieges keep coming, in a loop.
+  // Past Yorktown the war never ends, the great sieges keep coming, in a loop.
   const ENDLESS_BATTLES = [
     {name:'Vienna',      year:'1529', note:'Suleiman\u2019s tide reached its high-water mark at the walls of Vienna. Rain drowned his great guns on the road, and October cold did what the garrison alone could not.'},
     {name:'Malta',       year:'1565', note:'Nine thousand defenders against forty thousand. The Knights held Fort St Elmo to the last man, and the Great Siege broke on the harbor forts through a whole burning summer.'},
-    {name:'Osaka',       year:'1615', note:'The greatest fortress in Japan, moated like an island. Tokugawa Ieyasu won the first siege by treaty — then filled the moats, returned, and ended the age of samurai wars.'},
+    {name:'Osaka',       year:'1615', note:'The greatest fortress in Japan, moated like an island. Tokugawa Ieyasu won the first siege by treaty, then filled the moats, returned, and ended the age of samurai wars.'},
     {name:'La Rochelle', year:'1628', note:'Richelieu sealed the harbor of the Huguenot city with a sea-wall a mile long. Fourteen months later, of twenty-seven thousand souls, five thousand were left to surrender.'},
-    {name:'Candia',      year:'1669', note:'The longest siege in history: twenty-one years. Venice held the city of Crete against the Ottomans through a generation of mines, assaults, and relief fleets — and yielded with honors.'},
+    {name:'Candia',      year:'1669', note:'The longest siege in history: twenty-one years. Venice held the city of Crete against the Ottomans through a generation of mines, assaults, and relief fleets, and yielded with honors.'},
     {name:'Vienna',      year:'1683', note:'The second Ottoman siege ended in the greatest cavalry charge ever ridden, when Sobieski\u2019s winged hussars came down from the Kahlenberg at dusk.'},
     {name:'Gibraltar',   year:'1779', note:'Four years blockaded on a rock. The garrison answered floating batteries with red-hot shot, and the longest siege in British history ended with the Rock unbowed.'},
     {name:'Badajoz',     year:'1812', note:'Wellington\u2019s men stormed the breaches through a hail of fire and mines. The town fell in a night whose cost, and whose aftermath, the army did not like to remember.'},
-    {name:'Sevastopol',  year:'1855', note:'Eleven months of trenches, bombardments and cholera in the Crimea — the first siege reported by telegraph and photographed, a rehearsal for the wars to come.'},
+    {name:'Sevastopol',  year:'1855', note:'Eleven months of trenches, bombardments and cholera in the Crimea, the first siege reported by telegraph and photographed, a rehearsal for the wars to come.'},
     {name:'Vicksburg',   year:'1863', note:'Grant crossed the river, won five battles in seventeen days, and shut the fortress city in. Its surrender on the Fourth of July cut the Confederacy in two.'},
+    {name:'Numantia',    year:'133 BC', note:'The Celtiberian hill town defied Rome for twenty years. Scipio refused to assault it at all, he built seven miles of wall around it and let hunger finish what eight armies could not.'},
+    {name:'Jerusalem',   year:'AD 70',  note:'Titus threw a wall of his own around the city so nothing could leave, then broke through three sets of ramparts. The Temple burned against his reported orders.'},
+    {name:'Rome',        year:'537',    note:'Belisarius held the crumbling giant of a city with five thousand men against the whole Gothic nation for a year and nine days, sallying out so often the besiegers felt besieged.'},
+    {name:'Ch\u00e2teau Gaillard', year:'1204', note:'Richard the Lionheart\u2019s \u201csaucy castle\u201d was thought perfect. The French found the one flaw, an unbarred window over the chapel latrine, and climbed in through it.'},
+    {name:'Acre',        year:'1291', note:'The last great Crusader city fell to a hundred siege engines and mines under every tower. When the Accursed Tower cracked, two centuries of Outremer ended in a week.'},
+    {name:'Orl\u00e9ans', year:'1429', note:'The siege that turned the Hundred Years\u2019 War. Nine days after a seventeen-year-old in armor arrived with the relief convoy, the English burned their forts and marched away.'},
+    {name:'Belgrade',    year:'1456', note:'A crusade of peasants and friars broke the army that had taken Constantinople. The noon bells still rung across Europe commemorate the victory.'},
+    {name:'Tenochtitlan',year:'1521', note:'Cort\u00e9s built a fleet of brigantines on a mountain lake to strangle the island capital. Ninety-three days of causeway fighting ended the Aztec empire street by street.'},
+    {name:'Kazan',       year:'1552', note:'Ivan\u2019s engineers rolled a three-story siege tower to the walls and packed forty-eight barrels of powder beneath them. The stronghold of the khanate fell in a morning.'},
+    {name:'Szigetv\u00e1r', year:'1566', note:'Zr\u00ednyi\u2019s final charge from the burning fortress, sword in hand, cost the Ottomans a month and twenty thousand men, and Suleiman the Magnificent died in his tent before it fell.'},
+    {name:'Famagusta',   year:'1571', note:'Eleven months, a hundred thousand cannonballs. The garrison of eight thousand held half the Ottoman army in Cyprus until only bread and courage were left.'},
+    {name:'Ostend',      year:'1604', note:'\u201cThe New Troy.\u201d Three years of trench warfare in the dunes, a hundred thousand dead, and the victors captured a city that no longer existed.'},
+    {name:'Breda',       year:'1625', note:'Spinola\u2019s textbook blockade starved the fortress out with courtesy and clockwork. Vel\u00e1zquez painted the surrender, the victor refusing to let the loser kneel.'},
+    {name:'Magdeburg',   year:'1631', note:'The storm of the city shocked even the Thirty Years\u2019 War. Of thirty thousand souls, five thousand remained; \u201cmagdeburgization\u201d entered the language of war.'},
+    {name:'Derry',       year:'1689', note:'Thirteen apprentices shut the gates, and for a hundred and five days the answer from the walls was \u201cNo surrender.\u201d The relief ships broke the river boom with the city days from starvation.'},
+    {name:'Louisbourg',  year:'1758', note:'The great French fortress in the North Atlantic fog fell to amphibious landings through the surf, and opened the river road to Quebec.'},
+    {name:'Toulon',      year:'1793', note:'A twenty-four-year-old artillery captain saw that one fort commanded the harbor. When his guns took Point l\u2019Eguillette, the British fleet sailed out, and Bonaparte\u2019s star rose.'},
+    {name:'Saragossa',   year:'1809', note:'\u201cWar to the knife.\u201d The Spanish defended house by house, room by room; the French advanced by blowing walls between cellars. Fifty-four thousand died inside the city.'},
+    {name:'Antwerp',     year:'1832', note:'The last siege of the old school: parallels, batteries, and a chivalrous garrison that surrendered the citadel only when it was a heap of rubble, applauded by both sides.'},
+    {name:'Port Arthur', year:'1904', note:'Machine guns, searchlights, barbed wire and 203 Metre Hill, the siege that showed the century what its wars would look like.'},
   ];
+  // Beyond Siege 50 the chronicle ends: the war machine dreams its own sieges.
+  const GEN_FORT_A=['Kara','Vel','Dur','Ost','Bel','Tor','Mir','Zan','Hal','Cas','Rav','Stron','Gal','Ash','Thorn'];
+  const GEN_FORT_B=['grad','holm','burg','keep','mark','gate','spire','wall','fort','haven','rock','watch'];
+  function genBattle(level){
+    const r=mulberry32(level*97 + 13);
+    const name=GEN_FORT_A[Math.floor(r()*GEN_FORT_A.length)]+GEN_FORT_B[Math.floor(r()*GEN_FORT_B.length)];
+    return { name:'The Siege of '+name, year:'', generated:true,
+      note:'Beyond Siege 50 the chronicle runs out, this stronghold, its walls and its garrison are procedurally generated, and the war grows without limit.' };
+  }
   function battleFor(level){
-    if(level>20) return ENDLESS_BATTLES[(level-21)%ENDLESS_BATTLES.length];
+    if(level>50) return genBattle(level);
+    if(level>20) return ENDLESS_BATTLES[(level-21)];
     return BATTLES[level] || null;
   }
 
   // The five wars. A chapter banner (and, from Chapter II on, a one-time
   // scene-setting coach note) plays when its first siege begins.
   const CHAPTERS = [
-    {start:1,  name:'The Ancient World',    epi:'\u201cTen years before the walls, and the walls still stood.\u201d \u2014 a soldier of the Achaean camp', intro:'The first walls rose with the first cities — and armies have been solving them ever since. From the legend of Troy to Alexander at Tyre: the oldest art of war.'},
-    {start:5,  name:'Rome',                 epi:'\u201cThe legions do not storm walls. They outlive them.\u201d \u2014 a centurion\u2019s letter home', intro:'No power broke walls like Rome. The ring-wall, the ramp, the slow arithmetic of hunger — from Syracuse to Masada, the legions proved that no fortress outlasts an empire\u2019s patience.'},
-    {start:9,  name:'The Crusades',         epi:'\u201cWe built our towers from the ships that brought us. There is no way home but through.\u201d \u2014 a pilgrim\u2019s chronicle', intro:'Two centuries of holy war turned the Levant into a landscape of castles. Siege towers at Jerusalem, treachery at Antioch — and in the end even Constantinople\u2019s great walls were stormed.'},
-    {start:13, name:'The Mongol Storm',     epi:'\u201cThey said horsemen cannot take cities. The horsemen brought engineers.\u201d \u2014 a chronicler of Baghdad', intro:'The horsemen of the steppe were supposed to be helpless before walls. Instead they gathered the world\u2019s engineers and broke every city from Beijing to Baghdad.'},
-    {start:17, name:'The Age of Gunpowder', epi:'\u201cWhat a thousand years built, the great gun answered in a morning.\u201d \u2014 a gunner\u2019s diary', intro:'The cannon ended the age of the high wall. From Constantinople\u2019s shattered ramparts to the trenches of Yorktown, the siege now belonged to powder, spade — and time.'},
-    {start:21, name:'The Endless War',       epi:'\u201cEvery wall falls. The only question the siege asks is when.\u201d', intro:'The campaign is won, but the walls keep rising. Vienna, Malta, Osaka, Sevastopol — history\u2019s great sieges return in an unending war, harder with every year.'},
+    {start:1,  name:'The Ancient World',    epi:'\u201cTen years before the walls, and the walls still stood.\u201d, a soldier of the Achaean camp', intro:'The first walls rose with the first cities, and armies have been solving them ever since. From the legend of Troy to Alexander at Tyre: the oldest art of war.'},
+    {start:5,  name:'Rome',                 epi:'\u201cThe legions do not storm walls. They outlive them.\u201d, a centurion\u2019s letter home', intro:'No power broke walls like Rome. The ring-wall, the ramp, the slow arithmetic of hunger, from Syracuse to Masada, the legions proved that no fortress outlasts an empire\u2019s patience.'},
+    {start:9,  name:'The Crusades',         epi:'\u201cWe built our towers from the ships that brought us. There is no way home but through.\u201d, a pilgrim\u2019s chronicle', intro:'Two centuries of holy war turned the Levant into a landscape of castles. Siege towers at Jerusalem, treachery at Antioch, and in the end even Constantinople\u2019s great walls were stormed.'},
+    {start:13, name:'The Mongol Storm',     epi:'\u201cThey said horsemen cannot take cities. The horsemen brought engineers.\u201d, a chronicler of Baghdad', intro:'The horsemen of the steppe were supposed to be helpless before walls. Instead they gathered the world\u2019s engineers and broke every city from Beijing to Baghdad.'},
+    {start:17, name:'The Age of Gunpowder', epi:'\u201cWhat a thousand years built, the great gun answered in a morning.\u201d, a gunner\u2019s diary', intro:'The cannon ended the age of the high wall. From Constantinople\u2019s shattered ramparts to the trenches of Yorktown, the siege now belonged to powder, spade, and time.'},
+    {start:21, name:'The Endless War',       epi:'\u201cEvery wall falls. The only question the siege asks is when.\u201d', intro:'The campaign is won, but the walls keep rising. Vienna, Malta, Osaka, Sevastopol, history\u2019s great sieges return in an unending war, harder with every year.'},
+      {start:51, name:'Beyond the Chronicle',  epi:'\u201cWhen the histories ran out, the war wrote its own.\u201d',
+     intro:'Fifty sieges of recorded history are behind you. From here the strongholds are procedurally generated, invented walls, invented garrisons, difficulty without end. The chronicle is yours alone now.'},
   ];
   function chapterFor(level){ let c=null; for(const ch of CHAPTERS){ if(level>=ch.start) c=ch; } return c; }
 
@@ -1278,7 +1676,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // ── Fortunes of War: the battlefield has a mind of its own ─────────────────
   // From Siege 3 on (never in the Daily), an authored event fires every 30–50s:
   // deserters, dust storms, damp powder, sorties in force, arrow volleys, omens.
-  // Roughly two strokes of luck for every stroke of misfortune — war's fortune,
+  // Roughly two strokes of luck for every stroke of misfortune, war's fortune,
   // not a coin flip. Timed effects run through WAREV.mod(); the handful of hook
   // sites (tower rate/range, troop speed, wall damage) read it each frame.
   const WAREV = (function(){
@@ -1287,42 +1685,42 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     function set(key, v, dur){ mods[key].v=v; mods[key].t=dur; }
     function mod(key){ return mods[key].t>0 ? mods[key].v : 1; }
     function announce(title, body, color){
-      showBanner(title+' — '+body, 2.6);
+      showBanner(title+', '+body, 2.6);
       spawnFloater(LOGICAL_W*0.42, GROUND_TOP+30, title, color||'#f5c76a', 15);
       AudioFX.horn && AudioFX.horn();
     }
     const EVENTS = [
       { w:3, good:true, run(){ // deserters
           if(state.mode==='conquest'){ state.army.grunt=(state.army.grunt||0)+2; renderUnitButtons(); 
-            announce('Deserters slip from the city', 'two spearmen join your host for nothing'); }
+            announce('Deserters slip from the city', 'two soldiers join your army for nothing'); }
           else { const g=20+state.level*4; state.gold+=g; bumpGold();
             announce('Deserters slip from the city', 'they bring the garrison pay chest: +'+g+' gold'); }
         }},
       { w:3, good:true, run(){ // dust storm
           set('towerRange', 0.7, 14);
-          announce('A dust storm sweeps the field', 'the towers cannot see far — 14s', '#c9b18a');
+          announce('A dust storm sweeps the field', 'the towers cannot see far, 14s', '#c9b18a');
         }},
       { w:3, good:true, run(){ // damp powder
           set('towerCd', 1.55, 12);
-          announce('Damp powder in the towers', 'the defenders reload slowly — 12s', '#8fb8e0');
+          announce('Damp powder in the towers', 'the defenders reload slowly, 12s', '#8fb8e0');
         }},
       { w:3, good:true, run(){ // war drums
           set('troopSpd', 1.28, 12);
           for(const m of state.monsters) FX.sparks(m.x, m.y-m.r, 2, '#ffd98a');
-          announce('The war drums quicken', 'your whole host marches faster — 12s');
+          announce('The war drums quicken', 'your whole host marches faster, 12s');
         }},
       { w:3, good:true, run(){ // ram at the gate
           set('wallDmg', 1.4, 12);
-          announce('A ram is brought to the gate', 'wall blows strike +40% harder — 12s');
+          announce('A ram is brought to the gate', 'wall blows strike +40% harder, 12s');
         }},
       { w:2, good:true, run(){ // omen
           FX.sparks(LOGICAL_W*0.5, 30, 14, '#dfe6ff');
           for(const m of state.monsters){ m.hp = Math.min(m.maxHp, m.hp + m.maxHp*0.25); }
-          announce('An omen crosses the heavens', 'the host takes heart — every soldier heals a quarter', '#dfe6ff');
+          announce('An omen crosses the heavens', 'the host takes heart, every soldier heals a quarter', '#dfe6ff');
         }},
       { w:2, good:false, run(){ // sortie in force
           spawnSortie(); spawnSortie();
-          announce('The garrison sorties in force!', 'defenders pour from the gate — guard your camp', '#ff9a5a');
+          announce('The garrison sorties in force!', 'defenders pour from the gate, guard your camp', '#ff9a5a');
         }},
       { w:2, good:false, run(){ // arrow volley
           let hit=0;
@@ -1333,11 +1731,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         }},
       { w:2, good:false, run(){ // masons
           state.castleHP = Math.min(state.castleMaxHP, state.castleHP + Math.round(state.castleMaxHP*0.04));
-          announce('Fresh masons on the wall', 'the breach is patched — the wall regains strength', '#8fb8e0');
+          announce('Fresh masons on the wall', 'the breach is patched, the wall regains strength', '#8fb8e0');
         }},
     ];
     function pick(){
-      const goodFirst = Math.random()<0.65;
+      const goodFirst = Math.random() < ((state.shop.outriders||0) ? 0.78 : 0.65);
       const pool = EVENTS.map((e,i)=>({e,i})).filter(x=>x.e.good===goodFirst && x.i!==lastIdx);
       const total = pool.reduce((a,x)=>a+x.e.w,0);
       let r = Math.random()*total;
@@ -1349,7 +1747,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(state.level<3 || state.daily || (state.boss && state.boss.alive)) return;
       timer -= dt;
       if(timer<=0){
-        timer = 30+Math.random()*20;
+        timer = (30+Math.random()*20)*((state.shop.outriders||0)?0.78:1);
         pick().run();
       }
     }
@@ -1369,7 +1767,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       'The Governor of Xiangyang':{icon:'\uD83D\uDCDC', name:'Plans of Xiangyang',     desc:'enemy towers are rebuilt 30% slower'},
       'Lord Cornwallis':          {icon:'\uD83C\uDFF3\uFE0F', name:'The Surrendered Sword', desc:'+10% gold from every source'},
       'The Iron Pasha':           {icon:'\uD83C\uDF96\uFE0F', name:'The Pasha\u2019s Standard', desc:'your whole host marches +6% faster'},
-      'The Marshal of the Breach':{icon:'\uD83D\uDCEF', name:'The Breach-Horn',        desc:'camp morale recovers half again as fast'},
+      'The Marshal of the Breach':{icon:'\uD83D\uDCEF', name:'The Breach-Horn',        desc:'your camp holds a quarter more health'},
     };
     let owned={};
     try{ owned = JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(_){ owned={}; }
@@ -1380,24 +1778,24 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(!d || owned[bossName]) return;
       owned[bossName]=true; save();
       setTimeout(()=>{
-        showBanner('WAR TROPHY \u2014 '+d.name, 3.0);
-        showCoach('relic_'+bossName, 'You have taken '+d.name+' from '+bossName+'. From this day, '+d.desc+' \u2014 in every campaign, forever. (Your trophy case is in the Parley menu.)');
+        showBanner('WAR TROPHY, '+d.name, 3.0);
+        showCoach('relic_'+bossName, 'You have taken '+d.name+' from '+bossName+'. From this day, '+d.desc+', in every campaign, forever. (Your trophy case is in the Parley menu.)');
       }, 2600);
       FEATS.check('trophy');
     }
     function count(){ return Object.keys(owned).filter(k=>owned[k]).length; }
     function total(){ return Object.keys(DEFS).length; }
-    // effect taps — read at the few combat sites that care
+    // effect taps, read at the few combat sites that care
     const dmg    = ()=> has('The Zealot King') ? 1.10 : 1;
     const struct = ()=> has('The Varangian Captain') ? 1.12 : 1;
     const gold   = ()=> has('Lord Cornwallis') ? 1.10 : 1;
     const spd    = ()=> has('The Iron Pasha') ? 1.06 : 1;
     const slowF  = ()=> has('The Priest of Melqart') ? 0.775 : 0.55;
     const repair = ()=> has('The Governor of Xiangyang') ? 0.7 : 1;
-    const morale = ()=> has('The Marshal of the Breach') ? 1.5 : 1;
+    const morale = ()=> has('The Marshal of the Breach') ? 1.25 : 1;
     function renderCase(){
       const el=document.getElementById('trophyCase'); if(!el) return;
-      let h='<div class="tc-head">War Trophies \u2014 '+count()+' of '+total()+'</div>';
+      let h='<div class="tc-head">War Trophies, '+count()+' of '+total()+'</div>';
       for(const k in DEFS){
         const d=DEFS[k], got=!!owned[k];
         h+='<div class="tc-row'+(got?'':' tc-locked')+'"><span class="tc-ico">'+(got?d.icon:'\uD83D\uDD12')+'</span><span class="tc-txt"><b>'+(got?d.name:'???')+'</b>'+(got?d.desc:'slay '+k)+'</span></div>';
@@ -1417,7 +1815,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       {id:'horde',       name:'The Great Host',     desc:'Field 24 soldiers at once'},
       {id:'warchest',    name:'War Chest',          desc:'Hold 400 gold during a siege'},
       {id:'stormrider',  name:'Stormrider',         desc:'Breach a timed siege with a minute to spare'},
-      {id:'untouchable', name:'Untouchable',        desc:'Win a siege without your camp losing a drop of morale'},
+      {id:'untouchable', name:'Untouchable',        desc:'Win a siege without your camp losing a drop of health'},
       {id:'endless',     name:'Into the Endless War', desc:'March past Yorktown'},
       {id:'legend',      name:'Living Legend',      desc:'Reach Siege 30'},
       {id:'collector',   name:'Master of Trophies', desc:'Hold every champion\u2019s trophy'},
@@ -1435,7 +1833,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         const el=document.getElementById('featToast');
         const cur=queue.shift();
         if(!cur||!el){ showing=false; return; }
-        el.innerHTML='<span class="ft-star">\u2605</span><span><b>Feat of Arms \u2014 '+cur.name+'</b>'+cur.desc+'</span>';
+        el.innerHTML='<span class="ft-star">\u2605</span><span><b>Feat of Arms, '+cur.name+'</b>'+cur.desc+'</span>';
         el.classList.add('show');
         AudioFX.horn && AudioFX.horn();
         setTimeout(()=>{ el.classList.remove('show'); setTimeout(next, 450); }, 3200);
@@ -1456,7 +1854,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           if(state.sortiesActive && state.morale>=state.moraleMax-0.001) grant('untouchable');
           if(state.daily) grant('daily_won');
           break;
-        case 'boss':   grant('giantslayer'); break;
+        case 'boss':   grant('first_blood'); grant('giantslayer'); break;   // a champion is a defender too
         case 'trophy': if(RELIC.count()>=RELIC.total()) grant('collector'); break;
         case 'level':
           if(state.level>=21) grant('endless');
@@ -1473,7 +1871,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     function renderList(){
       const el=document.getElementById('featCase'); if(!el) return;
       const n=DEFS.filter(d=>got[d.id]).length;
-      let h='<div class="tc-head">Feats of Arms \u2014 '+n+' of '+DEFS.length+'</div>';
+      let h='<div class="tc-head">Feats of Arms, '+n+' of '+DEFS.length+'</div>';
       for(const d of DEFS){
         const g=!!got[d.id];
         h+='<div class="tc-row'+(g?'':' tc-locked')+'"><span class="tc-ico">'+(g?'\u2605':'\u2606')+'</span><span class="tc-txt"><b>'+d.name+'</b>'+d.desc+'</span></div>';
@@ -1487,7 +1885,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function makeBoss(level, wallRef){
     const def = bossDefFor(level);
     // The champion has his OWN health pool, anchored to the un-thinned wall with a
-    // hard floor — so debug sliders or early levels can never produce a one-hit boss.
+    // hard floor, so debug sliders or early levels can never produce a one-hit boss.
     const hp = Math.max(Math.round(wallRef*0.55), 140 + level*36);
     return {
       def, name:def.name, ability:def.ability,
@@ -1873,8 +2271,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     highFx:!REDUCED_MOTION,
     // Debug/level-select custom overrides (null = use defaults)
     custom:null,   // {startLevel, wallMult, resMult, capMult, densityMult}
-    daily:null,    // {day, seed, level} — set while playing the Daily Siege
-    coins:0,       // coins earned from breaking sieges — spent in the shop
+    daily:null,    // {day, seed, level}, set while playing the Daily Siege
+    coins:0,       // coins earned from breaking sieges, spent in the shop
     shop:{ harvest:0, train:0, cap:0, shrink:0, drill:0 },  // persistent purchased upgrades
   };
 
@@ -1887,7 +2285,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  //  FX — the cinematic layer. Weather, birds, god rays, shockwaves, spark
+  //  FX, the cinematic layer. Weather, birds, god rays, shockwaves, spark
   //  streaks, physical debris, scorch decals, lightning, slow-motion, and
   //  the letterboxed location cards. Everything here is presentation-only:
   //  it reads game state but never changes gameplay.
@@ -1958,7 +2356,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           if(w.x>LOGICAL_W+10||w.y>LOGICAL_H+10) Object.assign(w, makeFlake(era,false));
         }
       }
-      // birds — a distant flock crossing the sky (crows over the burning era)
+      // birds, a distant flock crossing the sky (crows over the burning era)
       S.birdT -= dt;
       if(S.birdT<=0 && HFX()){
         S.birdT = 16+Math.random()*22;
@@ -2229,8 +2627,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   function makeTurret(lane, xf, type){
     const def = TURRET_DEFS[type];
+    // Damage keeps the old gentle linear ramp; HEALTH now compounds 7% per
+    // siege (capped at 4x, reached around Siege 22), the old linear ramp made
+    // late towers feel like they'd stopped growing while your upgrades hadn't.
     const lvlScale = 1 + 0.055*(state.level-1);
-    const maxHp = def.hp * lvlScale;
+    const hpScale = Math.min(4, Math.pow(1.07, state.level-1));
+    const maxHp = def.hp * hpScale * PACE.towerHp;
     const t = {
       lane, xf, x:xf*LOGICAL_W, y:0, type,
       range:def.range, dmg:def.dmg*lvlScale, baseDmg:def.dmg*lvlScale, rate:def.rate,
@@ -2298,25 +2700,41 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return layout;
   }
 
+  function isWaterLane(i){
+    return state.theme==='naval' || (state.waterLanes && state.waterLanes.includes(i));
+  }
+  function computeWaterLanes(level){
+    // Hybrid coasts begin after landfall (13+), on land sieges only. The farm
+    // board is the source of truth: the more of the estate the sea has taken,
+    // the more of the battlefield is water. (Deterministic per level, so the
+    // classic Siege and Daily modes agree with Conquest.)
+    if(level<13 || themeFor(level)) return [];
+    const def = levelDef(level);
+    if(!def || !def.farm) return [];
+    const all = def.farm.join('');
+    const frac = (all.split('~').length-1)/all.length;
+    if(frac>=0.16) return [LANE_COUNT-1, LANE_COUNT-2]; // two waterways
+    if(frac>=0.08) return [LANE_COUNT-1];               // one waterway
+    return [];
+  }
   function setupLevel(){
+    state.theme = themeFor(state.level);
+    state.waterLanes = computeWaterLanes(state.level);
     const ramp = rampFactor();
     const cdef = (state.mode==='conquest') ? levelDef(state.level) : null;
     if(state.mode==='conquest'){
-      // Wall HP scales with the recommended host and the level's authored multiplier.
-      const base = state.level===1
-        ? minimumHost(1) * 14
-        : recommendedHost(state.level) * 14;
-      const _wm = (state.custom && state.custom.wallMult) || 1;
-      state.castleMaxHP = Math.round(base * (cdef && cdef.wallMult ? cdef.wallMult : 1) * _wm);
+      // Wall HP comes from ONE formula shared with minimumHost(), so the march
+      // gate and the wall can never drift apart (see conquestWallHP).
+      state.castleMaxHP = conquestWallHP(state.level);
     } else {
       const wallBase = state.level===1 ? 300 : 760;
-      state.castleMaxHP = Math.round(wallBase * Math.pow(1.27, state.level-1) * (0.55 + 0.45*ramp));
+      state.castleMaxHP = Math.round(wallBase * Math.pow(1.27, state.level-1) * (0.55 + 0.45*ramp) * PACE.wall);
     }
     // Champion sieges (every 4th level): a boss guards the gate. The wall itself
     // is thinner, but it cannot be harmed until the champion falls.
     if(isBossLevel(state.level)){
       // Wall is thinned to ~62%; the champion carries his own health pool (see
-      // makeBoss). The real difficulty is his attacks — in conquest the +25%
+      // makeBoss). The real difficulty is his attacks, in conquest the +25%
       // recommended host covers the attrition he inflicts.
       const preWall = state.castleMaxHP;
       state.castleMaxHP = Math.round(state.castleMaxHP*0.62);
@@ -2325,7 +2743,9 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       state.boss = null;
     }
     state.castleHP = state.castleMaxHP;
-    // Conquest has no relief timer — you're not racing a clock, you're solving the
+    state.battleT = 0;      // battle clock: sortie pressure escalates as the siege drags
+    state.lastStand = false; // the garrison's final flood (fires once, later sieges)
+    // Conquest has no relief timer, you're not racing a clock, you're solving the
     // supply puzzle and pushing the walls. Timer stays for the other modes.
     state.timerActive = (state.mode!=='conquest') && state.level >= 2;
     state.timeLimit = Math.min(340, 110 + state.level*12 + (isBossLevel(state.level)?50:0));
@@ -2381,7 +2801,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.monsters=[]; state.projectiles=[]; state.corpses=[];
     state.sorties=[];
     state.sortiesActive = state.level>=3;
-    state.morale = 100; state.moraleMax = 100;
+    state.moraleMax = Math.round(70*(1+(state.shop.standards||0)*0.20)*RELIC.morale());
+    state.morale = state.moraleMax;
     state.sortieTimer = state.level<=3 ? 16 : 9;
     state.trebStrikes = [];
     state.trebCd = new Array(LANE_COUNT).fill(0);
@@ -2398,6 +2819,27 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const def = UNIT_DEFS[key];
     if(!state.unlocked[key]) return false;
     if((state.unitCd[key]||0) > 0) return false;
+    // this deployment sails as a hull if the whole siege is naval, or if it's a
+    // Fire Ship on a coastal siege
+    const _isShip = state.theme==='naval'
+      || (state.waterLanes && state.waterLanes.length>0 && !state.theme && HYBRID_SHIP_KEYS.has(key));
+    const _galley = _isShip && key==='shield';
+    const _shipHp  = (_isShip ? SHIP_STATS.hp  : 1) * (_galley ? GALLEY_TUNE.hp  : 1);
+    const _shipDmg = (_isShip ? SHIP_STATS.dmg : 1) * (_galley ? GALLEY_TUNE.dmg : 1);
+    const _shipSpd = _galley ? GALLEY_TUNE.spd : 1;
+    // Coastal siege lane rules: waterways take hulls only. War Galleys
+    // (Spearmen who embark) and Fire Ships. Everyone else keeps to the land.
+    if(state.waterLanes && state.waterLanes.length && !state.theme){
+      const wetTarget = state.waterLanes.includes(activeLane);
+      if(HYBRID_SHIP_KEYS.has(key) && !wetTarget){
+        spawnFloater(LOGICAL_W*0.3, LANES[activeLane].y, 'Ships need a waterway, pick a sea lane', '#7ab8d8', 13);
+        return false;
+      }
+      if(wetTarget && !HYBRID_SHIP_KEYS.has(key)){
+        spawnFloater(LOGICAL_W*0.3, LANES[activeLane].y, 'Only ships can sail here, pick a land lane', '#7ab8d8', 13);
+        return false;
+      }
+    }
     if(state.mode==='conquest'){
       if((state.army[key]||0) <= 0) return false;
       state.army[key]--;
@@ -2405,14 +2847,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(state.gold < def.cost) return false;
       state.gold -= def.cost;
     }
-    state.unitCd[key] = def.cd * deployCdMult();
+    state.unitCd[key] = Math.max(PACE.cdFloor, def.cd * deployCdMult() * PACE.cd);
     const lane = LANES[activeLane] || LANES[0];
     const pad = def.r + 4;
     const y = Math.max(lane.top+pad, Math.min(lane.bottom-pad, lane.y + (Math.random()-0.5)*(lane.h*0.4)));
     state.monsters.push({
       id:++state.lastSpawnId, key, x:18, y, baseY:y, lane:activeLane,
-      hp:def.hp*effHPMult(), maxHp:def.hp*effHPMult(),
-      dmg:def.dmg*effDmgMult(), spd:def.spd*effSpdMult(),
+      hp:def.hp*effHPMult()*PACE.hp*_shipHp, maxHp:def.hp*effHPMult()*PACE.hp*_shipHp,
+      dmg:def.dmg*effDmgMult()*PACE.dmg*_shipDmg, spd:def.spd*effSpdMult()*PACE.spd*_shipSpd,
       r:def.r, color:def.color, dark:def.dark, flying:def.flying,
       weaponKind:def.weapon,
       atkRange:def.atkRange||0, armor:def.armor||1, structMult:def.structMult||1,
@@ -2438,7 +2880,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.camps.push({ x:cx, y:gy, rate:CAMP_DEF.rate, buildT:1, smokeT:0 });
     AudioFX.coin && AudioFX.coin();
     spawnDust(cx, gy+10, 8);
-    spawnFloater(cx, gy-20, '+'+CAMP_DEF.rate.toFixed(1)+' muster/s', '#7bbf5e', 13);
+    spawnFloater(cx, gy-20, '+'+CAMP_DEF.rate.toFixed(1)+' supply/s', '#7bbf5e', 13);
     return true;
   }
 
@@ -2452,7 +2894,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   function genEstate(){
     // Conquest uses hand-authored, fixed terrain per level so each is a crafted puzzle.
-    // The farm map's own dimensions set the board size — small estates early
+    // The farm map's own dimensions set the board size, small estates early
     // (the packing squeeze), bigger land as the campaign rewards you with it.
     if(state.mode==='conquest'){
       const def=levelDef(state.level);
@@ -2499,7 +2941,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // the piece is centered-ish on the tap: we try the tapped cell as each of the
   // piece's cells and pick the first fully-valid fit; fall back to origin at tap.
   // Resolve a tap into a placement: the piece must COVER the tapped tile, at
-  // the player's CURRENT rotation — rotation is always the player's call.
+  // the player's CURRENT rotation, rotation is always the player's call.
   // If no arrangement of this rotation fits but another rotation would, the
   // rejection says so ('rotate to fit') instead of leaving them guessing.
   function placementOrigin(type, rot, col, row){
@@ -2511,7 +2953,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(v.ok) return {ok:true, oc, or, cells, rot};
       if(/same kind/.test(v.why)) why=v.why;   // most informative rejection wins
     }
-    // would a different rotation fit here? (hint only — never auto-rotate)
+    // would a different rotation fit here? (hint only, never auto-rotate)
     if(why==='no room here'){
       for(let dr=1; dr<4 && why==='no room here'; dr++){
         const rcells=shapeCells(type,(rot+dr)%4);
@@ -2529,7 +2971,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const c=oc+dc, r=or+dr;
       if(c<0||r<0||c>=GRID_COLS||r>=GRID_ROWS) return {ok:false, why:'off grid'};
       const t=state.estate.tiles[r*GRID_COLS+c];
-      if(t.terrain==='ocean') return {ok:false, why:'open water'};
+      const wet = (t.terrain==='ocean' || t.terrain==='shoal');
+      if(themeFor(state.level)==='naval'){
+        // The harbor rule: the fleet floats. Only timber and quarry work the land;
+        // every other facility is a moored hull that must sit on open water.
+        if(NAVAL_LAND_ONLY.has(type)){ if(wet) return {ok:false, why:'needs solid ground'}; }
+        else if(!wet) return {ok:false, why:'must float, build on water'};
+      } else if(hybridNow() && HYBRID_FLEET_BUILDS.has(type)){
+        if(!wet) return {ok:false, why:'ships must float'};
+      } else {
+        if(wet) return {ok:false, why:'open water'};
+      }
+      if(t.terrain==='hill') return {ok:false, why:'rocky hills'};
       if(t.building||t.covered!=null) return {ok:false, why:'occupied'};
     }
     // THE rule: two buildings of the SAME kind may never touch edge-to-edge —
@@ -2540,7 +2993,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       for(const [nc,nr] of [[c-1,r],[c+1,r],[c,r-1],[c,r+1]]){
         if(nc<0||nr<0||nc>=GRID_COLS||nr>=GRID_ROWS) continue;
         const ni=nr*GRID_COLS+nc;
-        if(foot.has(ni)) continue;                // part of this same piece — fine
+        if(foot.has(ni)) continue;                // part of this same piece, fine
         const nt=state.estate.tiles[ni];
         const owner = nt.building ? nt.building
                     : (nt.covered!=null ? state.estate.tiles[nt.covered].building : null);
@@ -2579,7 +3032,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.estate.tiles[anchorIdx].building=b;
     for(const fi of footprint){ if(fi!==anchorIdx) state.estate.tiles[fi].covered=anchorIdx; }
     state.estate.history.push(anchorIdx);
-    // Harvesters pay out their entire yield ONCE, right now — scaled by rich-tile
+    state.estate.moves=(state.estate.moves||0)+1;   // every placement is a move (Deft Muster)
+    // Harvesters pay out their entire yield ONCE, right now, scaled by rich-tile
     // coverage, the harvest shop tier, and the level. Recorded in gained so Undo
     // can take it back exactly.
     if(def.kind==='harvest'){
@@ -2603,6 +3057,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function undoLastBuild(){
     if(!state.estate || !state.estate.history || !state.estate.history.length) return;
     const idx=state.estate.history.pop();
+    state.estate.moves=Math.max(0,(state.estate.moves||0)-1);   // undo is free: it takes its placement's move back with it
     const t=state.estate.tiles[idx];
     const b=t.building;
     if(!b){ return; }
@@ -2686,11 +3141,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     } else {
       budgetH=Math.max(150,(window.innerHeight||640)-372);
     }
-    // Fit the WHOLE grid inside the remaining space — no vertical overshoot, so
+    // Fit the WHOLE grid inside the remaining space, no vertical overshoot, so
     // the bottom rows are never cut off on phones. The minimum cell still scales
     // with grid width so the board fits narrow screens horizontally too.
-    const minCell = Math.min(30, (availW-2)/GRID_COLS);
-    const dispCell=Math.max(minCell, Math.min(availW/GRID_COLS, budgetH/GRID_ROWS));
+    // Fit BOTH axes: never let a readability floor push the board taller than
+    // the space it has, or the bottom rows fall off the screen on tall boards.
+    const fit = Math.min(availW/GRID_COLS, budgetH/GRID_ROWS);
+    const floorCell = Math.min(16, (availW-2)/GRID_COLS);
+    const dispCell = Math.max(floorCell, fit);
     cv.style.width=(dispCell*GRID_COLS)+'px';
     cv.style.height=(dispCell*GRID_ROWS)+'px';
   }
@@ -2709,7 +3167,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         const foot=b.footprint||[i];
         const fset=new Set(foot);
         // solid fill across every cell (no inner gaps) so the piece reads as one unit
-        g.fillStyle=def.color;
+        g.fillStyle=pColor(b.type);
         for(const fi of foot){
           const c=fi%GRID_COLS, r=(fi/GRID_COLS)|0;
           g.fillRect(c*CELL, r*CELL, CELL, CELL);
@@ -2753,7 +3211,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           }
         }
       }
-      // strong ghost at the tapped/hovered origin — shows exactly what a tap
+      // strong ghost at the tapped/hovered origin, shows exactly what a tap
       // would place at the CURRENT rotation; red means this rotation can't
       // cover the tile (the tap's floater says 'rotate to fit' when that's why)
       if(hov){
@@ -2785,11 +3243,39 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     for(const fl of estateFloaters){
       g.globalAlpha=Math.min(1,fl.t*1.4);
       g.fillStyle=fl.color; g.font='bold 15px Georgia,serif'; g.textAlign='center';
-      g.fillText(fl.text, (fl.col+0.5)*CELL, (fl.row+0.5)*CELL - (1.1-fl.t)*22);
+      // clamp: payouts on edge tiles used to run off the side of the board
+      const _tw=g.measureText(fl.text).width;
+      const _cx=Math.max(_tw/2+4, Math.min(GRID_COLS*CELL-_tw/2-4, (fl.col+0.5)*CELL));
+      g.fillText(fl.text, _cx, (fl.row+0.5)*CELL - (1.1-fl.t)*22);
       g.globalAlpha=1; g.textAlign='left';
     }
   }
   function drawTile(g,t,x,y,S){
+    if(t.terrain==='shoal'){
+      g.fillStyle=TERRAIN_COL.shoal; g.fillRect(x,y,S,S);
+      g.fillStyle='rgba(255,255,255,0.07)'; g.fillRect(x,y,S,S*0.5);
+      // silver fish flashing beneath the surface, the water's rich tiles
+      g.strokeStyle='rgba(225,240,248,0.85)'; g.lineWidth=Math.max(1,S*0.05); g.lineCap='round';
+      for(const [fx,fy,fl] of [[0.26,0.36,1],[0.6,0.58,-1],[0.44,0.78,1]]){
+        g.beginPath();
+        g.moveTo(x+S*fx, y+S*fy);
+        g.quadraticCurveTo(x+S*(fx+0.09*fl), y+S*(fy-0.06), x+S*(fx+0.18*fl), y+S*fy);
+        g.stroke();
+      }
+      g.strokeStyle='rgba(0,0,0,0.28)'; g.lineWidth=1; g.strokeRect(x+0.5,y+0.5,S-1,S-1);
+      return;
+    }
+    if(t.terrain==='hill'){
+      g.fillStyle=TERRAIN_COL.hill; g.fillRect(x,y,S,S);
+      // a rocky mound with a snow-touched crown
+      g.fillStyle='#5d564b';
+      g.beginPath(); g.moveTo(x+S*0.14,y+S*0.86); g.lineTo(x+S*0.5,y+S*0.2); g.lineTo(x+S*0.86,y+S*0.86); g.closePath(); g.fill();
+      g.fillStyle='#8d867a';
+      g.beginPath(); g.moveTo(x+S*0.3,y+S*0.86); g.lineTo(x+S*0.62,y+S*0.36); g.lineTo(x+S*0.9,y+S*0.86); g.closePath(); g.fill();
+      g.fillStyle='#ddd9d0';
+      g.beginPath(); g.moveTo(x+S*0.42,y+S*0.35); g.lineTo(x+S*0.5,y+S*0.2); g.lineTo(x+S*0.58,y+S*0.35); g.closePath(); g.fill();
+      return;
+    }
     if(t.terrain==='ocean'){
       g.fillStyle=TERRAIN_COL.ocean; g.fillRect(x,y,S,S);
       g.fillStyle='rgba(140,200,225,0.10)'; g.fillRect(x,y,S,S*0.45);
@@ -2836,7 +3322,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const cx=x+S/2, cy=y+S/2;
     const w=S*0.5*Math.max(0.5,pop);
     g.fillStyle='rgba(0,0,0,0.3)'; g.beginPath(); g.ellipse(cx,cy+w*0.4,w*0.55,w*0.22,0,0,Math.PI*2); g.fill();
-    g.fillStyle=lighten(def.color,18);
+    g.fillStyle=lighten(pColor(b.type),18);
     g.fillRect(cx-w/2,cy-w/2,w,w);
     g.fillStyle='rgba(255,255,255,0.28)'; g.fillRect(cx-w/2,cy-w/2,w,w*0.3);
     g.fillStyle='rgba(0,0,0,0.3)'; g.fillRect(cx-w/2,cy+w*0.2,w,w*0.3);
@@ -2844,6 +3330,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
 
   function recommendedHost(level){
+    if(level===9) return 15;   // the first sea siege sails with a small flotilla, half the old fleet
     const base = Math.round(9 + (level-1)*3.6);
     // Champion sieges pack ~25% more total HP (wall + champion), so advise a bigger host.
     return isBossLevel(level) ? Math.round(base*1.25) : base;
@@ -2864,14 +3351,15 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     for(const key of UNIT_ORDER){
       const n=state.army[key]||0, cap=unitCap(key);
       const el=document.getElementById('armycount-'+key);
-      if(el) el.textContent = cap>0 ? (n+'/'+cap) : n;
+      if(el) el.textContent = cap>0 ? (n+'/'+cap) : '\u2014';
+      const cellEl=document.getElementById('armycell-'+key);
+      if(cellEl) cellEl.classList.toggle('locked', cap<=0);
       const pel=document.getElementById('armyprice-'+key);
       if(pel){
         if(cap<=0){
-          pel.textContent='needs '+PLACE_DEFS[TRAINER_OF[key]].name;
-          pel.style.color='var(--ink-dim)';
+          pel.textContent='\uD83D\uDD12'; pel.style.color='var(--ink-dim)';
         } else if(n>=cap){
-          pel.textContent='+ '+PLACE_DEFS[TRAINER_OF[key]].name;   // housing full — build another
+          pel.textContent='+ '+PLACE_DEFS[TRAINER_OF[key]].name;   // housing full, build another
           pel.style.color='#e0a83f';
         } else {
           const p=unitPrice(key);
@@ -2880,7 +3368,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         }
       }
     }
-    const n=armyTotal(), rec=recommendedHost(state.level), min=minimumHost(state.level);
+    const n=armyTotal(), min=minimumHost(state.level), rec=Math.max(recommendedHost(state.level), min);
     const march=document.getElementById('marchBtn');
     if(march){
       const missing=missingRequired();
@@ -2889,11 +3377,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         const names=missing.map(t=>PLACE_DEFS[t].name).join(', ');
         march.textContent = 'Required: '+names;
       } else if(n<min){
-        march.textContent = 'Need '+min+' troops to march — you have '+n;
+        march.textContent = 'Need '+min+' troops to march, you have '+n;
       } else {
         march.textContent = 'March to Siege '+state.level
           + (isBossLevel(state.level)?' ⚔ CHAMPION':'')
-          + ' — '+n+' troops (rec. '+rec+')';
+          + ', '+n+' troops (rec. '+rec+')';
       }
       march.classList.toggle('disabled', !ready);
     }
@@ -2903,7 +3391,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       undoBtn.textContent = hist ? 'Undo ('+hist+')' : 'Undo';
       undoBtn.classList.toggle('disabled', hist===0);
     }
-    for(const type of PLACE_ORDER){
+    for(const type of palOrder()){
       const b=document.getElementById('palbtn-'+type);
       if(b && buildUnlocked(type)) b.classList.toggle('cant', !resAfford(PLACE_DEFS[type].cost));
     }
@@ -2913,15 +3401,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const cells=shapeCells(type, rot||0); const {w,h}=shapeExtent(cells);
     const cell=Math.floor(Math.min((cv.width-6)/w,(cv.height-6)/h));
     const ox=(cv.width - w*cell)/2, oy=(cv.height - h*cell)/2;
-    const def=PLACE_DEFS[type];
     for(const [c,r] of cells){
-      g.fillStyle=def.color; g.fillRect(ox+c*cell+1, oy+r*cell+1, cell-2, cell-2);
+      g.fillStyle=pColor(type); g.fillRect(ox+c*cell+1, oy+r*cell+1, cell-2, cell-2);
       g.fillStyle='rgba(255,255,255,0.22)'; g.fillRect(ox+c*cell+1, oy+r*cell+1, cell-2,(cell-2)*0.4);
       g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=1; g.strokeRect(ox+c*cell+1.5, oy+r*cell+1.5, cell-3, cell-3);
     }
   }
   const PAL_PER_PAGE=4;
-  function palPageCount(){ return Math.ceil(PLACE_ORDER.length/PAL_PER_PAGE); }
+  function palPageCount(){ return Math.ceil(palOrder().length/PAL_PER_PAGE); }
   function renderPalette(){
     const wrap=document.getElementById('build-palette'); if(!wrap) return;
     if(state.palPage==null) state.palPage=0;
@@ -2930,7 +3417,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.palPage<0) state.palPage=0;
     wrap.innerHTML='';
     const start=state.palPage*PAL_PER_PAGE;
-    const slice=PLACE_ORDER.slice(start, start+PAL_PER_PAGE);
+    const slice=palOrder().slice(start, start+PAL_PER_PAGE);
     for(const type of slice){
       const def=PLACE_DEFS[type];
       const unlocked=buildUnlocked(type);
@@ -2945,7 +3432,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           : ('<span style="color:#e0a83f">houses '+def.cap+' · '+costStr(unitPrice(def.trains))+' ea</span>');
         btn.innerHTML=
           '<canvas class="pal-shape" width="48" height="48"></canvas>'+
-          '<div class="pal-nm">'+def.name+'</div>'+
+          '<div class="pal-nm">'+pName(type)+'</div>'+
           '<div class="pal-cost">'+costStr(def.cost)+'</div>'+
           '<div class="pal-cost">'+detail+'</div>';
         // show at the live rotation if this piece is selected, else default
@@ -2953,9 +3440,9 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         btn.addEventListener('pointerdown', e=>{ e.preventDefault(); selectBuild(type); });
       } else {
         btn.innerHTML=
-          '<div class="pal-swatch" style="background:'+def.color+';opacity:.4"></div>'+
-          '<div class="pal-nm">'+def.name+'</div>'+
-          '<div class="pal-cost" style="color:var(--bronze)">Siege '+def.unlock+'</div>'+
+          '<div class="pal-swatch" style="background:'+pColor(type)+';opacity:.4"></div>'+
+          '<div class="pal-nm">'+pName(type)+'</div>'+
+          '<div class="pal-cost" style="color:var(--bronze)">Siege '+pUnlock(type)+'</div>'+
           '<div class="pal-cost" style="color:var(--ink-dim)">locked</div>';
       }
       wrap.appendChild(btn);
@@ -3009,8 +3496,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(!unitAvailable(key)) return;
     const cell=document.getElementById('armycell-'+key);
     const deny=()=>{ if(cell){ cell.classList.remove('deny'); void cell.offsetWidth; cell.classList.add('deny'); } AudioFX.retreat && AudioFX.retreat(); };
-    if(trainerCountFor(key)<=0){ deny(); return; }
-    if((state.army[key]||0) >= unitCap(key)){ deny(); return; }   // housing full — build another trainer
+    if(trainerCountFor(key)<=0){
+      deny();
+      farmToast('Build a '+pName(TRAINER_OF[key])+' to recruit '+uName(key));
+      return;
+    }
+    if((state.army[key]||0) >= unitCap(key)){ deny(); return; }   // housing full, build another trainer
     const p=unitPrice(key);
     if(!resAfford(p)){ deny(); return; }
     resPay(p);
@@ -3020,6 +3511,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     AudioFX.coin && AudioFX.coin();
     updateFarmHUD();
     guideNotify('buy');
+  }
+  let _farmToastT=null;
+  function farmToast(msg){
+    const el=document.getElementById('farmToast'); if(!el) return;
+    el.textContent=msg;
+    el.classList.add('show');
+    clearTimeout(_farmToastT);
+    _farmToastT=setTimeout(()=>el.classList.remove('show'), 2000);
   }
   function disbandTroop(key){
     const stack=state.paidStack && state.paidStack[key];
@@ -3039,9 +3538,54 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     drawEstate();
     updateFarmHUD();
   }
+  // One basic troop's blow against the wall, with every multiplier the real
+  // wall-hit applies (damage upgrades, relics, war modifiers, engineers). The
+  // yardstick is the Spearman on land and the War Galley at sea, the always-
+  // available line troops. Skirmishers hit softer, medics barely at all; a
+  // player who marches nothing but those has chosen not to break walls.
+  function wallBlow(level){
+    const naval = themeFor(level)==='naval';
+    const def = naval ? UNIT_DEFS.shield : UNIT_DEFS.grunt;
+    let b = def.dmg * PACE.dmg * PACE.wallHit;
+    if(naval) b *= SHIP_STATS.dmg * GALLEY_TUNE.dmg;
+    if(typeof effDmgMult==='function') b *= effDmgMult();
+    if(typeof RELIC!=='undefined') b *= RELIC.dmg()*RELIC.struct();
+    if(typeof WAREV!=='undefined' && WAREV.mod) b *= WAREV.mod('wallDmg');
+    b *= 1 + ((state.shop && state.shop.engineers)||0)*0.08;
+    return b;
+  }
+  // The conquest wall, pre-champion-thinning. Both setupLevel and minimumHost
+  // read from here, the wall and the march gate share one formula by design.
+  function conquestWallHP(level){
+    const theme = themeFor(level);
+    const cdef = levelDef(level);
+    const _wm = (state.custom && state.custom.wallMult) || 1;
+    if(level===1){
+      // Siege 1 is a promise: the minimum band (5 spearmen), if every one of
+      // them reaches the gate, breaks it, 0.9 leaves rounding margin, and
+      // 4 arrivals still fall just short.
+      const _blow = UNIT_DEFS.grunt.dmg * PACE.dmg * PACE.wallHit;
+      return Math.round(minimumHost(1) * _blow * 0.9 * _wm);
+    }
+    const base = recommendedHost(level) * 14;
+    // Sea-walls are thinner relative to the host formula: the naval roster is
+    // a handful of hulls with no medics, so the same wall demands far more of it.
+    const _navalWall = theme==='naval' ? 0.82 : 1;
+    return Math.round(base * (cdef && cdef.wallMult ? cdef.wallMult : 1) * _wm * PACE.wall * _navalWall);
+  }
   function minimumHost(level){
-    if(level===1) return 5;            // gentle first siege — march with a small band
-    return Math.max(8, Math.ceil(recommendedHost(level)*0.6));
+    if(level===1) return 5;            // gentle first siege, march with a small band
+    if(level===9) return 10;           // first sea siege: ten hulls float the assault
+    const floor = Math.max(8, Math.ceil(recommendedHost(level)*0.6));
+    if(state.mode!=='conquest') return floor;
+    // The gate must be HONEST: the minimum host, if every troop reaches the
+    // wall, must actually break it on castle HP alone. Champions thin the wall
+    // to 62% (their own health is the attrition the player absorbs on top).
+    // Because wallBlow reads live upgrades, the gate relaxes back toward the
+    // floor as the army's hitting power grows.
+    let need = conquestWallHP(level);
+    if(isBossLevel(level)) need *= 0.62;
+    return Math.max(floor, Math.ceil(need / wallBlow(level)));
   }
   // No slot cap: the land itself is the only build budget. Boards grow from
   // 7×7 to 12×12 across the campaign, so the constraint stays visible on the map.
@@ -3092,15 +3636,15 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
     return cells.slice(0,cells.length-1); // fallback (shouldn't happen)
   }
-  function shrinkCells(cells){
-    const tier=state.shop.shrink||0;
-    if(tier<=0) return cells;
-    let out=cells.map(p=>[p[0],p[1]]);
-    if(tier>=1 && out.length>3){ out=removeOneCell(out); }
-    if(tier>=2 && out.length>2){ out=removeOneCell(out); }
-    return normalizeCells(out);
+  function shrinkCells(cells, type){
+    if(!(state.shop && state.shop['shrink_'+type])) return cells;
+    if(cells.length<=3) return cells;   // never below 3 cells, the puzzle survives
+    return normalizeCells(removeOneCell(cells.map(p=>[p[0],p[1]])));
   }
   function enterFarm(){
+    // The theme flag must be current here too: conquest reaches the farm before
+    // setupLevel ever runs, so the sea/mountain story popups read a stale theme.
+    state.theme = themeFor(state.level);
     state.phase='farm';
     state.started=false;
     state.palPage=0; state.rot=0; state.selectedBuild=null;
@@ -3115,6 +3659,28 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // re-measure once layout settles (mobile viewport/safe-area can shift after paint)
     requestAnimationFrame(()=>{ sizeEstateCanvas(); drawEstate(); });
     if(state.level===1) startGuide();
+    if(state.theme==='naval' && state.level>12 && !localStorage_getBool('ewf_sea_return')){
+      localStorage_setBool('ewf_sea_return', true);
+      setTimeout(()=>showCoach('naval_return',
+        'The war returns to the SEA. This siege was fought on the water in its day, so yours is too, harbor rules apply: ships on the water, camps on the shores, shoals pay double. Your full fleet is available.'), 700);
+    }
+    if(state.theme==='naval' && state.level===9 && !localStorage_getBool('ewf_sea_story')){
+      localStorage_setBool('ewf_sea_story', true);
+      setTimeout(()=>showStory('The War Goes to Sea',
+        'From Lisbon to Constantinople, the Crusades were won and lost by FLEETS, and for the next four sieges, so is your war.<br><br>'+
+        '\u2022 Your estate is now a <b>harbor</b>: the Lumber Camp and Quarry work the two shores, but everything else is a <b>ship moored on open water</b>.<br>'+
+        '\u2022 The <b>Fishing Fleet</b> feeds your war; anchor over sparkling <b>shoals</b> for double yield.<br>'+
+        '\u2022 Your soldiers are <b>ships</b>: War Galleys and Arrow Barques from the first tide, Fire Ships joining as the campaign sails on.<br>'+
+        '\u2022 In battle, the lanes are <b>waterways into the port</b>, sail them, sink the sea-walls.<br><br>'+
+        'The water champion holds Constantinople. Take his walls, and the war returns to land.'), 500);
+    }
+    if(state.level===13 && localStorage_getBool && !localStorage_getBool('ewf_landfall')){
+      localStorage_setBool('ewf_landfall', true);
+      setTimeout(()=>showCoach('naval_out',
+        'LANDFALL. The fleets are behind you, the Horde\u2019s wars are fought on the endless steppe, and your host marches on solid ground again.'), 700);
+    }
+    if(state.theme==='mountain') setTimeout(()=>showCoach('mountain',
+      'The war climbs into the MOUNTAINS. Rocky hills break your estate, nothing can be built on them, so pack your camps into the valleys between. The fortress ahead is granite, and it has never fallen.'), 700);
     // First landfall: the campaign has reached the sea.
     if(state.estate.tiles.some(t=>t.terrain==='ocean') && !localStorage_getBool('ewf_coast')){
       localStorage_setBool('ewf_coast', true);
@@ -3138,8 +3704,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function canMarch(){
     return armyTotal() >= minimumHost(state.level) && missingRequired().length===0;
   }
-  function marchToSiege(){
-    if(!canMarch()) return;
+  function marchToSiege(force){
+    if(!force && !canMarch()) return;
     endGuide();
     document.getElementById('farm-screen').classList.remove('show');
     state.phase='battle';
@@ -3149,23 +3715,46 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.started=true;
     state.timeLeft=state.timeLimit;
     state.lastTickSec=-1;
+    // ── Deft Muster: an efficiency bonus, kept OFF the farm HUD on purpose.
+    // Placements count as moves (undo refunds its move); marching with no
+    // more than (buildings + 2) moves opens the siege with a heavier chest.
+    // The reward announces itself in battle, so the farm screen stays clean.
+    if(state.mode==='conquest' && state.estate){
+      let _built=0; for(const t of state.estate.tiles){ if(t.building) _built++; }
+      const _moves=state.estate.moves||0;
+      if(_built>0 && _moves<=_built+2){
+        const _g=Math.min(60, 16+state.level*3);
+        state.gold+=_g;
+        setTimeout(()=>{
+          spawnFloater(LOGICAL_W*0.4, LOGICAL_H*0.22, 'Deft planning! +'+_g+' gold', '#f5c76a', 15);
+          bumpGold && bumpGold();
+          showCoach('deft_muster',
+            'DEFT PLANNING: you raised your estate without a wasted move, so your war chest starts '+_g+' gold heavier. Plan before you build and the bonus is yours every siege.');
+        }, 900);
+      }
+    }
+    if(!state.theme && state.waterLanes && state.waterLanes.length) showCoach('hybrid',
+      'A COASTAL siege: the sea has taken the bottom '+(state.waterLanes.length===2?'two lanes':'lane')+' of the battlefield. Your estate\u2019s coastal water can moor a FLEET. War Galleys and Fire Ships, each sailing from its own moorage. TAP A LANE and the roster follows it: waterways show your two hulls, land lanes show the foot companies. The trebuchet cannot reach the water.');
+    if(state.theme==='naval') showCoach('naval_battle',
+      'A harbor assault: the lanes are WATERWAYS and your deployments are SHIPS. The port\u2019s sea-walls fall like any others, pick the channel with the weakest towers and press it.');
     announceBossIfAny();
     // Explain lane selection the first time the player commands troops in the field.
     setTimeout(()=>{
       showCoach('lanes',
-        "Now you command the assault. TAP A ROW of the battlefield to choose your attack lane — the golden chevron marks it, and the colored dots at each row's left edge show the towers guarding it (green = open path). Then tap a troop to send it down the chosen lane. Aim where the defenses are thin, and switch lanes freely as the walls crumble.");
+        "Now you command the assault. TAP A ROW of the battlefield to choose your attack lane, the golden chevron marks it, and the colored dots at each row's left edge show the towers guarding it (green = open path). Then tap a troop to send it down the chosen lane. Aim where the defenses are thin, and switch lanes freely as the walls crumble.");
     }, 650);
   }
 
   const GUIDE_STEPS=[
-    {sel:'#palbtn-lumber',    tip:'Tap the Lumber Camp. Every building is a puzzle piece that pays out ONCE, the moment you place it — placement is everything.', on:'sel:lumber'},
-    {sel:'#estate-wrap',      tip:'Tap the field to place it (Rotate turns the piece first). Cover the sparkling RICH tiles — each rich square it covers counts double.', on:'place'},
-    {sel:'#palbtn-farmhouse', tip:'Now the Farmhouse — it pays out food, which buys spearmen.', on:'sel:farmhouse'},
-    {sel:'#estate-wrap',      tip:'ONE RULE: two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush — wood/barracks/wood is fine, wood/wood is not.', on:'place'},
-    {sel:'#palbtn-barracks',  tip:'The Barracks houses 8 Spearmen. Want a bigger host? Build MORE barracks — each must keep clear of its twins.', on:'sel:barracks'},
-    {sel:'#estate-wrap',      tip:'Place it anywhere — even flush against your camps — as long as it never touches another Barracks.', on:'place'},
-    {sel:'#armycell-grunt',   tip:'Tap HERE to muster a spearman with your food (tap − to refund one). The count shows housing: 0/8.', on:'buy'},
-    {sel:'#marchBtn',         tip:'Short on troops? Undo and repack — a tighter estate pays for a bigger army. Then March to Siege.', on:'done'},
+    {sel:'#palbtn-lumber',    tip:'Tap the Lumber Camp. Every building is a puzzle piece that pays out ONCE, the moment you place it, placement is everything.', on:'sel:lumber'},
+    {sel:'#estate-wrap',      tip:'Tap the field to place it (Rotate turns the piece first). Cover the sparkling RICH tiles, each rich square it covers counts double.', on:'place'},
+    {sel:'#palbtn-farmhouse', tip:'Now the Farmhouse, it pays out food, which buys soldiers.', on:'sel:farmhouse'},
+    {sel:'#estate-wrap',      tip:'ONE RULE: two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush, wood/barracks/wood is fine, wood/wood is not.', on:'place'},
+    {sel:'#palbtn-barracks',  tip:'The Barracks houses 8 soldiers. Want a bigger army? Build MORE barracks, each must keep clear of its twins.', on:'sel:barracks'},
+    {sel:'#estate-wrap',      tip:'Place it anywhere, even flush against your camps, as long as it never touches another Barracks.', on:'place'},
+    {sel:'#armycell-grunt',   tip:'Tap HERE to recruit a soldier with your food (tap − to refund one). The count shows housing: 0/8. When your army is ready, March to Siege.', on:'buy'},
+    // (final step removed: the pulsing ring on the March button distracted
+    //  players still mustering troops, the line above covers it.)
   ];
   let guideStep=-1;
   let guideDoneThisRun=false;
@@ -3226,34 +3815,66 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
 
   const CAMP_EDGE = 44;
-  function spawnSortie(){
-    const lane = Math.floor(Math.random()*LANE_COUNT);
+  function spawnSortie(forceLane){
+    // Defenders don't wade into the sea: on coastal sieges, sorties come down
+    // the land lanes only. (On full naval sieges every lane is water and the
+    // sortie sails it as a hull, which is exactly right.)
+    let lanes = [];
+    for(let i=0;i<LANE_COUNT;i++){
+      if(!state.theme && state.waterLanes && state.waterLanes.includes(i)) continue;
+      lanes.push(i);
+    }
+    if(!lanes.length) lanes=[0];
+    const lane = (forceLane!=null && lanes.includes(forceLane))
+      ? forceLane
+      : lanes[Math.floor(Math.random()*lanes.length)];
     const L = LANES[lane] || LANES[0];
     const lv = state.level;
-    const hp = 60 + lv*12;
+    // Skirmisher rework: the garrison sends MANY light men instead of a few
+    // heavies, roughly half the health, ~60% of the bite, and a smaller
+    // wound to camp morale per leaker (the threat is the swarm, not the man).
+    const hp = 32 + lv*6;
     state.sorties.push({
       lane, x:CASTLE_X-20, baseY:L.y, y:L.y,
-      hp, maxHp:hp, dmg:10+lv*1.5, spd:30+lv*1.6, r:26,
+      hp, maxHp:hp, dmg:6+lv*0.9, spd:30+lv*1.6, r:24,
       // Morale damage is small and grows slowly; a single leaked sortie is a setback,
       // not a death sentence. Morale also regenerates (see updateSorties).
-      moraleDmg:6+Math.round(lv*0.5), atkT:0, hitFlash:0, wob:Math.random()*6,
+      moraleDmg:3+Math.round(lv*0.3), atkT:0, hitFlash:0, wob:Math.random()*6,
     });
     AudioFX.retreat && AudioFX.retreat();
   }
   function updateSorties(dt){
     if(!state.sortiesActive) return;
-    // Camp morale slowly recovers, so a long siege isn't a losing race.
-    if(state.morale < state.moraleMax){
-      state.morale = Math.min(state.moraleMax, state.morale + dt*1.6*RELIC.morale());
-    }
+    // Camp morale is now a HEALTH pool: what the sorties take, stays taken.
+    // (No passive recovery, every defender that reaches your camp matters.)
     showCoach('sortie',
-      'The defenders now sally out! Enemy soldiers march from the fortress toward your camp on the left. Your attacking troops will intercept them — but any that reach your camp drain its MORALE (top bar). If camp morale hits zero, the siege fails. Watch both the walls AND your camp.');
+      'The defenders now sally out! Enemy soldiers march from the fortress toward your camp on the left. Your attacking troops will intercept them, but any that reach your camp wound its HEALTH, and the camp does NOT heal: every hit stays for the whole siege. If it reaches zero, the siege fails. Watch both the walls AND your camp.');
+    // The Last Stand's flood: while it runs, a sortie every ~0.6s, sweeping
+    // the lanes in order so no approach is safe. It runs OUT, when the timer
+    // ends, the garrison is spent and the normal (calmer) cadence resumes.
+    if(state.lastStandT>0){
+      state.lastStandT -= dt;
+      state.lastStandSpawnT -= dt;
+      if(state.lastStandSpawnT<=0){
+        state.lastStandSpawnT = 0.6;
+        spawnSortie(state.lastStandLane % LANE_COUNT);
+        state.lastStandLane++;
+      }
+    }
     state.sortieTimer -= dt;
     if(state.sortieTimer<=0){
-      spawnSortie();
+      // Way more men: squads of 1–3 (bigger squads as the campaign deepens),
+      // on a faster drumbeat. Individually weak; together, a tide.
+      const squad = state.level<=3 ? 1
+                  : state.level<=8 ? (1 + (Math.random()<0.5?1:0))
+                  : (2 + (Math.random()<0.4?1:0));
+      for(let q=0;q<squad;q++) setTimeout(()=>{ if(state.started) spawnSortie(); }, q*420);
       // Gentler cadence when sorties are brand new (level 3), harder later.
-      const gap = state.level<=3 ? Math.max(11, 18 - state.level*0.5)
-                                 : Math.max(7, 14 - state.level*0.35);
+      let gap = state.level<=3 ? Math.max(9, 15 - state.level*0.5)
+                               : Math.max(5.5, 11 - state.level*0.3);
+      // Pressure builds: past the first minute the sallies quicken, down to
+      // ~55% cadence by the four-minute mark. Long sieges get hotter, not duller.
+      gap *= Math.max(0.55, 1 - Math.max(0, (state.battleT||0)-60)/400);
       state.sortieTimer = gap;
     }
     for(let i=state.sorties.length-1;i>=0;i--){
@@ -3281,6 +3902,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         spawnParticles(s.x, s.y, '#8a3a2a', 14, 120);
         spawnDust(s.x, s.y+s.r*0.5, 5);
         AudioFX.thud && AudioFX.thud();
+        FEATS.check('kill');   // one of THEIR defenders falls, that's first blood
         state.sorties.splice(i,1);
         continue;
       }
@@ -3288,7 +3910,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         state.morale = Math.max(0, state.morale - s.moraleDmg);
         state.shake = Math.min(10, state.shake+4);
         state.flash = Math.min(0.4, state.flash+0.2);
-        spawnFloater(CAMP_EDGE+10, s.y, '-'+s.moraleDmg+' morale', '#c23b34', 15);
+        spawnFloater(CAMP_EDGE+10, s.y, '-'+s.moraleDmg+' health', '#c23b34', 15);
         AudioFX.wallHit && AudioFX.wallHit();
         state.sorties.splice(i,1);
         if(state.level>1 && state.morale<=0){ state.morale=0; state.started=false; relieveCastle(); return; }
@@ -3320,7 +3942,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.save();
     ctx.translate(x+w+9, y+h/2); ctx.rotate(-Math.PI/2);
     ctx.fillStyle='#c8c3b6'; ctx.font='bold 10px Georgia,serif'; ctx.textAlign='center';
-    ctx.fillText('CAMP MORALE', 0, 0);
+    ctx.fillText('CAMP HEALTH', 0, 0);
     ctx.restore();
   }
 
@@ -3452,7 +4074,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     spawnParticles(b.x, b.y, '#f5c76a', 36, 220);
     spawnSmoke(b.x, b.y, 14, -Math.PI/2);
     spawnFloater(b.x-30, b.y-46, b.name+' has fallen! +'+bounty, '#f5c76a', 16);
-    showBanner(b.name+' is slain — the gate lies open!', 2.4);
+    showBanner(b.name+' is slain, the gate lies open!', 2.4);
     // The champion's fall cracks the gate itself.
     state.castleHP = Math.max(1, state.castleHP - Math.round(state.castleMaxHP*0.12));
     bumpGold();
@@ -3463,20 +4085,20 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const ch = chapterFor(state.level);
     if(!b || !b.alive){
       if(ch && ch.start===state.level){
-        showBanner('— '+ch.name.toUpperCase()+' —', 2.0);
-        if(bt) setTimeout(()=>showBanner('SIEGE '+state.level+' — '+bt.name.toUpperCase()+', '+bt.year, 2.4), 2100);
+        showBanner('⚔ '+ch.name.toUpperCase()+' ⚔', 2.0);
+        if(bt) setTimeout(()=>showBanner('SIEGE '+state.level+', '+bt.name.toUpperCase()+', '+bt.year, 2.4), 2100);
         // Chapter I's scene-setting lives on the title page; later wars get a coach note.
         if(ch.start>1) setTimeout(()=>showCoach('era'+ch.start, ch.name+'. '+ch.intro), 900);
       } else if(bt){
-        showBanner('SIEGE '+state.level+' — '+bt.name.toUpperCase()+', '+bt.year, 2.4);
+        showBanner('SIEGE '+state.level+', '+bt.name.toUpperCase()+', '+bt.year, 2.4);
       }
       return;
     }
-    showBanner((bt ? bt.name.toUpperCase()+', '+bt.year : 'CHAMPION SIEGE')+' — '+b.name+' guards the gate!', 3.0);
+    showBanner((bt ? bt.name.toUpperCase()+', '+bt.year : 'CHAMPION SIEGE')+', '+b.name+' guards the gate!', 3.0);
     setTimeout(()=>{
       showCoach('boss',
         (bt ? 'This is the siege of '+bt.name+' ('+bt.year+'). ' : '')+
-        'A CHAMPION defends this fortress! The wall cannot be harmed while he stands — every soldier who reaches the gate (even the Ladder Company) fights HIM instead. Beware: '+b.def.flavor+'. Slay him and the gate itself will crack open.');
+        'A CHAMPION defends this fortress! The wall cannot be harmed while he stands, every soldier who reaches the gate (even the Ladder Company) fights HIM instead. Beware: '+b.def.flavor+'. Slay him and the gate itself will crack open.');
     }, 900);
   }
   function drawBossSprite(b, x, y){
@@ -3587,7 +4209,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         g.quadraticCurveTo(s*0.34,-s*1.12, s*0.6,-s*0.86);
         g.stroke();
       }
-      // greatsword — held on the attackers' side, swings with atkAnim
+      // greatsword, held on the attackers' side, swings with atkAnim
       g.save();
       g.translate(-s*0.6, s*0.1);
       g.rotate(-Math.PI*0.62 + swing*1.7);
@@ -3809,15 +4431,16 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.level < TREB_MIN_LEVEL) return;
     for(let i=0;i<LANE_COUNT;i++){ if(state.trebCd[i]>0) state.trebCd[i]-=dt; }
     for(let li=0; li<LANE_COUNT; li++){
+      if(isWaterLane(li)) continue;      // boulders splash harmlessly into the sea
       const n = laneTroopCount(li);
       if(n>=TREB_LIMIT-2 && n<=TREB_LIMIT){
         showCoach('trebwarn',
           'The defenders have wheeled a TREBUCHET onto the walls! If more than '+TREB_LIMIT+
-          ' soldiers crowd into one lane, they will flatten it with a boulder volley — crushing your troops but also smashing their OWN towers in that lane. Spread your assault across lanes... or deliberately bait the shot with cheap troops and charge through the rubble while their guns lie broken.');
+          ' soldiers crowd into one lane, they will flatten it with a boulder volley, crushing your troops but also smashing their OWN towers in that lane. Spread your assault across lanes... or deliberately bait the shot with cheap troops and charge through the rubble while their guns lie broken.');
       }
       if(n>TREB_LIMIT && state.trebCd[li]<=0 && !state.trebStrikes.some(st=>st.lane===li)){
         launchTrebStrike(li);
-        state.trebCd[li]=TREB_CD;
+        state.trebCd[li]=TREB_CD*(1+(state.shop.sappers||0)*0.15);
       }
     }
     for(let i=state.trebStrikes.length-1;i>=0;i--){
@@ -3843,7 +4466,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.trebStrikes.push({lane, t:0, warn:2.2, fall:0.55, rocks});
     const L=LANES[lane];
     spawnFloater(LOGICAL_W*0.42, L?L.y:100, 'TREBUCHET! Lane '+(lane+1)+' targeted!', '#ff5a3a', 16);
-    showBanner('The trebuchet is loosed — lane '+(lane+1)+' will be flattened!', 2.0);
+    showBanner('The trebuchet is loosed, lane '+(lane+1)+' will be flattened!', 2.0);
     AudioFX.retreat && AudioFX.retreat();
     state.shake=Math.min(8, state.shake+3);
   }
@@ -3854,12 +4477,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(m.lane!==lane) continue;
       if(Math.abs(m.x-x)<=R){ m.hp -= dmg*(m.armor||1); m.hitFlash=1; }
     }
-    // Their own guns are buried in the rubble — and stay down longer than usual.
+    // Their own guns are buried in the rubble, and stay down longer than usual.
     for(const t of state.turrets){
       if(t.lane!==lane || !t.alive) continue;
       if(Math.abs(t.x-x)<=R){
         t.alive=false; t.hp=0;
-        t.repairT=t.repairTime*1.6;
+        t.repairT=t.repairTime*1.6*PACE.rebuild;
         FX.debris(t.x, t.y, 8, '#8a7a66');
         spawnParticles(t.x, t.y, '#8a7a66', 16, 130);
         spawnFloater(t.x, t.y-20, 'Crushed!', '#f5c76a', 13);
@@ -3961,7 +4584,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.shake = Math.min(6, state.shake+3);
     renderLaneButtons && renderLaneButtons();
     if(state.level<=2) showCoach('reinforce',
-      'The defenders watch where you attack. Overload one lane and they raise new towers there — spread your assault, or send the Ladder Company to climb past.');
+      'The defenders watch where you attack. Overload one lane and they raise new towers there, spread your assault, or send the Ladder Company to climb past.');
   }
 
   function tryUnlock(key){
@@ -3970,7 +4593,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.gold >= def.unlockCost){
       state.gold -= def.unlockCost;
       state.unlocked[key] = true;
-      spawnFloater(LOGICAL_W*0.5, LOGICAL_H*0.5, def.name+' joins the company!', '#e0a83f', 15);
+      spawnFloater(LOGICAL_W*0.5, LOGICAL_H*0.5, (uName ? uName(key) : def.name)+' joins the company!', '#e0a83f', 15);
       AudioFX.fanfare();
       renderUnitButtons();
     } else {
@@ -4044,6 +4667,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       dt *= 0.12;
     }
     state.animT += dt;
+    if(state.started) state.battleT = (state.battleT||0) + dt;
     if(state.unitCd){
       for(const k in state.unitCd){ if(state.unitCd[k]>0) state.unitCd[k]-=dt; }
     }
@@ -4118,7 +4742,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       }
       const enemyAhead = state.sortiesActive && state.sorties.some(s=>
         s.lane===m.lane && Math.abs(s.x-m.x) < s.r + m.r);
-      // The champion blocks EVERY unit — even the Ladder Company can't slip
+      // The champion blocks EVERY unit, even the Ladder Company can't slip
       // past him. Soldiers reaching the gate fight the champion, not the wall.
       const boss = state.boss;
       const bossBlocks = boss && boss.alive && (m.x + (m.atkRange||m.r)) >= (boss.x - boss.r*0.55);
@@ -4139,11 +4763,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       } else if(blocker){
         m.engaging = true;
         if(state.level<=2) showCoach('breaktower',
-          'Your foot soldiers must break this tower before advancing. Send more to smash it faster — or use the Ladder Company, who climb straight past towers.');
+          'Your foot soldiers must break this tower before advancing. Send more to smash it faster, or use the Ladder Company, who climb straight past towers.');
         m.atkT = (m.atkT||0) - dt;
         if(m.atkT<=0){
           m.atkT = 0.5;
-          blocker.hp -= m.dmg*(m.structMult||1)*RELIC.dmg()*RELIC.struct(); blocker.hitFlash = 1;
+          blocker.hp -= m.dmg*PACE.towerHit*(m.structMult||1)*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08); blocker.hitFlash = 1;
           if(m.atkRange){
             // bolt tracer from the skirmisher to the tower
             const bd=Math.hypot(blocker.x-m.x, blocker.y-m.y)||1;
@@ -4158,7 +4782,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           AudioFX.thwack();
           if(blocker.hp<=0){
             blocker.alive = false;
-            blocker.repairT = blocker.repairTime;
+            blocker.repairT = blocker.repairTime * PACE.rebuild;
             FX.shockwave(blocker.x, blocker.y, 90, 'rgba(220,190,150,0.45)');
             FX.debris(blocker.x, blocker.y, 9, '#8a7a66');
             FX.sparks(blocker.x, blocker.y, 8, '#e8c88a');
@@ -4176,8 +4800,26 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       }
       m.y = m.baseY + Math.sin(performance.now()/500+m.wob)*4;
       if(m.x >= CASTLE_X){
-        const dealt = m.dmg*(m.structMult||1)*WAREV.mod('wallDmg')*RELIC.dmg()*RELIC.struct();
+        const dealt = m.dmg*PACE.wallHit*(m.structMult||1)*WAREV.mod('wallDmg')*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08);
         state.castleHP -= dealt;
+        // THE LAST STAND: on later sieges, as the wall nears collapse the
+        // garrison pours out in one desperate flood at your camp, win the
+        // race to the breach, or peel back and defend. Fires once, and never
+        // voids a wall blow, so the minimum-host guarantee is untouched.
+        if(state.level>=8 && state.sortiesActive && !state.lastStand
+           && state.castleHP>0 && state.castleHP/state.castleMaxHP<=0.20){
+          state.lastStand = true;
+          // A timed flood, not a fixed burst: 5s at siege 8 growing to 10s by
+          // the deep Endless War, sweeping ALL lanes in turn (see updateSorties).
+          state.lastStandT = Math.min(10, 5 + (state.level-8)*0.12);
+          state.lastStandSpawnT = 0;
+          state.lastStandLane = 0;
+          state.shake = Math.min(12, state.shake+7);
+          showBanner('A LAST STAND, the garrison pours from the gates!');
+          AudioFX.wallHit && AudioFX.wallHit();
+          showCoach('laststand',
+            'A LAST STAND: when the wall is nearly down, the garrison empties the fortress in one final flood toward your camp. Finish the breach before they cross, or pull troops back to meet them.');
+        }
         state.gold += Math.max(1, Math.round(dealt*goldMult()));
         state.stats.dmgDealt += dealt;
         state.shake = Math.min(11, state.shake + dealt*0.16);
@@ -4198,7 +4840,6 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         addCorpse(m);
         spawnDust(m.x, m.y+m.r*0.6, 6);
         state.stats.killed++;
-        FEATS.check('kill');
         AudioFX.thud();
         state.monsters.splice(i,1);
       }
@@ -4337,8 +4978,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       // Award coins for the shop. Scales with level; +50% under Plunder.
       const baseReward = Math.round((10 + won*4) * goldMult());
       // Thrift bonus: survivors muster out for +1 coin per 2, capped so it can
-      // at most double the reward. Troops never carry over — the next estate is
-      // a fresh puzzle — but conserving them in battle still pays.
+      // at most double the reward. Troops never carry over, the next estate is
+      // a fresh puzzle, but conserving them in battle still pays.
       const survivors = armyTotal();
       const thrift = Math.min(baseReward, Math.floor(survivors/2));
       const coinReward = baseReward + thrift;
@@ -4348,7 +4989,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       state._wonBattle = bt;
       showBanner('VICTORY!  '+(bt ? bt.name+' has fallen!' : 'Siege '+won+' is broken!')
         +'  +'+coinReward+' coins'
-        +(thrift>0 ? ' ('+survivors+' survivors muster out: +'+thrift+')' : ''), 2.6);
+        +(thrift>0 ? ' ('+survivors+' survivors return: +'+thrift+')' : ''), 2.6);
       setStreakText('The walls are yours');
       AudioFX.fanfare();
       for(let i=0;i<3;i++){
@@ -4378,23 +5019,23 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       state.flash = 0.3; state.shake = 6;
       state.monsters = []; state.projectiles = [];
       state.started=false;
-      showBanner('The relief army arrives — your assault is repelled!');
+      showBanner('The relief army arrives, your assault is repelled!');
       setTimeout(()=>dailyFinish(false), 1300);
       return;
     }
-    // Level 1 is a safe on-ramp in every mode — never allow a loss here.
+    // Level 1 is a safe on-ramp in every mode, never allow a loss here.
     if(state.level===1){ state.started=true; return; }
     AudioFX.retreat();
     state.flash = 0.3; state.shake = 6;
     for(const m of state.monsters){ spawnDust(m.x, m.y+m.r*0.6, 4); }
     state.monsters = []; state.projectiles = [];
     if(state.mode==='conquest'){
-      showBanner('Your host is spent — fall back and gather again.');
+      showBanner('Your host is spent, fall back and gather again.');
       state.started=false;
       setTimeout(()=>enterFarm(), 1600);
       return;
     }
-    showBanner('The relief army arrives — your assault is repelled!');
+    showBanner('The relief army arrives, your assault is repelled!');
     offerUpgrade('Assault repelled. Regroup and resupply.', 0);
   }
 
@@ -4430,6 +5071,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.scale(sx,sy);
     drawBackground();
     FX.drawBack();
+    drawThemeGround();
     drawLanes();
     FX.drawGround();
     if(state.mode==='supply') drawCamps();
@@ -4470,14 +5112,81 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.restore();
   }
 
+  // The ground itself changes with the campaign: open sea for the harbor
+  // assaults of Sieges 9–12, high crags for the mountain fortress at 16.
+  function drawThemeGround(){
+    if(state.theme==='naval'){
+      const g=ctx.createLinearGradient(0,GROUND_TOP,0,LOGICAL_H);
+      g.addColorStop(0,'rgba(38,84,110,0.92)');
+      g.addColorStop(1,'rgba(16,42,60,0.95)');
+      ctx.fillStyle=g;
+      ctx.fillRect(0,GROUND_TOP,LOGICAL_W,LOGICAL_H-GROUND_TOP);
+      // moon/sun glints rolling on the swell
+      ctx.save(); ctx.globalCompositeOperation='lighter';
+      for(let i=0;i<14;i++){
+        const gy=GROUND_TOP+18+((i*53)% (LOGICAL_H-GROUND_TOP-24));
+        const gx=(i*137 + state.animT*22*(1+(i%3)*0.3)) % LOGICAL_W;
+        ctx.globalAlpha=0.05+0.05*Math.sin(state.animT*1.6+i);
+        ctx.fillStyle='#bfe4f2';
+        ctx.fillRect(gx, gy, 16+(i%3)*8, 1.4);
+      }
+      ctx.restore(); ctx.globalAlpha=1;
+    } else if(state.theme==='mountain'){
+      // distant granite crags rising behind the field
+      ctx.save();
+      const peaks=[[0.06,0.62],[0.2,0.4],[0.34,0.7],[0.5,0.5],[0.66,0.66]];
+      ctx.fillStyle='rgba(70,66,62,0.55)';
+      ctx.beginPath(); ctx.moveTo(0,GROUND_TOP);
+      for(const [px,ph] of peaks){
+        ctx.lineTo(LOGICAL_W*px, GROUND_TOP - SKY_H*0.36*ph);
+        ctx.lineTo(LOGICAL_W*(px+0.09), GROUND_TOP);
+      }
+      ctx.lineTo(LOGICAL_W,GROUND_TOP); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='rgba(230,228,222,0.5)';
+      for(const [px,ph] of peaks){
+        if(ph<0.55) continue;
+        const tx=LOGICAL_W*px, ty=GROUND_TOP - SKY_H*0.36*ph;
+        ctx.beginPath(); ctx.moveTo(tx-7,ty+9); ctx.lineTo(tx,ty); ctx.lineTo(tx+7,ty+9); ctx.closePath(); ctx.fill();
+      }
+      // cold scree tint over the field
+      ctx.fillStyle='rgba(120,118,120,0.14)';
+      ctx.fillRect(0,GROUND_TOP,LOGICAL_W,LOGICAL_H-GROUND_TOP);
+      ctx.restore();
+    }
+  }
+
   function drawLanes(){
     const groundH = LOGICAL_H - GROUND_TOP;
+    const naval = state.theme==='naval';
     for(let i=0;i<LANES.length;i++){
       const L = LANES[i];
       const isActive = (i===activeLane);
-      ctx.strokeStyle = isActive ? 'rgba(224,168,63,0.16)' : 'rgba(200,170,120,0.07)';
+      const wetLane = naval || isWaterLane(i);
+      if(wetLane && !naval){
+        // a coastal waterway cutting through the land battlefield
+        const wg=ctx.createLinearGradient(0,L.top,0,L.top+L.h);
+        wg.addColorStop(0,'rgba(38,84,110,0.85)');
+        wg.addColorStop(1,'rgba(18,46,64,0.9)');
+        ctx.fillStyle=wg;
+        ctx.fillRect(0,L.top,CASTLE_X0,L.h);
+      }
+      ctx.strokeStyle = wetLane
+        ? (isActive ? 'rgba(140,205,235,0.20)' : 'rgba(90,150,190,0.10)')
+        : (isActive ? 'rgba(224,168,63,0.16)' : 'rgba(200,170,120,0.07)');
       ctx.lineWidth = L.h*0.62;
       ctx.beginPath(); ctx.moveTo(0,L.y); ctx.lineTo(CASTLE_X0,L.y); ctx.stroke();
+      if(wetLane){ // the waterway's rolling swell
+        ctx.strokeStyle='rgba(190,228,242,0.16)'; ctx.lineWidth=1.2;
+        for(let wv=0; wv<3; wv++){
+          const wy=L.y-L.h*0.22+wv*L.h*0.22;
+          const off=(state.animT*26 + wv*90 + i*47) % 120;
+          for(let x=-off; x<CASTLE_X0; x+=120){
+            ctx.beginPath(); ctx.moveTo(x+off,wy);
+            ctx.quadraticCurveTo(x+off+9, wy-2.5, x+off+18, wy);
+            ctx.stroke();
+          }
+        }
+      }
       if(i>0){
         ctx.strokeStyle='rgba(0,0,0,0.22)'; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(0,L.top); ctx.lineTo(CASTLE_X0,L.top); ctx.stroke();
@@ -4485,7 +5194,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         ctx.beginPath(); ctx.moveTo(0,L.top+2); ctx.lineTo(CASTLE_X0,L.top+2); ctx.stroke();
       }
       // trebuchet crowd counter: warns as a lane approaches the volley limit
-      if(state.level>=TREB_MIN_LEVEL){
+      if(state.level>=TREB_MIN_LEVEL && isWaterLane(i) && !naval){
+        ctx.fillStyle='#7ab8d8'; ctx.font='bold 11px Georgia,serif'; ctx.textAlign='left';
+        ctx.globalAlpha=0.8; ctx.fillText('\u224b safe from volleys', 76, L.top+30); ctx.globalAlpha=1;
+      }
+      if(state.level>=TREB_MIN_LEVEL && !isWaterLane(i)){
         let n=0; for(const m of state.monsters){ if(m.lane===i) n++; }
         if(n>=TREB_LIMIT-3){
           const danger = n>=TREB_LIMIT;
@@ -4669,6 +5382,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.translate(CASTLE_X0,0);
     const dmgTint=1-frac;
     const stoneDmg=[dmgTint*55,-dmgTint*30,-dmgTint*34];
+    // per-theme stonework: warm sandstone / sea-washed grey / cold granite
+    const TB = state.theme==='naval'   ? [124,136,146, 112,124,136, 74,84,94]
+             : state.theme==='mountain'? [122,116,108, 108,102,94,  70,64,56]
+             :                           [150,132,104, 140,120,94,  86,72,52];
     const rows=Math.ceil(h/16), cols=Math.ceil(w/18);
     let ni=0;
     for(let r=0;r<rows;r++){
@@ -4676,19 +5393,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       for(let c=-1;c<cols;c++){
         const n=BRICK_NOISE[ni%BRICK_NOISE.length]; ni++;
         const shade=(n-0.5)*22;
-        ctx.fillStyle='rgb('+Math.round(150+stoneDmg[0]+shade)+','+Math.round(132+stoneDmg[1]+shade*0.8)+','+Math.round(104+stoneDmg[2]+shade*0.6)+')';
+        ctx.fillStyle='rgb('+Math.round(TB[0]+stoneDmg[0]+shade)+','+Math.round(TB[1]+stoneDmg[1]+shade*0.8)+','+Math.round(TB[2]+stoneDmg[2]+shade*0.6)+')';
         ctx.fillRect(c*18+offset,r*16,17,15);
       }
     }
     const ao=ctx.createLinearGradient(0,0,w,0);
     ao.addColorStop(0,'rgba(0,0,0,0.32)'); ao.addColorStop(0.5,'rgba(0,0,0,0.05)'); ao.addColorStop(1,'rgba(255,220,180,0.08)');
     ctx.fillStyle=ao; ctx.fillRect(0,0,w,h);
-    ctx.fillStyle='rgb('+Math.round(140+stoneDmg[0]*0.8)+','+Math.round(120+stoneDmg[1]*0.8)+','+Math.round(94+stoneDmg[2]*0.8)+')';
+    ctx.fillStyle='rgb('+Math.round(TB[3]+stoneDmg[0]*0.8)+','+Math.round(TB[4]+stoneDmg[1]*0.8)+','+Math.round(TB[5]+stoneDmg[2]*0.8)+')';
     ctx.beginPath(); ctx.arc(w*0.5,2,w*0.34,Math.PI,Math.PI*2); ctx.fill();
     ctx.fillRect(w*0.16,2,w*0.68,26);
     ctx.fillStyle='#241a12';
     for(let x=w*0.2;x<w*0.8;x+=w*0.16) ctx.fillRect(x,-2,w*0.07,10);
-    ctx.fillStyle='rgb('+Math.round(86+stoneDmg[0]*0.5)+','+Math.round(72+stoneDmg[1]*0.5)+','+Math.round(52+stoneDmg[2]*0.5)+')';
+    ctx.fillStyle='rgb('+Math.round(TB[6]+stoneDmg[0]*0.5)+','+Math.round(TB[7]+stoneDmg[1]*0.5)+','+Math.round(TB[8]+stoneDmg[2]*0.5)+')';
     for(let y=30;y<h-20;y+=34) ctx.fillRect(6,y,w-12,16);
     ctx.fillStyle='#1c1310';
     for(let y=54;y<h-40;y+=68){ ctx.fillRect(w*0.28,y,4,16); ctx.fillRect(w*0.64,y,4,16); }
@@ -4712,6 +5429,66 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.closePath(); ctx.fill();
     ctx.fillRect(-2,-32,4,32);
     ctx.restore();
+    if(state.theme==='naval'){
+      // the port: a lighthouse lantern on the seaward tower, sweeping its beam,
+      // and a great harbor chain across the gate
+      const lx=w*0.5, ly=-14;
+      ctx.fillStyle='#2a2420'; ctx.fillRect(lx-5,ly,10,14);
+      const beam=Math.sin(state.animT*0.9);
+      ctx.save(); ctx.globalCompositeOperation='lighter';
+      ctx.fillStyle='rgba(255,220,140,'+(0.5+0.3*Math.sin(state.animT*4))+')';
+      ctx.beginPath(); ctx.arc(lx,ly+4,3.4,0,Math.PI*2); ctx.fill();
+      const bg=ctx.createLinearGradient(lx,ly,lx-70*beam,ly-26);
+      bg.addColorStop(0,'rgba(255,225,150,0.22)'); bg.addColorStop(1,'rgba(255,225,150,0)');
+      ctx.fillStyle=bg;
+      ctx.beginPath(); ctx.moveTo(lx,ly+2); ctx.lineTo(lx-70*beam,ly-30); ctx.lineTo(lx-70*beam+16,ly-14); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle='#3a3630'; ctx.lineWidth=2.4;
+      ctx.beginPath(); ctx.moveTo(-4,h*0.7);
+      ctx.quadraticCurveTo(w*0.2,h*0.76,w*0.26,h*0.66); ctx.stroke();
+      // sea-lapped face: a wet sheen up the seaward edge, foam licking the stones
+      const wet=ctx.createLinearGradient(0,0,20,0);
+      wet.addColorStop(0,'rgba(24,52,64,0.38)'); wet.addColorStop(1,'rgba(24,52,64,0)');
+      ctx.fillStyle=wet; ctx.fillRect(0,0,20,h);
+      ctx.fillStyle='rgba(226,243,247,0.5)';
+      for(let y=14;y<h;y+=26){
+        const fx=2+Math.sin(state.animT*2.2+y*0.31)*2.6;
+        ctx.beginPath(); ctx.ellipse(fx,y,5,2,0,0,Math.PI*2); ctx.fill();
+      }
+      // seaweed streamers and barnacle crust where the tide reaches
+      ctx.strokeStyle='rgba(72,112,78,0.7)'; ctx.lineWidth=2; ctx.lineCap='round';
+      for(let y=44;y<h-26;y+=62){
+        const sw=Math.sin(state.animT*1.6+y)*3;
+        ctx.beginPath(); ctx.moveTo(3,y);
+        ctx.quadraticCurveTo(9+sw,y+12,4,y+24); ctx.stroke();
+      }
+      ctx.fillStyle='rgba(206,199,182,0.55)';
+      for(let y=22;y<h;y+=38){ ctx.beginPath(); ctx.arc(6+((y*7)%3)*3, y+((y*5)%7), 1.7, 0, Math.PI*2); ctx.fill(); }
+      // an iron anchor hangs above the harbor gate
+      const ax=w*0.5, ay=h*0.5;
+      ctx.strokeStyle='#262c30'; ctx.lineWidth=3; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(ax,ay-14); ctx.lineTo(ax,ay+9); ctx.stroke();          // shank
+      ctx.beginPath(); ctx.moveTo(ax-8,ay-8); ctx.lineTo(ax+8,ay-8); ctx.stroke();       // stock
+      ctx.beginPath(); ctx.arc(ax,ay+4,9,Math.PI*0.15,Math.PI*0.85); ctx.stroke();       // flukes
+      ctx.beginPath(); ctx.arc(ax,ay-17,3.4,0,Math.PI*2); ctx.stroke();                  // ring
+      // a gull rides the seaward battlement
+      const gx=w*0.28, gy=-5+Math.sin(state.animT*1.3)*0.8;
+      ctx.fillStyle='#e8ecee';
+      ctx.beginPath(); ctx.ellipse(gx,gy,5.5,3.2,0,0,Math.PI*2); ctx.fill();             // body
+      ctx.beginPath(); ctx.arc(gx-5,gy-3,2.4,0,Math.PI*2); ctx.fill();                   // head
+      ctx.fillStyle='#8a939a';
+      ctx.beginPath(); ctx.moveTo(gx+1,gy-2); ctx.quadraticCurveTo(gx+7,gy-4,gx+9,gy);   // folded wing
+      ctx.quadraticCurveTo(gx+5,gy+1,gx+1,gy+1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#d88a3a';
+      ctx.beginPath(); ctx.moveTo(gx-7,gy-3); ctx.lineTo(gx-10,gy-2.4); ctx.lineTo(gx-7,gy-1.8); ctx.closePath(); ctx.fill(); // beak
+    } else if(state.theme==='mountain'){
+      // snow on every ledge and crenellation
+      ctx.fillStyle='rgba(235,236,238,0.85)';
+      for(let x=w*0.2;x<w*0.8;x+=w*0.16) ctx.fillRect(x,-3,w*0.07,3);
+      ctx.fillRect(w*0.16,0,w*0.68,3);
+      ctx.fillStyle='rgba(235,236,238,0.35)';
+      for(let y=30;y<h-20;y+=34) ctx.fillRect(6,y-1,w-12,3);
+    }
     if(frac<0.75){
       ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.moveTo(w*0.2,h*0.1); ctx.lineTo(w*0.4,h*0.35); ctx.lineTo(w*0.25,h*0.55); ctx.stroke();
@@ -4732,18 +5509,87 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     ctx.restore();
   }
 
+  // On naval sieges the deployment IS the ship: a galley hull with a colored
+  // sail, a flapping pennant, oar-splash, and a bow wake. Class is read from
+  // the sail color; fire ships trail flame from the stern.
+  function drawShipSprite(m, g, aT){
+    const s=m.r, bob=Math.sin(aT*2.4+(m.wob||0))*1.6;
+    const cx=m.x, wy=m.y+s*0.3+bob;
+    const flash=(m.hitFlash||0)>0;
+    g.save();
+    if(g===ctx){ // wake + oar splash only on the battlefield, not in icons
+      g.strokeStyle='rgba(210,235,245,0.35)'; g.lineWidth=1.4; g.lineCap='round';
+      g.beginPath(); g.moveTo(cx-s*1.05,wy+4); g.quadraticCurveTo(cx-s*1.5,wy+2,cx-s*1.85,wy+7); g.stroke();
+      g.beginPath(); g.moveTo(cx-s*1.05,wy+6); g.quadraticCurveTo(cx-s*1.4,wy+6,cx-s*1.6,wy+10); g.stroke();
+    }
+    // hull
+    g.fillStyle=flash?'#e8e2d6':'#4a3220';
+    g.beginPath();
+    g.moveTo(cx-s*1.05,wy-4);
+    g.quadraticCurveTo(cx,wy+s*0.62,cx+s*1.0,wy-4);
+    g.lineTo(cx+s*1.3,wy-s*0.42);           // raised bow toward the walls
+    g.quadraticCurveTo(cx,wy+s*0.05,cx-s*1.2,wy-s*0.3);
+    g.closePath(); g.fill();
+    // gunwale trim in the class color
+    g.strokeStyle=flash?'#ffffff':(m.color||'#7a8f52'); g.lineWidth=2;
+    g.beginPath(); g.moveTo(cx-s*1.16,wy-s*0.28); g.quadraticCurveTo(cx,wy+0.5,cx+s*1.26,wy-s*0.4); g.stroke();
+    // oars
+    g.strokeStyle='rgba(30,20,12,0.8)'; g.lineWidth=1.4;
+    for(const ox of [-0.6,-0.15,0.35]){
+      const dip=Math.sin(aT*5+(m.wob||0)+ox*3)*2;
+      g.beginPath(); g.moveTo(cx+s*ox,wy-2); g.lineTo(cx+s*(ox-0.28),wy+s*0.5+dip); g.stroke();
+    }
+    // mast + yard + square sail, bellied toward the enemy
+    const mh=s*1.5;
+    g.strokeStyle='#2e2018'; g.lineWidth=2.4;
+    g.beginPath(); g.moveTo(cx,wy-2); g.lineTo(cx,wy-mh); g.stroke();
+    g.beginPath(); g.moveTo(cx-s*0.7,wy-mh*0.92); g.lineTo(cx+s*0.7,wy-mh*0.92); g.stroke();
+    const sail=flash?'#ffffff':lighten(m.color||'#7a8f52',52);
+    g.fillStyle=sail;
+    g.beginPath();
+    g.moveTo(cx-s*0.66,wy-mh*0.9);
+    g.quadraticCurveTo(cx+s*0.34,wy-mh*0.62,cx-s*0.6,wy-mh*0.28);
+    g.lineTo(cx+s*0.62,wy-mh*0.34);
+    g.quadraticCurveTo(cx+s*0.95,wy-mh*0.62,cx+s*0.66,wy-mh*0.9);
+    g.closePath(); g.fill();
+    // class band across the sail
+    g.fillStyle=m.color||'#7a8f52';
+    g.fillRect(cx-s*0.55,wy-mh*0.66,s*1.16,s*0.16);
+    // pennant
+    const flap=Math.sin(aT*7+(m.wob||0))*s*0.14;
+    g.fillStyle=m.color||'#7a8f52';
+    g.beginPath(); g.moveTo(cx,wy-mh); g.lineTo(cx+s*0.5,wy-mh+flap-s*0.1); g.lineTo(cx,wy-mh+s*0.2); g.closePath(); g.fill();
+    // fire ships burn as they go (in the roster icon too, it IS the identity)
+    if(m.weaponKind==='bomb'){
+      g.globalCompositeOperation='lighter';
+      const fl=0.6+Math.sin(aT*9+(m.wob||0))*0.3;
+      g.fillStyle='rgba(255,150,60,'+(0.45*fl)+')';
+      g.beginPath(); g.arc(cx-s*0.85,wy-s*0.35,s*0.34,0,Math.PI*2); g.fill();
+      g.fillStyle='rgba(255,220,120,'+(0.5*fl)+')';
+      g.beginPath(); g.arc(cx-s*0.85,wy-s*0.42,s*0.18,0,Math.PI*2); g.fill();
+      g.globalCompositeOperation='source-over';
+    }
+    g.restore();
+  }
   function drawTroopSprite(m, g, aT){
     g = g || ctx; if(aT===undefined) aT = state.animT;
     const s=m.r;
+    if((m.forceShip || state.theme==='naval' || themeFor(state.level)==='naval' || (m.lane!==undefined && isWaterLane(m.lane))) && !m.flying){
+      drawShipSprite(m, g, aT);
+      return;
+    }
     const bob=Math.sin(aT*8+m.wob)*s*0.05;
     const flash = m.hitFlash>0;
     g.save();
     g.translate(m.x,m.y+bob);
+    g.scale(1, 1+Math.sin(aT*8+m.wob)*0.015);   // breathing squash rides the bob
     g.lineJoin='round'; g.lineCap='round';
     const shG = g.createRadialGradient(s*0.1, s*0.96-bob, 1, s*0.1, s*0.96-bob, s*0.8);
     shG.addColorStop(0,'rgba(0,0,0,0.42)'); shG.addColorStop(1,'rgba(0,0,0,0)');
     g.fillStyle=shG;
     g.beginPath(); g.ellipse(s*0.1,s*0.96-bob,s*0.72,s*0.24,0,0,Math.PI*2); g.fill();
+    g.fillStyle='rgba(0,0,0,0.28)';
+    g.beginPath(); g.ellipse(s*0.08,s*0.94-bob,s*0.4,s*0.13,0,0,Math.PI*2); g.fill();
     const body = flash ? '#ffffff' : m.color;
     const shade = flash ? '#e8e8e8' : m.dark;
     const skin='#d8b48a', skinDk='#a8845a';
@@ -4764,6 +5610,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       }
     }
     const legSwing=Math.sin(aT*10+m.wob)*s*0.28;
+    // rear arm swings against the stride (drawn first so the torso overlaps it)
+    g.strokeStyle=outline; g.lineWidth=Math.max(2.6,s*0.24);
+    g.beginPath(); g.moveTo(-s*0.28,-s*0.08); g.lineTo(-s*0.46-legSwing*0.35, s*0.26); g.stroke();
+    g.strokeStyle=shade; g.lineWidth=Math.max(1.7,s*0.15);
+    g.beginPath(); g.moveTo(-s*0.28,-s*0.08); g.lineTo(-s*0.46-legSwing*0.35, s*0.26); g.stroke();
+    g.fillStyle=skinDk;
+    g.beginPath(); g.arc(-s*0.46-legSwing*0.35, s*0.28, s*0.085, 0, Math.PI*2); g.fill();
     g.strokeStyle=outline; g.lineWidth=Math.max(3,s*0.3);
     g.beginPath(); g.moveTo(-s*0.15,s*0.34); g.lineTo(-s*0.15+legSwing*0.4,s*0.86); g.stroke();
     g.beginPath(); g.moveTo(s*0.15,s*0.34); g.lineTo(s*0.15-legSwing*0.4,s*0.86); g.stroke();
@@ -4790,11 +5643,40 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     bodyG.addColorStop(1, shade);
     g.fillStyle=bodyG; g.fill();
     g.save(); g.clip();
-    g.strokeStyle='rgba(255,246,235,0.5)'; g.lineWidth=Math.max(1.4,s*0.08);
+    g.strokeStyle='rgba(255,246,235,0.75)'; g.lineWidth=Math.max(1.6,s*0.1);
     g.beginPath(); g.moveTo(-s*0.5,s*0.42); g.lineTo(-s*0.4,-s*0.2); g.stroke();
     g.globalAlpha=0.3; g.fillStyle='#000';
     g.beginPath(); g.ellipse(s*0.3,s*0.3,s*0.4,s*0.5,0,0,Math.PI*2); g.fill();
+    // scalloped mail rows, faint enough to read as texture rather than pattern
+    {
+      // Brigandine vest: overlapping riveted plates, offset per row, each
+      // catching a sliver of light along its top edge. Plus honest wear.
+      const rw=s*0.19, rh=s*0.15;
+      let row=0;
+      for(let ry=-s*0.3; ry<s*0.42; ry+=rh*0.85, row++){
+        const off=(row%2)*rw*0.5;
+        for(let rx=-s*0.56+off; rx<s*0.58; rx+=rw){
+          g.globalAlpha=0.26; g.fillStyle='#0c0c11';
+          g.fillRect(rx, ry, rw*0.92, rh);
+          g.globalAlpha=0.4; g.strokeStyle='rgba(255,244,224,0.5)'; g.lineWidth=Math.max(0.8,s*0.028);
+          g.beginPath(); g.moveTo(rx+rw*0.06,ry+rh*0.12); g.lineTo(rx+rw*0.8,ry+rh*0.12); g.stroke();
+          g.globalAlpha=0.55; g.fillStyle='#cfd6dc';
+          g.beginPath(); g.arc(rx+rw*0.46, ry+rh*0.52, Math.max(0.7,s*0.024), 0, Math.PI*2); g.fill();
+        }
+      }
+      g.globalAlpha=0.16; g.strokeStyle='#fff'; g.lineWidth=Math.max(0.7,s*0.02);
+      g.beginPath(); g.moveTo(-s*0.3,-s*0.04); g.lineTo(-s*0.04,s*0.07); g.stroke();
+      g.beginPath(); g.moveTo(s*0.1,s*0.2); g.lineTo(s*0.34,s*0.3); g.stroke();
+    }
     g.globalAlpha=1; g.restore();
+    const pldG=g.createLinearGradient(0,-s*0.36,0,-s*0.12);
+    pldG.addColorStop(0,steel); pldG.addColorStop(1,steelDk);
+    g.fillStyle=pldG;
+    g.beginPath(); g.ellipse(-s*0.4,-s*0.22,s*0.15,s*0.11,-0.35,0,Math.PI*2); g.fill();
+    g.beginPath(); g.ellipse( s*0.4,-s*0.22,s*0.15,s*0.11, 0.35,0,Math.PI*2); g.fill();
+    g.strokeStyle=outline; g.lineWidth=Math.max(1,s*0.045);
+    g.beginPath(); g.ellipse(-s*0.4,-s*0.22,s*0.15,s*0.11,-0.35,0,Math.PI*2); g.stroke();
+    g.beginPath(); g.ellipse( s*0.4,-s*0.22,s*0.15,s*0.11, 0.35,0,Math.PI*2); g.stroke();
     g.strokeStyle=woodDk; g.lineWidth=Math.max(1.8,s*0.12);
     g.beginPath(); g.moveTo(-s*0.46,s*0.16); g.lineTo(s*0.46,s*0.16); g.stroke();
     g.strokeStyle='#b89050'; g.lineWidth=Math.max(1,s*0.04);
@@ -4805,12 +5687,17 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     skinG.addColorStop(0,skin); skinG.addColorStop(1,skinDk);
     g.fillStyle=skinG;
     g.beginPath(); g.arc(0,-s*0.44,s*0.25,0,Math.PI*2); g.fill();
+    g.fillStyle='rgba(0,0,0,0.2)';
+    g.fillRect(-s*0.2,-s*0.56,s*0.4,s*0.07);                        // brow shadow
     const helmG=g.createLinearGradient(-s*0.2,-s*0.8,s*0.2,-s*0.4);
     helmG.addColorStop(0,steel); helmG.addColorStop(0.5,steelMid); helmG.addColorStop(1,steelDk);
     g.fillStyle=helmG;
     g.beginPath(); g.arc(0,-s*0.5,s*0.3,Math.PI*1.02,-0.02); g.fill();
     g.strokeStyle=outline; g.lineWidth=Math.max(1.2,s*0.05); g.stroke();
     g.fillStyle=steelDk; g.fillRect(-s*0.34,-s*0.52,s*0.68,s*0.09);
+    g.fillStyle=steelDk; g.fillRect(s*0.095,-s*0.53,s*0.055,s*0.16);  // nasal guard
+    g.strokeStyle=shade; g.lineWidth=Math.max(1.2,s*0.06);            // tunic collar
+    g.beginPath(); g.arc(0,-s*0.28,s*0.2,0.15*Math.PI,0.85*Math.PI); g.stroke();
     g.strokeStyle=shade; g.lineWidth=Math.max(1.5,s*0.1);
     g.beginPath(); g.moveTo(0,-s*0.8); g.quadraticCurveTo(s*0.12,-s*0.62,0,-s*0.5); g.stroke();
     g.strokeStyle=lighten(m.color,20); g.lineWidth=Math.max(1,s*0.05);
@@ -4830,7 +5717,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const shG2=g.createRadialGradient(-s*0.58,-s*0.06,1,-s*0.5,s*0.02,s*0.34);
       shG2.addColorStop(0,lighten(m.color,30)); shG2.addColorStop(1,shade);
       g.fillStyle=shG2; g.beginPath(); g.arc(-s*0.5,s*0.02,s*0.32,0,Math.PI*2); g.fill();
-      g.strokeStyle=outline; g.lineWidth=Math.max(1.4,s*0.06); g.stroke();
+      g.save(); g.beginPath(); g.arc(-s*0.5,s*0.02,s*0.32,0,Math.PI*2); g.clip();
+      g.globalAlpha=0.28; g.strokeStyle='#241608'; g.lineWidth=Math.max(0.8,s*0.03);
+      for(let px=-s*0.78; px<-s*0.2; px+=s*0.105){ g.beginPath(); g.moveTo(px,-s*0.32); g.lineTo(px,s*0.38); g.stroke(); }
+      g.globalAlpha=0.2; g.fillStyle='#fff';
+      g.beginPath(); g.arc(-s*0.58,-s*0.08,s*0.16,0,Math.PI*2); g.fill();
+      g.globalAlpha=1; g.restore();
+      g.strokeStyle=outline; g.lineWidth=Math.max(1.4,s*0.06);
+      g.beginPath(); g.arc(-s*0.5,s*0.02,s*0.32,0,Math.PI*2); g.stroke();
+      g.strokeStyle=steelDk; g.lineWidth=Math.max(1.4,s*0.06);
+      g.beginPath(); g.arc(-s*0.5,s*0.02,s*0.285,0,Math.PI*2); g.stroke();
+      g.fillStyle=steel;
+      for(let a=0;a<6;a++){ const an=a/6*Math.PI*2+0.3;
+        g.beginPath(); g.arc(-s*0.5+Math.cos(an)*s*0.25, s*0.02+Math.sin(an)*s*0.25, Math.max(0.8,s*0.03), 0, Math.PI*2); g.fill(); }
       g.fillStyle=steelMid; g.beginPath(); g.arc(-s*0.5,s*0.02,s*0.09,0,Math.PI*2); g.fill();
       g.fillStyle=steel; g.beginPath(); g.arc(-s*0.53,-s*0.01,s*0.04,0,Math.PI*2); g.fill();
     } else if(m.weaponKind==='crossbow'){
@@ -4879,6 +5778,17 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       pg.addColorStop(0, flash?'#fff':lighten(m.color,35));
       pg.addColorStop(1, flash?'#e8e8e8':m.dark);
       g.fillStyle=pg; g.fill();
+      g.save(); g.clip();
+      g.globalAlpha=0.25; g.strokeStyle='#241608'; g.lineWidth=Math.max(0.8,s*0.03);
+      for(let ply=-s*0.7; ply<s*0.6; ply+=s*0.14){ g.beginPath(); g.moveTo(px-s*0.02,ply); g.lineTo(px+s*0.46,ply); g.stroke(); }
+      g.globalAlpha=0.35; g.fillStyle=flash?'#eee':lighten(m.color,55);
+      g.beginPath(); g.moveTo(px,-s*0.44); g.lineTo(px+s*0.42,-s*0.28); g.lineTo(px+s*0.42,-s*0.42);
+      g.lineTo(px,-s*0.58); g.closePath(); g.fill();
+      g.globalAlpha=1; g.restore();
+      g.fillStyle=steel;
+      for(let ry2=-s*0.6; ry2<s*0.44; ry2+=s*0.26){
+        g.beginPath(); g.arc(px+s*0.055,ry2,Math.max(0.8,s*0.028),0,Math.PI*2); g.fill();
+        g.beginPath(); g.arc(px+s*0.365,ry2+s*0.06,Math.max(0.8,s*0.028),0,Math.PI*2); g.fill(); }
       // horizontal band + boss rivet
       g.strokeStyle=flash?'#ddd':'#c9a860'; g.lineWidth=Math.max(1.2,s*0.06);
       g.beginPath(); g.moveTo(px+s*0.02,-s*0.16); g.lineTo(px+s*0.4,-s*0.16); g.stroke();
@@ -5135,12 +6045,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     document.getElementById('castleFill').style.width = Math.max(0,100*state.castleHP/state.castleMaxHP)+'%';
     const musterStat = document.getElementById('musterStat');
     if(state.mode==='conquest'){
-      // Conquest fights with the host you mustered on the estate…
-      const total = armyTotal();
-      musterStat.style.display = '';
-      document.getElementById('manaTxt').textContent = total+' left';
-      document.getElementById('manaFill').style.width = Math.min(100, total*6)+'%';
-      // …and its one treasure is coins: show the same currency the shop spends.
+      // No Host bar in conquest: it pulled the eye during every deploy, and the
+      // per-unit "N ready" counts on the roster buttons already carry the info.
+      // The HUD keeps just what matters, the wall's exact HP, and your coins.
+      musterStat.style.display = 'none';
       document.getElementById('goldTxt').textContent = state.coins;
       document.getElementById('goldLbl').textContent = 'coins';
     } else {
@@ -5160,17 +6068,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.timerActive){
       const tl = Math.max(0, state.timeLeft);
       const mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+      relief.style.display='';
       relief.innerHTML = 'Relief army: <b id="timerTxt">'+mm+':'+(ss<10?'0':'')+ss+'</b>';
       relief.classList.toggle('urgent', tl<=10);
     } else if(state.mode==='conquest' && state.sortiesActive){
       const m=Math.max(0,Math.round(state.morale));
-      relief.innerHTML = 'Camp morale: <b id="timerTxt">'+m+'%</b> — hold off the enemy sorties';
+      relief.style.display='';
+      relief.innerHTML = 'Camp health: <b id="timerTxt">'+m+'/'+state.moraleMax+'</b>, hold off the sorties';
       relief.classList.toggle('urgent', m<=30);
-    } else if(state.level===1){
-      relief.innerHTML = 'The ten-year siege — <b>no relief is coming</b>. Take your time.';
-      relief.classList.remove('urgent');
     } else {
-      relief.innerHTML = 'No relief coming — press the assault';
+      // Untimed, no sorties: nothing worth a status line, hide it entirely.
+      relief.style.display='none';
+      relief.innerHTML='';
       relief.classList.remove('urgent');
     }
     for(const key of UNIT_ORDER){
@@ -5201,7 +6110,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         campBtn.style.display='';
         const full = state.camps.length>=CAMP_MAX;
         campBtn.textContent = full ? 'Camps at maximum' :
-          ('Build Supply Camp — '+CAMP_DEF.cost+' muster');
+          ('Build Supply Camp: '+CAMP_DEF.cost+' supply');
         campBtn.classList.toggle('disabled', full || state.mana<CAMP_DEF.cost);
       } else {
         campBtn.style.display='none';
@@ -5209,11 +6118,21 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     }
   }
 
-  function drawIconSprite(iconCtx,def){
-    iconCtx.clearRect(0,0,88,88);
+  function drawIconSprite(iconCtx,def,key){
+    // Size to the actual canvas (unit buttons are 88px, muster cells 64px) and
+    // fill it: the old fixed r:21 left the soldier swimming in empty space —
+    // fine in a lane, small on a thumb-sized button.
+    const cw = (iconCtx.canvas && iconCtx.canvas.width) || 88;
+    iconCtx.clearRect(0,0,cw,cw);
+    const hybridShipIcon = typeof hybridNow==='function' && hybridNow()
+      && (def.weapon==='bomb' || def.weapon==='pavise');
     const fake = {
-      x:44, y:46, r:21, wob:0.5, hitFlash:0,
+      x:cw*0.5, y:cw*0.53, r:cw*0.3, wob:0.5, hitFlash:0,
       color:def.color, dark:def.dark, weaponKind:def.weapon,
+      // hulls draw as ships in the roster everywhere they sail: all units on
+      // naval sieges, and, on coastal sieges, whatever the selected waterway
+      // will embark (Fire Ships always; Spearmen when a sea lane is picked)
+      forceShip: !def.flying && (themeFor(state.level)==='naval' || hybridShipIcon),
     };
     drawTroopSprite(fake, iconCtx, 0.4);
   }
@@ -5222,16 +6141,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const wrap=document.getElementById('units');
     wrap.innerHTML='';
     let teaserShown=false;
-    for(const key of UNIT_ORDER){
+    for(const key of rosterOrder()){
       const def=UNIT_DEFS[key];
       if(!unitAvailable(key)){
+        // Themed rosters (sea / waterway) hide impossible units outright —
+        // a "Siege N" teaser would be a lie there. Teasers are for locks only.
+        if(navalNow() || (typeof hybridNow==='function' && hybridNow() && state.started)) continue;
         // Show only the NEXT locked company as a teaser, skip the rest.
         if(teaserShown) continue;
         teaserShown=true;
         const tz=document.createElement('div');
         tz.className='unit-btn disabled';
         tz.innerHTML='<canvas class="unit-icon" width="88" height="88"></canvas>'+
-          '<div class="unit-name">'+def.name+'</div>'+
+          '<div class="unit-name">'+uName(key)+'</div>'+
           '<div class="unit-cost">Siege '+def.minLevel+'</div>';
         drawIconSprite(tz.querySelector('canvas').getContext('2d'), def);
         tz.querySelector('canvas').style.filter='grayscale(1) brightness(0.6)';
@@ -5245,10 +6167,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         : def.cost+' gold';
       btn.innerHTML =
         '<canvas class="unit-icon" width="88" height="88"></canvas>'+
-        '<div class="unit-name">'+def.name+'</div>'+
+        '<div class="unit-name">'+uName(key)+'</div>'+
         '<div class="unit-cost">'+costLine+'</div>'+
         '<div class="unit-cd" id="unitcd-'+key+'"></div>';
-      drawIconSprite(btn.querySelector('canvas').getContext('2d'), def);
+      drawIconSprite(btn.querySelector('canvas').getContext('2d'), def, key);
       if(!state.unlocked[key]){
         const lock=document.createElement('div');
         lock.className='unit-lock';
@@ -5273,7 +6195,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // the threat dots that used to live on the buttons are drawn in drawLanes.
   }
   function selectLane(i){
+    const prev=activeLane;
     activeLane = Math.max(0, Math.min(LANE_COUNT-1, i));
+    // hybrid sieges swap the visible roster when you cross the shoreline
+    if(prev!==activeLane && !state.theme && state.waterLanes && state.waterLanes.length
+       && typeof renderUnitButtons==='function' && state.started){
+      renderUnitButtons();
+    }
   }
   renderLaneButtons();
 
@@ -5365,7 +6293,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state._wonBattle){
       const h=document.createElement('div');
       h.className='history-note';
-      h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b> — '+state._wonBattle.note;
+      h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b>, '+state._wonBattle.note;
       body.appendChild(h);
     }
     if(bonus>0){
@@ -5414,18 +6342,40 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       desc:'+15% resource payout from every camp you place, permanently.',
       max:6, cost:(lvl)=> 12 + lvl*8 },
     { key:'train', cat:'Economy', emoji:'⚒️', name:'Drillmasters',
-      desc:'Troops cost 7% less to muster, permanently.',
+      desc:'Troops cost 7% less to recruit, permanently.',
       max:6, cost:(lvl)=> 14 + lvl*9 },
     { key:'cap', cat:'Economy', emoji:'🛢️', name:'Deeper Stores',
       desc:'+50% resource storage cap, permanently.',
       max:4, cost:(lvl)=> 16 + lvl*12 },
+    { key:'provision', cat:'Economy', emoji:'🐎', name:'Provisioners',
+      desc:'Baggage wagons bring gold at the start of every siege, more per tier, and more the deeper the campaign.',
+      max:4, cost:(lvl)=> 15 + lvl*11 },
     { key:'drill', cat:'War college', emoji:'🥁', name:'Drilled Companies',
       desc:'−10% troop deploy cooldown in battle, permanently.',
       max:4, cost:(lvl)=> 15 + lvl*10 },
-    { key:'shrink', cat:'One-time master works', emoji:'📐', name:'Master Builders',
-      desc:'Every building footprint loses a tile — pieces get smaller and far easier to fit. (Tier 2 shrinks them again.)',
-      max:2, cost:(lvl)=> lvl===0 ? 90 : 220 },
+    { key:'engineers', cat:'War college', emoji:'⛏️', name:'Siege Engineers',
+      desc:'Your blows against walls and towers land +8% harder, permanently.',
+      max:4, cost:(lvl)=> 18 + lvl*12 },
+    { key:'standards', cat:'War college', emoji:'🚩', name:'Standard Bearers',
+      desc:'+20% camp health, your camp holds longer against sorties, permanently.',
+      max:3, cost:(lvl)=> 16 + lvl*12 },
+    { key:'sappers', cat:'War college', emoji:'🕳️', name:'Counter-Sappers',
+      desc:'Enemy counter-volleys (the lane-flattening boulders) come 15% slower per tier, permanently.',
+      max:3, cost:(lvl)=> 18 + lvl*13 },
+    { key:'outriders', cat:'One-time master works', emoji:'🏇', name:'Outriders',
+      desc:'Scouts range ahead of the host: the Fortunes of War turn more often, and more often in your favor.',
+      max:1, cost:(lvl)=> 120 },
   ];
+  // Master works are PER BUILDING now: the old global tiers (especially tier 2)
+  // shrank every shape at once and flattened the packing puzzle into dominoes.
+  // Each trim takes one 4-cell building to 3 cells, pieces never drop below 3.
+  const SHRINKABLE = ['lumber','farmhouse','barracks','forge','siegeworks','shieldhall'];
+  for(const _t of SHRINKABLE){
+    SHOP_ITEMS.push({ key:'shrink_'+_t, cat:'One-time master works', emoji:'📐',
+      name:'Master Builders: '+PLACE_DEFS[_t].name,
+      desc:'The '+PLACE_DEFS[_t].name+' loses one tile (4 → 3 cells), permanently easier to place.',
+      max:1, cost:(lvl)=> 40 + PLACE_DEFS[_t].unlock*8 });
+  }
   function shopItemLevel(key){ return state.shop[key]||0; }
   function shopBuy(key){
     const item = SHOP_ITEMS.find(i=>i.key===key); if(!item) return;
@@ -5441,25 +6391,51 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.shop[key] = lvl+1;
     saveGame();
     AudioFX.coin && AudioFX.coin();
-    AudioFX.fanfare && (key==='shrink') && AudioFX.fanfare();
+    AudioFX.fanfare && key.indexOf('shrink')===0 && AudioFX.fanfare();
     renderShop();
   }
+  // The Quartermaster opens on a one-screen landing: three category doors and
+  // the Continue button all visible at once, so skipping never needs a scroll.
+  // Tap a category to browse just its wares; a back link returns to the doors.
+  let _shopCat=null;
   function renderShop(){
     document.getElementById('shopCoins').textContent = state.coins;
     const body = document.getElementById('shopBody');
     body.innerHTML='';
-    if(state._wonBattle){
-      const h=document.createElement('div');
-      h.className='history-note';
-      h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b> — '+state._wonBattle.note;
-      body.appendChild(h);
-    }
-    let lastCat=null;
-    for(const item of SHOP_ITEMS){
-      if(item.cat!==lastCat){
-        const c=document.createElement('div'); c.className='shop-cat'; c.textContent=item.cat;
-        body.appendChild(c); lastCat=item.cat;
+    if(!_shopCat){
+      if(state._wonBattle){
+        const h=document.createElement('div');
+        h.className='history-note';
+        h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b>, '+state._wonBattle.note;
+        body.appendChild(h);
       }
+      const cats=[]; for(const it of SHOP_ITEMS){ if(!cats.includes(it.cat)) cats.push(it.cat); }
+      for(const cat of cats){
+        const items=SHOP_ITEMS.filter(i=>i.cat===cat);
+        const open=items.filter(i=>shopItemLevel(i.key)<i.max);
+        const afford=open.filter(i=>state.coins>=i.cost(shopItemLevel(i.key))).length;
+        const icons=[]; for(const it of items){ if(!icons.includes(it.emoji)) icons.push(it.emoji); if(icons.length>=3) break; }
+        const sub = open.length===0 ? 'Everything here is owned'
+                  : open.length+' upgrade'+(open.length>1?'s':'')
+                    +(afford? ' · <span class="s-afford">'+afford+' affordable now</span>' : '');
+        const row=document.createElement('div'); row.className='shop-card shop-cat-card';
+        row.innerHTML =
+          '<div class="s-emoji">'+icons.join('')+'</div>'+
+          '<div class="s-main"><div class="s-name">'+cat+'</div>'+
+          '<div class="s-desc">'+sub+'</div></div>'+
+          '<div class="shop-buy"><span>View \u203a</span></div>';
+        row.querySelector('.shop-buy').addEventListener('pointerdown', e=>{ e.preventDefault(); _shopCat=cat; renderShop(); });
+        body.appendChild(row);
+      }
+      return;
+    }
+    const back=document.createElement('button'); back.className='action-btn shop-back-btn';
+    back.textContent='\u2039 Back to all wares';
+    back.addEventListener('pointerdown', e=>{ e.preventDefault(); _shopCat=null; renderShop(); });
+    body.appendChild(back);
+    const c=document.createElement('div'); c.className='shop-cat'; c.textContent=_shopCat;
+    body.appendChild(c);
+    for(const item of SHOP_ITEMS.filter(i=>i.cat===_shopCat)){
       const lvl=shopItemLevel(item.key);
       const maxed=lvl>=item.max;
       const cost=maxed?0:item.cost(lvl);
@@ -5474,13 +6450,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           (maxed? '<span>Owned</span>' : ('<span>Buy</span><span class="cost">'+cost+' ⛃</span>'))+
         '</div>';
       if(!maxed){
-        card.querySelector('.shop-buy').addEventListener('pointerdown', e=>{ e.preventDefault(); shopBuy(item.key); });
+        card.querySelector('.shop-buy').addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); shopBuy(item.key); });
       }
       body.appendChild(card);
     }
   }
   function openShop(justEarned){
     state.paused = true;
+    _shopCat=null;   // always open on the landing, Continue in reach
     renderShop();
     openOverlay('shop-overlay');
   }
@@ -5538,6 +6515,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(sv.manaRegen) state.manaRegen = sv.manaRegen;
     if(sv.manaCap) state.manaCap = sv.manaCap;
     if(sv.shop) state.shop = Object.assign(state.shop, sv.shop);
+    // Migrate the old global Master Builders: tier 1 becomes the six
+    // per-building trims; the retired tier-2 power is refunded in coins.
+    if(state.shop.shrink){
+      for(const _t of ['lumber','farmhouse','barracks','forge','siegeworks','shieldhall']) state.shop['shrink_'+_t]=1;
+      if(state.shop.shrink>=2) state.coins += 220;
+      state.shop.shrink = 0;
+    }
     if(sv.upgrades) state.upgrades = Object.assign(state.upgrades, sv.upgrades);
     if(sv.unlocked) state.unlocked = Object.assign(state.unlocked, sv.unlocked);
     document.getElementById('title-screen').classList.add('hidden');
@@ -5573,7 +6557,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const raw = localStorage.getItem('ewf_daily');
       const s = raw ? JSON.parse(raw) : {};
       let streak = s.streak||0;
-      if(s.last && daysBetween(s.last, dailyKey())>1) streak = 0;   // missed a day — the fire goes out
+      if(s.last && daysBetween(s.last, dailyKey())>1) streak = 0;   // missed a day, the fire goes out
       return {last:s.last||null, streak, best:s.best||0, wonToday:s.last===dailyKey()};
     }catch(_){ return {last:null, streak:0, best:0, wonToday:false}; }
   }
@@ -5609,7 +6593,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.started = true;
     state.timeLeft = state.timeLimit;
     state.lastTickSec = -1;
-    showBanner('DAILY SIEGE — '+day, 2.2);
+    showBanner('DAILY SIEGE, '+day, 2.2);
     announceBossIfAny();
     updateHUD();
   }
@@ -5621,10 +6605,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     let d = dailyState();
     if(won) d = dailyRecordWin();
     const share =
-      'Every Wall Falls — Daily Siege '+state.daily.day+'\n'+
+      'Every Wall Falls. Daily Siege '+state.daily.day+'\n'+
       (won
         ? '🏰 Walls broken in '+mm+':'+(ss<10?'0':'')+ss+' · '+state.stats.killed+' defenders slain'
-        : '🏳️ Assault repelled — the walls held')+
+        : '🏳️ Assault repelled, the walls held')+
       (d.streak>0 ? '\n🔥 Streak: '+d.streak+' day'+(d.streak>1?'s':'') : '');
     state._dailyShare = share;
     document.getElementById('dailyResultTitle').textContent = won ? 'The walls are yours' : 'The walls held';
@@ -5645,16 +6629,16 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   document.getElementById('dailyShare').addEventListener('pointerdown', function(e){
     e.preventDefault();
     const txt = state._dailyShare || '';
-    const done = ()=>{ this.textContent = 'Copied — go boast'; };
+    const done = ()=>{ this.textContent = 'Copied, go boast'; };
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(txt).then(done, ()=>{ window.prompt('Copy your result:', txt); });
-    } else { window.prompt('Copy your result:', txt); }
+      navigator.clipboard.writeText(txt).then(done, ()=>{ showCoach('sharefail', 'Copy your result:\n\n'+txt); });
+    } else { showCoach('sharefail', 'Copy your result:\n\n'+txt); }
   });
   document.getElementById('dailyRetry').addEventListener('pointerdown', e=>{
     e.preventDefault();
     closeOverlay('daily-overlay');
     state.paused = false;
-    startDaily();                        // same seed, same walls — no excuses
+    startDaily();                        // same seed, same walls, no excuses
   });
   document.getElementById('dailyBack').addEventListener('pointerdown', e=>{
     e.preventDefault(); dailyDismiss();
@@ -5684,7 +6668,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const start = document.getElementById('tap-start');
     if(sv && sv.level>1){
       cont.style.display = '';
-      cont.textContent = 'Continue — '+(sv.level>20 ? 'Endless, Siege '+sv.level : 'Siege '+sv.level);
+      cont.textContent = 'Continue, '+(sv.level>20 ? 'Endless, Siege '+sv.level : 'Siege '+sv.level);
       start.classList.add('secondary'); start.classList.remove('pulse');
       start.textContent = 'New Campaign';
     } else {
@@ -5695,27 +6679,111 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const d = dailyState();
     document.getElementById('dailySub').textContent =
       d.wonToday ? ('broken today · 🔥 '+d.streak+' day streak')
-      : (d.streak>0 ? ('🔥 '+d.streak+' day streak — keep it alive') : 'the same walls face every commander today');
+      : (d.streak>0 ? ('🔥 '+d.streak+' day streak, keep it alive') : 'the same walls face every commander today');
   }
   document.getElementById('tap-continue').addEventListener('pointerdown', e=>{
     e.preventDefault();
     const sv = loadSave();
     if(sv) continueCampaign(sv); else refreshTitleButtons();
   });
-  document.getElementById('tap-start').addEventListener('pointerdown', e=>{
-    e.preventDefault();
-    const sv = loadSave();
-    if(sv && sv.level>1 && !window.confirm('Abandon your saved campaign (Siege '+sv.level+') and start anew?')) return;
+  // window.confirm is silently blocked in sandboxed frames and installed-app
+  // mode on iOS (it just returns false), which made this button feel dead —
+  // so the game asks with its own sheet instead.
+  let _confirmYes=null;
+  function gameConfirm(title, body, onYes){
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmBody').textContent = body;
+    _confirmYes = onYes;
+    openOverlay('confirm-overlay');
+  }
+  document.getElementById('confirmYes').addEventListener('pointerdown', e=>{
+    e.preventDefault(); closeOverlay('confirm-overlay');
+    const fn=_confirmYes; _confirmYes=null; if(fn) fn();
+  });
+  document.getElementById('confirmNo').addEventListener('pointerdown', e=>{
+    e.preventDefault(); _confirmYes=null; closeOverlay('confirm-overlay');
+  });
+  function showStory(title, body){
+    document.getElementById('storyTitle').textContent = title;
+    document.getElementById('storyBody').innerHTML = body;
+    openOverlay('story-overlay');
+  }
+  document.getElementById('storyGo').addEventListener('pointerdown', e=>{
+    e.preventDefault(); closeOverlay('story-overlay');
+  });
+  function startFreshCampaign(){
     clearSave();
     AudioFX.unlock();
     state.daily = null;
-    state.custom = null;               // normal campaign — no overrides
+    state.custom = null;               // normal campaign, no overrides
     document.getElementById('title-screen').classList.add('hidden');
     chooseMode('conquest');
+  }
+  document.getElementById('tap-start').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    const sv = loadSave();
+    if(sv && sv.level>1){
+      gameConfirm('Start anew?',
+        'This abandons your saved campaign at Siege '+sv.level+' and begins again from Troy. Your War Trophies and Feats are kept forever.',
+        startFreshCampaign);
+      return;
+    }
+    startFreshCampaign();
   });
   document.getElementById('tap-daily').addEventListener('pointerdown', e=>{
     e.preventDefault(); startDaily();
   });
+
+  // ── War Room: a hidden dev loader for testing ───────────────────────────────
+  // Tap the date line on the title screen five times (or call EWFDEV.open()).
+  (function(){
+    let taps=0, tapT=0;
+    const eyebrow=document.querySelector('#title-screen .eyebrow');
+    function openDev(){
+      // sensible defaults from the current save
+      const sv=loadSave();
+      if(sv){ document.getElementById('devLevel').value=sv.level||1;
+              document.getElementById('devGold').value=(sv.gold!=null)?sv.gold:60;
+              document.getElementById('devCoins').value=sv.coins||0; }
+      openOverlay('dev-overlay');
+    }
+    const devIcon=document.getElementById('titleDev');
+    if(devIcon) devIcon.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); openDev(); });
+    if(eyebrow) eyebrow.addEventListener('pointerdown', ()=>{
+      const now=performance.now();
+      if(now-tapT>2600) taps=0;
+      tapT=now; taps++;
+      if(taps>=5){ taps=0; openDev(); }
+    });
+    window.EWFDEV={ open:openDev };
+    function seg(allId, noneId){
+      const a=document.getElementById(allId), n=document.getElementById(noneId);
+      a.addEventListener('pointerdown', e=>{e.preventDefault(); a.classList.add('on'); n.classList.remove('on');});
+      n.addEventListener('pointerdown', e=>{e.preventDefault(); n.classList.add('on'); a.classList.remove('on');});
+    }
+    seg('devShopAll','devShopNone'); seg('devUpAll','devUpNone');
+    document.getElementById('devGo').addEventListener('pointerdown', e=>{
+      e.preventDefault();
+      const level=Math.max(1, Math.min(99, parseInt(document.getElementById('devLevel').value)||1));
+      const gold =Math.max(0, parseInt(document.getElementById('devGold').value)||0);
+      const coins=Math.max(0, parseInt(document.getElementById('devCoins').value)||0);
+      const modeSel=document.getElementById('devMode').value;
+      const shopAll=document.getElementById('devShopAll').classList.contains('on');
+      const upAll  =document.getElementById('devUpAll').classList.contains('on');
+      const shop={}; for(const it of SHOP_ITEMS) shop[it.key]=shopAll?it.max:0;
+      const ups={};  for(const u of UPGRADES)    ups[u.key]=upAll?MAX_UPGRADE_LEVEL:0;
+      closeOverlay('dev-overlay');
+      guideDoneThisRun=true;
+      const sv={ mode:(modeSel==='siege'?'siege':'conquest'), level, gold, coins, shop, upgrades:ups };
+      continueCampaign(sv);
+      if(modeSel==='conquest-siege'){
+        // a stock host so the siege phase is immediately testable
+        state.army={grunt:10, runner:5, brute:5, flyer:4, shield:4, sapper:3, monk:3};
+        marchToSiege(true);   // War Room skips the estate requirements
+      }
+      showBanner('WAR ROOM. Siege '+level+' loaded ('+modeSel+')', 2.2);
+    });
+  })();
 
   // ── Sound: one switch, remembered ───────────────────────────────────────────
   function setSound(on){
@@ -5825,7 +6893,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       state.unlocked={grunt:true, runner:true, brute:true, flyer:true, shield:true, sapper:true, monk:true};
       state.level = (state.custom && state.custom.startLevel) ? state.custom.startLevel : 1;
       state.coins = 0;
-      state.shop = { harvest:0, train:0, cap:0, shrink:0, drill:0 };
+      state.shop = { harvest:0, train:0, cap:0, shrink:0, drill:0, provision:0, engineers:0, standards:0, sappers:0, outriders:0 };
       // Skip the hand-hold coach marks when using custom/debug start.
       guideDoneThisRun = state.custom ? true : false;
       enterFarm();
@@ -5840,18 +6908,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
 
   const TUT_TEXT =
     'Break the walls of the fortress on the right.\n\n' +
-    '1. PICK A LANE — the battlefield is split into four horizontal lanes, one per row. Simply TAP A ROW on the battlefield to choose where your soldiers charge; the golden chevron marks your chosen lane. The colored dots at the left edge of each row show which towers guard it — a single green dot means an open path.\n\n' +
-    '2. SEND YOUR TROOPS — with a lane chosen, tap a soldier to march them down it. Each soldier needs a moment to ready again, and you can switch lanes any time, so probe for the weak one.\n\n' +
+    '1. PICK A LANE, the battlefield is split into four horizontal lanes, one per row. Simply TAP A ROW on the battlefield to choose where your soldiers charge; the golden chevron marks your chosen lane. The colored dots at the left edge of each row show which towers guard it, a single green dot means an open path.\n\n' +
+    '2. SEND YOUR TROOPS, with a lane chosen, tap a soldier to march them down it. Each soldier needs a moment to ready again, and you can switch lanes any time, so probe for the weak one.\n\n' +
     'Foot soldiers must smash the towers in their path; the Ladder Company climbs straight past them. Attack where the defenses are thin.';
   const TUT_TEXT_SUPPLY =
-    'Break the walls of the fortress on the right — but here your muster does NOT refill on its own.\n\n' +
-    'BUILD SUPPLY CAMPS with the button below. Each camp costs muster now but generates muster over time, and they stack.\n\n' +
-    'The choice is yours every moment: spend muster on camps to grow your economy, or on troops to attack now. Pick a lane, then send your soldiers where the towers are thin.';
+    'Break the walls of the fortress on the right. Here your supply does NOT refill on its own.\n\n' +
+    'BUILD SUPPLY CAMPS with the button below. Each camp costs supply now but generates supply over time, and they stack.\n\n' +
+    'The choice is yours every moment: spend supply on camps to grow your economy, or on troops to attack now. Pick a lane, then send your soldiers where the towers are thin.';
   const TUT_TEXT_CONQUEST =
-    'This is the Conquest campaign — pack an estate, muster an army, then attack.\n\n' +
-    '1. BUILD — every building pays out ONCE, the moment it is placed. Camps grant wood, stone or food; sparkling RICH tiles count double for any building that covers them.\n\n' +
-    '2. THE ONE RULE — two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush. Packing the board well IS your economy.\n\n' +
-    '3. MUSTER & MARCH — a Barracks, Range or Forge HOUSES a set number of its troop; tap the roster to buy soldiers with your resources, and build more trainers to raise the ceiling. Each siege gets a fresh muster — troops never carry over, but survivors muster out for bonus coins — so pack, muster, then march.';
+    'This is the Conquest campaign: pack an estate, raise an army, then attack.\n\n' +
+    '1. BUILD, every building pays out ONCE, the moment it is placed. Camps grant wood, stone or food; sparkling RICH tiles count double for any building that covers them.\n\n' +
+    '2. THE ONE RULE, two buildings of the SAME kind may never touch edge-to-edge. Different kinds can sit flush. Packing the board well IS your economy.\n\n' +
+    '3. RECRUIT & MARCH. A Barracks, Range or Forge HOUSES a set number of its troop. Tap the roster to buy soldiers with your resources, and build more trainers to raise the ceiling. Each siege gets a fresh army. Troops never carry over, but survivors return for bonus coins. Pack, recruit, then march.';
   function startTutorial(){
     if(localStorage_getBool('assedio_tut_'+state.mode)){ beginGame(); return; }
     document.getElementById('tutText').textContent = state.mode==='supply' ? TUT_TEXT_SUPPLY : TUT_TEXT;
@@ -5869,6 +6937,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     state.started=true;
     state.timeLeft=state.timeLimit;
     state.lastTickSec=-1;
+    if(!state.daily && (state.shop.provision||0)>0 && state._provLvl!==state.level){
+      state._provLvl = state.level;
+      const g = state.shop.provision*(8 + Math.round(state.level*0.8));   // scales with the campaign, flat +12 was dust by the Endless War
+      state.gold += g; bumpGold();
+      spawnFloater(LOGICAL_W*0.2, GROUND_TOP+24, 'The wagons arrive: +'+g+' gold', '#f5c76a', 13);
+    }
     {
       const bt = battleFor(state.level), ch = chapterFor(state.level);
       FX.cine(bt ? bt.name : 'Siege '+state.level,
@@ -5876,11 +6950,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         (ch && ch.start===state.level) ? ch.epi : '');
     }
     AudioFX.musicStart();
+    if(state.theme==='naval') showCoach('naval_battle',
+      'A harbor assault: the lanes are WATERWAYS and every company fights from boats. The port\u2019s sea-walls fall the same way land walls do, pick the channel with the weakest towers and press it.');
     announceBossIfAny();
     if(state.level===1){
       setTimeout(()=>{
         showCoach('softlane',
-          "This is Troy — the siege that lasted ten years. No relief army will drive you off, so take your time and experiment freely. Tap any ROW of the battlefield to choose your attack lane — the golden chevron marks the current one. The colored dots at the left edge of each row are the towers guarding it. Find the row with the single GREEN dot (an open path), tap it, then tap a soldier to send them charging in.");
+          "This is Troy, the siege that lasted ten years. No relief army will drive you off, so take your time and experiment freely. Tap any ROW of the battlefield to choose your attack lane, the golden chevron marks the current one. The colored dots at the left edge of each row are the towers guarding it. Find the row with the single GREEN dot (an open path), tap it, then tap a soldier to send them charging in.");
       }, 700);
     }
   }
