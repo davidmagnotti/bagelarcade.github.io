@@ -245,7 +245,10 @@
   .army-cell canvas{width:26px; height:26px;}
   .army-col{display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0;}
   .army-count{font-size:15px; font-weight:700; color:var(--bronze-hi); line-height:1;}
-  .army-price{font-size:9px; color:var(--ink-dim); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:56px;}
+  .army-price{font-size:9px; color:var(--ink-dim); line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60px;}
+  .army-cell.locked canvas{filter:grayscale(1) brightness(.55);}
+  .army-cell.locked .army-count{color:var(--ink-dim);}
+  .army-price .lockdot{display:inline-block; width:8px; height:8px; margin-left:4px; vertical-align:-1px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.55);}
   .army-minus{
     position:absolute; top:0; right:0; width:17px; height:17px; padding:0;
     line-height:15px; text-align:center; font-size:13px; font-family:inherit;
@@ -450,7 +453,11 @@
     box-shadow:inset 0 0 0 1.5px #7a5a1f, 1px 1px 0 #000; display:inline-block; }
   .shop-note{ font-size:11px; color:var(--ink-dim); text-align:center; margin:0 0 8px; font-style:italic; }
   .shop-cat{ font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--bronze);
-    border-bottom:1px solid var(--stone-0); padding:8px 2px 4px; margin-top:6px; }
+    border-bottom:1px solid var(--stone-0); padding:9px 2px 6px; margin-top:6px;
+    display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+  .shop-cat .sc-chev{ color:var(--bronze-hi); width:10px; }
+  .shop-cat .sc-sum{ margin-left:auto; letter-spacing:0; text-transform:none; font-size:10px; color:var(--ink-dim); font-weight:400; }
+  .shop-cat.open{ color:var(--bronze-hi); }
   .shop-card{
     display:flex; align-items:center; gap:11px; text-align:left;
     background:var(--stone-1); border:1px solid var(--stone-0);
@@ -799,7 +806,7 @@
     <div class="sheet">
       <h2>The Quartermaster <span class="close">spoils of victory</span></h2>
       <div class="shop-coins"><span class="coin"></span><span id="shopCoins">0</span> coins</div>
-      <div class="shop-note">Upgrades are permanent and carry to every future siege.</div>
+      <div class="shop-note">Permanent upgrades — every one optional. Open a section to browse, or march straight on.</div>
       <div id="shopBody"></div>
       <button class="action-btn" id="shopDone" style="margin-top:14px; width:100%;">To the next province →</button>
     </div>
@@ -1102,7 +1109,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function shapeCells(type, rot){
     let cells = SHAPES[pShapeKey(type)].map(p=>[p[0],p[1]]);
     // Apply any purchased shape-shrink BEFORE rotating so the trimmed shape rotates cleanly.
-    if(typeof state!=='undefined' && state.shop && state.shop.shrink && !(typeof navalNow==='function' && navalNow() && NAVAL_BUILD[type] && NAVAL_BUILD[type].shape)){ cells = shrinkCells(cells); } // hulls don't shrink
+    if(typeof state!=='undefined' && state.shop && shrinkTierFor(type) && !(typeof navalNow==='function' && navalNow() && NAVAL_BUILD[type] && NAVAL_BUILD[type].shape)){ cells = shrinkCells(cells); } // hulls don't shrink
     rot = ((rot%4)+4)%4;
     for(let i=0;i<rot;i++) cells = rotateCells(cells);
     return normalizeCells(cells);
@@ -2293,7 +2300,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     custom:null,   // {startLevel, wallMult, resMult, capMult, densityMult}
     daily:null,    // {day, seed, level} — set while playing the Daily Siege
     coins:0,       // coins earned from breaking sieges — spent in the shop
-    shop:{ harvest:0, train:0, cap:0, shrink:0, drill:0 },  // persistent purchased upgrades
+    shop:{ harvest:0, train:0, cap:0, shrink:0, shrinkWood:0, shrinkStone:0, shrinkFood:0, shrinkWar:0, drill:0 },  // persistent purchased upgrades
   };
 
   function lighten(hex, amt){
@@ -3991,12 +3998,17 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       const el=document.getElementById('armycount-'+key);
       if(el) el.textContent = cap>0 ? (n+'/'+cap) : n;
       const pel=document.getElementById('armyprice-'+key);
+      const cellEl=document.getElementById('armycell-'+key);
+      if(cellEl) cellEl.classList.toggle('locked', cap<=0);
       if(pel){
         if(cap<=0){
-          pel.textContent='needs '+pName(TRAINER_OF[key]);
+          // locked: a padlock plus the color of the works that unlocks it —
+          // tapping the cell jumps to that building in the palette
+          const tcol=pColor(TRAINER_OF[key]);
+          pel.innerHTML='\uD83D\uDD12<span class="lockdot" style="background:'+tcol+'"></span>';
           pel.style.color='var(--ink-dim)';
         } else if(n>=cap){
-          pel.textContent='+ '+PLACE_DEFS[TRAINER_OF[key]].name;   // housing full — build another
+          pel.textContent='\u2302 full';   // housing full — tap to place another trainer
           pel.style.color='#e0a83f';
         } else {
           const p=unitPrice(key);
@@ -4150,12 +4162,24 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
   // Tap a roster cell to muster one soldier with resources; tap − to refund one
   // bought this visit (exact price paid, via the stack). Requires its trainer.
+  // The padlock is actionable: tapping a locked company selects its trainer
+  // in the build palette (jumping pages if needed), so the player is one tap
+  // from fixing it instead of decoding truncated text.
+  function focusTrainer(key){
+    const t=TRAINER_OF[key]; if(!t) return;
+    const order=palOrder(); const idx=order.indexOf(t);
+    if(idx<0) return;
+    state.palPage=Math.floor(idx/PAL_PER_PAGE);
+    renderPalette();
+    selectBuild(t);
+    updateFarmHUD();
+  }
   function buyTroop(key){
     if(!unitAvailable(key)) return;
     const cell=document.getElementById('armycell-'+key);
     const deny=()=>{ if(cell){ cell.classList.remove('deny'); void cell.offsetWidth; cell.classList.add('deny'); } AudioFX.retreat && AudioFX.retreat(); };
-    if(trainerCountFor(key)<=0){ deny(); return; }
-    if((state.army[key]||0) >= unitCap(key)){ deny(); return; }   // housing full — build another trainer
+    if(trainerCountFor(key)<=0){ deny(); focusTrainer(key); return; }
+    if((state.army[key]||0) >= unitCap(key)){ deny(); focusTrainer(key); return; }   // housing full — build another trainer
     const p=unitPrice(key);
     if(!resAfford(p)){ deny(); return; }
     resPay(p);
@@ -4212,9 +4236,29 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   // Shop-derived multipliers applied during the farm phase.
   function harvestMult(){ return 1 + (state.shop.harvest||0)*0.15; }   // +15% payout per tier
   function trainDiscount(){ return Math.max(0.55, 1 - (state.shop.train||0)*0.07); } // −7% troop price per tier
-  // Shape-shrink: each shrink tier removes the "last" cell from pieces larger than
-  // this many cells, making big footprints easier to place. Tier1 shrinks 4-cell
-  // pieces to 3; tier2 also shrinks 3-cell pieces to 2 (never below 2).
+  // Shape-shrink is sold per trade now (the old 90-gold everything-shrinker was
+  // wildly OP): Master Masons trim one tile from that resource's camps, Master
+  // Builders from the military works. Legacy saves with the old global upgrade
+  // are granted the full set once, in migrateShrink(). Never below 2 tiles.
+  function migrateShrink(){
+    const sh=state && state.shop; if(!sh || !sh.shrink) return;
+    sh.shrinkWood=1; sh.shrinkStone=1; sh.shrinkFood=1;
+    if(sh.shrink>=2) sh.shrinkWar=1;
+    sh.shrink=0;
+  }
+  function shrinkTierFor(type){
+    if(typeof state==='undefined' || !state.shop) return 0;
+    migrateShrink();
+    const d=PLACE_DEFS[type]; if(!d) return 0;
+    const sh=state.shop;
+    if(d.kind==='harvest'){
+      if(d.produces==='wood')  return sh.shrinkWood||0;
+      if(d.produces==='stone') return sh.shrinkStone||0;
+      if(d.produces==='food')  return sh.shrinkFood||0;
+      return 0;
+    }
+    return sh.shrinkWar||0;
+  }
   function cellsConnected(cells){
     if(cells.length<=1) return true;
     const key=(p)=>p[0]+','+p[1];
@@ -4238,11 +4282,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     return cells.slice(0,cells.length-1); // fallback (shouldn't happen)
   }
   function shrinkCells(cells){
-    const tier=state.shop.shrink||0;
-    if(tier<=0) return cells;
     let out=cells.map(p=>[p[0],p[1]]);
-    if(tier>=1 && out.length>3){ out=removeOneCell(out); }
-    if(tier>=2 && out.length>2){ out=removeOneCell(out); }
+    if(out.length>2){ out=removeOneCell(out); }
     return normalizeCells(out);
   }
   function enterFarm(){
@@ -4282,6 +4323,24 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       localStorage_setBool('ewf_landfall', true);
       setTimeout(()=>showCoach('naval_out',
         'LANDFALL. The fleets are behind you \u2014 the Horde\u2019s wars are fought on the endless steppe, and your host marches on solid ground again.'), 700);
+    }
+    // Introduce each newly-unlocked training works once (level 2: the Archery
+    // Range; the forge, siege works, etc. as the campaign opens them). Naval
+    // levels hide land works, so an introduction can also catch up after landfall.
+    if(!state.theme){
+      const fresh=palOrder().filter(t=>PLACE_DEFS[t].kind==='train'
+        && PLACE_DEFS[t].unlock>1
+        && PLACE_DEFS[t].unlock<=state.level
+        && !localStorage_getBool('ewf_newworks_'+t));
+      if(fresh.length){
+        const t=fresh[fresh.length-1], d=PLACE_DEFS[t];
+        localStorage_setBool('ewf_newworks_'+t, true);
+        const req = (typeof missingRequired==='function') && missingRequired().includes(t);
+        setTimeout(()=>showCoach('newworks_'+t,
+          'New works: the '+d.name.toUpperCase()+' trains '+uName(d.trains)+'s'+
+          (req?' \u2014 and this siege requires one':'')+
+          '. Build it, then tap the company in your muster to add them to the host.'), 900);
+      }
     }
     if(state.theme==='mountain') setTimeout(()=>showCoach('mountain',
       'The war climbs into the MOUNTAINS. Rocky hills break your estate \u2014 nothing can be built on them, so pack your camps into the valleys between. The fortress ahead is granite, and it has never fallen.'), 700);
@@ -4471,6 +4530,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         spawnParticles(s.x, s.y, '#8a3a2a', 14, 120);
         spawnDust(s.x, s.y+s.r*0.5, 5);
         AudioFX.thud && AudioFX.thud();
+        FEATS.check('kill');   // a defender slain — First Blood
         state.sorties.splice(i,1);
         continue;
       }
@@ -4630,6 +4690,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(!b || !b.alive) return;
     b.alive = false;
     state.stats.killed++;
+    FEATS.check('kill');    // the champion is certainly a defender
     FEATS.check('boss');
     RELIC.award(b.name);
     const bounty = Math.round((60 + state.level*10)*goldMult());
@@ -5361,6 +5422,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
             spawnSmoke(blocker.x, blocker.y, 10, -Math.PI/2);
             state.shake = Math.min(8, state.shake+3);
             spawnFloater(blocker.x, blocker.y-20, 'Tower down!', '#f5c76a', 14);
+            FEATS.check('kill');   // a defender slain — First Blood
           }
         }
       } else if(enemyAhead){
@@ -5392,8 +5454,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       if(m.hp<=0){
         addCorpse(m);
         spawnDust(m.x, m.y+m.r*0.6, 6);
-        state.stats.killed++;
-        FEATS.check('kill');
+        state.stats.killed++;   // your losses — a defender's kill, not yours
         AudioFX.thud();
         state.monsters.splice(i,1);
       }
@@ -6894,17 +6955,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(state.timerActive){
       const tl = Math.max(0, state.timeLeft);
       const mm = Math.floor(tl/60), ss = Math.floor(tl%60);
+      relief.style.display='';
       relief.innerHTML = 'Relief army: <b id="timerTxt">'+mm+':'+(ss<10?'0':'')+ss+'</b>';
       relief.classList.toggle('urgent', tl<=10);
     } else if(state.mode==='conquest' && state.sortiesActive){
       const m=Math.max(0,Math.round(state.morale));
+      relief.style.display='';
       relief.innerHTML = 'Camp: <b id="timerTxt">'+m+'/'+state.moraleMax+'</b> — it does not heal; hold off the sorties';
       relief.classList.toggle('urgent', m<=30);
-    } else if(state.level===1){
-      relief.innerHTML = 'The ten-year siege — <b>no relief is coming</b>. Take your time.';
-      relief.classList.remove('urgent');
     } else {
-      relief.innerHTML = 'No relief coming — press the assault';
+      // no timer, no morale — nothing worth a HUD line
+      relief.innerHTML = '';
+      relief.style.display='none';
       relief.classList.remove('urgent');
     }
     for(const key of UNIT_ORDER){
@@ -7190,9 +7252,18 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     { key:'outriders', cat:'One-time master works', emoji:'🏇', name:'Outriders',
       desc:'Scouts range ahead of the host: the Fortunes of War turn more often, and more often in your favor.',
       max:1, cost:(lvl)=> 120 },
-    { key:'shrink', cat:'One-time master works', emoji:'📐', name:'Master Builders',
-      desc:'Every building footprint loses a tile — pieces get smaller and far easier to fit. (Tier 2 shrinks them again.)',
-      max:2, cost:(lvl)=> lvl===0 ? 90 : 220 },
+    { key:'shrinkWood', cat:'One-time master works', emoji:'📐', name:'Master Masons — Timber',
+      desc:'Lumber Camps lose one tile from their footprint, permanently easier to fit.',
+      max:1, cost:()=> 45 },
+    { key:'shrinkStone', cat:'One-time master works', emoji:'📐', name:'Master Masons — Stone',
+      desc:'Quarries lose one tile from their footprint, permanently easier to fit.',
+      max:1, cost:()=> 45 },
+    { key:'shrinkFood', cat:'One-time master works', emoji:'📐', name:'Master Masons — Provisions',
+      desc:'Farmhouses lose one tile from their footprint, permanently easier to fit.',
+      max:1, cost:()=> 45 },
+    { key:'shrinkWar', cat:'One-time master works', emoji:'🏗️', name:'Master Builders — War Works',
+      desc:'Every military building — barracks, ranges, forges and beyond — loses one tile, permanently.',
+      max:1, cost:()=> 130 },
   ];
   function shopItemLevel(key){ return state.shop[key]||0; }
   function shopBuy(key){
@@ -7213,6 +7284,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     renderShop();
   }
   function renderShop(){
+    migrateShrink();
     document.getElementById('shopCoins').textContent = state.coins;
     const body = document.getElementById('shopBody');
     body.innerHTML='';
@@ -7222,12 +7294,31 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       h.innerHTML='<b>'+state._wonBattle.name+', '+state._wonBattle.year+'</b> — '+state._wonBattle.note;
       body.appendChild(h);
     }
-    let lastCat=null;
+    // categories fold shut: a glance shows what's inside and the cheapest way
+    // in, and the march-on button stays in reach without scrolling every card
+    const cats=[]; const byCat={};
     for(const item of SHOP_ITEMS){
-      if(item.cat!==lastCat){
-        const c=document.createElement('div'); c.className='shop-cat'; c.textContent=item.cat;
-        body.appendChild(c); lastCat=item.cat;
-      }
+      if(!byCat[item.cat]){ byCat[item.cat]=[]; cats.push(item.cat); }
+      byCat[item.cat].push(item);
+    }
+    for(const cat of cats){
+      const items=byCat[cat];
+      const owned=items.reduce((a,i)=>a+Math.min(shopItemLevel(i.key),i.max),0);
+      const buyable=items.filter(i=>shopItemLevel(i.key)<i.max).map(i=>i.cost(shopItemLevel(i.key)));
+      const cheapest=buyable.length?Math.min.apply(null,buyable):null;
+      const open=_shopOpen.has(cat);
+      const head=document.createElement('div');
+      head.className='shop-cat'+(open?' open':'');
+      head.innerHTML='<span class="sc-chev">'+(open?'\u25be':'\u25b8')+'</span>'+cat+
+        '<span class="sc-sum">'+(cheapest===null?'all owned':((owned?owned+' owned \u00b7 ':'')+'from '+cheapest+' \u26c3'))+'</span>';
+      head.addEventListener('pointerdown', e=>{
+        e.preventDefault();
+        if(_shopOpen.has(cat)) _shopOpen.delete(cat); else _shopOpen.add(cat);
+        renderShop();
+      });
+      body.appendChild(head);
+      if(!open) continue;
+      for(const item of items){
       const lvl=shopItemLevel(item.key);
       const maxed=lvl>=item.max;
       const cost=maxed?0:item.cost(lvl);
@@ -7245,8 +7336,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         card.querySelector('.shop-buy').addEventListener('pointerdown', e=>{ e.preventDefault(); shopBuy(item.key); });
       }
       body.appendChild(card);
+      }
     }
   }
+  const _shopOpen=new Set();
   function openShop(justEarned){
     state.paused = true;
     renderShop();
