@@ -5577,18 +5577,30 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       setTimeout(()=>dailyFinish(false), 1300);
       return;
     }
-    // Level 1 is a safe on-ramp in every mode — never allow a loss here.
+    // Conquest must fall back BEFORE the level-1 "never lose" guard below:
+    // with the whole host spent there is nothing left to send, so re-arming
+    // the battle would freeze the field forever (the tutorial's silent
+    // stall). Returning to the muster keeps level 1's no-penalty spirit —
+    // enterFarm deals a fresh board, fresh resources, and the guide again.
+    if(state.mode==='conquest'){
+      AudioFX.retreat();
+      state.flash = 0.3; state.shake = 6;
+      for(const m of state.monsters){ spawnDust(m.x, m.y+m.r*0.6, 4); }
+      state.monsters = []; state.projectiles = [];
+      state.started=false;
+      dismissCoach();                       // never strand a tutorial bubble over the retreat
+      showBanner(state.level===1
+        ? 'Your host is spent — every commander regroups. Muster a larger army!'
+        : 'Your host is spent — fall back and gather again.');
+      setTimeout(()=>enterFarm(), 1600);
+      return;
+    }
+    // Level 1 is a safe on-ramp in the classic modes — never allow a loss here.
     if(state.level===1){ state.started=true; return; }
     AudioFX.retreat();
     state.flash = 0.3; state.shake = 6;
     for(const m of state.monsters){ spawnDust(m.x, m.y+m.r*0.6, 4); }
     state.monsters = []; state.projectiles = [];
-    if(state.mode==='conquest'){
-      showBanner('Your host is spent — fall back and gather again.');
-      state.started=false;
-      setTimeout(()=>enterFarm(), 1600);
-      return;
-    }
     showBanner('The relief army arrives — your assault is repelled!');
     offerUpgrade('Assault repelled. Regroup and resupply.', 0);
   }
