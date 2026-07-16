@@ -44,8 +44,12 @@
   .qcard .qp{font-size:11px;color:#9be07f;margin-top:2px;font-weight:bold;}
   /* hotbar */
   #hotbar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;z-index:13;}
-  .slot{width:52px;height:52px;background:rgba(18,13,8,.85);border:2px solid #4a3826;border-radius:10px;
-    display:flex;align-items:center;justify-content:center;position:relative;box-shadow:var(--shadow);
+  .slot{width:52px;height:52px;background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.07), transparent 45%),
+    linear-gradient(160deg,#514e46 0%,#403d36 50%,#33312b 100%);
+    border:1px solid #26241f;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;position:relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -3px 4px rgba(0,0,0,.5), 0 3px 5px rgba(0,0,0,.55);
     pointer-events:auto;cursor:pointer;transition:transform .08s, border-color .12s;}
   .slot:active{transform:scale(.94);}
   .slot.sel{border-color:var(--ember);box-shadow:0 0 12px rgba(255,154,60,.5), var(--shadow);}
@@ -54,10 +58,18 @@
   .slot .cnt{position:absolute;bottom:2px;right:5px;font-size:11px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000;}
   .slot .lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
   /* menu buttons */
-  #menuBtns{position:absolute;bottom:12px;left:12px;display:flex;gap:8px;z-index:13;}
-  .mbtn{min-width:44px;height:44px;padding:0 10px;background:rgba(18,13,8,.85);border:2px solid #4a3826;border-radius:10px;
-    color:var(--parch);font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;
-    pointer-events:auto;cursor:pointer;box-shadow:var(--shadow);}
+  #menuBtns{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:13;opacity:.92;}
+  .mbtn{min-width:38px;height:32px;padding:0 9px;background:
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,.08), transparent 45%),
+    linear-gradient(160deg,#5c5951 0%,#494640 50%,#3a3831 100%);
+    border:1px solid #26241f;border-radius:7px;
+    color:var(--parch);font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;
+    text-shadow:0 -1px 0 rgba(0,0,0,.7);
+    pointer-events:auto;cursor:pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 3px rgba(0,0,0,.45), 0 2px 4px rgba(0,0,0,.5);}
+  .mbtn:active{transform:translateY(1px);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.4);}
+  .mbtn .tx{pointer-events:none;}
   .mbtn:active{transform:scale(.94);}
   .mbtn u{color:var(--ember);text-decoration:none;}
   /* touch controls */
@@ -72,11 +84,26 @@
   #joyKnob{position:absolute;width:50px;height:50px;border-radius:50%;
     background:rgba(240,226,192,.35);border:2px solid rgba(240,226,192,.5);display:none;}
   #actBtns{position:absolute;right:14px;bottom:84px;display:flex;flex-direction:column;gap:12px;align-items:center;pointer-events:auto;}
-  .abtn{width:72px;height:72px;border-radius:50%;background:rgba(200,55,42,.55);
-    border:3px solid rgba(240,226,192,.55);color:#fff;font-size:13px;font-weight:bold;
-    display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px #000;box-shadow:var(--shadow);}
-  .abtn:active{transform:scale(.92);}
+  .abtn{width:72px;height:72px;border-radius:50%;background:
+    radial-gradient(circle at 50% 46%, rgba(200,55,42,.75) 0%, rgba(140,35,26,.85) 42%, transparent 46%),
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
+    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);
+    border:2px solid #26241f;color:#ffe9d0;font-size:13px;font-weight:bold;
+    display:flex;align-items:center;justify-content:center;
+    text-shadow:0 -1px 0 rgba(0,0,0,.8), 0 1px 2px rgba(0,0,0,.6);
+    box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -4px 6px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.55);}
+  #interactBtn{background:
+    radial-gradient(circle at 50% 46%, rgba(88,150,74,.8) 0%, rgba(58,105,48,.9) 42%, transparent 46%),
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
+    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);}
+  #dodgeBtn{background:
+    radial-gradient(circle at 50% 46%, rgba(70,110,170,.8) 0%, rgba(45,72,115,.9) 42%, transparent 46%),
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
+    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);}
+  .abtn:active{transform:scale(.92);
+    box-shadow: inset 0 3px 8px rgba(0,0,0,.65), 0 2px 4px rgba(0,0,0,.45);}
   .abtn{touch-action:none;}
+  .mbtn,.slot,.btn{touch-action:manipulation;}
   #interactBtn{width:64px;height:64px;background:rgba(90,150,80,.6);display:none;font-size:11px;text-align:center;line-height:1.15;padding:4px;}
   /* panels */
   .panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;
@@ -87,10 +114,20 @@
     border-bottom:1px solid #4a3826;padding-bottom:7px;}
   .panel .closeX{position:absolute;top:10px;right:12px;width:28px;height:28px;border-radius:8px;
     background:#4a3826;color:var(--parch);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;}
-  .btn{background:linear-gradient(180deg,var(--ember),var(--ember-dk));color:#2a1608;border:none;border-radius:9px;
-    padding:9px 18px;font-weight:bold;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #7c4210;font-family:inherit;}
-  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #7c4210;}
-  .btn.ghost{background:#3b2c1c;color:var(--parch);box-shadow:0 3px 0 #241a10;}
+  .btn{background:
+    radial-gradient(circle at 22% 16%, rgba(255,255,255,.09), transparent 42%),
+    radial-gradient(circle at 80% 88%, rgba(0,0,0,.28), transparent 46%),
+    linear-gradient(160deg,#6b675f 0%,#57544c 45%,#454239 100%);
+    color:var(--parch);border:1px solid #2c2a25;border-radius:8px;
+    padding:10px 18px;font-weight:bold;font-size:13px;cursor:pointer;font-family:inherit;
+    letter-spacing:.5px;
+    text-shadow:0 -1px 0 rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 4px rgba(0,0,0,.45),
+      inset 2px 0 3px rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.55);}
+  .btn::first-letter{color:#e8c98f;}
+  .btn:active{transform:translateY(2px);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.5);}
+  .btn.ghost{filter:brightness(.8) saturate(.8);}
   /* dialog */
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
@@ -125,7 +162,7 @@
   #mapLegend{font-size:11px;color:var(--parch-dim);display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
   #mapLegend b{color:var(--parch);}
   /* toast + floats handled on canvas; toast is DOM */
-  #toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:40;background:rgba(20,14,8,.9);
+  #toast{position:fixed;top:96px;left:50%;transform:translateX(-50%);z-index:40;background:rgba(20,14,8,.9);
     border:2px solid var(--ember);border-radius:10px;padding:8px 16px;font-size:13px;display:none;
     box-shadow:var(--shadow);max-width:86vw;text-align:center;}
   /* title / overlays */
@@ -141,12 +178,9 @@
   #ovControls{margin-top:20px;font-size:12px;color:var(--parch-dim);line-height:1.8;}
   #ovControls b{color:var(--ember);}
   #fadeOv{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .7s ease;}
-  #savePanel textarea{width:100%;height:62px;background:#170f07;border:1px solid #4a3826;border-radius:8px;
-    color:var(--parch);font-size:10px;padding:6px;resize:none;
-    -webkit-user-select:text;user-select:text;}
-  .abtn.small{width:54px;height:54px;font-size:20px;background:rgba(70,110,170,.5);}
+  .abtn.small{width:54px;height:54px;font-size:20px;}
   /* ---------- AAA layer ---------- */
-  #bossBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(440px,72vw);z-index:12;display:none;pointer-events:none;}
+  #bossBar{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:min(440px,72vw);z-index:12;display:none;pointer-events:none;}
   #bossBar .bn{font-family:Georgia,serif;font-size:13px;letter-spacing:3px;text-align:center;color:#bfe8cd;
     text-shadow:0 0 12px rgba(120,220,160,.6),0 2px 4px #000;margin-bottom:3px;}
   #bossBar .bbar{height:14px;border:2px solid #1e3527;border-radius:7px;background:rgba(8,14,10,.8);overflow:hidden;
@@ -167,14 +201,29 @@
   #titleOv h1{animation:titleGlow 3.4s ease-in-out infinite;}
   @keyframes titleGlow{0%,100%{text-shadow:0 0 24px rgba(255,154,60,.3),0 4px 10px #000;}
     50%{text-shadow:0 0 44px rgba(255,154,60,.75),0 4px 10px #000;}}
-  #startBtn{animation:btnPulse 2.2s ease-in-out infinite;}
+  .btn.pulse{animation:btnPulse 2.2s ease-in-out infinite;}
+  .btn.danger{border-color:#4a1e16;background:
+    radial-gradient(circle at 22% 16%, rgba(255,200,180,.10), transparent 42%),
+    radial-gradient(circle at 80% 88%, rgba(0,0,0,.3), transparent 46%),
+    linear-gradient(160deg,#6e3a30 0%,#552a22 45%,#3e1c15 100%);}
+  .btn.danger:disabled{opacity:.4;cursor:not-allowed;animation:none;}
+  .btn.ghostly{opacity:.75;font-size:13px;padding:10px 18px;}
+  #confirmWipe{display:none;margin-top:14px;padding:12px;border:1px solid #7a2f26;border-radius:10px;
+    background:rgba(40,14,10,.55);max-width:340px;margin-left:auto;margin-right:auto;}
+  #confirmWipe p{font-size:12px;color:#e8b0a5;margin-bottom:8px;}
+  #wipeInput{width:100%;padding:8px;border-radius:8px;border:1px solid #7a3a30;background:#1c0f0b;
+    color:var(--parch);font-size:16px;text-align:center;letter-spacing:1px;
+    -webkit-user-select:text;user-select:text;}
+  #confirmWipe .row{display:flex;gap:8px;justify-content:center;margin-top:10px;}
   @keyframes btnPulse{0%,100%{box-shadow:0 0 0 rgba(255,154,60,0), var(--shadow);}
     50%{box-shadow:0 0 22px rgba(255,154,60,.55), var(--shadow);}}
   @media (max-width:700px){
     #tracker{width:170px;} .qcard{max-width:170px;}
     #topLeft .bar{width:150px;}
     #hotbar{bottom:8px;} .slot{width:46px;height:46px;}
-    #menuBtns{left:8px;bottom:auto;top:150px;flex-direction:column;}
+    #menuBtns{top:70px;left:10px;transform:none;gap:5px;}
+    .mbtn{min-width:32px;height:30px;padding:0 7px;}
+    .mbtn .tx{display:none;}
   }
 </style>
 </head>
@@ -195,11 +244,10 @@
 
 <div id="hotbar"></div>
 <div id="menuBtns">
-  <div class="mbtn" id="btnQuests"><u>Q</u>uests</div>
-  <div class="mbtn" id="btnInv"><u>I</u>nv</div>
-  <div class="mbtn" id="btnSkills"><u>K</u> Skills</div>
-  <div class="mbtn" id="btnMap"><u>M</u>ap</div>
-  <div class="mbtn" id="btnSave">💾</div>
+  <div class="mbtn" id="btnQuests">📜<span class="tx">Quests</span></div>
+  <div class="mbtn" id="btnInv">🎒<span class="tx">Bag</span></div>
+  <div class="mbtn" id="btnSkills">✦<span class="tx">Skills</span></div>
+  <div class="mbtn" id="btnMap">🗺<span class="tx">Map</span></div>
   <div class="mbtn" id="btnSound">♪</div>
 </div>
 
@@ -226,7 +274,8 @@
   <div class="closeX" data-close="invPanel">✕</div>
   <h2>Satchel</h2>
   <div id="invGrid"></div>
-  <div id="invHint">Tap a consumable to use it. Potions restore 30 HP · cooked fish 12 HP · wheat 10 HP.</div>
+  <div id="invHint">Tap a consumable to use it. Tonic 30 HP · bread 25 · grilled fish 20 · raw fish 12 · wheat 10.<br>
+  Sell spare goods to Maren · smelt & smith with Bram · cook with Willa · brew with Orin.</div>
 </div>
 
 <div class="panel" id="skillPanel">
@@ -240,17 +289,6 @@
   <div class="closeX" data-close="questPanel">✕</div>
   <h2>Quest Log</h2>
   <div id="qlog"></div>
-</div>
-
-<div class="panel" id="savePanel">
-  <div class="closeX" data-close="savePanel">✕</div>
-  <h2>Save & Load</h2>
-  <p style="font-size:11px;color:var(--parch-dim);margin-bottom:8px;">Copy this code somewhere safe — paste it back below anytime (even after a reload) and press Load.</p>
-  <textarea id="saveOut" readonly></textarea>
-  <button class="btn" id="copySaveBtn" style="margin:8px 0;font-size:12px;padding:8px 18px;">Copy Code</button>
-  <textarea id="saveIn" placeholder="paste a save code here…"></textarea>
-  <button class="btn" id="loadSaveBtn" style="margin-top:8px;font-size:12px;padding:8px 18px;">Load</button>
-  <div id="saveMsg" style="font-size:11px;margin-top:6px;color:#9be07f;"></div>
 </div>
 
 <div class="panel" id="mapPanel">
@@ -274,7 +312,19 @@
   <div class="ovCard">
     <h1>Emberwick <span>Isle</span></h1>
     <p>Learn the blade on Emberwick — tutorial shores of ember lanterns and old bones. Fell the Hollow King, then board Finn's boat for <b>Greyharbor</b>: a wilder mainland where elite packs prowl and a relic waits on Stormwatch Peak.</p>
-    <button class="btn" id="startBtn">Set Foot Ashore</button>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" id="continueBtn" style="display:none;">Continue</button>
+      <button class="btn" id="startBtn">Set Foot Ashore</button>
+    </div>
+    <div id="confirmWipe">
+      <p><b>This will erase your saved adventure forever</b> — gold, gear, quests, the lot.<br>
+      Type <b style="color:#ffb3a3">start over</b> to confirm.</p>
+      <input id="wipeInput" type="text" autocomplete="off" placeholder='type "start over"'>
+      <div class="row">
+        <button class="btn danger" id="wipeConfirm" disabled>Erase &amp; Begin Anew</button>
+        <button class="btn ghostly" id="wipeCancel">Keep My Save</button>
+      </div>
+    </div>
     <div id="ovControls"></div>
   </div>
 </div>
@@ -304,7 +354,7 @@
 
 /* ---------------- constants & helpers ---------------- */
 const TW = 64, TH = 32;                 // iso tile size
-let MAPW = 96, MAPH = 96;
+let MAPW = 112, MAPH = 112;
 const T = { DEEP:0, SHALLOW:1, SAND:2, GRASS:3, FOREST:4, RUIN:5, PATH:6, SOIL:7, PLANK:8 };
 const clamp = (v,a,b)=> v<a?a : v>b?b : v;
 const lerp = (a,b,t)=> a+(b-a)*t;
@@ -424,6 +474,9 @@ const walkTile = t => (t>=T.SAND); // sand and above are land
    ===================================================================== */
 let SEED = 20260715;
 let ZONES = {
+  springs:{x:22, y:34, r:5, name:'Ember Springs'},
+  cove:   {x:82, y:24, r:6, name:"Smuggler's Cove"},
+  orchard:{x:72, y:74, r:6, name:'Old Orchard'},
   village:{x:48,y:58,r:9,  name:'Emberwick Village'},
   farm:   {x:60,y:63,r:5,  name:'Willa\'s Farm'},
   dock:   {x:31,y:62,r:5,  name:'Driftwood Dock'},
@@ -480,6 +533,12 @@ function genWorld(){
   carveDisc(32,62,2,T.SAND,false);
   // dock planks reaching into bay
   for(let x=27;x<=31;x++){ setTile(x,62,T.PLANK); setTile(x,63,T.PLANK); }
+  // new isle zones
+  carveDisc(ZONES.springs.x,ZONES.springs.y,ZONES.springs.r,T.GRASS,false);
+  carveDisc(ZONES.springs.x,ZONES.springs.y,2,T.SHALLOW,false); // the hot pool
+  carveDisc(ZONES.cove.x,ZONES.cove.y,ZONES.cove.r,T.GRASS,false);
+  carveDisc(ZONES.cove.x+2,ZONES.cove.y-2,3,T.SAND,false);
+  carveDisc(ZONES.orchard.x,ZONES.orchard.y,ZONES.orchard.r,T.GRASS,false);
   // paths
   const V=ZONES.village;
   carveLine(V.x,V.y, ZONES.dock.x+1,62, T.PATH,0);
@@ -513,6 +572,7 @@ function blockedZone(x,y){
 function addNode(kind,x,y){
   const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:3,maxhp:3,dead:false,respawn:0,
              variant:rndi(0,2), sway:Math.random()*TAU};
+  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=4; }
   G.nodes.push(n);
   if(kind==='tree'||kind==='rock') setSolid(x,y,1);
   return n;
@@ -537,6 +597,45 @@ function placeObjects(){
   // bluecap mushrooms in the Whisperwood
   const shroomSpots = [[30,36],[35,41],[28,40],[36,34],[31,44],[38,39],[26,35]];
   for(const [x,y] of shroomSpots){ const s=findOpenNear(x,y,3); if(s) addNode('mushroom',s[0],s[1]); }
+  // old orchard: apple trees in a loose ring
+  const orr=mulberry32(SEED+71);
+  for(let i=0;i<9;i++){
+    const a=i*TAU/9+orr()*0.4, dd=2+orr()*(ZONES.orchard.r-2.5);
+    const ax=Math.round(ZONES.orchard.x+Math.cos(a)*dd), ay=Math.round(ZONES.orchard.y+Math.sin(a)*dd);
+    if(walkTile(tileAt(ax,ay)) && !solidAt(ax,ay)){ const n=addNode('apple',ax,ay); n.hp=n.maxhp=2; }
+  }
+  // smuggler's cove: an abandoned camp — wolves keep it now
+  const cv2=ZONES.cove;
+  G.decor.push({kind:'stump',x:cv2.x-1.5,y:cv2.y+1.5});
+  G.decor.push({kind:'stump',x:cv2.x+2.5,y:cv2.y+2});
+  addBuilding('lamp', Math.floor(cv2.x), Math.floor(cv2.y+1),'');
+  G.decor.push({kind:'chest',x:cv2.x+1.5,y:cv2.y-0.5,opened:false});
+  setSolid(Math.floor(cv2.x+1),Math.floor(cv2.y-1),1);
+  spawnMob('wolf',Math.floor(cv2.x-2),Math.floor(cv2.y-1));
+  spawnMob('wolf',Math.floor(cv2.x+3),Math.floor(cv2.y+3));
+  spawnMob('wolf',Math.floor(cv2.x-1),Math.floor(cv2.y+4));
+  // springs: an old marker stone with its own story
+  G.decor.push({kind:'pillar',x:ZONES.springs.x+2.8,y:ZONES.springs.y+0.5,broken:false,loreKey:'springs'});
+  setSolid(Math.floor(ZONES.springs.x+2.3),Math.floor(ZONES.springs.y),1);
+  // living meadow: grass tufts and wildflowers
+  const gr2=mulberry32(SEED+83);
+  const FLC=['#e0708a','#e8c14d','#c9d6ff','#e8855a'];
+  for(let y=2;y<MAPH-2;y++) for(let x=2;x<MAPW-2;x++){
+    if(tileAt(x,y)!==T.GRASS || solidAt(x,y)) continue;
+    if(dist(x,y,ZONES.village.x,ZONES.village.y)<4) continue;
+    const rr=gr2();
+    if(rr<0.09) G.decor.push({kind:'tuft',x:x+0.2+gr2()*0.6,y:y+0.2+gr2()*0.6,ph:gr2()*TAU});
+    else if(rr<0.115) G.decor.push({kind:'flower',x:x+0.2+gr2()*0.6,y:y+0.2+gr2()*0.6,ph:gr2()*TAU,c:FLC[(gr2()*4)|0]});
+  }
+  // beach shells along the sand
+  const shr=mulberry32(SEED+61);
+  let shells=0;
+  for(let tries=0; tries<4000 && shells<8; tries++){
+    const x=rndiR(shr,3,MAPW-4), y=rndiR(shr,3,MAPH-4);
+    if(tileAt(x,y)===T.SAND && !solidAt(x,y) && !G.nodes.some(n=>n.kind==='shell'&&dist(n.tx,n.ty,x,y)<6)){
+      addNode('shell',x,y); shells++;
+    }
+  }
   // fishing spots: shallow tiles adjacent to land
   const fishSpots=[[28,60],[27,64],[30,65],[24,61]];
   for(const [x,y] of fishSpots){ if(tileAt(x,y)<=T.SHALLOW){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; } }
@@ -610,6 +709,66 @@ const PAL = {
 };
 
 const TILE_SPR = {}; // [tileType][variant]
+const FRINGE={};
+function buildFringes(){
+  const defs={1:{c:PAL.sand,c2:PAL.sand2}, 2:{c:PAL.path,c2:PAL.path2},
+              3:{c:PAL.grass,c2:PAL.grassHi,tuft:true}, 4:{c:PAL.forest,c2:PAL.forest2,tuft:true}};
+  // diamond corners in local 64x32 space: T(32,0) R(64,16) B(32,32) L(0,16)
+  const edges=[[[32,0],[64,16]], [[64,16],[32,32]], [[32,32],[0,16]], [[0,16],[32,0]]]; // 0:TR 1:RB 2:BL 3:LT
+  for(const cls in defs){
+    FRINGE[cls]=[];
+    const D=defs[cls];
+    for(let di=0;di<4;di++){
+      FRINGE[cls].push(makeCanvas(TW,TH,(g)=>{
+        const r=mulberry32(500+cls*13+di*7);
+        g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
+        const [p1,p2]=edges[di];
+        const cxm=32, cym=16;
+        // wavy band polygon along the edge, bleeding inward
+        const N=7, outer=[], inner=[];
+        for(let i=0;i<=N;i++){
+          const t=i/N;
+          const ox=p1[0]+(p2[0]-p1[0])*t, oy=p1[1]+(p2[1]-p1[1])*t;
+          outer.push([ox,oy]);
+          const depth=(3.5+r()*5)/18;
+          inner.push([ox+(cxm-ox)*depth, oy+(cym-oy)*depth]);
+        }
+        g.beginPath(); g.moveTo(outer[0][0],outer[0][1]);
+        for(const p of outer) g.lineTo(p[0],p[1]);
+        for(let i=N;i>=0;i--) g.lineTo(inner[i][0],inner[i][1]);
+        g.closePath();
+        g.fillStyle=D.c; g.fill();
+        // texture inside the band
+        g.save(); g.clip();
+        for(let i=0;i<10;i++){
+          const t=r(), ox=p1[0]+(p2[0]-p1[0])*t, oy=p1[1]+(p2[1]-p1[1])*t;
+          g.fillStyle= r()<0.5? D.c2 : 'rgba(0,0,0,0.08)';
+          g.fillRect(ox+(cxm-ox)*r()*0.25, oy+(cym-oy)*r()*0.25, 2+r()*2, 1.4);
+        }
+        g.restore();
+        // grass/forest: blades poking over the seam
+        if(D.tuft){
+          g.strokeStyle=D.c2; g.lineWidth=1.2;
+          for(let i=0;i<6;i++){
+            const t=0.1+r()*0.8;
+            const ox=p1[0]+(p2[0]-p1[0])*t, oy=p1[1]+(p2[1]-p1[1])*t;
+            const ix=ox+(cxm-ox)*0.3, iy=oy+(cym-oy)*0.3;
+            g.beginPath(); g.moveTo(ix,iy);
+            g.lineTo(ix+(r()-0.5)*3, iy-3-r()*3); g.stroke();
+          }
+        }
+        // soft inner shade for depth
+        g.strokeStyle='rgba(0,0,0,0.10)'; g.lineWidth=1;
+        g.beginPath(); g.moveTo(inner[0][0],inner[0][1]);
+        for(const p of inner) g.lineTo(p[0],p[1]); g.stroke();
+        g.restore();
+      }));
+    }
+  }
+}
+function terrainCls(t){
+  return (t===T.DEEP||t===T.SHALLOW)?0 : t===T.SAND?1 : t===T.GRASS?3 : t===T.FOREST?4 : 2;
+}
 function buildTiles(){
   const specs = {
     [T.DEEP]:[PAL.deep,PAL.deep2], [T.SHALLOW]:[PAL.shallow,PAL.shallow2],
@@ -682,15 +841,46 @@ function buildSprites(){
   for(let v=0;v<3;v++){
     SPR.tree.push(makeCanvas(84,104,(g,w,h)=>{
       const [c1,c2,c3]=canopies[v];
-      // trunk
-      g.fillStyle='#6e4a2b'; g.fillRect(w/2-6,h-34,12,26);
-      g.fillStyle='#5c3d22'; g.fillRect(w/2-6,h-34,4,26);
-      // canopy blobs
+      const r=mulberry32(90+v*7);
+      // trunk with root flare and bark
+      g.fillStyle='#5c3d22';
+      g.beginPath();
+      g.moveTo(w/2-7,h-10); g.quadraticCurveTo(w/2-5,h-24,w/2-5,h-38);
+      g.lineTo(w/2+5,h-38); g.quadraticCurveTo(w/2+5,h-24,w/2+7,h-10);
+      g.quadraticCurveTo(w/2+12,h-8,w/2+13,h-7); g.lineTo(w/2-13,h-7);
+      g.quadraticCurveTo(w/2-12,h-8,w/2-7,h-10);
+      g.closePath(); g.fill();
+      g.fillStyle='#7a5230'; g.fillRect(w/2-5,h-38,4,30);
+      g.strokeStyle='rgba(30,18,8,0.5)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(w/2-1,h-12); g.lineTo(w/2-2,h-34);
+      g.moveTo(w/2+3,h-12); g.lineTo(w/2+3,h-30); g.stroke();
+      // a visible branch or two
+      g.strokeStyle='#5c3d22'; g.lineWidth=4; g.lineCap='round';
+      g.beginPath(); g.moveTo(w/2,h-36); g.quadraticCurveTo(w/2-12,h-44,w/2-18,h-50);
+      g.moveTo(w/2,h-40); g.quadraticCurveTo(w/2+10,h-48,w/2+16,h-54); g.stroke();
+      // canopy: gradient-lit clusters, dark to light, dappled leaves
       const blobs = v===2 ? [[0,-52,26],[-16,-40,20],[16,-42,21],[0,-32,24]]
                           : [[0,-58,24],[-18,-44,19],[18,-46,20],[-6,-34,22],[10,-32,20]];
-      for(const [bx,by,br] of blobs){ g.fillStyle=c3; g.beginPath(); g.arc(w/2+bx,h+by+3,br,0,TAU); g.fill(); }
-      for(const [bx,by,br] of blobs){ g.fillStyle=c1; g.beginPath(); g.arc(w/2+bx,h+by,br,0,TAU); g.fill(); }
-      for(const [bx,by,br] of blobs){ g.fillStyle=c2; g.beginPath(); g.arc(w/2+bx-br*0.25,h+by-br*0.3,br*0.55,0,TAU); g.fill(); }
+      for(const [bx,by,br] of blobs){ g.fillStyle=c3;
+        g.beginPath(); g.arc(w/2+bx,h+by+4,br,0,TAU); g.fill(); }
+      for(const [bx,by,br] of blobs){
+        const gr=g.createRadialGradient(w/2+bx-br*0.35,h+by-br*0.4,br*0.15,w/2+bx,h+by,br);
+        gr.addColorStop(0,c2); gr.addColorStop(0.55,c1); gr.addColorStop(1,c3);
+        g.fillStyle=gr; g.beginPath(); g.arc(w/2+bx,h+by,br,0,TAU); g.fill();
+      }
+      // leaf dapple
+      for(let i=0;i<60;i++){
+        const b=blobs[(i*7)%blobs.length];
+        const a=r()*TAU, d=r()*b[2]*0.92;
+        const px=w/2+b[0]+Math.cos(a)*d, py=h+b[1]+Math.sin(a)*d*0.9;
+        g.fillStyle= r()<0.55? 'rgba(255,255,235,'+(0.05+r()*0.10)+')' : 'rgba(10,25,10,'+(0.08+r()*0.10)+')';
+        g.beginPath(); g.ellipse(px,py,1.6+r()*1.6,1+r(), r()*TAU,0,TAU); g.fill();
+      }
+      // sky-side crown highlight + soft under-shadow
+      g.fillStyle='rgba(255,250,220,0.10)';
+      g.beginPath(); g.arc(w/2-8,h-62,18,Math.PI*1.0,Math.PI*1.9); g.fill();
+      g.fillStyle='rgba(10,15,8,0.16)';
+      g.beginPath(); g.ellipse(w/2,h-30,26,10,0,0,Math.PI); g.fill();
     }));
   }
   SPR.stump = makeCanvas(84,104,(g,w,h)=>{
@@ -706,16 +896,36 @@ function buildSprites(){
   for(let v=0;v<3;v++){
     SPR.rock.push(makeCanvas(70,56,(g,w,h)=>{
       const r=mulberry32(40+v);
-      g.fillStyle='#6f6f76';
-      g.beginPath(); g.moveTo(10,h-14);
-      const pts=[[14,h-30],[26,h-40],[44,h-38],[58,h-26],[60,h-14]];
-      for(const [px,py] of pts) g.lineTo(px+ (r()*4-2), py+(r()*4-2));
-      g.closePath(); g.fill();
-      g.fillStyle='#8d8d93'; g.beginPath(); g.moveTo(14,h-16); g.lineTo(18,h-30); g.lineTo(34,h-36); g.lineTo(40,h-18); g.closePath(); g.fill();
-      g.fillStyle='#a9a9b0'; g.beginPath(); g.moveTo(22,h-30); g.lineTo(30,h-34); g.lineTo(33,h-24); g.lineTo(24,h-22); g.closePath(); g.fill();
+      const jig=(px,py)=>[px+(r()*4-2),py+(r()*4-2)];
+      // silhouette
+      const outline=[[10,h-14],[14,h-30],[26,h-42],[44,h-40],[58,h-26],[60,h-14]].map(p=>jig(p[0],p[1]));
+      g.beginPath(); g.moveTo(outline[0][0],outline[0][1]);
+      for(const p of outline) g.lineTo(p[0],p[1]);
+      g.closePath();
+      g.fillStyle='#55555c'; g.fill();
+      g.strokeStyle='rgba(15,14,16,0.6)'; g.lineWidth=1.4; g.stroke();
+      // faceted planes: shadowed, mid, sun-lit
+      g.fillStyle='#6b6b72';
+      g.beginPath(); g.moveTo(34,h-40); g.lineTo(58,h-26); g.lineTo(60,h-14); g.lineTo(38,h-14); g.closePath(); g.fill();
+      const lit=g.createLinearGradient(12,h-42,34,h-16);
+      lit.addColorStop(0,'#b6b6bd'); lit.addColorStop(0.6,'#8f8f96'); lit.addColorStop(1,'#77777e');
+      g.fillStyle=lit;
+      g.beginPath(); g.moveTo(14,h-30); g.lineTo(26,h-42); g.lineTo(38,h-38); g.lineTo(34,h-16); g.lineTo(12,h-15); g.closePath(); g.fill();
+      // top sparkle facet
+      g.fillStyle='#cfd0d8';
+      g.beginPath(); g.moveTo(24,h-38); g.lineTo(32,h-41); g.lineTo(35,h-33); g.lineTo(26,h-31); g.closePath(); g.fill();
+      // facet seams + cracks
+      g.strokeStyle='rgba(20,18,22,0.5)'; g.lineWidth=1.1;
+      g.beginPath(); g.moveTo(34,h-40); g.lineTo(35,h-15);
+      g.moveTo(26,h-31); g.lineTo(22,h-16); g.stroke();
+      // moss at the base
+      g.fillStyle='rgba(78,110,52,0.7)';
+      for(let i=0;i<4;i++){ g.beginPath();
+        g.ellipse(14+r()*38,h-13-r()*4,3+r()*4,1.6+r()*1.6,0,0,TAU); g.fill(); }
       // ore glints
-      g.fillStyle='#dfe6ee';
-      for(let i=0;i<3;i++) g.fillRect(18+r()*30, h-34+r()*14, 3,3);
+      g.fillStyle='#e8eef6';
+      for(let i=0;i<3;i++){ const px=18+r()*28, py=h-36+r()*14;
+        g.fillRect(px,py,2.6,2.6); g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(px,py,1.2,1.2); g.fillStyle='#e8eef6'; }
     }));
   }
   SPR.rockLow = makeCanvas(70,56,(g,w,h)=>{
@@ -831,17 +1041,25 @@ function shade(hex,amt){
   return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
 }
 /* ---- characters: drawn live for animation ---- */
-function drawShadowAt(g,sx,sy,r){ g.fillStyle='rgba(0,0,0,0.28)';
-  g.beginPath(); g.ellipse(sx,sy,r,r*0.45,0,0,TAU); g.fill(); }
+function drawShadowAt(g,sx,sy,r){
+  const sg=g.createRadialGradient(sx,sy,r*0.15,sx,sy,r);
+  sg.addColorStop(0,'rgba(0,0,0,0.34)'); sg.addColorStop(0.7,'rgba(0,0,0,0.20)'); sg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=sg;
+  g.save(); g.translate(sx,sy); g.scale(1,0.45);
+  g.beginPath(); g.arc(0,0,r*1.25,0,TAU); g.fill();
+  g.restore();
+}
 
 function drawHumanoid(g,sx,sy,o){
   // o: {skin,hair,shirt,pants,dir,step,size,hat,weapon,swing,hurt,cloak,
   //     robe,trim,apron,pauldrons,beard,hairstyle,quiver,shield,rune,necklace}
   const s=o.size||1;
+  const ph=o.ph||0;
   const walking = !!o.step;
   const step=Math.sin(o.step||0)*2.6*s;
   const armSw=Math.sin((o.step||0))*0.55;
-  const bob = Math.abs(Math.sin(o.step||0))*1.7*s;
+  const bob = walking? Math.abs(Math.sin(o.step||0))*1.7*s
+                     : (Math.sin(G.time*2.1+ph)*0.5+0.5)*1.0*s; // idle breathing
   const flip = (o.dir && o.dir.x<0)?-1:1;
   const skin=o.skin||'#d8a97a', shirt=o.shirt||'#55483a', pants=o.pants||'#3c3833';
   const OUT='rgba(18,12,8,0.55)';
@@ -929,9 +1147,14 @@ function drawHumanoid(g,sx,sy,o){
       g.fillStyle=pants;
       g.beginPath(); g.roundRect(lx, legY+lift*0.9, 4.8*s, 12*s-lift, 2*s); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle=shade(pants,-14); // worn knee patch
+      g.beginPath(); g.roundRect(lx+0.7*s, legY+4*s+lift*0.6, 3.4*s, 3*s, 1.2*s); g.fill();
       g.fillStyle='#241b12';
       g.beginPath(); g.roundRect(lx-0.4*s, -4.5*s+lift*0.5, 5.8*s, 4.2*s, 1.6*s); g.fill();
       g.stroke();
+      g.strokeStyle='#3a2c1a'; g.lineWidth=1*s; // boot strap + buckle
+      g.beginPath(); g.moveTo(lx-0.4*s,-3.2*s+lift*0.5); g.lineTo(lx+5.4*s,-3.2*s+lift*0.5); g.stroke();
+      g.fillStyle='#c9a24e'; g.fillRect(lx+1.8*s,-3.9*s+lift*0.5,1.4*s,1.4*s);
     }
     // tunic torso
     g.fillStyle=shirt;
@@ -947,8 +1170,27 @@ function drawHumanoid(g,sx,sy,o){
       g.moveTo(-8*s,-13.6*s-bob); g.lineTo(8*s,-13.6*s-bob); g.stroke();
     }
     g.restore();
-    g.strokeStyle='rgba(0,0,0,0.18)'; g.lineWidth=1;
-    g.beginPath(); g.moveTo(0,-30*s-bob); g.lineTo(0,-19*s-bob); g.stroke();
+    // tailoring: V-collar with trim, chest lacing, cloth wrinkles
+    g.strokeStyle=shade(shirt,-30); g.lineWidth=1.3*s;
+    g.beginPath(); g.moveTo(-3.4*s,-31*s-bob); g.lineTo(0,-26.5*s-bob); g.lineTo(3.4*s,-31*s-bob); g.stroke();
+    g.fillStyle=skin;
+    g.beginPath(); g.moveTo(-2.4*s,-30.6*s-bob); g.lineTo(0,-27.6*s-bob); g.lineTo(2.4*s,-30.6*s-bob); g.closePath(); g.fill();
+    g.strokeStyle='rgba(230,220,190,0.55)'; g.lineWidth=0.9*s;
+    g.beginPath();
+    g.moveTo(-1.6*s,-26*s-bob); g.lineTo(1.6*s,-24.8*s-bob);
+    g.moveTo(1.6*s,-26*s-bob); g.lineTo(-1.6*s,-24.8*s-bob);
+    g.moveTo(-1.6*s,-24*s-bob); g.lineTo(1.6*s,-22.8*s-bob); g.stroke();
+    g.strokeStyle='rgba(0,0,0,0.14)'; g.lineWidth=1;
+    g.beginPath();
+    g.moveTo(-6*s,-24*s-bob); g.quadraticCurveTo(-4*s,-22.5*s-bob,-2.5*s,-23.5*s-bob);
+    g.moveTo(6*s,-22*s-bob); g.quadraticCurveTo(4.4*s,-20.8*s-bob,3*s,-21.6*s-bob); g.stroke();
+    // tunic skirt flaps over the hips
+    g.fillStyle=shade(shirt,-10);
+    g.beginPath(); g.moveTo(-8*s,-13.4*s-bob); g.lineTo(-2.5*s,-13.4*s-bob); g.lineTo(-3.4*s,-9.4*s-bob); g.lineTo(-8.4*s,-10*s-bob); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(2.5*s,-13.4*s-bob); g.lineTo(8*s,-13.4*s-bob); g.lineTo(8.4*s,-10*s-bob); g.lineTo(3.4*s,-9.4*s-bob); g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1;
+    g.beginPath(); g.moveTo(-8*s,-13.4*s-bob); g.lineTo(-3.4*s,-9.4*s-bob);
+    g.moveTo(8*s,-13.4*s-bob); g.lineTo(3.4*s,-9.4*s-bob); g.stroke();
     // apron over tunic
     if(o.apron){
       g.fillStyle=o.apron;
@@ -965,8 +1207,32 @@ function drawHumanoid(g,sx,sy,o){
     g.fillStyle='#8a6d30'; g.fillRect(-1*s,-15.6*s-bob,2*s,1.6*s);
   }
 
+  // armor over the clothes
+  if((o.armor|0)>=1 && !o.robe){
+    const a2=(o.armor|0)>=2;
+    const pg=g.createLinearGradient(-6*s,-30*s-bob,6*s,-15*s-bob);
+    pg.addColorStop(0, a2?'#d4dae4':'#b6bcc7'); pg.addColorStop(0.55, a2?'#98a0ad':'#828a96'); pg.addColorStop(1, a2?'#69707c':'#585f6a');
+    g.fillStyle=pg;
+    g.beginPath(); g.roundRect(-6.6*s,-30*s-bob,13.2*s,14.5*s,4*s); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    // center ridge + rivets
+    g.strokeStyle='rgba(25,28,34,0.55)'; g.lineWidth=1.1*s;
+    g.beginPath(); g.moveTo(0,-29*s-bob); g.lineTo(0,-16.5*s-bob); g.stroke();
+    g.fillStyle='#e6eaf1';
+    for(const rv of [[-4.6,-27.5],[4.6,-27.5],[-4.6,-18.5],[4.6,-18.5]])
+      { g.beginPath(); g.arc(rv[0]*s,rv[1]*s-bob,0.75*s,0,TAU); g.fill(); }
+    // tassets guarding the hips
+    g.fillStyle=a2?'#a8afbb':'#8a919d';
+    g.beginPath(); g.moveTo(-6.5*s,-15.5*s-bob); g.lineTo(-1*s,-15.5*s-bob); g.lineTo(-2*s,-11*s-bob); g.lineTo(-7*s,-11.8*s-bob); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(1*s,-15.5*s-bob); g.lineTo(6.5*s,-15.5*s-bob); g.lineTo(7*s,-11.8*s-bob); g.lineTo(2*s,-11*s-bob); g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+    if(a2){ // gorget at the throat
+      g.fillStyle='#c2c8d2';
+      g.beginPath(); g.ellipse(0,-30.5*s-bob,4.6*s,2.2*s,0,0,TAU); g.fill(); g.stroke();
+    }
+  }
   // shoulders: steel pauldrons or cloth pads
-  if(o.pauldrons){
+  if(o.pauldrons || (o.armor|0)>=1){
     for(const px of [-8*s,8*s]){
       const pg=g.createLinearGradient(px-4*s,-31*s-bob,px+4*s,-25*s-bob);
       pg.addColorStop(0,'#c2c8d2'); pg.addColorStop(0.5,'#8a919d'); pg.addColorStop(1,'#5c626d');
@@ -988,6 +1254,15 @@ function drawHumanoid(g,sx,sy,o){
     g.fillStyle=sleeve;
     g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,8.5*s,1.8*s); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+    if((o.armor|0)>=2){ // steel bracer
+      const bg=g.createLinearGradient(-2*s,4*s,2*s,8*s);
+      bg.addColorStop(0,'#c2c8d2'); bg.addColorStop(1,'#6c727d');
+      g.fillStyle=bg;
+      g.beginPath(); g.roundRect(-2.1*s,4.6*s,4.2*s,3.8*s,1.4*s); g.fill(); g.stroke();
+    } else {
+      g.fillStyle=shade(sleeve,-18); // rolled cuff
+      g.fillRect(-1.9*s,7*s,3.8*s,1.6*s);
+    }
     g.fillStyle=skin;
     g.beginPath(); g.arc(0,9.6*s,2.6*s,0,TAU); g.fill(); g.stroke();
     g.restore();
@@ -1061,6 +1336,18 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.arc(0,-38.6*s-bob,8.4*s,Math.PI*1.08,Math.PI*1.92); g.stroke();
     g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-45.8*s-bob,1.4*s,0,TAU); g.fill();
   }
+  else if((o.armor|0)>=2 && !o.hat){
+    const hg=g.createLinearGradient(-8*s,-46*s-bob,8*s,-38*s-bob);
+    hg.addColorStop(0,'#d4dae4'); hg.addColorStop(0.6,'#98a0ad'); hg.addColorStop(1,'#69707c');
+    g.fillStyle=hg;
+    g.beginPath(); g.arc(0,-40*s-bob,8.8*s,Math.PI*0.95,Math.PI*2.05); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    g.fillStyle='#98a0ad'; // nose guard
+    g.fillRect(-1*s,-41*s-bob,2*s,6.5*s);
+    g.strokeStyle='rgba(25,28,34,0.5)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(0,-48.6*s-bob); g.lineTo(0,-40*s-bob); g.stroke();
+    g.fillStyle='#e6eaf1'; g.beginPath(); g.arc(0,-47*s-bob,0.9*s,0,TAU); g.fill();
+  }
   else if(o.hairstyle==='bald'){
     g.fillStyle='rgba(255,255,255,0.10)';
     g.beginPath(); g.arc(-2.5*s,-43*s-bob,3.2*s,0,TAU); g.fill();
@@ -1118,16 +1405,30 @@ function drawHumanoid(g,sx,sy,o){
       }
     }
   } else {
-    // face: small almond eyes with clamped gaze, soft brows, hint of a mouth
+    // face: small almond eyes with clamped gaze, blinking, soft brows, hint of a mouth
     const ex = (o.dir? clamp(o.dir.x,-1,1):0)*1.2*s, ey = (o.dir? clamp(o.dir.y,-1,1):0)*0.9*s;
+    const blink = ((G.time + ph*1.7) % 4.3) < 0.13;
     g.fillStyle='#241a10';
-    g.beginPath();
-    g.ellipse(-3*s+ex,-38*s-bob+ey,1.15*s,1.55*s,0,0,TAU);
-    g.ellipse( 3*s+ex,-38*s-bob+ey,1.15*s,1.55*s,0,0,TAU); g.fill();
-    g.fillStyle='rgba(255,255,255,0.85)';
-    g.beginPath();
-    g.arc(-3*s+ex-0.35*s,-38.5*s-bob+ey,0.4*s,0,TAU);
-    g.arc( 3*s+ex-0.35*s,-38.5*s-bob+ey,0.4*s,0,TAU); g.fill();
+    if(blink){
+      g.lineWidth=1.1*s; g.strokeStyle='#241a10';
+      g.beginPath();
+      g.moveTo(-4.1*s+ex,-38*s-bob+ey); g.lineTo(-1.9*s+ex,-38*s-bob+ey);
+      g.moveTo( 1.9*s+ex,-38*s-bob+ey); g.lineTo( 4.1*s+ex,-38*s-bob+ey); g.stroke();
+    } else {
+      g.beginPath();
+      g.ellipse(-3*s+ex,-38*s-bob+ey,1.15*s,1.55*s,0,0,TAU);
+      g.ellipse( 3*s+ex,-38*s-bob+ey,1.15*s,1.55*s,0,0,TAU); g.fill();
+      g.fillStyle='rgba(255,255,255,0.85)';
+      g.beginPath();
+      g.arc(-3*s+ex-0.35*s,-38.5*s-bob+ey,0.4*s,0,TAU);
+      g.arc( 3*s+ex-0.35*s,-38.5*s-bob+ey,0.4*s,0,TAU); g.fill();
+    }
+    // warm sun rim-light on the lit side
+    const rim=0.22*(1-nightAmount()*0.75);
+    if(rim>0.03){
+      g.strokeStyle='rgba(255,225,170,'+rim+')'; g.lineWidth=1.6*s;
+      g.beginPath(); g.arc(0,-38*s-bob,8.1*s,Math.PI*0.75,Math.PI*1.25); g.stroke();
+    }
     g.strokeStyle='rgba(30,20,12,0.55)'; g.lineWidth=0.9*s;
     g.beginPath();
     g.moveTo(-4.4*s+ex*0.6,-40.6*s-bob+ey*0.5); g.lineTo(-1.7*s+ex*0.6,-40.8*s-bob+ey*0.5);
@@ -1160,6 +1461,10 @@ function drawHumanoid(g,sx,sy,o){
     if(o.weapon==='sword'){
       g.fillStyle='#d4d9e0'; g.fillRect(-1.5*s,-20*s,3*s,18*s);
       g.fillStyle='#9aa1ab'; g.fillRect(0,-20*s,1.5*s,18*s);
+      const gt=(G.time*0.8+ph)%4.6;
+      if(gt<0.3){ const ga=Math.sin(gt/0.3*Math.PI);
+        g.strokeStyle='rgba(255,255,255,'+(0.9*ga)+')'; g.lineWidth=1.6*s;
+        g.beginPath(); g.moveTo(-1.5*s,-19*s+gt*40*s); g.lineTo(1.5*s,-21*s+gt*40*s); g.stroke(); }
       g.beginPath(); g.moveTo(-1.5*s,-20*s); g.lineTo(0,-24*s); g.lineTo(1.5*s,-20*s); g.closePath();
       g.fillStyle='#d4d9e0'; g.fill();
       g.strokeStyle='rgba(18,12,8,0.55)'; g.lineWidth=1; g.strokeRect(-1.5*s,-20*s,3*s,18*s);
@@ -1388,12 +1693,12 @@ const QUESTS = {
     brief:'New boots on old sand — welcome, traveler. Our smith Bram has been muttering about needing help. Follow the lanterns east of the well and introduce yourself.',
     log:'Speak with Bram at the forge, east of the village well.',
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
-    rw:{gold:10, xp:{melee:30}}, unlocks:['sharpen','fish','harvest','cat'] },
+    rw:{gold:10, xp:{melee:30}}, unlocks:['sharpen','fish','harvest','cat','shells','springs'] },
   sharpen:{ giver:'bram', title:'Iron in the Fire', kind:'gather', need:{wood:5,stone:3},
     brief:'That rusty letter-opener of yours won\'t cut butter. Bring me 5 wood and 3 stone — there\'s a pine stand south of the village and a stone outcrop up the north road — and I\'ll forge you a proper iron sword.',
     log:'Bring Bram 5 wood and 3 stone.',
     doneText:'Stand back— *CLANG* —there. Iron, balanced, and mean. Try not to lose it.',
-    rw:{item:{}, sword:1, gold:5, xp:{melee:60, mining:80, woodcut:80}}, unlocks:['slimes'] },
+    rw:{item:{}, sword:1, gold:5, xp:{melee:60, mining:80, woodcut:80}}, unlocks:['slimes','cove'] },
   slimes:{ giver:'bram', title:'Meadow Menace', kind:'kill', kill:{slime:4},
     brief:'Slimes have gone and claimed the east meadow — Willa\'s cows won\'t graze. Squash four of them and I\'ll dig out my old hunting bow for you.',
     log:'Defeat 4 slimes in the meadow east of the village.',
@@ -1403,12 +1708,12 @@ const QUESTS = {
     brief:'Tide\'s kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family — keep any extra.',
     log:'Catch 3 fish at rippling water. Interact to cast, again on the "!"',
     doneText:'Beautiful catch! You\'ve got dock-hands, friend. Take these tonics — brewed them from sea kelp myself.',
-    rw:{item:{potion:3}, xp:{fishing:150}, gold:5} },
+    rw:{item:{potion:3}, xp:{fishing:150}, gold:5}, unlocks:['pearlq'] },
   harvest:{ giver:'willa', title:'Golden Rows', kind:'special', count:4,
     brief:'Soil\'s turned and begging for seed. Take these — plant them in the tilled plots, and wheat grows quick as gossip on this island. Harvest four bundles for me.',
     log:'Plant seeds in Willa\'s plots and harvest 4 wheat.',
     doneText:'Look at that gold! You keep half, that\'s farm law. Come plant whenever you like.',
-    rw:{item:{seed:4, wheat:2}, gold:15, xp:{farming:180}} },
+    rw:{item:{seed:4, wheat:2}, gold:15, xp:{farming:180}}, unlocks:['orchard'] },
   cat:{ giver:'nia', title:'Where\'s Pip?', kind:'special',
     brief:'My cat Pip chased a moth into the Whisperwood and never came back! He\'s orange and he\'s the BEST cat. Please find him? He likes tall trees…',
     log:'Find Pip the cat in the Whisperwood, west of the village.',
@@ -1418,7 +1723,7 @@ const QUESTS = {
     brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood — they only glow where the shade is honest — and I will wake the staff that\'s been asleep in my cellar.',
     log:'Gather 3 bluecaps from the Whisperwood for Orin.',
     doneText:'Bluecaps, crushed… essence, bound… there. This staff will throw fire that answers to you. Press 3. Mind the eyebrows.',
-    rw:{staff:true, xp:{magic:150}}, unlocks:['skeletons'] },
+    rw:{staff:true, xp:{magic:150}}, unlocks:['skeletons','remember'] },
   skeletons:{ giver:'orin', title:'Restless Bones', kind:'kill', kill:{skeleton:3},
     brief:'The old ruins north of my tower are rattling again. Skeletons — rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
     log:'Destroy 3 skeletons in the Old Ruins, north of the tower.',
@@ -1509,7 +1814,7 @@ function addXP(skill,amt){
   }
   refreshSkillsPanel();
 }
-function meleeDmg(){ return 6 + (P.swordTier?4:0) + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
+function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
 function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('relic',1)?4:0); }
 function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('relic',1)?4:0); }
 
@@ -1520,6 +1825,7 @@ function questReady(id){
   if(qs(id)!=='active') return false;
   if(q.kind==='gather'){ for(const it in q.need) if(!has(it,q.need[it])) return false; return true; }
   if(q.kind==='kill'){ for(const k in q.kill) if((P.prog[id]||0) < q.kill[k]) return false; return true; }
+  if(q.kind==='visit') return (P.prog[id]||0)>=1;
   if(q.kind==='special'){
     if(id==='harvest') return (P.prog.harvest||0) >= q.count;
     if(id==='cat') return P.petPip;
@@ -1546,6 +1852,7 @@ function completeQuest(id){
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]) P.quests[u]='avail'; });
   if(id==='cat'){ P.petPip=false; G.cat.following=false; G.cat.homebound=true; }
+  setTimeout(autoSave,300);
   if(id==='king') setTimeout(()=>toast('The strait is calm at last. <b style="color:var(--ember)">Finn\'s boat</b> at the dock can sail for <b>Greyharbor</b>.',6000),2600);
   banner('QUEST COMPLETE', q.title);
   Snd.quest(); updateQuestUI(); buildHotbar();
@@ -1571,6 +1878,13 @@ function questTargetPos(id){
     if(id==='skeletons'||id==='king') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='cat') return (G.cat && !G.cat.found)? {x:ZONES.forest.x,y:ZONES.forest.y} : null;
     if(id==='bounty'||id==='alpha') return ZONES.highlands? {x:ZONES.highlands.x,y:ZONES.highlands.y} : {x:ZONES.ruins.x,y:ZONES.ruins.y};
+    if(id==='shells'||id==='pearlq') return {x:ZONES.dock.x,y:ZONES.dock.y-2};
+    if(id==='springs') return {x:ZONES.springs.x,y:ZONES.springs.y};
+    if(id==='cove') return {x:ZONES.cove.x,y:ZONES.cove.y};
+    if(id==='orchard') return {x:ZONES.orchard.x,y:ZONES.orchard.y};
+    if(id==='remember') return {x:ZONES.tower.x,y:ZONES.tower.y};
+    if(id==='embers') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
+    if(id==='mossbrew') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
@@ -1579,7 +1893,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -1615,6 +1929,7 @@ function drawPortrait(npc){
   g.restore();
 }
 function openDialog(npc){
+  P.click=null;
   dlg.open=true; dlg.npc=npc;
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent=npc.name;
@@ -1674,7 +1989,22 @@ function buildDialogContent(npc){
   setDialog('“'+npc.idleLines[npc.li]+'”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
 }
 function shopButtons(npc,btns){
+  if(npc.id==='bram'){
+    btns.unshift({label:'Smith & craft…', fn:()=>craftMenu(npc)});
+  }
+  if(npc.id==='orin'){
+    btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
+  }
+  if(npc.id==='willa'){
+    btns.unshift({label:'Cook at the hearth…', fn:()=>cookMenu(npc)});
+  }
+  if(npc.id==='kell'){
+    btns.unshift({label:'Harbor projects…', fn:()=>projectsMenu(npc)});
+  }
   if(npc.id==='maren'){
+    btns.unshift({label:'Village projects…', fn:()=>projectsMenu(npc)});
+    btns.unshift({label:'Supply contract…', fn:()=>contractMenu(npc)});
+    btns.unshift({label:'Sell goods…', fn:()=>sellMenu(npc)});
     btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
       if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
         setDialog('“Sip it slow — or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
@@ -1706,18 +2036,78 @@ window.addEventListener('keydown',e=>{
   if(k==='2') selectWeapon('bow');
   if(k==='3') selectWeapon('staff');
   if(k==='4') useItem('potion');
-  if(k==='i') togglePanel('invPanel');
-  if(k==='q') togglePanel('questPanel');
-  if(k==='k') togglePanel('skillPanel');
-  if(k==='m') togglePanel('mapPanel');
   if(k==='escape'){ closeAllPanels(); closeDialog(); }
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; if(e.key===' ') input.attack=false; });
 
-cv.addEventListener('mousemove',e=>{ input.mx=e.clientX; input.my=e.clientY; });
-cv.addEventListener('mousedown',e=>{ if(G.state!=='play'||dlg.open) return;
-  Snd.init(); input.mouseDown=true; tryAttack(true); });
+cv.addEventListener('mousemove',e=>{ input.mx=e.clientX; input.my=e.clientY;
+  if(input.mouseDown && P.click && P.click.type==='pos' && !G.interior){
+    const w=screenToWorld(e.clientX,e.clientY); P.click.x=w.x; P.click.y=w.y;
+  }
+});
+cv.addEventListener('mousedown',e=>{ if(G.state!=='play') return;
+  Snd.init(); input.mouseDown=true;
+  if(dlg.open) return;
+  if(G.interior){ interiorClick(e.clientX,e.clientY); return; }
+  const w=screenToWorld(e.clientX,e.clientY);
+  P.click=pickClickTarget(w.x,w.y);
+  P._seek={x:P.x,y:P.y,t:0};
+  const fx=P.click.m? P.click.m : P.click.n? P.click.n : P.click;
+  P.clickFx={x:fx.x,y:fx.y,t:0.6};
+  if(P.click.type==='mob'){
+    const m=P.click.m, rng=P.weapon==='melee'?1.5:6.5;
+    if(dist(P.x,P.y,m.x,m.y)<=rng){ facePoint(m.x,m.y); tryAttack(true); }
+  }
+});
 window.addEventListener('mouseup',()=> input.mouseDown=false);
+
+function pickClickTarget(wx,wy){
+  let best=null, bd=1.1;
+  for(const m of G.mobs){
+    if(m.dead) continue;
+    const r=(m.boss||m.kind==='alpha')?1.8:1.0;
+    const d=dist(wx,wy,m.x,m.y-0.3);
+    if(d<r && d<bd){ bd=d; best={type:'mob',m}; }
+  }
+  if(best) return best;
+  const cand=[];
+  for(const n of G.npcs) cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.7,
+    go:()=>{ facePoint(n.x,n.y); openDialog(n); }});
+  for(const n of G.nodes){
+    if(n.dead) continue;
+    if(n.kind==='fish') cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.9,go:()=>{ facePoint(n.x,n.y); fishAction(n); }});
+    else cand.push({type:'gather',x:n.x,y:n.y,r:0.9,range:1.5,n});
+  }
+  for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});
+  for(const b of G.decor){
+    if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
+    else if(b.kind==='chest'||b.kind==='chestOpen') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>openChest(b)});
+    else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
+    else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
+    else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
+    else if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')
+      cand.push({type:'inter',x:b.x,y:b.y+0.9,r:1.3,range:1.5,go:()=>enterHouse(b)});
+  }
+  let bi=null; bd=999;
+  for(const c of cand){ const d=dist(wx,wy,c.x,c.y); if(d<c.r && d<bd){ bd=d; bi=c; } }
+  if(bi) return bi;
+  return {type:'pos',x:wx,y:wy};
+}
+function interiorClick(sx,sy){
+  const I=G.interior;
+  const ccx=isoX(I.w/2,I.h/2), ccy=isoY(I.w/2,I.h/2);
+  const ox=sx-(VW/2-ccx), oy=sy-(VH/2+14-ccy);
+  const wx=(ox/(TW/2)+oy/(TH/2))/2, wy=(oy/(TH/2)-ox/(TW/2))/2;
+  let best=null, bd=1.0;
+  for(const f of I.furn){
+    if(!{bed:1,hearth:1,anvil:1,orb:1,books:1,shelf:1,barrel:1,hay:1,crate:1}[f.type]) continue;
+    const d=dist(wx,wy,f.x,f.y);
+    if(d<bd){ bd=d; best=f; }
+  }
+  if(best){ I.click={x:best.x,y:best.y+0.9,f:best}; return; }
+  if(dist(wx,wy,I.exit.x,I.exit.y)<1.1){ I.click={x:I.exit.x,y:I.exit.y,exit:true}; return; }
+  I.click={x:clamp(wx,0.95,I.w-0.95), y:clamp(wy,2.1,I.h-0.65)};
+}
 
 /* touch joystick */
 const joyZone=document.getElementById('joyZone'), joyBase=document.getElementById('joyBase'), joyKnob=document.getElementById('joyKnob');
@@ -1803,22 +2193,14 @@ function togglePanel(id){
     if(id==='skillPanel') refreshSkillsPanel();
     if(id==='questPanel') refreshQuestLog();
     if(id==='mapPanel') drawBigMap();
-    if(id==='savePanel') document.getElementById('saveOut').value=saveCode();
   }
 }
-function closeAllPanels(){ ['invPanel','skillPanel','questPanel','mapPanel','savePanel'].forEach(id=> document.getElementById(id).style.display='none'); }
+function closeAllPanels(){ ['invPanel','skillPanel','questPanel','mapPanel'].forEach(id=> document.getElementById(id).style.display='none'); }
 document.querySelectorAll('.closeX').forEach(el=> el.onclick=()=> document.getElementById(el.dataset.close).style.display='none');
 document.getElementById('btnInv').onclick=()=>togglePanel('invPanel');
 document.getElementById('btnQuests').onclick=()=>togglePanel('questPanel');
 document.getElementById('btnSkills').onclick=()=>togglePanel('skillPanel');
 document.getElementById('btnMap').onclick=()=>togglePanel('mapPanel');
-document.getElementById('btnSave').onclick=()=>togglePanel('savePanel');
-document.getElementById('copySaveBtn').onclick=function(){
-  const ta=document.getElementById('saveOut'); ta.select();
-  try{ navigator.clipboard.writeText(ta.value); }catch(e){ try{ document.execCommand('copy'); }catch(e2){} }
-  this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy Code',1400);
-};
-document.getElementById('loadSaveBtn').onclick=()=> loadCode(document.getElementById('saveIn').value);
 document.getElementById('miniWrap').onclick=()=>togglePanel('mapPanel');
 document.getElementById('btnSound').onclick=function(){ Snd.init(); Snd.on=!Snd.on; this.style.opacity=Snd.on?1:0.45; };
 
@@ -1888,7 +2270,7 @@ function refreshSkillsPanel(){
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue; any=true;
@@ -1902,19 +2284,29 @@ function refreshQuestLog(){
   const avail = order.filter(id=>qs(id)==='avail');
   if(avail.length) box.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">'+avail.length+' villager'+(avail.length>1?'s have':' has')+' work for you — look for the <b style="color:var(--ember)">!</b> marks.</div>');
   if(!any && !avail.length) box.innerHTML='<div style="font-size:12px;color:var(--parch-dim);">Speak with Elder Maren by the village well.</div>';
+  const total=Object.keys(LORE).length, read=Object.keys(P.loreRead||{});
+  let lh='<div style="margin-top:12px;border-top:1px solid #3a2c1c;padding-top:8px;">'+
+    '<div class="qt" style="color:var(--ember);">Lore Journal — '+read.length+'/'+total+'</div>';
+  if(read.length){
+    for(const k of read){ if(LORE[k]) lh+='<div class="qlogItem" style="margin-top:6px;"><div class="qt" style="font-size:12px;">'+LORE[k].title+'</div><div class="qd">'+LORE[k].text+'</div></div>'; }
+  } else lh+='<div class="qd" style="font-size:11px;color:var(--parch-dim);">Books wait indoors; old stones wait among the ruins. Read them.</div>';
+  lh+='</div>';
+  box.insertAdjacentHTML('beforeend',lh);
 }
 function questProgressText(id){
   const q=QUESTS[id];
   if(questReady(id)) return 'Ready — return to '+npcName(q.giver)+'!';
   if(q.kind==='gather'){ return Object.keys(q.need).map(it=> ITEMS[it].name+' '+Math.min(q.need[it],P.inv[it]||0)+'/'+q.need[it]).join(' · '); }
-  if(q.kind==='kill'){ const k=Object.keys(q.kill)[0]; return MOBDEF[k].name+'s '+(P.prog[id]||0)+'/'+q.kill[k]; }
+  if(q.kind==='kill'){ const k=Object.keys(q.kill)[0];
+    return ((MOBDEF[k]&&MOBDEF[k].name+'s')||'Elites')+' '+(P.prog[id]||0)+'/'+q.kill[k]; }
+  if(q.kind==='visit') return 'Find '+ZONES[q.zone].name;
   if(id==='harvest') return 'Harvested '+(P.prog.harvest||0)+'/'+q.count;
-  if(id==='cat') return G.cat.following? 'Pip follows you — bring him to Nia!' : 'Search the Whisperwood';
+  if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you — bring him to Nia!' : 'Search the Whisperwood';
   return '';
 }
 function updateQuestUI(){
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
   let shown=0;
   for(const id of order){
     if(qs(id)!=='active' || shown>=2) continue; shown++;
@@ -1963,11 +2355,27 @@ function nearestInteract(){
     const rng = n.kind==='fish'?2.3:1.7;
     if(d<rng && d<bd){
       bd=d;
-      const lbl={tree:'Chop',rock:'Mine',mushroom:'Pick',fish: P.fishing? (P.fishing.bit?'Strike!':'…wait…') :'Fish'}[n.kind];
+      const lbl={tree:'Chop',rock:'Mine',mushroom:'Pick',shell:'Gather',apple:'Pick',fish: P.fishing? (P.fishing.bit?'Strike!':'…wait…') :'Fish'}[n.kind];
       best={type:'node',o:n,label:lbl};
     }
   }
   for(const b of G.decor){
+    if(b.kind==='pillar'){
+      const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')),o:b,label:'Read'}; }
+    }
+    if(b.kind==='crypt'){
+      const d=dist(P.x,P.y,b.x,b.y+1);
+      if(d<2.2 && d<bd){ bd=d; best={type:'lore',key:'crypt',o:b,label:'Read'}; }
+    }
+    if(b.kind==='well' && P.projects.well){
+      const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
+    }
+    if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'){
+      const d=dist(P.x,P.y,b.x,b.y+0.9);
+      if(d<1.6 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
+    }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
     if(b.kind==='chest'||b.kind==='chestOpen'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -1985,9 +2393,28 @@ function nearestInteract(){
 
 function doInteract(){
   if(G.state!=='play') return;
+  if(G.interior){
+    if(dlg.open){ closeDialog(); return; }
+    const hs=interiorHotspot();
+    const nearExit=dist(P.x,P.y,G.interior.exit.x,G.interior.exit.y)<1.6;
+    if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,G.interior.exit.x,G.interior.exit.y))){
+      useHotspot(hs); return;
+    }
+    if(nearExit) exitHouse();
+    return;
+  }
   if(dlg.open){ closeDialog(); return; }
   const it=nearestInteract();
   if(!it) return;
+  if(it.type==='lore'){ facePoint(it.o.x,it.o.y); readLore(it.key); return; }
+  if(it.type==='well'){
+    if(P.wellCd>0){ toast('The well needs '+Math.ceil(P.wellCd)+'s to refill.'); return; }
+    P.hp=P.maxhp; P.mp=P.maxmp; P.wellCd=90;
+    addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
+    burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
+    return;
+  }
+  if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); openChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
@@ -2010,21 +2437,56 @@ function hitNode(n){
   facePoint(n.x,n.y);
   if(n.kind==='fish'){ fishAction(n); return; }
   if(n.kind==='mushroom'){
-    n.dead=true; n.respawn=45;
+    n.dead=true; n.respawn=38;
     give('mushroom',1); addXP('farming',6); burst(n.x,n.y-0.3,'#7fb4e8',8);
+    return;
+  }
+  if(n.kind==='apple'){
+    n.hp-=1; n.shake=0.2; P.swing=0.28; P.anim+=0.5; Snd.chop();
+    burst(n.x,n.y-1.6,'#c9385a',5,1.6);
+    if(n.hp<=0){
+      n.dead=true; n.respawn=rnd(30,45);
+      give('apple',2+(P.skills.farming.lvl>=3?1:0)); addXP('farming',10);
+      addFloat('+apples',n.x,n.y-2,'#e0708a',1.05);
+    }
+    return;
+  }
+  if(n.kind==='shell'){
+    n.dead=true; n.respawn=rnd(45,70);
+    give('shell',1); addXP('fishing',5); burst(n.x,n.y-0.2,'#eaf4f8',7,1.4); Snd.pickup();
     return;
   }
   const isTree=n.kind==='tree';
   P.swing=0.28; P.anim+=0.5;
-  const power = 1 + Math.floor((isTree? P.skills.woodcut.lvl : P.skills.mining.lvl)/3);
+  const power = 1 + Math.floor((isTree? P.skills.woodcut.lvl : P.skills.mining.lvl)/3)
+              + (isTree? P.tools.axe : P.tools.pick);
   n.hp-=power;
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
   if(n.hp<=0){
-    n.dead=true; n.respawn= isTree? 40:55;
+    n.dead=true; n.respawn= isTree? rnd(20,30) : rnd(26,38);
+    hintOnce('regrow','The island <b>regrows</b> — felled pines and broken stone return in under a minute.');
     setSolid(n.tx,n.ty,0);
-    if(isTree){ const amt=2+Math.floor(P.skills.woodcut.lvl/2); give('wood',Math.min(amt,4)); addXP('woodcut',8); }
-    else { const amt=1+Math.floor(P.skills.mining.lvl/2); give('stone',Math.min(amt,3)); addXP('mining',9); }
+    if(isTree){
+      const amt=2+Math.floor(P.skills.woodcut.lvl/2); give('wood',Math.min(amt,4)); addXP('woodcut',8);
+      if(n.big && Math.random() < 0.45 + P.tools.axe*0.3 + P.skills.woodcut.lvl*0.03){
+        give('hardwood',1); addFloat('+1 hardwood',n.x,n.y-2.2,'#c9a24e',1.1);
+        hintOnce('hardwood','<b>Hardwood!</b> Old forest pines hide dense heartwood — Bram forges tools and steel with it.');
+      }
+    } else {
+      const amt=1+Math.floor(P.skills.mining.lvl/2); give('stone',Math.min(amt,3)); addXP('mining',9);
+      if(Math.random() < 0.22 + P.tools.pick*0.3 + P.skills.mining.lvl*0.04){
+        give('ore',1); addFloat('+1 iron ore',n.x,n.y-2,'#c9ced6',1.1);
+        hintOnce('ore','<b>Iron ore!</b> Take it to Bram — two ore and a stick of wood smelt into an iron bar.');
+      }
+      const nearVein = dist(n.x,n.y,ZONES.ruins.x,ZONES.ruins.y)<13 ||
+        (ZONES.highlands && dist(n.x,n.y,ZONES.highlands.x,ZONES.highlands.y)<13);
+      if(nearVein && Math.random()<0.16){
+        give('crystal',1); addFloat('+1 ember crystal',n.x,n.y-2.4,'#ff9a3c',1.15);
+        burst(n.x,n.y-0.6,'#ff9a3c',10,2);
+        hintOnce('crystal','<b>An ember crystal!</b> They vein the old stone near ruins. Sage Orin brews tonics from them.');
+      }
+    }
   }
 }
 function fishAction(n){
@@ -2036,9 +2498,14 @@ function fishAction(n){
   }
   if(P.fishing.bit){
     const big = P.skills.fishing.lvl>=3 && Math.random()<0.4;
-    give('fish', big?2:1); addXP('fishing',12);
+    give('fish', (big?2:1) + (P.projects.crane?1:0)); addXP('fishing',12);
     burst(n.x,n.y-0.4,'#9ecbe8',10); Snd.pickup();
     if(big) addFloat('Big catch!',P.x,P.y-2,'#ffd76a',1.3);
+    if(Math.random() < 0.06 + P.skills.fishing.lvl*0.015){
+      give('pearl',1); addFloat('A PEARL!',P.x,P.y-2.4,'#eaf4f8',1.4);
+      shockwave(n.x,n.y,'rgba(230,244,248,0.9)',30); Snd.levelup();
+      hintOnce('pearl','A <b>pearl</b>! Elder Maren pays 25 gold for these beauties.');
+    }
     P.fishing=null;
   } else {
     addFloat('too soon…',P.x,P.y-1.4,'#c9b990'); P.fishing=null; Snd.splash();
@@ -2060,7 +2527,7 @@ function usePlot(pl){
 
 /* ---- combat ---- */
 function tryAttack(useMouse){
-  if(P.atkCd>0 || G.state!=='play' || dlg.open) return;
+  if(P.atkCd>0 || G.state!=='play' || dlg.open || G.interior) return;
   // if a gatherable is closer than any mob and we're in melee, gather instead (mobile friendliness)
   const it=nearestInteract();
   if(it && it.type==='node' && it.o.kind!=='fish'){
@@ -2162,6 +2629,7 @@ function killMob(m,skill){
 }
 function hurtPlayer(dmg,src){
   if(P.hurtT>0 || P.dead || (P.rollT||0)>0) return;
+  dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
   burst(P.x,P.y-0.5,'#e05648',8); Snd.hurt(); G.shake=Math.max(G.shake,0.25);
@@ -2202,6 +2670,31 @@ function updatePlayer(dt){
   if(keys['d']||keys['arrowright']){ mx+=1; my-=1; }
   if(input.joy.active){ mx=input.joy.x; my=input.joy.y; }
   else if(input.gpDir){ mx=input.gpDir.x; my=input.gpDir.y; }
+  if(P.clickFx) P.clickFx.t-=dt;
+  if(Math.hypot(mx,my)>0.05){ P.click=null; }
+  else if(P.click && !dlg.open){
+    let tx,ty,range; const C=P.click;
+    if(C.type==='mob'){ if(C.m.dead){ P.click=null; } else { tx=C.m.x; ty=C.m.y; range=P.weapon==='melee'?1.45:6.0; } }
+    else if(C.type==='gather'){ if(C.n.dead){ P.click=null; } else { tx=C.n.x; ty=C.n.y; range=C.range; } }
+    else if(C.type==='inter'){ tx=C.x; ty=C.y; range=C.range; }
+    else { tx=C.x; ty=C.y; range=0.14; }
+    if(P.click){
+      const d=dist(P.x,P.y,tx,ty);
+      if(d>range){
+        mx=(tx-P.x)/d; my=(ty-P.y)/d;
+        P._seek=P._seek||{x:P.x,y:P.y,t:0};
+        P._seek.t+=dt;
+        if(dist(P.x,P.y,P._seek.x,P._seek.y)>0.06){ P._seek.x=P.x; P._seek.y=P.y; P._seek.t=0; }
+        else if(P._seek.t>0.8){ P.click=null; mx=0; my=0; }
+      } else {
+        if(P._seek) P._seek.t=0; // engaged, not stuck
+        if(C.type==='mob'){ facePoint(tx,ty); if(P.atkCd<=0) tryAttack(false); }
+        else if(C.type==='gather'){ facePoint(tx,ty); if(P.atkCd<=0){ P.atkCd=0.45; hitNode(C.n); } }
+        else if(C.type==='inter'){ P.click=null; C.go(); }
+        else P.click=null;
+      }
+    }
+  }
   const ml=Math.hypot(mx,my);
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){
@@ -2218,6 +2711,7 @@ function updatePlayer(dt){
     }
     if(P.fishing){ P.fishing=null; addFloat('line reeled in',P.x,P.y-1.3,'#c9b990'); }
   }
+  P.wellCd=Math.max(0,(P.wellCd||0)-dt);
   P.comboT=Math.max(0,(P.comboT||0)-dt); if(P.comboT===0) P.combo=0;
   P.atkCd=Math.max(0,P.atkCd-dt);
   P.swing=Math.max(0,P.swing-dt);
@@ -2239,6 +2733,22 @@ function updatePlayer(dt){
       else { P.hp=Math.min(P.maxhp,P.hp+pt.n); addFloat('+'+pt.n+' HP',P.x,P.y-1.4,'#7fe07f'); Snd.pickup(); refreshUI(); }
       pt.life=0;
     }
+  }
+  if(ZONES.springs){
+    const sd=dist(P.x,P.y,ZONES.springs.x,ZONES.springs.y);
+    if(sd<ZONES.springs.r){
+      if(qs('springs')==='active' && !(P.prog.springs)){ P.prog.springs=1; updateQuestUI();
+        toast('<b style="color:var(--ember)">Ember Springs discovered!</b> Return to Maren.',4200); Snd.quest(); }
+      hintOnce('springs','The <b>Ember Springs</b> — warm water rises from the island\'s heart. Wade at the pool\'s edge to mend your wounds.');
+      if(sd<2.4){
+        P.hp=Math.min(P.maxhp,P.hp+6*dt);
+        if(Math.random()<0.15) G.parts.push({x:P.x+rnd(-0.6,0.6),y:P.y+rnd(-0.6,0.6),
+          vx:rnd(-0.15,-0.05),vy:rnd(-0.15,-0.05),life:rnd(1.2,2),color:'rgba(230,240,245,0.35)',size:5,grav:-0.15});
+      }
+    }
+    if(sd<ZONES.springs.r+2 && Math.random()<0.06)
+      G.parts.push({x:ZONES.springs.x+rnd(-1.5,1.5),y:ZONES.springs.y+rnd(-1.5,1.5),
+        vx:rnd(-0.1,0),vy:rnd(-0.12,-0.04),life:rnd(1.5,2.5),color:'rgba(225,235,240,0.28)',size:6,grav:-0.15});
   }
   if(dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins — the air is cold here. Bones walk.');
   if(dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
@@ -2378,8 +2888,11 @@ function updateWorld(dt){
   // nodes respawn
   for(const n of G.nodes){
     if(n.dead){ n.respawn-=dt;
-      if(n.respawn<=0 && dist(P.x,P.y,n.x,n.y)>4){ n.dead=false; n.hp=n.maxhp;
-        if(n.kind==='tree'||n.kind==='rock') setSolid(n.tx,n.ty,1); } }
+      if(n.respawn<=0 && dist(P.x,P.y,n.x,n.y)>2.5){ n.dead=false; n.hp=n.maxhp;
+        if(n.kind==='tree'||n.kind==='rock') setSolid(n.tx,n.ty,1);
+        burst(n.x,n.y-0.6,'#9be07f',9,1.6);
+        if(dist(P.x,P.y,n.x,n.y)<14) Snd.tone(740,0.09,'sine',0.02,180);
+      } }
     if(n.shake) n.shake=Math.max(0,n.shake-dt);
   }
   // crops
@@ -2458,10 +2971,27 @@ function render(){
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
       cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
       if(t===T.SHALLOW || t===T.DEEP){
-        // gentle animated sheen
+        // gentle animated sheen + drifting sparkles
         const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
         if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
           cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
+        if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
+          const sa=0.35+0.35*Math.sin(G.time*6+x);
+          cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
+          cx.beginPath(); cx.moveTo(sx-3,sy); cx.lineTo(sx+3,sy);
+          cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
+        }
+      } else {
+        // soft terrain transitions: higher terrain bleeds over lower
+        const mc=terrainCls(t);
+        if(mc<4){
+          const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+          for(const nb of nbs){
+            const nt=tileAt(x+nb[0],y+nb[1]);
+            const nc=terrainCls(nt);
+            if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+          }
+        }
       }
     }
   }
@@ -2514,6 +3044,15 @@ function render(){
     } else if(pt.leaf){
       cx.save(); cx.translate(s.x,s.y-6+Math.sin(G.time*2+pt.ph)*3); cx.rotate(G.time*1.5+pt.ph);
       cx.fillStyle=pt.color; cx.fillRect(-2.6,-1.6,5.2,3.2); cx.restore();
+    } else if(pt.bfly){
+      const fl=Math.sin(G.time*15+pt.ph);
+      const bx=s.x+Math.sin(G.time*2.3+pt.ph)*8, by=s.y-9+Math.sin(G.time*3.1+pt.ph)*4;
+      cx.fillStyle=pt.color;
+      cx.save(); cx.translate(bx,by);
+      cx.beginPath(); cx.ellipse(-2.4*Math.abs(fl)-0.6,0,2.6*Math.abs(fl)+0.4,1.9,-0.4,0,TAU);
+      cx.ellipse( 2.4*Math.abs(fl)+0.6,0,2.6*Math.abs(fl)+0.4,1.9,0.4,0,TAU); cx.fill();
+      cx.fillStyle='rgba(40,30,20,0.9)'; cx.fillRect(-0.7,-2,1.4,4);
+      cx.restore();
     } else if(pt.glow){
       cx.fillStyle=pt.color; cx.beginPath(); cx.arc(s.x,s.y-6,pt.size,0,TAU); cx.fill();
       cx.globalAlpha*=0.35; cx.beginPath(); cx.arc(s.x,s.y-6,pt.size*2.6,0,TAU); cx.fill();
@@ -2546,9 +3085,27 @@ function render(){
     cx.globalAlpha=1;
   }
 
+  // point-and-click destination marker
+  if(P.clickFx && P.clickFx.t>0){
+    const s=worldToScreen(P.clickFx.x,P.clickFx.y);
+    const pr=1-P.clickFx.t/0.6;
+    cx.globalAlpha=P.clickFx.t/0.6;
+    cx.strokeStyle='#ffd76a'; cx.lineWidth=2;
+    cx.beginPath(); cx.ellipse(s.x,s.y,10+pr*14,(10+pr*14)*0.5,0,0,TAU); cx.stroke();
+    cx.globalAlpha=1;
+  }
+  if(P.click && P.click.type==='pos'){
+    const s=worldToScreen(P.click.x,P.click.y);
+    cx.globalAlpha=0.5+0.3*Math.sin(G.time*6);
+    cx.strokeStyle='#ffd76a'; cx.lineWidth=1.6;
+    cx.beginPath(); cx.ellipse(s.x,s.y,7,3.5,0,0,TAU); cx.stroke();
+    cx.globalAlpha=1;
+  }
+
   // ---- rolling ground fog & carrion crows ----
   drawFog();
   drawCrows();
+  drawGulls();
 
   // ---- passing cloud shadows (day) ----
   WX.drawCloudShadows();
@@ -2614,13 +3171,55 @@ function drawNode(n,s){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
     drawShadowAt(cx,s.x,s.y,16);
     const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.8+n.sway)*1.2;
-    cx.save(); cx.translate(s.x+sh*0.3,s.y); cx.rotate(sh*0.004);
-    cx.drawImage(SPR.tree[n.variant], -42, -96); cx.restore();
+    const dmg = 1 - n.hp/n.maxhp;
+    cx.save(); cx.translate(s.x+sh*0.3,s.y);
+    cx.rotate(sh*0.004 + dmg*0.07*(n.sway>Math.PI?-1:1));
+    if(n.big) cx.scale(1.15,1.15);
+    cx.drawImage(SPR.tree[n.variant], -42, -96);
+    if(dmg>0){ // axe notch in the trunk
+      cx.fillStyle='#e8dcbd';
+      cx.beginPath(); cx.moveTo(-5,-16); cx.lineTo(-5+8*dmg,-13); cx.lineTo(-5,-10); cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(40,25,12,0.7)'; cx.lineWidth=1; cx.stroke();
+    }
+    cx.restore();
   } else if(n.kind==='rock'){
     if(n.dead){ cx.drawImage(SPR.rockLow, s.x-35, s.y-44); return; }
     drawShadowAt(cx,s.x,s.y,15);
     const sh=n.shake? Math.sin(G.time*45)*2.4*n.shake*4:0;
     cx.drawImage(SPR.rock[n.variant], s.x-35+sh, s.y-44);
+    const cracks=n.maxhp-n.hp;
+    if(cracks>0){
+      cx.strokeStyle='rgba(15,12,8,0.65)'; cx.lineWidth=1.4;
+      const cr=mulberry32(n.tx*31+n.ty*7);
+      for(let i=0;i<cracks;i++){
+        let px=s.x-14+cr()*28+sh, py=s.y-30+cr()*16;
+        cx.beginPath(); cx.moveTo(px,py);
+        for(let sg=0;sg<3;sg++){ px+=3+cr()*6; py+=(cr()-0.5)*9; cx.lineTo(px,py); }
+        cx.stroke();
+      }
+    }
+  } else if(n.kind==='apple'){
+    if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
+    const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.8+n.sway)*1.2;
+    cx.save(); cx.translate(s.x+sh*0.3,s.y); cx.rotate(sh*0.004);
+    cx.drawImage(SPR.tree[2], -42, -96);
+    const fr=mulberry32(n.tx*17+n.ty*5);
+    cx.fillStyle='#c9385a';
+    const spots=[]; for(let i=0;i<6;i++) spots.push([-20+fr()*40,-70+fr()*30]);
+    for(const sp of spots){ cx.beginPath(); cx.arc(sp[0],sp[1],2.6,0,TAU); cx.fill(); }
+    cx.fillStyle='rgba(255,255,255,0.5)';
+    for(const sp of spots) cx.fillRect(sp[0]-1,sp[1]-1.6,1,1);
+    cx.restore();
+  } else if(n.kind==='shell'){
+    if(n.dead) return;
+    const gl=0.6+0.4*Math.sin(G.time*2.4+n.sway);
+    cx.save(); cx.translate(s.x,s.y-3); cx.rotate(n.sway);
+    cx.fillStyle='#e8e2d2'; cx.beginPath(); cx.ellipse(0,0,7,5,0,0,TAU); cx.fill();
+    cx.strokeStyle='#b9a88a'; cx.lineWidth=1.4;
+    cx.beginPath(); cx.arc(1,-0.5,4.2,0,TAU*0.8); cx.arc(1,-0.5,2.2,0,TAU*0.7); cx.stroke();
+    cx.restore();
+    cx.globalAlpha=0.25*gl; cx.fillStyle='#eaf4f8';
+    cx.beginPath(); cx.arc(s.x,s.y-4,9,0,TAU); cx.fill(); cx.globalAlpha=1;
   } else if(n.kind==='mushroom'){
     if(n.dead) return;
     const glow=0.5+0.5*Math.sin(G.time*2+n.sway);
@@ -2642,6 +3241,30 @@ function drawNode(n,s){
   }
 }
 function drawDecor(b,s){
+  if(b.kind==='tuft'){
+    const sw=Math.sin(G.time*1.7+b.ph)*2.2;
+    cx.strokeStyle='#688f4b'; cx.lineWidth=1.5; cx.lineCap='round';
+    cx.beginPath();
+    for(let i=-2;i<=2;i++){
+      cx.moveTo(s.x+i*2.4,s.y);
+      cx.quadraticCurveTo(s.x+i*2.4+sw*0.5, s.y-5, s.x+i*3+sw, s.y-8-Math.abs(i));
+    }
+    cx.stroke();
+    cx.strokeStyle='rgba(170,150,90,0.55)'; cx.lineWidth=1.1;
+    cx.beginPath(); cx.moveTo(s.x+1,s.y);
+    cx.quadraticCurveTo(s.x+1+sw*0.5,s.y-4,s.x+2+sw,s.y-7); cx.stroke();
+    return;
+  }
+  if(b.kind==='flower'){
+    const sw=Math.sin(G.time*1.9+b.ph)*1.8;
+    cx.strokeStyle='#4f7a3a'; cx.lineWidth=1.4;
+    cx.beginPath(); cx.moveTo(s.x,s.y); cx.quadraticCurveTo(s.x+sw*0.4,s.y-5,s.x+sw,s.y-9); cx.stroke();
+    cx.fillStyle=b.c;
+    for(let i=0;i<5;i++){ const a=i*TAU/5+b.ph;
+      cx.beginPath(); cx.ellipse(s.x+sw+Math.cos(a)*2.6, s.y-9+Math.sin(a)*2.6, 2, 1.4, a, 0, TAU); cx.fill(); }
+    cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x+sw,s.y-9,1.5,0,TAU); cx.fill();
+    return;
+  }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : 30);
@@ -2655,7 +3278,7 @@ function drawDecor(b,s){
 }
 function drawNPC(n,s){
   drawShadowAt(cx,s.x,s.y,11);
-  drawHumanoid(cx,s.x,s.y,{...n.look, size:n.look.size||1, dir:n.face, step:n.anim, name:n.name});
+  drawHumanoid(cx,s.x,s.y,{...n.look, size:n.look.size||1, dir:n.face, step:n.anim, name:n.name, ph:n.hx*0.7+n.hy*1.3});
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(n.name, s.x+1, s.y-52*(n.look.size||1)+1);
@@ -2745,6 +3368,8 @@ function drawPlayer(s){
       pauldrons:P.swordTier>0, shield: P.swordTier>0? '#6e4a2b':null, trim:P.swordTier>0?'#8a6d30':null,
       hat: has('crown',1)?'crown':null};
   }
+  look.armor=P.armor||0;
+  if(P.weapon==='staff') look.armor=0; // robes over plate would be silly
   drawHumanoid(cx,s.x,s.y,{...look,
     dir:P.dir, step:P.moving?P.anim:0, weapon:tool, swing:P.swing, hurt:P.hurtT>0});
   // slash arc trail
@@ -2976,6 +3601,43 @@ function drawFog(){
   }
 }
 
+/* ---------- coastal gulls ---------- */
+function updateGulls(dt){
+  G.gulls=G.gulls||[];
+  G.gullT=(G.gullT===undefined? 8 : G.gullT)-dt;
+  if(G.gullT<=0){
+    G.gullT=rnd(16,32);
+    if(Amb._coast){
+      const side=Math.random()<0.5?-1:1;
+      for(let i=0;i<2+((Math.random()*2)|0);i++){
+        G.gulls.push({x:P.x-side*16+rnd(-3,3), y:P.y+rnd(-8,8),
+          vx:side*rnd(1.6,2.4), vy:rnd(-0.5,0.5), h:rnd(70,120), ph:Math.random()*TAU});
+      }
+    }
+  }
+  for(let i=G.gulls.length-1;i>=0;i--){
+    const g0=G.gulls[i];
+    g0.x+=g0.vx*dt; g0.y+=g0.vy*dt;
+    if(dist(g0.x,g0.y,P.x,P.y)>34) G.gulls.splice(i,1);
+  }
+}
+function drawGulls(){
+  if(!G.gulls) return;
+  for(const b of G.gulls){
+    const s=worldToScreen(b.x,b.y);
+    if(s.x<-40||s.x>VW+40) continue;
+    const sy=s.y-b.h+Math.sin(G.time*1.2+b.ph)*5;
+    const flap=Math.sin(G.time*8+b.ph*3);
+    cx.strokeStyle='rgba(238,240,244,0.9)'; cx.lineWidth=1.8; cx.lineCap='round';
+    cx.beginPath();
+    cx.moveTo(s.x-6,sy-flap*3.5); cx.quadraticCurveTo(s.x-2,sy+1.5,s.x,sy);
+    cx.quadraticCurveTo(s.x+2,sy+1.5,s.x+6,sy-flap*3.5);
+    cx.stroke();
+    cx.strokeStyle='rgba(60,60,64,0.5)'; cx.lineWidth=0.8;
+    cx.beginPath(); cx.moveTo(s.x-5,sy-flap*3); cx.lineTo(s.x-6,sy-flap*3.5); cx.stroke();
+  }
+}
+
 /* ---------- carrion crows circling the ruins & tower ---------- */
 function drawCrows(){
   for(const c of G.crows){
@@ -3034,7 +3696,7 @@ const MAIN_ZONES = {
   tower:    {x:100,y:26,  r:6,  name:'Stormwatch Peak'}
 };
 const WORLD_DEFS = {
-  isle:{ W:96, H:96, seed:20260715, zones:ISLE_ZONES,
+  isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES — CHAPTER I',
     gen:()=>genIsleAll() },
   main:{ W:140, H:140, seed:99177, zones:MAIN_ZONES,
@@ -3052,6 +3714,7 @@ function addCrowsFor(){
 }
 function genIsleAll(){
   genWorld(); bakeSolids(); placeObjects(); buildFoam();
+  if(P.projects && P.projects.lanes) placeLaneLamps();
   spawnNPCs(); spawnMobs();
   addCrowsFor();
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
@@ -3131,6 +3794,25 @@ function placeObjectsMain(){
       if(land&&!G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<8)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
     }
   }
+  // living meadow: grass tufts and wildflowers
+  const gr2=mulberry32(SEED+83);
+  const FLC=['#e0708a','#e8c14d','#c9d6ff','#e8855a'];
+  for(let y=2;y<MAPH-2;y++) for(let x=2;x<MAPW-2;x++){
+    if(tileAt(x,y)!==T.GRASS || solidAt(x,y)) continue;
+    if(dist(x,y,ZONES.village.x,ZONES.village.y)<4) continue;
+    const rr=gr2();
+    if(rr<0.08) G.decor.push({kind:'tuft',x:x+0.2+gr2()*0.6,y:y+0.2+gr2()*0.6,ph:gr2()*TAU});
+    else if(rr<0.102) G.decor.push({kind:'flower',x:x+0.2+gr2()*0.6,y:y+0.2+gr2()*0.6,ph:gr2()*TAU,c:FLC[(gr2()*4)|0]});
+  }
+  // beach shells on the mainland strand
+  const shr=mulberry32(SEED+61);
+  let shells=0;
+  for(let tries=0; tries<5000 && shells<9; tries++){
+    const x=rndiR(shr,3,MAPW-4), y=rndiR(shr,3,MAPH-4);
+    if(tileAt(x,y)===T.SAND && !solidAt(x,y) && !G.nodes.some(n=>n.kind==='shell'&&dist(n.tx,n.ty,x,y)<7)){
+      addNode('shell',x,y); shells++;
+    }
+  }
   // barrow stones
   const br=mulberry32(SEED+31);
   for(let i=0;i<12;i++){ const a=br()*TAU, dd=2+br()*(ZONES.ruins.r-3);
@@ -3158,9 +3840,17 @@ function placeObjectsMain(){
 function spawnNPCsMain(){
   const V=ZONES.village;
   G.npcs.push(makeNPC('kell','Warden Kell', V.x+2.5,V.y-1,
-    {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a3f52',pants:'#2f2b33',hat:'hood',pauldrons:true,trim:'#8a8f9a',cloak:'#3a3542'},
+    {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a3f52',pants:'#2f2b33',hat:'hood',pauldrons:true,trim:'#8a8f9a',cloak:'#3a3542',armor:1},
     ["Mind the roads, stranger. The wilds here don't forgive.",
      "Elites wear a crimson ring. You'll know them when they charge."],1.5));
+  const fz=ZONES.forest;
+  const ms=findOpenNear(fz.x,fz.y+2,5);
+  if(ms) G.npcs.push(makeNPC('moss','Moss the Hermit', ms[0],ms[1],
+    {skin:'#c9b184',hair:'#6e7a5a',shirt:'#4f6032',pants:'#3a4228',robe:'#465a38',trim:'#8a9a6a',
+     beard:'#8a9a7a',beardLong:true,hairstyle:'bald'},
+    ["The pines talk, you know. Mostly complaints.",
+     "I came out here for quiet. The wolves had other ideas.",
+     "Bluecaps glow brightest the night after rain."],0.8));
   G.npcs.push(makeNPC('dockhand','Old Piety', ZONES.dock.x+2.5,ZONES.dock.y-0.5,
     {skin:'#b98f68',hair:'#a8a099',shirt:'#5a5348',pants:'#3a352c',hat:'straw',beard:'#a8a099',beardLong:true},
     ["Emberwick? Quaint little training ground, that isle.",
@@ -3189,6 +3879,7 @@ function spawnMobsMain(){
 }
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
+  if(P.projects && P.projects.beacon) placeBeacon();
   spawnNPCsMain(); spawnMobsMain();
   addCrowsFor();
   G.forgePos=null;
@@ -3200,7 +3891,47 @@ QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:
   brief:"The wilds have turned. Crimson-ringed beasts — elites, we call them — press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
   log:'Slay 8 elite beasts anywhere on the mainland.',
   doneText:"Eight heads' worth of quiet. The road breathes easier — and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
-  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['alpha'] };
+  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['alpha','embers'] };
+QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'springs',
+  brief:"My grandmother swore there were warm springs in the western hills — water that closes wounds. I'm too old for the walk and too stubborn to admit it. Find them for me. Just… find them.",
+  log:'Discover the Ember Springs in the isle\'s western hills.',
+  doneText:"You FOUND them. Warm as a kettle, she used to say. Go soak whenever the island bites you — and take this for an old woman's peace of mind.",
+  rw:{gold:30, item:{potion:1}, xp:{farming:80, fishing:80}} };
+QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{wolf:3},
+  brief:"There's an old smuggler camp on the northeast point — good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
+  log:'Slay 3 wolves at Smuggler\'s Cove and claim the camp.',
+  doneText:"Three pelts' worth of quiet. The cove's yours, friend — crack that chest open and think of me.",
+  rw:{gold:35, xp:{melee:120, archery:120}} };
+QUESTS.orchard={ giver:'willa', title:'Applewood', kind:'gather', need:{apple:5},
+  brief:"The old orchard south-east still fruits — nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
+  log:'Pick 5 apples in the Old Orchard.',
+  doneText:"Look at the color on these! The oven's already hot. Here — first loaves are yours, and the orchard knows your hands now.",
+  rw:{item:{bread:2}, gold:12, xp:{farming:150}} };
+QUESTS.shells={ giver:'nia', title:'Seven Spirals (well, four)', kind:'gather', need:{shell:4},
+  brief:"Pip found a SHELL and it's the best thing I own. I need more! The beach hides spiral ones — bring me four and I'll trade you my second-best treasure. It's gold. Don't tell Maren where I got it.",
+  log:'Gather 4 spiral shells from the beaches.',
+  doneText:"FOUR! Look how they curl! Here — treasure for treasure. That's the rule of the beach.",
+  rw:{gold:15, xp:{fishing:80}} };
+QUESTS.pearlq={ giver:'finn', title:'The One That Got Away', kind:'gather', need:{pearl:1},
+  brief:"Thirty years I've fished this bay, and once — ONCE — I pulled up a pearl the size of a thumbnail. Dropped it in the drink showing off to Willa. Bring me one and I'll pay like a man buying back his youth.",
+  log:'Catch a pearl while fishing (fishing skill improves the odds).',
+  doneText:"There she is… no, keep your coin ready — HERE'S yours. Worth every piece to hold one again.",
+  rw:{gold:45, xp:{fishing:200}} };
+QUESTS.remember={ giver:'orin', title:'The Island Remembers', kind:'gather', need:{page:3},
+  brief:"Three texts survive on this isle: my tower's Ember Wars, Maren's Songs of the Well, and a farmer's almanac gathering dust in the barn. Read them, copy a page from each, and I'll pay you in something better than gold — understanding. Also crystals.",
+  log:'Read the books inside the tower, Maren\'s cottage, and the barn (step inside and Read).',
+  doneText:"The Ember Wars… the Well… the Almanac's warning. It all points to the same truth: this island forgives, but it never forgets. Take these — they remember being warm.",
+  rw:{item:{crystal:2}, gold:25, xp:{magic:220}} };
+QUESTS.embers={ giver:'kell', title:'Embers for the Watch', kind:'gather', need:{crystal:3},
+  brief:"Winter watches are long and the braziers burn cold. Ember crystals hold heat like a grudge — three of them would warm the watchtower till spring. Mine the ruin-stone at Barrowfield or the Wolfcrag.",
+  log:'Mine 3 ember crystals from stone near Barrowfield or Wolfcrag.',
+  doneText:"Warm at last. The night watch drinks to you tonight — and Greyharbor pays its debts.",
+  rw:{gold:60, xp:{magic:200, mining:150}} };
+QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', need:{mushroom:4},
+  brief:"Visitors! Rare as dry socks out here. The blackpine bluecaps glow kinder than the isle's — four of them and I'll share the batch I'm brewing. A hermit's word is oak.",
+  log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
+  doneText:"Kind hands, kind harvest. Here — three bottles, brewed slow. Come by whenever the road is unkind.",
+  rw:{item:{potion:3}, gold:20, xp:{farming:160}} };
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
@@ -3223,6 +3954,73 @@ function buildExtraSprites(){
     g.fillStyle='#c9a24e'; g.fillRect(4,20,32,2);
   });
   SPR.chest=mk(false); SPR.chestOpen=mk(true);
+  ICONS.apple=makeCanvas(40,40,(g)=>{
+    const gr=g.createRadialGradient(16,16,3,20,21,13);
+    gr.addColorStop(0,'#e86a80'); gr.addColorStop(1,'#a81f3c');
+    g.fillStyle=gr; g.beginPath();
+    g.arc(15,22,9,Math.PI*0.5,Math.PI*1.6); g.arc(25,22,9,Math.PI*1.4,Math.PI*0.5); g.fill();
+    g.strokeStyle='#5a3d24'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(20,14); g.quadraticCurveTo(21,9,24,7); g.stroke();
+    g.fillStyle='#4f7a3a'; g.beginPath(); g.ellipse(25,10,4,2.4,0.6,0,TAU); g.fill();
+    g.fillStyle='rgba(255,255,255,0.6)'; g.beginPath(); g.arc(15,17,2,0,TAU); g.fill(); });
+  ICONS.shell=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#e8e2d2'; g.beginPath(); g.ellipse(20,22,13,10,0.3,0,TAU); g.fill();
+    g.strokeStyle='#b9a88a'; g.lineWidth=2;
+    g.beginPath(); g.arc(22,20,8,0,TAU*0.8); g.arc(22,20,4.5,0,TAU*0.75); g.arc(22,20,1.8,0,TAU*0.7); g.stroke();
+    g.strokeStyle='rgba(90,80,60,0.7)'; g.lineWidth=1.3;
+    g.beginPath(); g.ellipse(20,22,13,10,0.3,0,TAU); g.stroke(); });
+  ICONS.page=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#e8dcbd'; g.beginPath();
+    g.moveTo(11,6); g.lineTo(26,6); g.lineTo(31,12); g.lineTo(31,34); g.lineTo(11,34); g.closePath(); g.fill();
+    g.fillStyle='#c9b990'; g.beginPath(); g.moveTo(26,6); g.lineTo(26,12); g.lineTo(31,12); g.closePath(); g.fill();
+    g.strokeStyle='rgba(90,70,40,0.85)'; g.lineWidth=1.3;
+    g.beginPath(); g.moveTo(11,6); g.lineTo(26,6); g.lineTo(31,12); g.lineTo(31,34); g.lineTo(11,34); g.closePath(); g.stroke();
+    g.lineWidth=1;
+    for(let i=0;i<5;i++){ g.beginPath(); g.moveTo(14,15+i*4); g.lineTo(28,15+i*4); g.stroke(); } });
+  ICONS.hardwood=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#4a3322'; g.beginPath(); g.roundRect(6,14,28,12,5); g.fill();
+    g.fillStyle='#5f4128'; g.beginPath(); g.ellipse(34,20,4,6,0,0,TAU); g.fill();
+    g.strokeStyle='#2c1f14'; g.lineWidth=1.4;
+    g.beginPath(); g.ellipse(34,20,4,6,0,0,TAU); g.stroke();
+    g.beginPath(); g.ellipse(34,20,1.8,3,0,0,TAU); g.stroke();
+    g.strokeStyle='rgba(20,12,6,0.6)';
+    g.beginPath(); g.moveTo(8,18); g.lineTo(30,18); g.moveTo(8,22); g.lineTo(30,22); g.stroke(); });
+  ICONS.ore=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#6f6a63'; g.beginPath();
+    g.moveTo(8,28); g.lineTo(14,12); g.lineTo(26,10); g.lineTo(33,22); g.lineTo(28,30); g.closePath(); g.fill();
+    g.strokeStyle='rgba(20,16,10,0.7)'; g.lineWidth=1.5; g.stroke();
+    g.fillStyle='#a8562e'; for(const p of [[16,18],[24,15],[22,24],[14,25]]) g.fillRect(p[0],p[1],3.4,3.4); });
+  ICONS.bar=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#8a919d'; g.beginPath();
+    g.moveTo(7,24); g.lineTo(13,15); g.lineTo(33,15); g.lineTo(27,24); g.closePath(); g.fill();
+    g.fillStyle='#c2c8d2'; g.fillRect(7,24,20,6);
+    g.fillStyle='#5c626d'; g.beginPath(); g.moveTo(27,24); g.lineTo(33,15); g.lineTo(33,21); g.lineTo(27,30); g.closePath(); g.fill();
+    g.strokeStyle='rgba(20,20,26,0.7)'; g.lineWidth=1.3;
+    g.strokeRect(7,24,20,6); });
+  ICONS.crystal=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#c96f1e'; g.beginPath();
+    g.moveTo(20,5); g.lineTo(29,17); g.lineTo(24,34); g.lineTo(16,34); g.lineTo(11,17); g.closePath(); g.fill();
+    g.fillStyle='#ff9a3c'; g.beginPath(); g.moveTo(20,9); g.lineTo(26,18); g.lineTo(20,31); g.lineTo(15,18); g.closePath(); g.fill();
+    g.fillStyle='#ffe0b0'; g.fillRect(18,13,3,7);
+    g.strokeStyle='rgba(60,25,5,0.8)'; g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(20,5); g.lineTo(29,17); g.lineTo(24,34); g.lineTo(16,34); g.lineTo(11,17); g.closePath(); g.stroke(); });
+  ICONS.pearl=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#b9b4a4'; g.beginPath(); g.ellipse(20,27,14,8,0,0,Math.PI); g.fill();
+    g.fillStyle='#e8e2d2'; g.beginPath(); g.arc(20,20,8,0,TAU); g.fill();
+    g.fillStyle='#ffffff'; g.beginPath(); g.arc(17,17,2.6,0,TAU); g.fill();
+    g.strokeStyle='rgba(90,85,70,0.7)'; g.beginPath(); g.arc(20,20,8,0,TAU); g.stroke(); });
+  ICONS.bread=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#c9a24e'; g.beginPath(); g.roundRect(7,15,26,14,7); g.fill();
+    g.fillStyle='#e0c070'; g.beginPath(); g.roundRect(7,15,26,7,7); g.fill();
+    g.strokeStyle='rgba(90,60,20,0.8)'; g.lineWidth=1.4;
+    g.beginPath(); g.roundRect(7,15,26,14,7); g.stroke();
+    g.beginPath(); g.moveTo(13,17); g.lineTo(16,22); g.moveTo(19,16); g.lineTo(22,21); g.moveTo(25,17); g.lineTo(28,22); g.stroke(); });
+  ICONS.cookedfish=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#c98d5f'; g.beginPath(); g.ellipse(18,20,12,6,0,0,TAU); g.fill();
+    g.beginPath(); g.moveTo(28,20); g.lineTo(36,14); g.lineTo(36,26); g.closePath(); g.fill();
+    g.strokeStyle='rgba(70,40,15,0.8)'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(10,15); g.lineTo(14,25); g.moveTo(16,14); g.lineTo(20,26); g.moveTo(22,15); g.lineTo(26,25); g.stroke();
+    g.fillStyle='#3a2a1a'; g.beginPath(); g.arc(11,19,1.4,0,TAU); g.fill(); });
   ICONS.fang=makeCanvas(40,40,(g)=>{
     g.fillStyle='#eee7d8';
     g.beginPath(); g.moveTo(12,8); g.quadraticCurveTo(26,10,28,32);
@@ -3261,6 +4059,7 @@ function openChest(b){
   shockwave(b.x,b.y,'rgba(255,215,106,0.8)',36);
   burst(b.x,b.y-0.4,'#ffd76a',12,2.4);
   Snd.coin();
+  setTimeout(autoSave,300);
 }
 
 /* ---------- sailing ---------- */
@@ -3304,15 +4103,18 @@ function switchWorld(id){
   P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0}; P.fishing=null;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(id==='main') award('globetrotter');
+  if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';
+  if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
+  setTimeout(autoSave,400);
 }
 
 /* ---------- dodge roll ---------- */
 function tryRoll(){
-  if(P.dead || G.state!=='play' || dlg.open) return;
+  if(P.dead || G.state!=='play' || dlg.open || G.interior) return;
   if((P.rollCd||0)>0 || (P.rollT||0)>0) return;
   P.rollT=0.26; P.rollCd=1.0;
   Snd.noise(0.16,0.05,600,0.7);
@@ -3405,7 +4207,8 @@ const Amb={
     if(!Snd.ctx||G.state!=='play') return;
     this.ensure();
     const mute=!Snd.on;
-    if(this.rainGain) this.rainGain.gain.value = mute?0 : WX.rain*0.05;
+    if(this.rainGain) this.rainGain.gain.value = mute?0 : (G.interior?0.3:1)*WX.rain*0.05;
+    if(G.interior) this._coast=0;
     if(this.waveGain){
       this.t+=dt;
       if(this.t>0.4){ this.t=0; this._coast=0;
@@ -3590,6 +4393,11 @@ function ambientFX(dt){
     G.parts.push({x:P.x+rnd(-7,7), y:P.y+rnd(-7,7), vx:rnd(-0.15,0.15), vy:rnd(-0.15,0.15),
       life:rnd(2,4), color:'rgba(255,240,180,0.8)', size:2, glow:true});
   }
+  if(night<0.35 && dist(P.x,P.y,ZONES.meadow.x,ZONES.meadow.y)<9 && Math.random()<0.35){
+    G.parts.push({x:P.x+rnd(-8,8), y:P.y+rnd(-8,8), vx:rnd(-0.4,0.4), vy:rnd(-0.4,0.4),
+      life:rnd(4,7), bfly:true, ph:Math.random()*TAU,
+      color: Math.random()<0.5? '#e8c14d' : '#c9d6ff', size:3});
+  }
   if(G.forgePos && dist(P.x,P.y,G.forgePos.x,G.forgePos.y)<9 && Math.random()<0.8){
     G.parts.push({x:G.forgePos.x+rnd(-0.4,0.4), y:G.forgePos.y+rnd(-0.4,0.4),
       vx:rnd(-0.35,-0.12), vy:rnd(-0.35,-0.12),
@@ -3639,6 +4447,8 @@ function checkStats(){
   if((s.kills||0)>=1) award('firstblood');
   if((s.kills||0)>=25) award('slayer');
   if((s.chests||0)>=4) award('plunderer');
+  if((s.ore||0)>=5) award('prospector');
+  if((s.pearl||0)>=1) award('pearldiver');
 }
 
 /* ---------- save codes (copy/paste — survives page reloads) ---------- */
@@ -3656,7 +4466,8 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,stats:P.stats,ach:P.ach,flags};
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,tools:P.tools,
+    projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
 }
 function applyWorldFlags(f){
@@ -3671,8 +4482,7 @@ function applyWorldFlags(f){
 function loadCode(str){
   let d;
   try{ d=JSON.parse(decodeURIComponent(escape(atob((str||'').trim())))); if(!d||!d.v) throw 0; }
-  catch(e){ const m=document.getElementById('saveMsg');
-    if(m){ m.textContent="That code doesn't look right."; m.style.color='#e05648'; } return; }
+  catch(e){ return false; }
   // rebuild the isle fresh
   for(const k in WORLDS) delete WORLDS[k];
   const iso=WORLD_DEFS.isle;
@@ -3682,15 +4492,19 @@ function loadCode(str){
   G.decals=[]; G.cat=null; G.forgePos=null;
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   G.worldId='isle';
+  P.projects={}; // cleared before regen; restored (and re-placed) below
   iso.gen();
   // restore hero first (switchWorld reads quest state)
   P.gold=d.gold||0; P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
   P.quests=d.quests||{}; P.prog=d.prog||{};
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
+  P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
+  P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);
+  if(P.projects.lanes) placeLaneLamps();
   if(d.world==='main'){
     switchWorld('main');
     applyWorldFlags(d.flags&&d.flags.main);
@@ -3701,6 +4515,7 @@ function loadCode(str){
   closeAllPanels();
   banner('SAVE LOADED','WELCOME BACK, HERO');
   Snd.quest();
+  return true;
 }
 
 /* ---------- gamepad: stick to move, A attack, B roll, X interact,
@@ -3719,7 +4534,13 @@ function pollGamepad(){
   }
   const b=i=> !!(gp.buttons[i]&&gp.buttons[i].pressed);
   const edge=i=> b(i)&&!gpPrev[i];
-  if(G.state==='title' && (edge(0)||edge(9))){ const s=document.getElementById('startBtn'); if(s.onclick) s.onclick(); }
+  if(G.state==='title' && (edge(0)||edge(9))){
+    const c=document.getElementById('continueBtn');
+    const s=document.getElementById('startBtn');
+    if(c.style.display!=='none' && c.style.display!=='') { if(c.onclick) c.onclick(); }
+    else if(store.get()){ if(c.onclick) c.onclick(); }
+    else if(s.onclick) s.onclick();
+  }
   if(G.state==='play' && !dlg.open){
     if(b(0)) tryAttack(false);
     if(edge(1)) tryRoll();
@@ -3734,6 +4555,594 @@ function pollGamepad(){
     if(edge(9)) togglePanel('questPanel');
   } else if(G.state==='play' && dlg.open && edge(0)){ doInteract(); }
   gpPrev=gp.buttons.map(x=>!!x.pressed);
+}
+
+/* =====================================================================
+   INTERIORS — step inside the buildings
+   ===================================================================== */
+function enterHouse(b){
+  if(G.interior) return;
+  const kinds={
+    house:{line:'Dried herbs hang from every beam. It smells of thyme and woodsmoke.'},
+    house2:{line:'Nets, floats, and the good honest stink of the sea.'},
+    forge:{line:'The coals never quite sleep. Tools line every wall.'},
+    barn:{line:'Hay, harness, and something purring out of sight.'},
+    tower:{line:'Star charts, humming glass, and a faint smell of ozone.'}
+  };
+  const I={kind:b.kind, w:9, h:7, ret:{x:P.x,y:P.y+0.3}, exit:{x:4.5,y:6.1}, t:0, furn:[]};
+  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  if(b.kind==='house'){ F('bed',1.9,2.8,1.0,0.7); F('table',6.4,3.4,0.9,0.6); F('stool',5.2,4.2,0.35,0.3); F('stool',7.4,4.4,0.35,0.3); F('rug',4.5,4.4,0,0,false); F('hearth',2.4,1.35,0.9,0.35); F('shelf',6.4,1.3,1.0,0.3); }
+  if(b.kind==='house2'){ F('bed',7.1,2.8,1.0,0.7); F('barrel',1.8,3.0,0.45,0.4); F('barrel',2.6,3.5,0.45,0.4); F('crate',1.9,4.6,0.55,0.45); F('net',4.4,1.3,1.2,0.3); F('shelf',6.2,1.3,1.0,0.3); F('rug',4.6,4.3,0,0,false); }
+  if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
+  if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
+  if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
+  G.interior=I;
+  P.click=null;
+  P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
+  toast('<b>'+(b.label||'Inside')+'</b> — '+kinds[b.kind].line, 4000);
+  Snd.step(8);
+}
+function exitHouse(){
+  const r=G.interior.ret;
+  G.interior=null;
+  P.x=r.x; P.y=r.y;
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+  Snd.step(8);
+}
+function interiorBlocked(x,y,r){
+  const I=G.interior;
+  if(x-r<0.75||x+r>I.w-0.75||y-r<1.9||y+r>I.h-0.45) return true;
+  for(const f of I.furn) if(f.solid && Math.abs(x-f.x)<f.hw+r && Math.abs(y-f.y)<f.hh+r) return true;
+  return false;
+}
+function updateInterior(dt){
+  const I=G.interior; I.t+=dt;
+  let mx=0,my=0;
+  if(keys['w']||keys['arrowup']) { mx-=1; my-=1; }
+  if(keys['s']||keys['arrowdown']) { mx+=1; my+=1; }
+  if(keys['a']||keys['arrowleft']) { mx-=1; my+=1; }
+  if(keys['d']||keys['arrowright']){ mx+=1; my-=1; }
+  if(input.joy.active){ mx=input.joy.x; my=input.joy.y; }
+  else if(input.gpDir){ mx=input.gpDir.x; my=input.gpDir.y; }
+  if(Math.hypot(mx,my)>0.05){ I.click=null; }
+  else if(I.click && !dlg.open){
+    const C=I.click, d=dist(P.x,P.y,C.x,C.y);
+    const range=C.f? 1.15 : C.exit? 1.2 : 0.14;
+    if(d>range){ mx=(C.x-P.x)/d; my=(C.y-P.y)/d;
+      if(!I._sp || dist(P.x,P.y,I._sp.x,I._sp.y)>0.05){ I._sp={x:P.x,y:P.y}; I._st=0; }
+      I._st=(I._st||0)+dt;
+      if(I._st>0.8){ I.click=null; mx=0; my=0; }
+    } else {
+      const f=C.f, ex=C.exit; I.click=null;
+      if(f) useHotspot({f,label:''});
+      else if(ex) exitHouse();
+    }
+  }
+  const ml=Math.hypot(mx,my);
+  P.moving = ml>0.05 && !dlg.open;
+  if(P.moving){
+    mx/=ml; my/=ml;
+    const sp=3.8;
+    let nx=P.x+mx*sp*dt; if(!interiorBlocked(nx,P.y,0.28)) P.x=nx;
+    let ny=P.y+my*sp*dt; if(!interiorBlocked(P.x,ny,0.28)) P.y=ny;
+    P.dir={x:mx,y:my}; P.anim+=dt*9;
+  }
+  P.swing=Math.max(0,P.swing-dt);
+  P.hurtT=Math.max(0,P.hurtT-dt);
+  P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
+  if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
+}
+function iBox(s,w,d,h,top,lft,rgt){
+  // iso box at screen point s: footprint w×d tiles, height h px
+  const gx=(dxw,dyd)=>({x:s.x+(dxw-dyd)*(TW/2), y:s.y+(dxw+dyd)*(TH/2)});
+  const c1=gx(-w/2,-d/2), c2=gx(w/2,-d/2), c3=gx(w/2,d/2), c4=gx(-w/2,d/2);
+  // left face (c4-c3)
+  cx.fillStyle=lft; cx.beginPath();
+  cx.moveTo(c4.x,c4.y-h); cx.lineTo(c3.x,c3.y-h); cx.lineTo(c3.x,c3.y); cx.lineTo(c4.x,c4.y); cx.closePath(); cx.fill();
+  // right face (c3-c2)
+  cx.fillStyle=rgt; cx.beginPath();
+  cx.moveTo(c3.x,c3.y-h); cx.lineTo(c2.x,c2.y-h); cx.lineTo(c2.x,c2.y); cx.lineTo(c3.x,c3.y); cx.closePath(); cx.fill();
+  // top
+  cx.fillStyle=top; cx.beginPath();
+  cx.moveTo(c1.x,c1.y-h); cx.lineTo(c2.x,c2.y-h); cx.lineTo(c3.x,c3.y-h); cx.lineTo(c4.x,c4.y-h); cx.closePath(); cx.fill();
+  cx.strokeStyle='rgba(15,9,4,0.5)'; cx.lineWidth=1; cx.stroke();
+}
+function drawFurniture(f,s){
+  switch(f.type){
+    case 'bed':
+      iBox(s,2.0,1.3,10,'#6e5738','#4a3322','#3e2b1c');
+      iBox({x:s.x,y:s.y-10},1.9,1.2,8,'#8f4a3a','#6e3a2c','#5e3226');
+      iBox({x:s.x-(0.55)*(TW/2),y:s.y-(0.55)*(TH/2)-18},0.7,0.9,5,'#e8dcbd','#c9b990','#b0a078');
+      break;
+    case 'table':
+      iBox(s,1.7,1.1,16,'#6e5030','#4a3322','#3e2b1c');
+      cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x+6,s.y-19,3,0,TAU); cx.fill(); // candle glow base
+      cx.fillStyle='#ff9a3c'; cx.beginPath(); cx.arc(s.x+6,s.y-22,1.6+Math.sin(G.interior.t*9)*0.5,0,TAU); cx.fill();
+      break;
+    case 'desk':
+      iBox(s,1.9,1.1,16,'#5a4630','#3e2f1e','#332618');
+      cx.fillStyle='#e8dcbd'; cx.fillRect(s.x-14,s.y-22,12,7);
+      cx.fillStyle='#7fd4ff'; cx.beginPath(); cx.arc(s.x+10,s.y-21,3,0,TAU); cx.fill();
+      break;
+    case 'stool': iBox(s,0.6,0.6,9,'#6e5030','#4a3322','#3e2b1c'); break;
+    case 'crate': iBox(s,1.0,0.9,14,'#7d5834','#5a3d24','#4a3322'); break;
+    case 'hay':
+      iBox(s,1.7,1.3,13,'#c9a24e','#a8843c','#8f6f30');
+      cx.strokeStyle='rgba(120,90,30,0.6)'; cx.lineWidth=1;
+      for(let i=0;i<4;i++){ cx.beginPath(); cx.moveTo(s.x-14+i*8,s.y-12); cx.lineTo(s.x-10+i*8,s.y-4); cx.stroke(); }
+      break;
+    case 'barrel':
+      cx.fillStyle='#5a3d24'; cx.beginPath(); cx.ellipse(s.x,s.y-2,10,5,0,0,TAU); cx.fill();
+      cx.fillRect(s.x-10,s.y-20,20,18);
+      cx.fillStyle='#6e4a2b'; cx.beginPath(); cx.ellipse(s.x,s.y-20,10,5,0,0,TAU); cx.fill();
+      cx.strokeStyle='rgba(15,9,4,0.6)'; cx.strokeRect(s.x-10,s.y-20,20,18);
+      cx.strokeStyle='#3a2818'; cx.beginPath(); cx.moveTo(s.x-10,s.y-14); cx.lineTo(s.x+10,s.y-14);
+      cx.moveTo(s.x-10,s.y-7); cx.lineTo(s.x+10,s.y-7); cx.stroke();
+      break;
+    case 'anvil':
+      iBox(s,0.9,0.7,7,'#4a4d54','#3a3d43','#33363b');
+      iBox({x:s.x,y:s.y-7},1.3,0.6,7,'#8a919d','#5c626d','#4c525c');
+      break;
+    case 'orb':
+      iBox(s,0.8,0.8,14,'#6f6a63','#4c4842','#403c37');
+      { const pl=0.7+0.3*Math.sin(G.interior.t*3);
+        cx.fillStyle='rgba(127,212,255,'+(0.25*pl)+')'; cx.beginPath(); cx.arc(s.x,s.y-24,12*pl,0,TAU); cx.fill();
+        cx.fillStyle='#7fd4ff'; cx.beginPath(); cx.arc(s.x,s.y-24,6,0,TAU); cx.fill();
+        cx.fillStyle='#dff4ff'; cx.beginPath(); cx.arc(s.x-2,s.y-26,2,0,TAU); cx.fill(); }
+      break;
+    case 'books': case 'shelf':
+      iBox(s,1.6,0.55,22,'#4a3322','#3a2818','#332214');
+      for(let i=0;i<5;i++){ cx.fillStyle=['#8f4a3a','#3e6f8f','#5a4472','#4f6032','#8a6d30'][i];
+        cx.fillRect(s.x-16+i*7,s.y-20,5,12); }
+      break;
+    case 'rug':
+      cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5); cx.rotate(0);
+      cx.fillStyle='rgba(143,74,58,0.85)'; cx.beginPath(); cx.arc(0,0,34,0,TAU); cx.fill();
+      cx.strokeStyle='#c9a24e'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,0,26,0,TAU); cx.stroke();
+      cx.restore();
+      break;
+  }
+}
+function drawWallDecor(kind,w2s,I){
+  // hanging items along the north wall
+  const at=(x,fn)=>{ const s=w2s(x,0.05); fn(s.x,s.y-42); };
+  if(kind==='house'||kind==='tower'){
+    at(6.4,(x,y)=>{ if(kind!=='house') return; cx.fillStyle='#5a3d24'; cx.fillRect(x-22,y+6,44,4);
+      for(let i=0;i<3;i++){ cx.fillStyle=['#7fb05b','#c96f8a','#7fd4ff'][i]; cx.fillRect(x-16+i*14,y-2,8,8); } });
+  }
+  if(kind==='tower'){
+    at(4.6,(x,y)=>{ cx.fillStyle='#5a3d24'; cx.fillRect(x-30,y+6,60,4);
+      for(let i=0;i<6;i++){ cx.fillStyle=['#8f4a3a','#3e6f8f','#6e5030','#5a4472','#4f6032','#8a6d30'][i]; cx.fillRect(x-27+i*9,y-8,7,14); } });
+    at(2.2,(x,y)=>{ cx.fillStyle='#e8dcbd'; cx.fillRect(x-14,y-10,28,22);
+      cx.strokeStyle='#3a4a6f'; cx.beginPath(); cx.arc(x,y+1,7,0,TAU); cx.stroke();
+      cx.fillStyle='#ffd76a'; for(const p of [[-8,-5],[6,-3],[9,6],[-5,8]]){ cx.fillRect(x+p[0],y+p[1],2,2); } });
+  }
+  if(kind==='forge'){
+    at(6.0,(x,y)=>{ cx.fillStyle='#5a3d24'; cx.fillRect(x-30,y+6,60,4);
+      cx.strokeStyle='#8a919d'; cx.lineWidth=3;
+      cx.beginPath(); cx.moveTo(x-20,y+4); cx.lineTo(x-20,y-10); cx.moveTo(x-24,y-8); cx.lineTo(x-16,y-8);
+      cx.moveTo(x,y+4); cx.lineTo(x,y-10); cx.moveTo(x-4,y-10); cx.lineTo(x+4,y-10);
+      cx.moveTo(x+18,y+4); cx.lineTo(x+18,y-8); cx.stroke(); });
+  }
+  if(kind==='house2'){
+    at(4.4,(x,y)=>{ cx.strokeStyle='rgba(201,185,144,0.75)'; cx.lineWidth=1;
+      for(let i=0;i<5;i++){ cx.beginPath(); cx.moveTo(x-26+i*13,y-12); cx.quadraticCurveTo(x-20+i*13,y+8,x-26+i*13,y+16); cx.stroke(); }
+      for(let i=0;i<4;i++){ cx.beginPath(); cx.moveTo(x-28,y-8+i*7); cx.quadraticCurveTo(x,y-4+i*7,x+28,y-8+i*7); cx.stroke(); } });
+  }
+  if(kind==='barn'){
+    at(6.5,(x,y)=>{ cx.strokeStyle='#5a3d24'; cx.lineWidth=4; cx.beginPath(); cx.arc(x,y+2,14,0,TAU); cx.stroke();
+      cx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; cx.moveTo(x,y+2); cx.lineTo(x+Math.cos(a)*13,y+2+Math.sin(a)*13); } cx.lineWidth=2; cx.stroke(); });
+  }
+}
+function renderInterior(){
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  cx.fillStyle='#0b0906'; cx.fillRect(0,0,VW,VH);
+  const I=G.interior;
+  const ccx=isoX(I.w/2,I.h/2), ccy=isoY(I.w/2,I.h/2);
+  const w2s=(x,y)=>({x:isoX(x,y)-ccx+VW/2, y:isoY(x,y)-ccy+VH/2+14});
+  // floor
+  for(let y=0;y<I.h;y++) for(let x=0;x<I.w;x++){
+    const s=w2s(x,y);
+    cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
+  }
+  // walls: north (y=0) and west (x=0)
+  const WH=62;
+  for(let x=0;x<I.w;x++){
+    const a=w2s(x,0), b=w2s(x+1,0);
+    cx.fillStyle= x%2? '#4a3626':'#443122';
+    cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+    cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+  }
+  for(let y=0;y<I.h;y++){
+    const a=w2s(0,y), b=w2s(0,y+1);
+    cx.fillStyle= y%2? '#3a2a1c':'#352718';
+    cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+    cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+  }
+  // window with moody light on the north wall
+  { const s=w2s(7.0,0.05);
+    const night=nightAmount();
+    cx.fillStyle= night>0.4? '#1c2a4a' : '#c9d8e8';
+    cx.fillRect(s.x-12,s.y-52,24,20);
+    cx.strokeStyle='#241b12'; cx.lineWidth=3; cx.strokeRect(s.x-12,s.y-52,24,20);
+    cx.beginPath(); cx.moveTo(s.x,s.y-52); cx.lineTo(s.x,s.y-32); cx.moveTo(s.x-12,s.y-42); cx.lineTo(s.x+12,s.y-42); cx.stroke();
+  }
+  // hearth fire (house & forge)
+  if(I.kind==='house'||I.kind==='forge'){
+    const hf=I.furn.find(f=>f.type==='hearth');
+    const s=w2s(hf.x,0.1);
+    cx.fillStyle='#57534c'; cx.fillRect(s.x-26,s.y-56,52,40);
+    cx.fillStyle='#1c1712'; cx.fillRect(s.x-16,s.y-42,32,26);
+    for(let i=0;i<3;i++){
+      const fl=Math.sin(I.t*8+i*2.1)*3;
+      cx.fillStyle=['#ff9a3c','#ffce7a','#e05648'][i];
+      cx.beginPath();
+      cx.moveTo(s.x-10+i*8,s.y-18);
+      cx.quadraticCurveTo(s.x-8+i*8+fl,s.y-32-i*3, s.x-6+i*8,s.y-18);
+      cx.closePath(); cx.fill();
+    }
+  }
+  drawWallDecor(I.kind,w2s,I);
+  // door mat + glow at the exit
+  { const s=w2s(I.exit.x,I.exit.y+0.5);
+    cx.fillStyle='rgba(255,215,106,'+(0.15+0.1*Math.sin(G.time*3))+')';
+    cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5);
+    cx.beginPath(); cx.arc(0,0,26,0,TAU); cx.fill(); cx.restore();
+    cx.fillStyle='#ffd76a'; cx.font='bold 14px Georgia'; cx.textAlign='center';
+    cx.fillText('▼', s.x, s.y+4-Math.abs(Math.sin(G.time*3))*4);
+  }
+  // furniture & player, depth-sorted
+  const items=I.furn.map(f=>({d:f.x+f.y,f}));
+  items.push({d:P.x+P.y,player:true});
+  items.sort((a,b)=>a.d-b.d);
+  for(const it of items){
+    if(it.player){ const s=w2s(P.x,P.y); drawShadowAt(cx,s.x,s.y,11); drawPlayer(s); }
+    else drawFurniture(it.f, w2s(it.f.x,it.f.y));
+  }
+  // cozy warm grade
+  const wg=cx.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,Math.max(VW,VH)*0.62);
+  wg.addColorStop(0,'rgba(255,170,90,0.06)'); wg.addColorStop(1,'rgba(0,0,0,0.55)');
+  cx.fillStyle=wg; cx.fillRect(0,0,VW,VH);
+  drawGritGrade();
+  // interact affordance: hotspots beat the door when closer
+  const hs=interiorHotspot();
+  const nearExit=dist(P.x,P.y,I.exit.x,I.exit.y)<1.5;
+  const ib=document.getElementById('interactBtn');
+  let label=null, at=null;
+  if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,I.exit.x,I.exit.y))){
+    label=hs.label; at=w2s(hs.f.x,hs.f.y);
+    cx.strokeStyle='rgba(255,215,106,0.8)'; cx.lineWidth=2;
+    cx.setLineDash([5,4]); cx.lineDashOffset=-G.time*16;
+    cx.beginPath(); cx.ellipse(at.x,at.y,20,9,0,0,TAU); cx.stroke(); cx.setLineDash([]);
+  } else if(nearExit){ label='Leave'; at=w2s(I.exit.x,I.exit.y); }
+  if(isTouch){
+    ib.style.display= label? 'flex':'none';
+    if(label) ib.textContent=label;
+  } else if(label){
+    cx.font='11px Verdana'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillText('E — '+label, at.x+1, at.y-33);
+    cx.fillStyle='#ffe9a8'; cx.fillText('E — '+label, at.x, at.y-34);
+  }
+}
+
+/* =====================================================================
+   AUTO-SAVE — quietly persists to this browser's local storage
+   ===================================================================== */
+const store={
+  get(){ try{ return localStorage.getItem('emberwickSave'); }catch(e){ return null; } },
+  set(v){ try{ localStorage.setItem('emberwickSave',v); }catch(e){} },
+  clear(){ try{ localStorage.removeItem('emberwickSave'); }catch(e){} }
+};
+let autoT=0;
+function autoSave(){
+  if(G.state!=='play' || P.dead || G.interior) return;
+  store.set(saveCode());
+}
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) autoSave(); });
+
+/* =====================================================================
+   RESOURCE ECONOMY — rare materials, smithing, cooking, brewing, trade
+   ===================================================================== */
+P.tools=P.tools||{axe:0,pick:0}; P.armor=P.armor||0;
+ITEMS.hardwood={name:'Hardwood', desc:'Dense heartwood from the old forest pines.'};
+ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Bram can smelt it.'};
+ITEMS.bar={name:'Iron Bar', desc:'Smelted and anvil-ready.'};
+ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.'};
+ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune — sells dearly."};
+ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25};
+ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20};
+ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
+ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
+ACH.mastersmith={t:'Master Smith',d:'Forge the steel sword.'};
+ACH.loremaster={t:'Loremaster',d:'Read every text and stone on both islands.'};
+ACH.ironclad={t:'Ironclad',d:'Wear the steel plate.'};
+
+const SELL_PRICES={fish:3, cookedfish:4, wood:1, stone:1, hardwood:4, ore:5, bar:14, pearl:25, crystal:15, mushroom:2, wheat:2, apple:2};
+
+function costText(need){ return Object.keys(need).map(k=>need[k]+' '+ITEMS[k].name.toLowerCase()).join(' + '); }
+function canPay(need){ for(const k in need) if(!has(k,need[k])) return false; return true; }
+function pay(need){ for(const k in need) take(k,need[k]); }
+
+/* ---------- Bram: smelting & smithing ---------- */
+function craftMenu(npc){
+  const recipes=[
+    {id:'bar', label:'Smelt Iron Bar', need:{ore:2,wood:1},
+      out:()=>{ give('bar',1); toast('The bloom cools into a clean <b>iron bar</b>.'); },
+      owned:()=>false},
+    {id:'axe', label:'Iron Axe — +1 chop power, finds more hardwood', need:{bar:2,hardwood:2},
+      out:()=>{ P.tools.axe=1; banner('IRON AXE FORGED','TREES WILL FEAR YOU'); },
+      owned:()=>P.tools.axe>0},
+    {id:'pick', label:'Iron Pickaxe — +1 mining power, finds more ore', need:{bar:2,hardwood:2},
+      out:()=>{ P.tools.pick=1; banner('IRON PICKAXE FORGED','THE STONE GIVES UP ITS SECRETS'); },
+      owned:()=>P.tools.pick>0},
+    {id:'iarm', label:'Iron Armor — blocks 15% of damage', need:{bar:3,hardwood:2},
+      out:()=>{ P.armor=Math.max(P.armor,1); banner('IRON ARMOR FITTED','15% OF EVERY BLOW TURNED ASIDE'); },
+      owned:()=>P.armor>=1},
+    {id:'parm', label:'Steel Plate — blocks 30%, crowned with a helm', need:{bar:5,crystal:1},
+      out:()=>{ P.armor=2; award('ironclad'); banner('STEEL PLATE FORGED','30% OF EVERY BLOW TURNED ASIDE'); },
+      owned:()=>P.armor>=2, req:()=>P.armor>=1,
+      reqMsg:"“Plate hangs on iron. Let me fit the iron armor first.”"},
+    {id:'steel', label:'Steel Sword — +4 damage', need:{bar:4,hardwood:3},
+      out:()=>{ P.swordTier=2; buildHotbar(); award('mastersmith'); banner('STEEL SWORD FORGED','+4 DAMAGE'); },
+      owned:()=>P.swordTier>=2, req:()=>P.swordTier>=1,
+      reqMsg:"“Steel builds on iron. Finish my iron-sword commission first.”"}
+  ];
+  const btns=[];
+  for(const r of recipes){
+    if(r.owned()) continue;
+    btns.push({label:r.label+'<br><span style="font-size:10px;color:var(--parch-dim)">'+costText(r.need)+'</span>',
+      fn:()=>{
+        if(r.req && !r.req()){ setDialog(r.reqMsg, [{label:'Back',fn:()=>craftMenu(npc)}]); return; }
+        if(!canPay(r.need)){ setDialog('“Short on materials. I need '+costText(r.need)+'.”',
+          [{label:'Back',fn:()=>craftMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]); return; }
+        pay(r.need); r.out(); Snd.mine(); setTimeout(autoSave,300);
+        craftMenu(npc);
+      }});
+  }
+  if(!btns.length) btns.push({label:'Nothing left to forge — you have it all', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
+  btns.push({label: npc?'Back':'Step away', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
+  setDialog('“The anvil\'s hot. What are we making?”<br><span style="font-size:10px;color:var(--parch-dim)">Ore comes from rock — a pickaxe helps. Hardwood hides in the old forest pines.</span>', btns);
+}
+
+/* ---------- Maren: trade goods for gold ---------- */
+function sellMenu(npc){
+  const btns=[];
+  for(const k in SELL_PRICES){
+    const n=P.inv[k]||0;
+    if(n<=0) continue;
+    const total=n*priceOf(k);
+    btns.push({label:'Sell '+n+' '+ITEMS[k].name.toLowerCase()+' — <b style="color:#ffd76a">'+total+'g</b>',
+      fn:()=>{ take(k,n); giveGold(total); sellMenu(npc); }});
+  }
+  if(!btns.length) btns.push({label:'Nothing in the satchel worth coin', ghost:true, fn:()=>buildDialogContent(npc)});
+  btns.push({label:'Back',ghost:true,fn:()=>buildDialogContent(npc)});
+  setDialog('“Let\'s see what the island gave you. Fair prices, always.”', btns);
+}
+
+/* ---------- Willa: hearth cooking ---------- */
+function cookMenu(npc){
+  const opts=[
+    {label:'Bake bread (3 wheat) — heals 25', need:{wheat:3}, item:'bread', line:'“Fresh from the oven — mind your fingers.”'},
+    {label:'Grill fish (1 fish) — heals 20', need:{fish:1}, item:'cookedfish', line:'“Skin-crisp and steaming. Eat it warm.”'}
+  ];
+  const btns=opts.map(o=>({label:o.label, fn:()=>{
+    if(!canPay(o.need)){ setDialog('“You\'ll need '+costText(o.need)+' for that.”',
+      [{label:'Back',fn:()=>cookMenu(npc)}]); return; }
+    pay(o.need); give(o.item,1); Snd.pickup();
+    setDialog(o.line, [{label:'Cook more',fn:()=>cookMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+  }}));
+  btns.push({label: npc?'Back':'Step away', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
+  setDialog('“The hearth\'s always lit. Hungry work, adventuring.”', btns);
+}
+
+/* ---------- Orin: crystal brewing ---------- */
+function brewMenu(npc){
+  const need={mushroom:2, crystal:1};
+  setDialog('“Two bluecaps, one ember crystal — and I\'ll draw you <b>two tonics</b> from the boil.”',
+    [{label:'Brew (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
+        if(!canPay(need)){ setDialog('“The recipe is exact: '+costText(need)+'. Nature doesn\'t haggle.”',
+          [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
+        pay(need); give('potion',2); Snd.magic();
+        setDialog('“Careful — it\'s still humming.” <i>(+2 Ember Tonics)</i>',
+          [{label:'Brew again',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+      }},
+     {label:'Back',ghost:true,fn:()=>buildDialogContent(npc)}]);
+}
+
+/* =====================================================================
+   PURPOSE LAYER — village projects & rolling supply contracts
+   ===================================================================== */
+P.projects=P.projects||{}; P.contract=P.contract||0; P.wellCd=0;
+
+const PROJECTS={
+  well:  {name:'Mend the Old Well', need:{stone:8, bar:2}, where:'maren',
+    perk:'Drink at the village well: full heal, every 90s.',
+    done:'“Sweetest water on the isle, flowing again. Drink deep whenever you pass.”'},
+  crane: {name:'Raise the Dock Crane', need:{wood:12, hardwood:4}, where:'maren',
+    perk:'Every catch lands +1 fish, and fish sell for more.',
+    done:'“Finn wept, you know. Actual tears. The crane swings again.”'},
+  lanes: {name:'Light the Lanes', need:{wood:10, stone:6}, where:'maren',
+    perk:'New lanterns warm the village paths at night.',
+    done:'“Look at them glow. No one stumbles home in the dark now — that\'s your doing.”'},
+  beacon:{name:'Raise the Harbor Beacon', need:{bar:6, hardwood:8}, where:'kell',
+    perk:'Trade routes open: everything sells for +15%.',
+    done:'“Ships already turning toward the light. Greyharbor trades again — prices are up, friend.”'}
+};
+function priceOf(k){
+  let p=SELL_PRICES[k]||0;
+  if(k==='fish'||k==='cookedfish') p += P.projects.crane?1:0;
+  if(P.projects.beacon) p=Math.round(p*1.15);
+  return p;
+}
+function placeLaneLamps(){
+  for(const s of [[45,60],[49,62],[52,60],[47,55]]) addBuilding('lamp',s[0],s[1],'');
+}
+function placeBeacon(){
+  const D=ZONES.dock;
+  addBuilding('lamp',D.x-1,D.y-2,''); addBuilding('lamp',D.x-1,D.y+3,'');
+  addBuilding('lamp',D.x+1,D.y-2,''); addBuilding('lamp',D.x+1,D.y+3,'');
+}
+function buildProject(id,npc){
+  P.projects[id]=true;
+  if(id==='lanes' && G.worldId==='isle') placeLaneLamps();
+  if(id==='beacon' && G.worldId==='main') placeBeacon();
+  banner('PROJECT COMPLETE', PROJECTS[id].name.toUpperCase());
+  shockwave(P.x,P.y,'rgba(255,215,106,0.9)',50);
+  addXP('woodcut',60); addXP('mining',60);
+  Snd.levelup(); setTimeout(autoSave,300);
+  setDialog('“'+PROJECTS[id].done+'”', [{label:'Continue',fn:()=>projectsMenu(npc)}]);
+}
+function projectsMenu(npc){
+  const btns=[];
+  for(const id in PROJECTS){
+    const pr=PROJECTS[id];
+    if(pr.where!==npc.id) continue;
+    if(P.projects[id]){
+      btns.push({label:'✓ '+pr.name+' <span style="font-size:10px;color:#9be07f">(built)</span>', ghost:true, fn:()=>{}});
+      continue;
+    }
+    btns.push({label:pr.name+'<br><span style="font-size:10px;color:var(--parch-dim)">'+costText(pr.need)+' — '+pr.perk+'</span>',
+      fn:()=>{
+        if(!canPay(pr.need)){
+          setDialog('“A fine ambition — bring '+costText(pr.need)+' and we\'ll see it done.”',
+            [{label:'Back',fn:()=>projectsMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+          return;
+        }
+        pay(pr.need); buildProject(id,npc);
+      }});
+  }
+  btns.push({label:'Back',ghost:true,fn:()=>buildDialogContent(npc)});
+  setDialog(npc.id==='maren'
+    ? '“The isle gives you wood and stone — give a little back, and watch the village grow.”'
+    : '“Greyharbor was great once. With the right materials, it will be again.”', btns);
+}
+
+/* ---------- rolling supply contracts: gathering always pays ---------- */
+const CONTRACTS=[
+  {need:{wood:10},   gold:20, skill:'woodcut', xp:50, line:'Bram wants pine for tool hafts.'},
+  {need:{stone:8},   gold:18, skill:'mining',  xp:50, line:'The well wall wants shoring.'},
+  {need:{fish:5},    gold:24, skill:'fishing', xp:60, line:'Nia\'s begged for a fish supper all week.'},
+  {need:{hardwood:3},gold:24, skill:'woodcut', xp:70, line:'Orin needs heartwood for staff blanks.'},
+  {need:{ore:4},     gold:28, skill:'mining',  xp:70, line:'Bram\'s stockpile of raw iron runs thin.'},
+  {need:{wheat:6},   gold:20, skill:'farming', xp:60, line:'The village ovens are hungry.'}
+];
+function contractMenu(npc){
+  const c=CONTRACTS[P.contract%CONTRACTS.length];
+  setDialog('<b style="color:var(--ember)">Supply contract</b><br>“'+c.line+'”<br>'+
+    '<span style="font-size:11px;color:var(--parch-dim)">Deliver '+costText(c.need)+' → <b style="color:#ffd76a">'+c.gold+'g</b> + '+c.xp+' '+SKILLS[c.skill].name+' XP</span>',
+    [{label:'Deliver', fn:()=>{
+        if(!canPay(c.need)){
+          setDialog('“Short of the order. It\'ll keep — the island regrows fast.”',
+            [{label:'Back',fn:()=>contractMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+          return;
+        }
+        pay(c.need); giveGold(c.gold); addXP(c.skill,c.xp);
+        P.contract++; Snd.coin(); setTimeout(autoSave,300);
+        setDialog('“Delivered and paid. A new request is already on the board.”',
+          [{label:'Next contract',fn:()=>contractMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+      }},
+     {label:'Back',ghost:true,fn:()=>buildDialogContent(npc)}]);
+}
+
+/* =====================================================================
+   LORE, LIVING INTERIORS & NEW QUESTS
+   ===================================================================== */
+P.loreRead=P.loreRead||{};
+ITEMS.shell={name:'Spiral Shell', desc:'A perfect beach spiral. Nia collects them.'};
+ITEMS.apple={name:'Orchard Apple', desc:'Crisp and sweet. Restores 10 HP.', use:'heal', heal:10};
+ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.'};
+
+const LORE={
+  house2:{title:'Tide Tables & Margin Notes', text:'“Finn\'s hand, over thirty years of tide tables. The margins tell the real story: <i>W. said yes today</i> — circled twice. <i>Pearl. Showed off. Lost it.</i> And on the last page, pressed flat: a dried sea-flower, and the words <i>worth more anyway.</i>”'},
+  'house@m':{title:"A Sailor's Letters", text:'“Unsent letters, salt-stiff. <i>Dearest M — the strait is closed again. They say a dead king holds the far isle and the water obeys him. I will wait. The sea has taught me nothing if not waiting.</i> The last letter is dated the week the strait calmed.”'},
+  'house2@m':{title:"The Warden's Ledger", text:'“Kell\'s ledger, precise as a blade: <i>wolves — 14 sighted, crimson-marked. They move like soldiers now. Something on the crag gives orders.</i> A later entry, pressed hard into the page: <i>heard it howl. The packs went silent to listen.</i>”'},
+  'barn@m':{title:'Trade Hall Manifest', text:'“Cargo lists from Greyharbor\'s golden years — silk, cedar, ember-glass. The final page is an auction notice for the hall itself. Someone has written beneath it, recently and in hope: <i>the beacon will burn again.</i>”'},
+  springs:{title:'The Bathing Stone', text:'“Old court script, worn smooth by steam: <i>HERE THE FIRE UNDER THE ISLAND RISES GENTLE. SOLDIER, SET DOWN YOUR SWORD AND SOAK. THE WAR WILL KEEP.</i> Below it, in a child\'s hand: <i>it tickles.</i>”'},
+  'stone@isle':{title:'The Standing Stone', text:'“Weathered near to silence, the old script still bites: <i>HERE WATCHED THE KING WHO WOULD NOT DRINK. KINDNESS RUSTS NO CROWN — BUT PRIDE HOLLOWS ONE.</i> Below, in newer, angrier scratches: <i>we warned him.</i>”'},
+  'stone@main':{title:'The Barrow Dirge', text:'“A burial stone of the old court, carved with a dirge: <i>SLEEP, SWORDS OF THE EMBER WARS. YOUR KING REMEMBERS YOU — THAT IS THE PROBLEM.</i> The barrow soil around it never quite settles.”'},
+  crypt:{title:'The Hollow Crypt', text:'“The arch above the crypt bears the royal cipher, defaced by grief or fury. Inside the threshold, a single line remains legible: <i>He kept the crown. It kept him. Now it keeps us all awake.</i> The stone is cold in a way the sun cannot fix.”'},
+  tower:{title:'The Ember Wars', text:'“Before the lanterns, the isle burned. Mages of the old court bound their fire into crystals — the same warm stones you still find veined in ruin-rock. When the court fell, only the crystals remembered how to be warm.”'},
+  house:{title:'Songs of the Well', text:'“The well was dug by the first family, who swore its water could knit a wound shut overnight. They also swore the last king refused to drink — said kindness would rust his crown. He kept the crown. It kept him.”'},
+  barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes — old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'}
+};
+function readLore(key){
+  if(!LORE[key] && key.endsWith('@m')) key=key.slice(0,-2);
+  const L=LORE[key]; if(!L) return;
+  const first=!P.loreRead[key];
+  if(first){ P.loreRead[key]=true; give('page',1); Snd.quest();
+    if(Object.keys(P.loreRead).length>=Object.keys(LORE).length) award('loremaster'); }
+  dlg.open=true;
+  document.getElementById('dialog').style.display='flex';
+  document.getElementById('dname').textContent=L.title;
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.fillStyle='#e8dcbd'; pg.fillRect(14,10,44,52);
+  pg.strokeStyle='#8a6d30'; pg.strokeRect(14,10,44,52);
+  pg.strokeStyle='rgba(90,70,40,0.8)'; pg.lineWidth=1;
+  for(let i=0;i<6;i++){ pg.beginPath(); pg.moveTo(19,20+i*7); pg.lineTo(53,20+i*7); pg.stroke(); }
+  setDialog(L.text + (first? ' <br><i style="color:#9be07f">(+1 Lore Page copied)</i>':''),
+    [{label:'Close the book',ghost:true,fn:closeDialog}]);
+}
+function openStation(name,menuFn){
+  dlg.open=true;
+  document.getElementById('dialog').style.display='flex';
+  document.getElementById('dname').textContent=name;
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.fillStyle='#ff9a3c'; pg.beginPath(); pg.arc(36,44,16,0,TAU); pg.fill();
+  pg.fillStyle='#ffce7a'; pg.beginPath(); pg.arc(36,42,9,0,TAU); pg.fill();
+  menuFn(null);
+}
+function sleepInBed(){
+  const fade=document.getElementById('fadeOv');
+  fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
+  setTimeout(()=>{
+    G.dayT=0.02; // dawn
+    P.hp=P.maxhp; P.mp=P.maxmp;
+    G.fireflies.length=0;
+    refreshUI(); setTimeout(autoSave,300);
+    toast('You wake at <b>dawn</b>, whole and rested.',3600);
+    setTimeout(()=>{ fade.style.opacity=0; },120);
+  },750);
+}
+function rummage(f){
+  if(f.rummaged){ toast('Nothing more in there.'); return; }
+  f.rummaged=true;
+  const roll=Math.random();
+  if(f.type==='barrel'){ if(roll<0.45){ give('fish',1); toast('A salted <b>fish</b> at the bottom of the barrel!'); }
+    else toast('Brine and old rope. Nothing useful.'); }
+  else if(f.type==='hay'){ if(roll<0.45){ give(roll<0.2?'wheat':'seed',2); toast('You comb <b>seeds and grain</b> from the hay.'); }
+    else toast('Just hay. Itchy, honest hay.'); }
+  else if(f.type==='crate'){ if(roll<0.4){ giveGold(rndi(2,6)); }
+    else if(roll<0.7){ give('wood',1); toast('Spare <b>timber</b> in the crate.'); }
+    else toast('Packing straw and disappointment.'); }
+  Snd.step(8);
+}
+function interiorHotspot(){
+  const I=G.interior; if(!I) return null;
+  let best=null, bd=1.45;
+  for(const f of I.furn){
+    const lbl={bed:'Sleep', hearth:'Cook', anvil:'Smith', orb:'Attune',
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage'}[f.type];
+    if(!lbl) continue;
+    const d=dist(P.x,P.y,f.x,f.y);
+    if(d<bd){ bd=d; best={f,label:lbl}; }
+  }
+  return best;
+}
+function useHotspot(h){
+  const f=h.f, I=G.interior;
+  if(f.type==='bed') sleepInBed();
+  else if(f.type==='hearth') openStation('The Hearth', cookMenu);
+  else if(f.type==='anvil') openStation('The Anvil', craftMenu);
+  else if(f.type==='orb'){
+    if(P.mp>=P.maxmp){ toast('The orb hums — your mana is already full.'); return; }
+    P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
+    addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
+  }
+  else if(f.type==='books') readLore((I.kind==='tower'?'tower':'barn')+(G.worldId==='main'?'@m':''));
+  else if(f.type==='shelf') readLore((I.kind==='house2'?'house2':'house')+(G.worldId==='main'?'@m':''));
+  else rummage(f);
 }
 
 let lastT=0, uiTick=0;
@@ -3757,12 +5166,19 @@ function frame(ts){
     return;
   }
   G.time+=dt;
+  if(G.interior){
+    updateInterior(dt);
+    Music.update(); Amb.update(dt);
+    G.dayT=(G.dayT+dt/G.dayLen)%1;
+    renderInterior();
+    return;
+  }
   updatePlayer(dt);
   updateNPCs(dt);
   updateMobs(dt);
   updateProjs(dt);
   updateWorld(dt);
-  WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt);
+  WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt); updateGulls(dt);
   G.flash=Math.max(0,G.flash-raw*1.6);
   // camera with movement look-ahead
   const lead = P.moving? 26 : 0;
@@ -3773,10 +5189,12 @@ function frame(ts){
   render();
   uiTick+=dt;
   if(uiTick>0.25){ uiTick=0; refreshUI(); }
+  autoT+=raw;
+  if(autoT>10){ autoT=0; autoSave(); }
 }
 
 function boot(){
-  buildTiles(); buildSprites(); buildIcons(); buildExtraSprites();
+  buildTiles(); buildFringes(); buildSprites(); buildIcons(); buildExtraSprites();
   weatherAll();
   G.worldId='isle';
   genIsleAll();
@@ -3787,13 +5205,23 @@ function boot(){
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
     ? '<b>Left thumb</b> — joystick to move · <b>⚔</b> — attack / gather · <b>⤸</b> — dodge roll · <b>green button</b> — talk, fish, harvest'
-    : '<b>WASD / arrows</b> move · <b>click or Space</b> attack (aims at cursor) · <b>Shift</b> dodge roll · <b>E</b> interact · <b>1-4</b> hotbar · <b>Q I K M</b> panels · <b>gamepad supported</b>';
+    : '<b>Click</b> to walk, gather, talk, fight — or <b>WASD</b> + <b>Space</b> · <b>Shift</b> dodge · <b>E</b> interact · <b>1-4</b> hotbar · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
+  // Continue is the hero when a save exists; New Game demands typed confirmation
+  const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
+  if(store.get()){
+    contBtn.style.display='inline-block';
+    contBtn.classList.add('pulse');
+    startBtn.textContent='New Game';
+    startBtn.classList.add('ghostly');
+  } else {
+    startBtn.classList.add('pulse');
+  }
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
 }
-document.getElementById('startBtn').onclick=()=>{
+function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
@@ -3802,10 +5230,49 @@ document.getElementById('startBtn').onclick=()=>{
   updateQuestUI();
   setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well — look for the <b style="color:var(--ember)">!</b>',5200),600);
   Snd.quest();
+}
+document.getElementById('continueBtn').onclick=()=>{
+  const sc=store.get(); if(!sc) return;
+  Snd.init(); Amb.ensure(); Music.nextT=0;
+  document.getElementById('titleOv').style.display='none';
+  G.state='play';
+  if(loadCode(sc)===false){
+    toast('The old save was unreadable — starting fresh.');
+    P.quests.welcome='avail'; updateQuestUI();
+  }
+};
+document.getElementById('startBtn').onclick=()=>{
+  if(!store.get()){ startFresh(); return; }
+  // a save exists: never wipe on a stray tap
+  document.getElementById('confirmWipe').style.display='block';
+  const inp=document.getElementById('wipeInput');
+  inp.value=''; document.getElementById('wipeConfirm').disabled=true;
+  if(!isTouch){ try{ inp.focus(); }catch(e){} } // no auto-focus on touch: keeps the keyboard (and any zoom) away until tapped
+};
+document.getElementById('wipeInput').addEventListener('input',function(){
+  document.getElementById('wipeConfirm').disabled = this.value.trim().toLowerCase()!=='start over';
+});
+document.getElementById('wipeInput').addEventListener('keydown',e=> e.stopPropagation());
+document.getElementById('wipeConfirm').onclick=()=>{
+  if(document.getElementById('wipeInput').value.trim().toLowerCase()!=='start over') return;
+  store.clear();
+  document.getElementById('confirmWipe').style.display='none';
+  startFresh();
+};
+document.getElementById('wipeCancel').onclick=()=>{
+  document.getElementById('confirmWipe').style.display='none';
 };
 window.addEventListener('keydown',e=>{ if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
 document.addEventListener('touchmove',e=>{ if(e.target===cv) e.preventDefault(); },{passive:false});
 document.addEventListener('gesturestart',e=> e.preventDefault());
+document.addEventListener('dblclick',e=> e.preventDefault(),{passive:false});
+let lastTapEnd=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  const onGame = e.target===cv || e.target.id==='joyZone' || (e.target.closest && e.target.closest('#touchUI'));
+  if(now-lastTapEnd<330 && onGame) e.preventDefault();
+  lastTapEnd=now;
+},{passive:false});
 
 boot();
 </script>
