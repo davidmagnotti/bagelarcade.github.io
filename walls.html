@@ -479,6 +479,7 @@
   .shop-buy .cost{ color:var(--bronze-hi); }
   .shop-buy.cant{ opacity:.4; }
   .shop-buy.maxed{ background:var(--blood); border-color:#000; opacity:.9; }
+  .shop-buy.sell{ min-width:56px; margin-left:4px; opacity:.85; padding:9px 8px; }
   .offer-card{
     display:flex; align-items:center; gap:12px; text-align:left;
     background:var(--stone-1); border:1px solid var(--stone-0);
@@ -669,6 +670,7 @@
       </div>
       <button class="action-btn" id="undoBtn">Undo</button>
       <button class="action-btn" id="resetBtn">Reset</button>
+      <button class="action-btn" id="farmShopBtn">Shop</button>
     </div>
 
     <div id="farm-army"></div>
@@ -735,6 +737,7 @@
     <div id="units"></div>
     <div id="bottom-row">
       <button class="action-btn" id="campBtn" style="display:none;">Build Supply Camp — <span id="campCost">20</span></button>
+      <button class="action-btn" id="hornBtn" style="display:none;">War Horn</button>
       <button class="action-btn" id="pauseBtn">Pause</button>
     </div>
   </div>
@@ -955,6 +958,23 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const mx=s=>Math.round(((n1>>s)&255)*(1-t)+((n2>>s)&255)*t);
     return '#'+((1<<24)|(mx(16)<<16)|(mx(8)<<8)|mx(0)).toString(16).slice(1);
   }
+  // ── mire lanes: from Siege 14, some land sieges bog a lane down. Foot
+  //    troops (both armies) wade at 60% speed; ladder companies fly over.
+  function computeMireLanes(level){
+    if(level<14 || themeFor(level)) return [];
+    const water = typeof computeWaterLanes==='function' ? computeWaterLanes(level) : [];
+    const h=(level*2654435761)>>>0;
+    if((h%10)<4) return [];                      // not every siege bogs down
+    return [((h>>>3)%LANE_COUNT)].filter(l=>!water.includes(l));   // >>> keeps it unsigned
+  }
+  function mireMult(u){
+    return (!u.flying && state.mireLanes && state.mireLanes.includes(u.lane)) ? 0.6 : 1;
+  }
+  // ── the War Horn surge: bought with gold mid-battle; for 8s the host hits
+  //    +45% harder and takes 30% less
+  function surgeOut(){ return state.surgeT>0 ? 1.45 : 1; }
+  function surgeIn(){  return state.surgeT>0 ? 0.7  : 1; }
+  function hornCost(){ return 70 + (state.level||1)*6; }
   function fieldQuad(x0,x1,yTop,yBot){
     ctx.beginPath();
     ctx.moveTo(PJX(x0,yBot),yBot); ctx.lineTo(PJX(x1,yBot),yBot);
@@ -1146,7 +1166,16 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
   function unitCap(unit){
     const tr=TRAINER_OF[unit]; if(!tr) return 0;
-    return trainerCountFor(unit)*(PLACE_DEFS[tr].cap||0);
+    const base=PLACE_DEFS[tr].cap||0;
+    if(!state.estate) return trainerCountFor(unit)*base;
+    let cap=0; const seen=new Set();
+    for(const t of state.estate.tiles){
+      const b=t.building;
+      if(!b || b.type!==tr || seen.has(b)) continue;
+      seen.add(b);
+      cap += base + (b.tier||0)*Math.ceil(base/2);   // each expansion: +half housing
+    }
+    return cap;
   }
   // Lump payouts grow gently with level so late boards aren't pure grind.
   function levelYield(){ return 1 + (state.level-1)*0.03; }
@@ -1488,14 +1517,26 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   const NAVAL_BUILD = {
     lumber:    { unlock:9  },                                                     // land, unchanged
     quarrycamp:{ unlock:9  },                                                     // land, unchanged
-    farmhouse: { unlock:9,  name:'Fishing Fleet', color:'#3f8fae', shape:'I3' },
-    shieldhall:{ unlock:9,  name:'War Galleys',   color:'#6a7f9a', shape:'I4' },
-    sapperden: { unlock:10, name:'Fire Ships',    color:'#c9652e', shape:'I2' },
+    farmhouse: { unlock:9,  name:'Fishing Fleet',  color:'#3f8fae', shape:'I3' },
+    barracks:  { unlock:9,  name:'Longboat Sheds', color:'#5b7a8f', shape:'O'  },
+    range:     { unlock:9,  name:'Corsair Slips',  color:'#3f9a8f', shape:'I3' },
+    shieldhall:{ unlock:9,  name:'War Galleys',    color:'#6a7f9a', shape:'I4' },
+    sapperden: { unlock:10, name:'Fire Ships',     color:'#c9652e', shape:'I2' },
+    forge:     { unlock:10, name:'Bombard Wharf',  color:'#8f5a7a', shape:'L4' },
   };
   // The Shieldbearer's retired slots carry the flagship: the Shield Hall is the
   // War Galleys' moorage, the shield unit is the galley itself — its own
   // building, its own pool, no borrowing from the spear line.
-  const NAVAL_UNITS = { shield:{name:'War Galley', unlock:9}, sapper:{name:'Fire Ship', unlock:10} };
+  // Siege 9 opens with a real fleet — Longboats (the spear line afloat),
+  // Corsairs (fast raiders) and War Galleys; Siege 10 adds Fire Ships and the
+  // tower-shelling Bombard Ketch.
+  const NAVAL_UNITS = {
+    grunt: {name:'Longboat',      unlock:9},
+    runner:{name:'Corsair',       unlock:9},
+    shield:{name:'War Galley',    unlock:9},
+    sapper:{name:'Fire Ship',     unlock:10},
+    brute: {name:'Bombard Ketch', unlock:10},
+  };
   // The galley re-tunes the old tank chassis into a warship: less raw bulk
   // (armor already halves what it takes), far harder hitting, and quicker oars.
   const GALLEY_TUNE = { hp:0.6, dmg:1.8, spd:1.35 };
@@ -1541,8 +1582,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       && state.waterLanes.includes(activeLane);
   }
   const HYBRID_SHIP_KEYS = new Set(['shield','sapper']);   // war galley + fire ship
+  const NAVAL_SHIP_NAMES = { runner:'Corsair', brute:'Bombard Ketch' };
   function uName(key){
     if(navalNow() && NAVAL_UNITS[key]) return NAVAL_UNITS[key].name;
+    if(navalNow() && NAVAL_SHIP_NAMES[key]) return NAVAL_SHIP_NAMES[key];
     if(hybridNow()){
       if(key==='sapper') return 'Fire Ship';
       if(key==='shield') return 'War Galley';
@@ -1695,10 +1738,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   ];
   function chapterFor(level){ let c=null; for(const ch of CHAPTERS){ if(level>=ch.start) c=ch; } return c; }
 
-  // ── Trebuchet counter-siege: past Siege 5, crowding one lane with more than
-  //    TREB_LIMIT soldiers provokes a boulder volley that flattens the lane —
-  //    killing troops AND smashing the defenders' own towers there.
-  const TREB_MIN_LEVEL = 6, TREB_LIMIT = 12, TREB_CD = 25;
+  // ── Trebuchet counter-siege: from Siege 7, crowding one lane with more than
+  //    TREB_LIMIT soldiers provokes a boulder volley that DESTROYS the lane —
+  //    your troops, their sorties, and the defenders' own towers alike.
+  const TREB_MIN_LEVEL = 7, TREB_LIMIT = 10, TREB_CD = 25;
 
   // ── Fortunes of War: the battlefield has a mind of its own ─────────────────
   // From Siege 3 on (never in the Daily), an authored event fires every 30–50s:
@@ -1913,12 +1956,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const def = bossDefFor(level);
     // The champion has his OWN health pool, anchored to the un-thinned wall with a
     // hard floor — so debug sliders or early levels can never produce a one-hit boss.
-    const hp = Math.max(Math.round(wallRef*0.55), 140 + level*36);
+    const hp = Math.max(Math.round(wallRef*0.8), 200 + level*52);
     return {
       def, name:def.name, ability:def.ability,
-      x:CASTLE_X-26, y:GROUND_TOP+(LOGICAL_H-GROUND_TOP)*0.5, r:60,
+      x:CASTLE_X-26, y:GROUND_TOP+(LOGICAL_H-GROUND_TOP)*0.5, r:70,
       hp, maxHp:hp,
-      sweepDmg: 24+level*2, mortarDmg: 18+level*1.6, pulseDmg: 8+level,
+      sweepDmg: 26+level*2.4, mortarDmg: 20+level*1.9, pulseDmg: 8+level,
       meleeDmg: 13+level*1.2, meleeT: 2.2,
       regen: def.ability==='all' ? hp*0.005 : 0,
       abilityT: 3.5, atkAnim:0,
@@ -2759,6 +2802,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   function setupLevel(){
     state.theme = themeFor(state.level);
     state.waterLanes = computeWaterLanes(state.level);
+    state.mireLanes = computeMireLanes(state.level);
+    state.lastStand=false; state.lastStandT=0;
+    state.oil=null; state.oilT=9;
+    state.surgeT=0; state.hornCd=0;
+    if(state.mireLanes.length) setTimeout(()=>showCoach('mire',
+      'A MIRE has swallowed one of the approaches \u2014 foot soldiers wade it at little more than half pace (so do the garrison\u2019s sorties). Ladder Companies fly straight over. Route around it, or use it to bog the defenders down.'), 800);
     const ramp = rampFactor();
     const cdef = (state.mode==='conquest') ? levelDef(state.level) : null;
     if(state.mode==='conquest'){
@@ -2867,9 +2916,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const _isShip = state.theme==='naval'
       || (state.waterLanes && state.waterLanes.length>0 && !state.theme && HYBRID_SHIP_KEYS.has(key));
     const _galley = _isShip && key==='shield';
-    const _shipHp  = (_isShip ? SHIP_STATS.hp  : 1) * (_galley ? GALLEY_TUNE.hp  : 1);
-    const _shipDmg = (_isShip ? SHIP_STATS.dmg : 1) * (_galley ? GALLEY_TUNE.dmg : 1);
-    const _shipSpd = _galley ? GALLEY_TUNE.spd : 1;
+    // Two more hull types round out the fleet: the CORSAIR (crossbowmen who
+    // take to a fast raider) and the BOMBARD KETCH (men-at-arms crewing a
+    // floating siege gun that shells towers from range).
+    const _corsair = _isShip && key==='runner';
+    const _ketch   = _isShip && key==='brute';
+    const _shipHp  = (_isShip ? SHIP_STATS.hp  : 1) * (_galley ? GALLEY_TUNE.hp  : 1) * (_corsair?0.85:1) * (_ketch?0.62:1);
+    const _shipDmg = (_isShip ? SHIP_STATS.dmg : 1) * (_galley ? GALLEY_TUNE.dmg : 1) * (_corsair?1.25:1) * (_ketch?1.05:1);
+    const _shipSpd = (_galley ? GALLEY_TUNE.spd : 1) * (_corsair?1.3:1) * (_ketch?1.2:1);
     // Coastal siege lane rules: waterways take hulls only — War Galleys
     // (Spearmen who embark) and Fire Ships. Everyone else keeps to the land.
     if(state.waterLanes && state.waterLanes.length && !state.theme){
@@ -2900,7 +2954,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       dmg:def.dmg*effDmgMult()*PACE.dmg*_shipDmg, spd:def.spd*effSpdMult()*PACE.spd*_shipSpd,
       r:def.r, color:eraMix(def.color), dark:eraMix(def.dark), flying:def.flying,
       weaponKind:def.weapon,
-      atkRange:def.atkRange||0, armor:def.armor||1, structMult:def.structMult||1,
+      atkRange:(def.atkRange|| (_ketch?150:0)), armor:def.armor||1, structMult:(def.structMult||1)*(_ketch?2.2:1),
       healRate:def.healRate||0, healRadius:def.healRadius||0,
       slowUntil:0, wob:Math.random()*10, hitFlash:0,
     });
@@ -3107,11 +3161,14 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(b.gained){ for(const k in b.gained){ state.resources[k]=(state.resources[k]||0)-b.gained[k]; } }
     // Removing a trainer shrinks its troop's housing; any soldiers over the new
     // capacity are disbanded with exact refunds off the paid stack.
+    if(b.upPaid){ for(const p of b.upPaid) for(const k in p){ state.resources[k]=(state.resources[k]||0)+p[k]; } }
     if(def.kind==='train'){
       const unit=def.trains;
-      let others=0;
-      for(const t of state.estate.tiles){ const ob=t.building; if(ob && ob!==b && ob.type===b.type) others++; }
-      const newCap=others*(def.cap||0);
+      let newCap=0;
+      for(const t of state.estate.tiles){
+        const ob=t.building; if(!ob || ob===b || ob.type!==b.type) continue;
+        newCap += (def.cap||0) + (ob.tier||0)*Math.ceil((def.cap||0)/2);
+      }
       const stack=(state.paidStack && state.paidStack[unit])||[];
       while((state.army[unit]||0)>newCap && stack.length){
         const p=stack.pop();
@@ -3897,6 +3954,15 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           g.beginPath(); g.ellipse(p.x+3,p.y+3,ISO_HW*0.94,ISO_HH*0.94,0,0,Math.PI*2); g.fill();
         }
         isoPrism(g,fset,elev, lighten(col,14), lighten(col,-14), lighten(col,-32));
+        if(b.tier){
+          const a0=b.footprint[0], pp=isoC(a0%GRID_COLS,(a0/GRID_COLS)|0);
+          for(let k=0;k<b.tier;k++){
+            const px2=pp.x-6+k*9, py2=pp.y-elev-ISO_HH-4;
+            g.fillStyle='#f5c76a';
+            g.beginPath(); g.moveTo(px2,py2-3); g.lineTo(px2+3,py2); g.lineTo(px2,py2+3); g.lineTo(px2-3,py2); g.closePath(); g.fill();
+            g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=1; g.stroke();
+          }
+        }
       }});
       if(pop>0.85) isoBuildingProps(g,b,q,maxZ);
     }
@@ -4174,6 +4240,39 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     selectBuild(t);
     updateFarmHUD();
   }
+  // ── building upgrades: with nothing selected, tap a placed training works
+  //    to EXPAND it — +half its housing per tier, two tiers, no extra land.
+  function upgradeCost(b){
+    const def=PLACE_DEFS[b.type], out={};
+    for(const k in def.cost) out[k]=Math.ceil(def.cost[k]*0.8*((b.tier||0)+1));
+    return out;
+  }
+  function tryUpgradeAt(col,row){
+    if(!state.estate) return;
+    if(col<0||row<0||col>=GRID_COLS||row>=GRID_ROWS) return;
+    const t=state.estate.tiles[row*GRID_COLS+col];
+    const b=t&&t.building; if(!b) return;
+    const def=PLACE_DEFS[b.type];
+    if(def.kind!=='train') return;
+    if((b.tier||0)>=2){
+      estateFloaters.push({col,row,text:'Fully expanded',color:'#c8c3b6',t:1.1});
+      return;
+    }
+    const cost=upgradeCost(b);
+    if(!resAfford(cost)){
+      estateFlashes.push({col,row,color:'#c23b34',t:0.5});
+      estateFloaters.push({col,row,text:costStr(cost),color:'#c96a5a',t:1.1});
+      AudioFX.retreat && AudioFX.retreat();
+      return;
+    }
+    resPay(cost);
+    b.tier=(b.tier||0)+1;
+    (b.upPaid=b.upPaid||[]).push(cost);
+    estateFlashes.push({col,row,color:'#e0a83f',t:0.6});
+    estateFloaters.push({col,row,text:'\u2b06 +'+Math.ceil((def.cap||0)/2)+' housing',color:'#f5c76a',t:1.2});
+    AudioFX.coin && AudioFX.coin();
+    updateFarmHUD();
+  }
   function buyTroop(key){
     if(!unitAvailable(key)) return;
     const cell=document.getElementById('armycell-'+key);
@@ -4327,6 +4426,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // Introduce each newly-unlocked training works once (level 2: the Archery
     // Range; the forge, siege works, etc. as the campaign opens them). Naval
     // levels hide land works, so an introduction can also catch up after landfall.
+    if(state.level>=3 && !localStorage_getBool('ewf_upg')){
+      localStorage_setBool('ewf_upg', true);
+      setTimeout(()=>showCoach('upgrade',
+        'Training works can be EXPANDED: with nothing selected in the palette, tap a placed barracks (or range, forge\u2026) to upgrade it for resources \u2014 more housing without more land. Two expansions per building.'), 1600);
+    }
     if(!state.theme){
       const fresh=palOrder().filter(t=>PLACE_DEFS[t].kind==='train'
         && PLACE_DEFS[t].unlock>1
@@ -4477,17 +4581,21 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     // heavies — roughly half the health, ~60% of the bite, and a smaller
     // wound to camp morale per leaker (the threat is the swarm, not the man).
     const hp = 32 + lv*6;
+    // From Siege 15 the garrison fields KNIGHTS among the skirmishers:
+    // armored (30% less damage taken), twice the health, half again the bite.
+    const knight = lv>=15 && Math.random()<0.35;
     state.sorties.push({
       lane, x:CASTLE_X-20, baseY:L.y, y:L.y,
-      hp, maxHp:hp, dmg:6+lv*0.9, spd:30+lv*1.6, r:24,
-      // Morale damage is small and grows slowly; a single leaked sortie is a setback,
-      // not a death sentence. Morale also regenerates (see updateSorties).
-      moraleDmg:3+Math.round(lv*0.3), atkT:0, hitFlash:0, wob:Math.random()*6,
+      hp:Math.round(hp*(knight?2.1:1)), maxHp:Math.round(hp*(knight?2.1:1)),
+      dmg:(6+lv*0.9)*(knight?1.5:1), spd:(30+lv*1.6)*(knight?0.82:1),
+      r:knight?28:24, knight, armor:knight?0.7:1,
+      moraleDmg:(3+Math.round(lv*0.3))+(knight?3:0), atkT:0, hitFlash:0, wob:Math.random()*6,
     });
     AudioFX.retreat && AudioFX.retreat();
   }
   function updateSorties(dt){
-    if(!state.sortiesActive) return;
+    if(!state.sortiesActive && !state.sorties.length) return;
+    if(state.sortiesActive){
     // Camp morale is now a HEALTH pool: what the sorties take, stays taken.
     // (No passive recovery — every defender that reaches your camp matters.)
     showCoach('sortie',
@@ -4505,6 +4613,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
                                  : Math.max(5.5, 11 - state.level*0.3);
       state.sortieTimer = gap;
     }
+    }
     for(let i=state.sorties.length-1;i>=0;i--){
       const s=state.sorties[i];
       if(s.hitFlash>0) s.hitFlash-=dt*4;
@@ -4517,13 +4626,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         s.atkT=(s.atkT||0)-dt;
         if(s.atkT<=0){
           s.atkT=0.5;
-          foe.hp -= s.dmg*(foe.armor||1); foe.hitFlash=1;
-          s.hp -= (foe.dmg||10)*0.6; s.hitFlash=1;
+          foe.hp -= s.dmg*(foe.armor||1)*surgeIn(); foe.hitFlash=1;
+          s.hp -= (foe.dmg||10)*0.6*(s.armor||1)*surgeOut(); s.hitFlash=1;
           spawnParticles((s.x+foe.x)/2, s.y, '#c23b34', 5, 70);
           AudioFX.thwack && AudioFX.thwack();
         }
       } else {
-        s.x -= s.spd*dt;
+        s.x -= s.spd*mireMult(s)*dt;
       }
       s.y = s.baseY + Math.sin(performance.now()/500+s.wob)*4;
       if(s.hp<=0){
@@ -4535,13 +4644,19 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         continue;
       }
       if(s.x <= CAMP_EDGE){
-        state.morale = Math.max(0, state.morale - s.moraleDmg);
-        state.shake = Math.min(10, state.shake+4);
-        state.flash = Math.min(0.4, state.flash+0.2);
-        spawnFloater(CAMP_EDGE+10, s.y, '-'+s.moraleDmg+' morale', '#c23b34', 15);
-        AudioFX.wallHit && AudioFX.wallHit();
-        state.sorties.splice(i,1);
-        if(state.level>1 && state.morale<=0){ state.morale=0; state.started=false; relieveCastle(); return; }
+        if(state.sortiesActive){
+          state.morale = Math.max(0, state.morale - s.moraleDmg);
+          state.shake = Math.min(10, state.shake+4);
+          state.flash = Math.min(0.4, state.flash+0.2);
+          spawnFloater(CAMP_EDGE+10, s.y, '-'+s.moraleDmg+' morale', '#c23b34', 15);
+          AudioFX.wallHit && AudioFX.wallHit();
+          state.sorties.splice(i,1);
+          if(state.level>1 && state.morale<=0){ state.morale=0; state.started=false; relieveCastle(); return; }
+        } else {
+          spawnDust(CAMP_EDGE+14, s.y, 5);
+          spawnFloater(CAMP_EDGE+14, s.y, 'Slipped away!', '#c8c3b6', 12);
+          state.sorties.splice(i,1);
+        }
       }
     }
   }
@@ -4551,7 +4666,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       ctx.save();
       ctx.translate(spx, 0); ctx.scale(-1,1); ctx.translate(-spx, 0);
       drawTroopSprite({x:s.x, y:s.y, baseY:s.baseY, r:s.r, wob:s.wob, hitFlash:s.hitFlash,
-        color:'#7a2f2f', dark:'#3a1414', weaponKind:'sword'}, ctx, state.animT);
+        color:s.knight?'#5a6578':'#7a2f2f', dark:s.knight?'#252c38':'#3a1414',
+        weaponKind:'sword'}, ctx, state.animT);
       ctx.restore();
       if(s.hp<s.maxHp){
         const w=s.r*1.2;
@@ -4590,7 +4706,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         let struck=0;
         for(const m of state.monsters){
           if(m.lane!==b._volley.lane) continue;
-          m.hp -= b.volleyDmg*(m.armor||1); m.hitFlash=1; struck++;
+          m.hp -= b.volleyDmg*(m.armor||1)*surgeIn(); m.hitFlash=1; struck++;
         }
         if(L){ FX.sparks(LOGICAL_W*0.5, L.y-10, 14, '#e8e2d6'); FX.shockwave(LOGICAL_W*0.5, L.y, 130, 'rgba(230,220,200,0.35)'); }
         if(struck>=3) state.hitStop = 0.07;
@@ -4636,7 +4752,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     if(which==='sweep'){
       let struck=0;
       for(const m of state.monsters){
-        if(Math.hypot(m.x-b.x, m.y-b.y) <= 150){ m.hp -= b.sweepDmg*(m.armor||1); m.hitFlash=1; struck++; }
+        if(Math.hypot(m.x-b.x, m.y-b.y) <= 150){ m.hp -= b.sweepDmg*(m.armor||1)*surgeIn(); m.hitFlash=1; struck++; }
       }
       if(struck){
         spawnParticles(b.x-70, b.y, '#ff9a5a', 16, 150);
@@ -4676,7 +4792,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       b.abilityT = 7.0;
     } else { // slowpulse
       for(const m of state.monsters){
-        m.hp -= b.pulseDmg*(m.armor||1); m.hitFlash=1;
+        m.hp -= b.pulseDmg*(m.armor||1)*surgeIn(); m.hitFlash=1;
         m.slowUntil = performance.now()+2400;
       }
       spawnParticles(b.x, b.y-b.r*0.5, '#8fb8e0', 20, 160);
@@ -5102,10 +5218,10 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
   }
   function trebImpact(lane, x){
     const L=LANES[lane]; if(!L) return;
-    const R=90, dmg=60+state.level*4;
+    const R=90, dmg=320+state.level*14;   // annihilating — the volley clears the lane
     for(const m of state.monsters){
       if(m.lane!==lane) continue;
-      if(Math.abs(m.x-x)<=R){ m.hp -= dmg*(m.armor||1); m.hitFlash=1; }
+      if(Math.abs(m.x-x)<=R){ m.hp -= dmg*(m.armor||1)*surgeIn(); m.hitFlash=1; }
     }
     // Their own guns are buried in the rubble — and stay down longer than usual.
     for(const t of state.turrets){
@@ -5174,6 +5290,53 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         }
       }
     }
+  }
+  function drawMire(){
+    if(!state.mireLanes || !state.mireLanes.length || state.theme==='naval') return;
+    for(const i of state.mireLanes){
+      const L=LANES[i]; if(!L) continue;
+      ctx.save();
+      const g2=ctx.createLinearGradient(0,L.top,0,L.bottom);
+      g2.addColorStop(0,'rgba(52,44,28,0.30)');
+      g2.addColorStop(0.5,'rgba(40,36,22,0.42)');
+      g2.addColorStop(1,'rgba(30,26,16,0.34)');
+      ctx.fillStyle=g2; ctx.fillRect(0,L.top+2,CASTLE_X0,L.h-4);
+      for(let k=0;k<8;k++){
+        const px=40+((k*127+i*61)%(CASTLE_X0-90));
+        const py=L.top+8+((k*53)%(L.h-16));
+        const gl=0.13+0.10*Math.sin(state.animT*1.6+k*1.7);
+        ctx.fillStyle='rgba(150,190,200,'+gl.toFixed(2)+')';
+        ctx.beginPath(); ctx.ellipse(px,py,7+(k%3)*3,2.2,0,0,Math.PI*2); ctx.fill();
+      }
+      ctx.strokeStyle='rgba(92,104,52,0.8)'; ctx.lineWidth=1.2; ctx.lineCap='round';
+      for(let k=0;k<12;k++){
+        const px=30+((k*97+i*37)%(CASTLE_X0-60));
+        const py=(k%2)? L.top+6 : L.bottom-5;
+        ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px-2,py-7); ctx.moveTo(px,py); ctx.lineTo(px+2,py-6); ctx.stroke();
+      }
+      ctx.font='bold 10px Georgia,serif'; ctx.textAlign='left';
+      ctx.fillStyle='rgba(214,204,160,0.75)';
+      ctx.fillText('MIRE \u2014 slow going', 96, L.top+13);
+      ctx.restore();
+    }
+  }
+  function drawOil(){
+    const o=state.oil; if(!o) return;
+    const L=LANES[o.lane]; if(!L) return;
+    const x0=CASTLE_X-170, x1=CASTLE_X+6;
+    ctx.save();
+    if(o.phase==='tele'){
+      const pulse=0.4+0.4*Math.sin(state.animT*14);
+      ctx.strokeStyle='rgba(255,150,60,'+pulse.toFixed(2)+')'; ctx.lineWidth=2;
+      ctx.strokeRect(x0, L.top+3, x1-x0, L.h-6);
+      ctx.fillStyle='rgba(255,120,40,0.10)';
+      ctx.fillRect(x0, L.top+3, x1-x0, L.h-6);
+    } else {
+      const g2=ctx.createLinearGradient(x0,0,x1,0);
+      g2.addColorStop(0,'rgba(255,110,30,0.05)'); g2.addColorStop(1,'rgba(255,160,60,0.30)');
+      ctx.fillStyle=g2; ctx.fillRect(x0,L.top+2,x1-x0,L.h-4);
+    }
+    ctx.restore();
   }
   function updateAdaptiveDefender(){
     if(!state.lanePressure || !state.defenderActive) return;
@@ -5310,6 +5473,67 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     updateAdaptiveDefender();
     WAREV.update(dt);
     FEATS.tick(dt);
+    // ── the surge and the horn cool down ──
+    if(state.surgeT>0) state.surgeT-=dt;
+    if(state.hornCd>0) state.hornCd-=dt;
+    // ── the garrison's last stand: at a quarter wall, one desperate rush ──
+    if(state.started && !state.lastStand && state.level>=6
+       && state.castleHP>0 && state.castleHP<=state.castleMaxHP*0.25){
+      state.lastStand=true; state.lastStandT=8; state.lastStandSpawnT=0.2;
+      showBanner("THE GARRISON'S LAST STAND!");
+      AudioFX.horn && AudioFX.horn();
+      state.shake=Math.min(9,(state.shake||0)+4);
+      state.flash=Math.min(0.4,(state.flash||0)+0.2);
+    }
+    if(state.lastStandT>0){
+      state.lastStandT-=dt;
+      state.lastStandSpawnT-=dt;
+      if(state.lastStandSpawnT<=0 && state.sorties.length<14){
+        state.lastStandSpawnT=0.8;
+        spawnSortie();
+      }
+    }
+    // ── burning oil (Siege 18+): the wall punishes crowding at the gate ──
+    if(state.started && state.level>=18){
+      if(state.oilT===undefined) state.oilT=9;
+      if(!state.oil){
+        state.oilT-=dt;
+        if(state.oilT<=0){
+          let best=-1, bn=0;
+          for(let li=0; li<LANES.length; li++){
+            const n=state.monsters.filter(m=>m.lane===li && !m.flying && m.x>CASTLE_X-190).length;
+            if(n>bn){ bn=n; best=li; }
+          }
+          if(best>=0){
+            state.oil={lane:best, phase:'tele', t:1.3};
+            spawnFloater(CASTLE_X-70, LANES[best].y-26, 'Burning oil!', '#ff9a5a', 15);
+            AudioFX.sizzle && AudioFX.sizzle();
+          } else state.oilT=3;
+        }
+      } else {
+        const o=state.oil; o.t-=dt;
+        if(o.phase==='tele'){
+          if(o.t<=0){ o.phase='burn'; o.t=2.6;
+            FX.shockwave && FX.shockwave(CASTLE_X-70, LANES[o.lane].y, 80, 'rgba(255,140,60,0.5)'); }
+        } else {
+          const L=LANES[o.lane];
+          for(const m of state.monsters){
+            if(m.lane!==o.lane || m.flying) continue;
+            if(m.x>CASTLE_X-170 && m.x<CASTLE_X+10){
+              m.hp -= (26+state.level*1.1)*dt*(m.armor||1)*surgeIn();
+              m.hitFlash=Math.max(m.hitFlash||0, 0.4);
+            }
+          }
+          if(Math.random()<0.5){
+            state.particles.push({x:CASTLE_X-30-Math.random()*130,
+              y:L.y+(Math.random()-0.5)*20, vx:(Math.random()-0.5)*20,
+              vy:-40-Math.random()*40, life:0.6,
+              color:Math.random()<0.5?'#ff9a3a':'#ffcf6a', r:2.5});
+          }
+          if(o.t<=0){ state.oil=null; state.oilT=11+Math.random()*5; }
+        }
+      }
+    }
     updateSorties(dt);
     updateBoss(dt);
     updateTrebuchets(dt);
@@ -5383,7 +5607,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         m.atkT = (m.atkT||0) - dt;
         if(m.atkT<=0){
           m.atkT = 0.5;
-          boss.hp -= m.dmg*RELIC.dmg(); boss.hitFlash = 1;
+          boss.hp -= m.dmg*RELIC.dmg()*surgeOut(); boss.hitFlash = 1;
           const loot = Math.max(1, Math.round(m.dmg*0.45*goldMult()));
           state.gold += loot;
           state.stats.dmgDealt += m.dmg;
@@ -5399,7 +5623,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         m.atkT = (m.atkT||0) - dt;
         if(m.atkT<=0){
           m.atkT = 0.5;
-          blocker.hp -= m.dmg*PACE.towerHit*(m.structMult||1)*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08); blocker.hitFlash = 1;
+          blocker.hp -= m.dmg*PACE.towerHit*(m.structMult||1)*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08)*surgeOut(); blocker.hitFlash = 1;
           if(m.atkRange){
             // bolt tracer from the skirmisher to the tower
             const bd=Math.hypot(blocker.x-m.x, blocker.y-m.y)||1;
@@ -5429,11 +5653,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         m.engaging = true;
       } else {
         m.engaging = false;
-        m.x += m.spd*spdMult*dt;
+        m.x += m.spd*spdMult*mireMult(m)*dt;
       }
       m.y = m.baseY + Math.sin(performance.now()/500+m.wob)*4;
       if(m.x >= CASTLE_X){
-        const dealt = m.dmg*PACE.wallHit*(m.structMult||1)*WAREV.mod('wallDmg')*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08);
+        const dealt = m.dmg*PACE.wallHit*(m.structMult||1)*WAREV.mod('wallDmg')*RELIC.dmg()*RELIC.struct()*(1+(state.shop.engineers||0)*0.08)*surgeOut();
         state.castleHP -= dealt;
         state.gold += Math.max(1, Math.round(dealt*goldMult()));
         state.stats.dmgDealt += dealt;
@@ -5518,7 +5742,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         if(p.splash>0){
           let struck=0;
           for(const m of state.monsters){
-            if(Math.hypot(m.x-p.x,m.y-p.y)<=p.splash){ m.hp-=p.dmg*(m.armor||1); m.hitFlash=1; struck++; }
+            if(Math.hypot(m.x-p.x,m.y-p.y)<=p.splash){ m.hp-=p.dmg*(m.armor||1)*surgeIn(); m.hitFlash=1; struck++; }
           }
           FX.boom(p.x, p.y, false);
           spawnParticles(p.x,p.y,'#e07a3a',16,140);
@@ -5700,6 +5924,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     FX.drawBack();
     drawThemeGround();
     drawLanes();
+    drawMire();
     FX.drawGround();
     if(state.mode==='supply') drawCamps();
     for(const c of state.corpses) drawCorpse(c);
@@ -5719,6 +5944,7 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     for(const p of state.projectiles) drawProjectileSprite(p);
     drawSorties();
     drawTrebStrikes();
+    drawOil();
     drawMoraleBar();
     for(const pt of state.particles){
       if(pt.gy===undefined) pt.gy=pt.y;
@@ -6536,6 +6762,11 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     const flash = m.hitFlash>0;
     g.save();
     g.translate((g===ctx ? PJX(m.x, m.baseY!==undefined?m.baseY:m.y) : m.x), m.y+bob);
+    if(g===ctx && state.surgeT>0 && !m.forceShip){
+      g.strokeStyle='rgba(245,199,106,'+(0.3+0.2*Math.sin(aT*9+(m.wob||0))).toFixed(2)+')';
+      g.lineWidth=1.6;
+      g.beginPath(); g.ellipse(0, m.r*0.55, m.r*0.75, m.r*0.28, 0, 0, Math.PI*2); g.stroke();
+    }
     g.lineJoin='round'; g.lineCap='round';
     const shG = g.createRadialGradient(s*0.1, s*0.96-bob, 1, s*0.1, s*0.96-bob, s*0.8);
     shG.addColorStop(0,'rgba(0,0,0,0.42)'); shG.addColorStop(1,'rgba(0,0,0,0)');
@@ -6969,6 +7200,16 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       relief.style.display='none';
       relief.classList.remove('urgent');
     }
+    const horn=document.getElementById('hornBtn');
+    if(horn){
+      const show = state.started && state.level>=4 && state.mode!=='supply';
+      horn.style.display = show?'':'none';
+      if(show){
+        if(state.surgeT>0){ horn.textContent='Surging \u2014 '+Math.ceil(state.surgeT)+'s'; horn.classList.add('disabled'); }
+        else if((state.hornCd||0)>0){ horn.textContent='Horn \u2014 '+Math.ceil(state.hornCd)+'s'; horn.classList.add('disabled'); }
+        else { horn.textContent='\uD83D\uDCEF War Horn \u2014 '+hornCost()+' \u26c3'; horn.classList.toggle('disabled', state.gold<hornCost()); }
+      }
+    }
     for(const key of UNIT_ORDER){
       const btn=document.getElementById('unitbtn-'+key);
       if(!btn) continue;
@@ -7277,10 +7518,24 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
       return;
     }
     state.coins -= cost;
+    state._shopChanged = true;
     state.shop[key] = lvl+1;
     saveGame();
     AudioFX.coin && AudioFX.coin();
     AudioFX.fanfare && (key==='shrink') && AudioFX.fanfare();
+    renderShop();
+  }
+  // Selling returns 60% of the last tier's price. Together with the camp
+  // reset below, there's no buy→exploit→refund loop to farm.
+  function shopSell(key){
+    const item = SHOP_ITEMS.find(i=>i.key===key); if(!item) return;
+    const lvl = shopItemLevel(key);
+    if(lvl<=0) return;
+    state.coins += Math.round(item.cost(lvl-1)*0.6);
+    state.shop[key] = lvl-1;
+    state._shopChanged = true;
+    saveGame();
+    AudioFX.coin && AudioFX.coin();
     renderShop();
   }
   function renderShop(){
@@ -7288,6 +7543,12 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     document.getElementById('shopCoins').textContent = state.coins;
     const body = document.getElementById('shopBody');
     body.innerHTML='';
+    if(state._shopFromFarm){
+      const w=document.createElement('div');
+      w.className='shop-note';
+      w.textContent='Buying or selling from camp re-forms it: the board, stores and muster reset.';
+      body.appendChild(w);
+    }
     if(state._wonBattle){
       const h=document.createElement('div');
       h.className='history-note';
@@ -7331,9 +7592,13 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
           '<div class="s-desc">'+item.desc+'</div></div>'+
         '<div class="shop-buy '+(maxed?'maxed':(canAfford?'':'cant'))+'" id="shopbuy-'+item.key+'">'+
           (maxed? '<span>Owned</span>' : ('<span>Buy</span><span class="cost">'+cost+' ⛃</span>'))+
-        '</div>';
+        '</div>'+
+        (lvl>0 ? '<div class="shop-buy sell" id="shopsell-'+item.key+'"><span>Sell</span><span class="cost">+'+Math.round(item.cost(lvl-1)*0.6)+' ⛃</span></div>' : '');
       if(!maxed){
-        card.querySelector('.shop-buy').addEventListener('pointerdown', e=>{ e.preventDefault(); shopBuy(item.key); });
+        card.querySelector('#shopbuy-'+item.key).addEventListener('pointerdown', e=>{ e.preventDefault(); shopBuy(item.key); });
+      }
+      if(lvl>0){
+        card.querySelector('#shopsell-'+item.key).addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); shopSell(item.key); });
       }
       body.appendChild(card);
       }
@@ -7351,7 +7616,37 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
     saveGame();
     closeOverlay('shop-overlay');
     state.paused=false;
+    if(state._shopFromFarm){
+      const changed=state._shopChanged;
+      state._shopFromFarm=false; state._shopChanged=false;
+      if(changed){
+        showBanner('The ledgers change the muster \u2014 the camp re-forms.');
+        enterFarm();
+      }
+      return;
+    }
     enterFarm();
+  });
+  document.getElementById('farmShopBtn').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    state._shopFromFarm=true; state._shopChanged=false;
+    openShop();
+  });
+  document.getElementById('hornBtn').addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    if(!state.started || state.surgeT>0 || (state.hornCd||0)>0) return;
+    const c=hornCost();
+    if(state.gold<c){
+      const b=e.currentTarget;
+      b.style.transform='translateX(-2px)'; setTimeout(()=>b.style.transform='',80);
+      return;
+    }
+    state.gold-=c;
+    state.surgeT=8; state.hornCd=26;
+    spawnFloater(LOGICAL_W*0.4, GROUND_TOP+40, 'WAR HORN \u2014 the host surges!', '#f5c76a', 16);
+    AudioFX.horn && AudioFX.horn();
+    state.flash=Math.min(0.35,(state.flash||0)+0.15);
+    updateHUD();
   });
 
   (function buildTitleEmbers(){
@@ -7780,7 +8075,8 @@ You command the army at the gates. Every siege ahead was truly fought, and truly
         if(pts.size===0){
           if(!gestMoved && tapStart && state.estate && e.type==='pointerup'){
             const c=cellFromEvent(e);
-            tryPlaceAt(c.col, c.row);
+            if(state.selectedBuild) tryPlaceAt(c.col, c.row);
+            else tryUpgradeAt(c.col, c.row);
           }
           tapStart=null; gestMoved=false;
         }
