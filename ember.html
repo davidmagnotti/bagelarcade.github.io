@@ -138,6 +138,30 @@
   .objbox b{color:var(--ember);}
   .rwline{margin-top:6px;font-size:11px;color:#c9e0a0;}
   .qcard .qp.ready, .qlogItem .qp.ready{color:#ffd76a;text-shadow:0 0 8px rgba(255,215,106,.5);}
+  #pausePanel{position:fixed;inset:0;background:rgba(8,5,3,.78);z-index:40;display:none;
+    align-items:center;justify-content:center;}
+  #pauseCard{width:min(480px,94vw);max-height:88vh;overflow-y:auto;padding:18px 20px;border-radius:14px;
+    background:
+      radial-gradient(circle at 22% 10%, rgba(255,255,255,.06), transparent 45%),
+      linear-gradient(165deg,#3a372f 0%,#2b2922 55%,#1f1d18 100%);
+    border:1px solid #14120e;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.5), 0 12px 40px rgba(0,0,0,.7);}
+  #pauseCard h2{font-size:20px;color:var(--ember);text-align:center;letter-spacing:2px;margin-bottom:10px;
+    text-shadow:0 -1px 0 rgba(0,0,0,.8);}
+  .pRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px;color:var(--parch);}
+  .pRow input[type=range]{flex:1;max-width:200px;accent-color:#ff9a3c;}
+  .pSeg{display:flex;gap:6px;}
+  .pSeg .btn{padding:6px 10px;font-size:11px;}
+  .pSeg .btn.on{border-color:#8a6d30;color:#ffd76a;
+    box-shadow: inset 0 1px 0 rgba(255,235,180,.2), inset 0 -3px 4px rgba(0,0,0,.5), 0 0 10px rgba(255,154,60,.25);}
+  .pHead{font-size:11px;letter-spacing:2px;color:#9a917f;border-bottom:1px solid #45423a;
+    padding-bottom:4px;margin:14px 0 6px;text-transform:uppercase;}
+  #statGrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:12px;color:var(--parch);}
+  #statGrid b{color:#ffd76a;}
+  #achGrid{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+  .achRow{font-size:11px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.25);color:#7d7466;}
+  .achRow.got{color:#ffe0a0;background:rgba(120,90,20,.22);border-left:3px solid #c9a24e;}
+  #pauseBtns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
   /* dialog */
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
@@ -259,6 +283,7 @@
   <div class="mbtn" id="btnSkills">✦<span class="tx">Skills</span></div>
   <div class="mbtn" id="btnMap">🗺<span class="tx">Map</span></div>
   <div class="mbtn" id="btnSound">♪</div>
+  <div class="mbtn" id="btnPause">⏸</div>
 </div>
 
 <div id="touchUI">
@@ -326,7 +351,36 @@
       <button class="btn" id="continueBtn" style="display:none;">Continue</button>
       <button class="btn" id="startBtn">Set Foot Ashore</button>
     </div>
-    <div id="confirmWipe">
+    <div id="pausePanel">
+  <div id="pauseCard">
+    <h2>— PAUSED —</h2>
+    <div class="pHead">Sound</div>
+    <div class="pRow"><span>Music</span><input type="range" id="cfgMus" min="0" max="100"></div>
+    <div class="pRow"><span>Effects &amp; ambience</span><input type="range" id="cfgSfx" min="0" max="100"></div>
+    <div class="pHead">Display &amp; comfort</div>
+    <div class="pRow"><span>Screen shake</span>
+      <div class="pSeg"><button class="btn" id="cfgShakeOn">On</button><button class="btn" id="cfgShakeOff">Off</button></div></div>
+    <div class="pRow"><span>Lightning &amp; flash effects</span>
+      <div class="pSeg"><button class="btn" id="cfgFlashOn">On</button><button class="btn" id="cfgFlashOff">Off</button></div></div>
+    <div class="pHead">Difficulty <span style="text-transform:none;letter-spacing:0;">(damage you take)</span></div>
+    <div class="pRow"><div class="pSeg" style="margin:0 auto;">
+      <button class="btn" id="diff0">Story</button>
+      <button class="btn" id="diff1">Normal</button>
+      <button class="btn" id="diff2">Heroic</button></div></div>
+    <div class="pHead">Chronicle</div>
+    <div id="statGrid"></div>
+    <div class="pHead">Deeds</div>
+    <div id="achGrid"></div>
+    <div class="pHead">Controls</div>
+    <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
+      Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · E interact &amp; enter buildings · 1-4 hotbar · Esc pause · gamepad supported</div>
+    <div id="pauseBtns">
+      <button class="btn gold" id="resumeBtn">Resume</button>
+      <button class="btn ghostly" id="quitTitleBtn">Quit to Title</button>
+    </div>
+  </div>
+</div>
+<div id="confirmWipe">
       <p><b>This will erase your saved adventure forever</b> — gold, gear, quests, the lot.<br>
       Type <b style="color:#ffb3a3">start over</b> to confirm.</p>
       <input id="wipeInput" type="text" autocomplete="off" placeholder='type "start over"'>
@@ -404,7 +458,8 @@ const Snd = {
     const o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = type||'square'; o.frequency.setValueAtTime(freq, t0);
     if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide), t0+dur);
-    g.gain.setValueAtTime(vol||0.08, t0);
+    if(CFG.sfx<=0.02) return;
+    g.gain.setValueAtTime((vol||0.08)*CFG.sfx, t0);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
     o.connect(g); g.connect(this.ctx.destination);
     o.start(t0); o.stop(t0+dur+0.02);
@@ -417,7 +472,8 @@ const Snd = {
   noise(dur,vol,freq,q){ if(!this.on||!this.ctx) return;
     const t0=this.ctx.currentTime, s=this.ctx.createBufferSource(); s.buffer=this.noiseBuf();
     const f=this.ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||800; f.Q.value=q||0.8;
-    const g=this.ctx.createGain(); g.gain.setValueAtTime(vol||0.05,t0);
+    if(CFG.sfx<=0.02) return;
+    const g=this.ctx.createGain(); g.gain.setValueAtTime((vol||0.05)*CFG.sfx,t0);
     g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     s.connect(f); f.connect(g); g.connect(this.ctx.destination); s.start(t0); s.stop(t0+dur+0.02); },
   step(t){ this.noise(0.05, 0.016, t===2?900 : t===8?480 : 300, 1.2); },
@@ -1775,6 +1831,7 @@ const MOBDEF = {
   slime:{hp:18, dmg:6, speed:1.7, aggro:4.5, xp:16, gold:[1,2], name:'Slime'},
   wolf:{hp:32, dmg:10, speed:3.4, aggro:6, xp:26, gold:[1,3], name:'Wolf'},
   skeleton:{hp:46, dmg:12, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
+  archer:{hp:26, dmg:9, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   boss:{hp:320, dmg:18, speed:2.7, aggro:9, xp:220, gold:[30,40], name:'The Hollow King'},
   alpha:{hp:520, dmg:24, speed:3.6, aggro:8, xp:400, gold:[60,85], name:'Greymaw, the Alpha'}
 };
@@ -1810,7 +1867,8 @@ function give(item,n){ P.inv[item]=(P.inv[item]||0)+n;
 function giveQuiet(item,n){ P.inv[item]=(P.inv[item]||0)+n; refreshUI(); }
 function take(item,n){ P.inv[item]=Math.max(0,(P.inv[item]||0)-n); if(!P.inv[item]) delete P.inv[item]; refreshUI(); }
 function has(item,n){ return (P.inv[item]||0)>=n; }
-function giveGold(n){ P.gold+=n; addFloat('+'+n+' gold', P.x, P.y-1.4, '#ffd76a'); Snd.coin(); refreshUI(); }
+function giveGold(n){ P.gold+=n; P.stats.goldEarned=(P.stats.goldEarned||0)+n;
+  addFloat('+'+n+' gold', P.x, P.y-1.4, '#ffd76a'); Snd.coin(); refreshUI(); }
 
 function addXP(skill,amt){
   const sk=P.skills[skill]; if(!sk) return;
@@ -1956,6 +2014,8 @@ function drawPortrait(npc){
 }
 function openDialog(npc){
   P.click=null;
+  const dl=dist(P.x,P.y,npc.x,npc.y)||1;
+  npc.face={x:(P.x-npc.x)/dl, y:(P.y-npc.y)/dl};
   dlg.open=true; dlg.npc=npc;
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent=npc.name;
@@ -2073,7 +2133,13 @@ window.addEventListener('keydown',e=>{
   if(k==='2') selectWeapon('bow');
   if(k==='3') selectWeapon('staff');
   if(k==='4') useItem('potion');
-  if(k==='escape'){ closeAllPanels(); closeDialog(); }
+  if(k==='escape'){
+    if(G.paused){ togglePause(false); return; }
+    if(dlg.open){ closeDialog(); return; }
+    const anyPanel=['invPanel','skillPanel','questPanel','mapPanel'].some(id=>document.getElementById(id).style.display==='block');
+    if(anyPanel){ closeAllPanels(); return; }
+    togglePause(true);
+  }
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; if(e.key===' ') input.attack=false; });
 
@@ -2680,6 +2746,7 @@ function killMob(m,skill){
 }
 function hurtPlayer(dmg,src){
   if(P.hurtT>0 || P.dead || (P.rollT||0)>0) return;
+  dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
@@ -2691,7 +2758,7 @@ function hurtPlayer(dmg,src){
   if(P.hp<=0){ P.hp=0; playerDie(); }
 }
 function playerDie(){
-  P.dead=true; Snd.die();
+  P.dead=true; Snd.die(); P.stats.deaths=(P.stats.deaths||0)+1;
   setTimeout(()=>{ document.getElementById('deadOv').style.display='flex'; },600);
 }
 document.getElementById('respawnBtn').onclick=()=>{
@@ -2872,11 +2939,29 @@ function updateMobs(dt){
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
       m.face=dx<0?-1:1;
-      const stop = m.boss?1.3:0.95;
+      const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
       if(l>stop) moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
-      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead){
-        m.hitCd= m.boss?1.1:1.25; m.swing=0.3;
-        hurtPlayer(d.dmg, m);
+      // telegraphed strike: wind up, then the blow lands — roll through it!
+      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0)){
+        m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
+        m.hitCd= m.boss?1.1:1.25;
+      }
+      if(m.windup>0){
+        m.windup-=dt;
+        if(m.windup<=0){
+          m.windup=0; m.swing=0.3;
+          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(d.dmg, m);
+        }
+      }
+      if(m.kind==='archer'){
+        // kite: back away if crowded, loose bone arrows from range
+        if(l<3 && l>0.01) moveEntity(m, -dx/l*d.speed*1.1*dt, -dy/l*d.speed*1.1*dt);
+        m.shootCd-=dt;
+        if(m.shootCd<=0 && l>2 && l<10.5){
+          m.shootCd=2.3; m.swing=0.3;
+          G.projs.push({kind:'bone',x:m.x,y:m.y-0.8,vx:dx/l*8,vy:dy/l*8,life:1.7,dmg:d.dmg,from:'mob'});
+          Snd.bow();
+        }
       }
       if(m.kind==='alpha'){
         m.lungeCd=(m.lungeCd||3)-dt;
@@ -3004,7 +3089,7 @@ function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop
   cx.fillStyle='#16283e'; cx.fillRect(0,0,VW,VH);
-  if(G.shake>0){ cx.translate(rnd(-1,1)*G.shake*10, rnd(-1,1)*G.shake*10); }
+  if(G.shake>0 && CFG.shake){ cx.translate(rnd(-1,1)*G.shake*10, rnd(-1,1)*G.shake*10); }
 
   // visible tile range
   const corners=[screenToWorld(0,0),screenToWorld(VW,0),screenToWorld(0,VH),screenToWorld(VW,VH)];
@@ -3190,8 +3275,8 @@ function render(){
 
   // ---- weather & screen feedback ----
   WX.drawRain();
-  if(G.lightning>0.01){ cx.fillStyle='rgba(235,240,255,'+(G.lightning*0.55)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
-  if(G.flash>0.01){ cx.fillStyle='rgba(200,30,20,'+(G.flash*0.30)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
+  if(CFG.flash && G.lightning>0.01){ cx.fillStyle='rgba(235,240,255,'+(G.lightning*0.55)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
+  if(CFG.flash && G.flash>0.01){ cx.fillStyle='rgba(200,30,20,'+(G.flash*0.30)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
 
   // sickly miasma near the Old Ruins
   const ruinD=dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y);
@@ -3368,6 +3453,16 @@ function drawNPC(n,s){
 }
 function drawMob(m,s){
   drawShadowAt(cx,s.x,s.y, m.boss?20: m.kind==='slime'?11:13);
+  if(m.windup>0){
+    // danger ring + rising crouch: your cue to dodge
+    const wp=1-(m.windup/0.42);
+    cx.strokeStyle='rgba(230,60,45,'+(0.5+0.35*Math.sin(G.time*24))+')';
+    cx.lineWidth=2.5;
+    cx.beginPath(); cx.ellipse(s.x,s.y,26+wp*10,(26+wp*10)*0.5,0,0,TAU); cx.stroke();
+    cx.fillStyle='rgba(230,60,45,0.95)';
+    cx.font='bold 15px Georgia'; cx.textAlign='center';
+    cx.fillText('!', s.x, s.y-(m.boss?66:46)-Math.sin(G.time*20)*2);
+  }
   if(m.elite){
     const pl=0.7+0.3*Math.sin(G.time*4+m.hx);
     cx.strokeStyle='rgba(190,30,30,'+(0.55*pl)+')'; cx.lineWidth=2.2;
@@ -3390,6 +3485,14 @@ function drawMob(m,s){
   if(m.elite) cx.restore();
   // hp bar
   if(m.hp<m.maxhp){
+  if(m.kind==='archer'){
+    cx.strokeStyle='#7a5a34'; cx.lineWidth=2.5;
+    cx.beginPath();
+    cx.arc(s.x+m.face*9, s.y-27, 10, Math.PI/2, -Math.PI/2, m.face>0);
+    cx.stroke();
+    cx.strokeStyle='rgba(230,225,210,0.8)'; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(s.x+m.face*9, s.y-37); cx.lineTo(s.x+m.face*9, s.y-17); cx.stroke();
+  }
     const w=m.bigBoss?54:26, top= m.boss?-96: m.kind==='alpha'?-88: m.kind==='slime'?-30:-48;
     cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(s.x-w/2,s.y+top,w,4);
     cx.fillStyle= m.boss?'#78dca0':'#e05648'; cx.fillRect(s.x-w/2,s.y+top,w*clamp(m.hp/m.maxhp,0,1),4);
@@ -3552,18 +3655,44 @@ function drawBigMap(){
   const c=document.getElementById('bigMap'), g=c.getContext('2d');
   g.imageSmoothingEnabled=false;
   g.drawImage(mapBase,0,0,384,384);
+  const eg=EXPL[G.worldId];
+  if(eg){
+    g.fillStyle='rgba(22,17,11,0.94)';
+    const sc=384/MAPW;
+    for(let y=0;y<MAPH;y++){
+      let run=-1;
+      for(let x=0;x<=MAPW;x++){
+        const dark = x<MAPW && !eg[y*MAPW+x];
+        if(dark && run<0) run=x;
+        else if(!dark && run>=0){ g.fillRect(run*sc, y*sc, (x-run)*sc+0.5, sc+0.5); run=-1; }
+      }
+    }
+  }
   const dot=(x,y,col,r)=>{ g.fillStyle=col; g.beginPath(); g.arc(x/MAPW*384,y/MAPH*384,r||4,0,TAU); g.fill();
     g.strokeStyle='rgba(0,0,0,0.6)'; g.stroke(); };
   g.font='bold 11px Georgia'; g.textAlign='center';
+  const pqM=primaryQuest();
+  if(pqM){
+    const tp=questTargetPos(pqM);
+    if(tp){
+      const qx=tp.x/MAPW*384, qy=tp.y/MAPH*384;
+      g.save(); g.translate(qx,qy); g.rotate(Math.PI/4);
+      g.fillStyle='#ffd76a'; g.fillRect(-6,-6,12,12);
+      g.strokeStyle='rgba(60,40,0,0.9)'; g.lineWidth=2; g.strokeRect(-6,-6,12,12);
+      g.restore();
+      g.fillStyle='#ffd76a'; g.fillText('objective', qx, qy+20);
+    }
+  }
   const lbl=(x,y,text)=>{ const px=x/MAPW*384, py=y/MAPH*384-8;
     g.fillStyle='rgba(0,0,0,0.65)'; g.fillText(text,px+1,py+1); g.fillStyle='#f0e2c0'; g.fillText(text,px,py); };
-  for(const k in ZONES){ const z=ZONES[k]; lbl(z.x, z.y-3, z.name); }
+  P.disc=P.disc||{};
+  for(const k in ZONES){ const z=ZONES[k]; if(P.disc[G.worldId+':'+k]) lbl(z.x, z.y-3, z.name); }
   dot(P.x,P.y,'#fff',4);
   const pq=primaryQuest();
   if(pq){ const tp=questTargetPos(pq); if(tp) dot(tp.x,tp.y,'#ff9a3c',5); }
   document.getElementById('mapLegend').innerHTML=
     '<span><b style="color:#fff">●</b> You</span><span><b style="color:#ff9a3c">●</b> Quest</span>'+
-    '<span>'+(G.worldId==='main'? 'The King\'s Road links Greyharbor to the wild interior.' : 'Paths link the village to every corner of the isle.')+'</span>';
+    '<span style="color:#ffd76a">Tap a discovered region to travel there.</span>';
 }
 /* =====================================================================
    MAIN LOOP & BOOT
@@ -3911,6 +4040,7 @@ function spawnMobsMain(){
   const packs=[
     ['wolf', ZONES.highlands, 7, 0.55],
     ['skeleton', ZONES.ruins, 7, 0.6],
+    ['archer', ZONES.ruins, 4, 0.35],
     ['slime', ZONES.meadow, 7, 0.45]
   ];
   const pr=mulberry32(SEED+41);
@@ -4202,6 +4332,7 @@ const Music={
     while(this.nextT<now+0.35){ this.note(this.nextT,this.beat,spb); this.nextT+=spb; this.beat++; }
   },
   ping(t,f,dur,vol,type){
+    vol*=CFG.mus; if(vol<=0.0004) return;
     const ctx=Snd.ctx,o=ctx.createOscillator(),g=ctx.createGain();
     o.type=type||'sine'; o.frequency.value=f;
     g.gain.setValueAtTime(0.0001,t);
@@ -4210,6 +4341,7 @@ const Music={
     o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+dur+0.05);
   },
   pad(t,f,dur,vol){
+    vol*=CFG.mus; if(vol<=0.0004) return;
     const ctx=Snd.ctx;
     for(const det of [0,5]){
       const o=ctx.createOscillator(),g=ctx.createGain();
@@ -4258,7 +4390,7 @@ const Amb={
     if(!Snd.ctx||G.state!=='play') return;
     this.ensure();
     const mute=!Snd.on;
-    if(this.rainGain) this.rainGain.gain.value = mute?0 : (G.interior?0.3:1)*WX.rain*0.05;
+    if(this.rainGain) this.rainGain.gain.value = mute?0 : CFG.sfx*(G.interior?0.3:1)*WX.rain*0.05;
     if(G.interior) this._coast=0;
     if(this.waveGain){
       this.t+=dt;
@@ -4269,7 +4401,7 @@ const Amb={
         }
       }
       this.waveLFO+=dt*0.9;
-      const target= mute?0 : (this._coast? (0.028+0.018*Math.sin(this.waveLFO)) : 0);
+      const target= mute?0 : CFG.sfx*(this._coast? (0.028+0.018*Math.sin(this.waveLFO)) : 0);
       this.waveGain.gain.value += (target-this.waveGain.gain.value)*Math.min(1,dt*2);
     }
     if(mute) return;
@@ -4480,7 +4612,8 @@ const ACH={
   plunderer:{t:'Plunderer',d:'Open 4 treasure chests.'},
   globetrotter:{t:'Across the Strait',d:'Reach the mainland.'},
   kingslayer:{t:'Kingslayer',d:'Fell the Hollow King.'},
-  wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'}
+  wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'},
+  wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'}
 };
 function award(id){
   if(!ACH[id] || P.ach[id]) return;
@@ -4518,7 +4651,8 @@ function saveCode(){
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
     unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,tools:P.tools,
-    projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,flags};
+    projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
+    disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
 }
 function applyWorldFlags(f){
@@ -4553,6 +4687,7 @@ function loadCode(str){
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
+  P.disc=d.disc||{}; unpackExpl(d.expl);
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);
   if(P.projects.lanes) placeLaneLamps();
@@ -4603,7 +4738,7 @@ function pollGamepad(){
       i=(i+(edge(5)?1:order.length-1))%order.length;
       selectWeapon(order[i]);
     }
-    if(edge(9)) togglePanel('questPanel');
+    if(edge(9)) togglePause();
   } else if(G.state==='play' && dlg.open && edge(0)){ doInteract(); }
   gpPrev=gp.buttons.map(x=>!!x.pressed);
 }
@@ -4879,6 +5014,9 @@ function renderInterior(){
 /* =====================================================================
    AUTO-SAVE — quietly persists to this browser's local storage
    ===================================================================== */
+const CFG=(()=>{ try{ return Object.assign({mus:1,sfx:1,shake:1,flash:1,diff:1},
+  JSON.parse(localStorage.getItem('emberwickCfg')||'{}')); }catch(e){ return {mus:1,sfx:1,shake:1,flash:1,diff:1}; } })();
+function saveCfg(){ try{ localStorage.setItem('emberwickCfg',JSON.stringify(CFG)); }catch(e){} }
 const store={
   get(){ try{ return localStorage.getItem('emberwickSave'); }catch(e){ return null; } },
   set(v){ try{ localStorage.setItem('emberwickSave',v); }catch(e){} },
@@ -4890,6 +5028,63 @@ function autoSave(){
   store.set(saveCode());
 }
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) autoSave(); });
+
+/* =====================================================================
+   PAUSE MENU & SETTINGS
+   ===================================================================== */
+function fmtTime(sec){ sec=sec|0; const h=(sec/3600)|0, m=((sec%3600)/60)|0;
+  return h? h+'h '+m+'m' : m+'m '+(sec%60)+'s'; }
+function buildPauseStats(){
+  const s=P.stats||{};
+  const done=Object.keys(P.quests).filter(id=>P.quests[id]==='done').length;
+  document.getElementById('statGrid').innerHTML=
+    '<div>Time adventured <b>'+fmtTime(s.time||0)+'</b></div>'+
+    '<div>Monsters slain <b>'+(s.kills||0)+'</b></div>'+
+    '<div>Quests completed <b>'+done+'</b></div>'+
+    '<div>Gold earned <b>'+(s.goldEarned||0)+'</b></div>'+
+    '<div>Deaths <b>'+(s.deaths||0)+'</b></div>'+
+    '<div>Lore found <b>'+Object.keys(P.loreRead||{}).length+'/'+Object.keys(LORE).length+'</b></div>';
+  const ag=document.getElementById('achGrid'); ag.innerHTML='';
+  for(const k in ACH){
+    const got=!!P.ach[k];
+    ag.insertAdjacentHTML('beforeend','<div class="achRow'+(got?' got':'')+'">'+
+      (got?'★ ':'☆ ')+'<b>'+ACH[k].t+'</b> — '+ACH[k].d+'</div>');
+  }
+}
+function syncCfgUI(){
+  document.getElementById('cfgMus').value=Math.round(CFG.mus*100);
+  document.getElementById('cfgSfx').value=Math.round(CFG.sfx*100);
+  document.getElementById('cfgShakeOn').classList.toggle('on',!!CFG.shake);
+  document.getElementById('cfgShakeOff').classList.toggle('on',!CFG.shake);
+  document.getElementById('cfgFlashOn').classList.toggle('on',!!CFG.flash);
+  document.getElementById('cfgFlashOff').classList.toggle('on',!CFG.flash);
+  for(let i=0;i<3;i++) document.getElementById('diff'+i).classList.toggle('on',(CFG.diff|0)===i);
+}
+function togglePause(force){
+  if(G.state!=='play') return;
+  G.paused = force!==undefined? force : !G.paused;
+  document.getElementById('pausePanel').style.display = G.paused? 'flex':'none';
+  if(G.paused){ closeAllPanels(); closeDialog(); buildPauseStats(); syncCfgUI(); autoSave(); }
+}
+document.getElementById('btnPause').onclick=()=>togglePause();
+document.getElementById('resumeBtn').onclick=()=>togglePause(false);
+document.getElementById('quitTitleBtn').onclick=()=>{
+  autoSave(); togglePause(false);
+  G.state='title';
+  const t=document.getElementById('titleOv'); t.style.display='flex';
+  const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
+  if(store.get()){
+    contBtn.style.display='inline-block'; contBtn.classList.add('pulse');
+    startBtn.textContent='New Game'; startBtn.classList.add('ghostly'); startBtn.classList.remove('pulse');
+  }
+};
+document.getElementById('cfgMus').oninput=function(){ CFG.mus=this.value/100; saveCfg(); };
+document.getElementById('cfgSfx').oninput=function(){ CFG.sfx=this.value/100; saveCfg(); Snd.tone(660,0.07,'sine',0.06); };
+document.getElementById('cfgShakeOn').onclick=()=>{ CFG.shake=1; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgShakeOff').onclick=()=>{ CFG.shake=0; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgFlashOn').onclick=()=>{ CFG.flash=1; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgFlashOff').onclick=()=>{ CFG.flash=0; saveCfg(); syncCfgUI(); };
+for(let i=0;i<3;i++) document.getElementById('diff'+i).onclick=()=>{ CFG.diff=i; saveCfg(); syncCfgUI(); };
 
 /* =====================================================================
    RESOURCE ECONOMY — rare materials, smithing, cooking, brewing, trade
@@ -5196,6 +5391,82 @@ function useHotspot(h){
   else rummage(f);
 }
 
+/* =====================================================================
+   EXPLORATION — fog of war, zone discovery, fast travel
+   ===================================================================== */
+const EXPL={}; // worldId -> Uint8Array(MAPW*MAPH), 1 = seen
+function explGrid(){
+  if(!EXPL[G.worldId] || EXPL[G.worldId].length<MAPW*MAPH) EXPL[G.worldId]=new Uint8Array(MAPW*MAPH);
+  return EXPL[G.worldId];
+}
+let explT=0;
+function stampExplore(dt){
+  explT-=dt; if(explT>0) return; explT=0.25;
+  const g=explGrid(), r=9, px=P.x|0, py=P.y|0;
+  for(let y=Math.max(0,py-r); y<=Math.min(MAPH-1,py+r); y++)
+    for(let x=Math.max(0,px-r); x<=Math.min(MAPW-1,px+r); x++)
+      if((x-px)*(x-px)+(y-py)*(y-py)<=r*r) g[y*MAPW+x]=1;
+  checkDiscover();
+}
+function checkDiscover(){
+  P.disc=P.disc||{};
+  for(const k in ZONES){
+    const z=ZONES[k]; if(!z.name) continue;
+    const key=G.worldId+':'+k;
+    if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
+      P.disc[key]=1;
+      banner('DISCOVERED', z.name); Snd.quest(); giveGold(8);
+      const all=Object.keys(ZONES).filter(k2=>ZONES[k2].name).every(k2=>P.disc[G.worldId+':'+k2]);
+      if(all) award('wayfarer');
+    }
+  }
+}
+function packExpl(){
+  const o={};
+  for(const id in EXPL){
+    const g=EXPL[id], bytes=new Uint8Array(Math.ceil(g.length/8));
+    for(let i=0;i<g.length;i++) if(g[i]) bytes[i>>3]|=1<<(i&7);
+    let s=''; for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
+    o[id]=btoa(s);
+  }
+  return o;
+}
+function unpackExpl(o){
+  for(const id in (o||{})){
+    try{
+      const bin=atob(o[id]), n=bin.length*8, g=new Uint8Array(n);
+      for(let i=0;i<n;i++) if(bin.charCodeAt(i>>3)&(1<<(i&7))) g[i]=1;
+      EXPL[id]=g;
+    }catch(e){}
+  }
+}
+function tryFastTravel(tx,ty){
+  if(G.interior || P.dead || G.state!=='play') return;
+  P.disc=P.disc||{};
+  let best=null, bd=1e9;
+  for(const k in ZONES){
+    const z=ZONES[k]; if(!z.name || !P.disc[G.worldId+':'+k]) continue;
+    const d2=dist(tx,ty,z.x,z.y);
+    if(d2<Math.max(z.r||6,5)+2 && d2<bd){ bd=d2; best=z; }
+  }
+  if(!best) return false;
+  if(dist(P.x,P.y,best.x,best.y)<6){ toast('You are already at <b>'+best.name+'</b>.'); return false; }
+  if(G.mobs.some(m=>!m.dead && m.state==='chase' && dist(P.x,P.y,m.x,m.y)<9)){
+    toast('<b style="color:#e06a5a">Enemies nearby</b> — you cannot travel now.'); return false;
+  }
+  const s=findOpenNear(Math.round(best.x),Math.round(best.y),6);
+  if(!s){ toast('No safe footing there.'); return false; }
+  closeAllPanels(); P.click=null;
+  burst(P.x,P.y-0.5,'#ffd76a',14);
+  P.x=s[0]+0.5; P.y=s[1]+0.5; G.cam.x=P.x; G.cam.y=P.y;
+  burst(P.x,P.y-0.5,'#ffd76a',16); Snd.magic();
+  toast('<b style="color:#ffd76a">Travelled</b> to '+best.name+'.');
+  autoSave(); return true;
+}
+document.getElementById('bigMap').onclick=(e)=>{
+  const r=e.target.getBoundingClientRect();
+  tryFastTravel((e.clientX-r.left)/r.width*MAPW, (e.clientY-r.top)/r.height*MAPH);
+};
 let lastT=0, uiTick=0;
 function frame(ts){
   requestAnimationFrame(frame);
@@ -5216,7 +5487,10 @@ function frame(ts){
     render();
     return;
   }
+  if(G.paused){ render(); return; }
   G.time+=dt;
+  P.stats.time=(P.stats.time||0)+dt;
+  if(!G.interior) stampExplore(dt);
   if(G.interior){
     updateInterior(dt);
     Music.update(); Amb.update(dt);
@@ -5273,6 +5547,7 @@ function boot(){
   requestAnimationFrame(frame);
 }
 function startFresh(){
+  for(const k in EXPL) delete EXPL[k];
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
