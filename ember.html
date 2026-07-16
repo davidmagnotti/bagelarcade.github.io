@@ -1116,6 +1116,11 @@ function drawShadowAt(g,sx,sy,r){
   g.restore();
 }
 
+function dirOct(d){
+  // screen-space facing octant: 0=E, 1=SE, 2=S(front), 3=SW, ±4=W, -1=NE, -2=N(back), -3=NW
+  if(!d) return 1;
+  return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
+}
 function drawHumanoid(g,sx,sy,o){
   // o: {skin,hair,shirt,pants,dir,step,size,hat,weapon,swing,hurt,cloak,
   //     robe,trim,apron,pauldrons,beard,hairstyle,quiver,shield,rune,necklace}
@@ -1126,12 +1131,310 @@ function drawHumanoid(g,sx,sy,o){
   const armSw=Math.sin((o.step||0))*0.55;
   const bob = walking? Math.abs(Math.sin(o.step||0))*1.7*s
                      : (Math.sin(G.time*2.1+ph)*0.5+0.5)*1.0*s; // idle breathing
-  const flip = (o.dir && o.dir.x<0)?-1:1;
+  const oct = dirOct(o.dir);
+  const profile = (oct===0 || oct===4 || oct===-4);       // pure E/W: side view
+  const flip = profile ? (oct===0?1:-1)
+             : ((o.dir? (o.dir.x - o.dir.y) : 1) < 0 ? -1 : 1);
+  const away = (oct===-1 || oct===-2 || oct===-3);         // NE/N/NW: back to camera
+  const stowed = away && o.weapon && !(o.swing>0);         // weapon rides on the back when walking away
+  const sxd = o.dir? clamp(o.dir.x - o.dir.y, -1, 1) : 1;  // screen-space gaze components
+  const syd = o.dir? clamp(o.dir.x + o.dir.y, -1, 1) : 1;
   const skin=o.skin||'#d8a97a', shirt=o.shirt||'#55483a', pants=o.pants||'#3c3833';
   const OUT='rgba(18,12,8,0.55)';
+  const sleeve = o.robe? o.robe : shade(shirt,-8);
   g.save(); g.translate(sx,sy);
+  if(walking) g.rotate(flip*0.045); // lean into the stride
   if(o.hurt) g.globalAlpha = 0.55+0.45*Math.sin(G.time*40);
   g.lineJoin='round';
+
+  // ============ TRUE SIDE PROFILE (E/W) ============
+  // Purpose-built side-view anatomy: scissoring legs, sagittal arm swing,
+  // face on the silhouette edge, cloak trailing behind. Drawn facing +x,
+  // mirrored once via scale for west.
+  function profileFigure(){
+    const A = walking? Math.sin(o.step||0)*0.5 : 0.06;
+    const hipY=-13*s, shY=-27.5*s-bob;
+    const blink = ((G.time + ph*1.7) % 4.3) < 0.13;
+    g.save(); g.scale(flip,1);
+
+    // cloak streams out behind
+    if(o.cloak){
+      const sway=Math.sin((o.step||G.time*2))*1.5*s + (walking?1.6*s:0);
+      g.fillStyle=o.cloak;
+      g.beginPath();
+      g.moveTo(2*s,-28.5*s-bob);
+      g.quadraticCurveTo(-9*s-sway,-18*s, -11*s-sway*1.3, -2.5*s);
+      g.lineTo(-3*s,-3*s);
+      g.quadraticCurveTo(-4*s,-17*s, -1*s,-29*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle='rgba(0,0,0,0.16)';
+      g.beginPath(); g.moveTo(-2*s,-26*s-bob);
+      g.quadraticCurveTo(-7*s-sway,-14*s, -8*s-sway,-3*s);
+      g.lineTo(-4*s,-3.4*s); g.closePath(); g.fill();
+    }
+    // quiver angled on the back
+    if(o.quiver){
+      g.save(); g.translate(-3.4*s, -25*s-bob); g.rotate(0.6);
+      g.fillStyle='#5a3d24'; g.beginPath(); g.roundRect(-2.4*s,-2*s,4.8*s,12*s,2*s); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.strokeStyle='#c9b990'; g.lineWidth=1.3*s;
+      g.beginPath(); g.moveTo(-1*s,-2*s); g.lineTo(-2*s,-6.5*s);
+      g.moveTo(1.2*s,-2*s); g.lineTo(1.6*s,-7*s); g.stroke();
+      g.fillStyle='#e05648';
+      g.beginPath(); g.moveTo(-2*s,-6.5*s); g.lineTo(-3.4*s,-9*s); g.lineTo(-0.8*s,-8*s); g.closePath(); g.fill();
+      g.restore();
+    }
+    // shield slung across the back
+    if(o.shield){
+      g.save(); g.translate(-4.6*s, -20*s-bob); g.rotate(0.12);
+      g.fillStyle=o.shield; g.beginPath(); g.roundRect(-2.2*s,-6.5*s,4.4*s,13*s,2*s); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.strokeStyle='#c9a24e'; g.beginPath(); g.arc(0,0,1.5*s,0,TAU); g.stroke();
+      g.restore();
+    }
+
+    const leg=(ang,dark)=>{
+      g.save(); g.translate(0.5*s, hipY); g.rotate(ang);
+      g.fillStyle= dark? shade(pants,-16): pants;
+      g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,12.5*s,1.8*s); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle= dark? '#1f170f' : '#2e2318';
+      g.beginPath(); g.roundRect(-2*s,9.9*s,5.4*s,3*s,1.4*s); g.fill(); g.stroke();
+      g.restore();
+    };
+    const arm=(ang,dark)=>{
+      g.save(); g.translate(0.8*s, shY+1.5*s); g.rotate(ang);
+      g.fillStyle= dark? shade(sleeve,-18): sleeve;
+      g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,9*s,1.7*s); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle= dark? shade(skin,-20): skin;
+      g.beginPath(); g.arc(0,10*s,2.4*s,0,TAU); g.fill(); g.stroke();
+      g.restore();
+    };
+
+    // far limbs first, in shadow
+    arm(A*0.9, true);
+    if(!o.robe) leg(-A, true);
+
+    // torso: robe or tunic with a forward chest line
+    if(o.robe){
+      const hem=Math.sin(o.step||0)*1.6*s;
+      g.fillStyle='#241b12';
+      g.beginPath(); g.ellipse(-1.8*s,-1.4*s,2.6*s,1.6*s,0,0,TAU); g.fill();
+      g.fillStyle=o.robe;
+      g.beginPath();
+      g.moveTo(-4.5*s,-30*s-bob);
+      g.quadraticCurveTo(-7.5*s,-14*s, -6.5*s-hem, -2*s);
+      g.lineTo(6*s-hem,-2*s);
+      g.quadraticCurveTo(7*s,-14*s, 4.5*s,-30*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+      g.fillStyle='rgba(0,0,0,0.14)';
+      g.beginPath(); g.moveTo(-4.5*s,-30*s-bob);
+      g.quadraticCurveTo(-7.5*s,-14*s,-6.5*s-hem,-2*s);
+      g.lineTo(-1*s,-2*s); g.lineTo(-0.5*s,-30*s-bob); g.closePath(); g.fill();
+      if(o.trim){ g.strokeStyle=o.trim; g.lineWidth=1.1*s;
+        g.beginPath(); g.moveTo(5.2*s-hem,-3.4*s); g.lineTo(-5.6*s-hem,-3.4*s); g.stroke(); }
+      if(o.rune){ const pl=0.6+0.4*Math.sin(G.time*3+ph);
+        g.fillStyle='rgba(127,212,255,'+(0.5*pl)+')';
+        g.beginPath(); g.arc(3*s,-21*s-bob,1.6*s,0,TAU); g.fill(); }
+      g.fillStyle='#241b12';
+      g.beginPath(); g.ellipse(2.6*s,-1.2*s,2.7*s,1.7*s,0,0,TAU); g.fill();
+    } else {
+      g.fillStyle=shirt;
+      g.beginPath();
+      g.moveTo(-3.8*s,-28.5*s-bob);
+      g.quadraticCurveTo(-5.2*s,-21*s, -4.2*s, hipY+1.5*s);
+      g.lineTo(4.6*s, hipY+1.5*s);
+      g.quadraticCurveTo(5.9*s,-22*s, 4.2*s,-28.5*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle='rgba(0,0,0,0.15)';
+      g.beginPath(); g.moveTo(-3.8*s,-28.5*s-bob);
+      g.quadraticCurveTo(-5.2*s,-21*s,-4.2*s,hipY+1.5*s);
+      g.lineTo(-0.4*s,hipY+1.5*s); g.lineTo(-0.4*s,-28.5*s-bob); g.closePath(); g.fill();
+      g.fillStyle='#241b12';
+      g.beginPath(); g.roundRect(-4.2*s,hipY-1.6*s,8.8*s,2.2*s,1*s); g.fill();
+      g.fillStyle='#c9a24e'; g.fillRect(1*s,hipY-1.3*s,1.6*s,1.6*s);
+      if(o.apron){
+        g.fillStyle=o.apron;
+        g.beginPath(); g.moveTo(2.2*s,-26*s-bob);
+        g.quadraticCurveTo(5.8*s,-24*s, 5.4*s,-12.5*s);
+        g.lineTo(2.4*s,-12*s); g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      }
+      if((o.armor||0)>=1){
+        g.fillStyle='#8f96a2';
+        g.beginPath();
+        g.moveTo(-2.8*s,-28*s-bob);
+        g.quadraticCurveTo(-4.4*s,-21*s,-3.4*s,-14.5*s);
+        g.lineTo(4.4*s,-14.5*s);
+        g.quadraticCurveTo(6*s,-22*s,3.6*s,-28*s-bob);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+        g.strokeStyle='rgba(255,255,255,0.22)'; g.lineWidth=1.2*s;
+        g.beginPath(); g.moveTo(3.8*s,-26*s-bob); g.quadraticCurveTo(5*s,-21*s,4*s,-16*s); g.stroke();
+        g.fillStyle='#6d7480';
+        g.beginPath(); g.roundRect(-3.2*s,-14.5*s,3.6*s,3.4*s,1*s);
+        g.roundRect(0.8*s,-14.5*s,3.6*s,3.4*s,1*s); g.fill();
+      }
+    }
+    if(o.pauldrons || (o.armor||0)>=1){
+      g.fillStyle='#9aa3b0';
+      g.beginPath(); g.arc(1*s, shY-0.5*s, 4*s, Math.PI*0.9, Math.PI*2.1); g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+    }
+
+    // near limbs
+    if(!o.robe) leg(A, false);
+    if(!o.weapon) arm(-A*0.9, false);
+
+    // head: skull, jaw, ear, and the face on the leading edge
+    g.fillStyle=skin;
+    g.fillRect(-0.4*s,-32*s-bob,2.6*s,3.4*s); // neck
+    g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.6*s,0,TAU); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+    g.beginPath(); // jaw/chin wedge
+    g.moveTo(7.2*s,-36.5*s-bob);
+    g.quadraticCurveTo(7.8*s,-32.6*s-bob, 3.2*s,-31.4*s-bob);
+    g.quadraticCurveTo(0.6*s,-31.8*s-bob, 0.2*s,-33.5*s-bob);
+    g.closePath(); g.fillStyle=skin; g.fill();
+    g.strokeStyle='rgba(30,20,12,0.3)'; g.lineWidth=0.8*s;
+    g.beginPath(); g.arc(0.4*s,-37.6*s-bob,1.5*s,-0.9,1.6); g.stroke(); // ear
+    // nose on the edge
+    g.fillStyle=skin;
+    g.beginPath();
+    g.moveTo(8.2*s,-39*s-bob);
+    g.quadraticCurveTo(10.4*s,-37.4*s-bob, 8*s,-36*s-bob);
+    g.closePath(); g.fill();
+    g.strokeStyle='rgba(30,20,12,0.4)'; g.lineWidth=0.9*s;
+    g.beginPath(); g.moveTo(8.4*s,-39*s-bob);
+    g.quadraticCurveTo(10*s,-37.4*s-bob, 8.1*s,-36.2*s-bob); g.stroke();
+    // single leading eye + brow
+    if(blink){
+      g.strokeStyle='#241a10'; g.lineWidth=1.1*s;
+      g.beginPath(); g.moveTo(3*s,-38.6*s-bob); g.lineTo(5.6*s,-38.6*s-bob); g.stroke();
+    } else {
+      g.fillStyle='#241a10';
+      g.beginPath(); g.ellipse(4.4*s,-38.6*s-bob,1.15*s,1.5*s,0,0,TAU); g.fill();
+      g.fillStyle='rgba(255,255,255,0.85)';
+      g.beginPath(); g.arc(4.85*s,-39*s-bob,0.4*s,0,TAU); g.fill();
+    }
+    g.strokeStyle='rgba(30,20,12,0.55)'; g.lineWidth=0.9*s;
+    g.beginPath(); g.moveTo(2.9*s,-40.9*s-bob); g.lineTo(5.9*s,-41.1*s-bob); g.stroke();
+    // mouth notch on the edge
+    g.strokeStyle='rgba(90,45,30,0.6)'; g.lineWidth=0.8*s;
+    g.beginPath(); g.moveTo(6.6*s,-34.6*s-bob); g.lineTo(7.9*s,-34.9*s-bob); g.stroke();
+    // warm rim light from the sun side
+    const rim=0.22*(1-nightAmount()*0.75);
+    if(rim>0.03){
+      g.strokeStyle='rgba(255,225,170,'+rim+')'; g.lineWidth=1.6*s;
+      g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.6*s,-Math.PI*0.55,Math.PI*0.1); g.stroke();
+    }
+    // hair mass sweeps the back of the skull
+    const helm2=(o.armor||0)>=2;
+    if(!helm2 && o.hairstyle!=='bald' && o.hat!=='hood'){
+      g.fillStyle=o.hair||'#3a2a1a';
+      g.beginPath();
+      g.moveTo(5.8*s,-44*s-bob);
+      g.quadraticCurveTo(1*s,-47.6*s-bob, -5*s,-44*s-bob);
+      g.quadraticCurveTo(-7.6*s,-40*s-bob, -6.2*s,-33.6*s-bob);
+      g.quadraticCurveTo(-3.4*s,-31.6*s-bob, -3*s,-35*s-bob);
+      g.quadraticCurveTo(-2*s,-42*s-bob, 3*s,-42.6*s-bob);
+      g.quadraticCurveTo(5.4*s,-42.8*s-bob, 5.8*s,-44*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle=shade(o.hair||'#3a2a1a',16);
+      g.beginPath(); g.arc(-1*s,-44*s-bob,3.4*s,Math.PI*1.05,Math.PI*1.8); g.fill();
+      if(o.hairstyle==='long'){
+        g.fillStyle=o.hair||'#3a2a1a';
+        g.beginPath();
+        g.moveTo(-5.6*s,-36*s-bob);
+        g.quadraticCurveTo(-7.4*s,-28*s, -5.6*s,-22*s-bob*0.5);
+        g.quadraticCurveTo(-4*s,-24*s, -3.6*s,-31*s-bob);
+        g.closePath(); g.fill(); g.strokeStyle=OUT; g.stroke();
+      }
+      if(o.hairstyle==='bun'){
+        g.fillStyle=o.hair||'#3a2a1a';
+        g.beginPath(); g.arc(-7*s,-40*s-bob,2.7*s,0,TAU); g.fill();
+        g.strokeStyle=OUT; g.stroke();
+      }
+    } else if(!helm2 && o.hairstyle==='bald' && o.hat!=='hood'){
+      g.fillStyle='rgba(255,255,255,0.14)';
+      g.beginPath(); g.arc(0,-42.5*s-bob,3.6*s,Math.PI*1.1,Math.PI*1.7); g.fill();
+    }
+    // beard wraps the jaw
+    if(o.beard){
+      g.fillStyle=o.beard;
+      g.beginPath();
+      g.moveTo(7*s,-35.8*s-bob);
+      g.quadraticCurveTo(8*s,-31*s-bob, 3*s,(o.beardLong? -26.5 : -29.5)*s-bob);
+      g.quadraticCurveTo(-0.5*s,-30.5*s-bob, -0.5*s,-34*s-bob);
+      g.quadraticCurveTo(3*s,-32.4*s-bob, 7*s,-35.8*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+    }
+    // headwear
+    if(helm2){
+      g.fillStyle='#9aa3b0';
+      g.beginPath(); g.arc(1.2*s,-39.5*s-bob,7.9*s,Math.PI*0.95,Math.PI*2.12); g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle='#8f96a2'; g.fillRect(7.4*s,-41.5*s-bob,1.7*s,5.4*s); // nasal guard
+      g.strokeStyle='rgba(255,255,255,0.25)'; g.lineWidth=1;
+      g.beginPath(); g.arc(1.2*s,-39.5*s-bob,6.6*s,Math.PI*1.2,Math.PI*1.7); g.stroke();
+    } else if(o.hat==='hood'){
+      g.fillStyle=o.cloak||'#4a4238';
+      g.beginPath();
+      g.moveTo(7.6*s,-41*s-bob);
+      g.quadraticCurveTo(3*s,-49*s-bob, -5*s,-46*s-bob);
+      g.quadraticCurveTo(-9.4*s,-40*s-bob, -5.6*s,-31.4*s-bob);
+      g.quadraticCurveTo(-1*s,-29.4*s-bob, 2.6*s,-31.4*s-bob);
+      g.quadraticCurveTo(-1.4*s,-34*s-bob, 0*s,-40*s-bob);
+      g.quadraticCurveTo(1.4*s,-43.4*s-bob, 7.6*s,-41*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle='rgba(0,0,0,0.30)';
+      g.beginPath(); g.moveTo(0.4*s,-40.6*s-bob);
+      g.quadraticCurveTo(-1*s,-35*s-bob, 2.2*s,-31.8*s-bob);
+      g.quadraticCurveTo(0.6*s,-36*s-bob, 2*s,-40*s-bob); g.closePath(); g.fill();
+    } else if(o.hat==='straw'){
+      g.fillStyle='#c9b06a';
+      g.beginPath(); g.ellipse(0.6*s,-43.4*s-bob,10.4*s,2.5*s,-0.06,0,TAU); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.beginPath(); g.arc(0.8*s,-43.6*s-bob,5.4*s,Math.PI,0); g.closePath(); g.fill(); g.stroke();
+    } else if(o.hat==='wizard'){
+      const hc=o.robe||'#2e3b5e';
+      g.fillStyle=hc;
+      g.beginPath(); g.ellipse(0.6*s,-43.6*s-bob,8.8*s,2.2*s,-0.05,0,TAU); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.beginPath();
+      g.moveTo(-4.4*s,-44*s-bob); g.lineTo(4.8*s,-44*s-bob);
+      g.quadraticCurveTo(1.4*s,-52*s-bob, -3.6*s,-56*s-bob);
+      g.quadraticCurveTo(-2.4*s,-50*s-bob, -4.4*s,-44*s-bob);
+      g.closePath(); g.fill(); g.stroke();
+    } else if(o.hat==='crown'){
+      g.fillStyle='#c9a24e';
+      g.beginPath(); g.roundRect(-5.6*s,-46*s-bob,12.4*s,2.6*s,0.8*s); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.beginPath();
+      g.moveTo(-4.6*s,-46*s-bob); g.lineTo(-3.4*s,-49*s-bob); g.lineTo(-2.2*s,-46*s-bob);
+      g.moveTo(-0.2*s,-46*s-bob); g.lineTo(1*s,-49.6*s-bob); g.lineTo(2.2*s,-46*s-bob);
+      g.moveTo(4.2*s,-46*s-bob); g.lineTo(5.4*s,-49*s-bob); g.lineTo(6.6*s,-46*s-bob);
+      g.fill(); g.stroke();
+      g.fillStyle='#e05648'; g.beginPath(); g.arc(1*s,-44.8*s-bob,0.9*s,0,TAU); g.fill();
+    } else if(o.hat==='circlet'){
+      g.strokeStyle='#c9a24e'; g.lineWidth=1.4*s;
+      g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.9*s,Math.PI*1.08,Math.PI*1.92); g.stroke();
+    }
+    g.restore();
+  }
+  if(profile){
+    profileFigure();
+    if(o.weapon) drawWeaponArm(flip*3.2*s);
+    g.restore();
+    return;
+  }
 
   // quiver on the back
   if(o.quiver){
@@ -1163,6 +1466,55 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.moveTo(-2*s,-26*s-bob); g.lineTo(-4*s+sway,-4*s); g.lineTo(1*s+sway,-4*s); g.closePath(); g.fill();
   }
 
+  if(stowed){
+    // weapon slung across the back while walking away
+    g.save(); g.translate(-4*s, -28*s - bob); g.rotate(-0.55);
+    if(o.weapon==='sword'){
+      const wt = o.wtier==null? 1 : o.wtier;
+      const bl = (wt===2? 17.5 : wt===1? 15 : 12.5)*s;
+      const bc = wt===2? '#e9eef6' : wt===1? '#d4d9e0' : '#a9a292';
+      const cc = wt===2? '#b9c6da' : wt===1? '#9aa1ab' : '#7e786a';
+      g.fillStyle= wt===0? '#6e5a40' : '#8a6238'; g.fillRect(-1.4*s, 2*s, 2.8*s, 5*s);
+      if(wt===2){ g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,7.6*s,1.6*s,0,TAU); g.fill(); }
+      else if(wt===1){ g.fillStyle='#c9a24e'; g.beginPath(); g.arc(0,7.6*s,1.5*s,0,TAU); g.fill(); }
+      g.fillStyle= wt===2? '#c9a24e' : '#8a6238'; g.fillRect(-3.6*s, 0.4*s, 7.2*s, 2.2*s);
+      g.fillStyle=bc; g.fillRect(-1.4*s, 0.4*s-bl, 2.8*s, bl);
+      g.fillStyle=cc; g.fillRect(0, 0.4*s-bl, 1.4*s, bl);
+      if(wt===0){ g.fillStyle='rgba(96,70,48,0.55)';
+        g.fillRect(-1.4*s, 0.4*s-bl*0.5, 0.9*s, 1.4*s); g.fillRect(0.5*s, 0.4*s-bl*0.8, 0.8*s, 1.2*s); }
+      if(wt===2){ g.strokeStyle='rgba(255,170,90,0.4)'; g.lineWidth=0.8*s;
+        g.beginPath(); g.moveTo(0,0); g.lineTo(0,0.4*s-bl*0.8); g.stroke(); }
+      g.beginPath(); g.moveTo(-1.4*s,0.4*s-bl); g.lineTo(0,0.4*s-bl-3.4*s); g.lineTo(1.4*s,0.4*s-bl); g.closePath();
+      g.fillStyle=bc; g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.strokeRect(-1.4*s,0.4*s-bl,2.8*s,bl);
+    } else if(o.weapon==='axe' || o.weapon==='pick'){
+      g.fillStyle='#8a6238'; g.fillRect(-1.3*s,-13*s,2.6*s,20*s);
+      g.strokeStyle=OUT; g.lineWidth=1; g.strokeRect(-1.3*s,-13*s,2.6*s,20*s);
+      if(o.weapon==='axe'){
+        g.fillStyle='#b8bec8'; g.beginPath();
+        g.moveTo(0,-13*s); g.quadraticCurveTo(7*s,-11.5*s,5.6*s,-5.5*s); g.lineTo(0,-7*s); g.closePath(); g.fill();
+      } else {
+        g.strokeStyle='#b8bec8'; g.lineWidth=2.6*s;
+        g.beginPath(); g.arc(0,-9*s,6*s,Math.PI*1.15,Math.PI*1.85); g.stroke();
+      }
+    } else if(o.weapon==='bow'){
+      g.strokeStyle='#6e4a2b'; g.lineWidth=2.4*s;
+      g.beginPath(); g.arc(0,-3*s,10*s,-Math.PI*0.45,Math.PI*0.45); g.stroke();
+      g.strokeStyle='#e8e2d2'; g.lineWidth=1;
+      g.beginPath();
+      g.moveTo(10*s*Math.cos(-Math.PI*0.45), -3*s+10*s*Math.sin(-Math.PI*0.45));
+      g.lineTo(10*s*Math.cos( Math.PI*0.45), -3*s+10*s*Math.sin( Math.PI*0.45)); g.stroke();
+    } else if(o.weapon==='staff'){
+      g.fillStyle='#4f3520'; g.fillRect(-1.3*s,-17*s,2.6*s,26*s);
+      g.strokeStyle=OUT; g.lineWidth=1; g.strokeRect(-1.3*s,-17*s,2.6*s,26*s);
+      g.fillStyle='rgba(160,220,255,0.25)'; g.beginPath(); g.arc(0,-19*s,5.5*s,0,TAU); g.fill();
+      g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-19*s,3.2*s,0,TAU); g.fill();
+    } else if(o.weapon==='rod'){
+      g.strokeStyle='#8a6238'; g.lineWidth=2*s;
+      g.beginPath(); g.moveTo(-1*s,6*s); g.lineTo(2.5*s,-18*s); g.stroke();
+    }
+    g.restore();
+  }
   if(o.robe){
     // full-length robe: swaying hem, feet peeking beneath
     const hem=Math.sin(o.step||0)*1.4*s;
@@ -1314,7 +1666,6 @@ function drawHumanoid(g,sx,sy,o){
   }
 
   // arms
-  const sleeve = o.robe? o.robe : shade(shirt,-8);
   const drawArm=(shx,phase)=>{
     g.save(); g.translate(shx,-27.5*s-bob); g.rotate(phase);
     g.fillStyle=sleeve;
@@ -1334,7 +1685,7 @@ function drawHumanoid(g,sx,sy,o){
     g.restore();
   };
   drawArm(-8.6*s, walking? armSw:0.12);
-  if(!o.weapon) drawArm( 8.6*s, walking? -armSw:-0.12);
+  if(!o.weapon || stowed) drawArm( 8.6*s, walking? -armSw:-0.12);
 
   // round shield on the off-hand
   if(o.shield){
@@ -1434,7 +1785,6 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.arc(-2.4*s,-44*s-bob,4.6*s,Math.PI*1.05,Math.PI*1.75); g.fill();
   }
   // beard
-  const away = o.dir ? (o.dir.x + o.dir.y) < -0.35 : false; // facing up-screen = back to camera
   if(o.beard && !away){
     g.fillStyle=o.beard;
     g.beginPath();
@@ -1472,10 +1822,29 @@ function drawHumanoid(g,sx,sy,o){
     }
   } else {
     // face: small almond eyes with clamped gaze, blinking, soft brows, hint of a mouth
-    const ex = (o.dir? clamp(o.dir.x,-1,1):0)*1.2*s, ey = (o.dir? clamp(o.dir.y,-1,1):0)*0.9*s;
+    const ex = sxd*(profile?2.0:1.2)*s, ey = syd*0.9*s;
     const blink = ((G.time + ph*1.7) % 4.3) < 0.13;
     g.fillStyle='#241a10';
-    if(blink){
+    if(profile){
+      // side view: single leading eye, nose on the silhouette edge
+      const lx=flip*3.2*s+ex*0.4;
+      if(blink){
+        g.lineWidth=1.1*s; g.strokeStyle='#241a10';
+        g.beginPath(); g.moveTo(lx-1.1*s,-38*s-bob+ey); g.lineTo(lx+1.1*s,-38*s-bob+ey); g.stroke();
+      } else {
+        g.beginPath(); g.ellipse(lx,-38*s-bob+ey,1.15*s,1.55*s,0,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.85)';
+        g.beginPath(); g.arc(lx+flip*0.35*s,-38.5*s-bob+ey,0.4*s,0,TAU); g.fill();
+      }
+      g.fillStyle=skin;
+      g.beginPath();
+      g.moveTo(flip*7.8*s,-38.5*s-bob);
+      g.quadraticCurveTo(flip*10.2*s,-37*s-bob, flip*7.6*s,-35.6*s-bob);
+      g.closePath(); g.fill();
+      g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=0.8*s;
+      g.beginPath(); g.moveTo(flip*8.2*s,-38*s-bob);
+      g.quadraticCurveTo(flip*9.6*s,-37*s-bob, flip*8*s,-36*s-bob); g.stroke();
+    } else if(blink){
       g.lineWidth=1.1*s; g.strokeStyle='#241a10';
       g.beginPath();
       g.moveTo(-4.1*s+ex,-38*s-bob+ey); g.lineTo(-1.9*s+ex,-38*s-bob+ey);
@@ -1497,8 +1866,14 @@ function drawHumanoid(g,sx,sy,o){
     }
     g.strokeStyle='rgba(30,20,12,0.55)'; g.lineWidth=0.9*s;
     g.beginPath();
-    g.moveTo(-4.4*s+ex*0.6,-40.6*s-bob+ey*0.5); g.lineTo(-1.7*s+ex*0.6,-40.8*s-bob+ey*0.5);
-    g.moveTo( 1.7*s+ex*0.6,-40.8*s-bob+ey*0.5); g.lineTo( 4.4*s+ex*0.6,-40.6*s-bob+ey*0.5); g.stroke();
+    if(profile){
+      const bx=flip*3.2*s+ex*0.3;
+      g.moveTo(bx-1.4*s,-40.6*s-bob+ey*0.5); g.lineTo(bx+1.4*s,-40.8*s-bob+ey*0.5);
+    } else {
+      g.moveTo(-4.4*s+ex*0.6,-40.6*s-bob+ey*0.5); g.lineTo(-1.7*s+ex*0.6,-40.8*s-bob+ey*0.5);
+      g.moveTo( 1.7*s+ex*0.6,-40.8*s-bob+ey*0.5); g.lineTo( 4.4*s+ex*0.6,-40.6*s-bob+ey*0.5);
+    }
+    g.stroke();
     if(!o.beard){
       g.strokeStyle='rgba(90,45,30,0.6)'; g.lineWidth=0.8*s;
       g.beginPath(); g.moveTo(-1.4*s+ex*0.5,-33.6*s-bob+ey*0.4);
@@ -1507,9 +1882,10 @@ function drawHumanoid(g,sx,sy,o){
   }
 
   // weapon arm: shoulder-pivoting arm with the weapon socketed in the hand
-  if(o.weapon){
+  if(o.weapon && !stowed) drawWeaponArm(8.6*s*flip);
+  function drawWeaponArm(px){
     g.save();
-    g.translate(8.6*s*flip, -27.5*s - bob);
+    g.translate(px, -27.5*s - bob);
     g.scale(flip,1);
     const sw = o.swing||0;
     g.rotate(-0.15 + sw*1.9 + (walking? -armSw*0.35 : 0));
@@ -1525,17 +1901,49 @@ function drawHumanoid(g,sx,sy,o){
     const GRIP={sword:-2.5, axe:8, pick:8, bow:8, staff:9, rod:-2}[o.weapon]||0;
     g.translate(0, GRIP*s);
     if(o.weapon==='sword'){
-      g.fillStyle='#d4d9e0'; g.fillRect(-1.5*s,-20*s,3*s,18*s);
-      g.fillStyle='#9aa1ab'; g.fillRect(0,-20*s,1.5*s,18*s);
-      const gt=(G.time*0.8+ph)%4.6;
-      if(gt<0.3){ const ga=Math.sin(gt/0.3*Math.PI);
-        g.strokeStyle='rgba(255,255,255,'+(0.9*ga)+')'; g.lineWidth=1.6*s;
-        g.beginPath(); g.moveTo(-1.5*s,-19*s+gt*40*s); g.lineTo(1.5*s,-21*s+gt*40*s); g.stroke(); }
-      g.beginPath(); g.moveTo(-1.5*s,-20*s); g.lineTo(0,-24*s); g.lineTo(1.5*s,-20*s); g.closePath();
-      g.fillStyle='#d4d9e0'; g.fill();
-      g.strokeStyle='rgba(18,12,8,0.55)'; g.lineWidth=1; g.strokeRect(-1.5*s,-20*s,3*s,18*s);
-      g.fillStyle='#8a6238'; g.fillRect(-4*s,-3*s,8*s,3*s); g.fillRect(-1.5*s,0,3*s,5*s);
-      g.fillStyle='#c9a24e'; g.beginPath(); g.arc(0,5.4*s,1.6*s,0,TAU); g.fill(); }
+      const wt = o.wtier==null? 1 : o.wtier;
+      const bl = (wt===2? 21 : wt===1? 18 : 14.5)*s;                 // blade length grows with tier
+      const bc = wt===2? '#e9eef6' : wt===1? '#d4d9e0' : '#a9a292';  // worn grey → iron → bright steel
+      const cc = wt===2? '#b9c6da' : wt===1? '#9aa1ab' : '#7e786a';
+      const top=-2*s-bl;
+      g.fillStyle=bc; g.fillRect(-1.5*s,top,3*s,bl);
+      g.fillStyle=cc; g.fillRect(0,top,1.5*s,bl);
+      if(wt===0){ // notched, rust-bitten edge
+        g.fillStyle='rgba(96,70,48,0.55)';
+        g.fillRect(-1.5*s, top+bl*0.42, 1.0*s, 1.6*s);
+        g.fillRect( 0.6*s, top+bl*0.72, 0.9*s, 1.3*s);
+        g.fillRect(-0.6*s, top+bl*0.15, 0.8*s, 1.0*s);
+      }
+      if(wt===2){ // steel fuller with a faint ember rune-line
+        g.strokeStyle='rgba(255,170,90,'+(0.30+0.22*Math.sin(G.time*3+ph))+')';
+        g.lineWidth=0.9*s;
+        g.beginPath(); g.moveTo(0,-3.5*s); g.lineTo(0, top+bl*0.16); g.stroke();
+      }
+      if(wt>=1){
+        const gt=(G.time*(wt===2?1.35:0.8)+ph)%4.6;
+        if(gt<0.3){ const ga=Math.sin(gt/0.3*Math.PI);
+          g.strokeStyle='rgba(255,255,255,'+(0.9*ga)+')'; g.lineWidth=1.6*s;
+          g.beginPath(); g.moveTo(-1.5*s,top+1*s+gt*bl*2.2); g.lineTo(1.5*s,top-1*s+gt*bl*2.2); g.stroke(); }
+      }
+      g.beginPath(); g.moveTo(-1.5*s,top); g.lineTo(0,top-4*s); g.lineTo(1.5*s,top); g.closePath();
+      g.fillStyle=bc; g.fill();
+      g.strokeStyle='rgba(18,12,8,0.55)'; g.lineWidth=1; g.strokeRect(-1.5*s,top,3*s,bl);
+      if(wt===2){ // winged gold crossguard
+        g.fillStyle='#c9a24e';
+        g.beginPath(); g.moveTo(-5.5*s,-1.5*s); g.lineTo(-4*s,-4*s); g.lineTo(0,-3*s);
+        g.lineTo(4*s,-4*s); g.lineTo(5.5*s,-1.5*s); g.lineTo(0,-0.5*s); g.closePath(); g.fill();
+        g.strokeStyle='rgba(18,12,8,0.55)'; g.stroke();
+      } else {
+        g.fillStyle='#8a6238'; g.fillRect(-4*s,-3*s,8*s,3*s);
+      }
+      g.fillStyle= wt===0? '#6e5a40' : '#8a6238'; g.fillRect(-1.5*s,0,3*s,5*s);
+      if(wt===2){
+        const pp=0.7+0.3*Math.sin(G.time*4+ph);
+        g.fillStyle='rgba(255,154,60,'+(0.30*pp)+')'; g.beginPath(); g.arc(0,5.4*s,3.2*s,0,TAU); g.fill();
+        g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,5.4*s,1.7*s,0,TAU); g.fill();
+      } else if(wt===1){
+        g.fillStyle='#c9a24e'; g.beginPath(); g.arc(0,5.4*s,1.6*s,0,TAU); g.fill();
+      } }
     if(o.weapon==='axe'){ g.fillStyle='#8a6238'; g.fillRect(-1.5*s,-18*s,3*s,20*s);
       g.fillStyle='#b8bec8'; g.beginPath(); g.moveTo(0,-18*s); g.quadraticCurveTo(9*s,-16*s,7*s,-8*s); g.lineTo(0,-10*s); g.closePath(); g.fill(); }
     if(o.weapon==='pick'){ g.fillStyle='#8a6238'; g.fillRect(-1.5*s,-18*s,3*s,20*s);
@@ -1760,6 +2168,68 @@ const QUESTS = {
     log:'Speak with Bram at the forge, east of the village well.',
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, xp:{melee:30}}, unlocks:['sharpen','fish','harvest','cat','shells','springs'] },
+  // — Captain Brant's shipwright chain —
+  wreck:{ giver:'brant', title:'The Wrecked Tidewalker', kind:'gather', need:{wood:12, hardwood:6},
+    brief:'See her hull? Split like a walnut on Gull Reef. I need honest timber — twelve planks of common wood, and six lengths of hardwood from the deep-forest giants. Bring me that, and she floats again.',
+    log:'Gather 12 wood and 6 hardwood (from the largest forest trees) for the hull.',
+    doneText:'Aye, that\'s proper timber! I\'ll set to the hull this very tide.',
+    rw:{gold:30, xp:{woodcut:180}}, unlocks:['fittings'] },
+  fittings:{ giver:'brant', title:'Iron Fittings', kind:'gather', need:{bar:4},
+    brief:'A hull without iron is a coffin with sails. Four iron bars — Bram smelts them, two ore and a wood apiece. Nails, brackets, and a new anchor chain.',
+    log:'Bring 4 iron bars (Bram smelts each from 2 ore + 1 wood).',
+    doneText:'Good iron, well struck. She\'s watertight — now to fill her hold.',
+    rw:{gold:25, xp:{mining:150}}, unlocks:['provisions'] },
+  provisions:{ giver:'brant', title:'Provisions for the Voyage', kind:'gather', need:{bread:4, cookedfish:4, potion:2},
+    brief:'The strait\'s two days in a foul wind. Four loaves from Willa\'s hearth, four grilled fish, and two of Orin\'s tonics for luck. A full hold or no voyage.',
+    log:'Stock the hold: 4 bread, 4 grilled fish, 2 Ember Tonics.',
+    doneText:'A full hold and a mended hull! Now the only anchor left is your own unfinished business ashore.',
+    rw:{gold:30, xp:{fishing:150, farming:100}}, unlocks:['setsail'] },
+  setsail:{ giver:'brant', title:'Set Sail', kind:'special',
+    brief:'I don\'t weigh anchor while my passenger has debts of the heart ashore. Settle every last task on this isle — every single one — and we catch the morning tide to Greyharbor.',
+    log:'Complete every other quest on Emberwick Isle, then return to Captain Brant.',
+    doneText:'All squared away? Then stow your gear — the Tidewalker sails! Board her at the dock whenever you\'re ready.',
+    rw:{gold:50, xp:{melee:120, archery:120, magic:120}} },
+  // — village side work —
+  slimetide:{ giver:'bram', title:'Slime Tide', kind:'kill', kill:{slime:10},
+    brief:'Squashing four was a warning; they didn\'t listen. A whole tide of the wobbling things is welling up out east. Thin them properly — ten more — before they reach the wheat.',
+    log:'Defeat 10 slimes in the eastern meadows.',
+    doneText:'That\'s a proper culling. The meadow smells like a swamp, but it\'s OUR swamp.',
+    rw:{gold:22, xp:{melee:160}} },
+  masterwork:{ giver:'bram', title:'The Smith\'s Masterwork', kind:'gather', need:{ore:5, crystal:2, hardwood:2},
+    brief:'Before you leave this isle I mean to forge something worth remembering. Five ore, two ember crystals, two hardwood for the charcoal. Do this and I\'ll start you a stock of bars, free.',
+    log:'Bring Bram 5 iron ore, 2 ember crystals, and 2 hardwood.',
+    doneText:'Look at that heat! Take these bars — first fruits of the masterwork. The rest becomes something the mainland will hear about.',
+    rw:{gold:20, item:{bar:2}, xp:{mining:200}} },
+  wolffold:{ giver:'willa', title:'Wolves at the Fold', kind:'kill', kill:{wolf:6},
+    brief:'Six sets of tracks around the fold this morning. SIX. The cove pack\'s grown bold since the cold snap. Thin them before I lose a single lamb.',
+    log:'Hunt 6 wolves (the pine cove to the northeast, and the deep forest).',
+    doneText:'Six pelts\' worth of peace. The flock thanks you — loudly, at dawn, forever.',
+    rw:{gold:24, xp:{melee:120, archery:120}} },
+  feast:{ giver:'willa', title:'A Village Feast', kind:'gather', need:{bread:3, apple:3, fish:2},
+    brief:'Before you sail we\'re doing this PROPERLY: a farewell feast. Three loaves, three orchard apples, two fresh fish. I\'ll handle the rest — and no, you can\'t eat the ingredients on the way.',
+    log:'Gather the feast: 3 bread, 3 orchard apples, 2 fish.',
+    doneText:'Perfect! Tonight we eat like the harvest never ends. You\'ll be missed, you know.',
+    rw:{gold:26, xp:{farming:180}} },
+  echoes:{ giver:'orin', title:'Echoes of the Isle', kind:'special',
+    brief:'Three pages barely wet your feet, apprentice. The isle keeps at least seven echoes of its history — in homes, on stones, in places warm and cold. Read seven and you\'ll leave here knowing WHERE you\'ve been.',
+    log:'Read 7 lore writings across the isle (books, standing stones, the crypt...).',
+    doneText:'Seven echoes! You now know this island better than most who were born on it.',
+    rw:{gold:30, xp:{magic:220}} },
+  gravelord:{ giver:'orin', title:'The Gravelord Stirs', kind:'kill', kill:{gravelord:1},
+    brief:'The Hollow King had a herald — Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started.',
+    log:'Slay Gravelord Varek in the Old Ruins.',
+    doneText:'Varek, unmade. The ruins will finally hold nothing but memory. You\'ve the makings of a legend, you know.',
+    rw:{gold:45, xp:{melee:200, magic:150}} },
+  necklace:{ giver:'nia', title:'A Gift of the Sea', kind:'gather', need:{shell:6, pearl:1},
+    brief:'Mama\'s birthday is after you sail, and she always says the sea gives the best gifts. Six spiral shells and... a real PEARL? Fishers say they hide in the deep casts. Please?',
+    log:'Gather 6 spiral shells and 1 pearl (a rare catch while fishing).',
+    doneText:'A REAL PEARL! She\'s going to cry. Happy crying! You\'re my favorite person who isn\'t Mama.',
+    rw:{gold:35, xp:{fishing:200}} },
+  profit:{ giver:'maren', title:'A Tidy Profit', kind:'special',
+    brief:'Commerce keeps a village breathing, traveler. Sell twelve goods across my counter — fish, timber, pearls, whatever the isle yields — and I\'ll teach you the trick of mainland haggling.',
+    log:'Sell 12 items to Elder Maren.',
+    doneText:'Twelve sales, fairly struck! Here — and remember on the mainland: never take the first price.',
+    rw:{gold:40, xp:{farming:80, fishing:80}} },
   sharpen:{ giver:'bram', title:'Iron in the Fire', kind:'gather', need:{wood:5,stone:3},
     brief:'That rusty letter-opener of yours won\'t cut butter. Bring me 5 wood and 3 stone — there\'s a pine stand south of the village and a stone outcrop up the north road — and I\'ll forge you a proper iron sword.',
     log:'Bring Bram 5 wood and 3 stone.',
@@ -1813,6 +2283,8 @@ function spawnNPCs(){
       ['The well water tastes of iron. Always has.','Lanterns out by the dock mean rain, they say.','You walk like someone the island wanted.'],0.6),
     makeNPC('bram','Bram the Smith',54,58,{skin:'#d9a06a',hair:'#3a2a1c',shirt:'#8f4a3a',pants:'#3a3a40',hairstyle:'bald',beard:'#2c1f14',apron:'#4a3322'},
       ['A dull blade is a heavy blade.','Hear that ring? That\'s good iron talking.','Stone from the north road takes an edge best.'],0.4),
+    makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e'},
+      ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false),
     makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
       ['Fish bite best where the water ripples.','Lost three hooks to something big out there…','Salt cures fish and moods alike.'],0.5),
     makeNPC('willa','Willa the Farmer',60,60,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
@@ -1832,6 +2304,7 @@ const MOBDEF = {
   wolf:{hp:32, dmg:10, speed:3.4, aggro:6, xp:26, gold:[1,3], name:'Wolf'},
   skeleton:{hp:46, dmg:12, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
   archer:{hp:26, dmg:9, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
+  gravelord:{hp:150, dmg:14, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
   boss:{hp:320, dmg:18, speed:2.7, aggro:9, xp:220, gold:[30,40], name:'The Hollow King'},
   alpha:{hp:520, dmg:24, speed:3.6, aggro:8, xp:400, gold:[60,85], name:'Greymaw, the Alpha'}
 };
@@ -1898,12 +2371,16 @@ function questReady(id){
   if(q.kind==='special'){
     if(id==='harvest') return (P.prog.harvest||0) >= q.count;
     if(id==='cat') return P.petPip;
+    if(id==='echoes') return Object.keys(P.loreRead||{}).length>=7;
+    if(id==='profit') return (P.prog.profit||0)>=12;
+    if(id==='setsail') return isleQuestsSettled();
   }
   return false;
 }
 function acceptQuest(id){
   P.quests[id]='active'; P.prog[id]=0;
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
+  if(id==='gravelord') ensureGravelord(true);
   Snd.quest(); toast('<b style="color:var(--ember)">Quest accepted:</b> '+QUESTS[id].title);
   updateQuestUI();
 }
@@ -1921,6 +2398,7 @@ function completeQuest(id){
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
+  if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock — Greyharbor awaits'),1300);
   if(fresh.length){
     const who=[...new Set(fresh.map(u=>npcName(QUESTS[u].giver)))].join(' & ');
     setTimeout(()=>toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+who+'</b>.',4800),1400);
@@ -1977,7 +2455,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','slimetide','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -2373,7 +2851,7 @@ function refreshSkillsPanel(){
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','slimetide','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue; any=true;
@@ -2407,7 +2885,20 @@ function questProgressText(id){
   if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you — bring him to Nia!' : 'Search the Whisperwood';
   return '';
 }
+const ISLE_IDS=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','slimetide','masterwork','wolffold','feast','necklace','profit','echoes','gravelord'];
+function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
+const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], slimetide:['slimes'], masterwork:['skeletons'],
+  wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'] };
+function unlockSweep(){
+  for(const id in UNLOCK_AFTER){
+    if(!P.quests[id] && UNLOCK_AFTER[id].every(p=>qs(p)==='done')){
+      P.quests[id]='avail';
+      if(G.state==='play') toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+npcName(QUESTS[id].giver)+'</b>.',4200);
+    }
+  }
+}
 function questReadySweep(){
+  unlockSweep();
   P._rn=P._rn||{};
   for(const id in P.quests){
     if(P.quests[id]!=='active'){ delete P._rn[id]; continue; }
@@ -2423,7 +2914,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','slimetide','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
   let shown=0;
   for(const id of order){
     if(qs(id)!=='active' || shown>=2) continue; shown++;
@@ -2778,6 +3269,18 @@ function updatePlayer(dt){
   if(P.rollT>0){
     moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt);
     P.anim+=dt*16; P.moving=true;
+    P.stepT=(P.stepT||0)-dt;
+    if(P.stepT<=0 && !G.interior){
+      P.stepT=0.27;
+      const tt=tileAt(P.x|0,P.y|0);
+      if(tt>=T.SAND){
+        const col = tt===T.SAND? 'rgba(226,205,160,0.5)'
+                  : (tt===T.PATH||tt===T.SOIL)? 'rgba(150,120,90,0.5)'
+                  : 'rgba(120,140,88,0.42)';
+        for(let i=0;i<2;i++) G.parts.push({x:P.x+rnd(-0.15,0.15), y:P.y+rnd(-0.05,0.05),
+          vx:rnd(-0.4,0.4), vy:rnd(-0.5,-0.1), life:rnd(0.25,0.4), color:col, size:rnd(2,3.2), grav:0});
+      }
+    }
     if(Math.random()<0.6) G.parts.push({x:P.x,y:P.y,vx:-P.dir.x*0.8,vy:-P.dir.y*0.8,
       life:0.25,color:'rgba(210,200,175,0.5)',size:2.2});
   }
@@ -3405,6 +3908,30 @@ function drawDecor(b,s){
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : 30);
   cx.drawImage(S, s.x-S.width/2, s.y-S.height+ (b.kind==='boat'?18:10));
+  if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
+    const mx=s.x+2, mb=s.y-6;
+    cx.strokeStyle='#4f3a24'; cx.lineWidth=3;
+    cx.beginPath(); cx.moveTo(mx,mb); cx.lineTo(mx,mb-52); cx.stroke();
+    cx.strokeStyle='#3a2c1c'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(mx-16,mb-46); cx.lineTo(mx+16,mb-46); cx.stroke();
+    if(qs('setsail')==='done'){
+      const bil=Math.sin(G.time*1.6)*2.5;
+      cx.fillStyle='rgba(236,230,214,0.96)';
+      cx.beginPath();
+      cx.moveTo(mx-15,mb-45);
+      cx.quadraticCurveTo(mx-19-bil,mb-28, mx-13-bil,mb-12);
+      cx.lineTo(mx+14+bil*0.6,mb-14);
+      cx.quadraticCurveTo(mx+18,mb-30, mx+15,mb-45);
+      cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(60,45,25,0.5)'; cx.lineWidth=1.5; cx.stroke();
+      cx.strokeStyle='rgba(180,60,40,0.8)'; cx.lineWidth=2;
+      cx.beginPath(); cx.moveTo(mx-8,mb-44); cx.lineTo(mx-8-bil*0.4,mb-14); cx.stroke();
+    } else {
+      cx.fillStyle='#d8d2c0';
+      cx.beginPath(); cx.roundRect(s.x-14,mb-45,32,7,3); cx.fill();
+      cx.strokeStyle='rgba(60,45,25,0.5)'; cx.lineWidth=1; cx.stroke();
+    }
+  }
   if(b.kind==='forge'){ // smoke
     if(Math.random()<0.1) G.parts.push({x:b.x+0.55,y:b.y-2.6,vx:rnd(-0.1,0.2),vy:-0.6,life:1.6,color:'rgba(200,200,205,0.4)',size:5,grav:-0.2});
   }
@@ -3525,7 +4052,8 @@ function drawPlayer(s){
   look.armor=P.armor||0;
   if(P.weapon==='staff') look.armor=0; // robes over plate would be silly
   drawHumanoid(cx,s.x,s.y,{...look,
-    dir:P.dir, step:P.moving?P.anim:0, weapon:tool, swing:P.swing, hurt:P.hurtT>0});
+    dir:P.dir, step:P.moving?P.anim:0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
+    wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){
     const a0=Math.atan2((P.dir.x+P.dir.y)*(TH/2),(P.dir.x-P.dir.y)*(TW/2));
@@ -3895,6 +4423,7 @@ function addCrowsFor(){
 function genIsleAll(){
   genWorld(); bakeSolids(); placeObjects(); buildFoam();
   if(P.projects && P.projects.lanes) placeLaneLamps();
+  ensureGravelord(false);
   spawnNPCs(); spawnMobs();
   addCrowsFor();
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
@@ -4243,12 +4772,25 @@ function openChest(b){
   setTimeout(autoSave,300);
 }
 
+function ensureGravelord(announce){
+  if(G.worldId!=='isle' || qs('gravelord')!=='active') return;
+  if(G.mobs.some(m=>m.kind==='gravelord' && !m.dead)) return;
+  const m=spawnMob('gravelord', Math.round(ZONES.ruins.x), Math.round(ZONES.ruins.y));
+  m.elite=true;
+  if(announce) toast('A grave chill rises from the <b>Old Ruins</b> to the north...',5000);
+}
 /* ---------- sailing ---------- */
 let sailing=false;
 function attemptSail(){
   if(sailing) return;
-  if(G.worldId==='isle' && qs('king')!=='done'){
-    toast('Finn shakes his head. <b>"Strait\'s cursed while the Hollow King stands. Fell him first — then we sail."</b>',4600);
+  if(G.worldId==='isle' && qs('setsail')!=='done'){
+    if(qs('king')!=='done'){
+      toast('Captain Brant eyes the tower. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4600);
+    } else {
+      const left=ISLE_IDS.filter(id=>qs(id)!=='done').length;
+      if(left>0) toast('Captain Brant shakes his head. <b>"Not till every task ashore is settled."</b> '+left+' quest'+(left===1?'':'s')+' remain — check the log (📜).',5400);
+      else toast('The hold is packed. <b>Speak with Captain Brant</b> to complete <b>Set Sail</b> first.',4800);
+    }
     return;
   }
   sailing=true;
@@ -4691,6 +5233,7 @@ function loadCode(str){
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);
   if(P.projects.lanes) placeLaneLamps();
+  ensureGravelord(false);
   if(d.world==='main'){
     switchWorld('main');
     applyWorldFlags(d.flags&&d.flags.main);
@@ -5158,7 +5701,8 @@ function sellMenu(npc){
     if(n<=0) continue;
     const total=n*priceOf(k);
     btns.push({label:'Sell '+n+' '+ITEMS[k].name.toLowerCase()+' — <b style="color:#ffd76a">'+total+'g</b>',
-      fn:()=>{ take(k,n); giveGold(total); sellMenu(npc); }});
+      fn:()=>{ take(k,n); giveGold(total);
+        P.prog.profit=(P.prog.profit||0)+n; updateQuestUI(); sellMenu(npc); }});
   }
   if(!btns.length) btns.push({label:'Nothing in the satchel worth coin', ghost:true, fn:()=>buildDialogContent(npc)});
   btns.push({label:'Back',ghost:true,fn:()=>buildDialogContent(npc)});
