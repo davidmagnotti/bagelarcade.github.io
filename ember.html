@@ -128,6 +128,16 @@
   .btn:active{transform:translateY(2px);
     box-shadow: inset 0 2px 6px rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.5);}
   .btn.ghost{filter:brightness(.8) saturate(.8);}
+  .btn.gold{border-color:#6b5218;background:
+    radial-gradient(circle at 22% 16%, rgba(255,235,180,.16), transparent 42%),
+    radial-gradient(circle at 80% 88%, rgba(0,0,0,.25), transparent 46%),
+    linear-gradient(160deg,#8a713a 0%,#6e5827 45%,#524013 100%);
+    color:#ffe9b0;animation:btnPulse 2.4s ease-in-out infinite;}
+  .objbox{margin-top:8px;padding:7px 10px;border-left:3px solid var(--ember);
+    background:rgba(255,154,60,.08);border-radius:0 8px 8px 0;font-size:12px;color:#ffe0b8;}
+  .objbox b{color:var(--ember);}
+  .rwline{margin-top:6px;font-size:11px;color:#c9e0a0;}
+  .qcard .qp.ready, .qlogItem .qp.ready{color:#ffd76a;text-shadow:0 0 8px rgba(255,215,106,.5);}
   /* dialog */
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
@@ -1794,6 +1804,7 @@ function spawnMobs(){
    ===================================================================== */
 function give(item,n){ P.inv[item]=(P.inv[item]||0)+n;
   if(typeof bumpStat==='function') bumpStat(item,n);
+  if(typeof questReadySweep==='function' && G.state==='play') questReadySweep();
   addFloat('+'+n+' '+ITEMS[item].name, P.x, P.y-1.4, '#ffe9a8'); Snd.pickup();
   refreshUI(); updateQuestUI(); }
 function giveQuiet(item,n){ P.inv[item]=(P.inv[item]||0)+n; refreshUI(); }
@@ -1850,7 +1861,12 @@ function completeQuest(id){
   if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 — bolts cost 8 mana.'); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
-  (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]) P.quests[u]='avail'; });
+  const fresh=[];
+  (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
+  if(fresh.length){
+    const who=[...new Set(fresh.map(u=>npcName(QUESTS[u].giver)))].join(' & ');
+    setTimeout(()=>toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+who+'</b>.',4800),1400);
+  }
   if(id==='cat'){ P.petPip=false; G.cat.following=false; G.cat.homebound=true; }
   setTimeout(autoSave,300);
   if(id==='king') setTimeout(()=>toast('The strait is calm at last. <b style="color:var(--ember)">Finn\'s boat</b> at the dock can sail for <b>Greyharbor</b>.',6000),2600);
@@ -1870,6 +1886,16 @@ function killCredit(kind){
   updateQuestUI();
 }
 function npcName(id){ const n=G.npcs.find(n=>n.id===id); return n?n.name:id; }
+function rewardText(q){
+  const rw=q.rw||{}, parts=[];
+  if(rw.gold) parts.push('<b style="color:#ffd76a">'+rw.gold+' gold</b>');
+  if(rw.item) for(const it in rw.item){ if(ITEMS[it]) parts.push(rw.item[it]+'× '+ITEMS[it].name); }
+  if(rw.sword) parts.push('<b style="color:var(--ember)">the Iron Sword</b>');
+  if(rw.bow) parts.push('<b style="color:var(--ember)">the Hunting Bow</b>');
+  if(rw.staff) parts.push('<b style="color:var(--ember)">the Fire Staff</b>');
+  if(rw.xp){ const sk=Object.keys(rw.xp); parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
+  return parts.length? '<div class="rwline">Reward: '+parts.join(' · ')+'</div>' : '';
+}
 function questTargetPos(id){
   const q=QUESTS[id];
   if(qs(id)==='active' && !questReady(id)){
@@ -1942,7 +1968,7 @@ function setDialog(text,btns){
   const bx=document.getElementById('dbtns'); bx.innerHTML='';
   btns.forEach(b=>{
     const el=document.createElement('button');
-    el.className='btn'+(b.ghost?' ghost':''); el.innerHTML=b.label;
+    el.className='btn'+(b.ghost?' ghost':'')+(b.cls?' '+b.cls:''); el.innerHTML=b.label;
     el.onclick=()=>b.fn(); bx.appendChild(el);
   });
 }
@@ -1959,8 +1985,9 @@ function buildDialogContent(npc){
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && questReady(id)){
       const q=QUESTS[id];
-      setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles — let\'s see them!' : 'You found him?!') +'”',
-        [{label:'Turn in: '+q.title, fn:()=>{
+      setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles — let\'s see them!' : 'You found it?!') +'”'
+        + rewardText(q),
+        [{label:'✓ Complete — '+q.title, cls:'gold', fn:()=>{
             completeQuest(id);
             setDialog('“'+q.doneText+'”',[{label:'Continue',fn:()=>buildDialogContent(npc)}]);
         }},{label:'Not yet',ghost:true,fn:closeDialog}]);
@@ -1971,16 +1998,26 @@ function buildDialogContent(npc){
   for(const id in QUESTS){
     if(P.quests[id]==='avail' && QUESTS[id].giver===npc.id){
       const q=QUESTS[id];
-      setDialog('<b style="color:var(--ember)">'+q.title+'</b><br>“'+q.brief+'”',
-        [{label:'Accept', fn:()=>{ acceptQuest(id); closeDialog(); }},
+      setDialog('<b style="color:var(--ember)">'+q.title+'</b><br>“'+q.brief+'”'
+        + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
+        [{label:'! Accept quest', cls:'gold', fn:()=>{
+            acceptQuest(id);
+            setDialog('“Good. I\'ll be here.”'
+              + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
+              + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
+              [{label:'Off I go',fn:closeDialog}]);
+          }},
          {label:'Later', ghost:true, fn:closeDialog}]);
       return;
     }
   }
-  // 4) active quest reminder from giver
+  // 4) active quest reminder from giver — restate objective + live progress
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && QUESTS[id].kind!=='talk'){
-      setDialog('“'+QUESTS[id].log+'”', shopButtons(npc,[{label:'On it',ghost:true,fn:closeDialog}]));
+      setDialog('“How goes it?”'
+        + '<div class="objbox"><b>'+QUESTS[id].title+':</b> '+QUESTS[id].log
+        + '<br><span style="color:#9be07f">'+questProgressText(id)+'</span></div>',
+        shopButtons(npc,[{label:'On it',ghost:true,fn:closeDialog}]));
       return;
     }
   }
@@ -2278,7 +2315,7 @@ function refreshQuestLog(){
     box.insertAdjacentHTML('beforeend','<div class="qlogItem'+(st==='done'?' done':'')+'">'+
       '<div class="qt">'+q.title+(st==='done'?' ✓':'')+'</div>'+
       '<div class="qd">'+q.log+'</div>'+
-      (st==='active'? '<div class="qp">'+questProgressText(id)+'</div>':'')+
+      (st==='active'? '<div class="qp'+(questReady(id)?' ready':'')+'">'+questProgressText(id)+'</div>':'')+
       '</div>');
   }
   const avail = order.filter(id=>qs(id)==='avail');
@@ -2304,7 +2341,21 @@ function questProgressText(id){
   if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you — bring him to Nia!' : 'Search the Whisperwood';
   return '';
 }
+function questReadySweep(){
+  P._rn=P._rn||{};
+  for(const id in P.quests){
+    if(P.quests[id]!=='active'){ delete P._rn[id]; continue; }
+    const r=questReady(id);
+    if(r && !P._rn[id]){
+      P._rn[id]=1;
+      const q=QUESTS[id];
+      toast('<b style="color:#ffd76a">✓ Quest ready:</b> '+q.title+' — return to <b>'+npcName(q.giver)+'</b>!',4800);
+      Snd.quest();
+    } else if(!r) delete P._rn[id];
+  }
+}
 function updateQuestUI(){
+  questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
   const order=['welcome','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','bounty','alpha','embers','mossbrew'];
   let shown=0;
@@ -2312,7 +2363,7 @@ function updateQuestUI(){
     if(qs(id)!=='active' || shown>=2) continue; shown++;
     const q=QUESTS[id];
     tc.insertAdjacentHTML('beforeend','<div class="qcard"><div class="qt">'+q.title+'</div>'+
-      '<div class="qd">'+q.log+'</div><div class="qp">'+questProgressText(id)+'</div></div>');
+      '<div class="qd">'+q.log+'</div><div class="qp'+(questReady(id)?' ready':'')+'">'+questProgressText(id)+'</div></div>');
   }
   refreshQuestLog();
 }
