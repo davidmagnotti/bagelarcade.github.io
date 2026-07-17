@@ -280,7 +280,7 @@
   <div id="topLeft">
     <div class="bar"><div class="fill" id="hpFill"></div><div class="lbl" id="hpLbl"></div></div>
     <div class="bar" style="width:150px;height:14px;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
-    <div class="bar" style="width:120px;height:11px;"><div class="fill" id="wkFill"></div><div class="lbl" id="wkLbl" style="font-size:8.5px;"></div></div>
+    <div class="bar" id="wkBar" style="width:120px;height:11px;cursor:pointer;" title="What is the Wick? Tap to learn."><div class="fill" id="wkFill"></div><div class="lbl" id="wkLbl" style="font-size:8.5px;"></div></div>
     <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span></div>
   </div>
   <div id="tracker">
@@ -1278,7 +1278,7 @@ function drawHumanoid(g,sx,sy,o){
   const ph=o.ph||0;
   const walking = !!o.step;
   const step=Math.sin(o.step||0)*2.6*s;
-  const armSw=Math.sin((o.step||0))*0.68;
+  const armSw=Math.sin((o.step||0))*0.42;
   const bob = walking? Math.abs(Math.sin(o.step||0))*1.7*s
                      : (Math.sin(G.time*2.1+ph)*0.5+0.5)*1.0*s; // idle breathing
   const oct = dirOct(o.dir);
@@ -1356,10 +1356,15 @@ function drawHumanoid(g,sx,sy,o){
       g.restore();
     };
     const arm=(ang,dark)=>{
-      g.save(); g.translate(0.8*s, shY+1.5*s); g.rotate(ang);
+      g.save(); g.translate(0.8*s, shY+1.5*s); g.rotate(ang*0.75);
       g.fillStyle= dark? shade(sleeve,-18): sleeve;
-      g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,9*s,1.7*s); g.fill();
+      g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,5.6*s,1.7*s); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      g.translate(0,5.1*s); g.rotate(-0.5); g.translate(0,-0.6*s);
+      g.fillStyle= dark? shade(sleeve,-18): sleeve;
+      g.beginPath(); g.roundRect(-1.7*s,0,3.4*s,5.2*s,1.6*s); g.fill();
+      g.stroke();
+      g.translate(0,-4.4*s);
       g.fillStyle= dark? shade(skin,-20): skin;
       g.beginPath(); g.ellipse(0,10*s,2.1*s,2.5*s,0,0,TAU); g.fill(); g.stroke();
       g.beginPath(); g.arc(1.7*s,9.5*s,0.95*s,0,TAU); g.fill(); g.stroke(); // thumb leads
@@ -1847,10 +1852,19 @@ function drawHumanoid(g,sx,sy,o){
 
   // arms
   const drawArm=(shx,phase)=>{
+    // two segments: upper arm swings, forearm bends at the elbow
+    const fwd=clamp((shx<0?1:-1)*phase/0.42, -1, 1);
+    const bend=0.3 + 0.4*Math.max(0,fwd);
     g.save(); g.translate(shx,-27.5*s-bob); g.rotate(phase);
     g.fillStyle=sleeve;
-    g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,8.5*s,1.8*s); g.fill();
+    g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,5.4*s,1.8*s); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    g.translate(0,4.9*s); g.rotate(Math.sign(shx)*-bend);
+    g.translate(0,-0.4*s);
+    g.fillStyle=sleeve;
+    g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,5.4*s,1.7*s); g.fill();
+    g.stroke();
+    g.translate(0,-4.2*s);
     if((o.armor|0)>=2){ // steel bracer
       const bg=g.createLinearGradient(-2*s,4*s,2*s,8*s);
       bg.addColorStop(0,'#c2c8d2'); bg.addColorStop(1,'#6c727d');
@@ -1861,10 +1875,10 @@ function drawHumanoid(g,sx,sy,o){
       g.fillRect(-1.9*s,7*s,3.8*s,1.6*s);
     }
     g.fillStyle=skin;
-    g.beginPath(); g.ellipse(0,9.6*s,2.25*s,2.7*s,0,0,TAU); g.fill(); g.stroke();
-    g.beginPath(); g.arc(-Math.sign(shx)*1.9*s, 9.1*s, 1.05*s, 0, TAU); g.fill(); g.stroke(); // thumb toward the body
+    g.beginPath(); g.ellipse(0,9.3*s,2.25*s,2.6*s,0,0,TAU); g.fill(); g.stroke();
+    g.beginPath(); g.arc(-Math.sign(shx)*1.9*s, 8.8*s, 1.05*s, 0, TAU); g.fill(); g.stroke(); // thumb toward the body
     g.strokeStyle='rgba(30,20,12,0.3)'; g.lineWidth=0.9*s; // knuckle line
-    g.beginPath(); g.arc(0,8.9*s,1.5*s,Math.PI*1.15,Math.PI*1.85); g.stroke();
+    g.beginPath(); g.arc(0,8.6*s,1.5*s,Math.PI*1.15,Math.PI*1.85); g.stroke();
     g.restore();
   };
   drawArm(-8.6*s, walking? armSw:0.12);
@@ -2187,7 +2201,7 @@ function drawHumanoid(g,sx,sy,o){
     g.translate(px, -27.5*s - bob);
     g.scale(flip,1);
     const sw = o.swing||0;
-    g.rotate(-0.15 + sw*1.9 + (walking? -armSw*0.35 : 0));
+    g.rotate(-0.15 + sw*1.9 + (walking? -armSw*0.25 : 0));
     // upper arm (sleeve)
     g.fillStyle=sleeve;
     g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,8.5*s,1.8*s); g.fill();
@@ -3285,7 +3299,7 @@ function refreshUI(){
   document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
   document.getElementById('mpFill').style.width=(P.mp/P.maxmp*100)+'%';
   document.getElementById('wkFill').style.width=((P.wick??100))+'%';
-  document.getElementById('wkLbl').textContent='Wick '+Math.round(P.wick??100);
+  document.getElementById('wkLbl').textContent='✹ Wick '+Math.round(P.wick??100)+' — tap';
   document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
   document.getElementById('goldTxt').textContent=P.gold;
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv.potion||0;
@@ -5663,7 +5677,7 @@ function loadCode(str){
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.wick = d.wick==null? 100 : clamp(d.wick,0,100);
   P.tut = d.tut||{};
-  if(d.wick==null) setTimeout(showWickTut, 2000); // saves from before the Wick get the primer
+  if(!P.tut.wick) setTimeout(showWickTut, 2200); // never dismissed = shown on every load, until it is
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
   P.disc=d.disc||{}; unpackExpl(d.expl);
@@ -6633,6 +6647,9 @@ function showWickTut(){
   if(P.tut && P.tut.wick) return;
   document.getElementById('wickTut').style.display='flex';
 }
+document.getElementById('wkBar').onclick=()=>{ document.getElementById('wickTut').style.display='flex'; };
+if(document.getElementById('wkBar').addEventListener)
+  document.getElementById('wkBar').addEventListener('touchstart',(e)=>{e.preventDefault();e.stopPropagation();document.getElementById('wickTut').style.display='flex';},{passive:false});
 document.getElementById('wickTutBtn').onclick=()=>{
   P.tut=P.tut||{}; P.tut.wick=1;
   document.getElementById('wickTut').style.display='none';
