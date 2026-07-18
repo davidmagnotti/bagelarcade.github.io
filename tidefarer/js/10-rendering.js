@@ -306,10 +306,13 @@ function render(){
   // costly on weak desktop GPUs). Skip on the title/menu so the loading
   // screen stays light, and skip entirely at the lowest quality tier.
   if(fxOn('grade') && G.state==='play') drawGritGrade();
-  // vignette
-  const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
-  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  if(DBG.vignette && fxOn('vignette')){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
+  // vignette - a full-screen radial-gradient fill; cheap-looking but one of the
+  // pricier passes on weak GPUs, so build the gradient only when it's drawn.
+  if(DBG.vignette && fxOn('vignette')){
+    const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
+    cx.fillStyle=vg; cx.fillRect(0,0,VW,VH);
+  }
 
   // The minimap is a second on-screen canvas; redrawing it every frame forces
   // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.

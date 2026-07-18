@@ -1,7 +1,7 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '29';
+const BUILD = '30';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
 /* Storage can throw SecurityError in sandboxed frames / private browsing.
    Probe once; fall back to in-memory so the game always boots. */
@@ -131,11 +131,15 @@ let PERF = false; try{ PERF = SafeStore.get('tf_perf')==='1'; }catch(e){}
 const PERF_CAP = 640;   // max displayed longest-edge in Performance Mode
 const LB = {x:0, y:0};
 /* Per-effect toggles for Performance mode (checkboxes in the pause menu).
-   Defaults = the balanced low-gfx preset: the full-screen-expensive passes off,
-   the cheaper ambiance on. Persisted per-effect. In normal (non-perf) detail
-   everything renders regardless - fxOn() short-circuits when !LOWFX. */
-const FX = { grade:0, lighting:0, bloom:0, cloudShadows:0, foam:0,
-             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:1 };
+   Defaults = the tuned low-gfx preset. bloom + dynamic lighting are kept ON
+   (they measured ~30fps on a weak Surface ARM desktop and carry most of the
+   look); the truly costly full-screen blend passes stay off: grade + foam +
+   cloudShadows, and vignette (a full-screen radial-gradient fill that profiled
+   as one of the most expensive passes on weak GPUs, despite looking cheap).
+   Persisted per-effect. In normal (non-perf) detail everything renders
+   regardless - fxOn() short-circuits when !LOWFX. */
+const FX = { grade:0, lighting:1, bloom:1, cloudShadows:0, foam:0,
+             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:0 };
 try{ for(const k in FX){ const v=SafeStore.get('tf_fx_'+k); if(v!==null) FX[k]=(v==='1')?1:0; } }catch(e){}
 function fxOn(n){ return !LOWFX || !!FX[n]; }   // full detail => always on
 /* Benchmark hooks: DBG flags gate individual render passes so js/26-bench.js

@@ -8,20 +8,20 @@
 if(typeof FX==='undefined') return;
 
 const GROUPS = [
-  ['Costly (off by default)', [
+  ['Costly - untick these first', [
     ['grade','Cinematic color grade'],
-    ['lighting','Dynamic night lighting'],
-    ['bloom','Bloom glow'],
-    ['cloudShadows','Cloud shadows'],
+    ['vignette','Vignette (darkened edges)'],
     ['foam','Shore foam'],
+    ['cloudShadows','Cloud shadows'],
+    ['bloom','Bloom glow'],
+    ['lighting','Dynamic night lighting'],
   ]],
-  ['Cheap (on by default)', [
+  ['Cheap - safe to leave on', [
     ['fog','Ground fog'],
     ['decals','Blood & gore'],
     ['particles','Particles'],
     ['fireflies','Fireflies'],
     ['birds','Birds'],
-    ['vignette','Vignette'],
   ]],
 ];
 
