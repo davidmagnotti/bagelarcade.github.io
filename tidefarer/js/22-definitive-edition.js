@@ -53,7 +53,7 @@ st.textContent=`
 document.head.appendChild(st);
 
 /* ---------- title-screen dressing ---------- */
-document.title='Emberwick Isle - Definitive Edition';
+document.title='Tidefarer';
 const ovCard=document.querySelector('#titleOv .ovCard');
 if(ovCard){
   const h1=ovCard.querySelector('h1');
@@ -96,7 +96,7 @@ syncCfgUI=function(){
 const bloomCv=document.createElement('canvas');
 const bloomCx=bloomCv.getContext('2d');
 function drawRadiance(){
-  if(!CFG.bloom || !cv.width) return;
+  if(!CFG.bloom || LOWFX || !cv.width) return;
   const bw=Math.max(1,(cv.width/6)|0), bh=Math.max(1,(cv.height/6)|0);
   if(bloomCv.width!==bw || bloomCv.height!==bh){ bloomCv.width=bw; bloomCv.height=bh; }
   bloomCx.clearRect(0,0,bw,bh);
