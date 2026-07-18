@@ -47,6 +47,10 @@ function buildGroundCache(){
    offscreen and offsetting the camera so worldToScreen maps into cache space,
    then reusing the exact live node renderer. Depth-sorted; blitted behind the
    live entities. Rebuilt only when a node is harvested or respawns. */
+/* Decor that changes/moves stays drawn live; everything else (houses, lamps,
+   walls, fences, pillars, stumps...) is static and gets baked. */
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1};
+let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;
@@ -56,12 +60,14 @@ function buildSceneryCache(){
   cx=g; G.cam.x=-OX; G.cam.y=-OY;
   try{
     const items=[];
-    for(const n of G.nodes){ if(!n.dead) items.push(n); }
-    items.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
-    for(const n of items) drawNode(n, worldToScreen(n.x,n.y));
+    for(const n of G.nodes){ if(!n.dead) items.push({o:n, t:'node'}); }
+    for(const b of G.decor){ if(!DYNAMIC_DECOR[b.kind]) items.push({o:b, t:'decor'}); }
+    items.sort((a,b)=>(a.o.x+a.o.y)-(b.o.x+b.o.y));
+    for(const it of items){ const s=worldToScreen(it.o.x,it.o.y);
+      if(it.t==='node') drawNode(it.o,s); else drawDecor(it.o,s); }
   }catch(e){}
   cx=savedCx; G.cam.x=camX; G.cam.y=camY;
-  sceneryCache=c; scnWorld=G.worldId;
+  sceneryCache=c; scnWorld=G.worldId; scnDecorN=G.decor.length;
 }
 
 function render(){
@@ -84,8 +90,8 @@ function render(){
     if(!groundCache || gcWorld!==G.worldId) buildGroundCache();
     if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       groundCache.width/GC_S, groundCache.height/GC_S);
-    // baked scenery (trees/rocks/bushes) blitted behind the live entities
-    if(!sceneryCache || scnWorld!==G.worldId) buildSceneryCache();
+    // baked scenery (trees/rocks/bushes + static decor) behind the live entities
+    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length) buildSceneryCache();
     if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       sceneryCache.width/GC_S, sceneryCache.height/GC_S);
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
@@ -140,6 +146,7 @@ function render(){
     items.push({d:n.x+n.y, kind:'node', o:n});
   }
   for(const b of G.decor){ if(b.x<minX-2||b.x>maxX+2||b.y<minY-2||b.y>maxY+2) continue;
+    if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
     items.push({d:b.x+b.y, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead) items.push({d:m.x+m.y, kind:'mob', o:m}); }
