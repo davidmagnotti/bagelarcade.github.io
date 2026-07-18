@@ -2251,8 +2251,9 @@ function spawnNPCs(){
       ['A dull blade is a heavy blade.','Hear that ring? That\'s good iron talking.','Stone from the north road takes an edge best.'],0.4),
     makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e'},
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false),
-    makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
-      ['Fish bite best where the water ripples.','Lost three hooks to something big out there…','Salt cures fish and moods alike.'],0.5),
+    (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
+      ['Fish bite best where the water ripples.','Night fish are the honest ones — they bite from hunger, not habit.','Salt cures fish and moods alike.'],0.5);
+      f.nightOwl=true; return f; })(),
     (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 40.5,58.6,
       {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038'},
       ["A bed, a hearth, and no questions past dark. Ten gold.",
@@ -2320,7 +2321,7 @@ function give(item,n){ P.inv[item]=(P.inv[item]||0)+n;
 function giveQuiet(item,n){ P.inv[item]=(P.inv[item]||0)+n; refreshUI(); }
 function take(item,n){ P.inv[item]=Math.max(0,(P.inv[item]||0)-n); if(!P.inv[item]) delete P.inv[item]; refreshUI(); }
 function has(item,n){ return (P.inv[item]||0)>=n; }
-function giveGold(n){ P.gold+=n; P.stats.goldEarned=(P.stats.goldEarned||0)+n;
+function giveGold(n){ n=Math.round(+n)||0; P.gold=(Math.round(+P.gold)||0)+n; P.stats.goldEarned=(P.stats.goldEarned||0)+n;
   addFloat('+'+n+' gold', P.x, P.y-1.4, '#ffd76a'); Snd.coin(); refreshUI(); }
 
 function addXP(skill,amt){
@@ -2927,7 +2928,7 @@ function buildHotbar(){
     ic.getContext('2d').drawImage(ICONS[h.icon],0,0); s.appendChild(ic);
     const key=document.createElement('div'); key.className='key'; key.textContent=h.key; s.appendChild(key);
     if(!h.wpn){ const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv.potion||0; s.appendChild(c); }
-    if(locked){ const l=document.createElement('div'); l.className='lock'; l.textContent='🔒'; s.appendChild(l); }
+
     const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem('potion'); };
     s.onclick=act;
     if(s.addEventListener) s.addEventListener('touchstart',(e)=>{
@@ -2937,9 +2938,9 @@ function buildHotbar(){
   });
 }
 function selectWeapon(w){
-  if(w==='melee' && !P.unlocked.melee){ toast('No blade yet — Bram\'s <b>Iron in the Fire</b> quest forges your first sword.'); return; }
-  if(w==='bow' && !P.unlocked.bow){ toast('Bram\'s <b>Meadow Menace</b> quest rewards a bow.'); return; }
-  if(w==='staff' && !P.unlocked.staff){ toast('Sage Orin at the tower can wake a fire staff for you.'); return; }
+  if(w==='melee' && !P.unlocked.melee) return; // grayed slots speak for themselves
+  if(w==='bow' && !P.unlocked.bow) return;
+  if(w==='staff' && !P.unlocked.staff) return;
   P.weapon=w; buildHotbar();
 }
 function useItem(item){
@@ -5003,6 +5004,7 @@ function spawnNPCsMain(){
     {skin:'#b98f68',hair:'#a8a099',shirt:'#5a5348',pants:'#3a352c',hat:'straw',beard:'#a8a099',beardLong:true},
     ["Emberwick? Quaint little training ground, that isle.",
      "They say a storm-relic sits atop the Peak. Guarded, of course."],1.2));
+  { const dp=G.npcs.find(n=>n.id==='dockhand'); if(dp) dp.nightOwl=true; } // fishermen keep night hours
 }
 function spawnBarikFolk(){
   const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
@@ -5797,7 +5799,7 @@ function loadCode(str){
   P.projects={}; // cleared before regen; restored (and re-placed) below
   iso.gen();
   // restore hero first (switchWorld reads quest state)
-  P.gold=d.gold||0; P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
+  P.gold=Math.round(+d.gold)||0; // saves from the string-gold era heal on load P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
   P.quests=d.quests||{}; P.prog=d.prog||{};
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
@@ -6576,7 +6578,7 @@ function checkDiscover(){
     const key=G.worldId+':'+k;
     if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
       P.disc[key]=1;
-      banner('DISCOVERED', z.name + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest( + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); giveGold(8 + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : ''));
+      banner('DISCOVERED', z.name + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest(); giveGold(8);
       const all=Object.keys(ZONES).filter(k2=>ZONES[k2].name).every(k2=>P.disc[G.worldId+':'+k2]);
       if(all) award('wayfarer');
     }
@@ -6710,11 +6712,11 @@ function boot(){
 }
 let CINE=null;
 function startCinematic(){
-  CINE={t:0, dur:6.6, from:{x:P.x-8.5, y:P.y+7}, to:{x:P.x, y:P.y},
-    capts:[[0.25,'The strait took the ship, the cargo, and the crew.'],
-           [2.5,'It spat out one soul on the shores of Emberwick Isle.'],
-           [4.6,'CHAPTER I — TUTORIAL SHORES']]};
-  G.cam.x=CINE.from.x; G.cam.y=CINE.from.y;
+  CINE={t:0, dur:5.2,
+    capts:[[0.2,'The strait took the ship, the cargo, and the crew.'],
+           [1.9,'It spat out one soul on the shores of Emberwick Isle.'],
+           [3.6,'CHAPTER I — TUTORIAL SHORES']]};
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; // locked on the castaway
   const skip=()=>endCine();
   window.addEventListener('pointerdown',skip,{once:true});
   window.addEventListener('keydown',skip,{once:true});
@@ -6749,10 +6751,8 @@ function drawCineOverlay(){
 }
 function updateCine(dt){
   CINE.t+=dt;
-  const p=Math.min(1, CINE.t/(CINE.dur-1.2));
-  const e=p*p*(3-2*p); // smoothstep drift ashore
-  G.cam.x=CINE.from.x+(CINE.to.x-CINE.from.x)*e;
-  G.cam.y=CINE.from.y+(CINE.to.y-CINE.from.y)*e;
+  G.cam.x=isoX(P.x,P.y)-VW/2; // no drift, no tricks — just the castaway
+  G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(CINE.t>=CINE.dur) endCine();
 }
 function startFresh(){
