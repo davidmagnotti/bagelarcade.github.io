@@ -15,8 +15,12 @@
 try{ if((location.search||'').toLowerCase().indexOf('bench')<0) return; }catch(e){ return; }
 if(typeof frame!=='function' || typeof render!=='function') return;
 
-// Force full detail and stop the auto-tuner so every pass is active & steady.
-BENCH=true; SAFE=false; LOWFX=false; RQ=1;
+// Stop the auto-tuner so conditions stay steady, but DON'T force a mode:
+// - plain ?bench            -> measures full detail
+// - ?bench together w/ ?lowgfx -> measures low-gfx (what you actually play)
+// (?lowgfx is applied by 27-perfmode, which loads after this file.)
+BENCH=true;
+if((location.search||'').toLowerCase().indexOf('lowgfx')<0){ SAFE=false; LOWFX=false; RQ=1; }
 if(typeof resize==='function') resize();
 
 const toggles=[];
@@ -70,7 +74,9 @@ frame=function(ts){
   if(!winStart) winStart=ts;
 
   const label = phase<0? 'baseline (all passes on)' : ('OFF: '+toggles[phase].name);
-  box.textContent='BENCHMARKING…  '+(phase+2)+' / '+(toggles.length+1)+'\n'+
+  box.textContent='BUILD '+(typeof BUILD!=='undefined'?BUILD:'?')+
+    (typeof LOWFX!=='undefined'&&LOWFX?'  [low-gfx]':'  [full detail]')+'\n'+
+    'BENCHMARKING…  '+(phase+2)+' / '+(toggles.length+1)+'\n'+
     label+'\nkeep this window focused; ~'+Math.ceil((toggles.length+1)*WINDOW_MS/1000)+'s total';
 
   if(ts-winStart>=WINDOW_MS){
@@ -89,7 +95,9 @@ function finish(){
   allOn();
   results.sort((a,b)=>b.save-a.save);
   const bfps=baseline?1000/baseline:0;
-  let s='BENCHMARK COMPLETE  (most expensive first)\n'+
+  let s='BUILD '+(typeof BUILD!=='undefined'?BUILD:'?')+
+        (typeof LOWFX!=='undefined'&&LOWFX?'  [low-gfx]':'  [full detail]')+'\n'+
+        'BENCHMARK COMPLETE  (most expensive first)\n'+
         'baseline '+baseline.toFixed(0)+'ms/frame = '+bfps.toFixed(1)+' FPS\n'+
         'disabling → frametime / fps / time saved\n';
   for(const r of results)
