@@ -9,6 +9,16 @@
 (function(){
 'use strict';
 
+// Convenience: tidefarer/?lowgfx (or ?perfmode) forces Performance Mode on at
+// load, so it can be enabled without reaching the in-game pause menu.
+try{
+  const q=(location.search||'').toLowerCase();
+  if(q.indexOf('lowgfx')>=0 || q.indexOf('perfmode')>=0){
+    PERF=true; try{ SafeStore.set('tf_perf','1'); }catch(e){}
+    if(typeof resize==='function') resize();
+  }
+}catch(e){}
+
 function setPerfMode(on){
   PERF = !!on;
   try{ SafeStore.set('tf_perf', PERF?'1':'0'); }catch(e){}
