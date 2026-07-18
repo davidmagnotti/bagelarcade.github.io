@@ -12,8 +12,10 @@
       border-left:15px dashed rgba(240,226,192,.95);
       filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}
     @keyframes pgPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
-    #btnPause.playing{color:#9be07f;animation:btnPulse 1.2s ease-in-out infinite;}
-    @keyframes btnPulse{0%{box-shadow:0 0 0 0 rgba(155,224,127,.55)}70%{box-shadow:0 0 0 12px rgba(155,224,127,0)}100%{box-shadow:0 0 0 0 rgba(155,224,127,0)}}
+    /* The pause button is on screen the entire game; its old box-shadow "ping"
+       animation forced a full repaint every frame (no compositor fast-path) and
+       was the main cause of low FPS in-game. Static colour, no animation. */
+    #btnPause.playing{color:#9be07f;}
   `;
   document.head.appendChild(st);
   const pg=document.createElement('div');
