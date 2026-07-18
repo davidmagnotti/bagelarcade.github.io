@@ -8,6 +8,36 @@ function screenToWorld(sx,sy){
   return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 };
 }
 
+/* ---- pre-baked ground (low-gfx) ----
+   Bake every ground tile + fringe ONCE into an offscreen (half-res, ~27MB, so
+   it fits weak GPUs) and blit the whole thing in a SINGLE drawImage per frame,
+   instead of thousands of per-tile draws - the measured GPU bottleneck. Only
+   used when LOWFX; full-detail devices keep the crisp per-tile pass. */
+let groundCache=null, gcOX=0, gcOY=0, gcWorld=null;
+const GC_S=0.5;
+function invalidateGround(){ groundCache=null; }
+function buildGroundCache(){
+  const OX=(MAPH-1)*(TW/2)+TW, OY=TH;
+  const w=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
+  const h=Math.max(1,Math.ceil(((MAPW+MAPH)*(TH/2)+TH*3)*GC_S));
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g=c.getContext('2d');
+  g.setTransform(GC_S,0,0,GC_S,0,0); g.translate(OX,OY);
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const t=G.map[y*MAPW+x], sx=isoX(x,y), sy=isoY(x,y);
+    const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
+    if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2);
+    if(t!==T.SHALLOW && t!==T.DEEP){
+      const mc=terrainCls(t);
+      if(mc<4) for(const nb of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
+        const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
+        if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+      }
+    }
+  }
+  groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
+}
+
 function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop
@@ -22,7 +52,13 @@ function render(){
   minX=Math.floor(minX)-2; maxX=Math.ceil(maxX)+2; minY=Math.floor(minY)-2; maxY=Math.ceil(maxY)+4;
 
   // ---- ground pass ----
-  if(DBG.ground) for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
+  if(DBG.ground){
+   if(LOWFX){
+    // one blit of the whole pre-baked ground instead of thousands of tile draws
+    if(!groundCache || gcWorld!==G.worldId) buildGroundCache();
+    if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
+      groundCache.width/GC_S, groundCache.height/GC_S);
+   } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
@@ -57,6 +93,7 @@ function render(){
         }
       }
     }
+  }
   }
   if(!LOWFX) drawFoam(minX,maxX,minY,maxY);
   if(!LOWFX) drawDecals(minX,maxX,minY,maxY);
