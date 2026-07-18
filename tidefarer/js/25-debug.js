@@ -61,13 +61,17 @@ frame=function(ts){
     const fps= gapM? 1000/gapM : 0;
     const nonjs=Math.max(0, gapM - jsM);
     const stages=Object.keys(stageBuf).map(k=>[k,median(stageBuf[k])])
-      .sort((a,b)=>b[1]-a[1]).slice(0,6);
+      .sort((a,b)=>b[1]-a[1]).slice(0,7);
+    let mem='';
+    try{ if(performance.memory) mem='  heap '+(performance.memory.usedJSHeapSize/1048576|0)+'MB'; }catch(e){}
     let s='FPS '+fps.toFixed(0)+'   frameJS '+jsM.toFixed(0)+'ms   nonJS '+nonjs.toFixed(0)+'ms\n'+
-          '(median of last '+N+' frames; worst frame '+worst.toFixed(0)+'ms = boot)\n'+
+          'state '+(typeof G!=='undefined'?G.state:'?')+mem+
+          '   worstframe '+worst.toFixed(0)+'ms\n'+
           'RQ='+(typeof RQ!=='undefined'?RQ.toFixed(2):'?')+' LOWFX='+(typeof LOWFX!=='undefined'?LOWFX:'?')+
           ' DPR='+DPR.toFixed(2)+'  canvas '+cv.width+'x'+cv.height+'\n';
     for(const [k,v] of stages) s+='  '+v.toFixed(1).padStart(5)+'ms  '+k+'\n';
     box.textContent=s;
+    if(uiN%64===0) console.log('[perf]\n'+s); // easy copy from DevTools console
   }
 };
 })();
