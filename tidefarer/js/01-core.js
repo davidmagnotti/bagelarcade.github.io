@@ -104,8 +104,12 @@ const Snd = {
 const cv = document.getElementById('game');
 const cx = cv.getContext('2d');
 let VW=0, VH=0, DPR=1;
+/* RQ = render-quality scale, LOWFX = drop the most expensive post-FX.
+   The adaptive perf tuner (js/24-perf.js) lowers these on weak GPUs. */
+let RQ=1, LOWFX=false;
 function resize(){
-  DPR = Math.min(window.devicePixelRatio||1, 2);
+  const base = Math.min(window.devicePixelRatio||1, 2);
+  DPR = Math.max(0.5, base*RQ);
   VW = window.innerWidth; VH = window.innerHeight;
   cv.width = Math.round(VW*DPR); cv.height = Math.round(VH*DPR);
   cv.style.width = VW+'px'; cv.style.height = VH+'px';
