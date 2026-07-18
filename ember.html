@@ -1509,7 +1509,12 @@ function drawHumanoid(g,sx,sy,o){
   const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
   hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
   g.fillStyle=hg;
-  g.beginPath(); g.ellipse(0,0,HR,HRY,0,0,TAU); g.fill();
+  g.beginPath(); // wide cranium narrowing through the cheeks to a soft chin
+  g.ellipse(0,-1.5,HR,HRY*0.92,0,Math.PI,0);
+  g.quadraticCurveTo(HR*0.94,6.2, HR*0.46,10.4);
+  g.quadraticCurveTo(0,13.0, -HR*0.46,10.4);
+  g.quadraticCurveTo(-HR*0.94,6.2, -HR,-1.5);
+  g.closePath(); g.fill();
   g.strokeStyle=OUT; g.lineWidth=2.0; g.stroke();
 
   if(away){
@@ -1558,32 +1563,34 @@ function drawHumanoid(g,sx,sy,o){
     if(profile){
       // nose bump on the silhouette
       g.fillStyle=skin;
-      g.beginPath(); g.arc(flip*HR*0.98, 1.8, 2.3, 0, TAU); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+      g.beginPath(); g.arc(flip*HR*0.985, 1.9, 1.55, 0, TAU); g.fill(); // a modest nose
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
       g.fillStyle=skin;
-      g.beginPath(); g.arc(flip*HR*0.86, 1.8, 2.6, 0, TAU); g.fill(); // blend seam
+      g.beginPath(); g.arc(flip*HR*0.9, 1.9, 1.85, 0, TAU); g.fill(); // blend seam
       // one huge eye
       if(blink){
         g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
         g.beginPath(); g.moveTo(flip*2.2,-2.2); g.quadraticCurveTo(flip*4.8,-1.1,flip*7.4,-2.2); g.stroke();
         g.lineCap='butt';
       } else {
-        g.fillStyle='#241a10';
-        g.beginPath(); g.ellipse(flip*4.9,-2.2+fy,2.15,3.15,0,0,TAU); g.fill();
-        g.fillStyle='rgba(255,255,255,0.92)';
-        g.beginPath(); g.arc(flip*4.35,-3.3+fy,0.8,0,TAU); g.fill();
-        g.strokeStyle='rgba(24,16,10,0.7)'; g.lineWidth=1.3;
-        g.beginPath(); g.arc(flip*4.9,-2.2+fy,2.5,Math.PI*1.14,Math.PI*1.86); g.stroke();
+        g.fillStyle='#1d150d';
+        g.beginPath();
+        g.moveTo(flip*3.0,-2.1+fy);
+        g.quadraticCurveTo(flip*4.9,-4.5+fy, flip*6.8,-2.1+fy);
+        g.quadraticCurveTo(flip*4.9,-0.1+fy, flip*3.0,-2.1+fy);
+        g.closePath(); g.fill();
+        g.fillStyle='rgba(255,255,255,0.9)';
+        g.beginPath(); g.arc(flip*4.4,-2.8+fy,0.5,0,TAU); g.fill();
       }
       g.strokeStyle='#2e2418'; g.lineWidth=1.6; // brow
       g.beginPath(); g.moveTo(flip*1.8,-7.6); g.quadraticCurveTo(flip*5,-8.8,flip*8,-7.2); g.stroke();
-      g.strokeStyle='#5a3a28'; g.lineWidth=1.15; g.lineCap='round'; // mouth
-      g.beginPath(); g.moveTo(flip*7.6,4.6); g.quadraticCurveTo(flip*8.9,5.2,flip*10,4.5); g.stroke();
+      g.strokeStyle='rgba(90,58,40,0.75)'; g.lineWidth=1.05; g.lineCap='round'; // quiet mouth
+      g.beginPath(); g.moveTo(flip*7.9,4.7); g.lineTo(flip*9.7,4.7); g.stroke();
       g.lineCap='butt';
       g.fillStyle='rgba(220,100,70,0.2)';
       g.beginPath(); g.ellipse(flip*3,3.2,2.4,1.7,0,0,TAU); g.fill();
     } else {
-      const eSp=4.35, eyeY=-1.5+fy;
+      const eSp=4.4, eyeY=-1.4+fy;
       const expr=o.expr||'calm';
       if(expr==='hurt'){
         g.strokeStyle='#241a10'; g.lineWidth=1.7; g.lineCap='round';
@@ -1603,20 +1610,20 @@ function drawHumanoid(g,sx,sy,o){
       } else if(blink){
         g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
         g.beginPath();
-        g.moveTo(-eSp+fx-2.6,eyeY); g.quadraticCurveTo(-eSp+fx,eyeY+1.1,-eSp+fx+2.6,eyeY);
-        g.moveTo( eSp+fx-2.6,eyeY); g.quadraticCurveTo( eSp+fx,eyeY+1.1, eSp+fx+2.6,eyeY);
+        g.moveTo(-eSp+fx-1.7,eyeY); g.quadraticCurveTo(-eSp+fx,eyeY+0.9,-eSp+fx+1.7,eyeY);
+        g.moveTo( eSp+fx-1.7,eyeY); g.quadraticCurveTo( eSp+fx,eyeY+0.9, eSp+fx+1.7,eyeY);
         g.stroke(); g.lineCap='butt';
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#241a10'; // warm dark almond
-          g.beginPath(); g.ellipse(ex2+fx*0.15,eyeY,2.3,3.3,0,0,TAU); g.fill();
-          g.fillStyle='rgba(255,255,255,0.92)';
-          g.beginPath(); g.arc(ex2-0.65,eyeY-1.1,0.85,0,TAU); g.fill();
-          g.fillStyle='rgba(255,255,255,0.4)';
-          g.beginPath(); g.arc(ex2+0.55,eyeY+0.9,0.38,0,TAU); g.fill();
-          g.strokeStyle='rgba(24,16,10,0.7)'; g.lineWidth=1.3; // soft upper lid
-          g.beginPath(); g.arc(ex2,eyeY,2.6,Math.PI*1.14,Math.PI*1.86); g.stroke();
+          g.fillStyle='#1d150d'; // human almond: pointed corners
+          g.beginPath();
+          g.moveTo(ex2-2.1,eyeY);
+          g.quadraticCurveTo(ex2,eyeY-2.7, ex2+2.1,eyeY);
+          g.quadraticCurveTo(ex2,eyeY+2.2, ex2-2.1,eyeY);
+          g.closePath(); g.fill();
+          g.fillStyle='rgba(255,255,255,0.9)';
+          g.beginPath(); g.arc(ex2-0.6,eyeY-0.8,0.55,0,TAU); g.fill();
         }
       }
       // filled tapered brows, tilted by mood
@@ -1654,9 +1661,9 @@ function drawHumanoid(g,sx,sy,o){
         g.closePath(); g.fill();
         g.lineWidth=1.1; g.strokeStyle='rgba(30,18,12,0.6)'; g.stroke();
       } else {
-        g.lineWidth=1.25;
+        g.lineWidth=1.05; g.strokeStyle='rgba(90,58,40,0.75)';
         g.beginPath();
-        g.moveTo(fx*0.4-2.3,4.1); g.quadraticCurveTo(fx*0.4,5.3, fx*0.4+2.3,4.1);
+        g.moveTo(fx*0.4-1.6,4.4); g.lineTo(fx*0.4+1.6,4.4); // quiet, neutral
         g.stroke();
       }
       g.lineCap='butt';
@@ -2254,7 +2261,7 @@ const MOBDEF = {
   skeleton:{hp:46, dmg:36, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
   archer:{hp:26, dmg:27, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   gravelord:{hp:150, dmg:42, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
-  boss:{hp:320, dmg:36, speed:2.7, aggro:9, xp:220, gold:[30,40], name:'The Hollow King'},
+  boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], name:'The Hollow King'},
   alpha:{hp:520, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], name:'Greymaw, the Alpha'}
 };
 function inSafeZone(x,y){
@@ -2556,7 +2563,16 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Ask for passage to Barik', fn:()=>{
       const rem=ISLE_IDS.filter(id=>qs(id)!=='done').length;
       setDialog('“Happy to haul you across to <b>Barik</b>, friend — she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
-        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        shopButtons(npc,[
+          {label:'No really — I\'m ready.', fn:()=>{
+            setDialog('“Ok, if you\'re sure…” <i>He squints at you the way sailors squint at weather.</i> “…are you <b>sure</b>? Barik doesn\'t grade on a curve, and the isle\'s work will still be waiting.”',
+              shopButtons(npc,[
+                {label:'Yes. Set sail.', fn:()=>{ P.earlySail=1; closeDialog(); departEarly(); }},
+                {label:'On second thought…', ghost:true, fn:closeDialog}
+              ]));
+          }},
+          {label:'Farewell',ghost:true,fn:closeDialog}
+        ]));
     }});
   }
   if(npc.id==='sela'){
@@ -3495,7 +3511,8 @@ function updateMobs(dt){
     } else {
       // leash
       if(pd>d.aggro*2.2 || P.dead || dist(m.x,m.y,m.hx,m.hy)>14){
-        m.state='idle'; m.hp=Math.min(m.maxhp,m.hp+m.maxhp*0.3);
+        m.state='idle';
+        if(!m.boss && !m.bigBoss) m.hp=Math.min(m.maxhp,m.hp+m.maxhp*0.3); // bosses keep their wounds
         m.tx=m.hx; m.ty=m.hy; continue;
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
@@ -4942,6 +4959,14 @@ function ensureGravelord(announce){
 }
 /* ---------- sailing ---------- */
 let sailing=false;
+function departEarly(){
+  if(sailing) return;
+  sailing=true;
+  toast('“Cast off! Barik, then — and luck to the bold.”',3000);
+  const fade=document.getElementById('fadeOv');
+  fade.style.opacity=1; Snd.splash();
+  setTimeout(()=>{ switchWorld('main'); fade.style.opacity=0; sailing=false; }, 900);
+}
 function attemptSail(){
   if(sailing) return;
   if(G.worldId==='isle' && qs('setsail')!=='done'){
@@ -4991,6 +5016,19 @@ function switchWorld(id){
   if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
   if(id==='main'){
     for(const q2 of ['welcome2','hedda1','torv1','ivo1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
+    if(P.earlySail && !P.earlyKit){
+      P.earlyKit=1;
+      P.kit=true;
+      P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.staff=true;
+      P.swordTier=Math.max(P.swordTier||0,2);
+      P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
+      giveQuiet('potion',3); giveQuiet('bread',2); P.gold+=50;
+      buildHotbar(); refreshUI();
+      setTimeout(()=>{
+        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> — steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
+        Snd.quest(); autoSave();
+      }, 1400);
+    }
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
@@ -5356,7 +5394,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
@@ -5394,6 +5432,7 @@ function loadCode(str){
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
+  P.earlySail=!!d.es; P.earlyKit=!!d.ek;
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
