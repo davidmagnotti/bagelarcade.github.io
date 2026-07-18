@@ -107,7 +107,12 @@ const cv = document.getElementById('game');
    for the browser to composite - critical on weak GPUs (e.g. Snapdragon/ARM
    with little graphics memory), where per-pixel blending of a transparent
    full-viewport canvas dominates the frame. */
-const cx = cv.getContext('2d', {alpha:false});
+/* desynchronized:true = low-latency canvas. On this page the profiler showed
+   drawing is fast (~7ms) but PRESENTING the frame is slow (~200ms) - the ARM
+   GPU is software-compositing the full-viewport canvas. The low-latency hint
+   lets the browser push the canvas to screen more directly, bypassing that
+   compositor. Harmless where it's unsupported (the flag is just ignored). */
+const cx = cv.getContext('2d', {alpha:false, desynchronized:true});
 let VW=0, VH=0, DPR=1;
 /* RQ = render-quality scale, LOWFX = drop the most expensive post-FX,
    SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf
