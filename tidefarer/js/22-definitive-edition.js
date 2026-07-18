@@ -100,13 +100,22 @@ function drawRadiance(){
   const bw=Math.max(1,(cv.width/6)|0), bh=Math.max(1,(cv.height/6)|0);
   if(bloomCv.width!==bw || bloomCv.height!==bh){ bloomCv.width=bw; bloomCv.height=bh; }
   bloomCx.clearRect(0,0,bw,bh);
+  /* Extract the highlights while downscaling to the tiny bloom buffer. Running
+     the tone-curve filter here (on a ~1/6-size canvas) instead of on the full
+     screen keeps it cheap - a per-frame full-screen canvas blur/filter is fast
+     on iOS but murders desktop Chrome/Edge (Skia). */
+  bloomCx.save();
+  try{ if(typeof bloomCx.filter==='string') bloomCx.filter='brightness(0.72) contrast(1.75) saturate(1.5)'; }catch(e){}
+  bloomCx.imageSmoothingEnabled=true;
   bloomCx.drawImage(cv,0,0,bw,bh);
+  bloomCx.restore();
   const night=(typeof nightAmount==='function')? nightAmount() : 0;
   cx.save();
   cx.setTransform(1,0,0,1,0,0);
   cx.globalCompositeOperation='lighter';
   cx.globalAlpha=0.15+night*0.14;
-  cx.filter='blur(4px) brightness(0.72) contrast(1.75) saturate(1.5)';
+  /* Upscaling the small buffer with smoothing IS the blur - no costly filter. */
+  cx.imageSmoothingEnabled=true;
   cx.drawImage(bloomCv,0,0,cv.width,cv.height);
   cx.restore();
 }
