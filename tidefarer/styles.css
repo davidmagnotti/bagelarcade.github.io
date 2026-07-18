@@ -9,7 +9,8 @@
     -webkit-user-select:none;user-select:none;touch-action:none;
     overscroll-behavior:none;overscroll-behavior-y:contain;}
   body{position:fixed;inset:0;}
-  #game{position:fixed;inset:0;display:block;background:#16283e;}
+  #game{position:fixed;left:0;top:0;display:block;background:#16283e;}
+  html,body{background:#07090d;}
   .serif{font-family:Georgia,'Times New Roman',serif;}
   /* ---------- HUD ---------- */
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10;}

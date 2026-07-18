@@ -3,6 +3,7 @@
    ===================================================================== */
 function worldToScreen(wx,wy){ return { x: isoX(wx,wy)-G.cam.x, y: isoY(wx,wy)-G.cam.y }; }
 function screenToWorld(sx,sy){
+  sx-=LB.x; sy-=LB.y;   // undo Performance Mode letterbox offset
   const ox=sx+G.cam.x, oy=sy+G.cam.y;
   return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 };
 }
