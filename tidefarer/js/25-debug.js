@@ -64,7 +64,8 @@ frame=function(ts){
       .sort((a,b)=>b[1]-a[1]).slice(0,7);
     let mem='';
     try{ if(performance.memory) mem='  heap '+(performance.memory.usedJSHeapSize/1048576|0)+'MB'; }catch(e){}
-    let s='FPS '+fps.toFixed(0)+'   frameJS '+jsM.toFixed(0)+'ms   nonJS '+nonjs.toFixed(0)+'ms\n'+
+    let s='=== BUILD '+(typeof BUILD!=='undefined'?BUILD:'?')+' ===\n'+
+          'FPS '+fps.toFixed(0)+'   frameJS '+jsM.toFixed(0)+'ms   nonJS '+nonjs.toFixed(0)+'ms\n'+
           'state '+(typeof G!=='undefined'?G.state:'?')+mem+
           '   worstframe '+worst.toFixed(0)+'ms\n'+
           'RQ='+(typeof RQ!=='undefined'?RQ.toFixed(2):'?')+' LOWFX='+(typeof LOWFX!=='undefined'?LOWFX:'?')+
