@@ -13,18 +13,23 @@ function screenToWorld(sx,sy){
    it fits weak GPUs) and blit the whole thing in a SINGLE drawImage per frame,
    instead of thousands of per-tile draws - the measured GPU bottleneck. Only
    used when LOWFX; full-detail devices keep the crisp per-tile pass. */
-let groundCache=null, gcOX=0, gcOY=0, gcWorld=null;
+let groundCache=null, sceneryCache=null, gcOX=0, gcOY=0, gcWorld=null, scnWorld=null;
 const GC_S=0.5;
-function invalidateGround(){ groundCache=null; }
-function buildGroundCache(){
+function gcDims(){
   const OX=(MAPH-1)*(TW/2)+TW, OY=TH;
-  const w=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
-  const h=Math.max(1,Math.ceil(((MAPW+MAPH)*(TH/2)+TH*3)*GC_S));
-  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const W=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
+  const H=Math.max(1,Math.ceil(((MAPW+MAPH)*(TH/2)+TH*3)*GC_S));
+  return {OX,OY,W,H};
+}
+function invalidateGround(){ groundCache=null; }
+function invalidateScenery(){ sceneryCache=null; }
+function buildGroundCache(){
+  const {OX,OY,W,H}=gcDims();
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
   const g=c.getContext('2d');
-  g.setTransform(GC_S,0,0,GC_S,0,0); g.translate(OX,OY);
+  g.setTransform(GC_S,0,0,GC_S,0,0);
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
-    const t=G.map[y*MAPW+x], sx=isoX(x,y), sy=isoY(x,y);
+    const t=G.map[y*MAPW+x], sx=isoX(x,y)+OX, sy=isoY(x,y)+OY;
     const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
     if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2);
     if(t!==T.SHALLOW && t!==T.DEEP){
@@ -36,6 +41,27 @@ function buildGroundCache(){
     }
   }
   groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
+}
+/* Scenery (trees/rocks/bushes) is static in position but drawn live with many
+   path ops per node. In low-gfx, bake it once here by pointing `cx` at the
+   offscreen and offsetting the camera so worldToScreen maps into cache space,
+   then reusing the exact live node renderer. Depth-sorted; blitted behind the
+   live entities. Rebuilt only when a node is harvested or respawns. */
+function buildSceneryCache(){
+  const {OX,OY,W,H}=gcDims();
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const g=c.getContext('2d');
+  g.setTransform(GC_S,0,0,GC_S,0,0);
+  const savedCx=cx, camX=G.cam.x, camY=G.cam.y;
+  cx=g; G.cam.x=-OX; G.cam.y=-OY;
+  try{
+    const items=[];
+    for(const n of G.nodes){ if(!n.dead) items.push(n); }
+    items.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
+    for(const n of items) drawNode(n, worldToScreen(n.x,n.y));
+  }catch(e){}
+  cx=savedCx; G.cam.x=camX; G.cam.y=camY;
+  sceneryCache=c; scnWorld=G.worldId;
 }
 
 function render(){
@@ -58,6 +84,10 @@ function render(){
     if(!groundCache || gcWorld!==G.worldId) buildGroundCache();
     if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       groundCache.width/GC_S, groundCache.height/GC_S);
+    // baked scenery (trees/rocks/bushes) blitted behind the live entities
+    if(!sceneryCache || scnWorld!==G.worldId) buildSceneryCache();
+    if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
+      sceneryCache.width/GC_S, sceneryCache.height/GC_S);
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -104,7 +134,8 @@ function render(){
 
   // ---- object/entity pass (depth sorted) ----
   const items=[];
-  for(const n of G.nodes){
+  // In low-gfx the static nodes are pre-baked into the scenery cache; skip them here.
+  if(!LOWFX) for(const n of G.nodes){
     if(n.tx<minX-1||n.tx>maxX+1||n.ty<minY-1||n.ty>maxY+1) continue;
     items.push({d:n.x+n.y, kind:'node', o:n});
   }

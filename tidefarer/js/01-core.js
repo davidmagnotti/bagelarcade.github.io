@@ -111,7 +111,9 @@ const cv = document.getElementById('game');
    NOTE: desynchronized:true was tried and REVERTED - on this ARM/Edge setup it
    caused a strobe/flicker (canvas presenting out of sync with the DOM UI on
    top) without improving performance. */
-const cx = cv.getContext('2d', {alpha:false});
+/* `let` (not const) so the low-gfx scenery baker can briefly point drawing at
+   an offscreen cache and restore it - see buildSceneryCache in js/10-rendering. */
+let cx = cv.getContext('2d', {alpha:false});
 let VW=0, VH=0, DPR=1;
 /* RQ = render-quality scale, LOWFX = drop the most expensive post-FX,
    SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf

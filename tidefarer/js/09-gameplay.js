@@ -140,7 +140,7 @@ function hitNode(n){
   }
   if(n.kind==='fish'){ fishAction(n); return; }
   if(n.kind==='mushroom'){
-    n.dead=true; n.respawn=38;
+    n.dead=true; n.respawn=38; invalidateScenery();
     give('mushroom',1); addXP('farming',6); burst(n.x,n.y-0.3,'#7fb4e8',8);
     return;
   }
@@ -148,14 +148,14 @@ function hitNode(n){
     n.hp-=1; n.shake=0.2; P.swing=0.28; P.anim+=0.5; Snd.chop();
     burst(n.x,n.y-1.6,'#c9385a',5,1.6);
     if(n.hp<=0){
-      n.dead=true; n.respawn=rnd(30,45);
+      n.dead=true; n.respawn=rnd(30,45); invalidateScenery();
       give('apple',2+(P.skills.farming.lvl>=3?1:0)); addXP('farming',10);
       addFloat('+apples',n.x,n.y-2,'#e0708a',1.05);
     }
     return;
   }
   if(n.kind==='shell'){
-    n.dead=true; n.respawn=rnd(45,70);
+    n.dead=true; n.respawn=rnd(45,70); invalidateScenery();
     give('shell',1); burst(n.x,n.y-0.2,'#eaf4f8',7,1.4); Snd.pickup();
     return;
   }
@@ -167,7 +167,7 @@ function hitNode(n){
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
   if(n.hp<=0){
-    n.dead=true; n.respawn= isTree? rnd(20,30) : rnd(26,38);
+    n.dead=true; n.respawn= isTree? rnd(20,30) : rnd(26,38); invalidateScenery();
     hintOnce('regrow','The island <b>regrows</b> - felled pines and broken stone return in under a minute.');
     setSolid(n.tx,n.ty,0);
     if(isTree){
@@ -797,7 +797,7 @@ function updateWorld(dt){
   // nodes respawn
   for(const n of G.nodes){
     if(n.dead){ n.respawn-=dt;
-      if(n.respawn<=0 && dist(P.x,P.y,n.x,n.y)>2.5){ n.dead=false; n.hp=n.maxhp;
+      if(n.respawn<=0 && dist(P.x,P.y,n.x,n.y)>2.5){ n.dead=false; n.hp=n.maxhp; invalidateScenery();
         if(n.kind==='tree'||n.kind==='rock') setSolid(n.tx,n.ty,1);
         burst(n.x,n.y-0.6,'#9be07f',9,1.6);
         if(dist(P.x,P.y,n.x,n.y)<14) Snd.tone(740,0.09,'sine',0.02,180);
