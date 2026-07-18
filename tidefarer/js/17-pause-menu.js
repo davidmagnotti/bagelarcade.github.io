@@ -35,6 +35,11 @@ function togglePause(force){
   document.getElementById('pausePanel').style.display = G.paused? 'flex':'none';
   if(G.paused){ closeAllPanels(); closeDialog(); buildPauseStats(); syncCfgUI(); autoSave(); }
 }
+/* #pausePanel is styled as a full-screen overlay (position:fixed;inset:0) but
+   was nested inside #titleOv, which is display:none during play - so a hidden
+   parent kept the whole pause menu (Sound, Display & comfort, the Effects
+   panel) from ever appearing while playing. Move it to <body> so it shows. */
+try{ document.body.appendChild(document.getElementById('pausePanel')); }catch(e){}
 document.getElementById('btnPause').onclick=()=>togglePause();
 document.getElementById('resumeBtn').onclick=()=>togglePause(false);
 document.getElementById('quitTitleBtn').onclick=()=>{
