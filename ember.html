@@ -279,7 +279,7 @@
   <div id="topLeft">
     <div class="bar"><div class="fill" id="hpFill"></div><div class="lbl" id="hpLbl"></div></div>
     <div class="bar" style="width:150px;height:14px;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
-    <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span></div>
+    <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span><span id="plvlTxt" style="margin-left:10px;color:#c9b0ff;font-weight:bold;">Lv 1</span></div>
   </div>
   <div id="tracker">
     <div id="miniWrap" class="clickable" title="Open map"><canvas id="minimap" width="120" height="120"></canvas></div>
@@ -748,6 +748,8 @@ function placeObjects(){
   addBuilding('tower', 56,33, 'Orin\'s tower');
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
+  addBuilding('house2', 39,57, 'The Ember Hearth (Inn)');
+  addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
   addBuilding('lamp', 30,62,''); addBuilding('lamp', 59,62,'');
   // hidden loot caches for explorers
@@ -2114,6 +2116,7 @@ const P = {
   hp:100, maxhp:100, mp:30, maxmp:30,
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
+  level:1, xpL:0, bank:0, bind:null, horse:0, riding:0, home:0, homeUp:{},
   swordTier:0, // 0 rusty, 1 iron
   atkCd:0, swing:0, hurtT:0, lastCombat:-99, regenT:0,
   inv:{potion:2, seed:0}, gold:0,
@@ -2250,6 +2253,11 @@ function spawnNPCs(){
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false),
     makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
       ['Fish bite best where the water ripples.','Lost three hooks to something big out there…','Salt cures fish and moods alike.'],0.5),
+    (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 40.5,58.6,
+      {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038'},
+      ["A bed, a hearth, and no questions past dark. Ten gold.",
+       "Night's for wolves and worries. Neither gets past my door."],0.7);
+      inn.nightOwl=true; return inn; })(),
     makeNPC('willa','Willa the Farmer',60,60,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true},
@@ -2268,8 +2276,10 @@ const MOBDEF = {
   skeleton:{hp:46, dmg:36, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
   archer:{hp:26, dmg:27, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   gravelord:{hp:150, dmg:42, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
-  boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], name:'The Hollow King'},
-  alpha:{hp:520, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], name:'Greymaw, the Alpha'}
+  boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow King'},
+  alpha:{hp:520, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], lvl:8, name:'Greymaw, the Alpha'},
+  scorpion:{hp:360, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
+  raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'}
 };
 function inSafeZone(x,y){
   for(const k of ['village','dock','farm']){
@@ -2283,7 +2293,7 @@ function spawnMob(kind,x,y,elite){
   const hp=Math.round(d.hp*(elite?2.3:1));
   const m={kind, x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, hp, maxhp:hp,
     dmg:Math.round(d.dmg*(elite?1.7:1)), speed:d.speed*(elite?1.12:1), aggro:d.aggro*(elite?1.2:1),
-    xp:Math.round(d.xp*(elite?2.5:1)), elite:!!elite,
+    xp:Math.round(d.xp*(elite?2.5:1)), elite:!!elite, lvl:(d.lvl||1)+(elite?2:0),
     face:1, anim:Math.random()*10, state:'idle', wt:rnd(1,3), hitCd:0, hurtT:0,
     swing:0, boss:kind==='boss', bigBoss:(kind==='boss'||kind==='alpha'),
     title: kind==='boss'? 'THE HOLLOW KING' : kind==='alpha'? 'GREYMAW, THE ALPHA' : null,
@@ -2357,6 +2367,7 @@ function acceptQuest(id){
 }
 function completeQuest(id){
   P.cheerT=3; // wear the win on your face
+  gainLXP(QUESTS[id].xpL || 70); // quests carry the climb
   const q=QUESTS[id];
   if(q.kind==='gather') for(const it in q.need) take(it,q.need[it]);
   P.quests[id]='done';
@@ -2427,6 +2438,9 @@ function questTargetPos(id){
     if(id==='roadclear') return {x:ZONES.highlands.x,y:ZONES.highlands.y};
     if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='nets') return {x:ZONES.dock.x-2,y:ZONES.dock.y};
+    if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};
+    if(id==='sting1') return {x:ZONES.desert.x,y:ZONES.desert.y};
+    if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
@@ -2435,7 +2449,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -2582,6 +2596,95 @@ function shopButtons(npc,btns){
         ]));
     }});
   }
+  if(npc.id==='bree'){
+    btns.unshift({label:'Deposit all gold', fn:()=>{
+      P.bank=(P.bank||0)+P.gold; const dep=P.gold; P.gold=0; Snd.coin(); refreshUI(); autoSave();
+      setDialog('“'+dep+' gold, sealed in the vault. Total holdings: <b>'+P.bank+'</b>. Death itself signs no withdrawal slips here.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Withdraw all gold', fn:()=>{
+      P.gold+=(P.bank||0); const w=P.bank||0; P.bank=0; Snd.coin(); refreshUI(); autoSave();
+      setDialog('“'+w+' gold, counted twice. Spend it somewhere that deserves it.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='aelin'){
+    btns.unshift({label:'Study the weave (25g \u2192 magic XP)', fn:()=>{
+      if(P.gold<25){ setDialog('“The Spire\'s wisdom is subsidized, not free. Twenty-five.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=25; Snd.coin(); addXP('magic',140); refreshUI();
+      setDialog('“Again — and this time, <i>mean</i> the syllables.” <i>(+140 Magic XP)</i>',
+        shopButtons(npc,[{label:'Study again (25g)',fn:()=>{ if(P.gold>=25){P.gold-=25;Snd.coin();addXP('magic',140);refreshUI();} }},{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='rook'){
+    btns.unshift({label:'Drill volleys (20g \u2192 archery XP)', fn:()=>{
+      if(P.gold<20){ setDialog('“Arrows aren\'t free, friend. Twenty.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=20; Snd.coin(); addXP('archery',120); refreshUI();
+      setDialog('“Better. The target only laughed twice.” <i>(+120 Archery XP)</i>',
+        shopButtons(npc,[{label:'Drill again (20g)',fn:()=>{ if(P.gold>=20){P.gold-=20;Snd.coin();addXP('archery',120);refreshUI();} }},{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='hedda'){
+    if(!P.home) btns.unshift({label:'Buy the homestead (250g)', fn:()=>{
+      if(P.gold<250){ setDialog('“Two hundred fifty. The land\'s worth twice that — I like your face.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=250; P.home=1; Snd.quest(); refreshUI(); autoSave();
+      const hb=G.decor.find(b=>String(b.label||'').includes('Homestead')); if(hb) hb.label='Your homestead';
+      setDialog('“Then it\'s yours — deed, door, and drafts. Come back when you\'re ready to <b>improve</b> it.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    else btns.unshift({label:'Home improvements\u2026', fn:()=>{
+      const opts=[];
+      if(!P.homeUp.story) opts.push({label:'Raise a second story (200g)', fn:()=>{
+        if(P.gold<200) return;
+        P.gold-=200; P.homeUp.story=1; Snd.quest(); refreshUI(); autoSave();
+        const hb=G.decor.find(b=>String(b.label||'').includes('Your homestead')); if(hb) hb.kind='house2';
+        setDialog('“A second story! The gulls will be jealous.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      if(!P.homeUp.furnish) opts.push({label:'Furnish it proper (150g)', fn:()=>{
+        if(P.gold<150) return;
+        P.gold-=150; P.homeUp.furnish=1; Snd.quest(); refreshUI(); autoSave();
+        setDialog('“Rug, hearth-iron, and a bed worth oversleeping in. <b>Sleep free at home</b> from now on.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      if(!P.homeUp.farm) opts.push({label:'Buy the adjoining field (100g)', fn:()=>{
+        if(P.gold<100) return;
+        P.gold-=100; P.homeUp.farm=1; Snd.quest(); refreshUI(); autoSave();
+        const hb=G.decor.find(b=>String(b.label||'').includes('Your homestead'));
+        if(hb) for(let i=0;i<8;i++) G.plots.push({x:Math.floor(hb.x)+3+(i%4)*1.5, y:Math.floor(hb.y)+1+Math.floor(i/4)*1.5, crop:null, t:0});
+        setDialog('“Good soil. Willa\'s seeds grow anywhere — plant away.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      opts.push({label:'Farewell',ghost:true,fn:closeDialog});
+      setDialog(opts.length>1? '“What\'ll it be? A house is never finished — that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
+    }});
+    if(!P.horse) btns.unshift({label:'Buy a horse \u2014 Chestnut (150g)', fn:()=>{
+      if(P.gold<150){ setDialog('“Hundred fifty for Chestnut. He eats like a duke but runs like a rumor.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=150; P.horse=1; P.riding=1; Snd.quest(); refreshUI(); autoSave();
+      setDialog('“He\'s yours. Whistle any time —” <i>Chestnut is already nosing your pockets.</i> <b>(Toggle riding via Hedda or the pause menu.)</b>',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    else btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
+      P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
+    }});
+  }
+  if(npc.id==='perrin' || npc.id==='saffi'){
+    btns.unshift({label:'Rest the night (10g)', fn:()=>{
+      if(P.gold<10){
+        setDialog('“Ten gold for the bed, friend. The hearth\'s warmth is free to look at.”',
+          shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        return;
+      }
+      P.gold-=10; Snd.coin(); closeDialog();
+      const fade=document.getElementById('fadeOv');
+      fade.style.opacity=1;
+      setTimeout(()=>{
+        G.dayT=0.09; // morning proper — the dark is done
+        P.hp=P.maxhp; P.mp=P.maxmp;
+        P.bind={w:G.worldId, x:npc.x, y:npc.y+1};
+        fade.style.opacity=0;
+        toast('You sleep deep and dreamless. Dawn finds you <b>fully mended</b>.',4600);
+        Snd.quest(); refreshUI(); autoSave();
+      }, 800);
+    }});
+  }
   if(npc.id==='sela'){
     btns.unshift({label:'Buy Bread (5g)', fn:()=>{
       if(P.gold>=5){ P.gold-=5; giveQuiet('bread',1); Snd.coin(); refreshUI();
@@ -2672,8 +2775,8 @@ function pickClickTarget(wx,wy){
   }
   if(best) return best;
   const cand=[];
-  for(const n of G.npcs) cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.7,
-    go:()=>{ facePoint(n.x,n.y); openDialog(n); }});
+  for(const n of G.npcs){ if(n.hidden) continue; cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.7,
+    go:()=>{ facePoint(n.x,n.y); openDialog(n); }}); }
   for(const n of G.nodes){
     if(n.dead) continue;
     if(n.kind==='fish') cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.9,go:()=>{ facePoint(n.x,n.y); fishAction(n); }});
@@ -2684,6 +2787,7 @@ function pickClickTarget(wx,wy){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
     else if(b.kind==='chest'||b.kind==='chestOpen') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>openChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
+    else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
     else if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')
@@ -2898,7 +3002,7 @@ function refreshSkillsPanel(){
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue; any=true;
@@ -2936,7 +3040,8 @@ const ISLE_IDS=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], masterwork:['skeletons'],
   wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'],
-  nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'] };
+  nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'],
+  feud1:['roadclear'], sting1:['feud1'], undermaw1:['torv2'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
     if(!P.quests[id] && UNLOCK_AFTER[id].every(p=>qs(p)==='done')){
@@ -2962,7 +3067,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};
@@ -2981,6 +3086,7 @@ function refreshUI(){
   document.getElementById('mpFill').style.width=(P.mp/P.maxmp*100)+'%';
   document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
   document.getElementById('goldTxt').textContent=P.gold;
+  const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv.potion||0;
 }
 /* =====================================================================
@@ -3004,7 +3110,7 @@ function circleBlocked(x,y,r){
 /* ---- nearest interactable ---- */
 function nearestInteract(){
   let best=null, bd=1.9;
-  for(const n of G.npcs){ const d=dist(P.x,P.y,n.x,n.y); if(d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
+  for(const n of G.npcs){ if(n.hidden) continue; const d=dist(P.x,P.y,n.x,n.y); if(d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
   if(G.cat && !G.cat.following){ const d=dist(P.x,P.y,G.cat.x,G.cat.y);
     if(d<1.9 && d<bd){bd=d;best={type:'cat',o:G.cat,label:'Pet'};} }
   for(const n of G.nodes){
@@ -3262,6 +3368,36 @@ function tryAttack(useMouse){
     refreshUI();
   }
 }
+function xpForP(l){ return 70+55*l; }
+function gainLXP(n){
+  P.xpL+=n;
+  addFloat('+'+n+' XP', P.x, P.y-2.6, '#c9b0ff');
+  while(P.xpL>=xpForP(P.level) && P.level<20){
+    P.xpL-=xpForP(P.level); P.level++;
+    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp;
+    burst(P.x,P.y-0.5,'#c9b0ff',20); Snd.levelup();
+    shockwave(P.x,P.y,'rgba(201,176,255,0.9)',46);
+    banner('LEVEL '+P.level, 'Barik takes your measure — and steps back.');
+    P.cheerT=3;
+  }
+  refreshUI();
+}
+function drawMobBars(m,s){
+  if(m.hp<m.maxhp){
+    const w=m.bigBoss?54:26, top= m.kind==='scorpion'? -30 : -52;
+    cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(s.x-w/2,s.y+top,w,4);
+    cx.fillStyle='#e05648'; cx.fillRect(s.x-w/2,s.y+top,w*clamp(m.hp/m.maxhp,0,1),4);
+  }
+  if(!m.dead && dist(P.x,P.y,m.x,m.y)<8){
+    const dl=(m.lvl||1)-(P.level||1);
+    cx.font='bold 9px Georgia'; cx.textAlign='center';
+    cx.fillStyle= dl>=3?'#ff6a5a': dl>=1?'#ffd76a': dl<=-3?'#8a94a0':'#e8e0d0';
+    const top2= m.kind==='scorpion'? -36 : m.boss?-102: m.kind==='alpha'?-94: -58;
+    cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=2.6;
+    cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
+    cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
+  }
+}
 function damageMob(m,dmg,knock,skill){
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
@@ -3271,6 +3407,8 @@ function damageMob(m,dmg,knock,skill){
   }
   let crit=false;
   if(Math.random()<0.12){ dmg=Math.round(dmg*1.6); crit=true; }
+  const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
+  dmg=Math.max(1,Math.round(dmg*Math.max(0.35,1-0.09*lvdiff))); // high-level foes shrug
   m.hp-=dmg; m.hurtT=0.18; m.state='chase';
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
@@ -3282,6 +3420,7 @@ function damageMob(m,dmg,knock,skill){
 }
 function killMob(m,skill){
   buzz(13);
+  gainLXP((m.lvl||1)*6+4);
   m.dead=true; m.respawnT = m.bigBoss? -1 : rnd(24,40);
   const d=MOBDEF[m.kind];
   burst(m.x,m.y-0.4,'#fff',14,3);
@@ -3318,6 +3457,8 @@ function hurtPlayer(dmg,src){
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
+  const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
+  dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
   burst(P.x,P.y-0.5,'#e05648',8); Snd.hurt(); G.shake=Math.max(G.shake,0.25);
@@ -3334,14 +3475,21 @@ function playerDie(){
 document.getElementById('respawnBtn').onclick=()=>{
   document.getElementById('deadOv').style.display='none';
   P.dead=false; P.hp=Math.round(P.maxhp*0.6); P.mp=P.maxmp;
-  P.x=ZONES.village.x+0.5; P.y=ZONES.village.y+2.5; P.hurtT=1.5;
-  refreshUI();
+  const toll=Math.floor((P.gold||0)*0.15);
+  if(toll>0){ P.gold-=toll;
+    toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach — Goldwarden Bree, Greyharbor.)</i>',6200); }
+  const b=P.bind;
+  if(b && b.w && b.w!==G.worldId) switchWorld(b.w);
+  if(b){ P.x=b.x; P.y=b.y; }
+  else { P.x=ZONES.village.x+0.5; P.y=ZONES.village.y+2.5; }
+  P.hurtT=1.5; refreshUI(); autoSave();
 };
 document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv').style.display='none'; };
 
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
+  if(G.interior && P.riding){ P.riding=0; toast('Chestnut waits outside.',2200); }
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(keys['shift']) tryRoll();
@@ -3399,7 +3547,7 @@ function updatePlayer(dt){
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){
     mx/=ml; my/=ml;
-    const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1);
+    const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)*(P.riding?1.55:1);
     moveEntity(P, mx*sp*dt, my*sp*dt);
     P.dir={x:mx,y:my}; P.anim+=sp*dt*3.1; // stride matches ground covered — no foot-sliding
     P.stepT=(P.stepT||0)+dt;
@@ -3457,6 +3605,13 @@ function updatePlayer(dt){
 }
 
 function updateNPCs(dt){
+  const night=isNight();
+  if(!night) G.nightToasted=false;
+  else if(!G.nightToasted && !G.interior){
+    G.nightToasted=true;
+    toast('Lamps flicker on as the villagers head indoors for the night. The <b>inn</b> keeps its door open.',5200);
+  }
+  for(const n of G.npcs) n.hidden = night && !n.nightOwl;
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
     n.chatT=(n.chatT===undefined? rnd(4,10) : n.chatT)-dt;
@@ -3653,6 +3808,7 @@ function updateWorld(dt){
   if(night<0.2) G.fireflies.length=0;
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
+function isNight(){ return nightAmount()>0.55; }
 function nightAmount(){
   // dayT: 0=dawn .25=noon .5=dusk .75=midnight
   const t=G.dayT;
@@ -3987,6 +4143,30 @@ function drawDecor(b,s){
     cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x+sw,s.y-9,1.5,0,TAU); cx.fill();
     return;
   }
+  if(b.kind==='target'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    g.strokeStyle='#5a4630'; g.lineWidth=3;
+    g.beginPath(); g.moveTo(0,0); g.lineTo(0,-22); g.stroke();
+    for(const [r,c] of [[10,'#e8e0d0'],[7,'#c04038'],[4,'#e8e0d0'],[1.8,'#c04038']]){
+      g.fillStyle=c; g.beginPath(); g.ellipse(0,-26,r,r*1.15,0,0,TAU); g.fill(); }
+    g.strokeStyle='#241a10'; g.lineWidth=1.6;
+    g.beginPath(); g.ellipse(0,-26,10,11.5,0,0,TAU); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='cavemouth'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a3f47'; // rock brow
+    g.beginPath();
+    g.moveTo(-26,4); g.quadraticCurveTo(-24,-26, 0,-30);
+    g.quadraticCurveTo(24,-26, 26,4); g.closePath(); g.fill();
+    g.strokeStyle='#171a1f'; g.lineWidth=2.4; g.stroke();
+    g.fillStyle='#0b0d10'; // the maw
+    g.beginPath(); g.moveTo(-13,4); g.quadraticCurveTo(0,-20,13,4); g.closePath(); g.fill();
+    const pulse=0.5+0.5*Math.sin(G.time*2.2);
+    g.fillStyle='rgba(120,60,180,'+(0.10+0.12*pulse)+')'; // a wrong light inside
+    g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
+    g.restore(); return;
+  }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : 30);
@@ -4035,6 +4215,7 @@ function drawDecor(b,s){
   }
 }
 function drawNPC(n,s){
+  if(n.hidden) return;
   drawShadowAt(cx,s.x,s.y,14);
   drawHumanoid(cx,s.x,s.y,{...n.look, size:(n.look.size||1)*1.28, dir:n.face, step:n.anim, name:n.name, ph:n.hx*0.7+n.hy*1.3});
   // name
@@ -4073,7 +4254,46 @@ function drawNPC(n,s){
     cx.fillText(mark,s.x,s.y-66+bob);
   }
 }
+function drawScorpion(m,s){
+  const g=cx; g.save(); g.translate(s.x,s.y);
+  const fl=m.face||1, an=Math.sin(m.anim*6)*0.5;
+  g.scale(1.25,1.25);
+  g.fillStyle='rgba(0,0,0,0.25)';
+  g.beginPath(); g.ellipse(0,2,16,6,0,0,TAU); g.fill();
+  const bd='#c08a3c', sh='#8a5f24', dk='#5f3f16';
+  for(const [lx,ph] of [[-11,0],[-6,2],[6,4],[11,1]]){ // legs
+    g.strokeStyle=dk; g.lineWidth=2;
+    g.beginPath(); g.moveTo(lx*0.5,-3); g.lineTo(lx,Math.sin(m.anim*8+ph)*1.5+1); g.stroke();
+    g.beginPath(); g.moveTo(-lx*0.5,-3); g.lineTo(-lx,Math.sin(m.anim*8+ph+3)*1.5+1); g.stroke();
+  }
+  g.fillStyle=bd; // segmented body
+  for(let i=0;i<3;i++){ g.beginPath(); g.ellipse(-fl*i*4,-4+i*0.4,7-i*1.2,4.5-i*0.6,0,0,TAU); g.fill();
+    g.strokeStyle='#3a2810'; g.lineWidth=1.4; g.stroke(); }
+  g.fillStyle=sh; // claws
+  for(const e of [-1,1]){
+    g.beginPath(); g.ellipse(fl*10,e*4-4,4.5,3,e*0.4,0,TAU); g.fill();
+    g.strokeStyle='#3a2810'; g.lineWidth=1.4; g.stroke(); }
+  g.strokeStyle=sh; g.lineWidth=3.4; // the tail
+  g.beginPath(); g.moveTo(-fl*9,-5);
+  g.quadraticCurveTo(-fl*15,-12+an, -fl*11,-17+an);
+  g.quadraticCurveTo(-fl*8,-20+an, -fl*6,-18+an); g.stroke();
+  g.fillStyle='#2c1c0c'; // stinger
+  g.beginPath(); g.moveTo(-fl*6,-18+an); g.lineTo(-fl*3.4,-16+an); g.lineTo(-fl*6.4,-15+an);
+  g.closePath(); g.fill();
+  g.fillStyle='#1a1210';
+  g.beginPath(); g.arc(fl*6,-6,1.1,0,TAU); g.arc(fl*8.5,-6,1.1,0,TAU); g.fill();
+  g.restore();
+}
 function drawMob(m,s){
+  if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
+  if(m.kind==='raider'){
+    drawShadowAt(cx,s.x,s.y,13);
+    drawHumanoid(cx,s.x,s.y,{skin:'#b58a66',hair:'#2c2624',shirt:'#5e2a2a',pants:'#332020',
+      hat:'hood',hatColor:'#4a1f1f',armor:1,pauldrons:true,weapon:'sword',wtier:1,
+      swing:m.swing||0, hurt:m.hurtT>0, size:1.24,
+      dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)});
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   drawShadowAt(cx,s.x,s.y, m.boss?20: m.kind==='slime'?11:13);
   if(m.windup>0){
     // danger ring + rising crouch: your cue to dodge
@@ -4128,8 +4348,58 @@ function drawMob(m,s){
     cx.fillStyle= m.boss? '#9fe8c0' : '#ffb0a0'; cx.fillText(nm,s.x,s.y+ny);
   }
 }
+function drawHorse(s){
+  const g=cx; g.save(); g.translate(s.x,s.y);
+  const fl=(P.dir.x<0)?-1:1, tr=Math.sin(P.anim*7);
+  g.scale(1.3,1.3);
+  g.fillStyle='rgba(0,0,0,0.28)';
+  g.beginPath(); g.ellipse(0,1.5,17,6,0,0,TAU); g.fill();
+  const c1='#8a5a34', c2='#6e4426', mane='#3a2614';
+  for(const [lx,ph] of [[-9,0],[-4,2.4],[5,1.2],[10,3.6]]){ // legs
+    g.strokeStyle=c2; g.lineWidth=3.4; g.lineCap='round';
+    g.beginPath(); g.moveTo(lx,-12);
+    g.lineTo(lx+(P.moving?Math.sin(P.anim*9+ph)*3.4:0), 0.5); g.stroke();
+  }
+  const bg=g.createLinearGradient(0,-24,0,-8);
+  bg.addColorStop(0,'#9a6a3e'); bg.addColorStop(1,c1);
+  g.fillStyle=bg; // barrel body
+  g.beginPath(); g.ellipse(0,-15,14.5,7.2,0,0,TAU); g.fill();
+  g.strokeStyle='#241608'; g.lineWidth=1.8; g.stroke();
+  g.fillStyle=c1; // neck & head
+  g.beginPath();
+  g.moveTo(fl*10,-19);
+  g.quadraticCurveTo(fl*16,-26+tr*0.6, fl*17.5,-29+tr*0.6);
+  g.lineTo(fl*22,-27+tr*0.6);
+  g.quadraticCurveTo(fl*23,-24+tr*0.6, fl*20,-22.5+tr*0.6);
+  g.quadraticCurveTo(fl*15,-20, fl*11,-14);
+  g.closePath(); g.fill();
+  g.strokeStyle='#241608'; g.lineWidth=1.7; g.stroke();
+  g.fillStyle=mane; // mane
+  g.beginPath();
+  g.moveTo(fl*9.5,-20.5); g.quadraticCurveTo(fl*14,-27, fl*16.5,-30+tr*0.6);
+  g.lineTo(fl*14.5,-30+tr*0.6); g.quadraticCurveTo(fl*11,-25, fl*8,-19.5);
+  g.closePath(); g.fill();
+  g.fillStyle='#1a1210';
+  g.beginPath(); g.arc(fl*18.6,-27.5+tr*0.6,0.9,0,TAU); g.fill(); // eye
+  g.strokeStyle=mane; g.lineWidth=2.6; // tail
+  g.beginPath(); g.moveTo(-fl*13.5,-17);
+  g.quadraticCurveTo(-fl*18,-12+tr, -fl*16.5,-5+tr); g.stroke();
+  g.fillStyle='#5a3a5e'; // saddle
+  g.beginPath(); g.ellipse(-fl*1,-20.5,5.5,2.6,0,0,TAU); g.fill();
+  g.strokeStyle='#2c1830'; g.lineWidth=1.4; g.stroke();
+  g.restore();
+}
 function drawPlayer(s){
+  if(P.riding){
+    drawHorse(s);
+    const s2={x:s.x, y:s.y-21};
+    drawPlayerFigure(s2);
+    return;
+  }
   drawShadowAt(cx,s.x,s.y,14);
+  drawPlayerFigure(s);
+}
+function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
     ((P.gatherT||0)>0? P.gatherKind :
      P.fishing? 'rod' : (P.unlocked.melee? 'sword' : null)); // kit in hand while gathering; no phantom blade before the forge
@@ -4486,23 +4756,28 @@ function drawGritGrade(){
    WORLD LAYER — tutorial isle, the mainland, sailing between them
    ===================================================================== */
 const ISLE_ZONES = ZONES; // the tutorial isle's zones (initial)
-const MAIN_ZONES = { // the isle of Barik — five times the home shores
-  village:  {x:54, y:179, r:12, name:'Greyharbor'},
-  dock:     {x:39, y:182, r:6,  name:'Harbor Docks'},
-  forest:   {x:104,y:157, r:22, name:'Blackpine Reach'},
-  highlands:{x:164,y:114, r:20, name:'Wolfcrag Highlands'},
-  ruins:    {x:118,y:57,  r:19, name:'Barrowfield'},
-  meadow:   {x:182,y:179, r:19, name:'The Mirefen'},
-  tower:    {x:179,y:46,  r:9,  name:'Stormwatch Peak'},
-  farm:     {x:206,y:150, r:13, name:'Barik Farmsteads'},
-  mines:    {x:64, y:104, r:10, name:'Old Barik Mines'}
+const MAIN_ZONES = { // BARIK — ten times the home shores
+  village:  {x:77, y:254, r:15, name:'Greyharbor', lv:[1,3]},
+  dock:     {x:55, y:258, r:7,  name:'Harbor Docks', lv:[1,2]},
+  forest:   {x:148,y:223, r:28, name:'Blackpine Reach', lv:[2,4]},
+  highlands:{x:233,y:162, r:26, name:'Wolfcrag Highlands', lv:[4,7]},
+  ruins:    {x:168,y:81,  r:24, name:'Barrowfield', lv:[5,8]},
+  meadow:   {x:258,y:254, r:24, name:'The Mirefen', lv:[2,5]},
+  tower:    {x:254,y:65,  r:11, name:'Stormwatch Peak', lv:[8,10]},
+  farm:     {x:293,y:213, r:16, name:'Barik Farmsteads', lv:[1,3]},
+  mines:    {x:91, y:148, r:12, name:'Old Barik Mines', lv:[3,5]},
+  castle:   {x:118,y:300, r:14, name:'Barik Keep', lv:[1,1]},
+  spire:    {x:150,y:312, r:8,  name:"Aelin's Spire", lv:[1,1]},
+  desert:   {x:300,y:112, r:32, name:'Sunscour Valley', lv:[11,14]},
+  undermaw: {x:212,y:196, r:8,  name:'The Undermaw', lv:[10,13]},
+  vael:     {x:318,y:40,  r:20, name:'The Vael March', lv:[11,14]}
 };
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES — CHAPTER I',
     gen:()=>genIsleAll() },
-  main:{ W:250, H:250, seed:99177, zones:MAIN_ZONES,
-    spawn:{x:40.5,y:182.5}, title:'BARIK', sub:'CHAPTER II — THE WILD SHORES',
+  main:{ W:355, H:355, seed:99177, zones:MAIN_ZONES,
+    spawn:{x:57.5,y:259.5}, title:'BARIK', sub:'CHAPTER II — THE WILD SHORES',
     gen:()=>genMainAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -4554,6 +4829,13 @@ function genMainland(){
   carveDisc(ZONES.tower.x,ZONES.tower.y,ZONES.tower.r,T.RUIN,false);
   carveDisc(ZONES.farm.x,ZONES.farm.y,ZONES.farm.r,T.GRASS,false);
   carveDisc(ZONES.mines.x,ZONES.mines.y,ZONES.mines.r,T.RUIN,false);
+  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.PATH,false);   // keep courtyard
+  carveDisc(ZONES.spire.x,ZONES.spire.y,ZONES.spire.r,T.GRASS,false);
+  carveDisc(ZONES.desert.x,ZONES.desert.y,ZONES.desert.r,T.SAND,false);   // Sunscour
+  carveDisc(ZONES.desert.x-14,ZONES.desert.y+16,16,T.SAND,false);
+  carveDisc(ZONES.desert.x+15,ZONES.desert.y-14,15,T.SAND,false);
+  carveDisc(ZONES.undermaw.x,ZONES.undermaw.y,ZONES.undermaw.r,T.RUIN,false); // the scar
+  carveDisc(ZONES.vael.x,ZONES.vael.y,ZONES.vael.r,T.RUIN,false);         // burned march
   // farmsteads: tilled soil strips
   for(let i=0;i<7;i++){
     const fx=ZONES.farm.x-8+((i%3)*6), fy=ZONES.farm.y-6+(Math.floor(i/3)*5);
@@ -4581,6 +4863,10 @@ function genMainland(){
   carveLine(ZONES.ruins.x+4,ZONES.ruins.y-4, ZONES.tower.x-2,ZONES.tower.y+3, T.PATH,0);
   carveLine(ZONES.meadow.x+4,ZONES.meadow.y-6, ZONES.farm.x-4,ZONES.farm.y+4, T.PATH,0);
   carveLine(ZONES.forest.x-8,ZONES.forest.y-10, ZONES.mines.x+4,ZONES.mines.y+4, T.PATH,0);
+  carveLine(V.x+4,V.y+6, ZONES.castle.x-6,ZONES.castle.y-4, T.PATH,0);
+  carveLine(ZONES.castle.x+6,ZONES.castle.y+4, ZONES.spire.x-3,ZONES.spire.y-2, T.PATH,0);
+  carveLine(ZONES.highlands.x+6,ZONES.highlands.y-8, ZONES.desert.x-16,ZONES.desert.y+12, T.PATH,0);
+  carveLine(ZONES.meadow.x-4,ZONES.meadow.y-10, ZONES.undermaw.x+2,ZONES.undermaw.y+4, T.PATH,0);
   // shore cleanup
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(tileAt(x,y)===T.SHALLOW){
@@ -4649,12 +4935,40 @@ function placeObjectsMain(){
   addBuilding('barn',  V.x+4,V.y+3,'Trade hall');
   addBuilding('house', V.x-5,V.y+3,"Sela's Provisions");
   addBuilding('house2',V.x+7,V.y,"Ivo's Herbary");
+  addBuilding('house2',V.x-2,V.y+5,'The Gull & Anchor (Inn)');
+  addBuilding('lamp',V.x-0.5,V.y+6,'');
   const FZ=ZONES.farm;
   addBuilding('barn', FZ.x+4,FZ.y-4,"Hedda's barn");
   addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse');
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
+  // Barik Keep — the Queen's seat
+  const CK=ZONES.castle;
+  addBuilding('tower', CK.x,CK.y-3,'Barik Keep — Hall of Queen Maelis');
+  addBuilding('house2',CK.x-6,CK.y+2,'Keep barracks');
+  addBuilding('house2',CK.x+6,CK.y+2,'Keep granary');
+  addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
+  G.decor.push({kind:'pillar',x:CK.x-4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x-5,CK.y-2,1);
+  G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
+  // Aelin's Spire — the magic tower
+  const SP=ZONES.spire;
+  addBuilding('tower', SP.x,SP.y,"Aelin's Spire — school of the weave");
+  addBuilding('lamp',SP.x-2,SP.y+2,'');
+  // the archery range, on Greyharbor's edge
+  addBuilding('house', V.x+9,V.y+7,"Rook's Range");
+  for(let i=0;i<3;i++){ G.decor.push({kind:'target',x:V.x+12+i*2,y:V.y+9+i*0.5}); setSolid(Math.floor(V.x+12+i*2),Math.floor(V.y+9+i*0.5),1); }
+  // the Undermaw mouth — enter if you dare
+  const UM=ZONES.undermaw;
+  G.decor.push({kind:'cavemouth',x:UM.x+0.5,y:UM.y+0.5});
+  addBuilding('lamp',UM.x-2,UM.y+2,'');
+  // the homestead, for sale
+  const FZ2=ZONES.farm;
+  addBuilding('house', FZ2.x+10,FZ2.y+3,'Homestead (FOR SALE)');
+  // Vael March raider camp
+  const VM=ZONES.vael;
+  addBuilding('house2',VM.x,VM.y,'Vael war-tent');
+  G.decor.push({kind:'pillar',x:VM.x-3.5,y:VM.y+2.5,broken:true}); setSolid(VM.x-4,VM.y+2,1);
   G.decor.push({kind:'pillar',x:MZ.x-1.5,y:MZ.y+0.5,broken:true}); setSolid(MZ.x-2,MZ.y,1);
   G.decor.push({kind:'pillar',x:MZ.x+2.5,y:MZ.y+1.5,broken:false}); setSolid(MZ.x+2,MZ.y+1,1);
   addBuilding('lamp',V.x-1,V.y-1,''); addBuilding('lamp',V.x+2,V.y+1,'');
@@ -4709,12 +5023,49 @@ function spawnBarikFolk(){
     ["These shafts fed three generations before the wilds took the road.",
      "Stone's still down there. Just needs hands brave enough."],0.9));
 }
+function spawnRealmFolk(){
+  const CK=ZONES.castle, SP=ZONES.spire, V=ZONES.village, VM=ZONES.vael;
+  G.npcs.push(makeNPC('maelis','Queen Maelis of Barik', CK.x+0.5,CK.y+0.8,
+    {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
+    ["Barik feeds three duchies and fears one: the Vael March, north-east, where my cousin plays at war.",
+     "A queen rules by ledger and by patience. The sword is for those who run out of both."],0.5));
+  G.npcs.push(makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
+    {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
+    ["Her Majesty receives travelers. Mind your manners and your mud."],0.4));
+  G.npcs.push(makeNPC('aelin','Aelin the Weaver', SP.x+1.5,SP.y+2.2,
+    {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
+    ["Magic is grammar for the world's oldest language. I teach conjugation.",
+     "The Spire takes students, not worshippers. Bring coin and humility."],0.6));
+  G.npcs.push(makeNPC('rook','Fletcher Rook', V.x+10.5,V.y+8.2,
+    {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',quiver:true},
+    ["Breathe out, loose, and never apologize to the target.",
+     "Twenty gold buys a hundred arrows' worth of lessons."],0.8));
+  G.npcs.push(makeNPC('bree','Goldwarden Bree', V.x+5.5,V.y+3.8,
+    {skin:'#d3a377',hair:'#5a4a3a',shirt:'#4a3a5a',pants:'#332c3c',apron:'#8a7a5a',hairstyle:'bun'},
+    ["The vault holds what the grave cannot take. Deposit while you breathe.",
+     "Greyharbor's ledger balances daily. Unlike its taverns."],0.5));
+  G.npcs.push(makeNPC('castell','Castellan of the Vael', VM.x-6.5,VM.y+6.5,
+    {skin:'#c09070',hair:'#3a3230',shirt:'#5e2a2a',pants:'#3a2020',cloakless:1,armor:1,beard:'#3a3230'},
+    ["Turn back, Barik-friend. The March answers to its own crown now.",
+     "The Queen's cousin pays iron for iron. You've been warned once."],0.4));
+}
+function spawnBarikInn(){
+  const V=ZONES.village;
+  const inn=makeNPC('saffi','Saffi of the Gull', V.x-1.5,V.y+6.2,
+    {skin:'#caa27b',hair:'#2e2624',shirt:'#5a4a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
+    ["Sailors, wardens, wanderers — everyone sleeps under my roof eventually.",
+     "Ten gold buys the best bed on Barik. The second-best is the floor."],0.8);
+  inn.nightOwl=true; G.npcs.push(inn);
+}
 function spawnMobsMain(){
   const packs=[
-    ['wolf', ZONES.highlands, 7, 0.55],
-    ['skeleton', ZONES.ruins, 7, 0.6],
-    ['archer', ZONES.ruins, 4, 0.35],
-    ['slime', ZONES.meadow, 7, 0.45]
+    ['wolf', ZONES.highlands, 9, 0.55],
+    ['skeleton', ZONES.ruins, 9, 0.6],
+    ['archer', ZONES.ruins, 5, 0.35],
+    ['slime', ZONES.meadow, 9, 0.45],
+    ['scorpion', ZONES.desert, 10, 0.4],
+    ['raider', ZONES.vael, 8, 0.45],
+    ['skeleton', ZONES.undermaw, 5, 0.9]
   ];
   const pr=mulberry32(SEED+41);
   for(const [kind,z,count,eliteP] of packs){
@@ -4734,7 +5085,7 @@ function spawnMobsMain(){
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
-  spawnNPCsMain(); spawnBarikFolk(); spawnMobsMain();
+  spawnNPCsMain(); spawnBarikFolk(); spawnBarikInn(); spawnRealmFolk(); spawnMobsMain();
   addCrowsFor();
   G.forgePos=null;
   buildMapBase();
@@ -4781,6 +5132,21 @@ QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
   log:'Collect 5 shells from Barik\'s beaches for Ivo.',
   doneText:'Unbroken, every one. You\'d make a fair herbalist if the sword ever bores you. Balm\'s share is yours.',
   rw:{gold:35, item:{potion:2}, xp:{forage:140}} };
+QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
+  brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler — they are Lv 12 men and proud of it.',
+  log:'Drive off 6 Vael Raiders in the north-east March.',
+  doneText:'Six hoods emptied. My cousin will sulk for a season — Barik thanks you in gold and in standing.',
+  rw:{gold:220, item:{potion:2}, xp:{melee:300, archery:300, magic:300}}, unlocks:['sting1'] };
+QUESTS.sting1={ giver:'maelis', title:'Sunscour Cull', kind:'kill', kill:{scorpion:5}, xpL:220,
+  brief:'The Sunscour breeds armored horrors that drag off goats, carts, and the occasional tax collector. Cull five. I am told their shells turn all but the truest blows — Lv 13, my wardens reckon.',
+  log:'Slay 5 Sunscour Scorpions in the desert valley.',
+  doneText:'Five stingers for the trophy wall. The caravans will run the valley road again — carefully.',
+  rw:{gold:260, item:{potion:2}, xp:{melee:340, archery:340, magic:340}} };
+QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone:'undermaw', xpL:150,
+  brief:'East of the Mirefen the ground splits — the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
+  log:'Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)',
+  doneText:'You found it and kept your skin — that\'s rarer than the gold. Whatever you carried out, you earned.',
+  rw:{gold:90, xp:{mining:200}} };
 /* ---------- the bounty quest & relic ---------- */
 QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:{elite:8},
   brief:"The wilds have turned. Crimson-ringed beasts — elites, we call them — press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
@@ -5401,7 +5767,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
@@ -5440,6 +5806,9 @@ function loadCode(str){
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
+  if(typeof d.dyt==='number') G.dayT=d.dyt;
+  P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.bind=d.bind||null;
+  P.horse=d.hs?1:0; P.home=d.hm?1:0; P.homeUp=d.hu||{};
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
@@ -5516,6 +5885,7 @@ function enterHouse(b){
     tower:{line:'Star charts, humming glass, and a faint smell of ozone.'}
   };
   const I={kind:b.kind, w:9, h:7, ret:{x:P.x,y:P.y+0.3}, exit:{x:4.5,y:6.1}, t:0, furn:[]};
+  if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
   const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
   if(b.kind==='house'){ F('bed',1.9,2.8,1.0,0.7); F('table',6.4,3.4,0.9,0.6); F('stool',5.2,4.2,0.35,0.3); F('stool',7.4,4.4,0.35,0.3); F('rug',4.5,4.4,0,0,false); F('hearth',2.4,1.35,0.9,0.35); F('shelf',6.4,1.3,1.0,0.3); }
   if(b.kind==='house2'){ F('bed',7.1,2.8,1.0,0.7); F('barrel',1.8,3.0,0.45,0.4); F('barrel',2.6,3.5,0.45,0.4); F('crate',1.9,4.6,0.55,0.45); F('net',4.4,1.3,1.2,0.3); F('shelf',6.2,1.3,1.0,0.3); F('rug',4.6,4.3,0,0,false); }
@@ -5525,7 +5895,20 @@ function enterHouse(b){
   G.interior=I;
   P.click=null;
   P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>'+(b.label||'Inside')+'</b> — '+kinds[b.kind].line, 4000);
+  toast('<b>'+(b.label||'Inside')+'</b> — '+((kinds[b.kind]||{}).line||'Shelter from the wide sky.'), 4000);
+  Snd.step(8);
+}
+function enterCave(){
+  if(G.interior) return;
+  const I={kind:'cave', w:9, h:7, ret:{x:P.x,y:P.y+0.4}, exit:{x:4.5,y:6.1}, t:0, furn:[], cave:1};
+  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  F('orb',2.2,2.6,0.5,0.4);
+  F('crate',7.0,4.4,0.55,0.45);
+  F('cavechest',4.6,2.2,0.7,0.5);
+  F('books',6.6,1.5,1.2,0.3);
+  G.interior=I; P.click=null;
+  P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
+  toast('<b>The Undermaw</b> — the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
   Snd.step(8);
 }
 function exitHouse(){
@@ -6155,6 +6538,17 @@ function useHotspot(h){
   }
   else if(f.type==='books') readLore((I.kind==='tower'?'tower':'barn')+(G.worldId==='main'?'@m':''));
   else if(f.type==='shelf') readLore((I.kind==='house2'?'house2':'house')+(G.worldId==='main'?'@m':''));
+  else if(f.type==='cavechest'){
+    if(P.prog.caveChest){ toast('The great chest sits empty. The dark remembers you took its heart.',3200); }
+    else { P.prog.caveChest=1; giveGold(220); give('potion',3); gainLXP(180);
+      burst(P.x,P.y-0.5,'#c9b0ff',22); Snd.quest(); award&&award('delver');
+      toast('The Undermaw yields: <b>220 gold</b>, three tonics, and a story worth <b>180 XP</b>.',5200); }
+  }
+  else if(f.type==='bed' && G.interior && G.interior.home && P.homeUp && P.homeUp.furnish){
+    G.dayT=0.09; P.hp=P.maxhp; P.mp=P.maxmp; P.bind={w:'main', x:G.interior.ret.x, y:G.interior.ret.y};
+    toast('You sleep in <b>your own bed</b> — free, deep, and yours. Dawn finds you mended.',4400);
+    Snd.quest(); refreshUI(); autoSave();
+  }
   else rummage(f);
 }
 
@@ -6182,7 +6576,7 @@ function checkDiscover(){
     const key=G.worldId+':'+k;
     if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
       P.disc[key]=1;
-      banner('DISCOVERED', z.name); Snd.quest(); giveGold(8);
+      banner('DISCOVERED', z.name + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest( + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); giveGold(8 + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : ''));
       const all=Object.keys(ZONES).filter(k2=>ZONES[k2].name).every(k2=>P.disc[G.worldId+':'+k2]);
       if(all) award('wayfarer');
     }
