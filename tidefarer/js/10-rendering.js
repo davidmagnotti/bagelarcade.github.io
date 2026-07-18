@@ -201,7 +201,7 @@ function render(){
   }
   // fireflies
   const night=nightAmount();
-  if(!LOWFX && night>0.1){
+  if(night>0.1){   // fireflies: a few small arcs - cheap enough to keep in low-gfx
     for(const f of G.fireflies){
       const s=worldToScreen(f.x,f.y);
       const a=(0.4+0.6*Math.abs(Math.sin(f.ph)))*Math.min(1,f.life);
@@ -240,12 +240,12 @@ function render(){
     cx.globalAlpha=1;
   }
 
-  // ---- rolling ground fog & carrion crows ----
+  // ---- carrion crows & coastal gulls (cheap: a few line strokes) - kept in low-gfx
+  drawCrows();
+  drawGulls();
+  // rolling fog + cloud shadows are broader fills - low-gfx only skips these
   if(!LOWFX){
     drawFog();
-    drawCrows();
-    drawGulls();
-    // ---- passing cloud shadows (day) ----
     WX.drawCloudShadows();
   }
 
@@ -313,7 +313,7 @@ function render(){
   // vignette
   const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  if(DBG.vignette && !LOWFX){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
+  if(DBG.vignette){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }   // 1 gradient fill - cheap, kept in low-gfx
 
   // The minimap is a second on-screen canvas; redrawing it every frame forces
   // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.
