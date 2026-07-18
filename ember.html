@@ -1339,6 +1339,36 @@ function drawHumanoid(g,sx,sy,o){
     }
   }
 
+  /* ---------------- sausage arms with mitt hands ----------------
+     Defined before the body so the rear view can tuck them BEHIND it:
+     from behind you see shoulders and arm slivers, never mitts on the back. */
+  const armY=-20.5+B*0.8;
+  const drawArm=(side,ang,lift)=>{
+    g.save();
+    g.translate(side*8.2,armY+(lift||0));
+    g.rotate(side*0.28 + ang);
+    g.fillStyle=o.robe? o.robe : shirt;
+    g.beginPath(); g.roundRect(-2.1,0,4.2,7.4,2.1); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    g.fillStyle=skin; // big mitt
+    g.beginPath(); g.arc(0,8.6,3.0,0,TAU); g.fill(); g.stroke();
+    g.beginPath(); g.arc(-side*2.1,7.8,1.15,0,TAU); g.fill(); g.stroke(); // thumb
+    g.restore();
+  };
+  const armSwing=walking? sw1*0.5 : 0.05;
+  const stowed = away && o.weapon;
+  const claspIdle = away && !walking && !o.weapon && (o.stillT===undefined || o.stillT>0.25);
+  if(away && !claspIdle){
+    // rear view: draw arms now, under the body and head
+    if(walking){
+      drawArm(-1, 0.06*sw1, sw1*1.7);
+      if(!o.weapon || stowed) drawArm(1, -0.06*sw1, -sw1*1.7);
+    } else {
+      drawArm(-1, 0.05);
+      if(!o.weapon || stowed) drawArm(1, -0.05);
+    }
+  }
+
   /* ---------------- tiny round body ---------------- */
   if(o.robe){
     const hem=Math.sin(step||G.time*1.6)*1.2;
@@ -1449,34 +1479,18 @@ function drawHumanoid(g,sx,sy,o){
     g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
   }
 
-  /* ---------------- sausage arms with mitt hands ---------------- */
-  const armY=-20.5+B*0.8;
-  const drawArm=(side,ang)=>{
-    g.save();
-    g.translate(side*8.2,armY);
-    g.rotate(side*0.28 + ang);
-    g.fillStyle=o.robe? o.robe : shirt;
-    g.beginPath(); g.roundRect(-2.1,0,4.2,7.4,2.1); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.fillStyle=skin; // big mitt
-    g.beginPath(); g.arc(0,8.6,3.0,0,TAU); g.fill(); g.stroke();
-    g.beginPath(); g.arc(-side*2.1,7.8,1.15,0,TAU); g.fill(); g.stroke(); // thumb
-    g.restore();
-  };
-  const armSwing=walking? sw1*0.5*(away?1.4:1) : 0.05; // arms swing wider seen from behind
-  const stowed = away && o.weapon;
-  if(away && !walking && !o.weapon){
+  /* ---------------- arms, front views (drawn over the body) ---------------- */
+  if(claspIdle){
     // idle with back turned: hands clasp at the small of the back
     g.save(); g.translate(0,armY+8.2);
     g.fillStyle=skin; g.strokeStyle=OUT; g.lineWidth=1.3;
     g.beginPath(); g.arc(-2.3,0,2.9,0,TAU); g.fill(); g.stroke();
     g.beginPath(); g.arc(2.3,0.4,2.9,0,TAU); g.fill(); g.stroke();
     g.restore();
-  } else {
+  } else if(!away){
     drawArm(-1, flip>0? armSwing : -armSwing);
-    if(!o.weapon || stowed) drawArm(1, flip>0? -armSwing : armSwing);
+    if(!o.weapon) drawArm(1, flip>0? -armSwing : armSwing);
   }
-
   /* ---------------- back layers when walking away ---------------- */
   if(o.quiver && away){
     g.save(); g.translate(5.5,-24+B); g.rotate(-0.5);
@@ -1606,7 +1620,7 @@ function drawHumanoid(g,sx,sy,o){
       g.fillStyle='rgba(220,100,70,0.2)';
       g.beginPath(); g.ellipse(flip*3,3.2,2.4,1.7,0,0,TAU); g.fill();
     } else {
-      const eSp=3.95, eyeY=-1.4+fy;
+      const eSp=3.6, eyeY=-1.4+fy;
       const expr=o.expr||'calm';
       if(expr==='hurt'){
         g.strokeStyle='#241a10'; g.lineWidth=1.7; g.lineCap='round';
@@ -1626,27 +1640,20 @@ function drawHumanoid(g,sx,sy,o){
       } else if(blink){
         g.strokeStyle='#241a10'; g.lineWidth=2.1; g.lineCap='round'; // a real, visible blink
         g.beginPath();
-        g.moveTo(-eSp+fx-2.3,eyeY-0.2); g.quadraticCurveTo(-eSp+fx,eyeY+1.2,-eSp+fx+2.3,eyeY-0.2);
-        g.moveTo( eSp+fx-2.3,eyeY-0.2); g.quadraticCurveTo( eSp+fx,eyeY+1.2, eSp+fx+2.3,eyeY-0.2);
-        g.stroke();
-        g.lineWidth=1; // little lash ticks sell the closed lid
-        g.beginPath();
-        g.moveTo(-eSp+fx-2.3,eyeY-0.2); g.lineTo(-eSp+fx-3.0,eyeY+0.3);
-        g.moveTo( eSp+fx+2.3,eyeY-0.2); g.lineTo( eSp+fx+3.0,eyeY+0.3);
+        g.moveTo(-eSp+fx-1.9,eyeY-0.2); g.quadraticCurveTo(-eSp+fx,eyeY+1.1,-eSp+fx+1.9,eyeY-0.2);
+        g.moveTo( eSp+fx-1.9,eyeY-0.2); g.quadraticCurveTo( eSp+fx,eyeY+1.1, eSp+fx+1.9,eyeY-0.2);
         g.stroke(); g.lineCap='butt';
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#17100a'; // solid black almond - level and friendly
+          g.fillStyle='#17100a'; // round button eyes - level and friendly
           g.beginPath();
-          g.moveTo(ex2-2.65,eyeY-0.1);
-          g.quadraticCurveTo(ex2,eyeY-3.4, ex2+2.65,eyeY-0.1);
-          g.quadraticCurveTo(ex2,eyeY+3.05, ex2-2.65,eyeY-0.1);
-          g.closePath(); g.fill();
+          g.arc(ex2,eyeY,2.15,0,TAU);
+          g.fill();
           g.fillStyle='rgba(255,255,255,0.92)';
-          g.beginPath(); g.arc(ex2-0.7,eyeY-1.1,0.68,0,TAU); g.fill();
+          g.beginPath(); g.arc(ex2-0.6,eyeY-0.9,0.58,0,TAU); g.fill();
           g.fillStyle='rgba(255,255,255,0.35)';
-          g.beginPath(); g.arc(ex2+0.65,eyeY+1.0,0.34,0,TAU); g.fill();
+          g.beginPath(); g.arc(ex2+0.55,eyeY+0.8,0.28,0,TAU); g.fill();
         }
       }
       // filled tapered brows, tilted by mood
@@ -2301,6 +2308,7 @@ const MOBDEF = {
   scorpion:{hp:360, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
   raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
   brigand:{hp:240, dmg:22, speed:3.15, aggro:9, xp:180, gold:[18,34], lvl:7, name:'Pinewood Brigand'},
+  wraith:{hp:130, dmg:15, speed:4.2, aggro:13, xp:110, gold:[10,20], lvl:6, name:'Night Wraith'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'}
 };
 function inSafeZone(x,y){
@@ -2402,6 +2410,8 @@ function completeQuest(id){
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.'); }
+  if(rw.dash2){ P.unlocked.dash2=true;
+    toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   if(id==='ribbon3'){ P.prog.eastSail=1;
@@ -2466,6 +2476,7 @@ function questTargetPos(id){
     if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};
     if(id==='sting1') return {x:ZONES.desert.x,y:ZONES.desert.y};
     if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
+    if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
@@ -2671,6 +2682,24 @@ function shopButtons(npc,btns){
       toast('<b>Aelin\'s lesson:</b> deal <b>30 damage</b> to the range dummies. Staff, sword, anything that moves the air.',5000); Snd.quest();
     };
     btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    if(P.skills.magic.lvl>=5){
+      P.spells=P.spells||{};
+      if(!P.spells.snare){
+        btns.unshift({label:'Learn Snare (100g)', fn:()=>{
+          if(P.gold<100){ setDialog('“A hundred gold. Binding-work is the hardest weave there is.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+          P.gold-=100; P.spells.snare=1; Snd.quest(); refreshUI(); autoSave();
+          setDialog('“Snare: the weave made rope. Your staff can now <b>root a foe in place</b>. Come back any time to attune between <b>Bolt</b> and <b>Snare</b>.”',
+            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        }});
+      } else {
+        const nextSpell=(P.spell||'bolt')==='bolt'? 'Snare':'Bolt';
+        btns.unshift({label:'Attune staff: '+nextSpell, fn:()=>{
+          P.spell=nextSpell.toLowerCase(); Snd.magic(); autoSave();
+          setDialog('“Attuned. Your staff now casts <b>'+nextSpell+'</b>.”',
+            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        }});
+      }
+    }
   }
   if(npc.id==='rook'){
     btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
@@ -3307,7 +3336,7 @@ function hitNode(n){
   }
   if(n.kind==='shell'){
     n.dead=true; n.respawn=rnd(45,70);
-    give('shell',1); addXP('fishing',5); burst(n.x,n.y-0.2,'#eaf4f8',7,1.4); Snd.pickup();
+    give('shell',1); burst(n.x,n.y-0.2,'#eaf4f8',7,1.4); Snd.pickup();
     return;
   }
   const isTree=n.kind==='tree';
@@ -3443,7 +3472,10 @@ function tryAttack(useMouse){
   } else if(P.weapon==='staff'){
     if(P.mp<8){ toast('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
-    G.projs.push({kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:1.2});
+    if(P.spell==='snare' && P.spells && P.spells.snare)
+      G.projs.push({kind:'snarebolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:Math.max(4,Math.round(magicDmg()*0.4)),from:'player',skill:'magic',aoe:1.2,snare:2.5});
+    else
+      G.projs.push({kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:1.2});
     refreshUI();
   }
 }
@@ -3539,6 +3571,18 @@ function hurtPlayer(dmg,src){
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
+  // grit: every so many hits taken, your hide toughens - the bar rises each level,
+  // and each level grants a bigger slab of max HP
+  P.gritN=(P.gritN||0)+1;
+  const gritNeed=Math.round(10*Math.pow(1.4,P.gritLv||0));
+  if(P.gritN>=gritNeed){
+    P.gritN=0; P.gritLv=(P.gritLv||0)+1;
+    const gritGain=6+P.gritLv*2;
+    P.maxhp+=gritGain; P.hp=Math.min(P.maxhp,P.hp+gritGain);
+    banner('GRIT - LEVEL '+P.gritLv, '+'+gritGain+' MAX HP - WHAT DOES NOT KILL YOU...');
+    Snd.levelup(); burst(P.x,P.y-0.5,'#ff9a6a',14,2);
+    setTimeout(()=>refreshUI(),0);
+  }
   if(src && src.kind==='scorpion'){ P.poisonT=6;
     hintOnce('venom','<b>Venom!</b> Scorpion stings burn for a few breaths - the poison fades on its own.'); }
   if(P.openCh){ P.openCh=null; toast('The blow knocks you off the chest lid!'); }
@@ -3585,6 +3629,7 @@ function updatePlayer(dt){
   if(G.interior && P.riding){ P.riding=0; toast('Chestnut waits outside.',2200); }
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
+  if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
     moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt);
@@ -3698,6 +3743,7 @@ function updatePlayer(dt){
       Snd.levelup();
     }
   }
+  P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
   if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
@@ -3800,7 +3846,7 @@ function updateMobs(dt){
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
       if(m.tx!=null){ const dx=m.tx-m.x, dy=m.ty-m.y, l=Math.hypot(dx,dy);
-        if(l>0.15){ moveEntity(m,dx/l*d.speed*0.4*dt,dy/l*d.speed*0.4*dt); m.face=dx<0?-1:1; } else m.tx=null; }
+        if(l>0.15 && !((m.snareT||0)>0)){ moveEntity(m,dx/l*d.speed*0.4*dt,dy/l*d.speed*0.4*dt); if(Math.abs(dx)>0.35) m.face=dx<0?-1:1; } else if(l<=0.15) m.tx=null; }
     } else {
       // leash
       if(pd>d.aggro*2.2 || P.dead || dist(m.x,m.y,m.hx,m.hy)>14){
@@ -3809,10 +3855,11 @@ function updateMobs(dt){
         m.tx=m.hx; m.ty=m.hy; continue;
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
-      m.face=dx<0?-1:1;
+      if(Math.abs(dx)>0.35) m.face=dx<0?-1:1; // hysteresis: chasing straight up/down no longer mirror-flips every frame
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
+      if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
-      if(l>stop){
+      if(l>stop && !((m.snareT||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
@@ -3888,6 +3935,7 @@ function updateProjs(dt){
   for(const p of G.projs){
     p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
     if(p.kind==='bolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#ffb26b',size:3,grav:0});
+    if(p.kind==='snarebolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.32,color:'#6fe0c8',size:3,grav:0});
     if(p.kind==='arrow'&&Math.random()<0.5) G.parts.push({x:p.x,y:p.y-0.35,vx:0,vy:0,life:0.18,color:'rgba(230,225,205,0.55)',size:2});
     const tx=Math.floor(p.x), ty=Math.floor(p.y);
     if(G.solid[ty*MAPW+tx]===1 && tileAt(tx,ty)>=T.SAND){ p.life=0; burst(p.x,p.y-0.3,'#c9b990',4,1.5); continue; }
@@ -3895,8 +3943,11 @@ function updateProjs(dt){
       for(const m of G.mobs){
         if(m.dead) continue;
         if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
-          if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && dist(p.x,p.y,m2.x,m2.y)<p.aoe) damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill); }
-            burst(p.x,p.y-0.3,'#ff9a3c',14,3); }
+          if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
+              damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
+              if(p.snare && !m2.boss && !m2.bigBoss){ m2.snareT=p.snare; m2.windup=0;
+                burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); } } }
+            burst(p.x,p.y-0.3,p.snare?'#6fe0c8':'#ff9a3c',14,3); }
           else damageMob(m,p.dmg,{x:p.vx/13,y:p.vy/13},p.skill);
           p.life=0; break;
         }
@@ -3960,17 +4011,19 @@ function updateWorld(dt){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
       const nx=Math.round(P.x+Math.cos(a2)*dd2), ny=Math.round(P.y+Math.sin(a2)*dd2);
       if(inb(nx,ny) && walkTile(tileAt(nx,ny)) && !solidAt(nx,ny) && !inSafeZone(nx,ny)){
-        const m=spawnMob(Math.random()<0.55?'skeleton':'wolf', nx,ny, Math.random()<0.15);
-        m.night=1; m.aggro=Math.max(m.aggro,13);
-        burst(nx+0.5,ny,'#9db8d8',10,2);
-        if(!G._nightWarned){ G._nightWarned=true; toast('Something stirs in the dark. <b>The night hunts.</b>',4200); }
+        const m=spawnMob('wraith', nx,ny, Math.random()<0.15);
+        m.night=1;
+        m.lvl=Math.max(3,Math.min(8,P.level)); // the dark measures you before it strikes
+        m.maxhp=90+m.lvl*12; m.hp=m.maxhp;
+        burst(nx+0.5,ny,'#8fa8d8',12,2.2);
+        if(!G._nightWarned){ G._nightWarned=true; toast('The dark thickens and takes shape. <b>Night wraiths are hunting.</b>',4200); }
       }
     }
   }
   if(night<0.15){
     let gone=false;
     for(const m of G.mobs) if(m.night && !m.dead){ m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',8,1.6); gone=true; }
-    if(gone) toast('Dawn scatters the night\u2019s hunters to mist.',3200);
+    if(gone) toast('Dawn burns the night wraiths back to mist.',3200);
     G._nightWarned=false;
   }
   G.shake=Math.max(0,G.shake-dt*2.5);
@@ -4519,7 +4572,55 @@ function drawScorpion(m,s){
   g.restore();
 }
 function drawMob(m,s){
+  if((m.snareT||0)>0){
+    const ra=0.6+0.4*Math.sin(G.time*6);
+    cx.strokeStyle='rgba(111,224,200,'+ra.toFixed(2)+')'; cx.lineWidth=2.5;
+    cx.beginPath(); cx.ellipse(s.x,s.y,15,7,0,0,TAU); cx.stroke();
+    cx.strokeStyle='rgba(60,150,130,0.7)'; cx.lineWidth=1.6;
+    for(let k=0;k<5;k++){ const aa=k/5*TAU+G.time*0.8;
+      cx.beginPath(); cx.moveTo(s.x+Math.cos(aa)*13,s.y+Math.sin(aa)*6);
+      cx.quadraticCurveTo(s.x+Math.cos(aa)*10,s.y+Math.sin(aa)*4-7, s.x+Math.cos(aa)*8,s.y+Math.sin(aa)*3-3);
+      cx.stroke(); }
+  }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
+  if(m.kind==='wraith'){
+    const bobW=Math.sin(m.anim*3.2)*2.5;
+    drawShadowAt(cx,s.x,s.y,9);
+    cx.save(); cx.translate(s.x,s.y-14+bobW);
+    cx.globalAlpha=0.82;
+    // tattered shade body, wisping to nothing at the hem
+    cx.fillStyle='#1c2233';
+    cx.beginPath();
+    cx.moveTo(-9,-14);
+    cx.quadraticCurveTo(0,-24,9,-14);
+    cx.quadraticCurveTo(11,-2,7,8);
+    cx.quadraticCurveTo(4,12,2,7);
+    cx.quadraticCurveTo(0,13,-2,7);
+    cx.quadraticCurveTo(-4,12,-7,8);
+    cx.quadraticCurveTo(-11,-2,-9,-14);
+    cx.closePath(); cx.fill();
+    cx.strokeStyle='rgba(140,170,220,0.35)'; cx.lineWidth=1.4; cx.stroke();
+    // deep hood
+    cx.fillStyle='#0e1220';
+    cx.beginPath(); cx.ellipse(0,-14,7,6.4,0,0,TAU); cx.fill();
+    // ember eyes
+    const gl=0.7+0.3*Math.sin(m.anim*7);
+    cx.fillStyle='rgba(140,200,255,'+gl.toFixed(2)+')';
+    cx.beginPath(); cx.arc(-2.6*(m.face||1),-14.5,1.5,0,TAU); cx.arc(2.2*(m.face||1),-14.5,1.2,0,TAU); cx.fill();
+    // reaching claw when mid-strike
+    if(m.swing>0){
+      cx.strokeStyle='rgba(140,200,255,0.8)'; cx.lineWidth=2; cx.lineCap='round';
+      const fl2=m.face||1;
+      cx.beginPath();
+      cx.moveTo(fl2*8,-8); cx.lineTo(fl2*14,-4);
+      cx.moveTo(fl2*8,-6); cx.lineTo(fl2*13,-1);
+      cx.stroke(); cx.lineCap='butt';
+    }
+    cx.restore();
+    // trailing wisps
+    if(Math.random()<0.25) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.2,0.8), 'rgba(140,170,220,0.5)', 1, 1.0);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;
@@ -4668,7 +4769,7 @@ function drawPlayerFigure(s){
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32,
-    dir:P.dir, step:P.moving?P.anim:0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
+    dir:P.dir, step:P.moving?P.anim:0, stillT:P.stillT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){
@@ -4705,6 +4806,10 @@ function drawProj(p,s){
     cx.strokeStyle='#c9a06a'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-9,0); cx.lineTo(7,0); cx.stroke();
     cx.fillStyle='#dfe0d8'; cx.beginPath(); cx.moveTo(10,0); cx.lineTo(5,-3); cx.lineTo(5,3); cx.closePath(); cx.fill();
     cx.restore();
+  } else if(p.kind==='snarebolt'){
+    cx.fillStyle='rgba(111,224,200,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
+    cx.fillStyle='#8ff0dc'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
+    cx.fillStyle='#e8fff8'; cx.beginPath(); cx.arc(s.x,s.y-12,2.2,0,TAU); cx.fill();
   } else if(p.kind==='bolt'){
     cx.fillStyle='rgba(255,154,60,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#ffce7a'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
@@ -5538,8 +5643,8 @@ QUESTS.embers={ giver:'kell', title:'Embers for the Watch', kind:'gather', need:
 QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', need:{mushroom:4},
   brief:"Visitors! Rare as dry socks out here. The blackpine bluecaps glow kinder than the isle's - four of them and I'll share the batch I'm brewing. A hermit's word is oak.",
   log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
-  doneText:"Kind hands, kind harvest. Here - three bottles, brewed slow. Come by whenever the road is unkind.",
-  rw:{item:{potion:3}, gold:20, xp:{farming:160}} };
+  doneText:"Kind hands, kind harvest. Here - three bottles, brewed slow. And drink this thimble now: my quickroot draught. Your legs will remember it when one dodge is not enough.",
+  rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
@@ -5839,7 +5944,12 @@ function switchWorld(id){
 /* ---------- dodge roll ---------- */
 function tryRoll(){
   if(P.dead || G.state!=='play' || dlg.open || G.interior) return;
-  if((P.rollCd||0)>0 || (P.rollT||0)>0) return;
+  if((P.rollT||0)>0) return;
+  if((P.rollCd||0)>0){
+    // double dash (Moss's quickroot): one chained roll inside the cooldown window
+    if(!(P.unlocked&&P.unlocked.dash2) || P.dashChain) return;
+    P.dashChain=1;
+  } else P.dashChain=0;
   P.rollT=0.26; P.rollCd=1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
@@ -6193,7 +6303,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
@@ -6223,7 +6333,8 @@ function loadCode(str){
   P.projects={}; // cleared before regen; restored (and re-placed) below
   iso.gen();
   // restore hero first (switchWorld reads quest state)
-  P.gold=Math.round(+d.gold)||0; // saves from the string-gold era heal on load P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
+  P.gold=Math.round(+d.gold)||0; // saves from the string-gold era heal on load
+  P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
   P.quests=d.quests||{}; P.prog=d.prog||{};
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
@@ -6233,7 +6344,7 @@ function loadCode(str){
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
   if(typeof d.dyt==='number') G.dayT=d.dyt;
-  P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.vault=d.vault||{}; P.bind=d.bind||null;
+  P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.vault=d.vault||{}; P.gritLv=d.gritLv||0; P.gritN=d.gritN||0; P.spell=d.spell||'bolt'; P.spells=d.spells||{}; P.bind=d.bind||null;
   P.horse=d.hs?1:0; P.home=d.hm?1:0; P.homeUp=d.hu||{};
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
