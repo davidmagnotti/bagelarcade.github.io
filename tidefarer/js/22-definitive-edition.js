@@ -16,8 +16,7 @@ st.textContent=`
   .edEmbers{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
   .edEmber{position:absolute;bottom:-12px;width:5px;height:5px;border-radius:50%;
     background:radial-gradient(circle,#ffd9a0 0%,#ff9a3c 45%,rgba(255,120,30,0) 72%);
-    filter:drop-shadow(0 0 6px rgba(255,154,60,.8));opacity:0;
-    animation:edRise linear infinite;}
+    opacity:0;animation:edRise linear infinite;}
   @keyframes edRise{
     0%{transform:translate(0,0) scale(1);opacity:0;}
     8%{opacity:.9;}
@@ -96,7 +95,7 @@ syncCfgUI=function(){
 const bloomCv=document.createElement('canvas');
 const bloomCx=bloomCv.getContext('2d');
 function drawRadiance(){
-  if(!CFG.bloom || LOWFX || !cv.width) return;
+  if(!CFG.bloom || LOWFX || G.state!=='play' || !cv.width) return;
   const bw=Math.max(1,(cv.width/6)|0), bh=Math.max(1,(cv.height/6)|0);
   if(bloomCv.width!==bw || bloomCv.height!==bh){ bloomCv.width=bw; bloomCv.height=bh; }
   bloomCx.clearRect(0,0,bw,bh);

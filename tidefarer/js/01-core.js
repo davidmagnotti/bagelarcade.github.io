@@ -104,13 +104,21 @@ const Snd = {
 const cv = document.getElementById('game');
 const cx = cv.getContext('2d');
 let VW=0, VH=0, DPR=1;
-/* RQ = render-quality scale, LOWFX = drop the most expensive post-FX.
-   The adaptive perf tuner (js/24-perf.js) lowers these on weak GPUs. */
-let RQ=1, LOWFX=false;
+/* RQ = render-quality scale, LOWFX = drop the most expensive post-FX,
+   SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf
+   tuner (js/24-perf.js) lowers these on weak GPUs; SAFE is forced by ?safe. */
+let RQ=1, LOWFX=false, SAFE=false;
 function resize(){
-  const base = Math.min(window.devicePixelRatio||1, 2);
-  DPR = Math.max(0.5, base*RQ);
   VW = window.innerWidth; VH = window.innerHeight;
+  const base = Math.min(window.devicePixelRatio||1, 2);
+  let dpr = base*RQ;
+  /* Cap the backing store to a pixel budget so a big high-DPI desktop panel
+     (e.g. Surface) isn't asked to fill a canvas several times the size of a
+     phone's every frame. Phones stay under budget, so they're unaffected. */
+  const BUDGET = 2000000; // ~1080p worth of device pixels
+  const px = VW*VH*dpr*dpr;
+  if(px > BUDGET) dpr *= Math.sqrt(BUDGET/px);
+  DPR = Math.max(0.5, dpr);
   cv.width = Math.round(VW*DPR); cv.height = Math.round(VH*DPR);
   cv.style.width = VW+'px'; cv.style.height = VH+'px';
 }

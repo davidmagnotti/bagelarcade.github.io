@@ -173,6 +173,7 @@ const WX={
 /* ---------- dynamic lighting: darkness with carved light pools ---------- */
 let lightCv=null, lightCx=null;
 function drawLighting(night){
+  if(SAFE) return; // minimal-GPU mode: skip the full-screen light buffer
   if(!lightCv||lightCv.width!==cv.width||lightCv.height!==cv.height){
     lightCv=document.createElement('canvas'); lightCv.width=cv.width; lightCv.height=cv.height;
     lightCx=lightCv.getContext('2d');
