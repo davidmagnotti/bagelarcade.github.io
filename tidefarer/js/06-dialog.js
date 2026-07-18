@@ -1,0 +1,330 @@
+/* =====================================================================
+   DIALOG SYSTEM
+   ===================================================================== */
+const dlg = {open:false, npc:null};
+function drawPortrait(npc){
+  const c=document.getElementById('dportrait'), g=c.getContext('2d');
+  g.clearRect(0,0,72,72);
+  g.fillStyle='#20160c'; g.fillRect(0,0,72,72);
+  g.save(); g.translate(36,66); g.scale(1.35,1.35);
+  drawHumanoid(g,0,0,{...npc.look, size:npc.look.size||1, dir:{x:0,y:1}, step:0});
+  g.restore();
+}
+function openDialog(npc){
+  P.click=null;
+  const dl=dist(P.x,P.y,npc.x,npc.y)||1;
+  npc.face={x:(P.x-npc.x)/dl, y:(P.y-npc.y)/dl};
+  dlg.open=true; dlg.npc=npc;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent=npc.name;
+  drawPortrait(npc);
+  buildDialogContent(npc);
+}
+function closeDialog(){ dlg.open=false; document.getElementById('dialog').style.display='none'; }
+function setDialog(text,btns){
+  document.getElementById('dtext').innerHTML=text;
+  const bx=document.getElementById('dbtns'); bx.innerHTML='';
+  btns.forEach(b=>{
+    const el=document.createElement('button');
+    el.className='btn'+(b.ghost?' ghost':'')+(b.cls?' '+b.cls:''); el.innerHTML=b.label;
+    el.onclick=()=>b.fn(); bx.appendChild(el);
+  });
+}
+function buildDialogContent(npc){
+  // 1) talk-quest completion
+  for(const id in P.quests){
+    if(P.quests[id]==='active' && QUESTS[id].kind==='talk' && QUESTS[id].talkTo===npc.id){
+      completeQuest(id);
+      setDialog('“'+QUESTS[id].doneText+'”', [{label:'Continue',fn:()=>buildDialogContent(npc)}]);
+      return;
+    }
+  }
+  // 2) turn-in
+  for(const id in P.quests){
+    if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && questReady(id)){
+      const q=QUESTS[id];
+      setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles - let\'s see them!' : 'You found it?!') +'”'
+        + rewardText(q),
+        [{label:'✓ Complete - '+q.title, cls:'gold', fn:()=>{
+            completeQuest(id);
+            setDialog('“'+q.doneText+'”',[{label:'Continue',fn:()=>buildDialogContent(npc)}]);
+        }},{label:'Not yet',ghost:true,fn:closeDialog}]);
+      return;
+    }
+  }
+  // 3) offer available quest
+  for(const id in QUESTS){
+    if(P.quests[id]==='avail' && QUESTS[id].giver===npc.id){
+      const q=QUESTS[id];
+      setDialog('<b style="color:var(--ember)">'+q.title+'</b><br>“'+q.brief+'”'
+        + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
+        [{label:'! Accept quest', cls:'gold', fn:()=>{
+            acceptQuest(id);
+            setDialog('“Good. I\'ll be here.”'
+              + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
+              + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
+              [{label:'Off I go',fn:closeDialog}]);
+          }},
+         {label:'Later', ghost:true, fn:closeDialog}]);
+      return;
+    }
+  }
+  // 4) active quest reminder from giver - restate objective + live progress
+  for(const id in P.quests){
+    if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && QUESTS[id].kind!=='talk'){
+      setDialog('“How goes it?”'
+        + '<div class="objbox"><b>'+QUESTS[id].title+':</b> '+QUESTS[id].log
+        + '<br><span style="color:#9be07f">'+questProgressText(id)+'</span></div>',
+        shopButtons(npc,[{label:'On it',ghost:true,fn:closeDialog}]));
+      return;
+    }
+  }
+  // 5) idle chatter + shop
+  npc.li=(npc.li+1)%npc.idleLines.length;
+  setDialog('“'+npc.idleLines[npc.li]+'”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+}
+function shopButtons(npc,btns){
+  if(npc.id==='bram'){
+    btns.unshift({label:'Smith & craft…', fn:()=>craftMenu(npc)});
+  }
+  if(npc.id==='orin'){
+    btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
+  }
+  if(npc.id==='willa'){
+    btns.unshift({label:'Cook at the hearth…', fn:()=>cookMenu(npc)});
+  }
+  if(npc.id==='kell'){
+    btns.unshift({label:'Harbor projects…', fn:()=>projectsMenu(npc)});
+  }
+  if(npc.id==='maren'){
+    btns.unshift({label:'Village projects…', fn:()=>projectsMenu(npc)});
+    btns.unshift({label:'Supply contract…', fn:()=>contractMenu(npc)});
+    btns.unshift({label:'Sell goods…', fn:()=>sellMenu(npc)});
+    btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
+      if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
+        setDialog('“Sip it slow - or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Coin first, tonic after. Island rules.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='brant' && qs('setsail')!=='done'){
+    btns.unshift({label:'Ask for passage to Barik', fn:()=>{
+      const rem=ISLE_IDS.filter(id=>qs(id)!=='done').length;
+      setDialog('“Happy to haul you across to <b>Barik</b>, friend - she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
+        shopButtons(npc,[
+          {label:'No really - I\'m ready.', fn:()=>{
+            setDialog('“Ok, if you\'re sure…” <i>He squints at you the way sailors squint at weather.</i> “…are you <b>sure</b>? Barik doesn\'t grade on a curve, and the isle\'s work will still be waiting.”',
+              shopButtons(npc,[
+                {label:'Yes. Set sail.', fn:()=>{ P.earlySail=1; closeDialog(); departEarly(); }},
+                {label:'On second thought…', ghost:true, fn:closeDialog}
+              ]));
+          }},
+          {label:'Farewell',ghost:true,fn:closeDialog}
+        ]));
+    }});
+  }
+  if(npc.id==='corvo' && P.prog.eastSail){
+    btns.unshift({label:'Set sail east - the Sunward Isle', fn:()=>{
+      closeDialog();
+      const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
+      setTimeout(()=>{ switchWorld('east'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
+    }});
+  }
+  if(npc.id==='corvoE'){
+    btns.unshift({label:'Sail home to Barik', fn:()=>{
+      closeDialog();
+      const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
+      setTimeout(()=>{ switchWorld('main'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
+    }});
+  }
+  if(npc.id==='sable'){
+    btns.unshift({label:'Range drill (20g \u2192 archery)', fn:()=>{
+      if(P.gold<20){ setDialog('\u201cThe wind teaches for free. I do not.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x+1.2; P.y=npc.y+1.2; unstickEntity(P);
+      TRAIN={who:'sable', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Sable\'s drill:</b> deal <b>30 damage</b> to the range dummies - a bow if you have one, anything if you don\'t.',5000); Snd.quest();
+    }});
+  }
+  if(npc.id==='huk' && P.unlocked && P.unlocked.moa){
+    btns.unshift({label:P.riding? 'Dismount Kiko':'Whistle for Kiko the Moa', fn:()=>{
+      P.riding=P.riding?0:1; closeDialog();
+      toast(P.riding? 'Kiko folds her legs, you climb aboard, and the world starts moving <b>fast</b>.':'Kiko struts off to bully a palm for coconuts. <b>Dismounted.</b>',3000);
+    }});
+  }
+  if(npc.id==='hermit' && !P.prog.hermitGift){
+    btns.unshift({label:'“Why hide out here?”', fn:()=>{
+      P.prog.hermitGift=1;
+      giveGold(150); giveQuiet('potion',2); giveQuiet('crystal',1); refreshUI(); Snd.quest(); autoSave();
+      setDialog('“To see who\'d bother looking. You did - so take what the pines saved for you: <b>150 gold</b>, two <b>tonics</b>, and an <b>ember crystal</b> I found where the roots run hot. Tell no one, or tell everyone. Both amuse me.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='bree'){
+    btns.unshift({label:'Store goods in the vault', fn:()=>{
+      let vn=0; P.vault=P.vault||{};
+      for(const vk in SELL_PRICES){ const vc=P.inv[vk]||0;
+        if(vc>0){ P.vault[vk]=(P.vault[vk]||0)+vc; take(vk,vc); vn+=vc; } }
+      Snd.coin(); autoSave();
+      setDialog(vn>0? '“'+vn+' goods, shelved and sealed under your name. Why goods only? Scavengers take what is loose in a satchel; tonics ride your belt and steel rides your back. The vault guards the only things death can touch.”'
+        : '“Your satchel holds nothing the vault takes - raw goods only: catch, crop, timber, ore and gem.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Reclaim stored goods', fn:()=>{
+      let vn=0; P.vault=P.vault||{};
+      for(const vk in P.vault){ if(P.vault[vk]>0){ giveQuiet(vk,P.vault[vk]); vn+=P.vault[vk]; } }
+      P.vault={}; Snd.coin(); refreshUI(); autoSave();
+      setDialog(vn>0? '“'+vn+' goods, counted twice, back in your keeping.”' : '“The shelf under your name sits empty.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Deposit all gold', fn:()=>{
+      P.bank=(P.bank||0)+P.gold; const dep=P.gold; P.gold=0; Snd.coin(); refreshUI(); autoSave();
+      setDialog('“'+dep+' gold, sealed in the vault. Total holdings: <b>'+P.bank+'</b>. Death itself signs no withdrawal slips here.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Withdraw all gold', fn:()=>{
+      P.gold+=(P.bank||0); const w=P.bank||0; P.bank=0; Snd.coin(); refreshUI(); autoSave();
+      setDialog('“'+w+' gold, counted twice. Spend it somewhere that deserves it.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='aelin'){
+    // tuition scales with mastery (25g \u00d7 magic level) and the Spire caps out at level 7
+    const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
+    const aelinStudy=()=>{
+      if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      const f=aelinFee();
+      if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
+      TRAIN={who:'aelin', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Aelin\'s lesson:</b> deal <b>30 damage</b> to the range dummies. Staff, sword, anything that moves the air.',5000); Snd.quest();
+    };
+    btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    if(P.skills.magic.lvl>=5){
+      P.spells=P.spells||{};
+      if(!P.spells.snare){
+        btns.unshift({label:'Learn Snare (100g)', fn:()=>{
+          if(P.gold<100){ setDialog('“A hundred gold. Binding-work is the hardest weave there is.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+          P.gold-=100; P.spells.snare=1; Snd.quest(); refreshUI(); autoSave();
+          setDialog('“Snare: the weave made rope. Your staff can now <b>root a foe in place</b>. Come back any time to attune between <b>Bolt</b> and <b>Snare</b>.”',
+            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        }});
+      } else {
+        const nextSpell=(P.spell||'bolt')==='bolt'? 'Snare':'Bolt';
+        btns.unshift({label:'Attune staff: '+nextSpell, fn:()=>{
+          P.spell=nextSpell.toLowerCase(); Snd.magic(); autoSave();
+          setDialog('“Attuned. Your staff now casts <b>'+nextSpell+'</b>.”',
+            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        }});
+      }
+    }
+  }
+  if(npc.id==='rook'){
+    btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
+      if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x-2.5; P.y=npc.y-2.7; unstickEntity(P);
+      TRAIN={who:'rook', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Rook\'s drill:</b> deal <b>30 damage</b> to the practice dummies in the yard. Strike!',4600); Snd.quest();
+    }});
+    btns.unshift({label:'\u201cArchery lessons?\u201d', fn:()=>{
+      setDialog('\u201cBows? My cousin teaches archery across the eastern water. Proper range, proper wind. When the strait opens, sail out and tell her I still owe her twenty gold.\u201d',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='hedda'){
+    if(!P.home) btns.unshift({label:'Buy the homestead (250g)', fn:()=>{
+      if(P.gold<250){ setDialog('“Two hundred fifty. The land\'s worth twice that - I like your face.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=250; P.home=1; Snd.quest(); refreshUI(); autoSave();
+      const hb=G.decor.find(b=>String(b.label||'').includes('Homestead')); if(hb) hb.label='Your homestead';
+      setDialog('“Then it\'s yours - deed, door, and drafts. Come back when you\'re ready to <b>improve</b> it.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    else btns.unshift({label:'Home improvements\u2026', fn:()=>{
+      const opts=[];
+      if(!P.homeUp.story) opts.push({label:'Raise a second story (200g)', fn:()=>{
+        if(P.gold<200) return;
+        P.gold-=200; P.homeUp.story=1; Snd.quest(); refreshUI(); autoSave();
+        const hb=G.decor.find(b=>String(b.label||'').includes('Your homestead')); if(hb) hb.kind='house2';
+        setDialog('“A second story! The gulls will be jealous.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      if(!P.homeUp.furnish) opts.push({label:'Furnish it proper (150g)', fn:()=>{
+        if(P.gold<150) return;
+        P.gold-=150; P.homeUp.furnish=1; Snd.quest(); refreshUI(); autoSave();
+        setDialog('“Rug, hearth-iron, and a bed worth oversleeping in. <b>Sleep free at home</b> from now on.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      if(!P.homeUp.farm) opts.push({label:'Buy the adjoining field (100g)', fn:()=>{
+        if(P.gold<100) return;
+        P.gold-=100; P.homeUp.farm=1; Snd.quest(); refreshUI(); autoSave();
+        const hb=G.decor.find(b=>String(b.label||'').includes('Your homestead'));
+        if(hb) for(let i=0;i<8;i++) G.plots.push({x:Math.floor(hb.x)+3+(i%4)*1.5, y:Math.floor(hb.y)+1+Math.floor(i/4)*1.5, crop:null, t:0});
+        setDialog('“Good soil. Willa\'s seeds grow anywhere - plant away.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      }});
+      opts.push({label:'Farewell',ghost:true,fn:closeDialog});
+      setDialog(opts.length>1? '“What\'ll it be? A house is never finished - that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
+    }});
+    if(!P.horse) btns.unshift({label:'Buy a horse - Chestnut (150g)', fn:()=>{
+      if(P.gold<150){ setDialog('“Hundred fifty for Chestnut. He eats like a duke but runs like a rumor.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=150; P.horse=1; P.riding=1; Snd.quest(); refreshUI(); autoSave();
+      setDialog('“He\'s yours. Whistle any time -” <i>Chestnut is already nosing your pockets.</i> <b>(Toggle riding via Hedda or the pause menu.)</b>',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    else btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
+      P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
+    }});
+  }
+  if(npc.id==='perrin' || npc.id==='saffi'){
+    btns.unshift({label:'Rest the night (10g)', fn:()=>{
+      if(P.gold<10){
+        setDialog('“Ten gold for the bed, friend. The hearth\'s warmth is free to look at.”',
+          shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        return;
+      }
+      P.gold-=10; Snd.coin(); closeDialog();
+      const fade=document.getElementById('fadeOv');
+      fade.style.opacity=1;
+      setTimeout(()=>{
+        G.dayT=0.09; // morning proper - the dark is done
+        P.hp=P.maxhp; P.mp=P.maxmp;
+        P.bind={w:G.worldId, x:npc.x, y:npc.y+1};
+        fade.style.opacity=0;
+        toast('You sleep deep and dreamless. Dawn finds you <b>fully mended</b>.',4600);
+        Snd.quest(); refreshUI(); autoSave();
+      }, 800);
+    }});
+  }
+  if(npc.id==='sela'){
+    btns.unshift({label:'Buy Bread (5g)', fn:()=>{
+      if(P.gold>=5){ P.gold-=5; giveQuiet('bread',1); Snd.coin(); refreshUI();
+        setDialog('“Still warm. Don\'t tell the gulls.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Five coin. The oven doesn\'t run on kindness.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Buy Cooked Fish (7g)', fn:()=>{
+      if(P.gold>=7){ P.gold-=7; giveQuiet('cookedfish',1); Snd.coin(); refreshUI();
+        setDialog('“Caught at dawn, crisped at noon.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Seven, friend. Fish don\'t catch themselves.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='ivo'){
+    btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
+      if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
+        setDialog('“Brewed bitter so you remember to stay alive.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Eight gold. Healing\'s cheap; herbs aren\'t.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Buy Bluecap (4g)', fn:()=>{
+      if(P.gold>=4){ P.gold-=4; giveQuiet('mushroom',1); Snd.coin(); refreshUI();
+        setDialog('“Glows a little. That\'s how you know it\'s working.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Four coin a cap.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='willa'){
+    btns.unshift({label:'Ask for seeds (free)', fn:()=>{
+      giveQuiet('seed',3); Snd.pickup(); refreshUI();
+      setDialog('“Seeds are the island\'s, not mine. Plant kindly.” <i>(+3 seeds)</i>', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  return btns;
+}

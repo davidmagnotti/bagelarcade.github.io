@@ -1,0 +1,57 @@
+/* =====================================================================
+   PAUSE MENU & SETTINGS
+   ===================================================================== */
+function fmtTime(sec){ sec=sec|0; const h=(sec/3600)|0, m=((sec%3600)/60)|0;
+  return h? h+'h '+m+'m' : m+'m '+(sec%60)+'s'; }
+function buildPauseStats(){
+  const s=P.stats||{};
+  const done=Object.keys(P.quests).filter(id=>P.quests[id]==='done').length;
+  document.getElementById('statGrid').innerHTML=
+    '<div>Time adventured <b>'+fmtTime(s.time||0)+'</b></div>'+
+    '<div>Monsters slain <b>'+(s.kills||0)+'</b></div>'+
+    '<div>Quests completed <b>'+done+'</b></div>'+
+    '<div>Gold earned <b>'+(s.goldEarned||0)+'</b></div>'+
+    '<div>Deaths <b>'+(s.deaths||0)+'</b></div>'+
+    '<div>Lore found <b>'+Object.keys(P.loreRead||{}).length+'/'+Object.keys(LORE).length+'</b></div>';
+  const ag=document.getElementById('achGrid'); ag.innerHTML='';
+  for(const k in ACH){
+    const got=!!P.ach[k];
+    ag.insertAdjacentHTML('beforeend','<div class="achRow'+(got?' got':'')+'">'+
+      (got?'★ ':'☆ ')+'<b>'+ACH[k].t+'</b> - '+ACH[k].d+'</div>');
+  }
+}
+function syncCfgUI(){
+  document.getElementById('cfgMus').value=Math.round(CFG.mus*100);
+  document.getElementById('cfgSfx').value=Math.round(CFG.sfx*100);
+  document.getElementById('cfgShakeOn').classList.toggle('on',!!CFG.shake);
+  document.getElementById('cfgShakeOff').classList.toggle('on',!CFG.shake);
+  document.getElementById('cfgFlashOn').classList.toggle('on',!!CFG.flash);
+  document.getElementById('cfgFlashOff').classList.toggle('on',!CFG.flash);
+  for(let i=0;i<3;i++) document.getElementById('diff'+i).classList.toggle('on',(CFG.diff|0)===i);
+}
+function togglePause(force){
+  if(G.state!=='play') return;
+  G.paused = force!==undefined? force : !G.paused;
+  document.getElementById('pausePanel').style.display = G.paused? 'flex':'none';
+  if(G.paused){ closeAllPanels(); closeDialog(); buildPauseStats(); syncCfgUI(); autoSave(); }
+}
+document.getElementById('btnPause').onclick=()=>togglePause();
+document.getElementById('resumeBtn').onclick=()=>togglePause(false);
+document.getElementById('quitTitleBtn').onclick=()=>{
+  autoSave(); togglePause(false);
+  G.state='title';
+  const t=document.getElementById('titleOv'); t.style.display='flex';
+  const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
+  if(store.get()){
+    contBtn.style.display='inline-block'; contBtn.classList.add('pulse');
+    startBtn.textContent='New Game'; startBtn.classList.add('ghostly'); startBtn.classList.remove('pulse');
+  }
+};
+document.getElementById('cfgMus').oninput=function(){ CFG.mus=this.value/100; saveCfg(); };
+document.getElementById('cfgSfx').oninput=function(){ CFG.sfx=this.value/100; saveCfg(); Snd.tone(660,0.07,'sine',0.06); };
+document.getElementById('cfgShakeOn').onclick=()=>{ CFG.shake=1; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgShakeOff').onclick=()=>{ CFG.shake=0; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgFlashOn').onclick=()=>{ CFG.flash=1; saveCfg(); syncCfgUI(); };
+document.getElementById('cfgFlashOff').onclick=()=>{ CFG.flash=0; saveCfg(); syncCfgUI(); };
+for(let i=0;i<3;i++) document.getElementById('diff'+i).onclick=()=>{ CFG.diff=i; saveCfg(); syncCfgUI(); };
+
