@@ -118,7 +118,7 @@ function resize(){
   const BUDGET = 2000000; // ~1080p worth of device pixels
   const px = VW*VH*dpr*dpr;
   if(px > BUDGET) dpr *= Math.sqrt(BUDGET/px);
-  DPR = Math.max(0.5, dpr);
+  DPR = Math.max(0.4, dpr);
   cv.width = Math.round(VW*DPR); cv.height = Math.round(VH*DPR);
   cv.style.width = VW+'px'; cv.style.height = VH+'px';
 }
