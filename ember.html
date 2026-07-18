@@ -1254,6 +1254,7 @@ function dirOct(d){
   return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
 }
 function drawHumanoid(g,sx,sy,o){
+  try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){}
   /* =====================================================================
      MASCOT FIGURE — Mario-64 / Wind-Waker inspired redesign.
      Head is half the character. Big eyes, big boots, bouncy gait.
@@ -1369,6 +1370,8 @@ function drawHumanoid(g,sx,sy,o){
     g.quadraticCurveTo(0,-26.5+B, -8.2,-23.5+B);
     g.closePath(); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.9; g.stroke();
+    g.strokeStyle='rgba(255,240,208,0.30)'; g.lineWidth=1.5; // modern rim light
+    g.beginPath(); g.arc(-2.6,-16.5+B,7.2,Math.PI*0.95,Math.PI*1.4); g.stroke();
     g.fillStyle=shade(shirt,-6); // tunic hem flares over the hips
     g.beginPath();
     g.moveTo(-8.6,-8.2); g.quadraticCurveTo(0,-5.8, 8.6,-8.2);
@@ -1501,19 +1504,19 @@ function drawHumanoid(g,sx,sy,o){
 
   /* ---------------- THE HEAD: half the hero ---------------- */
   g.save();
-  g.translate(0,-33.5+B*1.15);
+  g.translate(0,-34.6+B*1.15);
   if(o.hero){ g.scale(1.12,1.12); } // the hero's head is grander still
   if(walking) g.rotate(sw1*0.035);
-  const HR=13.0, HRY=12.2;
+  const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
   // ball with soft top-light — round, not flat
   const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
   hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
   g.fillStyle=hg;
   g.beginPath(); // wide cranium narrowing through the cheeks to a soft chin
   g.ellipse(0,-1.5,HR,HRY*0.92,0,Math.PI,0);
-  g.quadraticCurveTo(HR*0.94,6.2, HR*0.46,10.4);
-  g.quadraticCurveTo(0,13.0, -HR*0.46,10.4);
-  g.quadraticCurveTo(-HR*0.94,6.2, -HR,-1.5);
+  g.quadraticCurveTo(HR*0.90,6.8, HR*0.42,11.2);
+  g.quadraticCurveTo(0,13.8, -HR*0.42,11.2);
+  g.quadraticCurveTo(-HR*0.90,6.8, -HR,-1.5);
   g.closePath(); g.fill();
   g.strokeStyle=OUT; g.lineWidth=2.0; g.stroke();
 
@@ -1556,31 +1559,33 @@ function drawHumanoid(g,sx,sy,o){
   } else {
     /* the face — where all the charm lives. The iso camera looks DOWN
        at people: the face sits low on the skull, crown above. */
-    g.save(); g.translate(0,2.3);
+    g.save(); g.translate(0,2.8); g.scale(1.16,1.16); // slim feature scale on the oval
     const fx=profile? flip*3.2 : (o.dir? clamp((dx-dy)*1.6,-2.2,2.2) : 0);
     const fy=clamp(scrY*1.2,-1,1.6);
-    const blink=((G.time+ph*1.7)%4.3)<0.13;
+    const blink=((G.time+ph*1.7)%3.6)<0.24; // slower cycle, longer close — visible at last
     if(profile){
       // nose bump on the silhouette
       g.fillStyle=skin;
-      g.beginPath(); g.arc(flip*HR*0.985, 1.9, 1.55, 0, TAU); g.fill(); // a modest nose
+      g.beginPath(); g.arc(flip*HR*0.795, 1.9, 1.55, 0, TAU); g.fill(); // a modest nose (cluster-scaled to the head's edge)
       g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
       g.fillStyle=skin;
-      g.beginPath(); g.arc(flip*HR*0.9, 1.9, 1.85, 0, TAU); g.fill(); // blend seam
+      g.beginPath(); g.arc(flip*HR*0.726, 1.9, 1.85, 0, TAU); g.fill(); // blend seam
       // one huge eye
       if(blink){
-        g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
-        g.beginPath(); g.moveTo(flip*2.2,-2.2); g.quadraticCurveTo(flip*4.8,-1.1,flip*7.4,-2.2); g.stroke();
+        g.strokeStyle='#241a10'; g.lineWidth=2.1; g.lineCap='round';
+        g.beginPath(); g.moveTo(flip*2.3,-2.3); g.quadraticCurveTo(flip*4.9,-0.8,flip*7.5,-2.3); g.stroke();
+        g.lineWidth=1;
+        g.beginPath(); g.moveTo(flip*7.5,-2.3); g.lineTo(flip*8.2,-1.8); g.stroke();
         g.lineCap='butt';
       } else {
-        g.fillStyle='#1d150d';
+        g.fillStyle='#17100a';
         g.beginPath();
-        g.moveTo(flip*3.0,-2.1+fy);
-        g.quadraticCurveTo(flip*4.9,-4.5+fy, flip*6.8,-2.1+fy);
-        g.quadraticCurveTo(flip*4.9,-0.1+fy, flip*3.0,-2.1+fy);
+        g.moveTo(flip*2.5,-2.15+fy);
+        g.quadraticCurveTo(flip*4.9,-4.75+fy, flip*7.3,-2.15+fy);
+        g.quadraticCurveTo(flip*4.9,0.75+fy, flip*2.5,-2.15+fy);
         g.closePath(); g.fill();
-        g.fillStyle='rgba(255,255,255,0.9)';
-        g.beginPath(); g.arc(flip*4.4,-2.8+fy,0.5,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.92)';
+        g.beginPath(); g.arc(flip*4.35,-3.1+fy,0.6,0,TAU); g.fill();
       }
       g.strokeStyle='#2e2418'; g.lineWidth=1.6; // brow
       g.beginPath(); g.moveTo(flip*1.8,-7.6); g.quadraticCurveTo(flip*5,-8.8,flip*8,-7.2); g.stroke();
@@ -1590,7 +1595,7 @@ function drawHumanoid(g,sx,sy,o){
       g.fillStyle='rgba(220,100,70,0.2)';
       g.beginPath(); g.ellipse(flip*3,3.2,2.4,1.7,0,0,TAU); g.fill();
     } else {
-      const eSp=4.4, eyeY=-1.4+fy;
+      const eSp=3.95, eyeY=-1.4+fy;
       const expr=o.expr||'calm';
       if(expr==='hurt'){
         g.strokeStyle='#241a10'; g.lineWidth=1.7; g.lineCap='round';
@@ -1608,22 +1613,29 @@ function drawHumanoid(g,sx,sy,o){
         g.arc( eSp+fx,eyeY+0.6,2.3,Math.PI*1.15,Math.PI*1.85);
         g.stroke(); g.lineCap='butt';
       } else if(blink){
-        g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
+        g.strokeStyle='#241a10'; g.lineWidth=2.1; g.lineCap='round'; // a real, visible blink
         g.beginPath();
-        g.moveTo(-eSp+fx-1.7,eyeY); g.quadraticCurveTo(-eSp+fx,eyeY+0.9,-eSp+fx+1.7,eyeY);
-        g.moveTo( eSp+fx-1.7,eyeY); g.quadraticCurveTo( eSp+fx,eyeY+0.9, eSp+fx+1.7,eyeY);
+        g.moveTo(-eSp+fx-2.3,eyeY-0.2); g.quadraticCurveTo(-eSp+fx,eyeY+1.2,-eSp+fx+2.3,eyeY-0.2);
+        g.moveTo( eSp+fx-2.3,eyeY-0.2); g.quadraticCurveTo( eSp+fx,eyeY+1.2, eSp+fx+2.3,eyeY-0.2);
+        g.stroke();
+        g.lineWidth=1; // little lash ticks sell the closed lid
+        g.beginPath();
+        g.moveTo(-eSp+fx-2.3,eyeY-0.2); g.lineTo(-eSp+fx-3.0,eyeY+0.3);
+        g.moveTo( eSp+fx+2.3,eyeY-0.2); g.lineTo( eSp+fx+3.0,eyeY+0.3);
         g.stroke(); g.lineCap='butt';
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#1d150d'; // human almond: pointed corners
+          g.fillStyle='#17100a'; // solid black almond — level and friendly
           g.beginPath();
-          g.moveTo(ex2-2.1,eyeY);
-          g.quadraticCurveTo(ex2,eyeY-2.7, ex2+2.1,eyeY);
-          g.quadraticCurveTo(ex2,eyeY+2.2, ex2-2.1,eyeY);
+          g.moveTo(ex2-2.65,eyeY-0.1);
+          g.quadraticCurveTo(ex2,eyeY-3.4, ex2+2.65,eyeY-0.1);
+          g.quadraticCurveTo(ex2,eyeY+3.05, ex2-2.65,eyeY-0.1);
           g.closePath(); g.fill();
-          g.fillStyle='rgba(255,255,255,0.9)';
-          g.beginPath(); g.arc(ex2-0.6,eyeY-0.8,0.55,0,TAU); g.fill();
+          g.fillStyle='rgba(255,255,255,0.92)';
+          g.beginPath(); g.arc(ex2-0.7,eyeY-1.1,0.68,0,TAU); g.fill();
+          g.fillStyle='rgba(255,255,255,0.35)';
+          g.beginPath(); g.arc(ex2+0.65,eyeY+1.0,0.34,0,TAU); g.fill();
         }
       }
       // filled tapered brows, tilted by mood
@@ -1667,12 +1679,7 @@ function drawHumanoid(g,sx,sy,o){
         g.stroke();
       }
       g.lineCap='butt';
-      // WW blush
-      g.fillStyle='rgba(220,100,70,0.2)';
-      g.beginPath();
-      g.ellipse(-8+fx*0.5,3,2.4,1.7,0,0,TAU);
-      g.ellipse( 8+fx*0.5,3,2.4,1.7,0,0,TAU); g.fill();
-    }
+}
     /* beard hugs the giant chin */
     if(o.beard){
       const bl=o.beardLong?5:0;
@@ -1709,7 +1716,7 @@ function drawHumanoid(g,sx,sy,o){
   }
 
   /* ---------------- hair & hats on the giant head ---------------- */
-  const helm2=(o.armor|0)>=2 && !o.hat;
+  const helm2=(o.armor|0)>=2 && !o.hat && !o.hero; // guards wear helms; heroes wear hair
   if(!o.hat && !helm2 && o.hairstyle!=='bald'){
     if(profile){
       // side view: mass swept back over the crown to a point at the nape
