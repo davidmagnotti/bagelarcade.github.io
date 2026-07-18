@@ -328,7 +328,7 @@
   <div class="closeX" data-close="skillPanel">✕</div>
   <h2>Skills</h2>
   <div id="skillRows"></div>
-  <div style="font-size:11px;color:var(--parch-dim);margin-top:8px;">Quests grant the biggest experience — adventure beats grinding on Emberwick.</div>
+  <div style="font-size:11px;color:var(--parch-dim);margin-top:8px;">Quests grant the biggest experience - adventure beats grinding on Emberwick.</div>
 </div>
 
 <div class="panel" id="questPanel">
@@ -357,14 +357,14 @@
 <div class="overlay" id="titleOv">
   <div class="ovCard">
     <h1>Emberwick <span>Isle</span></h1>
-    <p>Learn the blade on Emberwick — tutorial shores of ember lanterns and old bones. Fell the Hollow King, then board Finn's boat for <b>Greyharbor</b>: a wilder mainland where elite packs prowl and a relic waits on Stormwatch Peak.</p>
+    <p>Learn the blade on Emberwick - tutorial shores of ember lanterns and old bones. Fell the Hollow King, then board Finn's boat for <b>Greyharbor</b>: a wilder mainland where elite packs prowl and a relic waits on Stormwatch Peak.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button class="btn" id="continueBtn" style="display:none;">Continue</button>
       <button class="btn" id="startBtn">Set Foot Ashore</button>
     </div>
     <div id="pausePanel">
   <div id="pauseCard">
-    <h2>— PAUSED —</h2>
+    <h2>- PAUSED -</h2>
     <div class="pHead">Sound</div>
     <div class="pRow"><span>Music</span><input type="range" id="cfgMus" min="0" max="100"></div>
     <div class="pRow"><span>Effects &amp; ambience</span><input type="range" id="cfgSfx" min="0" max="100"></div>
@@ -392,7 +392,7 @@
   </div>
 </div>
 <div id="confirmWipe">
-      <p><b>This will erase your saved adventure forever</b> — gold, gear, quests, the lot.<br>
+      <p><b>This will erase your saved adventure forever</b> - gold, gear, quests, the lot.<br>
       Type <b style="color:#ffb3a3">start over</b> to confirm.</p>
       <input id="wipeInput" type="text" autocomplete="off" placeholder='type "start over"'>
       <div class="row">
@@ -407,7 +407,7 @@
 <div class="overlay" id="deadOv" style="display:none;">
   <div class="ovCard">
     <h1 style="color:var(--blood);">You fell…</h1>
-    <p>Kind hands carry you back to the village well. Your satchel is untouched.</p>
+    <p>Kind hands carry you back to the waking world. Check your purse and your satchel: scavengers are quicker than kindness.</p>
     <button class="btn" id="respawnBtn">Wake Up</button>
   </div>
 </div>
@@ -415,7 +415,7 @@
 <div class="overlay" id="winOv" style="display:none;">
   <div class="ovCard">
     <h1>The <span>Hollow King</span> has fallen!</h1>
-    <p id="winText">The ruins fall silent. Return to Elder Maren for your crown — then find Finn's boat at the dock. The strait is calm now, and Greyharbor waits across the water.</p>
+    <p id="winText">The ruins fall silent. Return to Elder Maren for your crown - then find Finn's boat at the dock. The strait is calm now, and Greyharbor waits across the water.</p>
     <button class="btn" id="winBtn">Keep Exploring</button>
   </div>
 </div>
@@ -435,7 +435,7 @@ const SafeStore=(()=>{
   };
 })();
 /* =====================================================================
-   EMBERWICK ISLE — a single-file isometric sandbox adventure
+   EMBERWICK ISLE - a single-file isometric sandbox adventure
    All art is drawn procedurally. All audio is synthesized. No assets.
    ===================================================================== */
 
@@ -693,7 +693,7 @@ function placeObjects(){
     const ax=Math.round(ZONES.orchard.x+Math.cos(a)*dd), ay=Math.round(ZONES.orchard.y+Math.sin(a)*dd);
     if(walkTile(tileAt(ax,ay)) && !solidAt(ax,ay)){ const n=addNode('apple',ax,ay); n.hp=n.maxhp=2; }
   }
-  // smuggler's cove: an abandoned camp — wolves keep it now
+  // smuggler's cove: an abandoned camp - wolves keep it now
   const cv2=ZONES.cove;
   G.decor.push({kind:'stump',x:cv2.x-1.5,y:cv2.y+1.5});
   G.decor.push({kind:'stump',x:cv2.x+2.5,y:cv2.y+2});
@@ -769,7 +769,7 @@ function findOpenNear(x,y,rad){
 function addBuilding(kind,x,y,label){
   const b={kind,x:x+0.5,y:y+0.5,label};
   G.decor.push(b);
-  const fp = {house:[2,2],house2:[2,2],forge:[2,2],barn:[3,2],tower:[2,2],castle:[4,2],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0]}[kind]||[0,0];
+  const fp = {house:[2,2],house2:[2,2],forge:[2,2],barn:[3,2],tower:[2,2],castle:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0]}[kind]||[0,0];
   for(let dy=0;dy<fp[1];dy++) for(let dx=0;dx<fp[0];dx++) setSolid(Math.floor(x)+dx-Math.floor(fp[0]/2), Math.floor(y)+dy-Math.floor(fp[1]/2), 1);
   return b;
 }
@@ -783,7 +783,7 @@ function bakeSolids(){
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++) if(tileAt(x,y)===T.PLANK) setSolid(x,y,0);
 }
 /* =====================================================================
-   PROCEDURAL ART — every sprite drawn in code
+   PROCEDURAL ART - every sprite drawn in code
    ===================================================================== */
 function makeCanvas(w,h,fn){
   const c=document.createElement('canvas'); c.width=w; c.height=h;
@@ -1113,7 +1113,7 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   const dk=18/(bw/2); // wall slope
   const gyL=(x)=> byBase-18*scale + (x-(bx-bw/2))*dk;   // left-face ground line
   const gyR=(x)=> byBase - (x-bx)*dk;                    // right-face ground line
-  // — door (left face) —
+  // - door (left face) -
   const dw=18*scale, dh=27*scale, dx0=bx-bw/4-dw/2;
   g.fillStyle='#3c2a14';
   g.beginPath();
@@ -1135,7 +1135,7 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   g.moveTo(dx0-1, gyL(dx0)); g.lineTo(dx0+dw+1, gyL(dx0+dw));
   g.lineTo(dx0+dw+1, gyL(dx0+dw)+3*scale); g.lineTo(dx0-1, gyL(dx0)+3*scale);
   g.closePath(); g.fill();
-  // — window (right face) —
+  // - window (right face) -
   const ww=16*scale, wh=13*scale, wx0=bx+bw/4-ww/2, wel=14*scale;
   g.fillStyle='#ffd76a';
   g.beginPath();
@@ -1258,7 +1258,7 @@ function dirOct(d){
 function drawHumanoid(g,sx,sy,o){
   try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){}
   /* =====================================================================
-     MASCOT FIGURE — Mario-64 / Wind-Waker inspired redesign.
+     MASCOT FIGURE - Mario-64 / Wind-Waker inspired redesign.
      Head is half the character. Big eyes, big boots, bouncy gait.
      Same option contract as the old renderer: every caller just works.
      ===================================================================== */
@@ -1286,8 +1286,8 @@ function drawHumanoid(g,sx,sy,o){
   if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean);
   g.scale(s,s);
-  g.scale(1,0.93); // seen from the isometric camera above — slight vertical foreshorten
-  // squash & stretch on the whole body — mascot bounce
+  g.scale(1,0.93); // seen from the isometric camera above - slight vertical foreshorten
+  // squash & stretch on the whole body - mascot bounce
   const sq=walking? 1+0.045*sw2 : 1;
   g.scale(1/Math.sqrt(sq), sq);
 
@@ -1519,7 +1519,7 @@ function drawHumanoid(g,sx,sy,o){
   if(o.hero){ g.scale(1.12,1.12); } // the hero's head is grander still
   if(walking) g.rotate(sw1*0.035);
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
-  // ball with soft top-light — round, not flat
+  // ball with soft top-light - round, not flat
   const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
   hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
   g.fillStyle=hg;
@@ -1568,12 +1568,12 @@ function drawHumanoid(g,sx,sy,o){
       }
     }
   } else {
-    /* the face — where all the charm lives. The iso camera looks DOWN
+    /* the face - where all the charm lives. The iso camera looks DOWN
        at people: the face sits low on the skull, crown above. */
     g.save(); g.translate(0,2.8); g.scale(1.16,1.16); // slim feature scale on the oval
     const fx=profile? flip*3.2 : (o.dir? clamp((dx-dy)*1.6,-2.2,2.2) : 0);
     const fy=clamp(scrY*1.2,-1,1.6);
-    const blink=((G.time+ph*1.7)%3.6)<0.24; // slower cycle, longer close — visible at last
+    const blink=((G.time+ph*1.7)%3.6)<0.24; // slower cycle, longer close - visible at last
     if(profile){
       // nose bump on the silhouette
       g.fillStyle=skin;
@@ -1637,7 +1637,7 @@ function drawHumanoid(g,sx,sy,o){
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#17100a'; // solid black almond — level and friendly
+          g.fillStyle='#17100a'; // solid black almond - level and friendly
           g.beginPath();
           g.moveTo(ex2-2.65,eyeY-0.1);
           g.quadraticCurveTo(ex2,eyeY-3.4, ex2+2.65,eyeY-0.1);
@@ -2041,6 +2041,15 @@ function iconCanvas(kind,sz=40){
     g.translate(w/2,h/2); const s=w/40;
     g.scale(s,s);
     switch(kind){
+      case 'silk': g.fillStyle='#ffb0c8'; g.beginPath(); g.roundRect(-12,-8,24,16,4); g.fill();
+        g.fillStyle='#ff8fb0'; g.fillRect(-12,-2,24,4);
+        g.strokeStyle='#a85878'; g.lineWidth=1.5; g.beginPath(); g.roundRect(-12,-8,24,16,4); g.stroke();
+        g.beginPath(); g.moveTo(-6,-8); g.lineTo(-6,8); g.moveTo(2,-8); g.lineTo(2,8); g.stroke(); break;
+      case 'ribbon': g.strokeStyle='#e05a7a'; g.lineWidth=4; g.lineCap='round';
+        g.beginPath(); g.arc(-6,-3,5.5,0.6,5.2); g.stroke();
+        g.beginPath(); g.arc(6,-3,5.5,4.2,3.0); g.stroke();
+        g.beginPath(); g.moveTo(-2,1); g.lineTo(-8,11); g.moveTo(2,1); g.lineTo(8,11); g.stroke();
+        g.fillStyle='#ffce7a'; g.beginPath(); g.arc(0,-1,2.6,0,TAU); g.fill(); break;
       case 'wood': g.rotate(0.5); g.fillStyle='#8a6238'; g.beginPath(); g.roundRect(-13,-6,26,12,5); g.fill();
         g.fillStyle='#c9a06a'; g.beginPath(); g.ellipse(-13,0,4,6,0,0,TAU); g.fill();
         g.strokeStyle='#a57e4d'; g.beginPath(); g.ellipse(-13,0,2,3,0,0,TAU); g.stroke();
@@ -2091,12 +2100,12 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }
 /* =====================================================================
-   GAME DATA — items, skills, quests, NPCs
+   GAME DATA - items, skills, quests, NPCs
    ===================================================================== */
 const ITEMS = {
   wood:{name:'Wood', desc:'Fresh-cut timber.'},
@@ -2139,25 +2148,25 @@ for(const k in SKILLS) P.skills[k]={lvl:1,xp:0};
 /* ---------- quests ---------- */
 const QUESTS = {
   welcome:{ giver:'maren', title:'Welcome Ashore', kind:'talk', talkTo:'bram',
-    brief:'New boots on old sand — welcome, traveler. Our smith Bram has been muttering about needing help. Follow the lanterns east of the well and introduce yourself.',
+    brief:'New boots on old sand - welcome, traveler. Our smith Bram has been muttering about needing help. Follow the lanterns east of the well and introduce yourself.',
     log:'Speak with Bram at the forge, east of the village well.',
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, xp:{melee:30}}, unlocks:['kit','fish','harvest','cat','shells','springs'] },
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'talk', talkTo:'bram',
-    brief:'Whoa there — planning to claw at pine with your bare hands? You\'ll lose the fingers before the tree loses a branch. Take my spares: a woodsman\'s axe and an old miner\'s pick. Bring them back never.',
+    brief:'Whoa there - planning to claw at pine with your bare hands? You\'ll lose the fingers before the tree loses a branch. Take my spares: a woodsman\'s axe and an old miner\'s pick. Bring them back never.',
     log:'Speak with Bram to receive his spare axe and pick.',
-    doneText:'Axe for timber, pick for stone. Swing at what you want — the right tool finds your hand.',
+    doneText:'Axe for timber, pick for stone. Swing at what you want - the right tool finds your hand.',
     rw:{kit:true, gold:2, xp:{woodcut:25, mining:25}}, unlocks:['sharpen'] },
-  // — Captain Brant's shipwright chain —
+  // - Captain Brant's shipwright chain -
   wreck:{ giver:'brant', title:'The Wrecked Tidewalker', kind:'gather', need:{wood:12, hardwood:6},
-    brief:'See her hull? Split like a walnut on Gull Reef. I need honest timber — twelve planks of common wood, and six lengths of hardwood from the deep-forest giants. Bring me that, and she floats again.',
+    brief:'See her hull? Split like a walnut on Gull Reef. I need honest timber - twelve planks of common wood, and six lengths of hardwood from the deep-forest giants. Bring me that, and she floats again.',
     log:'Gather 12 wood and 6 hardwood (from the largest forest trees) for the hull.',
     doneText:'Aye, that\'s proper timber! I\'ll set to the hull this very tide.',
     rw:{gold:30, xp:{woodcut:180}}, unlocks:['fittings'] },
   fittings:{ giver:'brant', title:'Iron Fittings', kind:'gather', need:{bar:4},
-    brief:'A hull without iron is a coffin with sails. Four iron bars — Bram smelts them, two ore and a wood apiece. Nails, brackets, and a new anchor chain.',
+    brief:'A hull without iron is a coffin with sails. Four iron bars - Bram smelts them, two ore and a wood apiece. Nails, brackets, and a new anchor chain.',
     log:'Bring 4 iron bars (Bram smelts each from 2 ore + 1 wood).',
-    doneText:'Good iron, well struck. She\'s watertight — now to fill her hold.',
+    doneText:'Good iron, well struck. She\'s watertight - now to fill her hold.',
     rw:{gold:25, xp:{mining:150}}, unlocks:['provisions'] },
   provisions:{ giver:'brant', title:'Provisions for the Voyage', kind:'gather', need:{bread:4, cookedfish:4, potion:2},
     brief:'The strait\'s two days in a foul wind. Four loaves from Willa\'s hearth, four grilled fish, and two of Orin\'s tonics for luck. A full hold or no voyage.',
@@ -2165,33 +2174,33 @@ const QUESTS = {
     doneText:'A full hold and a mended hull! Now the only anchor left is your own unfinished business ashore.',
     rw:{gold:30, xp:{fishing:150, farming:100}}, unlocks:['setsail'] },
   setsail:{ giver:'brant', title:'Set Sail', kind:'special',
-    brief:'I don\'t weigh anchor while my passenger has debts of the heart ashore. Settle every last task on this isle — every single one — and we catch the morning tide to Greyharbor.',
+    brief:'I don\'t weigh anchor while my passenger has debts of the heart ashore. Settle every last task on this isle - every single one - and we catch the morning tide to Greyharbor.',
     log:'Complete every other quest on Emberwick Isle, then return to Captain Brant.',
-    doneText:'All squared away? Then stow your gear — the Tidewalker sails! Board her at the dock whenever you\'re ready.',
+    doneText:'All squared away? Then stow your gear - the Tidewalker sails! Board her at the dock whenever you\'re ready.',
     rw:{gold:50, xp:{melee:120, archery:120, magic:120}} },
-  // — village side work —
+  // - village side work -
   masterwork:{ giver:'bram', title:'The Smith\'s Masterwork', kind:'gather', need:{ore:5, crystal:2, hardwood:2},
     brief:'Before you leave this isle I mean to forge something worth remembering. Five ore, two ember crystals, two hardwood for the charcoal. Do this and I\'ll start you a stock of bars, free.',
     log:'Bring Bram 5 iron ore, 2 ember crystals, and 2 hardwood.',
-    doneText:'Look at that heat! Take these bars — first fruits of the masterwork. The rest becomes something the mainland will hear about.',
+    doneText:'Look at that heat! Take these bars - first fruits of the masterwork. The rest becomes something the mainland will hear about.',
     rw:{gold:20, item:{bar:2}, xp:{mining:200}} },
   wolffold:{ giver:'willa', title:'Wolves at the Fold', kind:'kill', kill:{wolf:6},
     brief:'Six sets of tracks around the fold this morning. SIX. The cove pack\'s grown bold since the cold snap. Thin them before I lose a single lamb.',
     log:'Hunt 6 wolves (the pine cove to the northeast, and the deep forest).',
-    doneText:'Six pelts\' worth of peace. The flock thanks you — loudly, at dawn, forever.',
+    doneText:'Six pelts\' worth of peace. The flock thanks you - loudly, at dawn, forever.',
     rw:{gold:24, xp:{melee:120, archery:120}} },
   feast:{ giver:'willa', title:'A Village Feast', kind:'gather', need:{bread:3, apple:3, fish:2},
-    brief:'Before you sail we\'re doing this PROPERLY: a farewell feast. Three loaves, three orchard apples, two fresh fish. I\'ll handle the rest — and no, you can\'t eat the ingredients on the way.',
+    brief:'Before you sail we\'re doing this PROPERLY: a farewell feast. Three loaves, three orchard apples, two fresh fish. I\'ll handle the rest - and no, you can\'t eat the ingredients on the way.',
     log:'Gather the feast: 3 bread, 3 orchard apples, 2 fish.',
     doneText:'Perfect! Tonight we eat like the harvest never ends. You\'ll be missed, you know.',
     rw:{gold:26, xp:{farming:180}} },
   echoes:{ giver:'orin', title:'Echoes of the Isle', kind:'special',
-    brief:'Three pages barely wet your feet, apprentice. The isle keeps at least seven echoes of its history — in homes, on stones, in places warm and cold. Read seven and you\'ll leave here knowing WHERE you\'ve been.',
+    brief:'Three pages barely wet your feet, apprentice. The isle keeps at least seven echoes of its history - in homes, on stones, in places warm and cold. Read seven and you\'ll leave here knowing WHERE you\'ve been.',
     log:'Read 7 lore writings across the isle (books, standing stones, the crypt...).',
     doneText:'Seven echoes! You now know this island better than most who were born on it.',
     rw:{gold:30, xp:{magic:220}} },
   gravelord:{ giver:'orin', title:'The Gravelord Stirs', kind:'kill', kill:{gravelord:1},
-    brief:'The Hollow King had a herald — Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started. And take Bram\'s yew bow — old bones splinter under arrows, half again as deep.',
+    brief:'The Hollow King had a herald - Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started. And take Bram\'s yew bow - old bones splinter under arrows, half again as deep.',
     log:'Slay Gravelord Varek in the Old Ruins.',
     doneText:'Varek, unmade. The ruins will finally hold nothing but memory. You\'ve the makings of a legend, you know.',
     rw:{gold:45, xp:{melee:200, magic:150}} },
@@ -2201,27 +2210,27 @@ const QUESTS = {
     doneText:'A REAL PEARL! She\'s going to cry. Happy crying! You\'re my favorite person who isn\'t Mama.',
     rw:{gold:35, xp:{fishing:200}} },
   profit:{ giver:'maren', title:'A Tidy Profit', kind:'special',
-    brief:'Commerce keeps a village breathing, traveler. Sell twelve goods across my counter — fish, timber, pearls, whatever the isle yields — and I\'ll teach you the trick of mainland haggling.',
+    brief:'Commerce keeps a village breathing, traveler. Sell twelve goods across my counter - fish, timber, pearls, whatever the isle yields - and I\'ll teach you the trick of mainland haggling.',
     log:'Sell 12 items to Elder Maren.',
-    doneText:'Twelve sales, fairly struck! Here — and remember on the mainland: never take the first price.',
+    doneText:'Twelve sales, fairly struck! Here - and remember on the mainland: never take the first price.',
     rw:{gold:40, xp:{farming:80, fishing:80}} },
   sharpen:{ giver:'bram', title:'Iron in the Fire', kind:'gather', need:{wood:5,stone:3},
-    brief:'That rusty letter-opener of yours won\'t cut butter. Bring me 5 wood and 3 stone — there\'s a pine stand south of the village and a stone outcrop up the north road — and I\'ll forge you a proper iron sword.',
+    brief:'That rusty letter-opener of yours won\'t cut butter. Bring me 5 wood and 3 stone - there\'s a pine stand south of the village and a stone outcrop up the north road - and I\'ll forge you a proper iron sword.',
     log:'Bring Bram 5 wood and 3 stone.',
-    doneText:'Stand back— *CLANG* —there. Iron, balanced, and mean. Try not to lose it.',
+    doneText:'Stand back- *CLANG* -there. Iron, balanced, and mean. Try not to lose it.',
     rw:{item:{}, sword:1, gold:5, xp:{melee:60, mining:80, woodcut:80}}, unlocks:['slimes','cove'] },
   slimes:{ giver:'bram', title:'Meadow Menace', kind:'kill', kill:{slime:4},
-    brief:'Slimes have gone and claimed the east meadow — Willa\'s cows won\'t graze. Squash four of them and I\'ll dig out my old hunting bow for you.',
+    brief:'Slimes have gone and claimed the east meadow - Willa\'s cows won\'t graze. Squash four of them and I\'ll dig out my old hunting bow for you.',
     log:'Defeat 4 slimes in the meadow east of the village.',
-    doneText:'Not a drop of goo on you! Here — my old yew bow. She pulls a little left. Press 2 to draw it.',
+    doneText:'Not a drop of goo on you! Here - my old yew bow. She pulls a little left. Press 2 to draw it.',
     rw:{bow:true, gold:10, xp:{melee:80, archery:120}}, unlocks:['mushrooms'] },
   fish:{ giver:'finn', title:'Supper for Three', kind:'gather', need:{fish:3},
-    brief:'Tide\'s kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family — keep any extra.',
+    brief:'Tide\'s kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.',
     log:'Catch 3 fish at rippling water. Interact to cast, again on the "!"',
-    doneText:'Beautiful catch! You\'ve got dock-hands, friend. Take these tonics — brewed them from sea kelp myself.',
+    doneText:'Beautiful catch! You\'ve got dock-hands, friend. Take these tonics - brewed them from sea kelp myself.',
     rw:{item:{potion:3}, xp:{fishing:150}, gold:5}, unlocks:['pearlq'] },
   harvest:{ giver:'willa', title:'Golden Rows', kind:'special', count:4,
-    brief:'Soil\'s turned and begging for seed. Take these — plant them in the tilled plots, and wheat grows quick as gossip on this island. Harvest four bundles for me.',
+    brief:'Soil\'s turned and begging for seed. Take these - plant them in the tilled plots, and wheat grows quick as gossip on this island. Harvest four bundles for me.',
     log:'Plant seeds in Willa\'s plots and harvest 4 wheat.',
     doneText:'Look at that gold! You keep half, that\'s farm law. Come plant whenever you like.',
     rw:{item:{seed:4, wheat:2}, gold:15, xp:{farming:180}}, unlocks:['orchard'] },
@@ -2231,19 +2240,19 @@ const QUESTS = {
     midText:'PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything.',
     rw:{item:{potion:2}, xp:{melee:40}, gold:3} },
   mushrooms:{ giver:'orin', title:'Light in the Dark', kind:'gather', need:{mushroom:3},
-    brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood — they only glow where the shade is honest — and I will wake the staff that\'s been asleep in my cellar.',
+    brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will wake the staff that\'s been asleep in my cellar.',
     log:'Gather 3 bluecaps from the Whisperwood for Orin.',
     doneText:'Bluecaps, crushed… essence, bound… there. This staff will throw fire that answers to you. Press 3. Mind the eyebrows.',
     rw:{staff:true, xp:{magic:150}}, unlocks:['skeletons','remember'] },
   skeletons:{ giver:'orin', title:'Restless Bones', kind:'kill', kill:{skeleton:3},
-    brief:'The old ruins north of my tower are rattling again. Skeletons — rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
+    brief:'The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
     log:'Destroy 3 skeletons in the Old Ruins, north of the tower.',
-    doneText:'Quieter already. This ember charm rides your strikes — every blow burns a little brighter now.',
+    doneText:'Quieter already. This ember charm rides your strikes - every blow burns a little brighter now.',
     rw:{item:{charm:1}, gold:20, xp:{melee:80, archery:80, magic:80}}, unlocks:['king'] },
   king:{ giver:'maren', title:'The Hollow King', kind:'kill', kill:{boss:1},
-    brief:'Then it\'s true — the Hollow King stirs beneath the crypt. Long ago he traded his heart for a crown, and the island has carried his silence since. End it, traveler. Take your tonics, your steel, your fire. Emberwick believes in you.',
+    brief:'Then it\'s true - the Hollow King stirs beneath the crypt. Long ago he traded his heart for a crown, and the island has carried his silence since. End it, traveler. Take your tonics, your steel, your fire. Emberwick believes in you.',
     log:'Defeat the Hollow King at the crypt in the Old Ruins.',
-    doneText:'The lanterns burn brighter tonight because of you. Kneel, traveler — rise, Champion of Emberwick. The crown is yours; may it weigh kindly.',
+    doneText:'The lanterns burn brighter tonight because of you. Kneel, traveler - rise, Champion of Emberwick. The crown is yours; may it weigh kindly.',
     rw:{item:{crown:1}, gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
 };
 
@@ -2260,9 +2269,9 @@ function spawnNPCs(){
       ['A dull blade is a heavy blade.','Hear that ring? That\'s good iron talking.','Stone from the north road takes an edge best.'],0.4),
     (()=>{ const b=makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e'},
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false);
-      b.nightOwl=true; return b; })(), // a captain sleeps aboard — findable at any hour
+      b.nightOwl=true; return b; })(), // a captain sleeps aboard - findable at any hour
     (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
-      ['Fish bite best where the water ripples.','Night fish are the honest ones — they bite from hunger, not habit.','Salt cures fish and moods alike.'],0.5);
+      ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.'],0.5);
       f.nightOwl=true; return f; })(),
     (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 40.5,58.6,
       {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038'},
@@ -2290,7 +2299,9 @@ const MOBDEF = {
   boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow King'},
   alpha:{hp:520, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], lvl:8, name:'Greymaw, the Alpha'},
   scorpion:{hp:360, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
-  raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'}
+  raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
+  brigand:{hp:240, dmg:22, speed:3.15, aggro:9, xp:180, gold:[18,34], lvl:7, name:'Pinewood Brigand'},
+  dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'}
 };
 function inSafeZone(x,y){
   for(const k of ['village','dock','farm']){
@@ -2343,7 +2354,7 @@ function addXP(skill,amt){
     addFloat(SKILLS[skill].name+' Lv '+sk.lvl+'!', P.x, P.y-2.3, '#ffd76a', 1.6);
     burst(P.x,P.y-0.5,'#ffd76a',16); Snd.levelup();
     shockwave(P.x,P.y,'rgba(255,215,106,0.9)',40);
-    banner(SKILLS[skill].name.toUpperCase()+' — LEVEL '+sk.lvl, SKILLS[skill].perk);
+    banner(SKILLS[skill].name.toUpperCase()+' - LEVEL '+sk.lvl, SKILLS[skill].perk);
     P.cheerT=3;
   }
   refreshSkillsPanel();
@@ -2386,16 +2397,19 @@ function completeQuest(id){
   if(rw.gold) giveGold(rw.gold);
   if(rw.item) for(const it in rw.item) give(it,rw.item[it]);
   if(rw.sword){ P.swordTier=Math.max(P.swordTier,1); P.unlocked.melee=true; buildHotbar();
-    toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon — tap the sword slot to wield it.'); }
+    toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon - tap the sword slot to wield it.'); }
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
-  if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 — bolts cost 8 mana.'); }
+  if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.'); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
+  if(id==='ribbon3'){ P.prog.eastSail=1;
+    banner('NEW HORIZONS','THE EAST STRAIT OPENS SOON');
+    setTimeout(()=>toast('Corvo readies his sloop. <b>A new island</b> waits past the shoals. Coming in a future update.',6000),1500); }
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
-  if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock — Greyharbor awaits'),1300);
+  if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock - Greyharbor awaits'),1300);
   if(fresh.length){
     const who=[...new Set(fresh.map(u=>npcName(QUESTS[u].giver)))].join(' & ');
     setTimeout(()=>toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+who+'</b>.',4800),1400);
@@ -2414,7 +2428,7 @@ function killCredit(kind){
     if(q.kind==='kill' && q.kill[kind]!=null){
       P.prog[id]=Math.min(q.kill[kind],(P.prog[id]||0)+1);
       const left=q.kill[kind]-P.prog[id];
-      toast(((MOBDEF[kind]&&MOBDEF[kind].name)||'Elite foe')+' defeated — '+(left>0? left+' to go' : '<b style="color:#9be07f">objective complete! Return to '+npcName(q.giver)+'</b>'));
+      toast(((MOBDEF[kind]&&MOBDEF[kind].name)||'Elite foe')+' defeated - '+(left>0? left+' to go' : '<b style="color:#9be07f">objective complete! Return to '+npcName(q.giver)+'</b>'));
     }
   }
   updateQuestUI();
@@ -2428,7 +2442,7 @@ function rewardText(q){
   if(rw.kit) parts.push('a woodsman\'s <b>axe &amp; pick</b>');
   if(rw.bow) parts.push('<b style="color:var(--ember)">the Hunting Bow</b>');
   if(rw.staff) parts.push('<b style="color:var(--ember)">the Fire Staff</b>');
-  if(rw.xp){ const sk=Object.keys(rw.xp); parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
+  if(rw.xp){ const sk=Object.keys(rw.xp).filter(s=>SKILLS[s]); if(sk.length) parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
   return parts.length? '<div class="rwline">Reward: '+parts.join(' · ')+'</div>' : '';
 }
 function questTargetPos(id){
@@ -2460,7 +2474,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -2528,9 +2542,9 @@ function buildDialogContent(npc){
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && questReady(id)){
       const q=QUESTS[id];
-      setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles — let\'s see them!' : 'You found it?!') +'”'
+      setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles - let\'s see them!' : 'You found it?!') +'”'
         + rewardText(q),
-        [{label:'✓ Complete — '+q.title, cls:'gold', fn:()=>{
+        [{label:'✓ Complete - '+q.title, cls:'gold', fn:()=>{
             completeQuest(id);
             setDialog('“'+q.doneText+'”',[{label:'Continue',fn:()=>buildDialogContent(npc)}]);
         }},{label:'Not yet',ghost:true,fn:closeDialog}]);
@@ -2554,7 +2568,7 @@ function buildDialogContent(npc){
       return;
     }
   }
-  // 4) active quest reminder from giver — restate objective + live progress
+  // 4) active quest reminder from giver - restate objective + live progress
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].giver===npc.id && QUESTS[id].kind!=='talk'){
       setDialog('“How goes it?”'
@@ -2587,16 +2601,16 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Sell goods…', fn:()=>sellMenu(npc)});
     btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
       if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
-        setDialog('“Sip it slow — or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+        setDialog('“Sip it slow - or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
       else setDialog('“Coin first, tonic after. Island rules.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
   if(npc.id==='brant' && qs('setsail')!=='done'){
     btns.unshift({label:'Ask for passage to Barik', fn:()=>{
       const rem=ISLE_IDS.filter(id=>qs(id)!=='done').length;
-      setDialog('“Happy to haul you across to <b>Barik</b>, friend — she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
+      setDialog('“Happy to haul you across to <b>Barik</b>, friend - she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
         shopButtons(npc,[
-          {label:'No really — I\'m ready.', fn:()=>{
+          {label:'No really - I\'m ready.', fn:()=>{
             setDialog('“Ok, if you\'re sure…” <i>He squints at you the way sailors squint at weather.</i> “…are you <b>sure</b>? Barik doesn\'t grade on a curve, and the isle\'s work will still be waiting.”',
               shopButtons(npc,[
                 {label:'Yes. Set sail.', fn:()=>{ P.earlySail=1; closeDialog(); departEarly(); }},
@@ -2611,7 +2625,7 @@ function shopButtons(npc,btns){
     btns.unshift({label:'“Why hide out here?”', fn:()=>{
       P.prog.hermitGift=1;
       giveGold(150); giveQuiet('potion',2); giveQuiet('crystal',1); refreshUI(); Snd.quest(); autoSave();
-      setDialog('“To see who\'d bother looking. You did — so take what the pines saved for you: <b>150 gold</b>, two <b>tonics</b>, and an <b>ember crystal</b> I found where the roots run hot. Tell no one, or tell everyone. Both amuse me.”',
+      setDialog('“To see who\'d bother looking. You did - so take what the pines saved for you: <b>150 gold</b>, two <b>tonics</b>, and an <b>ember crystal</b> I found where the roots run hot. Tell no one, or tell everyone. Both amuse me.”',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
@@ -2621,8 +2635,8 @@ function shopButtons(npc,btns){
       for(const vk in SELL_PRICES){ const vc=P.inv[vk]||0;
         if(vc>0){ P.vault[vk]=(P.vault[vk]||0)+vc; take(vk,vc); vn+=vc; } }
       Snd.coin(); autoSave();
-      setDialog(vn>0? '“'+vn+' goods, shelved and sealed under your name. Death itself signs no withdrawal slips here.”'
-        : '“Your satchel holds nothing the vault takes — raw goods only: catch, crop, timber, ore and gem.”',
+      setDialog(vn>0? '“'+vn+' goods, shelved and sealed under your name. Why goods only? Scavengers take what is loose in a satchel; tonics ride your belt and steel rides your back. The vault guards the only things death can touch.”'
+        : '“Your satchel holds nothing the vault takes - raw goods only: catch, crop, timber, ore and gem.”',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
     btns.unshift({label:'Reclaim stored goods', fn:()=>{
@@ -2647,30 +2661,37 @@ function shopButtons(npc,btns){
     // tuition scales with mastery (25g \u00d7 magic level) and the Spire caps out at level 7
     const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
     const aelinStudy=()=>{
-      if(P.skills.magic.lvl>=7){ setDialog('“Level seven — the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       const f=aelinFee();
-      if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold — mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      P.gold-=f; Snd.coin(); addXP('magic',140); refreshUI();
-      const nxt=P.skills.magic.lvl>=7? 'none — you\'ve reached the ceiling' : aelinFee()+'g';
-      setDialog('“Again — and this time, <i>mean</i> the syllables.” <i>(+140 Magic XP · next lesson: '+nxt+')</i>',
-        shopButtons(npc,[{label:'Study again',fn:aelinStudy},{label:'Farewell',ghost:true,fn:closeDialog}]));
+      if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x+2.5; P.y=npc.y+1.6;
+      TRAIN={who:'aelin', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Aelin\'s lesson:</b> deal <b>30 damage</b> to the range dummies. Staff, sword, anything that moves the air.',5000); Snd.quest();
     };
-    btns.unshift({label:P.skills.magic.lvl>=7? 'Study the weave (mastered)' : 'Study the weave ('+aelinFee()+'g → magic XP)', fn:aelinStudy});
+    btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
   }
   if(npc.id==='rook'){
-    btns.unshift({label:'Drill volleys (20g \u2192 archery XP)', fn:()=>{
-      if(P.gold<20){ setDialog('“Arrows aren\'t free, friend. Twenty.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      P.gold-=20; Snd.coin(); addXP('archery',120); refreshUI();
-      setDialog('“Better. The target only laughed twice.” <i>(+120 Archery XP)</i>',
-        shopButtons(npc,[{label:'Drill again (20g)',fn:()=>{ if(P.gold>=20){P.gold-=20;Snd.coin();addXP('archery',120);refreshUI();} }},{label:'Farewell',ghost:true,fn:closeDialog}]));
+    btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
+      if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x+1.5; P.y=npc.y+1.2;
+      TRAIN={who:'rook', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Rook\'s drill:</b> deal <b>30 damage</b> to the practice dummies in the yard. Strike!',4600); Snd.quest();
+    }});
+    btns.unshift({label:'\u201cArchery lessons?\u201d', fn:()=>{
+      setDialog('\u201cBows? My cousin teaches archery across the eastern water. Proper range, proper wind. When the strait opens, sail out and tell her I still owe her twenty gold.\u201d',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
   if(npc.id==='hedda'){
     if(!P.home) btns.unshift({label:'Buy the homestead (250g)', fn:()=>{
-      if(P.gold<250){ setDialog('“Two hundred fifty. The land\'s worth twice that — I like your face.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      if(P.gold<250){ setDialog('“Two hundred fifty. The land\'s worth twice that - I like your face.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=250; P.home=1; Snd.quest(); refreshUI(); autoSave();
       const hb=G.decor.find(b=>String(b.label||'').includes('Homestead')); if(hb) hb.label='Your homestead';
-      setDialog('“Then it\'s yours — deed, door, and drafts. Come back when you\'re ready to <b>improve</b> it.”',
+      setDialog('“Then it\'s yours - deed, door, and drafts. Come back when you\'re ready to <b>improve</b> it.”',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
     else btns.unshift({label:'Home improvements\u2026', fn:()=>{
@@ -2691,15 +2712,15 @@ function shopButtons(npc,btns){
         P.gold-=100; P.homeUp.farm=1; Snd.quest(); refreshUI(); autoSave();
         const hb=G.decor.find(b=>String(b.label||'').includes('Your homestead'));
         if(hb) for(let i=0;i<8;i++) G.plots.push({x:Math.floor(hb.x)+3+(i%4)*1.5, y:Math.floor(hb.y)+1+Math.floor(i/4)*1.5, crop:null, t:0});
-        setDialog('“Good soil. Willa\'s seeds grow anywhere — plant away.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+        setDialog('“Good soil. Willa\'s seeds grow anywhere - plant away.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
       }});
       opts.push({label:'Farewell',ghost:true,fn:closeDialog});
-      setDialog(opts.length>1? '“What\'ll it be? A house is never finished — that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
+      setDialog(opts.length>1? '“What\'ll it be? A house is never finished - that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
     }});
-    if(!P.horse) btns.unshift({label:'Buy a horse \u2014 Chestnut (150g)', fn:()=>{
+    if(!P.horse) btns.unshift({label:'Buy a horse - Chestnut (150g)', fn:()=>{
       if(P.gold<150){ setDialog('“Hundred fifty for Chestnut. He eats like a duke but runs like a rumor.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=150; P.horse=1; P.riding=1; Snd.quest(); refreshUI(); autoSave();
-      setDialog('“He\'s yours. Whistle any time —” <i>Chestnut is already nosing your pockets.</i> <b>(Toggle riding via Hedda or the pause menu.)</b>',
+      setDialog('“He\'s yours. Whistle any time -” <i>Chestnut is already nosing your pockets.</i> <b>(Toggle riding via Hedda or the pause menu.)</b>',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
     else btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
@@ -2717,7 +2738,7 @@ function shopButtons(npc,btns){
       const fade=document.getElementById('fadeOv');
       fade.style.opacity=1;
       setTimeout(()=>{
-        G.dayT=0.09; // morning proper — the dark is done
+        G.dayT=0.09; // morning proper - the dark is done
         P.hp=P.maxhp; P.mp=P.maxmp;
         P.bind={w:G.worldId, x:npc.x, y:npc.y+1};
         fade.style.opacity=0;
@@ -2759,7 +2780,7 @@ function shopButtons(npc,btns){
   return btns;
 }
 /* =====================================================================
-   INPUT — keyboard, mouse, touch
+   INPUT - keyboard, mouse, touch
    ===================================================================== */
 const keys={};
 const input={mx:0,my:0,mouseDown:false,joy:{x:0,y:0,active:false},attack:false};
@@ -2826,7 +2847,7 @@ function pickClickTarget(wx,wy){
   for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});
   for(const b of G.decor){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
-    else if(b.kind==='chest'||b.kind==='chestOpen') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
+    else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done')) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
     else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
@@ -2984,7 +3005,7 @@ function selectWeapon(w){
   P.weapon=w; buildHotbar();
 }
 function useItem(item){
-  if(!has(item,1)) { if(item==='potion') toast('No tonics left — Elder Maren sells them for 8 gold.'); return; }
+  if(!has(item,1)) { if(item==='potion') toast('No tonics left - Elder Maren sells them for 8 gold.'); return; }
   const def=ITEMS[item];
   if(def.use==='heal'){
     if(P.hp>=P.maxhp){ toast('You\'re already at full health.'); return; }
@@ -3010,7 +3031,7 @@ function refreshInvPanel(){
   const AR=[{t:0,n:'Traveler\'s Clothes',d:'No protection, full freedom.'},
             {t:1,n:'Iron Armor',d:'Turns aside 15% of every blow.'},
             {t:2,n:'Steel Plate',d:'Turns aside 30% of every blow.'}];
-  let eq='<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:5px;">EQUIPMENT — ARMOR</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
+  let eq='<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:5px;">EQUIPMENT - ARMOR</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
   AR.forEach(a=>{
     const lk=a.t>own, sel=(P.armor||0)===a.t;
     eq+='<button class="btn'+(sel?' gold':'')+(lk?' ghost':'')+'" style="padding:6px 9px;font-size:11px;" '+
@@ -3019,13 +3040,13 @@ function refreshInvPanel(){
   eq+='</div>';
   grid.insertAdjacentHTML('beforeend',eq);
   const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0);
-  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">Satchel\'s empty. The island provides — go poke it.</div>'); return; }
+  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">Satchel\'s empty. The island provides - go poke it.</div>'); return; }
   keysList.forEach(k=>{
-    const s=document.createElement('div'); s.className='islot'; s.title=ITEMS[k].name+' — '+ITEMS[k].desc;
+    const s=document.createElement('div'); s.className='islot'; s.title=ITEMS[k].name+' - '+ITEMS[k].desc;
     const ic=document.createElement('canvas'); ic.width=ic.height=40; ic.getContext('2d').drawImage(ICONS[k]||iconCanvas('stone'),0,0);
     s.appendChild(ic);
     const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv[k]; s.appendChild(c);
-    s.onclick=()=>{ if(ITEMS[k].use) { useItem(k); } else toast('<b>'+ITEMS[k].name+'</b> — '+ITEMS[k].desc); };
+    s.onclick=()=>{ if(ITEMS[k].use) { useItem(k); } else toast('<b>'+ITEMS[k].name+'</b> - '+ITEMS[k].desc); };
     grid.appendChild(s);
   });
 }
@@ -3043,7 +3064,7 @@ function refreshSkillsPanel(){
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue; any=true;
@@ -3055,11 +3076,11 @@ function refreshQuestLog(){
       '</div>');
   }
   const avail = order.filter(id=>qs(id)==='avail');
-  if(avail.length) box.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">'+avail.length+' villager'+(avail.length>1?'s have':' has')+' work for you — look for the <b style="color:var(--ember)">!</b> marks.</div>');
+  if(avail.length) box.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">'+avail.length+' villager'+(avail.length>1?'s have':' has')+' work for you - look for the <b style="color:var(--ember)">!</b> marks.</div>');
   if(!any && !avail.length) box.innerHTML='<div style="font-size:12px;color:var(--parch-dim);">Speak with Elder Maren by the village well.</div>';
   const total=Object.keys(LORE).length, read=Object.keys(P.loreRead||{});
   let lh='<div style="margin-top:12px;border-top:1px solid #3a2c1c;padding-top:8px;">'+
-    '<div class="qt" style="color:var(--ember);">Lore Journal — '+read.length+'/'+total+'</div>';
+    '<div class="qt" style="color:var(--ember);">Lore Journal - '+read.length+'/'+total+'</div>';
   if(read.length){
     for(const k of read){ if(LORE[k]) lh+='<div class="qlogItem" style="margin-top:6px;"><div class="qt" style="font-size:12px;">'+LORE[k].title+'</div><div class="qd">'+LORE[k].text+'</div></div>'; }
   } else lh+='<div class="qd" style="font-size:11px;color:var(--parch-dim);">Books wait indoors; old stones wait among the ruins. Read them.</div>';
@@ -3068,13 +3089,13 @@ function refreshQuestLog(){
 }
 function questProgressText(id){
   const q=QUESTS[id];
-  if(questReady(id)) return 'Ready — return to '+npcName(q.giver)+'!';
+  if(questReady(id)) return 'Ready - return to '+npcName(q.giver)+'!';
   if(q.kind==='gather'){ return Object.keys(q.need).map(it=> ITEMS[it].name+' '+Math.min(q.need[it],P.inv[it]||0)+'/'+q.need[it]).join(' · '); }
   if(q.kind==='kill'){ const k=Object.keys(q.kill)[0];
     return ((MOBDEF[k]&&MOBDEF[k].name+'s')||'Elites')+' '+(P.prog[id]||0)+'/'+q.kill[k]; }
   if(q.kind==='visit') return 'Find '+ZONES[q.zone].name;
   if(id==='harvest') return 'Harvested '+(P.prog.harvest||0)+'/'+q.count;
-  if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you — bring him to Nia!' : 'Search the Whisperwood';
+  if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you - bring him to Nia!' : 'Search the Whisperwood';
   return '';
 }
 const ISLE_IDS=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord'];
@@ -3082,6 +3103,7 @@ function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], masterwork:['skeletons'],
   wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'],
   nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'],
+  ribbon2:['ribbon1'], ribbon3:['ribbon2'],
   feud1:['roadclear'], sting1:['feud1'], undermaw1:['torv2'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
@@ -3100,7 +3122,7 @@ function questReadySweep(){
     if(r && !P._rn[id]){
       P._rn[id]=1;
       const q=QUESTS[id];
-      toast('<b style="color:#ffd76a">✓ Quest ready:</b> '+q.title+' — return to <b>'+npcName(q.giver)+'</b>!',4800);
+      toast('<b style="color:#ffd76a">✓ Quest ready:</b> '+q.title+' - return to <b>'+npcName(q.giver)+'</b>!',4800);
       Snd.quest();
     } else if(!r) delete P._rn[id];
   }
@@ -3108,7 +3130,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};
@@ -3183,7 +3205,7 @@ function nearestInteract(){
     }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
-    if(b.kind==='chest'||b.kind==='chestOpen'){ const d=dist(P.x,P.y,b.x,b.y);
+    if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done')){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
   for(const pl of G.plots){
@@ -3227,7 +3249,7 @@ function doInteract(){
     if(qs('cat')==='active' && !P.petPip){
       P.petPip=true; G.cat.found=true; G.cat.following=true;
       burst(G.cat.x,G.cat.y-0.4,'#ffd76a',12); Snd.quest();
-      toast('<b style="color:var(--ember)">Pip found!</b> He trots along behind you — back to Nia!');
+      toast('<b style="color:var(--ember)">Pip found!</b> He trots along behind you - back to Nia!');
       updateQuestUI();
     } else { addFloat('mrrp~',G.cat.x,G.cat.y-1,'#ffd76a'); Snd.pickup(); }
     return;
@@ -3244,8 +3266,8 @@ function hitNode(n){
     P._toolT=P._toolT||0;
     if(G.time>P._toolT){ P._toolT=G.time+2.5;
       toast(n.kind==='tree'
-        ? 'Bark tears at bare palms — you need an <b>axe</b>. <b>Bram</b> at the forge keeps spares.'
-        : 'Stone laughs at fists — you need a <b>pick</b>. <b>Bram</b> at the forge keeps spares.',4200);
+        ? 'Bark tears at bare palms - you need an <b>axe</b>. <b>Bram</b> at the forge keeps spares.'
+        : 'Stone laughs at fists - you need a <b>pick</b>. <b>Bram</b> at the forge keeps spares.',4200);
     }
     P.click=null;
     return;
@@ -3284,7 +3306,7 @@ function hitNode(n){
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
   if(n.hp<=0){
     n.dead=true; n.respawn= isTree? rnd(20,30) : rnd(26,38);
-    hintOnce('regrow','The island <b>regrows</b> — felled pines and broken stone return in under a minute.');
+    hintOnce('regrow','The island <b>regrows</b> - felled pines and broken stone return in under a minute.');
     setSolid(n.tx,n.ty,0);
     if(isTree){
       const amt=2+Math.floor(P.skills.woodcut.lvl/2); give('wood',Math.min(amt,4)); addXP('woodcut',8);
@@ -3293,13 +3315,13 @@ function hitNode(n){
       else if(windfall<0.24){ give('mushroom',1); addFloat('+1 mushroom',n.x,n.y-1.6,'#d8b0c8',1.0); }
       if(n.big && Math.random() < 0.45 + P.tools.axe*0.3 + P.skills.woodcut.lvl*0.03){
         give('hardwood',1); addFloat('+1 hardwood',n.x,n.y-2.2,'#c9a24e',1.1);
-        hintOnce('hardwood','<b>Hardwood!</b> Old forest pines hide dense heartwood — Bram forges tools and steel with it.');
+        hintOnce('hardwood','<b>Hardwood!</b> Old forest pines hide dense heartwood - Bram forges tools and steel with it.');
       }
     } else {
       const amt=1+Math.floor(P.skills.mining.lvl/2); give('stone',Math.min(amt,3)); addXP('mining',9);
       if(Math.random() < 0.22 + P.tools.pick*0.3 + P.skills.mining.lvl*0.04){
         give('ore',1); addFloat('+1 iron ore',n.x,n.y-2,'#c9ced6',1.1);
-        hintOnce('ore','<b>Iron ore!</b> Take it to Bram — two ore and a stick of wood smelt into an iron bar.');
+        hintOnce('ore','<b>Iron ore!</b> Take it to Bram - two ore and a stick of wood smelt into an iron bar.');
       }
       const nearVein = dist(n.x,n.y,ZONES.ruins.x,ZONES.ruins.y)<13 ||
         (ZONES.highlands && dist(n.x,n.y,ZONES.highlands.x,ZONES.highlands.y)<13);
@@ -3353,7 +3375,7 @@ function tryAttack(useMouse){
   if(!P.unlocked[P.weapon==='melee'?'melee':P.weapon]){
     P._noWpnT=P._noWpnT||0;
     if(G.time>P._noWpnT){ P._noWpnT=G.time+2.5;
-      toast('Bare hands won\'t do — <b>Bram\'s forge</b> can arm you. (Quest: <b>Iron in the Fire</b>)'); }
+      toast('Bare hands won\'t do - <b>Bram\'s forge</b> can arm you. (Quest: <b>Iron in the Fire</b>)'); }
     return;
   }
   // if a gatherable is closer than any mob and we're in melee, gather instead (mobile friendliness)
@@ -3406,7 +3428,7 @@ function tryAttack(useMouse){
     P.atkCd=0.62; P.swing=0.2; Snd.bow();
     G.projs.push({kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'});
   } else if(P.weapon==='staff'){
-    if(P.mp<8){ toast('Not enough mana — it returns as you breathe.'); P.atkCd=0.3; return; }
+    if(P.mp<8){ toast('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
     G.projs.push({kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:1.2});
     refreshUI();
@@ -3421,7 +3443,7 @@ function gainLXP(n){
     P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp;
     burst(P.x,P.y-0.5,'#c9b0ff',20); Snd.levelup();
     shockwave(P.x,P.y,'rgba(201,176,255,0.9)',46);
-    banner('LEVEL '+P.level, 'Barik takes your measure — and steps back.');
+    banner('LEVEL '+P.level, 'Barik takes your measure - and steps back.');
     P.cheerT=3;
   }
   refreshUI();
@@ -3447,7 +3469,7 @@ function damageMob(m,dmg,knock,skill){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
     if(!P._boneHint){ P._boneHint=1;
-      toast('Old bones splinter — <b style="color:#ffd76a">arrows deal heavy bonus damage to skeletons!</b>',5000); }
+      toast('Old bones splinter - <b style="color:#ffd76a">arrows deal heavy bonus damage to skeletons!</b>',5000); }
   }
   let crit=false;
   if(Math.random()<0.12){ dmg=Math.round(dmg*1.6); crit=true; }
@@ -3485,7 +3507,7 @@ function killMob(m,skill){
     shockwave(m.x,m.y,'rgba(255,140,110,0.9)',70);
     banner('GREYMAW FALLS','THE HIGHLANDS GO QUIET');
     give('fang',1);
-    toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> — +8 melee damage while carried.',5200);
+    toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
   }
   if(m.boss){
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
@@ -3505,7 +3527,7 @@ function hurtPlayer(dmg,src){
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
   if(src && src.kind==='scorpion'){ P.poisonT=6;
-    hintOnce('venom','<b>Venom!</b> Scorpion stings burn for a few breaths \u2014 the poison fades on its own.'); }
+    hintOnce('venom','<b>Venom!</b> Scorpion stings burn for a few breaths - the poison fades on its own.'); }
   if(P.openCh){ P.openCh=null; toast('The blow knocks you off the chest lid!'); }
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
   burst(P.x,P.y-0.5,'#e05648',8); Snd.hurt(); G.shake=Math.max(G.shake,0.25);
@@ -3524,7 +3546,7 @@ document.getElementById('respawnBtn').onclick=()=>{
   P.dead=false; P.hp=Math.round(P.maxhp*0.6); P.mp=P.maxmp;
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
-    toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach — Goldwarden Bree, Greyharbor.)</i>',6200); }
+    toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach - Goldwarden Bree, Greyharbor.)</i>',6200); }
   if((CFG.diff|0)>0){ // Story mode keeps your goods
     const lost=[];
     for(const lk in SELL_PRICES){ const lc=P.inv[lk]||0;
@@ -3603,7 +3625,7 @@ function updatePlayer(dt){
     mx/=ml; my/=ml;
     const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)*(P.riding?1.55:1);
     moveEntity(P, mx*sp*dt, my*sp*dt);
-    P.dir={x:mx,y:my}; P.anim+=sp*dt*3.1; // stride matches ground covered — no foot-sliding
+    P.dir={x:mx,y:my}; P.anim+=sp*dt*3.1; // stride matches ground covered - no foot-sliding
     P.stepT=(P.stepT||0)+dt;
     if(P.stepT>0.27){ P.stepT=0;
       const ut=tileAt(Math.floor(P.x),Math.floor(P.y));
@@ -3637,6 +3659,28 @@ function updatePlayer(dt){
     else { P.openCh.t+=dt;
       if(P.openCh.t>=P.openCh.dur){ P.openCh=null; openChest(ob); } }
   }
+  // training drills: strikes, combos, footwork
+  if(TRAIN){
+    const dums=G.mobs.filter(m=>m.kind==='dummy');
+    const dmgDone=dums.reduce((a,m)=>a+(m.maxhp-m.hp),0)-TRAIN.dmg0;
+    if(P.rollT>0 && !TRAIN._r){ TRAIN._r=1; TRAIN.rolls++; }
+    if(P.rollT<=0) TRAIN._r=0;
+    TRAIN.combo=Math.max(TRAIN.combo,P.combo||0);
+    if(dist(P.x,P.y,TRAIN.x,TRAIN.y)>14){ TRAIN=null; toast('Drill abandoned. The dummies gossip about you.',3200); }
+    else if(TRAIN.stage===0 && dmgDone>=30){ TRAIN.stage=1; Snd.quest();
+      toast('<b>Good.</b> Now chain it: land a <b>COMBO x2</b> without pausing between strikes.',4400); }
+    else if(TRAIN.stage===1 && TRAIN.combo>=2){ TRAIN.stage=2; Snd.quest();
+      toast('<b>Sharp.</b> Footwork now: <b>dodge-roll 3 times</b>'+(isTouch?' (the roll button)':' (Shift)')+'.',4400); }
+    else if(TRAIN.stage===2 && TRAIN.rolls>=3){
+      const who=TRAIN.who; TRAIN=null;
+      for(const m of dums){ m.hp=m.maxhp; }
+      if(who==='rook'){ addXP('melee',150); gainLXP(120);
+        toast('<b>Rook nods.</b> \u201cStrike, chain, move. That is the whole art.\u201d <i>(+150 Melee XP, +120 XP)</i>',5200); }
+      else { addXP('magic',150); gainLXP(120);
+        toast('<b>Aelin smiles.</b> \u201cThe weave rewards a moving target.\u201d <i>(+150 Magic XP, +120 XP)</i>',5200); }
+      Snd.levelup();
+    }
+  }
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
   if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
@@ -3659,7 +3703,7 @@ function updatePlayer(dt){
     if(sd<ZONES.springs.r){
       if(qs('springs')==='active' && !(P.prog.springs)){ P.prog.springs=1; updateQuestUI();
         toast('<b style="color:var(--ember)">Ember Springs discovered!</b> Return to Maren.',4200); Snd.quest(); }
-      hintOnce('springs','The <b>Ember Springs</b> — warm water rises from the island\'s heart. Wade at the pool\'s edge to mend your wounds.');
+      hintOnce('springs','The <b>Ember Springs</b> - warm water rises from the island\'s heart. Wade at the pool\'s edge to mend your wounds.');
       if(sd<2.4){
         P.hp=Math.min(P.maxhp,P.hp+6*dt);
         if(Math.random()<0.15) G.parts.push({x:P.x+rnd(-0.6,0.6),y:P.y+rnd(-0.6,0.6),
@@ -3670,7 +3714,7 @@ function updatePlayer(dt){
       G.parts.push({x:ZONES.springs.x+rnd(-1.5,1.5),y:ZONES.springs.y+rnd(-1.5,1.5),
         vx:rnd(-0.1,0),vy:rnd(-0.12,-0.04),life:rnd(1.5,2.5),color:'rgba(225,235,240,0.28)',size:6,grav:-0.15});
   }
-  if(dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins — the air is cold here. Bones walk.');
+  if(dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
   if(dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
 }
 
@@ -3752,7 +3796,7 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
       if(l>stop) moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
-      // telegraphed strike: wind up, then the blow lands — roll through it!
+      // telegraphed strike: wind up, then the blow lands - roll through it!
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0)){
         m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
         m.hitCd= m.boss?1.1:1.25;
@@ -4226,6 +4270,7 @@ function signGlyph(label){
   if(sl.includes('provision')||sl.includes('trade')) return 'coin';
   if(sl.includes('herbary')) return 'leaf';
   if(sl.includes('warden')) return 'shield';
+  if(sl.includes('clothier')||sl.includes('thread')) return 'spool';
   if(sl.includes('your homestead')) return 'key';
   return null; // homes and farms hang no shingle
 }
@@ -4251,6 +4296,13 @@ function signCanvas(kind){
     if(kind==='shield'){ g.fillStyle='#8fa3b8';
       g.beginPath(); g.moveTo(13,6.5); g.lineTo(19,9); g.quadraticCurveTo(19,17,13,20); g.quadraticCurveTo(7,17,7,9); g.closePath(); g.fill();
       g.strokeStyle='#26313c'; g.stroke(); }
+    if(kind==='spool'){ g.fillStyle='#c9a06a';
+      g.fillRect(7,7,12,3); g.fillRect(7,16,12,3);
+      g.fillStyle='#e05a7a'; g.fillRect(8,10,10,6);
+      g.strokeStyle='#8a3048'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(8,12); g.lineTo(18,12); g.moveTo(8,14); g.lineTo(18,14); g.stroke();
+      g.strokeStyle='#e8e0d0'; g.lineWidth=1.4;
+      g.beginPath(); g.moveTo(18,13); g.lineTo(22,9); g.stroke(); }
     if(kind==='key'){ g.strokeStyle='#e8c860'; g.lineWidth=2;
       g.beginPath(); g.arc(10,11,3,0,TAU); g.stroke();
       g.beginPath(); g.moveTo(12.6,12.6); g.lineTo(18,18); g.moveTo(16,18.5); g.lineTo(17.6,16.9); g.stroke(); }
@@ -4266,6 +4318,7 @@ function drawSign(b,s,BS){
   cx.restore();
 }
 function drawDecor(b,s){
+  if(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done') return; // unseen until you learn of it
   if(b.kind==='tuft'){
     const sw=Math.sin(G.time*1.7+b.ph)*2.2;
     cx.strokeStyle='#688f4b'; cx.lineWidth=1.5; cx.lineCap='round';
@@ -4316,7 +4369,7 @@ function drawDecor(b,s){
   }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : 30);
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : 30);
   const BS=(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16:1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
@@ -4434,6 +4487,26 @@ function drawScorpion(m,s){
 }
 function drawMob(m,s){
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
+  if(m.kind==='dummy'){
+    drawShadowAt(cx,s.x,s.y,10);
+    cx.strokeStyle='#5a4326'; cx.lineWidth=5;
+    cx.beginPath(); cx.moveTo(s.x,s.y); cx.lineTo(s.x,s.y-34); cx.stroke();
+    cx.lineWidth=4; cx.beginPath(); cx.moveTo(s.x-13,s.y-26); cx.lineTo(s.x+13,s.y-26); cx.stroke();
+    cx.fillStyle='#c9b070';
+    cx.beginPath(); cx.ellipse(s.x,s.y-20,8,11,0,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(24,16,10,0.8)'; cx.lineWidth=1.5; cx.stroke();
+    cx.beginPath(); cx.arc(s.x,s.y-37,6,0,TAU); cx.fill(); cx.stroke();
+    if(m.hurtT>0){ cx.strokeStyle='#ffd76a'; cx.lineWidth=2; cx.beginPath(); cx.arc(s.x,s.y-24,15,0,TAU); cx.stroke(); }
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='brigand'){
+    drawShadowAt(cx,s.x,s.y,13);
+    drawHumanoid(cx,s.x,s.y,{skin:'#c39a72',hair:'#3a3026',shirt:'#3f5230',pants:'#2c3322',
+      hat:'hood',hatColor:'#2f3d24',weapon:'sword',wtier:1,
+      swing:m.swing||0, hurt:m.hurtT>0, size:1.18,
+      dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)});
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='raider'){
     drawShadowAt(cx,s.x,s.y,13);
     drawHumanoid(cx,s.x,s.y,{skin:'#b58a66',hair:'#2c2624',shirt:'#5e2a2a',pants:'#332020',
@@ -4551,7 +4624,7 @@ function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
     ((P.gatherT||0)>0? P.gatherKind :
      P.fishing? 'rod' : (P.unlocked.melee? 'sword' : null)); // kit in hand while gathering; no phantom blade before the forge
-  // one adventurer, one outfit — weapons only change what's in your hands
+  // one adventurer, one outfit - weapons only change what's in your hands
   const expr = P.hurtT>0? 'hurt'
     : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
@@ -4736,7 +4809,7 @@ function drawBigMap(){
    MAIN LOOP & BOOT
    ===================================================================== */
 /* =====================================================================
-   GRIT LAYER — weathering, gore decals, ground fog, crows, film grade
+   GRIT LAYER - weathering, gore decals, ground fog, crows, film grade
    ===================================================================== */
 
 /* ---------- weather every pre-rendered sprite: grime, moss, streaks ---------- */
@@ -4901,10 +4974,10 @@ function drawGritGrade(){
 }
 
 /* =====================================================================
-   WORLD LAYER — tutorial isle, the mainland, sailing between them
+   WORLD LAYER - tutorial isle, the mainland, sailing between them
    ===================================================================== */
 const ISLE_ZONES = ZONES; // the tutorial isle's zones (initial)
-const MAIN_ZONES = { // BARIK — ten times the home shores
+const MAIN_ZONES = { // BARIK - ten times the home shores
   village:  {x:77, y:254, r:15, name:'Greyharbor', lv:[1,3]},
   dock:     {x:55, y:258, r:7,  name:'Harbor Docks', lv:[1,2]},
   forest:   {x:148,y:223, r:28, name:'Blackpine Reach', lv:[2,4]},
@@ -4922,10 +4995,10 @@ const MAIN_ZONES = { // BARIK — ten times the home shores
 };
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
-    spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES — CHAPTER I',
+    spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES - CHAPTER I',
     gen:()=>genIsleAll() },
   main:{ W:355, H:355, seed:99177, zones:MAIN_ZONES,
-    spawn:{x:57.5,y:259.5}, title:'BARIK', sub:'CHAPTER II — THE WILD SHORES',
+    spawn:{x:57.5,y:259.5}, title:'BARIK', sub:'CHAPTER II - THE WILD SHORES',
     gen:()=>genMainAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -5037,8 +5110,16 @@ function genMainland(){
   ];
   for(const r of ROADS) landBridge(r[0],r[1],r[2],r[3]);
   for(const r of ROADS) carveLine(r[0],r[1],r[2],r[3], T.PATH,0);
-  // ambush knolls on the long spire road — guaranteed dry ground for the packs below
+  // ambush knolls on the long spire road - guaranteed dry ground for the packs below
   carveDisc(150,316,5,T.GRASS,false); carveDisc(172,325,5,T.GRASS,false);
+  // the brigands' pines, north of Blackpine
+  carveDisc(162,148,7,T.FOREST,false); carveDisc(162,148,3,T.GRASS,false);
+  landBridge(ZONES.forest.x,ZONES.forest.y-4, 162,151);
+  carveLine(ZONES.forest.x,ZONES.forest.y-4, 162,151, T.PATH,0);
+  // the east cove, so Corvo's shore can be walked
+  carveDisc(331,245,4,T.SAND,false);
+  landBridge(ZONES.farm.x+4,ZONES.farm.y+3, 331,245);
+  carveLine(ZONES.farm.x+4,ZONES.farm.y+3, 331,245, T.PATH,0);
   // shore cleanup
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(tileAt(x,y)===T.SHALLOW){
@@ -5115,22 +5196,22 @@ function placeObjectsMain(){
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
-  // Barik Keep — the Queen's seat
+  // Barik Keep - the Queen's seat
   const CK=ZONES.castle;
-  addBuilding('castle', CK.x,CK.y-3,'Barik Keep — Hall of Queen Maelis');
+  addBuilding('castle', CK.x,CK.y-3,'Barik Keep - Hall of Queen Maelis');
   addBuilding('house2',CK.x-6,CK.y+2,'Keep barracks');
   addBuilding('house2',CK.x+6,CK.y+2,'Keep granary');
   addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
   G.decor.push({kind:'pillar',x:CK.x-4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x-5,CK.y-2,1);
   G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
-  // Aelin's Spire — the magic tower
+  // Aelin's Spire - the magic tower
   const SP=ZONES.spire;
-  addBuilding('tower', SP.x,SP.y,"Aelin's Spire — school of the weave");
+  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave");
   addBuilding('lamp',SP.x-2,SP.y+2,'');
   // the archery range, on Greyharbor's edge
   addBuilding('house', V.x+9,V.y+7,"Rook's Range");
   for(let i=0;i<3;i++){ G.decor.push({kind:'target',x:V.x+12+i*2,y:V.y+9+i*0.5}); setSolid(Math.floor(V.x+12+i*2),Math.floor(V.y+9+i*0.5),1); }
-  // the Undermaw mouth — enter if you dare
+  // the Undermaw mouth - enter if you dare
   const UM=ZONES.undermaw;
   G.decor.push({kind:'cavemouth',x:UM.x+0.5,y:UM.y+0.5});
   addBuilding('lamp',UM.x-2,UM.y+2,'');
@@ -5140,12 +5221,20 @@ function placeObjectsMain(){
   // Vael March raider camp
   const VM=ZONES.vael;
   addBuilding('house2',VM.x,VM.y,'Vael war-tent');
-  // war chests in dangerous country — worth the walk, worth the wait
+  // war chests in dangerous country - worth the walk, worth the wait
   for(const [wz,wlv] of [[ZONES.highlands,4],[ZONES.ruins,6],[ZONES.desert,12],[ZONES.vael,12],[ZONES.undermaw,11],[ZONES.spire,3]]){
     const wsp=findOpenNear(wz.x+3,wz.y+3,6);
     if(wsp){ G.decor.push({kind:'chest',x:wsp[0]+0.5,y:wsp[1]+0.5,opened:false,rich:wlv}); setSolid(wsp[0],wsp[1],1); }
   }
-  // a hermit hides in the deep pines — chop through the ring to find him
+  // the brigand camp and their stolen-goods cache (it only matters once you know of it)
+  addBuilding('lamp',161,147,'');
+  G.decor.push({kind:'chest',x:162.5,y:146.5,opened:false,cache:1});
+  // Captain Corvo's cove on the far shore; his sloop rides at anchor
+  addBuilding('lamp',330,244,'');
+  addBuilding('boat',338.5,249.5,'');
+  // Thimble & Thread, Greyharbor's clothier
+  addBuilding('house',V.x-7,V.y-1,'Thimble & Thread (Clothier)');
+  // a hermit hides in the deep pines - chop through the ring to find him
   { const HX=ZONES.forest.x+9, HY=ZONES.forest.y-7;
     carveDisc(HX,HY,4,T.FOREST,false);
     for(let hy=-3;hy<=3;hy++) for(let hx=-3;hx<=3;hx++){
@@ -5195,12 +5284,12 @@ function spawnBarikFolk(){
   const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
   G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-4.5,V.y+1.5,
     {skin:'#d3a377',hair:'#3c2f22',shirt:'#7a4a36',pants:'#4a3a2c',apron:'#c9b48e',hairstyle:'bun'},
-    ["Bread, fish, and no questions — Greyharbor's finest counter.",
+    ["Bread, fish, and no questions - Greyharbor's finest counter.",
      "The farmsteads east keep us fed. Mostly."],1.2));
   G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x+6.5,V.y+1.8,
     {skin:'#c9a884',hair:'#5a6a4a',shirt:'#46603c',pants:'#35402c',robe:'#3f5a3a',trim:'#9ab87a'},
     ["Everything on Barik either heals you or bites you. I sell the first kind.",
-     "Bluecaps, tonics, tidebalm. The wilds provide — I just bottle it."],1.0));
+     "Bluecaps, tonics, tidebalm. The wilds provide - I just bottle it."],1.0));
   G.npcs.push(makeNPC('hedda','Farmer Hedda', FZ.x+1.5,FZ.y+1.5,
     {skin:'#d8ab7d',hair:'#b8863e',shirt:'#8a6a3a',pants:'#5a4630',apron:'#7a5a3a',hairstyle:'bun'},
     ["Soil's good here. It's everything ELSE that's the problem.",
@@ -5227,9 +5316,17 @@ function spawnRealmFolk(){
     {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',quiver:true},
     ["Breathe out, loose, and never apologize to the target.",
      "Twenty gold buys a hundred arrows' worth of lessons."],0.8));
+  G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-6.5,V.y+0.2,
+    {skin:'#c9a081',hair:'#2c2030',shirt:'#5e3a6a',pants:'#3a2c44',hairstyle:'long'},
+    ['Silk holds a memory of every hand that touches it.',
+     'My whole shipment, taken on the north road. The pines have thieves in them now.'],0.5));
+  G.npcs.push((()=>{ const cv2=makeNPC('corvo','Captain Corvo', 330.5,243.2,
+    {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
+    ['East past the shoals sits an island the charts pretend not to see.',
+     'My girl Wren turns twelve at the next full tide. I promised her something fine.'],0.3); cv2.nightOwl=true; return cv2; })());
   G.npcs.push((()=>{ const hm=makeNPC('hermit','Moss-Brother Fen', ZONES.forest.x+9.5,ZONES.forest.y-6.6,
     {skin:'#c9a27b',hair:'#9aa08a',shirt:'#4a5a3a',pants:'#3a4230',robe:'#54644a'},
-    ['Sixty years the pines kept my secret. You brought an axe to a riddle \u2014 fair enough.',
+    ['Sixty years the pines kept my secret. You brought an axe to a riddle - fair enough.',
      'The forest regrows what you take. Remember that about yourself, too.'],0); hm.nightOwl=true; return hm; })());
   G.npcs.push(makeNPC('bree','Goldwarden Bree', V.x+5.5,V.y+3.8,
     {skin:'#d3a377',hair:'#5a4a3a',shirt:'#4a3a5a',pants:'#332c3c',apron:'#8a7a5a',hairstyle:'bun'},
@@ -5244,7 +5341,7 @@ function spawnBarikInn(){
   const V=ZONES.village;
   const inn=makeNPC('saffi','Saffi of the Gull', V.x-1.5,V.y+6.2,
     {skin:'#caa27b',hair:'#2e2624',shirt:'#5a4a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
-    ["Sailors, wardens, wanderers — everyone sleeps under my roof eventually.",
+    ["Sailors, wardens, wanderers - everyone sleeps under my roof eventually.",
      "Ten gold buys the best bed on Barik. The second-best is the floor."],0.8);
   inn.nightOwl=true; G.npcs.push(inn);
 }
@@ -5258,8 +5355,14 @@ function spawnMobsMain(){
     ['raider', ZONES.vael, 8, 0.45],
     ['skeleton', ZONES.undermaw, 5, 0.9],
     ['wolf',     {x:150,y:316,r:8}, 5, 0.4],   // the spire road earns its length
-    ['skeleton', {x:172,y:325,r:7}, 5, 0.45]
+    ['skeleton', {x:172,y:325,r:7}, 5, 0.45],
+    ['brigand',  {x:162,y:148,r:6}, 5, 0.25]   // they guard what they stole
   ];
+  // practice dummies: Rook's yard by his range, and the Spire range
+  spawnMob('dummy', Math.round(ZONES.village.x+11), Math.round(ZONES.village.y+9));
+  spawnMob('dummy', Math.round(ZONES.village.x+13), Math.round(ZONES.village.y+8));
+  spawnMob('dummy', Math.round(ZONES.spire.x+4), Math.round(ZONES.spire.y+4));
+  spawnMob('dummy', Math.round(ZONES.spire.x+6), Math.round(ZONES.spire.y+3));
   const pr=mulberry32(SEED+41);
   for(const [kind,z,count,eliteP] of packs){
     for(let i=0;i<count;i++){
@@ -5286,14 +5389,14 @@ function genMainAll(){
 
 /* ---------- Barik's quest wave ---------- */
 QUESTS.welcome2={ giver:'kell', title:'The Warden\'s Ledger', kind:'talk', talkTo:'sela',
-  brief:'New boots off the Emberwick ferry — I can smell the tutorial on you. Barik\'s bigger, hungrier, and less forgiving. Get provisioned before you get ambitious: Sela runs the counter south of the well. Tell her the Warden sent you.',
+  brief:'New boots off the Emberwick ferry - I can smell the tutorial on you. Barik\'s bigger, hungrier, and less forgiving. Get provisioned before you get ambitious: Sela runs the counter south of the well. Tell her the Warden sent you.',
   log:'Introduce yourself to Sela the Provisioner in Greyharbor.',
-  doneText:'Kell sent you? Then you\'re either useful or doomed. Let\'s find out which — Barik has work for both kinds.',
+  doneText:'Kell sent you? Then you\'re either useful or doomed. Let\'s find out which - Barik has work for both kinds.',
   rw:{gold:15, xp:{melee:40}}, unlocks:['nets','roadclear'] };
 QUESTS.nets={ giver:'sela', title:'Nets of Barik', kind:'gather', need:{fish:6},
   brief:'The trawlers won\'t round the point while wolves haunt the cliff road, so my counter\'s bare. Six fresh fish from any Barik shallows keeps Greyharbor fed a week.',
   log:'Catch 6 fish in Barik\'s shallows for Sela.',
-  doneText:'Fat ones, too. The harbor eats tonight — and pays this morning.',
+  doneText:'Fat ones, too. The harbor eats tonight - and pays this morning.',
   rw:{gold:45, item:{bread:2}, xp:{fishing:160}} };
 QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', kill:{wolf:8},
   brief:'The road from Greyharbor to Blackpine belongs to the wolves after dusk. Eight pelts thins the packs enough for the carts to run. Mind the crimson-ringed ones.',
@@ -5304,16 +5407,16 @@ QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushro
   brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
   log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',
   doneText:'Smell that? That\'s Barik in a pot. Take your share and your coin.',
-  rw:{gold:40, item:{bread:2}, xp:{forage:180}}, unlocks:['hedda2'] };
+  rw:{gold:40, item:{bread:2}, xp:{farming:180}}, unlocks:['hedda2'] };
 QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{slime:6},
   brief:'Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.',
   log:'Destroy 6 slimes around the Mirefen and Farmsteads.',
   doneText:'Rows are clean, seed\'s safe, and I owe you a harvest\'s gratitude. Coin will have to stand in for it.',
   rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}} };
 QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{stone:10},
-  brief:'Three generations of Barik built with stone from these shafts — then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
+  brief:'Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
   log:'Mine 10 stone around the Old Barik Mines for Torv.',
-  doneText:'Listen to that ring. The old girl\'s awake. Barik builds again — starting with your pay.',
+  doneText:'Listen to that ring. The old girl\'s awake. Barik builds again - starting with your pay.',
   rw:{gold:55, xp:{mining:220}}, unlocks:['torv2'] };
 QUESTS.torv2={ giver:'torv', title:'The Old Vein', kind:'gather', need:{ore:4},
   brief:'Stone keeps walls up; ore keeps forges lit. The deep rock here still carries iron if you\'ve the arm for it. Four ore and Greyharbor\'s smith stays in business.',
@@ -5321,112 +5424,145 @@ QUESTS.torv2={ giver:'torv', title:'The Old Vein', kind:'gather', need:{ore:4},
   doneText:'Good iron. Honest iron. The kind that remembers being a mountain.',
   rw:{gold:75, xp:{mining:260}} };
 QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
-  brief:'Ground shell, kelp ash, and patience — tidebalm knits cuts the sea gives. The strand west of the docks throws up shells after every tide. Five whole ones, unbroken.',
+  brief:'Ground shell, kelp ash, and patience - tidebalm knits cuts the sea gives. The strand west of the docks throws up shells after every tide. Five whole ones, unbroken.',
   log:'Collect 5 shells from Barik\'s beaches for Ivo.',
   doneText:'Unbroken, every one. You\'d make a fair herbalist if the sword ever bores you. Balm\'s share is yours.',
-  rw:{gold:35, item:{potion:2}, xp:{forage:140}} };
+  rw:{gold:35, item:{potion:2}, xp:{fishing:140}} };
+QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'mira', xpL:90,
+  brief:'East past the shoals sits an island the charts pretend not to see. Bring my girl Wren a fine ribbon for her birthday and I will sail you there myself. Mira at Thimble and Thread in Greyharbor weaves the best on Barik.',
+  log:'Ask Mira the Seamstress in Greyharbor about a ribbon.',
+  doneText:'A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come.',
+  rw:{} };
+QUESTS.ribbon2={ giver:'mira', title:'Stolen Thread', kind:'gather', need:{silk:1}, xpL:200,
+  brief:'If you can walk into that camp and walk out again: my silk sits in a chest they guard, north of the deep pines. Bring me one bolt and I will weave the finest ribbon Barik has seen.',
+  log:'Steal back a bolt of silk from the brigand camp north of Blackpine.',
+  doneText:'Dawn-colored, and not a thread pulled. Give me a moment... there. A Sunset Ribbon, and my thanks stitched into it.',
+  rw:{item:{ribbon:1}, gold:40} };
+QUESTS.ribbon3={ giver:'corvo', title:'The Tide Turns', kind:'gather', need:{ribbon:1}, xpL:260,
+  brief:'You have it? Wren will be over the moon and halfway back.',
+  log:'Bring the Sunset Ribbon to Captain Corvo at the east cove.',
+  doneText:'She will wear it till the color goes. A bargain is a bargain: when the tide turns, we sail east. Watch the horizon, friend. New shores are coming.',
+  rw:{gold:150} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
-  brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler — they are Lv 12 men and proud of it.',
+  brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
   log:'Drive off 6 Vael Raiders in the north-east March.',
-  doneText:'Six hoods emptied. My cousin will sulk for a season — Barik thanks you in gold and in standing.',
+  doneText:'Six hoods emptied. My cousin will sulk for a season - Barik thanks you in gold and in standing.',
   rw:{gold:220, item:{potion:2}, xp:{melee:300, archery:300, magic:300}}, unlocks:['sting1'] };
 QUESTS.sting1={ giver:'maelis', title:'Sunscour Cull', kind:'kill', kill:{scorpion:5}, xpL:220,
-  brief:'The Sunscour breeds armored horrors that drag off goats, carts, and the occasional tax collector. Cull five. I am told their shells turn all but the truest blows — Lv 13, my wardens reckon.',
+  brief:'The Sunscour breeds armored horrors that drag off goats, carts, and the occasional tax collector. Cull five. I am told their shells turn all but the truest blows - Lv 13, my wardens reckon.',
   log:'Slay 5 Sunscour Scorpions in the desert valley.',
-  doneText:'Five stingers for the trophy wall. The caravans will run the valley road again — carefully.',
+  doneText:'Five stingers for the trophy wall. The caravans will run the valley road again - carefully.',
   rw:{gold:260, item:{potion:2}, xp:{melee:340, archery:340, magic:340}} };
 QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone:'undermaw', xpL:150,
-  brief:'East of the Mirefen the ground splits — the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
+  brief:'East of the Mirefen the ground splits - the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
   log:'Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)',
-  doneText:'You found it and kept your skin — that\'s rarer than the gold. Whatever you carried out, you earned.',
+  doneText:'You found it and kept your skin - that\'s rarer than the gold. Whatever you carried out, you earned.',
   rw:{gold:90, xp:{mining:200}} };
 /* ---------- the bounty quest & relic ---------- */
 QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:{elite:8},
-  brief:"The wilds have turned. Crimson-ringed beasts — elites, we call them — press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
+  brief:"The wilds have turned. Crimson-ringed beasts - elites, we call them - press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
   log:'Slay 8 elite beasts anywhere on the mainland.',
-  doneText:"Eight heads' worth of quiet. The road breathes easier — and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
+  doneText:"Eight heads' worth of quiet. The road breathes easier - and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
   rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['alpha','embers'] };
 QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'springs',
-  brief:"My grandmother swore there were warm springs in the western hills — water that closes wounds. I'm too old for the walk and too stubborn to admit it. Find them for me. Just… find them.",
+  brief:"My grandmother swore there were warm springs in the western hills - water that closes wounds. I'm too old for the walk and too stubborn to admit it. Find them for me. Just… find them.",
   log:'Discover the Ember Springs in the isle\'s western hills.',
-  doneText:"You FOUND them. Warm as a kettle, she used to say. Go soak whenever the island bites you — and take this for an old woman's peace of mind.",
+  doneText:"You FOUND them. Warm as a kettle, she used to say. Go soak whenever the island bites you - and take this for an old woman's peace of mind.",
   rw:{gold:30, item:{potion:1}, xp:{farming:80, fishing:80}} };
 QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{wolf:3},
-  brief:"There's an old smuggler camp on the northeast point — good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
+  brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
   log:'Slay 3 wolves at Smuggler\'s Cove and claim the camp.',
-  doneText:"Three pelts' worth of quiet. The cove's yours, friend — crack that chest open and think of me.",
+  doneText:"Three pelts' worth of quiet. The cove's yours, friend - crack that chest open and think of me.",
   rw:{gold:35, xp:{melee:120, archery:120}} };
 QUESTS.orchard={ giver:'willa', title:'Applewood', kind:'gather', need:{apple:5},
-  brief:"The old orchard south-east still fruits — nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
+  brief:"The old orchard south-east still fruits - nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
   log:'Pick 5 apples in the Old Orchard.',
-  doneText:"Look at the color on these! The oven's already hot. Here — first loaves are yours, and the orchard knows your hands now.",
+  doneText:"Look at the color on these! The oven's already hot. Here - first loaves are yours, and the orchard knows your hands now.",
   rw:{item:{bread:2}, gold:12, xp:{farming:150}} };
 QUESTS.shells={ giver:'nia', title:'Seven Spirals (well, four)', kind:'gather', need:{shell:4},
-  brief:"Pip found a SHELL and it's the best thing I own. I need more! The beach hides spiral ones — bring me four and I'll trade you my second-best treasure. It's gold. Don't tell Maren where I got it.",
+  brief:"Pip found a SHELL and it's the best thing I own. I need more! The beach hides spiral ones - bring me four and I'll trade you my second-best treasure. It's gold. Don't tell Maren where I got it.",
   log:'Gather 4 spiral shells from the beaches.',
-  doneText:"FOUR! Look how they curl! Here — treasure for treasure. That's the rule of the beach.",
+  doneText:"FOUR! Look how they curl! Here - treasure for treasure. That's the rule of the beach.",
   rw:{gold:15, xp:{fishing:80}} };
 QUESTS.pearlq={ giver:'finn', title:'The One That Got Away', kind:'gather', need:{pearl:1},
-  brief:"Thirty years I've fished this bay, and once — ONCE — I pulled up a pearl the size of a thumbnail. Dropped it in the drink showing off to Willa. Bring me one and I'll pay like a man buying back his youth.",
+  brief:"Thirty years I've fished this bay, and once - ONCE - I pulled up a pearl the size of a thumbnail. Dropped it in the drink showing off to Willa. Bring me one and I'll pay like a man buying back his youth.",
   log:'Catch a pearl while fishing (fishing skill improves the odds).',
-  doneText:"There she is… no, keep your coin ready — HERE'S yours. Worth every piece to hold one again.",
+  doneText:"There she is… no, keep your coin ready - HERE'S yours. Worth every piece to hold one again.",
   rw:{gold:45, xp:{fishing:200}} };
 QUESTS.remember={ giver:'orin', title:'The Island Remembers', kind:'gather', need:{page:3},
-  brief:"Three texts survive on this isle: my tower's Ember Wars, Maren's Songs of the Well, and a farmer's almanac gathering dust in the barn. Read them, copy a page from each, and I'll pay you in something better than gold — understanding. Also crystals.",
+  brief:"Three texts survive on this isle: my tower's Ember Wars, Maren's Songs of the Well, and a farmer's almanac gathering dust in the barn. Read them, copy a page from each, and I'll pay you in something better than gold - understanding. Also crystals.",
   log:'Read the books inside the tower, Maren\'s cottage, and the barn (step inside and Read).',
-  doneText:"The Ember Wars… the Well… the Almanac's warning. It all points to the same truth: this island forgives, but it never forgets. Take these — they remember being warm.",
+  doneText:"The Ember Wars… the Well… the Almanac's warning. It all points to the same truth: this island forgives, but it never forgets. Take these - they remember being warm.",
   rw:{item:{crystal:2}, gold:25, xp:{magic:220}} };
 QUESTS.embers={ giver:'kell', title:'Embers for the Watch', kind:'gather', need:{crystal:3},
-  brief:"Winter watches are long and the braziers burn cold. Ember crystals hold heat like a grudge — three of them would warm the watchtower till spring. Mine the ruin-stone at Barrowfield or the Wolfcrag.",
+  brief:"Winter watches are long and the braziers burn cold. Ember crystals hold heat like a grudge - three of them would warm the watchtower till spring. Mine the ruin-stone at Barrowfield or the Wolfcrag.",
   log:'Mine 3 ember crystals from stone near Barrowfield or Wolfcrag.',
-  doneText:"Warm at last. The night watch drinks to you tonight — and Greyharbor pays its debts.",
+  doneText:"Warm at last. The night watch drinks to you tonight - and Greyharbor pays its debts.",
   rw:{gold:60, xp:{magic:200, mining:150}} };
 QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', need:{mushroom:4},
-  brief:"Visitors! Rare as dry socks out here. The blackpine bluecaps glow kinder than the isle's — four of them and I'll share the batch I'm brewing. A hermit's word is oak.",
+  brief:"Visitors! Rare as dry socks out here. The blackpine bluecaps glow kinder than the isle's - four of them and I'll share the batch I'm brewing. A hermit's word is oak.",
   log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
-  doneText:"Kind hands, kind harvest. Here — three bottles, brewed slow. Come by whenever the road is unkind.",
+  doneText:"Kind hands, kind harvest. Here - three bottles, brewed slow. Come by whenever the road is unkind.",
   rw:{item:{potion:3}, gold:20, xp:{farming:160}} };
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
-  brief:"The elites answer to something. Greymaw — a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
+  brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
   log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
-  doneText:"By the tides... you actually did it. The howling stopped last night — now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name.",
+  doneText:"By the tides... you actually did it. The howling stopped last night - now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name.",
   rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
 
 function buildExtraSprites(){
   // Barik Keep, drawn as an honest castle: curtain wall, flanking towers,
   // crenellated keep, royal banner, and a portcullis gate
-  SPR.castle=makeCanvas(210,152,(g)=>{
+  SPR.castle=makeCanvas(300,224,(g)=>{
     const OUT='rgba(20,14,8,0.9)', stone='#8f8b83', stoneD='#6e6a63', stoneL='#a8a49b';
+    const cren=(x0,x1,y,wd)=>{ for(let x=x0;x<x1;x+=wd*1.7){ g.fillRect(x,y,wd,wd); g.strokeRect(x,y,wd,wd); } };
     g.lineWidth=2; g.strokeStyle=OUT;
-    g.fillStyle=stoneD; g.fillRect(25,88,160,44); g.strokeRect(25,88,160,44);
-    for(let x=25;x<185;x+=16){ g.fillRect(x,80,10,10); g.strokeRect(x,80,10,10); }
-    const tw=(tx)=>{
-      g.fillStyle=stone; g.fillRect(tx,48,34,84); g.strokeRect(tx,48,34,84);
-      g.fillStyle=stoneL;
-      for(let x2=tx;x2<tx+34;x2+=12){ g.fillRect(x2+3,38,8,12); g.strokeRect(x2+3,38,8,12); }
-      g.fillStyle='#241a10'; g.fillRect(tx+13,62,8,12); g.strokeRect(tx+13,62,8,12);
+    // long curtain wall
+    g.fillStyle=stoneD; g.fillRect(20,140,260,60); g.strokeRect(20,140,260,60);
+    g.fillStyle=stoneD; cren(20,280,130,11);
+    // four towers: two outer squat, two inner tall
+    const tower=(tx,ty,tw2,th2)=>{
+      g.fillStyle=stone; g.fillRect(tx,ty,tw2,th2); g.strokeRect(tx,ty,tw2,th2);
+      g.fillStyle=stoneL; cren(tx-1,tx+tw2+1,ty-12,9);
+      g.fillStyle='#241a10'; g.fillRect(tx+tw2/2-4,ty+18,8,14); g.strokeRect(tx+tw2/2-4,ty+18,8,14);
     };
-    tw(10); tw(166);
-    g.fillStyle=stone; g.fillRect(70,30,70,102); g.strokeRect(70,30,70,102);
-    g.fillStyle=stoneL;
-    for(let x=70;x<140;x+=14){ g.fillRect(x+2,20,9,12); g.strokeRect(x+2,20,9,12); }
+    tower(8,86,42,114); tower(250,86,42,114);
+    tower(62,56,40,144); tower(198,56,40,144);
+    // grand central keep
+    g.fillStyle=stone; g.fillRect(100,34,100,166); g.strokeRect(100,34,100,166);
+    g.fillStyle=stoneL; cren(99,201,22,11);
+    // keep windows, two storeys
     g.fillStyle='#241a10';
-    g.fillRect(84,46,10,14); g.strokeRect(84,46,10,14);
-    g.fillRect(116,46,10,14); g.strokeRect(116,46,10,14);
-    g.strokeStyle='#3a2a1a'; g.lineWidth=3;
-    g.beginPath(); g.moveTo(105,20); g.lineTo(105,4); g.stroke();
+    for(const wy of [56,92]){ g.fillRect(116,wy,12,18); g.strokeRect(116,wy,12,18);
+      g.fillRect(144,wy,12,18); g.strokeRect(144,wy,12,18);
+      g.fillRect(172,wy,12,18); g.strokeRect(172,wy,12,18); }
+    // warm lit window
+    g.fillStyle='#ffce7a'; g.fillRect(145,93,10,16);
+    // the Queen's banner on the keep
+    g.strokeStyle='#3a2a1a'; g.lineWidth=4;
+    g.beginPath(); g.moveTo(150,22); g.lineTo(150,2); g.stroke();
     g.strokeStyle=OUT; g.lineWidth=2;
-    g.fillStyle='#6a3a5e'; // the Queen's colors
-    g.beginPath(); g.moveTo(105,5); g.lineTo(129,9); g.lineTo(105,15); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#6a3a5e';
+    g.beginPath(); g.moveTo(150,3); g.lineTo(184,9); g.lineTo(150,17); g.closePath(); g.fill(); g.stroke();
+    // tower pennants
+    g.fillStyle='#e8c860';
+    g.beginPath(); g.moveTo(82,44); g.lineTo(100,48); g.lineTo(82,53); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(218,44); g.lineTo(236,48); g.lineTo(218,53); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle='#3a2a1a'; g.lineWidth=3;
+    g.beginPath(); g.moveTo(82,56); g.lineTo(82,40); g.moveTo(218,56); g.lineTo(218,40); g.stroke();
+    g.strokeStyle=OUT; g.lineWidth=2;
+    // grand gatehouse with portcullis
     g.fillStyle='#4d3418';
-    g.beginPath(); g.moveTo(92,132); g.lineTo(92,110); g.quadraticCurveTo(105,98,118,110); g.lineTo(118,132); g.closePath(); g.fill(); g.stroke();
-    g.strokeStyle='rgba(30,20,10,0.6)'; g.lineWidth=1.4;
-    for(let x=96;x<118;x+=5){ g.beginPath(); g.moveTo(x,106); g.lineTo(x,132); g.stroke(); }
+    g.beginPath(); g.moveTo(128,200); g.lineTo(128,164); g.quadraticCurveTo(150,146,172,164); g.lineTo(172,200); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle='rgba(30,20,10,0.6)'; g.lineWidth=1.6;
+    for(let x=133;x<172;x+=6){ g.beginPath(); g.moveTo(x,158); g.lineTo(x,200); g.stroke(); }
+    for(let y=166;y<200;y+=7){ g.beginPath(); g.moveTo(129,y); g.lineTo(171,y); g.stroke(); }
+    // stonework texture
     g.strokeStyle='rgba(40,36,30,0.5)'; g.lineWidth=1;
-    for(let i=0;i<40;i++){ const rx=28+((i*53)%150), ry=52+((i*37)%72);
-      g.beginPath(); g.moveTo(rx,ry); g.lineTo(rx+7,ry); g.stroke(); }
+    for(let n=0;n<90;n++){ const rx=24+((n*67)%252), ry=60+((n*41)%130);
+      g.beginPath(); g.moveTo(rx,ry); g.lineTo(rx+8,ry); g.stroke(); }
   });
   const mk=(open)=>makeCanvas(40,34,(g)=>{
     g.fillStyle='#4d3418'; g.beginPath(); g.roundRect(4,14,32,16,3); g.fill();
@@ -5526,6 +5662,7 @@ function buildExtraSprites(){
     g.beginPath(); g.moveTo(20,4); g.lineTo(32,16); g.lineTo(20,36); g.lineTo(8,16); g.closePath(); g.stroke();
   });
 }
+let TRAIN=null; // active training drill, if any
 function beginOpenChest(b){
   if(b.opened){ openChest(b); return; }
   if(P.openCh && P.openCh.b===b) return;
@@ -5533,7 +5670,7 @@ function beginOpenChest(b){
   P.click=null; Snd.step(6);
 }
 function openChest(b){
-  if(b.opened){ toast('Empty — already plundered.'); return; }
+  if(b.opened){ toast('Empty - already plundered.'); return; }
   b.opened=true; b.kind='chestOpen';
   if(b.relic){
     bumpStat('chests');
@@ -5545,10 +5682,19 @@ function openChest(b){
     return;
   }
   bumpStat('chests');
+  if(b.cache){
+    give('silk',1);
+    toast('Beneath raider trinkets: <b>Mira\u2019s dawn-colored silk</b>, unspoiled. Now walk out alive.',5200);
+    shockwave(b.x,b.y,'rgba(255,170,200,0.85)',44);
+    burst(b.x,b.y-0.5,'#ffb0c8',14,2.2);
+    Snd.quest();
+    return;
+  }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
     if(Math.random()<0.6) give('potion',1);
     if(Math.random()<0.4){ give('crystal',1); toast('An <b>ember crystal</b> glows among the war-spoils!'); }
+    if(Math.random()<0.15){ give('pearl',1); toast('A <b>pearl</b> among the spoils. Rare as mercy out here.'); }
     shockwave(b.x,b.y,'rgba(255,150,80,0.85)',48);
     burst(b.x,b.y-0.5,'#ffb060',16,2.4);
     Snd.levelup();
@@ -5556,6 +5702,9 @@ function openChest(b){
   }
   const roll=Math.random();
   giveGold(rndi(18,45));
+  const rare=Math.random();
+  if(rare<0.04){ give('pearl',1); toast('A <b>pearl</b> wrapped in oilcloth. A rare find!'); }
+  else if(rare<0.07){ give('bar',1); toast('An <b>iron bar</b> stamped with an old mint mark.'); }
   if(roll<0.45){ give('potion',1); toast('An <b>Ember Tonic</b> among the coin!'); }
   else if(roll<0.6){ give('seed',2); }
   shockwave(b.x,b.y,'rgba(255,215,106,0.8)',36);
@@ -5576,7 +5725,7 @@ let sailing=false;
 function departEarly(){
   if(sailing) return;
   sailing=true;
-  toast('“Cast off! Barik, then — and luck to the bold.”',3000);
+  toast('“Cast off! Barik, then - and luck to the bold.”',3000);
   const fade=document.getElementById('fadeOv');
   fade.style.opacity=1; Snd.splash();
   setTimeout(()=>{ switchWorld('main'); fade.style.opacity=0; sailing=false; }, 900);
@@ -5588,7 +5737,7 @@ function attemptSail(){
       toast('Captain Brant eyes the tower. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4600);
     } else {
       const left=ISLE_IDS.filter(id=>qs(id)!=='done').length;
-      if(left>0) toast('Captain Brant shakes his head. <b>"Not till every task ashore is settled."</b> '+left+' quest'+(left===1?'':'s')+' remain — check the log (📜).',5400);
+      if(left>0) toast('Captain Brant shakes his head. <b>"Not till every task ashore is settled."</b> '+left+' quest'+(left===1?'':'s')+' remain - check the log (📜).',5400);
       else toast('The hold is packed. <b>Speak with Captain Brant</b> to complete <b>Set Sail</b> first.',4800);
     }
     return;
@@ -5629,7 +5778,7 @@ function switchWorld(id){
   if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';
   if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
   if(id==='main'){
-    for(const q2 of ['welcome2','hedda1','torv1','ivo1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
+    for(const q2 of ['welcome2','hedda1','torv1','ivo1','ribbon1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
     if(P.earlySail && !P.earlyKit){
       P.earlyKit=1;
       P.kit=true;
@@ -5639,7 +5788,7 @@ function switchWorld(id){
       giveQuiet('potion',3); giveQuiet('bread',2); P.gold+=50;
       buildHotbar(); refreshUI();
       setTimeout(()=>{
-        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> — steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
+        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
         Snd.quest(); autoSave();
       }, 1400);
     }
@@ -5662,7 +5811,7 @@ function tryRoll(){
 }
 
 /* =====================================================================
-   AAA LAYER — adaptive music, ambience, weather, dynamic light, juice
+   AAA LAYER - adaptive music, ambience, weather, dynamic light, juice
    ===================================================================== */
 
 /* ---------- banners, cinematics, shockwaves ---------- */
@@ -5956,7 +6105,7 @@ function ambientFX(dt){
 }
 
 /* =====================================================================
-   META LAYER — achievements, save codes, gamepad
+   META LAYER - achievements, save codes, gamepad
    ===================================================================== */
 P.stats=P.stats||{}; P.ach=P.ach||{}; P.combo=0; P.comboT=0;
 
@@ -5976,7 +6125,7 @@ const ACH={
 function award(id){
   if(!ACH[id] || P.ach[id]) return;
   P.ach[id]=true;
-  banner('ACHIEVEMENT', ACH[id].t+' — '+ACH[id].d);
+  banner('ACHIEVEMENT', ACH[id].t+' - '+ACH[id].d);
   Snd.quest();
 }
 function bumpStat(k,n){ P.stats[k]=(P.stats[k]||0)+(n||1); checkStats(); }
@@ -5993,7 +6142,7 @@ function checkStats(){
   if((s.pearl||0)>=1) award('pearldiver');
 }
 
-/* ---------- save codes (copy/paste — survives page reloads) ---------- */
+/* ---------- save codes (copy/paste - survives page reloads) ---------- */
 function worldFlagsFrom(mobs,decor){
   return {
     bossDead: mobs.some(m=>m.boss&&m.dead),
@@ -6078,7 +6227,7 @@ function pollGamepad(){
   if(pollGamepad._blocked) return;
   let pads=null;
   try{ pads = navigator.getGamepads? navigator.getGamepads() : null; }
-  catch(e){ pollGamepad._blocked=true; input.gpDir=null; return; } // permissions policy denies gamepad here — stop asking
+  catch(e){ pollGamepad._blocked=true; input.gpDir=null; return; } // permissions policy denies gamepad here - stop asking
   const gp = pads && pads[0];
   input.gpDir=null;
   if(!gp) return;
@@ -6114,10 +6263,28 @@ function pollGamepad(){
 }
 
 /* =====================================================================
-   INTERIORS — step inside the buildings
+   INTERIORS - step inside the buildings
    ===================================================================== */
 function enterHouse(b){
   if(G.interior) return;
+  const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
+  const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || lblL.includes('your homestead');
+  if(nightL>0.5 && !alwaysOpen){
+    let minD=1e9; for(const zk of ['village','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
+    if((b.kind==='house'||b.kind==='house2') && minD>24){
+      // remote hospitality: far from any town, folk take a knocker in
+      give('bread',1);
+      const fadeH=document.getElementById('fadeOv'); fadeH.style.opacity=1; Snd.tone(200,0.5,'sine',0.04,-60);
+      setTimeout(()=>{ G.dayT=0.09; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0; refreshUI(); autoSave();
+        toast('You knock. \u201cStorm-late, are you? Come in, the hearth is yours till dawn.\u201d They wake you with <b>bread</b> at first light.',5200);
+        setTimeout(()=>{ fadeH.style.opacity=0; },120); },750);
+      return;
+    }
+    toast(['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
+      '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
+      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)],3600);
+    Snd.step(5); return;
+  }
   const kinds={
     house:{line:'Dried herbs hang from every beam. It smells of thyme and woodsmoke.'},
     house2:{line:'Nets, floats, and the good honest stink of the sea.'},
@@ -6126,7 +6293,9 @@ function enterHouse(b){
     tower:{line:'Star charts, humming glass, and a faint smell of ozone.'},
     castle:{line:'Banners, cold stone, and a hearth that has heard a hundred oaths.'}
   };
-  const I={kind:b.kind, w:9, h:7, ret:{x:P.x,y:P.y+0.3}, exit:{x:4.5,y:6.1}, t:0, furn:[]};
+  const dims = b.kind==='castle'? [15,9] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
+  const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
+  if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
   if(String(b.label||'').toLowerCase().includes('(inn)')) I.inn=1;
   const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
@@ -6135,11 +6304,34 @@ function enterHouse(b){
   if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
   if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
   if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
-  if(b.kind==='castle'){ F('rug',4.5,3.8,0,0,false); F('books',2.4,1.35,1.4,0.3); F('hearth',6.6,1.35,1.1,0.35); F('table',4.5,2.6,1.2,0.6); F('stool',3.1,3.5,0.35,0.3); F('stool',5.9,3.5,0.35,0.3); }
+  if(b.kind==='castle'){
+    F('rug',7.5,5.0,0,0,false);
+    F('throne',7.5,1.7,1.0,0.6);
+    F('banner',3.4,1.25,0.9,0.25); F('banner',11.6,1.25,0.9,0.25);
+    F('column',4.6,3.0,0.5,0.45); F('column',10.4,3.0,0.5,0.45);
+    F('column',4.6,6.0,0.5,0.45); F('column',10.4,6.0,0.5,0.45);
+    F('hearth',1.9,1.35,1.1,0.35); F('hearth',13.1,1.35,1.1,0.35);
+    F('books',5.7,1.3,1.3,0.3); F('books',9.3,1.3,1.3,0.3);
+    F('table',7.5,3.6,1.5,0.6);
+    F('stool',5.6,4.4,0.35,0.3); F('stool',9.4,4.4,0.35,0.3);
+  }
+  // per-house variation: no two homes furnished quite alike
+  if(b.kind==='house'||b.kind==='house2'){
+    const hv=(Math.floor(b.x)*7+Math.floor(b.y)*13)%3;
+    if(hv===1){ F('crate',I.w-1.6,I.h-1.9,0.55,0.45); F('stool',2.6,I.h-2.1,0.35,0.3); }
+    if(hv===2){ F('barrel',I.w-1.7,2.6,0.45,0.4); F('rug',I.w/2+1.4,I.h-2.5,0,0,false); }
+  }
+  // the Trade hall is Bree's vault inside: strongbox rows behind the counter
+  if(I.vault){ I.furn.length=0;
+    F('strongbox',2.0,2.4,0.7,0.5); F('strongbox',2.0,3.6,0.7,0.5); F('strongbox',2.0,4.8,0.7,0.5);
+    F('strongbox',10.0,2.4,0.7,0.5); F('strongbox',10.0,3.6,0.7,0.5); F('strongbox',10.0,4.8,0.7,0.5);
+    F('table',6.0,2.6,1.3,0.6); F('books',6.0,1.3,1.4,0.3);
+    F('crate',4.0,5.2,0.55,0.45); F('crate',8.2,5.2,0.55,0.45); F('rug',6.0,4.2,0,0,false);
+  }
   G.interior=I;
   P.click=null;
-  P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>'+(b.label||'Inside')+'</b> — '+((kinds[b.kind]||{}).line||'Shelter from the wide sky.'), 4000);
+  P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
+  toast('<b>'+(b.label||'Inside')+'</b>', 2400);
   Snd.step(8);
 }
 function enterCave(){
@@ -6152,7 +6344,7 @@ function enterCave(){
   F('books',6.6,1.5,1.2,0.3);
   G.interior=I; P.click=null;
   P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>The Undermaw</b> — the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
+  toast('<b>The Undermaw</b> - the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
   Snd.step(8);
 }
 function exitHouse(){
@@ -6238,6 +6430,29 @@ function drawFurniture(f,s){
       cx.fillStyle='#7fd4ff'; cx.beginPath(); cx.arc(s.x+10,s.y-21,3,0,TAU); cx.fill();
       break;
     case 'stool': iBox(s,0.6,0.6,9,'#6e5030','#4a3322','#3e2b1c'); break;
+    case 'throne':
+      iBox(s,1.5,1.0,10,'#5a4630','#3e2f1e','#332618');
+      iBox({x:s.x,y:s.y-10},1.2,0.8,24,'#7a2a3a','#5a1f2c','#4a1a24');
+      cx.fillStyle='#e8c860';
+      cx.beginPath(); cx.arc(s.x-15,s.y-36,3,0,TAU); cx.arc(s.x+15,s.y-36,3,0,TAU); cx.fill();
+      cx.beginPath(); cx.arc(s.x,s.y-42,4.5,0,TAU); cx.fill();
+      break;
+    case 'column':
+      iBox(s,0.8,0.8,46,'#a8a49b','#8f8b83','#6e6a63');
+      cx.fillStyle='#b8b4ab'; cx.fillRect(s.x-15,s.y-54,30,5);
+      break;
+    case 'banner':
+      cx.fillStyle='#6a3a5e'; cx.fillRect(s.x-9,s.y-48,18,30);
+      cx.beginPath(); cx.moveTo(s.x-9,s.y-18); cx.lineTo(s.x,s.y-10); cx.lineTo(s.x+9,s.y-18); cx.closePath(); cx.fill();
+      cx.fillStyle='#e8c860'; cx.beginPath(); cx.arc(s.x,s.y-36,5,0,TAU); cx.fill();
+      cx.strokeStyle='#3a2a1a'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(s.x-11,s.y-48); cx.lineTo(s.x+11,s.y-48); cx.stroke();
+      break;
+    case 'strongbox':
+      iBox(s,1.1,0.9,13,'#4a4f5e','#33363f','#2a2c33');
+      cx.strokeStyle='#8f97a8'; cx.lineWidth=2;
+      cx.beginPath(); cx.moveTo(s.x-13,s.y-13); cx.lineTo(s.x+13,s.y-13); cx.stroke();
+      cx.fillStyle='#e8c860'; cx.fillRect(s.x-2.5,s.y-11,5,6);
+      break;
     case 'crate': iBox(s,1.0,0.9,14,'#7d5834','#5a3d24','#4a3322'); break;
     case 'hay':
       iBox(s,1.7,1.3,13,'#c9a24e','#a8843c','#8f6f30');
@@ -6393,13 +6608,13 @@ function renderInterior(){
     if(label) ib.textContent=label;
   } else if(label){
     cx.font='11px Verdana'; cx.textAlign='center';
-    cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillText('E — '+label, at.x+1, at.y-33);
-    cx.fillStyle='#ffe9a8'; cx.fillText('E — '+label, at.x, at.y-34);
+    cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillText('E - '+label, at.x+1, at.y-33);
+    cx.fillStyle='#ffe9a8'; cx.fillText('E - '+label, at.x, at.y-34);
   }
 }
 
 /* =====================================================================
-   AUTO-SAVE — quietly persists to this browser's local storage
+   AUTO-SAVE - quietly persists to this browser's local storage
    ===================================================================== */
 const CFG=(()=>{ try{ return Object.assign({mus:1,sfx:1,shake:1,flash:1,diff:1},
   JSON.parse(SafeStore.get('emberwickCfg')||'{}')); }catch(e){ return {mus:1,sfx:1,shake:1,flash:1,diff:1}; } })();
@@ -6440,7 +6655,7 @@ function buildPauseStats(){
   for(const k in ACH){
     const got=!!P.ach[k];
     ag.insertAdjacentHTML('beforeend','<div class="achRow'+(got?' got':'')+'">'+
-      (got?'★ ':'☆ ')+'<b>'+ACH[k].t+'</b> — '+ACH[k].d+'</div>');
+      (got?'★ ':'☆ ')+'<b>'+ACH[k].t+'</b> - '+ACH[k].d+'</div>');
   }
 }
 function syncCfgUI(){
@@ -6479,14 +6694,14 @@ document.getElementById('cfgFlashOff').onclick=()=>{ CFG.flash=0; saveCfg(); syn
 for(let i=0;i<3;i++) document.getElementById('diff'+i).onclick=()=>{ CFG.diff=i; saveCfg(); syncCfgUI(); };
 
 /* =====================================================================
-   RESOURCE ECONOMY — rare materials, smithing, cooking, brewing, trade
+   RESOURCE ECONOMY - rare materials, smithing, cooking, brewing, trade
    ===================================================================== */
 P.tools=P.tools||{axe:0,pick:0}; P.armor=P.armor||0; P.armorOwn=Math.max(P.armorOwn||0,P.armor||0);
 ITEMS.hardwood={name:'Hardwood', desc:'Dense heartwood from the old forest pines.'};
 ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Bram can smelt it.'};
 ITEMS.bar={name:'Iron Bar', desc:'Smelted and anvil-ready.'};
 ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.'};
-ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune — sells dearly."};
+ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune - sells dearly."};
 ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25};
 ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20};
 ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
@@ -6507,21 +6722,21 @@ function craftMenu(npc){
     {id:'bar', label:'Smelt Iron Bar', need:{ore:2,wood:1},
       out:()=>{ give('bar',1); toast('The bloom cools into a clean <b>iron bar</b>.'); },
       owned:()=>false},
-    {id:'axe', label:'Iron Axe — +1 chop power, finds more hardwood', need:{bar:2,hardwood:2},
+    {id:'axe', label:'Iron Axe - +1 chop power, finds more hardwood', need:{bar:2,hardwood:2},
       out:()=>{ P.tools.axe=1; banner('IRON AXE FORGED','TREES WILL FEAR YOU'); },
       owned:()=>P.tools.axe>0},
-    {id:'pick', label:'Iron Pickaxe — +1 mining power, finds more ore', need:{bar:2,hardwood:2},
+    {id:'pick', label:'Iron Pickaxe - +1 mining power, finds more ore', need:{bar:2,hardwood:2},
       out:()=>{ P.tools.pick=1; banner('IRON PICKAXE FORGED','THE STONE GIVES UP ITS SECRETS'); },
       owned:()=>P.tools.pick>0},
-    {id:'iarm', label:'Iron Armor — blocks 15% of damage', need:{bar:3,hardwood:2},
+    {id:'iarm', label:'Iron Armor - blocks 15% of damage', need:{bar:3,hardwood:2},
       out:()=>{ P.armor=Math.max(P.armor,1); P.armorOwn=Math.max(P.armorOwn||0,1);
         banner('IRON ARMOR FITTED','15% OF EVERY BLOW TURNED ASIDE'); },
       owned:()=>(P.armorOwn||0)>=1},
-    {id:'parm', label:'Steel Plate — blocks 30%, crowned with a helm', need:{bar:5,crystal:1},
+    {id:'parm', label:'Steel Plate - blocks 30%, crowned with a helm', need:{bar:5,crystal:1},
       out:()=>{ P.armor=2; P.armorOwn=2; award('ironclad'); banner('STEEL PLATE FORGED','30% OF EVERY BLOW TURNED ASIDE'); },
       owned:()=>P.armor>=2, req:()=>P.armor>=1,
       reqMsg:"“Plate hangs on iron. Let me fit the iron armor first.”"},
-    {id:'steel', label:'Steel Sword — +4 damage', need:{bar:4,hardwood:3},
+    {id:'steel', label:'Steel Sword - +4 damage', need:{bar:4,hardwood:3},
       out:()=>{ P.swordTier=2; buildHotbar(); award('mastersmith'); banner('STEEL SWORD FORGED','+4 DAMAGE'); },
       owned:()=>P.swordTier>=2, req:()=>P.swordTier>=1,
       reqMsg:"“Steel builds on iron. Finish my iron-sword commission first.”"}
@@ -6538,9 +6753,9 @@ function craftMenu(npc){
         craftMenu(npc);
       }});
   }
-  if(!btns.length) btns.push({label:'Nothing left to forge — you have it all', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
+  if(!btns.length) btns.push({label:'Nothing left to forge - you have it all', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
   btns.push({label: npc?'Back':'Step away', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
-  setDialog('“The anvil\'s hot. What are we making?”<br><span style="font-size:10px;color:var(--parch-dim)">Ore comes from rock — a pickaxe helps. Hardwood hides in the old forest pines.</span>', btns);
+  setDialog('“The anvil\'s hot. What are we making?”<br><span style="font-size:10px;color:var(--parch-dim)">Ore comes from rock - a pickaxe helps. Hardwood hides in the old forest pines.</span>', btns);
 }
 
 /* ---------- Maren: trade goods for gold ---------- */
@@ -6550,7 +6765,7 @@ function sellMenu(npc){
     const n=P.inv[k]||0;
     if(n<=0) continue;
     const total=n*priceOf(k);
-    btns.push({label:'Sell '+n+' '+ITEMS[k].name.toLowerCase()+' — <b style="color:#ffd76a">'+total+'g</b>',
+    btns.push({label:'Sell '+n+' '+ITEMS[k].name.toLowerCase()+' - <b style="color:#ffd76a">'+total+'g</b>',
       fn:()=>{ take(k,n); giveGold(total);
         P.prog.profit=(P.prog.profit||0)+n; updateQuestUI(); sellMenu(npc); }});
   }
@@ -6562,8 +6777,8 @@ function sellMenu(npc){
 /* ---------- Willa: hearth cooking ---------- */
 function cookMenu(npc){
   const opts=[
-    {label:'Bake bread (3 wheat) — heals 25', need:{wheat:3}, item:'bread', line:'“Fresh from the oven — mind your fingers.”'},
-    {label:'Grill fish (1 fish) — heals 20', need:{fish:1}, item:'cookedfish', line:'“Skin-crisp and steaming. Eat it warm.”'}
+    {label:'Bake bread (3 wheat) - heals 25', need:{wheat:3}, item:'bread', line:'“Fresh from the oven - mind your fingers.”'},
+    {label:'Grill fish (1 fish) - heals 20', need:{fish:1}, item:'cookedfish', line:'“Skin-crisp and steaming. Eat it warm.”'}
   ];
   const btns=opts.map(o=>({label:o.label, fn:()=>{
     if(!canPay(o.need)){ setDialog('“You\'ll need '+costText(o.need)+' for that.”',
@@ -6578,19 +6793,19 @@ function cookMenu(npc){
 /* ---------- Orin: crystal brewing ---------- */
 function brewMenu(npc){
   const need={mushroom:2, crystal:1};
-  setDialog('“Two bluecaps, one ember crystal — and I\'ll draw you <b>two tonics</b> from the boil.”',
+  setDialog('“Two bluecaps, one ember crystal - and I\'ll draw you <b>two tonics</b> from the boil.”',
     [{label:'Brew (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
         if(!canPay(need)){ setDialog('“The recipe is exact: '+costText(need)+'. Nature doesn\'t haggle.”',
           [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
         pay(need); give('potion',2); Snd.magic();
-        setDialog('“Careful — it\'s still humming.” <i>(+2 Ember Tonics)</i>',
+        setDialog('“Careful - it\'s still humming.” <i>(+2 Ember Tonics)</i>',
           [{label:'Brew again',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
       }},
      {label:'Back',ghost:true,fn:()=>buildDialogContent(npc)}]);
 }
 
 /* =====================================================================
-   PURPOSE LAYER — village projects & rolling supply contracts
+   PURPOSE LAYER - village projects & rolling supply contracts
    ===================================================================== */
 P.projects=P.projects||{}; P.contract=P.contract||0; P.wellCd=0;
 
@@ -6603,10 +6818,10 @@ const PROJECTS={
     done:'“Finn wept, you know. Actual tears. The crane swings again.”'},
   lanes: {name:'Light the Lanes', need:{wood:10, stone:6}, where:'maren',
     perk:'New lanterns warm the village paths at night.',
-    done:'“Look at them glow. No one stumbles home in the dark now — that\'s your doing.”'},
+    done:'“Look at them glow. No one stumbles home in the dark now - that\'s your doing.”'},
   beacon:{name:'Raise the Harbor Beacon', need:{bar:6, hardwood:8}, where:'kell',
     perk:'Trade routes open: everything sells for +15%.',
-    done:'“Ships already turning toward the light. Greyharbor trades again — prices are up, friend.”'}
+    done:'“Ships already turning toward the light. Greyharbor trades again - prices are up, friend.”'}
 };
 function priceOf(k){
   let p=SELL_PRICES[k]||0;
@@ -6641,10 +6856,10 @@ function projectsMenu(npc){
       btns.push({label:'✓ '+pr.name+' <span style="font-size:10px;color:#9be07f">(built)</span>', ghost:true, fn:()=>{}});
       continue;
     }
-    btns.push({label:pr.name+'<br><span style="font-size:10px;color:var(--parch-dim)">'+costText(pr.need)+' — '+pr.perk+'</span>',
+    btns.push({label:pr.name+'<br><span style="font-size:10px;color:var(--parch-dim)">'+costText(pr.need)+' - '+pr.perk+'</span>',
       fn:()=>{
         if(!canPay(pr.need)){
-          setDialog('“A fine ambition — bring '+costText(pr.need)+' and we\'ll see it done.”',
+          setDialog('“A fine ambition - bring '+costText(pr.need)+' and we\'ll see it done.”',
             [{label:'Back',fn:()=>projectsMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
           return;
         }
@@ -6653,7 +6868,7 @@ function projectsMenu(npc){
   }
   btns.push({label:'Back',ghost:true,fn:()=>buildDialogContent(npc)});
   setDialog(npc.id==='maren'
-    ? '“The isle gives you wood and stone — give a little back, and watch the village grow.”'
+    ? '“The isle gives you wood and stone - give a little back, and watch the village grow.”'
     : '“Greyharbor was great once. With the right materials, it will be again.”', btns);
 }
 
@@ -6672,7 +6887,7 @@ function contractMenu(npc){
     '<span style="font-size:11px;color:var(--parch-dim)">Deliver '+costText(c.need)+' → <b style="color:#ffd76a">'+c.gold+'g</b> + '+c.xp+' '+SKILLS[c.skill].name+' XP</span>',
     [{label:'Deliver', fn:()=>{
         if(!canPay(c.need)){
-          setDialog('“Short of the order. It\'ll keep — the island regrows fast.”',
+          setDialog('“Short of the order. It\'ll keep - the island regrows fast.”',
             [{label:'Back',fn:()=>contractMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
           return;
         }
@@ -6690,21 +6905,23 @@ function contractMenu(npc){
 P.loreRead=P.loreRead||{};
 ITEMS.shell={name:'Spiral Shell', desc:'A perfect beach spiral. Nia collects them.'};
 ITEMS.apple={name:'Orchard Apple', desc:'Crisp and sweet. Restores 10 HP.', use:'heal', heal:10};
+ITEMS.silk={name:'Stolen Silk', desc:'A bolt of dawn-colored silk, liberated back from the brigands.'};
+ITEMS.ribbon={name:'Sunset Ribbon', desc:'Mira\'s finest work. Made for a captain\'s daughter.'};
 ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.'};
 
 const LORE={
   castle:{title:'The Ledger of Queens', text:'“Three hundred years of harvests, tithes, and quiet mercies in Maelis’s own hand and her mothers’ before her. One margin note repeats every winter, every reign: <i>feed the March anyway.</i>”'},
-  house2:{title:'Tide Tables & Margin Notes', text:'“Finn\'s hand, over thirty years of tide tables. The margins tell the real story: <i>W. said yes today</i> — circled twice. <i>Pearl. Showed off. Lost it.</i> And on the last page, pressed flat: a dried sea-flower, and the words <i>worth more anyway.</i>”'},
-  'house@m':{title:"A Sailor's Letters", text:'“Unsent letters, salt-stiff. <i>Dearest M — the strait is closed again. They say a dead king holds the far isle and the water obeys him. I will wait. The sea has taught me nothing if not waiting.</i> The last letter is dated the week the strait calmed.”'},
-  'house2@m':{title:"The Warden's Ledger", text:'“Kell\'s ledger, precise as a blade: <i>wolves — 14 sighted, crimson-marked. They move like soldiers now. Something on the crag gives orders.</i> A later entry, pressed hard into the page: <i>heard it howl. The packs went silent to listen.</i>”'},
-  'barn@m':{title:'Trade Hall Manifest', text:'“Cargo lists from Greyharbor\'s golden years — silk, cedar, ember-glass. The final page is an auction notice for the hall itself. Someone has written beneath it, recently and in hope: <i>the beacon will burn again.</i>”'},
+  house2:{title:'Tide Tables & Margin Notes', text:'“Finn\'s hand, over thirty years of tide tables. The margins tell the real story: <i>W. said yes today</i> - circled twice. <i>Pearl. Showed off. Lost it.</i> And on the last page, pressed flat: a dried sea-flower, and the words <i>worth more anyway.</i>”'},
+  'house@m':{title:"A Sailor's Letters", text:'“Unsent letters, salt-stiff. <i>Dearest M - the strait is closed again. They say a dead king holds the far isle and the water obeys him. I will wait. The sea has taught me nothing if not waiting.</i> The last letter is dated the week the strait calmed.”'},
+  'house2@m':{title:"The Warden's Ledger", text:'“Kell\'s ledger, precise as a blade: <i>wolves - 14 sighted, crimson-marked. They move like soldiers now. Something on the crag gives orders.</i> A later entry, pressed hard into the page: <i>heard it howl. The packs went silent to listen.</i>”'},
+  'barn@m':{title:'Trade Hall Manifest', text:'“Cargo lists from Greyharbor\'s golden years - silk, cedar, ember-glass. The final page is an auction notice for the hall itself. Someone has written beneath it, recently and in hope: <i>the beacon will burn again.</i>”'},
   springs:{title:'The Bathing Stone', text:'“Old court script, worn smooth by steam: <i>HERE THE FIRE UNDER THE ISLAND RISES GENTLE. SOLDIER, SET DOWN YOUR SWORD AND SOAK. THE WAR WILL KEEP.</i> Below it, in a child\'s hand: <i>it tickles.</i>”'},
-  'stone@isle':{title:'The Standing Stone', text:'“Weathered near to silence, the old script still bites: <i>HERE WATCHED THE KING WHO WOULD NOT DRINK. KINDNESS RUSTS NO CROWN — BUT PRIDE HOLLOWS ONE.</i> Below, in newer, angrier scratches: <i>we warned him.</i>”'},
-  'stone@main':{title:'The Barrow Dirge', text:'“A burial stone of the old court, carved with a dirge: <i>SLEEP, SWORDS OF THE EMBER WARS. YOUR KING REMEMBERS YOU — THAT IS THE PROBLEM.</i> The barrow soil around it never quite settles.”'},
+  'stone@isle':{title:'The Standing Stone', text:'“Weathered near to silence, the old script still bites: <i>HERE WATCHED THE KING WHO WOULD NOT DRINK. KINDNESS RUSTS NO CROWN - BUT PRIDE HOLLOWS ONE.</i> Below, in newer, angrier scratches: <i>we warned him.</i>”'},
+  'stone@main':{title:'The Barrow Dirge', text:'“A burial stone of the old court, carved with a dirge: <i>SLEEP, SWORDS OF THE EMBER WARS. YOUR KING REMEMBERS YOU - THAT IS THE PROBLEM.</i> The barrow soil around it never quite settles.”'},
   crypt:{title:'The Hollow Crypt', text:'“The arch above the crypt bears the royal cipher, defaced by grief or fury. Inside the threshold, a single line remains legible: <i>He kept the crown. It kept him. Now it keeps us all awake.</i> The stone is cold in a way the sun cannot fix.”'},
-  tower:{title:'The Ember Wars', text:'“Before the lanterns, the isle burned. Mages of the old court bound their fire into crystals — the same warm stones you still find veined in ruin-rock. When the court fell, only the crystals remembered how to be warm.”'},
-  house:{title:'Songs of the Well', text:'“The well was dug by the first family, who swore its water could knit a wound shut overnight. They also swore the last king refused to drink — said kindness would rust his crown. He kept the crown. It kept him.”'},
-  barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes — old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'}
+  tower:{title:'The Ember Wars', text:'“Before the lanterns, the isle burned. Mages of the old court bound their fire into crystals - the same warm stones you still find veined in ruin-rock. When the court fell, only the crystals remembered how to be warm.”'},
+  house:{title:'Songs of the Well', text:'“The well was dug by the first family, who swore its water could knit a wound shut overnight. They also swore the last king refused to drink - said kindness would rust his crown. He kept the crown. It kept him.”'},
+  barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes - old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'}
 };
 function readLore(key){
   if(!LORE[key] && key.endsWith('@m')) key=key.slice(0,-2);
@@ -6743,7 +6960,7 @@ function sleepInBed(own){
     G.fireflies.length=0;
     if(own && G.interior) P.bind={w:G.worldId, x:G.interior.ret.x, y:G.interior.ret.y};
     refreshUI(); setTimeout(autoSave,300);
-    toast(own? 'You sleep in <b>your own bed</b> \u2014 free, deep, and yours. Dawn finds you <b>fully mended</b>.'
+    toast(own? 'You sleep in <b>your own bed</b> - free, deep, and yours. Dawn finds you <b>fully mended</b>.'
              : 'You wake at <b>dawn</b>, whole and rested.',3600);
     setTimeout(()=>{ fade.style.opacity=0; },120);
   },750);
@@ -6776,21 +6993,21 @@ function interiorHotspot(){
 function useHotspot(h){
   const f=h.f, I=G.interior;
   if(f.type==='bed'){
-    // beds belong to somebody \u2014 only your own (furnished) bed grants free sleep
+    // beds belong to somebody - only your own (furnished) bed grants free sleep
     if(G.interior && G.interior.home){
       if(!P.home) toast('The <b>FOR SALE</b> sign creaks outside. <b>Hedda</b> at the farmsteads holds the deed.',4200);
-      else if(!(P.homeUp&&P.homeUp.furnish)) toast('Your roof \u2014 but a bare frame and a straw tick. Have <b>Hedda furnish it proper</b> and the bed is yours.',4600);
+      else if(!(P.homeUp&&P.homeUp.furnish)) toast('Your roof - but a bare frame and a straw tick. Have <b>Hedda furnish it proper</b> and the bed is yours.',4600);
       else sleepInBed(true);
     }
     else if(G.interior && G.interior.inn) toast('\u201cBeds are <b>ten gold</b>, friend,\u201d calls the innkeep from the hearth. <b>Talk to them</b> to rest the night.',4200);
     else toast(['You smooth the quilt back down. Not your bed.',
-      'Tempting \u2014 but the whole village would hear of it by lunch.',
+      'Tempting - but the whole village would hear of it by lunch.',
       'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
   }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') openStation('The Anvil', craftMenu);
   else if(f.type==='orb'){
-    if(P.mp>=P.maxmp){ toast('The orb hums — your mana is already full.'); return; }
+    if(P.mp>=P.maxmp){ toast('The orb hums - your mana is already full.'); return; }
     P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
     addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
   }
@@ -6806,7 +7023,7 @@ function useHotspot(h){
 }
 
 /* =====================================================================
-   EXPLORATION — fog of war, zone discovery, fast travel
+   EXPLORATION - fog of war, zone discovery, fast travel
    ===================================================================== */
 const EXPL={}; // worldId -> Uint8Array(MAPW*MAPH), 1 = seen
 function explGrid(){
@@ -6829,7 +7046,7 @@ function checkDiscover(){
     const key=G.worldId+':'+k;
     if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
       P.disc[key]=1;
-      banner('DISCOVERED', z.name + (z.lv? ' \u2014 Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest(); giveGold(8);
+      banner('DISCOVERED', z.name + (z.lv? ' - Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest(); giveGold(8);
       const all=Object.keys(ZONES).filter(k2=>ZONES[k2].name).every(k2=>P.disc[G.worldId+':'+k2]);
       if(all) award('wayfarer');
     }
@@ -6866,7 +7083,7 @@ function tryFastTravel(tx,ty){
   if(!best) return false;
   if(dist(P.x,P.y,best.x,best.y)<6){ toast('You are already at <b>'+best.name+'</b>.'); return false; }
   if(G.mobs.some(m=>!m.dead && m.state==='chase' && dist(P.x,P.y,m.x,m.y)<9)){
-    toast('<b style="color:#e06a5a">Enemies nearby</b> — you cannot travel now.'); return false;
+    toast('<b style="color:#e06a5a">Enemies nearby</b> - you cannot travel now.'); return false;
   }
   const s=findOpenNear(Math.round(best.x),Math.round(best.y),6);
   if(!s){ toast('No safe footing there.'); return false; }
@@ -6891,7 +7108,7 @@ function frame(ts){
   if(G.hitStop>0){ G.hitStop-=raw; dt*=0.12; }        // impact freeze
   else if(G.slowmo>0){ G.slowmo-=raw; dt*=0.35; }     // cinematic slow-mo
   if(G.state!=='play'){
-    // living title screen — slow drift around the sleeping village
+    // living title screen - slow drift around the sleeping village
     G.time+=raw*0.5;
     updateNPCs(raw*0.5); updateWorld(raw*0.5); WX.update(raw*0.5);
     const a=G.time*0.05;
@@ -6944,8 +7161,8 @@ function boot(){
   buildHotbar(); refreshUI();
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
-    ? '<b>Left thumb</b> — joystick to move · <b>⚔</b> — attack / gather · <b>⤸</b> — dodge roll · <b>green button</b> — talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight — or <b>WASD</b> + <b>Space</b> · <b>Shift</b> dodge · <b>E</b> interact · <b>1-4</b> hotbar · <b>gamepad supported</b>';
+    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Shift</b> dodge · <b>E</b> interact · <b>1-4</b> hotbar · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // Continue is the hero when a save exists; New Game demands typed confirmation
   const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
@@ -6966,7 +7183,7 @@ function startCinematic(){
   CINE={t:0, dur:5.2,
     capts:[[0.2,'The strait took the ship, the cargo, and the crew.'],
            [1.9,'It spat out one soul on the shores of Emberwick Isle.'],
-           [3.6,'CHAPTER I — TUTORIAL SHORES']]};
+           [3.6,'CHAPTER I - TUTORIAL SHORES']]};
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; // locked on the castaway
   const skip=()=>endCine();
   window.addEventListener('pointerdown',skip,{once:true});
@@ -6975,8 +7192,8 @@ function startCinematic(){
 function endCine(){
   if(!CINE) return;
   CINE=null;
-  banner('EMBERWICK ISLE','TUTORIAL SHORES — CHAPTER I');
-  setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well — look for the <b style="color:var(--ember)">!</b>',5200),600);
+  banner('EMBERWICK ISLE','TUTORIAL SHORES - CHAPTER I');
+  setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well - look for the <b style="color:var(--ember)">!</b>',5200),600);
   Snd.quest();
 }
 function drawCineOverlay(){
@@ -6997,12 +7214,12 @@ function drawCineOverlay(){
   const sa=0.55+0.3*Math.sin(G.time*3);
   cx.fillStyle='rgba(220,210,190,'+sa+')';
   cx.font='12px Georgia'; cx.textAlign='center'; cx.letterSpacing='2px';
-  cx.fillText('— tap anywhere to skip —', VW/2, bh>24? bh-9 : 20);
+  cx.fillText('- tap anywhere to skip -', VW/2, bh>24? bh-9 : 20);
   cx.letterSpacing='0px';
 }
 function updateCine(dt){
   CINE.t+=dt;
-  G.cam.x=isoX(P.x,P.y)-VW/2; // no drift, no tricks — just the castaway
+  G.cam.x=isoX(P.x,P.y)-VW/2; // no drift, no tricks - just the castaway
   G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(CINE.t>=CINE.dur) endCine();
 }
@@ -7011,7 +7228,7 @@ function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
-  if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving — progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
+  if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   P.quests.welcome='avail';
   updateQuestUI();
   startCinematic();
@@ -7022,7 +7239,7 @@ document.getElementById('continueBtn').onclick=()=>{
   document.getElementById('titleOv').style.display='none';
   G.state='play';
   if(loadCode(sc)===false){
-    toast('The old save was unreadable — starting fresh.');
+    toast('The old save was unreadable - starting fresh.');
     P.quests.welcome='avail'; updateQuestUI();
   }
 };
@@ -7116,7 +7333,7 @@ st.textContent=`
 document.head.appendChild(st);
 
 /* ---------- title-screen dressing ---------- */
-document.title='Emberwick Isle \u2014 Definitive Edition';
+document.title='Emberwick Isle - Definitive Edition';
 const ovCard=document.querySelector('#titleOv .ovCard');
 if(ovCard){
   const h1=ovCard.querySelector('h1');
@@ -7234,7 +7451,7 @@ FILTERS.forEach((F,i)=>{
 function enterPhoto(){
   if(PH.on) return;
   if(G.state!=='play' || G.interior || P.dead || CINE){ 
-    if(G.interior) toast('Step outside first \u2014 the light in here is no good for portraits.');
+    if(G.interior) toast('Step outside first - the light in here is no good for portraits.');
     return;
   }
   if(G.paused) togglePause(false);
@@ -7319,7 +7536,7 @@ if(pauseBtns){
   b.onclick=enterPhoto;
 }
 
-/* hotkeys — capture phase so the game's own key handler stays quiet */
+/* hotkeys - capture phase so the game's own key handler stays quiet */
 window.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(PH.on){
@@ -7335,7 +7552,7 @@ window.addEventListener('keydown',e=>{
 },true);
 
 /* frame wrap: photo mode freezes the world but keeps water, flame and
-   firefly shimmer alive — a living postcard */
+   firefly shimmer alive - a living postcard */
 const _frame=frame;
 frame=function(ts){
   if(PH.on){
@@ -7356,24 +7573,27 @@ if(oc2 && !isTouch) oc2.innerHTML += ' \u00B7 <b>P</b> photo mode';
 
 
 /* =====================================================================
-   PAUSE AFFORDANCE — twin dashed bars + play/pause button swap
+   PAUSE AFFORDANCE: giant dashed bars centered in the pause screen,
+   and a pulsing play button up top
    ===================================================================== */
 (function(){
   const st=document.createElement('style');
   st.textContent=`
-    #pauseGlyph{position:fixed;top:66px;left:50%;transform:translateX(-50%);
-      z-index:60;display:none;gap:11px;pointer-events:none;
-      animation:pgPulse 1.6s ease-in-out infinite;}
-    #pauseGlyph span{display:block;width:0;height:38px;
-      border-left:6px dashed rgba(240,226,192,.9);
-      filter:drop-shadow(0 2px 5px rgba(0,0,0,.8));}
-    @keyframes pgPulse{0%,100%{opacity:.55}50%{opacity:1}}
-    #btnPause.playing{color:#9be07f;}
+    #pausePanel{flex-direction:column;gap:18px;}
+    #pauseGlyph{display:none;gap:26px;pointer-events:none;
+      animation:pgPulse 1.5s ease-in-out infinite;}
+    #pauseGlyph span{display:block;width:0;height:92px;
+      border-left:15px dashed rgba(240,226,192,.95);
+      filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}
+    @keyframes pgPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+    #btnPause.playing{color:#9be07f;animation:btnPulse 1.2s ease-in-out infinite;}
+    @keyframes btnPulse{0%{box-shadow:0 0 0 0 rgba(155,224,127,.55)}70%{box-shadow:0 0 0 12px rgba(155,224,127,0)}100%{box-shadow:0 0 0 0 rgba(155,224,127,0)}}
   `;
   document.head.appendChild(st);
   const pg=document.createElement('div');
   pg.id='pauseGlyph'; pg.innerHTML='<span></span><span></span>';
-  document.body.appendChild(pg);
+  const pp=document.getElementById('pausePanel');
+  pp.insertBefore(pg, pp.firstChild);
   const btn=document.getElementById('btnPause');
   const _tp=togglePause;
   togglePause=function(force){
@@ -7382,7 +7602,6 @@ if(oc2 && !isTouch) oc2.innerHTML += ' \u00B7 <b>P</b> photo mode';
     pg.style.display=on?'flex':'none';
     if(btn){ btn.textContent=on?'\u25B6':'\u23F8'; btn.classList.toggle('playing',on); }
   };
-  // re-bind the button so it uses the wrapped toggle
   if(btn) btn.onclick=()=>togglePause();
   const rb=document.getElementById('resumeBtn');
   if(rb) rb.onclick=()=>togglePause(false);
