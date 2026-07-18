@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Tidefarer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="topLeft">
+    <div class="bar"><div class="fill" id="hpFill"></div><div class="lbl" id="hpLbl"></div></div>
+    <div class="bar" style="width:150px;height:14px;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
+    <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span><span id="plvlTxt" style="margin-left:10px;color:#c9b0ff;font-weight:bold;">Lv 1</span></div>
+  </div>
+  <div id="tracker">
+    <div id="miniWrap" class="clickable" title="Open map"><canvas id="minimap" width="120" height="120"></canvas></div>
+    <div id="trackerCards"></div>
+  </div>
+</div>
+
+<div id="hotbar"></div>
+<div id="menuBtns">
+  <div class="mbtn" id="btnQuests">📜<span class="tx">Quests</span></div>
+  <div class="mbtn" id="btnInv">🎒<span class="tx">Bag</span></div>
+  <div class="mbtn" id="btnSkills">✦<span class="tx">Skills</span></div>
+  <div class="mbtn" id="btnMap">🗺<span class="tx">Map</span></div>
+  <div class="mbtn" id="btnSound">♪</div>
+  <div class="mbtn" id="btnPause">⏸</div>
+</div>
+
+<div id="touchUI">
+  <div id="joyZone"></div>
+  <div id="joyRest">MOVE</div>
+  <div id="joyBase"></div><div id="joyKnob"></div>
+  <div id="actBtns">
+    <div class="abtn" id="interactBtn">Talk</div>
+    <div class="abtn small" id="dodgeBtn">⤸</div>
+    <div class="abtn" id="attackBtn">⚔</div>
+  </div>
+</div>
+
+<div class="panel" id="dialog">
+  <div class="drow">
+    <canvas id="dportrait" width="72" height="72"></canvas>
+    <div style="flex:1;"><div id="dname"></div><div id="dtext"></div></div>
+  </div>
+  <div id="dbtns"></div>
+</div>
+
+<div class="panel" id="invPanel">
+  <div class="closeX" data-close="invPanel">✕</div>
+  <h2>Satchel</h2>
+  <div id="invGrid"></div>
+  <div id="invHint">Tap a consumable to use it. Tonic 30 HP · bread 25 · grilled fish 20 · raw fish 12 · wheat 10.<br>
+  Sell spare goods to Maren · smelt & smith with Bram · cook with Willa · brew with Orin.</div>
+</div>
+
+<div class="panel" id="skillPanel">
+  <div class="closeX" data-close="skillPanel">✕</div>
+  <h2>Skills</h2>
+  <div id="skillRows"></div>
+  <div style="font-size:11px;color:var(--parch-dim);margin-top:8px;">Quests grant the biggest experience - adventure beats grinding on Emberwick.</div>
+</div>
+
+<div class="panel" id="questPanel">
+  <div class="closeX" data-close="questPanel">✕</div>
+  <h2>Quest Log</h2>
+  <input id="qsearch" type="text" placeholder="Search quests &amp; lore..." autocomplete="off"
+    style="width:100%;box-sizing:border-box;margin:0 0 8px 0;padding:7px 10px;border-radius:8px;
+    border:1.5px solid #4a3a26;background:#241a10;color:var(--parch);font:inherit;font-size:13px;">
+  <div id="qlog"></div>
+</div>
+
+<div class="panel" id="mapPanel">
+  <div class="closeX" data-close="mapPanel">✕</div>
+  <h2>Emberwick Isle</h2>
+  <div id="bigMapWrap">
+    <canvas id="bigMap" width="384" height="384"></canvas>
+    <div id="mapLegend"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="bossBar"><div class="bn" id="bossName">THE HOLLOW KING</div>
+  <div class="bbar"><div class="bfill" id="bossFill"></div></div></div>
+<div id="banner"><div class="bt" id="bannerT"></div><div class="rule"></div><div class="bs" id="bannerS"></div></div>
+<div class="lbox" id="lboxT"></div><div class="lbox" id="lboxB"></div>
+<div id="fadeOv"></div>
+
+<div class="overlay" id="titleOv">
+  <div class="ovCard">
+    <h1>Emberwick <span>Isle</span></h1>
+    <p>Learn the blade on Emberwick - tutorial shores of ember lanterns and old bones. Fell the Hollow King, then board Finn's boat for <b>Greyharbor</b>: a wilder mainland where elite packs prowl and a relic waits on Stormwatch Peak.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" id="continueBtn" style="display:none;">Continue</button>
+      <button class="btn" id="startBtn">Set Foot Ashore</button>
+    </div>
+    <div id="pausePanel">
+  <div id="pauseCard">
+    <h2>- PAUSED -</h2>
+    <div class="pHead">Sound</div>
+    <div class="pRow"><span>Music</span><input type="range" id="cfgMus" min="0" max="100"></div>
+    <div class="pRow"><span>Effects &amp; ambience</span><input type="range" id="cfgSfx" min="0" max="100"></div>
+    <div class="pHead">Display &amp; comfort</div>
+    <div class="pRow"><span>Screen shake &amp; haptics</span>
+      <div class="pSeg"><button class="btn" id="cfgShakeOn">On</button><button class="btn" id="cfgShakeOff">Off</button></div></div>
+    <div class="pRow"><span>Lightning &amp; flash effects</span>
+      <div class="pSeg"><button class="btn" id="cfgFlashOn">On</button><button class="btn" id="cfgFlashOff">Off</button></div></div>
+    <div class="pHead">Difficulty <span style="text-transform:none;letter-spacing:0;">(damage you take)</span></div>
+    <div class="pRow"><div class="pSeg" style="margin:0 auto;">
+      <button class="btn" id="diff0">Story</button>
+      <button class="btn" id="diff1">Normal</button>
+      <button class="btn" id="diff2">Heroic</button></div></div>
+    <div class="pHead">Chronicle</div>
+    <div id="statGrid"></div>
+    <div class="pHead">Deeds</div>
+    <div id="achGrid"></div>
+    <div class="pHead">Controls</div>
+    <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
+      Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · E interact &amp; enter buildings · 1-4 hotbar · Esc pause · gamepad supported</div>
+    <div id="pauseBtns">
+      <button class="btn gold" id="resumeBtn">Resume</button>
+      <button class="btn ghostly" id="quitTitleBtn">Quit to Title</button>
+    </div>
+  </div>
+</div>
+<div id="confirmWipe">
+      <p><b>This will erase your saved adventure forever</b> - gold, gear, quests, the lot.<br>
+      Type <b style="color:#ffb3a3">start over</b> to confirm.</p>
+      <input id="wipeInput" type="text" autocomplete="off" placeholder='type "start over"'>
+      <div class="row">
+        <button class="btn danger" id="wipeConfirm" disabled>Erase &amp; Begin Anew</button>
+        <button class="btn ghostly" id="wipeCancel">Keep My Save</button>
+      </div>
+    </div>
+    <div id="ovControls"></div>
+  </div>
+</div>
+
+<div class="overlay" id="deadOv" style="display:none;">
+  <div class="ovCard">
+    <h1 style="color:var(--blood);">You fell…</h1>
+    <p>Kind hands carry you back to the waking world. Check your purse and your satchel: scavengers are quicker than kindness.</p>
+    <button class="btn" id="respawnBtn">Wake Up</button>
+  </div>
+</div>
+
+<div class="overlay" id="winOv" style="display:none;">
+  <div class="ovCard">
+    <h1>The <span>Hollow King</span> has fallen!</h1>
+    <p id="winText">The ruins fall silent. Return to Elder Maren for your crown - then find Finn's boat at the dock. The strait is calm now, and Greyharbor waits across the water.</p>
+    <button class="btn" id="winBtn">Keep Exploring</button>
+  </div>
+</div>
+
+<script src="js/01-core.js"></script>
+<script src="js/02-worldgen.js"></script>
+<script src="js/03-art.js"></script>
+<script src="js/04-data.js"></script>
+<script src="js/05-inventory-skills-quests.js"></script>
+<script src="js/06-dialog.js"></script>
+<script src="js/07-input.js"></script>
+<script src="js/08-ui-panels.js"></script>
+<script src="js/09-gameplay.js"></script>
+<script src="js/10-rendering.js"></script>
+<script src="js/11-main-loop.js"></script>
+<script src="js/12-world-layer.js"></script>
+<script src="js/13-aaa-layer.js"></script>
+<script src="js/14-meta-layer.js"></script>
+<script src="js/15-interiors.js"></script>
+<script src="js/16-autosave.js"></script>
+<script src="js/17-pause-menu.js"></script>
+<script src="js/18-economy.js"></script>
+<script src="js/19-purpose.js"></script>
+<script src="js/20-lore.js"></script>
+<script src="js/21-exploration.js"></script>
+<script src="js/22-definitive-edition.js"></script>
+<script src="js/23-pause-affordance.js"></script>
+</body>
+</html>
