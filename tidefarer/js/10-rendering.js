@@ -29,15 +29,18 @@ function render(){
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
       cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
       if(t===T.SHALLOW || t===T.DEEP){
-        // gentle animated sheen + drifting sparkles
-        const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
-        if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
-          cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
-        if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
-          const sa=0.35+0.35*Math.sin(G.time*6+x);
-          cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
-          cx.beginPath(); cx.moveTo(sx-3,sy); cx.lineTo(sx+3,sy);
-          cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
+        // gentle animated sheen + drifting sparkles (per-water-tile path ops -
+        // one of the biggest costs on a software-rendered canvas; drop at LOWFX)
+        if(!LOWFX){
+          const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
+          if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
+            cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
+          if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
+            const sa=0.35+0.35*Math.sin(G.time*6+x);
+            cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
+            cx.beginPath(); cx.moveTo(sx-3,sy); cx.lineTo(sx+3,sy);
+            cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
+          }
         }
       } else {
         // soft terrain transitions: higher terrain bleeds over lower
@@ -53,7 +56,7 @@ function render(){
       }
     }
   }
-  drawFoam(minX,maxX,minY,maxY);
+  if(!LOWFX) drawFoam(minX,maxX,minY,maxY);
   drawDecals(minX,maxX,minY,maxY);
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
@@ -121,7 +124,7 @@ function render(){
   }
   // fireflies
   const night=nightAmount();
-  if(night>0.1){
+  if(!LOWFX && night>0.1){
     for(const f of G.fireflies){
       const s=worldToScreen(f.x,f.y);
       const a=(0.4+0.6*Math.abs(Math.sin(f.ph)))*Math.min(1,f.life);
@@ -161,15 +164,16 @@ function render(){
   }
 
   // ---- rolling ground fog & carrion crows ----
-  drawFog();
-  drawCrows();
-  drawGulls();
-
-  // ---- passing cloud shadows (day) ----
-  WX.drawCloudShadows();
+  if(!LOWFX){
+    drawFog();
+    drawCrows();
+    drawGulls();
+    // ---- passing cloud shadows (day) ----
+    WX.drawCloudShadows();
+  }
 
   // ---- dynamic darkness with carved light pools ----
-  if(night>0.02){
+  if(!LOWFX && night>0.02){
     drawLighting(night);
     // warm additive glow around flames
     cx.globalCompositeOperation='lighter';

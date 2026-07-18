@@ -1,15 +1,17 @@
 /* =====================================================================
    ADAPTIVE PERFORMANCE
-   Scales render resolution down (and, at the lowest tier, drops the most
-   expensive full-screen post-FX) when the frame rate can't keep up.
-   Fast devices - phones especially - stay at full fidelity; weak desktop
-   GPUs (e.g. Surface), where canvas blend-mode passes are slow, get
-   rescued automatically. One-way step-down so a genuine slowdown ratchets
-   quality down but a single hitch doesn't.
+   Scales render resolution down and, at lower tiers, strips the expensive
+   decorative passes (cinematic grade, bloom, dynamic lighting, water sheen,
+   foam, fog, crows/gulls, cloud shadows). Fast devices - phones especially -
+   stay at full fidelity; weak/software-rendered desktop canvases (e.g. Edge
+   on a Surface with no GPU acceleration) get rescued automatically.
 
-   Escape hatch: tidefarer/?safe (or ?lo) forces the lowest tier + minimal-GPU
-   mode (no dynamic lighting) from the very first frame - a guaranteed-light
-   fallback if the normal page overwhelms a weak GPU at load.
+   Reacts on ELAPSED TIME, not a fixed frame count, so a machine stuck at a
+   few FPS ratchets down within ~1s instead of tens of seconds, and can jump
+   several tiers at once when frames are catastrophically slow. One-way down.
+
+   Escape hatch: tidefarer/?safe (or ?lo) pins the lowest tier + minimal-GPU
+   mode (no dynamic lighting) from the first frame.
    ===================================================================== */
 (function(){
 'use strict';
@@ -17,10 +19,11 @@ if(typeof RQ==='undefined' || typeof frame!=='function') return;
 
 const TIERS=[
   {rq:1.00, low:false},   // full quality
-  {rq:0.82, low:false},   // ~33% fewer pixels
-  {rq:0.66, low:false},   // ~56% fewer pixels
-  {rq:0.50, low:true}     // ~75% fewer pixels + no cinematic grade / bloom
+  {rq:0.80, low:false},   // fewer pixels
+  {rq:0.62, low:false},   // fewer still
+  {rq:0.45, low:true}     // lowest res + bare-bones render (no decorative passes)
 ];
+const MAX=TIERS.length-1;
 
 let safe=false;
 try{
@@ -29,31 +32,35 @@ try{
 }catch(e){}
 if(safe) SAFE=true;
 
-let tier = safe ? TIERS.length-1 : 0;   // safe mode pins the lowest tier
-let acc=0, cnt=0, cooldown=0, prev=0;
+let tier = safe ? MAX : 0;
+let acc=0, cnt=0, prev=0, cooldownUntil=0;
 
 function apply(){
   RQ=TIERS[tier].rq;
   LOWFX=TIERS[tier].low;
   if(typeof resize==='function') resize();
 }
-apply(); // establish the starting tier (matters for safe mode)
+apply();
 
 const _frame=frame;
 frame=function(ts){
   _frame(ts);
-  if(safe) return; // pinned - nothing to tune
-  // Judge any live, animating frame (including the living title screen, which
-  // is where a weak GPU can choke first) - just not paused/hidden/photo frames.
+  if(safe) return; // pinned
   if(G.paused || document.hidden ||
      document.body.classList.contains('photoing')){ prev=ts; return; }
-  if(prev){ const dt=ts-prev; if(dt>0 && dt<250){ acc+=dt; cnt++; } }
+  if(prev){ const dt=ts-prev; if(dt>0 && dt<2000){ acc+=dt; cnt++; } }
   prev=ts;
-  if(cnt>=48){
+  // Evaluate roughly every 0.6s of wall time (or 60 frames, whichever first),
+  // so slow machines still get judged quickly.
+  if((acc>=600 || cnt>=60) && cnt>0){
     const avg=acc/cnt; acc=0; cnt=0;
-    if(cooldown>0){ cooldown--; return; }
-    // avg > ~22ms  =>  under ~45fps sustained: drop one quality tier.
-    if(avg>22 && tier<TIERS.length-1){ tier++; apply(); cooldown=3; }
+    if(ts<cooldownUntil) return;
+    if(avg>22 && tier<MAX){                 // under ~45fps: step down
+      const jump = avg>120 ? 3 : avg>55 ? 2 : 1;   // very slow => drop harder
+      tier=Math.min(MAX, tier+jump);
+      apply();
+      cooldownUntil=ts+900;                 // let the new tier settle
+    }
   }
 };
 })();
