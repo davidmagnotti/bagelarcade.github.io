@@ -142,9 +142,9 @@ function drawCrows(){
 /* ---------- film grain + cinematic grade ---------- */
 let grainCv=null;
 function drawGritGrade(){
-  // desaturate
-  cx.globalCompositeOperation='saturation';
-  cx.globalAlpha=0.22; cx.fillStyle='#808080'; cx.fillRect(-20,-20,VW+40,VH+40);
+  // NOTE: the old 'saturation' desaturate pass was removed - that non-separable
+  // blend mode is extremely slow and can hard-crash integrated GPUs on Windows
+  // (Surface). The cool-shadow + grain passes below give most of the look.
   // cool the shadows
   cx.globalCompositeOperation='soft-light';
   cx.globalAlpha=0.35; cx.fillStyle='#243642'; cx.fillRect(-20,-20,VW+40,VH+40);

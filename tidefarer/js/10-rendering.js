@@ -225,10 +225,10 @@ function render(){
   }
   // interaction marker + quest arrow
   drawMarkers();
-  // cinematic grade: desaturate, cool shadows, film grain
-  // (full-screen blend-mode passes - the biggest cost on weak desktop GPUs;
-  //  the perf tuner disables them via LOWFX before touching resolution further)
-  if(!LOWFX) drawGritGrade();
+  // cinematic grade: cool shadows, film grain (full-screen blend passes -
+  // costly on weak desktop GPUs). Skip on the title/menu so the loading
+  // screen stays light, and skip entirely at the lowest quality tier.
+  if(!LOWFX && G.state==='play') drawGritGrade();
   // vignette
   const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
