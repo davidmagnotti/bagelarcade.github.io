@@ -186,6 +186,8 @@
     display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .islot:hover{border-color:var(--ember);}
   .islot .cnt{position:absolute;bottom:2px;right:5px;font-size:12px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000;}
+  .islot.invsel{border-color:var(--ember);box-shadow:0 0 8px rgba(255,150,60,.35);}
+  .islot{cursor:pointer;}
   .islot .nm{position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:var(--parch-dim);margin-top:2px;display:none;}
   #invHint{font-size:11px;color:var(--parch-dim);margin-top:14px;line-height:1.5;}
   /* skills */
@@ -776,7 +778,7 @@ function findOpenNear(x,y,rad){
 function addBuilding(kind,x,y,label){
   const b={kind,x:x+0.5,y:y+0.5,label};
   G.decor.push(b);
-  const fp = {house:[2,2],house2:[2,2],forge:[2,2],barn:[3,2],tower:[2,2],castle:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0]}[kind]||[0,0];
+  const fp = {house:[2,2],house2:[2,2],forge:[2,2],barn:[3,2],tower:[2,2],castle:[6,3],hut:[2,2],volcano:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0]}[kind]||[0,0];
   for(let dy=0;dy<fp[1];dy++) for(let dx=0;dx<fp[0];dx++) setSolid(Math.floor(x)+dx-Math.floor(fp[0]/2), Math.floor(y)+dy-Math.floor(fp[1]/2), 1);
   return b;
 }
@@ -2064,6 +2066,28 @@ function iconCanvas(kind,sz=40){
         g.beginPath(); g.arc(6,-3,5.5,4.2,3.0); g.stroke();
         g.beginPath(); g.moveTo(-2,1); g.lineTo(-8,11); g.moveTo(2,1); g.lineTo(8,11); g.stroke();
         g.fillStyle='#ffce7a'; g.beginPath(); g.arc(0,-1,2.6,0,TAU); g.fill(); break;
+      case 'coconut': g.fillStyle='#6a4c2e'; g.beginPath(); g.arc(0,1,9,0,TAU); g.fill();
+        g.strokeStyle='#3e2c18'; g.lineWidth=1.6; g.stroke();
+        g.fillStyle='#3e2c18'; g.beginPath(); g.arc(-3,-3,1.4,0,TAU); g.arc(2,-4,1.4,0,TAU); g.arc(0,0,1.4,0,TAU); g.fill();
+        g.fillStyle='#8a6a42'; g.beginPath(); g.ellipse(-4,4,3,2,0.5,0,TAU); g.fill(); break;
+      case 'boarmeat': g.fillStyle='#c96a52'; g.beginPath(); g.ellipse(-2,0,9,7,0.4,0,TAU); g.fill();
+        g.strokeStyle='#7a3626'; g.lineWidth=1.6; g.stroke();
+        g.strokeStyle='#e8e0d0'; g.lineWidth=3.5; g.lineCap='round';
+        g.beginPath(); g.moveTo(6,4); g.lineTo(12,9); g.stroke(); g.lineCap='butt';
+        g.fillStyle='#e8b0a0'; g.beginPath(); g.ellipse(-3,-2,4,2.6,0.4,0,TAU); g.fill(); break;
+      case 'armor0': g.fillStyle='#8a6a4a'; g.beginPath(); g.roundRect(-9,-10,18,20,4); g.fill();
+        g.strokeStyle='#5a4028'; g.lineWidth=1.6; g.beginPath(); g.roundRect(-9,-10,18,20,4); g.stroke();
+        g.beginPath(); g.moveTo(0,-10); g.lineTo(0,10); g.stroke();
+        g.fillStyle='#6a4a2c'; g.fillRect(-9,-12,6,5); g.fillRect(3,-12,6,5); break;
+      case 'armor1': g.fillStyle='#9aa3ae'; g.beginPath(); g.roundRect(-10,-11,20,22,5); g.fill();
+        g.strokeStyle='#4a525c'; g.lineWidth=2; g.beginPath(); g.roundRect(-10,-11,20,22,5); g.stroke();
+        g.beginPath(); g.moveTo(-10,-3); g.lineTo(10,-3); g.stroke();
+        g.fillStyle='#7a838e'; g.fillRect(-12,-12,6,7); g.fillRect(6,-12,6,7); break;
+      case 'armor2': g.fillStyle='#c8d0da'; g.beginPath(); g.roundRect(-10,-11,20,22,5); g.fill();
+        g.strokeStyle='#3c4650'; g.lineWidth=2; g.beginPath(); g.roundRect(-10,-11,20,22,5); g.stroke();
+        g.beginPath(); g.moveTo(0,-11); g.lineTo(0,11); g.moveTo(-10,-2); g.lineTo(10,-2); g.stroke();
+        g.fillStyle='#e8c860'; g.beginPath(); g.arc(0,-6,2.2,0,TAU); g.fill();
+        g.fillStyle='#a8b2be'; g.fillRect(-13,-12,7,8); g.fillRect(6,-12,7,8); break;
       case 'bread': g.fillStyle='#d8a45c'; g.beginPath(); g.ellipse(0,1,11,7.5,0,0,TAU); g.fill();
         g.fillStyle='#eec27e'; g.beginPath(); g.ellipse(-1,-1.5,9,5,0,0,TAU); g.fill();
         g.strokeStyle='#9a6a34'; g.lineWidth=1.6; g.lineCap='round';
@@ -2127,7 +2151,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }
@@ -2329,6 +2353,7 @@ const MOBDEF = {
   raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
   brigand:{hp:240, dmg:22, speed:3.15, aggro:9, xp:180, gold:[18,34], lvl:7, name:'Pinewood Brigand'},
   wraith:{hp:130, dmg:15, speed:4.2, aggro:13, xp:110, gold:[10,20], lvl:6, name:'Night Wraith'},
+  boar:{hp:160, dmg:16, speed:3.5, aggro:7, xp:130, gold:[6,14], lvl:5, name:'Bristleback Boar'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'}
 };
 function inSafeZone(x,y){
@@ -2430,6 +2455,10 @@ function completeQuest(id){
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.'); }
+  if(rw.surf){ P.unlocked.surf=true;
+    toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
+  if(rw.moa){ P.unlocked.moa=true; P.riding=1;
+    toast('<b style="color:var(--ember)">Kiko the Moa is yours!</b> Press <b>M</b> to mount and dismount - the fastest legs on any shore.',6500); }
   if(rw.dash2){ P.unlocked.dash2=true;
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
@@ -2439,8 +2468,8 @@ function completeQuest(id){
   if(id==='ribbon2'){ P.quests.ribbon3='active';
     toast('<b>Quest updated:</b> A Ribbon for Wren - bring the Sunset Ribbon to Captain Corvo at the east cove.',5600); }
   if(id==='ribbon3'){ P.prog.eastSail=1;
-    banner('NEW HORIZONS','THE EAST STRAIT OPENS SOON');
-    setTimeout(()=>toast('Corvo readies his sloop. <b>A new island</b> waits past the shoals. Coming in a future update.',6000),1500); }
+    banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
+    setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
   if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock - Greyharbor awaits'),1300);
@@ -2509,7 +2538,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -2654,6 +2683,36 @@ function shopButtons(npc,btns){
           }},
           {label:'Farewell',ghost:true,fn:closeDialog}
         ]));
+    }});
+  }
+  if(npc.id==='corvo' && P.prog.eastSail){
+    btns.unshift({label:'Set sail east - the Sunward Isle', fn:()=>{
+      closeDialog();
+      const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
+      setTimeout(()=>{ switchWorld('east'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
+    }});
+  }
+  if(npc.id==='corvoE'){
+    btns.unshift({label:'Sail home to Barik', fn:()=>{
+      closeDialog();
+      const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
+      setTimeout(()=>{ switchWorld('main'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
+    }});
+  }
+  if(npc.id==='sable'){
+    btns.unshift({label:'Range drill (20g \u2192 archery)', fn:()=>{
+      if(P.gold<20){ setDialog('\u201cThe wind teaches for free. I do not.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
+      P.x=npc.x+1.2; P.y=npc.y+1.2; unstickEntity(P);
+      TRAIN={who:'sable', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+      toast('<b>Sable\'s drill:</b> deal <b>30 damage</b> to the range dummies - a bow if you have one, anything if you don\'t.',5000); Snd.quest();
+    }});
+  }
+  if(npc.id==='huk' && P.unlocked && P.unlocked.moa){
+    btns.unshift({label:P.riding? 'Dismount Kiko':'Whistle for Kiko the Moa', fn:()=>{
+      P.riding=P.riding?0:1; closeDialog();
+      toast(P.riding? 'Kiko folds her legs, you climb aboard, and the world starts moving <b>fast</b>.':'Kiko struts off to bully a palm for coconuts. <b>Dismounted.</b>',3000);
     }});
   }
   if(npc.id==='hermit' && !P.prog.hermitGift){
@@ -2850,6 +2909,7 @@ window.addEventListener('keydown',e=>{
   if(k==='3') selectWeapon('staff');
   if(k==='4') useItem(P.quickItem||'potion');
   if(k==='r') cycleQuickItem();
+  if(k==='m' && (P.horse||P.unlocked&&P.unlocked.moa) && !G.interior && G.state==='play'){ P.riding=P.riding?0:1; toast(P.riding?'<b>Mounted.</b>':'<b>Dismounted.</b>',1400); }
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }
@@ -3066,7 +3126,7 @@ function buildHotbar(){
     hb.appendChild(s);
   });
 }
-const QUICK_ITEMS=['potion','bread','cookedfish','apple','fish','wheat'];
+const QUICK_ITEMS=['potion','bread','cookedfish','boarmeat','coconut','apple','fish','wheat'];
 function cycleQuickItem(){
   const cur=QUICK_ITEMS.indexOf(P.quickItem||'potion');
   for(let i=1;i<=QUICK_ITEMS.length;i++){
@@ -3106,31 +3166,79 @@ function equipArmor(t){
   toast('<b style="color:#ffd76a">Equipped:</b> '+(t===0?'Traveler\'s Clothes':t===1?'Iron Armor':'Steel Plate'));
   refreshInvPanel();
 }
+let INV_SEL=null;
 function refreshInvPanel(){
   if(document.getElementById('invPanel').style.display!=='block') return;
   const grid=document.getElementById('invGrid'); grid.innerHTML='';
   const own=P.armorOwn||0;
-  const AR=[{t:0,n:'Traveler\'s Clothes',d:'No protection, full freedom.'},
+  const AR=[{t:0,n:"Traveler's Clothes",d:'No protection, full freedom.'},
             {t:1,n:'Iron Armor',d:'Turns aside 15% of every blow.'},
             {t:2,n:'Steel Plate',d:'Turns aside 30% of every blow.'}];
-  let eq='<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:5px;">EQUIPMENT - ARMOR</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
-  AR.forEach(a=>{
-    const lk=a.t>own, sel=(P.armor||0)===a.t;
-    eq+='<button class="btn'+(sel?' gold':'')+(lk?' ghost':'')+'" style="padding:6px 9px;font-size:11px;" '+
-        'onclick="equipArmor('+a.t+')" title="'+a.d+'">'+(lk?'\uD83D\uDD12 ':'')+(sel?'\u2713 ':'')+a.n+'</button>';
-  });
+  // ---- equipment: a worn slot plus a gear shelf; tap to swap ----
+  let eq='<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:5px;">EQUIPMENT</div>'+
+    '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">';
+  const worn=AR[P.armor||0];
+  eq+='<div id="eqArmor" style="text-align:center;">'+
+    '<div class="islot" style="border-color:var(--ember);box-shadow:0 0 8px rgba(255,150,60,.25) inset;" '+
+      'onclick="unequipArmor()" title="'+worn.n+' - tap to take off">'+
+      '<canvas width="40" height="40" data-eqicon="armor'+(P.armor||0)+'"></canvas></div>'+
+    '<div style="font-size:10px;color:var(--parch-dim);max-width:56px;margin-top:2px;">'+worn.n+'</div></div>';
+  const shelf=AR.filter(a=>a.t<=own && a.t!==(P.armor||0) && a.t>0);
+  if(shelf.length){
+    eq+='<div><div style="font-size:10px;color:var(--parch-dim);margin-bottom:3px;">In your pack - tap to wear:</div>'+
+      '<div style="display:flex;gap:6px;">';
+    shelf.forEach(a=>{
+      eq+='<div class="islot gearTile" data-t="'+a.t+'" onclick="equipArmor('+a.t+')" title="'+a.n+' - '+a.d+'">'+
+        '<canvas width="40" height="40" data-eqicon="armor'+a.t+'"></canvas></div>';
+    });
+    eq+='</div></div>';
+  } else if(own===0){
+    eq+='<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Bram\u2019s forge sells iron for your ribs.</div>';
+  }
   eq+='</div>';
   grid.insertAdjacentHTML('beforeend',eq);
+  grid.querySelectorAll('canvas[data-eqicon]').forEach(cv2=>{
+    cv2.getContext('2d').drawImage(ICONS[cv2.dataset.eqicon]||iconCanvas('stone'),0,0);
+  });
+  // ---- the satchel: tap selects; the action card below does the doing ----
   const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0);
-  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">Satchel\'s empty. The island provides - go poke it.</div>'); return; }
+  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">Satchel\u2019s empty. The island provides - go poke it.</div>'); return; }
+  if(INV_SEL && !(P.inv[INV_SEL]>0)) INV_SEL=null;
+  const row=document.createElement('div'); row.style.cssText='display:flex;flex-wrap:wrap;gap:6px;';
   keysList.forEach(k=>{
-    const s=document.createElement('div'); s.className='islot'; s.title=ITEMS[k].name+' - '+ITEMS[k].desc;
+    const s=document.createElement('div'); s.className='islot'+(INV_SEL===k?' invsel':''); s.title=ITEMS[k].name+' - '+ITEMS[k].desc;
     const ic=document.createElement('canvas'); ic.width=ic.height=40; ic.getContext('2d').drawImage(ICONS[k]||iconCanvas('stone'),0,0);
     s.appendChild(ic);
     const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv[k]; s.appendChild(c);
-    s.onclick=()=>{ if(ITEMS[k].use) { useItem(k); } else toast('<b>'+ITEMS[k].name+'</b> - '+ITEMS[k].desc); };
-    grid.appendChild(s);
+    if((P.quickItem||'potion')===k){
+      const q=document.createElement('div'); q.textContent='\u21c4';
+      q.style.cssText='position:absolute;top:1px;left:3px;font-size:11px;color:var(--ember);text-shadow:0 1px 2px #000;';
+      s.appendChild(q);
+    }
+    s.onclick=()=>{ INV_SEL=(INV_SEL===k?null:k); Snd.step&&Snd.step(6); refreshInvPanel(); };
+    row.appendChild(s);
   });
+  grid.appendChild(row);
+  if(INV_SEL){
+    const k=INV_SEL, it=ITEMS[k];
+    const canUse=!!it.use, canQuick=QUICK_ITEMS.includes(k);
+    let act='<div id="invAct" style="margin-top:10px;border:2px solid var(--ember);border-radius:10px;padding:10px 12px;background:#241a10;">'+
+      '<div style="font-weight:bold;">'+it.name+' \u00d7'+P.inv[k]+'</div>'+
+      '<div style="font-size:12px;color:var(--parch-dim);margin:3px 0 8px;">'+it.desc+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    if(canUse)  act+='<button class="btn gold" id="invUseBtn" style="padding:8px 14px;" onclick="useItem(INV_SEL);refreshInvPanel();">'+(it.use==='heal'?'Eat / Drink (+'+it.heal+' HP)':'Use')+'</button>';
+    if(canQuick) act+='<button class="btn" id="invQuickBtn" style="padding:8px 14px;" onclick="P.quickItem=INV_SEL;buildHotbar();refreshUI();refreshInvPanel();toast(\'Quick slot: <b>\'+ITEMS[INV_SEL].name+\'</b>\');">\u21c4 Set Quick Slot</button>';
+    act+='<button class="btn ghost" style="padding:8px 12px;" onclick="INV_SEL=null;refreshInvPanel();">Close</button>';
+    act+='</div></div>';
+    grid.insertAdjacentHTML('beforeend',act);
+  } else {
+    grid.insertAdjacentHTML('beforeend','<div style="font-size:11px;color:var(--parch-dim);margin-top:8px;">Tap an item for options; \u21c4 marks your quick slot.</div>');
+  }
+}
+function unequipArmor(){
+  if((P.armor||0)===0){ toast('Just your traveling clothes - nothing to take off.'); return; }
+  P.armor=0; Snd.pickup(); toast('Armor packed away. The wind gets a vote again.');
+  refreshInvPanel(); refreshUI();
 }
 function refreshSkillsPanel(){
   if(document.getElementById('skillPanel').style.display!=='block') return;
@@ -3149,7 +3257,7 @@ function refreshQuestLog(){
   const box=document.getElementById('qlog'); box.innerHTML='';
   const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
   const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue;
@@ -3201,7 +3309,7 @@ function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], masterwork:['skeletons'],
   wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'],
   nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'],
-  ribbon2:['ribbon1'], ribbon3:['ribbon2'],
+  ribbon2:['ribbon1'], ribbon3:['ribbon2'], tame1:['hunt1'],
   feud1:['roadclear'], sting1:['feud1'], undermaw1:['torv2'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
@@ -3228,7 +3336,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};
@@ -3253,13 +3361,12 @@ function refreshUI(){
 /* =====================================================================
    GAMEPLAY SYSTEMS
    ===================================================================== */
-function moveEntity(e,dx,dy,rad){
+function moveEntity(e,dx,dy,rad,waterOK){
   rad=rad||0.28;
-  // x axis
   let nx=e.x+dx;
-  if(!circleBlocked(nx,e.y,rad)) e.x=nx;
+  if(!circleBlocked(nx,e.y,rad,waterOK)) e.x=nx;
   let ny=e.y+dy;
-  if(!circleBlocked(e.x,ny,rad)) e.y=ny;
+  if(!circleBlocked(e.x,ny,rad,waterOK)) e.y=ny;
 }
 function unstickEntity(e){
   // if an entity is embedded in water or a solid, snap it to the nearest open tile
@@ -3274,9 +3381,13 @@ function unstickEntity(e){
   }
   return false;
 }
-function circleBlocked(x,y,r){
+function circleBlocked(x,y,r,waterOK){
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,-r],[0,r],[-r,0],[r,0]]){
-    if(solidAt(Math.floor(x+ox),Math.floor(y+oy))) return true;
+    const tx=Math.floor(x+ox), ty=Math.floor(y+oy);
+    if(solidAt(tx,ty)){
+      if(waterOK && inb(tx,ty) && tileAt(tx,ty)<=T.SHALLOW) continue; // the board rides what blocks boots
+      return true;
+    }
   }
   return false;
 }
@@ -3310,7 +3421,7 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
     }
-    if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'){
+    if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'){
       const d=dist(P.x,P.y,b.x,b.y+0.9);
       if(d<1.6 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
     }
@@ -3421,6 +3532,7 @@ function hitNode(n){
     setSolid(n.tx,n.ty,0);
     if(isTree){
       const amt=2+Math.floor(P.skills.woodcut.lvl/2); give('wood',Math.min(amt,4)); addXP('woodcut',8);
+      if(n.palm && Math.random()<0.35){ give('coconut',1); addFloat('+1 coconut',n.x,n.y-1.6,'#e8d8a8',1.0); }
       const windfall=Math.random();
       if(windfall<0.16){ give('apple',1); addFloat('+1 apple',n.x,n.y-1.6,'#e0708a',1.0); }
       else if(windfall<0.24){ give('mushroom',1); addFloat('+1 mushroom',n.x,n.y-1.6,'#d8b0c8',1.0); }
@@ -3614,6 +3726,7 @@ function killMob(m,skill){
   if(m.elite) killCredit('elite');
   // drops
   const g=rndi(d.gold[0],d.gold[1])*(m.elite?3:1);
+  if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
   if(m.kind==='alpha'){
@@ -3701,7 +3814,7 @@ function updatePlayer(dt){
   if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
-    moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt);
+    moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding);
     P.anim+=P.speed*2.7*dt*3.1; P.moving=true;
     P.stepT=(P.stepT||0)-dt;
     if(P.stepT<=0 && !G.interior){
@@ -3754,8 +3867,14 @@ function updatePlayer(dt){
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){
     mx/=ml; my/=ml;
-    const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)*(P.riding?1.55:1);
-    moveEntity(P, mx*sp*dt, my*sp*dt);
+    const onWater=tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW;
+    const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding;
+    const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)
+      *(P.riding? (P.unlocked&&P.unlocked.moa?2.1:1.55) :1)
+      *(onWater&&canSurf?1.8:1);
+    moveEntity(P, mx*sp*dt, my*sp*dt, 0.28, canSurf);
+    if(onWater&&canSurf&&Math.random()<dt*14)
+      G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-mx*0.8+rnd(-0.4,0.4),vy:-my*0.8+rnd(-0.4,0.4),life:0.35,color:'#eaf6ff',size:2.4,grav:0});
     P.dir={x:mx,y:my}; P.anim+=sp*dt*3.1; // stride matches ground covered - no foot-sliding
     P.stepT=(P.stepT||0)+dt;
     if(P.stepT>0.27){ P.stepT=0;
@@ -3805,7 +3924,9 @@ function updatePlayer(dt){
     else if(TRAIN.stage===2 && TRAIN.rolls>=3){
       const who=TRAIN.who; TRAIN=null;
       for(const m of dums){ m.hp=m.maxhp; }
-      if(who==='rook'){ addXP('melee',150); gainLXP(120);
+      if(who==='sable'){ addXP('archery',160); gainLXP(120);
+        toast('<b>Sable nods once.</b> \u201cBreath in, world out, loose.\u201d <i>(+160 Archery XP, +120 XP)</i>',5200); }
+      else if(who==='rook'){ addXP('melee',150); gainLXP(120);
         toast('<b>Rook nods.</b> \u201cStrike, chain, move. That is the whole art.\u201d <i>(+150 Melee XP, +120 XP)</i>',5200); }
       else { addXP('magic',150); gainLXP(120);
         toast('<b>Aelin smiles.</b> \u201cThe weave rewards a moving target.\u201d <i>(+150 Magic XP, +120 XP)</i>',5200); }
@@ -3846,8 +3967,8 @@ function updatePlayer(dt){
       G.parts.push({x:ZONES.springs.x+rnd(-1.5,1.5),y:ZONES.springs.y+rnd(-1.5,1.5),
         vx:rnd(-0.1,0),vy:rnd(-0.12,-0.04),life:rnd(1.5,2.5),color:'rgba(225,235,240,0.28)',size:6,grav:-0.15});
   }
-  if(dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
-  if(dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
+  if(ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
+  if(ZONES.forest && dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
 }
 
 function updateNPCs(dt){
@@ -4076,6 +4197,11 @@ function updateWorld(dt){
   for(const f of G.fireflies){ f.ph+=dt*2; f.life-=dt;
     f.x+=Math.cos(f.ph*0.7)*dt*0.5; f.y+=Math.sin(f.ph*0.9)*dt*0.5; }
   G.fireflies=G.fireflies.filter(f=>f.life>0 && dist(f.x,f.y,P.x,P.y)<16);
+  if(G.worldId==='east' && ZONES.volcano && Math.random()<dt*3){
+    G.parts.push({x:ZONES.volcano.x+rnd(-1,1), y:ZONES.volcano.y-rnd(0,0.6),
+      vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.6), life:rnd(1.5,2.6),
+      color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.1});
+  }
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist
   if(night>0.55 && !G.interior && !P.dead && !inSafeZone(P.x,P.y)){
@@ -4314,7 +4440,7 @@ function render(){
   if(CFG.flash && G.flash>0.01){ cx.fillStyle='rgba(200,30,20,'+(G.flash*0.30)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
 
   // sickly miasma near the Old Ruins
-  const ruinD=dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y);
+  const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<14){ cx.fillStyle='rgba(70,100,70,'+(0.10*(1-ruinD/14)).toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
   // venom haze
   if((P.poisonT||0)>0){ const va2=0.05+0.05*Math.sin(G.time*5);
@@ -4349,6 +4475,30 @@ function render(){
 }
 
 function drawNode(n,s){
+  if(n.kind==='tree' && n.palm){
+    if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
+    drawShadowAt(cx,s.x,s.y,13);
+    const sway2=Math.sin(G.time*1.1+n.x*0.7)*0.05;
+    cx.save(); cx.translate(s.x,s.y); cx.rotate(sway2);
+    cx.strokeStyle='#8a6a42'; cx.lineWidth=5; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(6,-22,12,-40); cx.stroke();
+    cx.strokeStyle='rgba(20,14,8,0.55)'; cx.lineWidth=1.2;
+    for(let yy=-6;yy>-36;yy-=6){ cx.beginPath(); cx.moveTo(yy*-0.3+2,yy); cx.lineTo(yy*-0.3+7,yy-1); cx.stroke(); }
+    cx.translate(12,-40);
+    for(let f=0;f<6;f++){
+      const fa=f/6*TAU+0.3;
+      cx.strokeStyle='#4e8a4a'; cx.lineWidth=3.5; cx.lineCap='round';
+      cx.beginPath(); cx.moveTo(0,0);
+      cx.quadraticCurveTo(Math.cos(fa)*12,Math.sin(fa)*7-6, Math.cos(fa)*20,Math.sin(fa)*11-1);
+      cx.stroke();
+    }
+    cx.fillStyle='#8a6a3a';
+    cx.beginPath(); cx.arc(-3,1,2.4,0,TAU); cx.arc(2,2.5,2.4,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(20,14,8,0.8)'; cx.lineWidth=1; cx.stroke();
+    cx.restore(); cx.lineCap='butt';
+    if(n.hp<n.maxhp){ drawNodeHp&&drawNodeHp(n,s); }
+    return;
+  }
   if(n.kind==='tree'){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
     drawShadowAt(cx,s.x,s.y,16);
@@ -4533,7 +4683,7 @@ function drawDecor(b,s){
   }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : 30);
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : b.kind==='volcano'?66 : 30);
   const BS=(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16:1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
@@ -4711,6 +4861,28 @@ function drawMob(m,s){
     if(m.hurtT>0){ cx.strokeStyle='#ffd76a'; cx.lineWidth=2; cx.beginPath(); cx.arc(s.x,s.y-24,15,0,TAU); cx.stroke(); }
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='boar'){
+    drawShadowAt(cx,s.x,s.y,13);
+    const trot=Math.sin(m.anim*9)*2, fl4=m.face||1;
+    cx.save(); cx.translate(s.x,s.y);
+    cx.strokeStyle='#4a3520'; cx.lineWidth=3; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-7,-8); cx.lineTo(-7+trot,0); cx.moveTo(7,-8); cx.lineTo(7-trot,0); cx.stroke();
+    cx.fillStyle='#6a4c2e';
+    cx.beginPath(); cx.ellipse(0,-12,14,9,0,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.8; cx.stroke();
+    cx.fillStyle='#4e3820';
+    cx.beginPath(); cx.moveTo(-12,-19); cx.quadraticCurveTo(0,-24,12,-19); cx.quadraticCurveTo(0,-20,-12,-19); cx.closePath(); cx.fill();
+    cx.fillStyle='#7a5a38';
+    cx.beginPath(); cx.ellipse(fl4*13,-11,6.5,5.5,0,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.6; cx.stroke();
+    cx.fillStyle='#9a7a52'; cx.beginPath(); cx.ellipse(fl4*17.5,-10,2.6,2.2,0,0,TAU); cx.fill(); cx.stroke();
+    cx.fillStyle='#f0e8d8';
+    cx.beginPath(); cx.moveTo(fl4*16,-8); cx.quadraticCurveTo(fl4*20,-10,fl4*19,-13); cx.lineTo(fl4*17,-10); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle='#17100a'; cx.beginPath(); cx.arc(fl4*12,-13,1.3,0,TAU); cx.fill();
+    if(m.hurtT>0){ cx.strokeStyle='#ffb26b'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,-12,17,0,TAU); cx.stroke(); }
+    cx.restore(); cx.lineCap='butt';
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='brigand'){
     drawShadowAt(cx,s.x,s.y,13);
     drawHumanoid(cx,s.x,s.y,{skin:'#c39a72',hair:'#3a3026',shirt:'#3f5230',pants:'#2c3322',
@@ -4781,6 +4953,36 @@ function drawMob(m,s){
     cx.fillStyle= m.boss? '#9fe8c0' : '#ffb0a0'; cx.fillText(nm,s.x,s.y+ny);
   }
 }
+function drawMoa(s){
+  drawShadowAt(cx,s.x,s.y,15);
+  const run=Math.sin(P.anim*8);
+  cx.save(); cx.translate(s.x,s.y);
+  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=3.4; cx.lineCap='round';
+  // long runner legs, scissoring
+  cx.strokeStyle='#8a6a3a';
+  cx.beginPath(); cx.moveTo(-4,-14); cx.lineTo(-6+run*4,-6); cx.lineTo(-7+run*5,0); cx.stroke();
+  cx.beginPath(); cx.moveTo(4,-14); cx.lineTo(6-run*4,-6); cx.lineTo(7-run*5,0); cx.stroke();
+  // round feathered body
+  cx.fillStyle='#7a6242';
+  cx.beginPath(); cx.ellipse(0,-19,13,9.5,0,0,TAU); cx.fill();
+  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.8; cx.stroke();
+  cx.fillStyle='#8f7550';
+  cx.beginPath(); cx.ellipse(-3,-21,8,5.5,0,0,TAU); cx.fill();
+  // tail plume
+  cx.fillStyle='#5e4a30';
+  cx.beginPath(); cx.moveTo(-12,-22); cx.quadraticCurveTo(-20,-26,-18,-16); cx.quadraticCurveTo(-14,-14,-11,-16); cx.closePath(); cx.fill(); cx.stroke();
+  // neck + head, leaning into the run
+  const fl3=(P.dir&&P.dir.x<0)?-1:1;
+  cx.strokeStyle='#7a6242'; cx.lineWidth=4.5;
+  cx.beginPath(); cx.moveTo(fl3*8,-22); cx.quadraticCurveTo(fl3*15,-30,fl3*16,-36); cx.stroke();
+  cx.fillStyle='#8f7550';
+  cx.beginPath(); cx.arc(fl3*16,-38,4.2,0,TAU); cx.fill();
+  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.6; cx.stroke();
+  cx.fillStyle='#e8b23c';
+  cx.beginPath(); cx.moveTo(fl3*19,-38); cx.lineTo(fl3*25,-36.5); cx.lineTo(fl3*19,-35.5); cx.closePath(); cx.fill(); cx.stroke();
+  cx.fillStyle='#17100a'; cx.beginPath(); cx.arc(fl3*17,-39,1.2,0,TAU); cx.fill();
+  cx.restore(); cx.lineCap='butt';
+}
 function drawHorse(s){
   const g=cx; g.save(); g.translate(s.x,s.y);
   const fl=(P.dir.x<0)?-1:1, tr=Math.sin(P.anim*7);
@@ -4824,9 +5026,24 @@ function drawHorse(s){
 }
 function drawPlayer(s){
   if(P.riding){
-    drawHorse(s);
+    if(P.unlocked&&P.unlocked.moa) drawMoa(s); else drawHorse(s);
     const s2={x:s.x, y:s.y-21};
     drawPlayerFigure(s2);
+    return;
+  }
+  if(P.unlocked&&P.unlocked.surf&&!G.interior&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
+    // the board: pale wood with a dark stripe, riding its own bow-wave
+    const bobS=Math.sin(G.time*5)*1.4;
+    cx.save(); cx.translate(s.x,s.y+bobS*0.4);
+    cx.fillStyle='rgba(234,246,255,0.5)';
+    cx.beginPath(); cx.ellipse(0,3,20,8,0,0,TAU); cx.fill();
+    cx.fillStyle='#e0c894';
+    cx.beginPath(); cx.ellipse(0,0,16,6,0,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(20,14,8,0.85)'; cx.lineWidth=1.6; cx.stroke();
+    cx.strokeStyle='#8a6a3a'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(-13,0); cx.lineTo(13,0); cx.stroke();
+    cx.restore();
+    drawPlayerFigure({x:s.x, y:s.y-3+bobS*0.4});
     return;
   }
   drawShadowAt(cx,s.x,s.y,14);
@@ -5205,9 +5422,17 @@ const MAIN_ZONES = { // BARIK - ten times the home shores
   mines:    {x:91, y:148, r:12, name:'Old Barik Mines', lv:[3,5]},
   castle:   {x:118,y:300, r:14, name:'Barik Keep', lv:[1,1]},
   spire:    {x:196,y:332, r:8,  name:"Aelin's Spire", lv:[2,4]},
+  hollow:   {x:162,y:148, r:6,  name:"Thieves' Hollow", lv:[7,7]},
   desert:   {x:300,y:112, r:32, name:'Sunscour Valley', lv:[11,14]},
   undermaw: {x:212,y:196, r:8,  name:'The Undermaw', lv:[10,13]},
   vael:     {x:318,y:40,  r:20, name:'The Vael March', lv:[11,14]}
+};
+const EAST_ZONES = {
+  dock:    {x:38, y:118, r:7,  name:'Palm Cove', lv:[0,0]},
+  village: {x:72, y:110, r:10, name:'Kohana Village', lv:[0,0]},
+  grove:   {x:118,y:132, r:12, name:'Palmwatch Grove', lv:[4,6]},
+  volcano: {x:110,y:52,  r:14, name:'Mount Kea', lv:[6,8]},
+  reef:    {x:170,y:96,  r:9,  name:'Windward Reef', lv:[0,0]}
 };
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
@@ -5215,7 +5440,10 @@ const WORLD_DEFS = {
     gen:()=>genIsleAll() },
   main:{ W:355, H:355, seed:99177, zones:MAIN_ZONES,
     spawn:{x:57.5,y:259.5}, title:'BARIK', sub:'CHAPTER II - THE WILD SHORES',
-    gen:()=>genMainAll() }
+    gen:()=>genMainAll() },
+  east:{ W:200, H:200, seed:44721, zones:EAST_ZONES,
+    spawn:{x:38.5,y:118.5}, title:'THE SUNWARD ISLE', sub:'CHAPTER III - PALMS, ASH, AND OPEN WATER',
+    gen:()=>genEastAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -5597,6 +5825,115 @@ function spawnMobsMain(){
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
   spawnMob('skeleton',ZONES.tower.x,ZONES.tower.y+3,true);
 }
+function genEast(){
+  const rng=mulberry32(SEED);
+  const CX2=100, CY2=100;
+  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*12-6);
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const dx=x-CX2, dy=y-CY2, d=Math.hypot(dx,dy), a=Math.atan2(dy,dx);
+    const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
+    const rad=72+wob[wi]+6*Math.sin(a*5+1.7);
+    let t=T.DEEP;
+    if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+2) t=T.SHALLOW;
+    G.map[y*MAPW+x]=t;
+  }
+  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,5,T.SAND,false);
+  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,8,T.SHALLOW,true);
+  carveDisc(EAST_ZONES.volcano.x,EAST_ZONES.volcano.y,13,T.RUIN,false);
+  carveDisc(EAST_ZONES.volcano.x,EAST_ZONES.volcano.y+8,10,T.GRASS,false);
+  carveDisc(EAST_ZONES.grove.x,EAST_ZONES.grove.y,11,T.FOREST,false);
+  carveDisc(EAST_ZONES.village.x,EAST_ZONES.village.y,9,T.GRASS,false);
+  carveDisc(EAST_ZONES.dock.x,EAST_ZONES.dock.y,5,T.SAND,false);
+  carveLine(EAST_ZONES.dock.x,EAST_ZONES.dock.y, EAST_ZONES.village.x,EAST_ZONES.village.y, T.PATH,0);
+  carveLine(EAST_ZONES.village.x,EAST_ZONES.village.y, EAST_ZONES.grove.x,EAST_ZONES.grove.y, T.PATH,0);
+  carveLine(EAST_ZONES.village.x,EAST_ZONES.village.y, EAST_ZONES.volcano.x,EAST_ZONES.volcano.y+9, T.PATH,0);
+}
+function placeObjectsEast(){
+  const V=EAST_ZONES.village, D=EAST_ZONES.dock, VO=EAST_ZONES.volcano;
+  addBuilding('volcano', VO.x, VO.y, 'Mount Kea');
+  addBuilding('hut', V.x-4, V.y-3, 'Kohana longhut (Inn)');
+  addBuilding('hut', V.x+3, V.y-4, 'Weaver hut');
+  addBuilding('hut', V.x+6, V.y+1, 'Hunting hut');
+  addBuilding('hut', V.x-6, V.y+2, 'Board shack');
+  addBuilding('hut', V.x, V.y+5,  'Drying hut');
+  addBuilding('well', V.x, V.y, 'Spring well');
+  addBuilding('lamp', D.x, D.y-1, '');
+  addBuilding('boat', D.x-5.5, D.y+2.5, '');
+  addBuilding('lamp', V.x+10, V.y+7, '');
+  const pr2=mulberry32(SEED+7);
+  // the grove proper: thick palms
+  const GR=EAST_ZONES.grove;
+  for(let gy=-11;gy<=11;gy++) for(let gx=-11;gx<=11;gx++){
+    const px=GR.x+gx, py=GR.y+gy;
+    if(Math.hypot(gx,gy)<=11 && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr2()<0.22){
+      const n=addNode('tree',px,py); n.palm=1;
+    }
+  }
+  for(let i=0;i<300;i++){
+    const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
+    const t=tileAt(ax,ay);
+    if((t===T.FOREST || (t===T.GRASS&&pr2()<0.18) || (t===T.SAND&&pr2()<0.3)) && !solidAt(ax,ay)
+       && dist(ax,ay,V.x,V.y)>6 && dist(ax,ay,D.x,D.y)>4){
+      const n=addNode('tree',ax,ay); n.palm=1;
+    }
+  }
+  for(let i=0;i<26;i++){
+    const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
+    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay);
+  }
+  for(let i=0;i<20;i++){
+    const ax=VO.x+Math.floor(pr2()*22-11), ay=VO.y+Math.floor(pr2()*22-11);
+    if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay)) addNode('rock',ax,ay);
+  }
+  G.decor.push({kind:'chest',x:EAST_ZONES.reef.x+0.5,y:EAST_ZONES.reef.y+0.5,opened:false,rich:8});
+  const vc=findOpenNear(VO.x+3,VO.y+5,6);
+  if(vc){ G.decor.push({kind:'chest',x:vc[0]+0.5,y:vc[1]+0.5,opened:false,rich:9}); setSolid(vc[0],vc[1],1); }
+}
+function spawnEastFolk(){
+  const V=EAST_ZONES.village, D=EAST_ZONES.dock;
+  G.npcs.push((()=>{ const c2=makeNPC('corvoE','Captain Corvo', D.x+1.5,D.y+1.2,
+    {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
+    ['Wren has not taken the ribbon off since we landed.',
+     'The sloop is provisioned. Say the word and we run for Barik.'],0.2); c2.nightOwl=true; return c2; })());
+  G.npcs.push(makeNPC('sable','Sable of the Far Range', V.x+9.5,V.y+6.2,
+    {skin:'#a97c58',hair:'#1e1a16',shirt:'#5e4a2a',pants:'#3a3026',hairstyle:'long'},
+    ['Rook still owes me twenty gold. Tell him the wind remembers.',
+     'A bow is a held breath. Learn to let it go.'],0.4));
+  G.npcs.push(makeNPC('huk','Huk the Boarfather', V.x+5.5,V.y+1.8,
+    {skin:'#8f6a48',hair:'#26201a',shirt:'#6a3a2a',pants:'#33261c'},
+    ['The bristlebacks fatten on fallen coconuts. So do I.',
+     'A hunter feeds the village. A show-off feeds the flies.'],0.5));
+  G.npcs.push(makeNPC('kaia','Kaia the Wavewright', V.x-5.5,V.y+2.6,
+    {skin:'#c99a6e',hair:'#2c2a3a',shirt:'#3a6a72',pants:'#2c3a40',hairstyle:'long'},
+    ['The wind is a road, if your feet are brave enough.',
+     'I shaped my first board at nine. The sea shaped me back.'],0.6));
+  G.npcs.push(makeNPC('moli','Elder Moli', V.x-0.5,V.y-1.6,
+    {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
+    ['Kea grumbles, the palms bow, the reef sings. The island talks - listen.',
+     'Guests of the tide are guests of Kohana.'],0.7));
+}
+function spawnMobsEast(){
+  const packs=[
+    ['boar', EAST_ZONES.grove, 8, 0.2],
+    ['boar', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+12, r:8}, 5, 0.3],
+    ['scorpion', EAST_ZONES.volcano, 4, 0.4]
+  ];
+  for(const [kind,z,count,el] of packs){
+    for(let i=0;i<count;i++){
+      const a=Math.random()*TAU, r2=Math.random()*z.r*0.8;
+      const sp2=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 4);
+      if(sp2) spawnMob(kind, sp2[0], sp2[1], Math.random()<el);
+    }
+  }
+  const yd1=findOpenNear(Math.round(EAST_ZONES.village.x+10), Math.round(EAST_ZONES.village.y+8), 5);
+  const yd2=findOpenNear(Math.round(EAST_ZONES.village.x+12), Math.round(EAST_ZONES.village.y+7), 5);
+  if(yd1) spawnMob('dummy',yd1[0],yd1[1]);
+  if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+}
+function genEastAll(){
+  genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
+  spawnEastFolk(); spawnMobsEast();
+}
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
@@ -5654,14 +5991,29 @@ QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'
   rw:{} };
 QUESTS.ribbon2={ giver:'mira', title:'A Ribbon for Wren', kind:'gather', need:{silk:1}, xpL:200, stageOf:'ribbon', stage:2,
   brief:'If you can walk into that camp and walk out again: my silk sits in a chest they guard, north of the deep pines. Bring me one bolt and I will weave the finest ribbon Barik has seen.',
-  log:'(2/3) Steal back a bolt of silk from the brigand camp north of Blackpine.',
+  log:'(2/3) Steal back a bolt of silk from Thieves\' Hollow, north of Blackpine.',
   doneText:'Dawn-colored, and not a thread pulled. Give me a moment... there. A Sunset Ribbon, and my thanks stitched into it.',
   rw:{item:{ribbon:1}, gold:40} };
 QUESTS.ribbon3={ giver:'corvo', title:'A Ribbon for Wren', kind:'gather', need:{ribbon:1}, xpL:260, stageOf:'ribbon', stage:3,
   brief:'You have it? Wren will be over the moon and halfway back.',
   log:'(3/3) Bring the Sunset Ribbon to Captain Corvo at the east cove.',
-  doneText:'She will wear it till the color goes. A bargain is a bargain: when the tide turns, we sail east. Watch the horizon, friend. New shores are coming.',
+  doneText:'She will wear it till the color goes. A bargain is a bargain - and the tide is with us NOW. Say the word, any time, and we run east for the Sunward Isle.',
   rw:{gold:150} };
+QUESTS.hunt1={ giver:'huk', title:'Bristleback Cull', kind:'kill', kill:{boar:6}, xpL:170,
+  brief:'The bristlebacks breed faster than the palms can feed them, and they have started on our gardens. Thin the sounder - six boars - and Kohana eats well either way.',
+  log:'Hunt 6 bristleback boars in Palmwatch Grove or on the ash slopes.',
+  doneText:'Six, clean. You hunt like you mean it. Come back when you want to meet Kiko - she only likes people who can keep up.',
+  rw:{gold:90, item:{boarmeat:3}, xp:{archery:160}} };
+QUESTS.tame1={ giver:'huk', title:'The Long-Legged Friend', kind:'gather', need:{apple:3}, xpL:200,
+  brief:'Kiko is a moa - tall as a door and faster than gossip. She will carry a friend, and friendship with Kiko costs exactly three crisp apples. Barik orchards grow them; so do lucky axe swings.',
+  log:'Bring Huk 3 orchard apples to win over Kiko the Moa.',
+  doneText:'She likes you. That settles it - Kiko is yours to whistle for. Press M, or ask me, and hold on with your knees.',
+  rw:{moa:true} };
+QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wood:8, crystal:1}, xpL:220,
+  brief:'Bring me eight good lengths of timber and one ember crystal to cure the resin, and I will shape you a board that treats the sea like a street. The Windward Reef is only the first place it will take you.',
+  log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
+  doneText:'There. Kaia-work, signed in the grain. Step onto the water and the board will find your feet. The reef is yours - so is every shore you can see.',
+  rw:{surf:true, gold:30} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
   log:'Drive off 6 Vael Raiders in the north-east March.',
@@ -5732,6 +6084,50 @@ QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:
   rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
 
 function buildExtraSprites(){
+  // Kohana huts: bamboo walls under a deep straw cone
+  SPR.hut=makeCanvas(96,86,(g)=>{
+    const OUT='rgba(20,14,8,0.9)';
+    g.lineWidth=2; g.strokeStyle=OUT;
+    g.fillStyle='#a8845c';
+    g.fillRect(22,48,52,32); g.strokeRect(22,48,52,32);
+    g.strokeStyle='rgba(60,42,24,0.7)'; g.lineWidth=1.4;
+    for(let x=28;x<74;x+=7){ g.beginPath(); g.moveTo(x,48); g.lineTo(x,80); g.stroke(); }
+    g.strokeStyle=OUT; g.lineWidth=2;
+    g.fillStyle='#c9a75a';
+    g.beginPath(); g.moveTo(48,6); g.lineTo(90,54); g.lineTo(6,54); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#b3924a';
+    g.beginPath(); g.moveTo(48,6); g.lineTo(90,54); g.lineTo(64,54); g.closePath(); g.fill();
+    g.strokeStyle='rgba(90,66,30,0.75)'; g.lineWidth=1.3;
+    for(let i=1;i<6;i++){ const yy=6+i*8;
+      g.beginPath(); g.moveTo(48-(yy-6)*0.87,yy); g.lineTo(48+(yy-6)*0.87,yy); g.stroke(); }
+    g.strokeStyle=OUT; g.lineWidth=2;
+    g.fillStyle='#3a2a18';
+    g.beginPath(); g.moveTo(40,80); g.lineTo(40,60); g.quadraticCurveTo(48,52,56,60); g.lineTo(56,80); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#e8d8a8'; g.fillRect(44,2,8,6); g.strokeRect(44,2,8,6);
+  });
+  // Mount Kea: an ash cone with a living caldera
+  SPR.volcano=makeCanvas(260,200,(g)=>{
+    const OUT='rgba(20,14,8,0.9)';
+    g.lineWidth=2.5; g.strokeStyle=OUT;
+    g.fillStyle='#3c3a3e';
+    g.beginPath(); g.moveTo(96,26); g.lineTo(164,26);
+    g.lineTo(238,178); g.lineTo(22,178); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#4c4a50';
+    g.beginPath(); g.moveTo(96,26); g.lineTo(130,26); g.lineTo(96,178); g.lineTo(22,178); g.closePath(); g.fill();
+    g.fillStyle='#2a282c';
+    g.beginPath(); g.ellipse(130,26,36,11,0,0,TAU); g.fill(); g.stroke();
+    g.fillStyle='#ff7a34';
+    g.beginPath(); g.ellipse(130,26,26,7,0,0,TAU); g.fill();
+    g.fillStyle='#ffd050';
+    g.beginPath(); g.ellipse(130,26,13,4,0,0,TAU); g.fill();
+    g.strokeStyle='#ff8a44'; g.lineWidth=3; g.lineCap='round';
+    g.beginPath(); g.moveTo(112,34); g.quadraticCurveTo(102,90,86,150); g.stroke();
+    g.beginPath(); g.moveTo(150,36); g.quadraticCurveTo(162,100,178,166); g.stroke();
+    g.lineCap='butt';
+    g.strokeStyle='rgba(24,20,18,0.6)'; g.lineWidth=1.5;
+    for(let i=0;i<36;i++){ const rx=40+((i*61)%180), ry=60+((i*37)%110);
+      g.beginPath(); g.moveTo(rx,ry); g.lineTo(rx+9,ry+3); g.stroke(); }
+  });
   // Barik Keep, drawn as an honest castle: curtain wall, flanking towers,
   // crenellated keep, royal banner, and a portcullis gate
   SPR.castle=makeCanvas(300,224,(g)=>{
@@ -6014,6 +6410,7 @@ function switchWorld(id){
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
+  if(id==='east') for(const q3 of ['hunt1','surf1']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
@@ -6318,7 +6715,7 @@ function ambientFX(dt){
       life:rnd(0.8,1.6), color:'#ffab4d', size:2.4, glow:true});
   }
   // grit: fog banks + ash
-  const ruinD=dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y);
+  const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<12 && Math.random()<0.5) spawnFog(P.x+rnd(-9,9),P.y+rnd(-9,9),'rgba(96,116,98,');
   if((G.dayT>0.92||G.dayT<0.08) && Math.random()<0.35) spawnFog(P.x+rnd(-10,10),P.y+rnd(-10,10),'rgba(150,165,185,');
   if(WX.rain>0.4 && Math.random()<0.25) spawnFog(P.x+rnd(-10,10),P.y+rnd(-10,10),'rgba(120,135,155,');
@@ -6516,7 +6913,8 @@ function enterHouse(b){
     forge:{line:'The coals never quite sleep. Tools line every wall.'},
     barn:{line:'Hay, harness, and something purring out of sight.'},
     tower:{line:'Star charts, humming glass, and a faint smell of ozone.'},
-    castle:{line:'Banners, cold stone, and a hearth that has heard a hundred oaths.'}
+    castle:{line:'Banners, cold stone, and a hearth that has heard a hundred oaths.'},
+    hut:{line:'Woven mats, hanging nets, and the sweet smell of dried palm.'}
   };
   const dims = b.kind==='castle'? [15,9] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
@@ -6529,6 +6927,7 @@ function enterHouse(b){
   if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
   if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
   if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
+  if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='castle'){
     F('rug',7.5,5.0,0,0,false);
     F('throne',7.5,1.7,1.0,0.6);
@@ -7132,6 +7531,8 @@ ITEMS.shell={name:'Spiral Shell', desc:'A perfect beach spiral. Nia collects the
 ITEMS.apple={name:'Orchard Apple', desc:'Crisp and sweet. Restores 10 HP.', use:'heal', heal:10};
 ITEMS.silk={name:'Stolen Silk', desc:'A bolt of dawn-colored silk, liberated back from the brigands.'};
 ITEMS.ribbon={name:'Sunset Ribbon', desc:'Mira\'s finest work. Made for a captain\'s daughter.'};
+ITEMS.coconut={name:'Coconut', desc:'Sweet water, rich meat. Restores 15 HP.', use:'heal', heal:15};
+ITEMS.boarmeat={name:'Boar Meat', desc:'Rich and gamey. Restores 22 HP.', use:'heal', heal:22};
 ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.'};
 
 const LORE={
