@@ -132,7 +132,7 @@ function render(){
   }
   }
   if(!LOWFX) drawFoam(minX,maxX,minY,maxY);
-  if(!LOWFX) drawDecals(minX,maxX,minY,maxY);
+  drawDecals(minX,maxX,minY,maxY);   // gore decals restored in low-gfx (build 27)
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
@@ -171,7 +171,7 @@ function render(){
   }
 
   // ---- particles & floats ----
-  if(DBG.particles && !LOWFX) for(const pt of G.parts){
+  if(DBG.particles) for(const pt of G.parts){   // particles restored in low-gfx (build 27)
     if(pt.pickup) continue;
     const s=worldToScreen(pt.x,pt.y);
     cx.globalAlpha=clamp(pt.life*2.2,0,1);
@@ -243,11 +243,8 @@ function render(){
   // ---- carrion crows & coastal gulls (cheap: a few line strokes) - kept in low-gfx
   drawCrows();
   drawGulls();
-  // rolling fog + cloud shadows are broader fills - low-gfx only skips these
-  if(!LOWFX){
-    drawFog();
-    WX.drawCloudShadows();
-  }
+  drawFog();                       // restored in low-gfx (build 27)
+  if(!LOWFX){ WX.drawCloudShadows(); }   // cloud shadows: broad fills, still low-gfx-off
 
   // ---- dynamic darkness with carved light pools ----
   if(!LOWFX && night>0.02){
