@@ -17,6 +17,14 @@ Live copies (handy for pasting URLs into the Median dashboard):
 | `splash-light.png` | 2048×2048 | No | **Splash / launch screen — light mode.** |
 | `splash-logo-transparent.png` | 2048×2048 | Yes | Alternative splash for Median's "centered logo + background color" mode. Set the background to the colors below. |
 
+### App Store screenshots
+
+`screenshots/` holds five ready-to-upload App Store screenshots (1290×2796, iPhone
+6.9" class) captured from live gameplay and framed in the game's style — title,
+build phase, land siege, naval siege, and a boss siege. Unframed device captures
+are in `screenshots/raw/`. See `screenshots/README.md` for the upload order and
+Google Play notes.
+
 ## Colors
 
 | Purpose | Hex |
