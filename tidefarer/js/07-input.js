@@ -82,6 +82,7 @@ function pickClickTarget(wx,wy){
   return {type:'pos',x:wx,y:wy};
 }
 function interiorClick(sx,sy){
+  sx-=LB.x; sy-=LB.y;   // undo Performance Mode letterbox offset
   const I=G.interior;
   const ccx=isoX(I.w/2,I.h/2), ccy=isoY(I.w/2,I.h/2);
   const ox=sx-(VW/2-ccx), oy=sy-(VH/2+14-ccy);

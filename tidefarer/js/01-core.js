@@ -117,13 +117,30 @@ let VW=0, VH=0, DPR=1;
    SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf
    tuner (js/24-perf.js) lowers these on weak GPUs; SAFE is forced by ?safe. */
 let RQ=1, LOWFX=false, SAFE=false;
+/* PERF (Performance Mode) shrinks the DISPLAYED canvas into a smaller centered
+   box - the one lever that actually helps GPUs that are slow to composite a
+   full-viewport canvas (fewer on-screen pixels to present each frame). LB holds
+   the letterbox offset so input coords map back into the smaller canvas. */
+let PERF = false; try{ PERF = SafeStore.get('tf_perf')==='1'; }catch(e){}
+const PERF_CAP = 640;   // max displayed longest-edge in Performance Mode
+const LB = {x:0, y:0};
 /* Benchmark hooks: DBG flags gate individual render passes so js/26-bench.js
    can attribute real (GPU-side) cost per pass via differential timing (?bench).
    All default on, so normal play is unchanged. BENCH pauses the auto-tuner. */
 let BENCH=false;
 const DBG={ground:1, entities:1, particles:1, floats:1, vignette:1};
 function resize(){
-  VW = window.innerWidth; VH = window.innerHeight;
+  const iw = window.innerWidth, ih = window.innerHeight;
+  let dispW = iw, dispH = ih, offX = 0, offY = 0;
+  if(PERF){
+    // Shrink the displayed canvas so the GPU composites far fewer pixels.
+    const sc = Math.min(1, PERF_CAP / Math.max(iw, ih));
+    dispW = Math.max(1, Math.round(iw*sc));
+    dispH = Math.max(1, Math.round(ih*sc));
+    offX = Math.round((iw-dispW)/2);
+    offY = Math.round((ih-dispH)/2);
+  }
+  VW = dispW; VH = dispH;                 // logical render size == displayed size
   const base = Math.min(window.devicePixelRatio||1, 2);
   let dpr = base*RQ;
   /* Cap the backing store to a pixel budget so a big high-DPI desktop panel
@@ -134,7 +151,9 @@ function resize(){
   if(px > BUDGET) dpr *= Math.sqrt(BUDGET/px);
   DPR = Math.max(0.4, dpr);
   cv.width = Math.round(VW*DPR); cv.height = Math.round(VH*DPR);
-  cv.style.width = VW+'px'; cv.style.height = VH+'px';
+  cv.style.width = dispW+'px'; cv.style.height = dispH+'px';
+  cv.style.left = offX+'px'; cv.style.top = offY+'px';
+  LB.x = offX; LB.y = offY;               // input maps client coords back in
 }
 window.addEventListener('resize', resize); resize();
 
