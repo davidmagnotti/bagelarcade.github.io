@@ -2665,7 +2665,7 @@ function shopButtons(npc,btns){
       const f=aelinFee();
       if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
-      P.x=npc.x+2.5; P.y=npc.y+1.6;
+      P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
       TRAIN={who:'aelin', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
       toast('<b>Aelin\'s lesson:</b> deal <b>30 damage</b> to the range dummies. Staff, sword, anything that moves the air.',5000); Snd.quest();
@@ -2676,7 +2676,7 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
       if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
-      P.x=npc.x+1.5; P.y=npc.y+1.2;
+      P.x=npc.x-2.5; P.y=npc.y-2.7; unstickEntity(P);
       TRAIN={who:'rook', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
       toast('<b>Rook\'s drill:</b> deal <b>30 damage</b> to the practice dummies in the yard. Strike!',4600); Snd.quest();
@@ -3163,6 +3163,19 @@ function moveEntity(e,dx,dy,rad){
   let ny=e.y+dy;
   if(!circleBlocked(e.x,ny,rad)) e.y=ny;
 }
+function unstickEntity(e){
+  // if an entity is embedded in water or a solid, snap it to the nearest open tile
+  if(!circleBlocked(e.x,e.y,0.26)) return false;
+  for(let d=0;d<=8;d++) for(let oy=-d;oy<=d;oy++) for(let ox=-d;ox<=d;ox++){
+    if(Math.max(Math.abs(ox),Math.abs(oy))!==d) continue;
+    const tx=Math.round(e.x)+ox, ty=Math.round(e.y)+oy;
+    if(!inb(tx,ty)) continue;
+    if(walkTile(tileAt(tx,ty)) && !circleBlocked(tx+0.5,ty+0.5,0.3)){
+      e.x=tx+0.5; e.y=ty+0.5; return true;
+    }
+  }
+  return false;
+}
 function circleBlocked(x,y,r){
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,-r],[0,r],[-r,0],[r,0]]){
     if(solidAt(Math.floor(x+ox),Math.floor(y+oy))) return true;
@@ -3565,6 +3578,10 @@ document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv')
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
+  // safety net: never leave the player wedged between water and land
+  if(!G.interior && unstickEntity(P)){
+    hintOnce('unstuck','Solid ground found its way back under your boots.');
+  }
   if(G.interior && P.riding){ P.riding=0; toast('Chestnut waits outside.',2200); }
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
@@ -3795,7 +3812,23 @@ function updateMobs(dt){
       m.face=dx<0?-1:1;
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
-      if(l>stop) moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
+      if(l>stop){
+        const ox2=m.x, oy2=m.y;
+        if((m.detourLock||0)>0){
+          // committed detour: slide purely along the wall until the lock expires
+          m.detourLock-=dt;
+          moveEntity(m, -dy/l*d.speed*dt*m.detour, dx/l*d.speed*dt*m.detour);
+        } else {
+          moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
+        }
+        if(Math.hypot(m.x-ox2,m.y-oy2) < d.speed*dt*0.2){
+          // no progress: flip the shoulder and commit to the slide
+          m.detour = -(m.detour||(((m.x*7+m.y*13)|0)%2? 1:-1));
+          m.detourLock=0.7;
+          m.wedgeT=(m.wedgeT||0)+dt;
+          if(m.wedgeT>3){ m.wedgeT=0; m.detourLock=0; unstickEntity(m); }
+        } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
+      }
       // telegraphed strike: wind up, then the blow lands - roll through it!
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0)){
         m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
@@ -5358,11 +5391,14 @@ function spawnMobsMain(){
     ['skeleton', {x:172,y:325,r:7}, 5, 0.45],
     ['brigand',  {x:162,y:148,r:6}, 5, 0.25]   // they guard what they stole
   ];
-  // practice dummies: Rook's yard by his range, and the Spire range
-  spawnMob('dummy', Math.round(ZONES.village.x+11), Math.round(ZONES.village.y+9));
-  spawnMob('dummy', Math.round(ZONES.village.x+13), Math.round(ZONES.village.y+8));
-  spawnMob('dummy', Math.round(ZONES.spire.x+4), Math.round(ZONES.spire.y+4));
-  spawnMob('dummy', Math.round(ZONES.spire.x+6), Math.round(ZONES.spire.y+3));
+  // practice dummies: Rook's yard by his range (dry side - the shore bites), and the Spire range.
+  // findOpenNear dodges buildings, trees, and water so a dummy can never spawn wedged.
+  carveDisc(Math.round(ZONES.village.x+8), Math.round(ZONES.village.y+5), 2, T.SOIL, false);
+  for(const [yx,yy] of [[ZONES.village.x+7,ZONES.village.y+5],[ZONES.village.x+9,ZONES.village.y+4],
+                        [ZONES.spire.x+4,ZONES.spire.y+4],[ZONES.spire.x+6,ZONES.spire.y+3]]){
+    const yd=findOpenNear(Math.round(yx),Math.round(yy),5);
+    if(yd) spawnMob('dummy',yd[0],yd[1]);
+  }
   const pr=mulberry32(SEED+41);
   for(const [kind,z,count,eliteP] of packs){
     for(let i=0;i<count;i++){
