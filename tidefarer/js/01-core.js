@@ -102,7 +102,12 @@ const Snd = {
 
 /* ---------------- canvas setup ---------------- */
 const cv = document.getElementById('game');
-const cx = cv.getContext('2d');
+/* alpha:false = opaque canvas. The scene fills every pixel (sky fill each
+   frame), so we never need transparency, and an opaque canvas is far cheaper
+   for the browser to composite - critical on weak GPUs (e.g. Snapdragon/ARM
+   with little graphics memory), where per-pixel blending of a transparent
+   full-viewport canvas dominates the frame. */
+const cx = cv.getContext('2d', {alpha:false});
 let VW=0, VH=0, DPR=1;
 /* RQ = render-quality scale, LOWFX = drop the most expensive post-FX,
    SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf
