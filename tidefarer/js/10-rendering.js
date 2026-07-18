@@ -59,7 +59,7 @@ function render(){
     }
   }
   if(!LOWFX) drawFoam(minX,maxX,minY,maxY);
-  drawDecals(minX,maxX,minY,maxY);
+  if(!LOWFX) drawDecals(minX,maxX,minY,maxY);
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
@@ -96,7 +96,7 @@ function render(){
   }
 
   // ---- particles & floats ----
-  if(DBG.particles) for(const pt of G.parts){
+  if(DBG.particles && !LOWFX) for(const pt of G.parts){
     if(pt.pickup) continue;
     const s=worldToScreen(pt.x,pt.y);
     cx.globalAlpha=clamp(pt.life*2.2,0,1);
@@ -238,9 +238,12 @@ function render(){
   // vignette
   const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  if(DBG.vignette){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
+  if(DBG.vignette && !LOWFX){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
 
-  drawMinimap();
+  // The minimap is a second on-screen canvas; redrawing it every frame forces
+  // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.
+  if(!LOWFX) drawMinimap();
+  else if(((G._mmT=(G._mmT|0)+1) % 10) === 0) drawMinimap();
 }
 
 function drawNode(n,s){

@@ -37,7 +37,7 @@ let acc=0, cnt=0, prev=0, cooldownUntil=0;
 
 function apply(){
   RQ=TIERS[tier].rq;
-  LOWFX=TIERS[tier].low;
+  LOWFX=TIERS[tier].low || PERF;   // Performance Mode always strips to low-gfx
   if(typeof resize==='function') resize();
 }
 apply();
