@@ -28,7 +28,6 @@
   .bar .fill{height:100%;transition:width .18s;border-radius:6px;}
   #hpFill{background:linear-gradient(180deg,#ff7a6b,#c8372a);}
   #mpFill{background:linear-gradient(180deg,#8cc4f2,#2f6fb0);}
-  #wkFill{background:linear-gradient(180deg,#ffd76a,#e07020);}
   .bar .lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     font-size:11px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000;letter-spacing:.5px;}
   #goldRow{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:bold;
@@ -280,7 +279,6 @@
   <div id="topLeft">
     <div class="bar"><div class="fill" id="hpFill"></div><div class="lbl" id="hpLbl"></div></div>
     <div class="bar" style="width:150px;height:14px;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
-    <div class="bar" id="wkBar" style="width:120px;height:11px;cursor:pointer;" title="What is the Wick? Tap to learn."><div class="fill" id="wkFill"></div><div class="lbl" id="wkLbl" style="font-size:8.5px;"></div></div>
     <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span></div>
   </div>
   <div id="tracker">
@@ -306,7 +304,6 @@
   <div id="actBtns">
     <div class="abtn" id="interactBtn">Talk</div>
     <div class="abtn small" id="dodgeBtn">⤸</div>
-    <div class="abtn small" id="burstBtn">✷</div>
     <div class="abtn" id="attackBtn">⚔</div>
   </div>
 </div>
@@ -365,31 +362,7 @@
       <button class="btn" id="continueBtn" style="display:none;">Continue</button>
       <button class="btn" id="startBtn">Set Foot Ashore</button>
     </div>
-    <div id="wickTut" style="position:fixed;inset:0;background:rgba(8,5,3,.7);z-index:45;display:none;align-items:center;justify-content:center;">
-  <div id="pauseCard2" style="width:min(400px,92vw);padding:18px 20px;border-radius:14px;
-    background:radial-gradient(circle at 22% 10%, rgba(255,255,255,.06), transparent 45%),
-      linear-gradient(165deg,#3a372f 0%,#2b2922 55%,#1f1d18 100%);
-    border:1px solid #14120e;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.5), 0 12px 40px rgba(0,0,0,.7);">
-    <h2 style="font-size:19px;color:var(--ember);text-align:center;letter-spacing:2px;margin-bottom:4px;">YOUR WICK</h2>
-    <div style="text-align:center;margin-bottom:10px;">
-      <div style="display:inline-block;width:130px;height:11px;border-radius:6px;background:#1a140c;border:1px solid #45423a;overflow:hidden;">
-        <div style="width:78%;height:100%;background:linear-gradient(180deg,#ffd76a,#e07020);"></div></div>
-    </div>
-    <div style="font-size:12.5px;color:var(--parch);line-height:1.85;">
-      You carry a <b style="color:#ffd76a">flame</b>. It is your warmth and your light.<br>
-      ☀ <b>Daylight, hearths, hot springs &amp; campfires</b> feed it.<br>
-      ☾ <b>Night drains it</b> — faster in the rain. Low wick, small light.<br>
-      ♥ A <b>bright wick</b> (70+) slowly mends your wounds.<br>
-      🔥 <b>Campfire</b> (slot 5 · 2 wood): beasts fear its light.<br>
-      ✷ <b>Ember Burst</b> (Q / ✷ · 35 flame): rout the walking bones.
-    </div>
-    <div style="text-align:center;margin-top:14px;">
-      <button class="btn gold" id="wickTutBtn">Carry the flame</button>
-    </div>
-  </div>
-</div>
-<div id="pausePanel">
+    <div id="pausePanel">
   <div id="pauseCard">
     <h2>— PAUSED —</h2>
     <div class="pHead">Sound</div>
@@ -411,10 +384,7 @@
     <div id="achGrid"></div>
     <div class="pHead">Controls</div>
     <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
-      Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · Q ember burst (✷) · 5/🔥 campfire (2 wood) · E interact · 1-5 hotbar · Esc pause · gamepad supported</div>
-    <div class="pHead">The Wick</div>
-    <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
-      Your flame: fed by daylight, hearths, springs &amp; campfires; drained by night and rain. Bright (70+) it mends you; low, your light shrinks. Ember Burst spends 35 to rout the bone-kin.</div>
+      Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · E interact &amp; enter buildings · 1-4 hotbar · Esc pause · gamepad supported</div>
     <div id="pauseBtns">
       <button class="btn gold" id="resumeBtn">Resume</button>
       <button class="btn ghostly" id="quitTitleBtn">Quit to Title</button>
@@ -452,6 +422,18 @@
 
 <script>
 "use strict";
+/* Storage can throw SecurityError in sandboxed frames / private browsing.
+   Probe once; fall back to in-memory so the game always boots. */
+const SafeStore=(()=>{
+  let ok=false; const mem={};
+  try{ const k='__ew_probe'; localStorage.setItem(k,'1'); localStorage.removeItem(k); ok=true; }catch(e){ ok=false; }
+  return {
+    get:(k)=>{ try{ return ok? localStorage.getItem(k) : (k in mem? mem[k] : null); }catch(e){ return (k in mem? mem[k]:null); } },
+    set:(k,v)=>{ try{ if(ok){ localStorage.setItem(k,v); return; } }catch(e){} mem[k]=String(v); },
+    del:(k)=>{ try{ if(ok){ localStorage.removeItem(k); return; } }catch(e){} delete mem[k]; },
+    persistent: ok
+  };
+})();
 /* =====================================================================
    EMBERWICK ISLE — a single-file isometric sandbox adventure
    All art is drawn procedurally. All audio is synthesized. No assets.
@@ -561,7 +543,7 @@ const G = {
   state:'title', time:0, dayT:0.32, dayLen:240,
   map:new Uint8Array(MAPW*MAPH), solid:new Uint8Array(MAPW*MAPH),
   variant:new Uint8Array(MAPW*MAPH),
-  nodes:[], npcs:[], mobs:[], projs:[], parts:[], fires:[], floats:[], decor:[], plots:[],
+  nodes:[], npcs:[], mobs:[], projs:[], parts:[], floats:[], decor:[], plots:[],
   cam:{x:0,y:0}, shake:0, killFeedTimer:0,
   hitStop:0, slowmo:0, flash:0, lightning:0,
   clouds:[], foam:[], forgePos:null,
@@ -1272,1021 +1254,669 @@ function dirOct(d){
   return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
 }
 function drawHumanoid(g,sx,sy,o){
-  // o: {skin,hair,shirt,pants,dir,step,size,hat,weapon,swing,hurt,cloak,
-  //     robe,trim,apron,pauldrons,beard,hairstyle,quiver,shield,rune,necklace}
-  const s=o.size||1;
+  /* =====================================================================
+     MASCOT FIGURE — Mario-64 / Wind-Waker inspired redesign.
+     Head is half the character. Big eyes, big boots, bouncy gait.
+     Same option contract as the old renderer: every caller just works.
+     ===================================================================== */
+  const s=(o.size||1);
+  const step=o.step||0, walking=Math.abs(step)>0.0001 && o.step!==undefined && o.step!==0;
   const ph=o.ph||0;
-  const walking = !!o.step;
-  const step=Math.sin(o.step||0)*2.6*s;
-  const armSw=Math.sin((o.step||0))*0.42;
-  const bob = walking? Math.abs(Math.sin(o.step||0))*1.7*s
-                     : (Math.sin(G.time*2.1+ph)*0.5+0.5)*1.0*s; // idle breathing
-  const oct = dirOct(o.dir);
-  const profile = (oct===0 || oct===4 || oct===-4);       // pure E/W: side view
-  const flip = profile ? (oct===0?1:-1)
-             : ((o.dir? (o.dir.x - o.dir.y) : 1) < 0 ? -1 : 1);
-  const away = (oct===-1 || oct===-2 || oct===-3);         // NE/N/NW: back to camera
-  const stowed = away && o.weapon && !(o.swing>0);         // weapon rides on the back when walking away
-  const sxd = o.dir? clamp(o.dir.x - o.dir.y, -1, 1) : 1;  // screen-space gaze components
-  const syd = o.dir? clamp(o.dir.x + o.dir.y, -1, 1) : 1;
-  const skin=o.skin||'#d8a97a', shirt=o.shirt||'#55483a', pants=o.pants||'#3c3833';
-  const OUT='rgba(18,12,8,0.55)';
-  const sleeve = o.robe? o.robe : shade(shirt,-8);
-  g.save(); g.translate(sx,sy);
-  if(walking) g.rotate(flip*0.045); // lean into the stride
-  if(walking){ const fs=Math.abs(Math.cos(o.step||0))*0.03;
-    g.scale(1+fs*0.5, 1-fs); } // footfall squash & stretch
-  if(o.hurt) g.globalAlpha = 0.55+0.45*Math.sin(G.time*40);
-  g.lineJoin='round';
+  const hc=o.hair||'#3a2a1a', skin=o.skin||'#d8a97a';
+  const shirt=o.robe? o.robe : (o.shirt||'#7a5f43');
+  const pants=o.pants||'#4a3d30';
+  const OUT='rgba(24,16,10,0.85)';
+  // facing
+  const dx=o.dir?o.dir.x:0.7, dy=o.dir?o.dir.y:0.7;
+  const scrX=dx-dy, scrY=(dx+dy)*0.5;
+  const away=scrY<-0.15;
+  const profile=!away && Math.abs(scrX)>1.05 && Math.abs(scrY)<0.42;
+  const flip=scrX<0?-1:1;
+  // gait
+  const sw1=Math.sin(step), sw2=Math.sin(step*2);
+  const bounce=walking? Math.abs(sw1)*2.2*s : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s;
+  const lean=walking? sw1*0.03 : 0;
+  const hurtF=o.hurt?1:0;
 
-  // ============ TRUE SIDE PROFILE (E/W) ============
-  // Purpose-built side-view anatomy: scissoring legs, sagittal arm swing,
-  // face on the silhouette edge, cloak trailing behind. Drawn facing +x,
-  // mirrored once via scale for west.
-  function profileFigure(){
-    const A = walking? Math.sin(o.step||0)*0.6 : 0.06;
-    const hipY=-13*s, shY=-27.5*s-bob;
-    const blink = ((G.time + ph*1.7) % 4.3) < 0.13;
-    g.save(); g.scale(flip,1);
+  g.save();
+  g.translate(sx,sy);
+  if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
+  g.rotate(lean);
+  g.scale(s,s);
+  g.scale(1,0.93); // seen from the isometric camera above — slight vertical foreshorten
+  // squash & stretch on the whole body — mascot bounce
+  const sq=walking? 1+0.045*sw2 : 1;
+  g.scale(1/Math.sqrt(sq), sq);
 
-    // cloak streams out behind
-    if(o.cloak){
-      const sway=Math.sin((o.step||G.time*2))*1.5*s + (walking?1.6*s:0);
-      g.fillStyle=o.cloak;
-      g.beginPath();
-      g.moveTo(2*s,-28.5*s-bob);
-      g.quadraticCurveTo(-9*s-sway,-18*s, -11*s-sway*1.3, -2.5*s);
-      g.lineTo(-3*s,-3*s);
-      g.quadraticCurveTo(-4*s,-17*s, -1*s,-29*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle='rgba(0,0,0,0.16)';
-      g.beginPath(); g.moveTo(-2*s,-26*s-bob);
-      g.quadraticCurveTo(-7*s-sway,-14*s, -8*s-sway,-3*s);
-      g.lineTo(-4*s,-3.4*s); g.closePath(); g.fill();
-    }
-    // quiver angled on the back
-    if(o.quiver){
-      g.save(); g.translate(-3.4*s, -25*s-bob); g.rotate(0.6);
-      g.fillStyle='#5a3d24'; g.beginPath(); g.roundRect(-2.4*s,-2*s,4.8*s,12*s,2*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.strokeStyle='#c9b990'; g.lineWidth=1.3*s;
-      g.beginPath(); g.moveTo(-1*s,-2*s); g.lineTo(-2*s,-6.5*s);
-      g.moveTo(1.2*s,-2*s); g.lineTo(1.6*s,-7*s); g.stroke();
-      g.fillStyle='#e05648';
-      g.beginPath(); g.moveTo(-2*s,-6.5*s); g.lineTo(-3.4*s,-9*s); g.lineTo(-0.8*s,-8*s); g.closePath(); g.fill();
-      g.restore();
-    }
-    // shield slung across the back
-    if(o.shield){
-      g.save(); g.translate(-4.6*s, -20*s-bob); g.rotate(0.12);
-      g.fillStyle=o.shield; g.beginPath(); g.roundRect(-2.2*s,-6.5*s,4.4*s,13*s,2*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.strokeStyle='#c9a24e'; g.beginPath(); g.arc(0,0,1.5*s,0,TAU); g.stroke();
-      g.restore();
-    }
+  const B=-bounce/s; // bounce offset in local units
+  const stride=walking? sw1 : 0;
+  g.fillStyle='rgba(10,6,3,0.20)'; // tight contact shadow under the boots
+  g.beginPath(); g.ellipse(0,0.6,7.8,2.5,0,0,TAU); g.fill();
 
-    const leg=(ang,dark)=>{
-      g.save(); g.translate(0.5*s, hipY); g.rotate(ang);
-      g.fillStyle= dark? shade(pants,-16): pants;
-      g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,12.5*s,1.8*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle= dark? '#1f170f' : '#2e2318';
-      g.beginPath(); g.roundRect(-2*s,9.9*s,5.4*s,3*s,1.4*s); g.fill(); g.stroke();
-      g.restore();
-    };
-    const arm=(ang,dark)=>{
-      g.save(); g.translate(0.8*s, shY+1.5*s); g.rotate(ang*0.75);
-      g.fillStyle= dark? shade(sleeve,-18): sleeve;
-      g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,5.6*s,1.7*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.translate(0,5.1*s); g.rotate(-0.5); g.translate(0,-0.6*s);
-      g.fillStyle= dark? shade(sleeve,-18): sleeve;
-      g.beginPath(); g.roundRect(-1.7*s,0,3.4*s,5.2*s,1.6*s); g.fill();
-      g.stroke();
-      g.translate(0,-4.4*s);
-      g.fillStyle= dark? shade(skin,-20): skin;
-      g.beginPath(); g.ellipse(0,10*s,2.1*s,2.5*s,0,0,TAU); g.fill(); g.stroke();
-      g.beginPath(); g.arc(1.7*s,9.5*s,0.95*s,0,TAU); g.fill(); g.stroke(); // thumb leads
-      g.restore();
-    };
-
-    // far limbs first, in shadow
-    arm(A*0.9, true);
-    if(!o.robe) leg(-A, true);
-
-    // torso: robe or tunic with a forward chest line
-    if(o.robe){
-      const hem=Math.sin(o.step||0)*1.6*s;
-      g.fillStyle='#241b12';
-      g.beginPath(); g.ellipse(-1.8*s,-1.4*s,2.6*s,1.6*s,0,0,TAU); g.fill();
-      g.fillStyle=o.robe;
-      g.beginPath();
-      g.moveTo(-5.1*s,-30*s-bob);
-      g.quadraticCurveTo(-8.2*s,-14*s, -7.1*s-hem, -2*s);
-      g.lineTo(6.6*s-hem,-2*s);
-      g.quadraticCurveTo(7.7*s,-14*s, 5.1*s,-30*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-      g.fillStyle='rgba(0,0,0,0.14)';
-      g.beginPath(); g.moveTo(-4.5*s,-30*s-bob);
-      g.quadraticCurveTo(-7.5*s,-14*s,-6.5*s-hem,-2*s);
-      g.lineTo(-1*s,-2*s); g.lineTo(-0.5*s,-30*s-bob); g.closePath(); g.fill();
-      if(o.trim){ g.strokeStyle=o.trim; g.lineWidth=1.1*s;
-        g.beginPath(); g.moveTo(5.2*s-hem,-3.4*s); g.lineTo(-5.6*s-hem,-3.4*s); g.stroke(); }
-      if(o.rune){ const pl=0.6+0.4*Math.sin(G.time*3+ph);
-        g.fillStyle='rgba(127,212,255,'+(0.5*pl)+')';
-        g.beginPath(); g.arc(3*s,-21*s-bob,1.6*s,0,TAU); g.fill(); }
-      g.fillStyle='#241b12';
-      g.beginPath(); g.ellipse(2.6*s,-1.2*s,2.7*s,1.7*s,0,0,TAU); g.fill();
-    } else {
-      g.fillStyle=shirt;
-      g.beginPath();
-      g.moveTo(-4.4*s,-28.5*s-bob);
-      g.quadraticCurveTo(-5.9*s,-21*s, -4.8*s, hipY+1.5*s);
-      g.lineTo(5.3*s, hipY+1.5*s);
-      g.quadraticCurveTo(6.7*s,-22*s, 4.9*s,-28.5*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle='rgba(0,0,0,0.15)';
-      g.beginPath(); g.moveTo(-3.8*s,-28.5*s-bob);
-      g.quadraticCurveTo(-5.2*s,-21*s,-4.2*s,hipY+1.5*s);
-      g.lineTo(-0.4*s,hipY+1.5*s); g.lineTo(-0.4*s,-28.5*s-bob); g.closePath(); g.fill();
-      g.fillStyle='#241b12';
-      g.beginPath(); g.roundRect(-4.8*s,hipY-1.6*s,10.1*s,2.2*s,1*s); g.fill();
-      g.fillStyle='#c9a24e'; g.fillRect(1.4*s,hipY-1.3*s,1.6*s,1.6*s);
-      if(o.apron){
-        g.fillStyle=o.apron;
-        g.beginPath(); g.moveTo(2.2*s,-26*s-bob);
-        g.quadraticCurveTo(5.8*s,-24*s, 5.4*s,-12.5*s);
-        g.lineTo(2.4*s,-12*s); g.closePath(); g.fill();
-        g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      }
-      if((o.armor||0)>=1){
-        g.fillStyle='#8f96a2';
-        g.beginPath();
-        g.moveTo(-3.3*s,-28*s-bob);
-        g.quadraticCurveTo(-5*s,-21*s,-3.9*s,-14.5*s);
-        g.lineTo(5.1*s,-14.5*s);
-        g.quadraticCurveTo(6.8*s,-22*s,4.2*s,-28*s-bob);
-        g.closePath(); g.fill();
-        g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-        g.strokeStyle='rgba(255,255,255,0.22)'; g.lineWidth=1.2*s;
-        g.beginPath(); g.moveTo(3.8*s,-26*s-bob); g.quadraticCurveTo(5*s,-21*s,4*s,-16*s); g.stroke();
-        g.fillStyle='#6d7480';
-        g.beginPath(); g.roundRect(-3.2*s,-14.5*s,3.6*s,3.4*s,1*s);
-        g.roundRect(0.8*s,-14.5*s,3.6*s,3.4*s,1*s); g.fill();
-      }
-    }
-    if(o.pauldrons || (o.armor||0)>=1){
-      g.fillStyle='#9aa3b0';
-      g.beginPath(); g.arc(1*s, shY-0.5*s, 4*s, Math.PI*0.9, Math.PI*2.1); g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    }
-
-    // near limbs
-    if(!o.robe) leg(A, false);
-    if(!o.weapon) arm(-A*0.9, false);
-
-    // head: skull, jaw, ear, and the face on the leading edge
-    g.fillStyle=skin;
-    g.fillRect(-0.4*s,-32*s-bob,2.6*s,3.4*s); // neck
-    g.fillStyle='rgba(20,14,10,0.24)';
-    g.fillRect(-0.4*s,-32*s-bob,2.6*s,1.3*s); // jaw shadow on the neck
-    g.save(); // head assembly scaled to match front-view proportions
-    g.translate(1.2*s,-38.5*s-bob); g.scale(1.13,1.08); g.translate(-1.2*s,38.5*s+bob);
-    g.fillStyle=skin;
-    g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.6*s,0,TAU); g.fill();
+  if(o.quiver && !away){
+    g.save(); g.translate(-7,-24+B); g.rotate(0.5);
+    g.fillStyle='#5a3d24'; g.beginPath(); g.roundRect(-2.6,-2,5.2,12,2); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.beginPath(); // jaw/chin wedge
-    g.moveTo(7.2*s,-36.5*s-bob);
-    g.quadraticCurveTo(7.8*s,-32.6*s-bob, 3.2*s,-31.4*s-bob);
-    g.quadraticCurveTo(0.6*s,-31.8*s-bob, 0.2*s,-33.5*s-bob);
-    g.closePath(); g.fillStyle=skin; g.fill();
-    g.fillStyle=shade(skin,-6); // one small ear, mostly tucked — side view only
-    g.beginPath(); g.ellipse(-0.1*s,-37.7*s-bob,0.95*s,1.35*s,0.1,0,TAU); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
-    // nose on the edge
-    g.fillStyle=skin;
-    g.beginPath();
-    g.moveTo(8.2*s,-39*s-bob);
-    g.quadraticCurveTo(10.4*s,-37.4*s-bob, 8*s,-36*s-bob);
-    g.closePath(); g.fill();
-    g.strokeStyle='rgba(30,20,12,0.4)'; g.lineWidth=0.9*s;
-    g.beginPath(); g.moveTo(8.4*s,-39*s-bob);
-    g.quadraticCurveTo(10*s,-37.4*s-bob, 8.1*s,-36.2*s-bob); g.stroke();
-    // single leading eye + brow
-    if(blink){
-      g.strokeStyle='#241a10'; g.lineWidth=1.1*s;
-      g.beginPath(); g.moveTo(3*s,-38.6*s-bob); g.lineTo(5.6*s,-38.6*s-bob); g.stroke();
-    } else {
-      g.fillStyle='#241a10';
-      g.beginPath(); g.ellipse(4.4*s,-38.6*s-bob,1.15*s,1.5*s,0,0,TAU); g.fill();
-      g.fillStyle='rgba(255,255,255,0.85)';
-      g.beginPath(); g.arc(4.85*s,-39*s-bob,0.4*s,0,TAU); g.fill();
-    }
-    g.strokeStyle='rgba(30,20,12,0.55)'; g.lineWidth=0.9*s;
-    g.beginPath(); g.moveTo(2.9*s,-40.9*s-bob); g.lineTo(5.9*s,-41.1*s-bob); g.stroke();
-    // mouth notch on the edge
-    g.strokeStyle='rgba(90,45,30,0.6)'; g.lineWidth=0.8*s;
-    g.beginPath(); g.moveTo(6.6*s,-34.6*s-bob); g.lineTo(7.9*s,-34.9*s-bob); g.stroke();
-    // warm rim light from the sun side
-    const rim=0.22*(1-nightAmount()*0.75);
-    if(rim>0.03){
-      g.strokeStyle='rgba(255,225,170,'+rim+')'; g.lineWidth=1.6*s;
-      g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.6*s,-Math.PI*0.55,Math.PI*0.1); g.stroke();
-    }
-    // hair mass sweeps the back of the skull
-    const helm2=(o.armor||0)>=2;
-    if(!helm2 && o.hairstyle!=='bald' && o.hat!=='hood'){
-      g.fillStyle=o.hair||'#3a2a1a';
-      g.beginPath();
-      g.moveTo(5.8*s,-44*s-bob);
-      g.quadraticCurveTo(1*s,-47.6*s-bob, -5*s,-44*s-bob);
-      g.quadraticCurveTo(-7.6*s,-40*s-bob, -6.2*s,-33.6*s-bob);
-      g.quadraticCurveTo(-3.4*s,-31.6*s-bob, -3*s,-35*s-bob);
-      g.quadraticCurveTo(-2*s,-42*s-bob, 3*s,-42.6*s-bob);
-      g.quadraticCurveTo(5.4*s,-42.8*s-bob, 5.8*s,-44*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle=shade(o.hair||'#3a2a1a',16);
-      g.beginPath(); g.arc(-1*s,-44*s-bob,3.4*s,Math.PI*1.05,Math.PI*1.8); g.fill();
-      g.strokeStyle=shade(o.hair||'#3a2a1a',-22); g.lineWidth=1*s; g.lineCap='round';
-      g.beginPath();
-      g.moveTo(4*s,-43.6*s-bob); g.quadraticCurveTo(-1*s,-46.6*s-bob, -5.4*s,-42.6*s-bob);
-      g.moveTo(2.6*s,-42*s-bob); g.quadraticCurveTo(-1.6*s,-44*s-bob, -4.8*s,-39*s-bob);
-      g.stroke(); g.lineCap='butt';
-      if(o.hairstyle==='long'){
-        g.fillStyle=o.hair||'#3a2a1a';
-        g.beginPath();
-        g.moveTo(-5.6*s,-36*s-bob);
-        g.quadraticCurveTo(-7.4*s,-28*s, -5.6*s,-22*s-bob*0.5);
-        g.quadraticCurveTo(-4*s,-24*s, -3.6*s,-31*s-bob);
-        g.closePath(); g.fill(); g.strokeStyle=OUT; g.stroke();
-      }
-      if(o.hairstyle==='bun'){
-        g.fillStyle=o.hair||'#3a2a1a';
-        g.beginPath(); g.arc(-7*s,-40*s-bob,2.7*s,0,TAU); g.fill();
-        g.strokeStyle=OUT; g.stroke();
-      }
-    } else if(!helm2 && o.hairstyle==='bald' && o.hat!=='hood'){
-      g.fillStyle='rgba(255,255,255,0.14)';
-      g.beginPath(); g.arc(0,-42.5*s-bob,3.6*s,Math.PI*1.1,Math.PI*1.7); g.fill();
-    }
-    // beard wraps the jaw
-    if(o.beard){
-      g.fillStyle=o.beard;
-      g.beginPath();
-      g.moveTo(7*s,-35.8*s-bob);
-      g.quadraticCurveTo(8*s,-31*s-bob, 3*s,(o.beardLong? -26.5 : -29.5)*s-bob);
-      g.quadraticCurveTo(-0.5*s,-30.5*s-bob, -0.5*s,-34*s-bob);
-      g.quadraticCurveTo(3*s,-32.4*s-bob, 7*s,-35.8*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    }
-    // headwear
-    if(helm2){
-      g.fillStyle='#9aa3b0';
-      g.beginPath(); g.arc(1.2*s,-39.5*s-bob,7.9*s,Math.PI*0.95,Math.PI*2.12); g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle='#8f96a2'; g.fillRect(7.4*s,-41.5*s-bob,1.7*s,5.4*s); // nasal guard
-      g.strokeStyle='rgba(255,255,255,0.25)'; g.lineWidth=1.3;
-      g.beginPath(); g.arc(1.2*s,-39.5*s-bob,6.6*s,Math.PI*1.2,Math.PI*1.7); g.stroke();
-    } else if(o.hat==='hood'){
-      g.fillStyle=o.cloak||'#4a4238';
-      g.beginPath();
-      g.moveTo(7.6*s,-41*s-bob);
-      g.quadraticCurveTo(3*s,-49*s-bob, -5*s,-46*s-bob);
-      g.quadraticCurveTo(-9.4*s,-40*s-bob, -5.6*s,-31.4*s-bob);
-      g.quadraticCurveTo(-1*s,-29.4*s-bob, 2.6*s,-31.4*s-bob);
-      g.quadraticCurveTo(-1.4*s,-34*s-bob, 0*s,-40*s-bob);
-      g.quadraticCurveTo(1.4*s,-43.4*s-bob, 7.6*s,-41*s-bob);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle='rgba(0,0,0,0.30)';
-      g.beginPath(); g.moveTo(0.4*s,-40.6*s-bob);
-      g.quadraticCurveTo(-1*s,-35*s-bob, 2.2*s,-31.8*s-bob);
-      g.quadraticCurveTo(0.6*s,-36*s-bob, 2*s,-40*s-bob); g.closePath(); g.fill();
-    } else if(o.hat==='straw'){
-      g.fillStyle='#c9b06a';
-      g.beginPath(); g.ellipse(0.6*s,-43.4*s-bob,10.4*s,2.5*s,-0.06,0,TAU); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.beginPath(); g.arc(0.8*s,-43.6*s-bob,5.4*s,Math.PI,0); g.closePath(); g.fill(); g.stroke();
-    } else if(o.hat==='wizard'){
-      const hc=o.robe||'#2e3b5e';
-      g.fillStyle=hc;
-      g.beginPath(); g.ellipse(0.6*s,-43.6*s-bob,8.8*s,2.2*s,-0.05,0,TAU); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.beginPath();
-      g.moveTo(-4.4*s,-44*s-bob); g.lineTo(4.8*s,-44*s-bob);
-      g.quadraticCurveTo(1.4*s,-52*s-bob, -3.6*s,-56*s-bob);
-      g.quadraticCurveTo(-2.4*s,-50*s-bob, -4.4*s,-44*s-bob);
-      g.closePath(); g.fill(); g.stroke();
-    } else if(o.hat==='crown'){
-      g.fillStyle='#c9a24e';
-      g.beginPath(); g.roundRect(-5.6*s,-46*s-bob,12.4*s,2.6*s,0.8*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.beginPath();
-      g.moveTo(-4.6*s,-46*s-bob); g.lineTo(-3.4*s,-49*s-bob); g.lineTo(-2.2*s,-46*s-bob);
-      g.moveTo(-0.2*s,-46*s-bob); g.lineTo(1*s,-49.6*s-bob); g.lineTo(2.2*s,-46*s-bob);
-      g.moveTo(4.2*s,-46*s-bob); g.lineTo(5.4*s,-49*s-bob); g.lineTo(6.6*s,-46*s-bob);
-      g.fill(); g.stroke();
-      g.fillStyle='#e05648'; g.beginPath(); g.arc(1*s,-44.8*s-bob,0.9*s,0,TAU); g.fill();
-    } else if(o.hat==='circlet'){
-      g.strokeStyle='#c9a24e'; g.lineWidth=1.4*s;
-      g.beginPath(); g.arc(1.2*s,-38.5*s-bob,7.9*s,Math.PI*1.08,Math.PI*1.92); g.stroke();
-    }
-    g.restore(); // head scale
-    g.restore();
-  }
-  if(profile){
-    profileFigure();
-    if(o.weapon) drawWeaponArm(flip*3.2*s);
-    g.restore();
-    return;
-  }
-
-  // quiver on the back
-  function quiverAt(){
-    // seen from behind the strap crosses the other way, so mirror it
-    g.save(); g.translate((away?4.5:-6)*s,-27*s-bob); g.rotate(away?-0.5:0.5);
-    g.fillStyle='#5a3d24'; g.beginPath(); g.roundRect(-2.6*s,-2*s,5.2*s,13*s,2*s); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.strokeStyle='#c9b990'; g.lineWidth=1.4*s;
-    g.beginPath(); g.moveTo(-1.4*s,-2*s); g.lineTo(-2.6*s,-7*s);
-    g.moveTo(0.6*s,-2*s); g.lineTo(0.4*s,-7.5*s);
-    g.moveTo(2*s,-2*s); g.lineTo(3.2*s,-6.5*s); g.stroke();
+    g.strokeStyle='#c9b990'; g.lineWidth=1.3;
+    g.beginPath(); g.moveTo(-1,-2); g.lineTo(-2.2,-6.5); g.moveTo(1.2,-2); g.lineTo(1.4,-7); g.stroke();
     g.fillStyle='#e05648';
-    g.beginPath(); g.moveTo(-2.6*s,-7*s); g.lineTo(-4*s,-9.5*s); g.lineTo(-1.4*s,-8.6*s); g.closePath(); g.fill();
-    g.fillStyle='#eceee6';
-    g.beginPath(); g.moveTo(0.4*s,-7.5*s); g.lineTo(-0.6*s,-10.4*s); g.lineTo(1.8*s,-9.4*s); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(-2.2,-6.5); g.lineTo(-3.6,-9); g.lineTo(-1,-8); g.closePath(); g.fill();
     g.restore();
-  }
-  // cloak behind body (front & profile views)
-  if(o.cloak && !away){
-    const sway=Math.sin((o.step||G.time*2))*1.6*s;
-    g.fillStyle=o.cloak;
-    g.beginPath();
-    g.moveTo(-7*s,-28*s-bob);
-    g.quadraticCurveTo(-11*s+sway,-14*s, -9*s+sway*1.4, -3*s);
-    g.lineTo(7*s+sway*1.2, -3*s);
-    g.quadraticCurveTo(10*s+sway,-14*s, 7*s,-28*s-bob);
-    g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.fillStyle=shade(o.cloak,-24);
-    g.beginPath(); g.moveTo(-2*s,-26*s-bob); g.lineTo(-4*s+sway,-4*s); g.lineTo(1*s+sway,-4*s); g.closePath(); g.fill();
-    g.strokeStyle=shade(o.cloak,-34); g.lineWidth=1*s;
-    g.beginPath();
-    g.moveTo(-5.5*s,-24*s-bob); g.quadraticCurveTo(-7.5*s+sway*0.7,-14*s, -6.5*s+sway,-5*s);
-    g.moveTo( 4.5*s,-24*s-bob); g.quadraticCurveTo( 6.5*s+sway*0.8,-14*s,  5.5*s+sway,-5*s);
-    g.stroke();
-    g.strokeStyle=shade(o.cloak,16); g.lineWidth=0.9*s;
-    g.beginPath(); g.moveTo(6.4*s,-26*s-bob); g.quadraticCurveTo(8.6*s+sway*0.6,-15*s, 7.4*s+sway,-6*s); g.stroke();
   }
 
-  if(o.robe){
-    // full-length robe: swaying hem, feet peeking beneath
-    const hem=Math.sin(o.step||0)*1.4*s;
-    g.fillStyle='#241b12';
-    g.beginPath(); g.ellipse(-3.4*s,-1.4*s,2.6*s,1.6*s,0,0,TAU);
-    g.ellipse(3.4*s,-1.4*s,2.6*s,1.6*s,0,0,TAU); g.fill();
-    g.fillStyle=o.robe;
-    g.beginPath();
-    g.moveTo(-7.5*s,-30*s-bob);
-    g.quadraticCurveTo(-10.5*s,-14*s, -9.5*s+hem, -2*s);
-    g.lineTo(9.5*s-hem,-2*s);
-    g.quadraticCurveTo(10.5*s,-14*s, 7.5*s,-30*s-bob);
-    g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-    g.save(); g.beginPath();
-    g.moveTo(-7.5*s,-30*s-bob);
-    g.quadraticCurveTo(-10.5*s,-14*s, -9.5*s+hem, -2*s);
-    g.lineTo(9.5*s-hem,-2*s);
-    g.quadraticCurveTo(10.5*s,-14*s, 7.5*s,-30*s-bob);
-    g.closePath(); g.clip();
-    g.fillStyle=shade(o.robe,12); g.fillRect(-11*s,-32*s-bob,8*s,34*s);
-    g.fillStyle=shade(o.robe,-22); g.fillRect(4*s,-32*s-bob,7*s,34*s);
-    g.strokeStyle='rgba(0,0,0,0.20)'; g.lineWidth=1.3;
-    g.beginPath(); g.moveTo(-3*s,-16*s); g.quadraticCurveTo(-3.6*s+hem,-8*s,-3.2*s+hem,-2*s);
-    g.moveTo(3*s,-16*s); g.quadraticCurveTo(3.6*s-hem,-8*s,3.2*s-hem,-2*s); g.stroke();
-    if(o.trim){
-      g.strokeStyle=o.trim; g.lineWidth=1.6*s;
-      g.beginPath(); g.moveTo(-9.5*s+hem,-3.4*s); g.lineTo(9.5*s-hem,-3.4*s); g.stroke();
-      g.lineWidth=1.1*s;
-      g.beginPath(); g.moveTo(0,-30*s-bob); g.lineTo(0,-18*s-bob); g.stroke();
+  /* ---------------- stubby legs & big boots ---------------- */
+  const bootC='#5a3d28', bootD='#3e2a1c';
+  if(!o.robe){
+    for(const L of [[-4.1,1],[4.1,-1]]){
+      const lx=L[0], sg=L[1];
+      const la=stride*0.55*sg;
+      const lift=Math.max(0, sg*stride)*2.2;
+      g.save();
+      g.translate(lx,-8.5+B*0.4); g.rotate(flip*la*(away?-1:1));
+      g.fillStyle=pants;
+      g.beginPath(); g.roundRect(-2.4,0,4.8,6.5,2.1); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      // big boot
+      const fs=walking? Math.max(0,-sg*stride)*0.12 : 0;
+      g.translate(0,6.2-lift*0.3);
+      g.scale(1+fs, 1-fs*0.6);
+      const btg=g.createLinearGradient(0,-1.2,0,3.4);
+      btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
+      g.fillStyle=btg;
+      g.lineWidth=1.7;
+      g.beginPath(); g.roundRect(-3.6,-1.2,7.2,4.6,2.1); g.fill(); g.stroke();
+      g.fillStyle='rgba(255,245,225,0.25)'; // gloss
+      g.beginPath(); g.ellipse(-1.2,0,1.5,0.75,-0.3,0,TAU); g.fill();
+      g.lineWidth=1.3;
+      if(!away){
+        g.fillStyle=bootD; // toe cap
+        g.beginPath(); g.roundRect(flip>0?1.2:-3.4, -0.6, 2.2, 3.4, 1.2); g.fill(); g.stroke();
+      }
+      g.restore();
     }
-    g.restore();
+  }
+
+  /* ---------------- tiny round body ---------------- */
+  if(o.robe){
+    const hem=Math.sin(step||G.time*1.6)*1.2;
+    const rg2=g.createLinearGradient(0,-27,0,0);
+    rg2.addColorStop(0,shade(o.robe,10)); rg2.addColorStop(0.6,o.robe); rg2.addColorStop(1,shade(o.robe,-12));
+    g.fillStyle=rg2;
+    g.beginPath();
+    g.moveTo(-7.5,-24+B);
+    g.quadraticCurveTo(-11,-10, -9.5+hem,-0.5);
+    g.lineTo(9.5+hem,-0.5);
+    g.quadraticCurveTo(11,-10, 7.5,-24+B);
+    g.quadraticCurveTo(0,-27+B, -7.5,-24+B);
+    g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.9; g.stroke();
+    if(o.trim){ g.strokeStyle=o.trim; g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(-9+hem,-2.4); g.lineTo(9+hem,-2.4); g.stroke(); }
     if(o.rune && !away){
-      const pl=0.6+0.4*Math.sin(G.time*3);
-      g.strokeStyle='rgba(127,212,255,'+(0.85*pl)+')'; g.lineWidth=1.3*s;
-      g.beginPath(); g.arc(0,-23*s-bob,3.2*s,0,TAU);
-      g.moveTo(0,-26.8*s-bob); g.lineTo(0,-19.2*s-bob);
-      g.moveTo(-3*s,-23*s-bob); g.lineTo(3*s,-23*s-bob); g.stroke();
-      g.fillStyle='rgba(127,212,255,'+(0.14*pl)+')';
-      g.beginPath(); g.arc(0,-23*s-bob,5.4*s,0,TAU); g.fill();
+      const pl=0.6+0.4*Math.sin(G.time*3+ph);
+      g.fillStyle='rgba(127,212,255,'+(0.5*pl)+')';
+      g.beginPath(); g.arc(0,-16+B,2.4,0,TAU); g.fill();
     }
   } else {
-    // legs with boots
-    const legY=-15*s;
-    const legs=[[-6*s, Math.max(0,step), 1],[1.2*s, Math.max(0,-step), -1]];
-    for(const L of legs){
-      const lx=L[0] + flip*L[2]*step*0.55, lift=L[1];
-      g.fillStyle=pants;
-      g.beginPath(); g.roundRect(lx, legY+lift*0.9, 4.8*s, 12*s-lift, 2*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.fillStyle=shade(pants,-14); // worn knee patch
-      g.beginPath(); g.roundRect(lx+0.7*s, legY+4*s+lift*0.6, 3.4*s, 3*s, 1.2*s); g.fill();
-      const toe = (lx<0? -0.20:0.20) + flip*0.13
-                + (walking? (lx<0?1:-1)*Math.sin(o.step||0)*0.16 : 0); // heel-strike, toe-off
-      g.save(); g.translate(lx+2.5*s, -2.4*s+lift*0.5); g.rotate(toe);
-      g.fillStyle='#241b12';
-      g.beginPath(); g.roundRect(-2.9*s,-2.1*s,5.8*s,4.2*s,1.6*s); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      if(!away){
-        // toe cap points where you're headed
-        g.beginPath(); g.roundRect(flip>0? 2.2*s : -3.9*s, -1.3*s, 1.7*s, 2.8*s, 1.1*s); g.fill(); g.stroke();
-      } else {
-        // heel counter faces the camera
-        g.fillStyle='#1c150e';
-        g.beginPath(); g.roundRect(flip>0? -3.6*s : 2.1*s, -1.1*s, 1.5*s, 2.6*s, 0.9*s); g.fill(); g.stroke();
-        g.fillStyle='#241b12';
-      }
-      g.strokeStyle='#3a2c1a'; g.lineWidth=1*s; // strap + buckle
-      g.beginPath(); g.moveTo(-2.9*s,-0.8*s); g.lineTo(2.9*s,-0.8*s); g.stroke();
-      g.fillStyle='#c9a24e'; g.fillRect(-0.7*s,-1.6*s,1.4*s,1.4*s);
-      g.restore();
-    }
-    // tunic torso
-    g.fillStyle=shirt;
-    g.beginPath(); g.roundRect(-8*s, -31*s - bob, 16*s, 19*s, 5*s); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-    g.save(); g.beginPath(); g.roundRect(-8*s, -31*s - bob, 16*s, 19*s, 5*s); g.clip();
-    g.fillStyle=shade(shirt,14); g.fillRect(-8*s,-31*s-bob,7*s,19*s);
-    g.fillStyle=shade(shirt,-22); g.fillRect(3*s,-31*s-bob,5*s,19*s);
-    g.fillStyle='rgba(0,0,0,0.14)'; g.fillRect(-8*s,-17*s-bob,16*s,5*s);
-    if(o.trim){
-      g.strokeStyle=o.trim; g.lineWidth=1.4*s;
-      g.beginPath(); g.moveTo(-8*s,-29.4*s-bob); g.lineTo(8*s,-29.4*s-bob);
-      g.moveTo(-8*s,-13.6*s-bob); g.lineTo(8*s,-13.6*s-bob); g.stroke();
-    }
-    g.restore();
-    // tailoring: V-collar with trim, chest lacing, cloth wrinkles (front only)
-    if(!away){
-    g.strokeStyle=shade(shirt,-30); g.lineWidth=1.3*s;
-    g.beginPath(); g.moveTo(-3.4*s,-31*s-bob); g.lineTo(0,-26.5*s-bob); g.lineTo(3.4*s,-31*s-bob); g.stroke();
-    g.fillStyle=skin;
-    g.beginPath(); g.moveTo(-2.4*s,-30.6*s-bob); g.lineTo(0,-27.6*s-bob); g.lineTo(2.4*s,-30.6*s-bob); g.closePath(); g.fill();
-    g.strokeStyle='rgba(230,220,190,0.55)'; g.lineWidth=0.9*s;
+    const bg2=g.createLinearGradient(0,-26,0,-6);
+    bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11));
+    g.fillStyle=bg2;
     g.beginPath();
-    g.moveTo(-1.6*s,-26*s-bob); g.lineTo(1.6*s,-24.8*s-bob);
-    g.moveTo(1.6*s,-26*s-bob); g.lineTo(-1.6*s,-24.8*s-bob);
-    g.moveTo(-1.6*s,-24*s-bob); g.lineTo(1.6*s,-22.8*s-bob); g.stroke();
-    g.strokeStyle='rgba(0,0,0,0.14)'; g.lineWidth=1.3;
+    g.moveTo(-8.2,-23.5+B);
+    g.quadraticCurveTo(-10.4,-15.5, -8.6,-7.5);
+    g.quadraticCurveTo(0,-5.2, 8.6,-7.5);
+    g.quadraticCurveTo(10.4,-15.5, 8.2,-23.5+B);
+    g.quadraticCurveTo(0,-26.5+B, -8.2,-23.5+B);
+    g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.9; g.stroke();
+    g.fillStyle=shade(shirt,-6); // tunic hem flares over the hips
     g.beginPath();
-    g.moveTo(-6*s,-24*s-bob); g.quadraticCurveTo(-4*s,-22.5*s-bob,-2.5*s,-23.5*s-bob);
-    g.moveTo(6*s,-22*s-bob); g.quadraticCurveTo(4.4*s,-20.8*s-bob,3*s,-21.6*s-bob); g.stroke();
-    } else {
-      // seen from behind: a center back-seam and shoulder yoke
-      g.strokeStyle=shade(shirt,-26); g.lineWidth=1.1*s;
-      g.beginPath(); g.moveTo(0,-30*s-bob); g.lineTo(0,-17*s-bob); g.stroke();
-      g.strokeStyle=shade(shirt,-18);
-      g.beginPath(); g.moveTo(-7*s,-28*s-bob); g.quadraticCurveTo(0,-26.6*s-bob,7*s,-28*s-bob); g.stroke();
+    g.moveTo(-8.6,-8.2); g.quadraticCurveTo(0,-5.8, 8.6,-8.2);
+    g.lineTo(9.7,-4.4); g.quadraticCurveTo(0,-1.8, -9.7,-4.4);
+    g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.5; g.stroke();
+    if(!away){ // crew collar
+      g.strokeStyle=shade(shirt,-24); g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(-4.6,-23.4+B); g.quadraticCurveTo(0,-21.6+B, 4.6,-23.4+B); g.stroke();
     }
-    // tunic skirt flaps over the hips
-    g.fillStyle=shade(shirt,-10);
-    g.beginPath(); g.moveTo(-8*s,-13.4*s-bob); g.lineTo(-2.5*s,-13.4*s-bob); g.lineTo(-3.4*s,-9.4*s-bob); g.lineTo(-8.4*s,-10*s-bob); g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(2.5*s,-13.4*s-bob); g.lineTo(8*s,-13.4*s-bob); g.lineTo(8.4*s,-10*s-bob); g.lineTo(3.4*s,-9.4*s-bob); g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3;
-    g.beginPath(); g.moveTo(-8*s,-13.4*s-bob); g.lineTo(-3.4*s,-9.4*s-bob);
-    g.moveTo(8*s,-13.4*s-bob); g.lineTo(3.4*s,-9.4*s-bob); g.stroke();
-    // apron over tunic
-    if(o.apron){
-      if(away){
-        g.strokeStyle=o.apron; g.lineWidth=1.4*s;
-        g.beginPath(); g.moveTo(-4*s,-16*s-bob); g.lineTo(4*s,-16*s-bob); g.stroke();
-        g.fillStyle=o.apron;
-        g.beginPath(); g.arc(0,-16*s-bob,1.6*s,0,TAU); g.fill();
-      } else {
-      g.fillStyle=o.apron;
-      g.beginPath(); g.moveTo(-5*s,-28*s-bob); g.lineTo(5*s,-28*s-bob);
-      g.lineTo(6*s,-9*s); g.lineTo(-6*s,-9*s); g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      g.strokeStyle='rgba(0,0,0,0.25)';
-      g.beginPath(); g.moveTo(-4*s,-22*s-bob); g.lineTo(4*s,-22*s-bob); g.stroke();
-      g.fillStyle='rgba(255,255,255,0.06)'; g.fillRect(-5*s,-27*s-bob,4*s,16*s);
-      }
-    }
-    // underarm occlusion
-    g.fillStyle='rgba(0,0,0,0.13)';
-    g.beginPath();
-    g.ellipse(-6.8*s,-25.8*s-bob,2*s,3.2*s,0.3,0,TAU);
-    g.ellipse( 6.8*s,-25.8*s-bob,2*s,3.2*s,-0.3,0,TAU); g.fill();
-    // belt + buckle
-    g.fillStyle='#2c2118'; g.fillRect(-8*s,-16.5*s-bob,16*s,3.4*s);
-    g.fillStyle='rgba(0,0,0,0.2)'; g.fillRect(-8*s,-13.1*s-bob,16*s,1.1*s); // belt casts shadow
-    if(!away){
-      g.fillStyle='#c9a24e'; g.fillRect(-2*s,-16.5*s-bob,4*s,3.4*s);
-      g.fillStyle='#8a6d30'; g.fillRect(-1*s,-15.6*s-bob,2*s,1.6*s);
-    }
-  }
-
-  // armor over the clothes
-  if((o.armor|0)>=1 && !o.robe){
-    const a2=(o.armor|0)>=2;
-    const pg=g.createLinearGradient(-6*s,-30*s-bob,6*s,-15*s-bob);
-    pg.addColorStop(0, a2?'#d4dae4':'#b6bcc7'); pg.addColorStop(0.55, a2?'#98a0ad':'#828a96'); pg.addColorStop(1, a2?'#69707c':'#585f6a');
-    g.fillStyle=pg;
-    g.beginPath(); g.roundRect(-6.6*s,-30*s-bob,13.2*s,14.5*s,4*s); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-    if(!away){
-    // center ridge + rivets
-    g.strokeStyle='rgba(25,28,34,0.55)'; g.lineWidth=1.1*s;
-    g.beginPath(); g.moveTo(0,-29*s-bob); g.lineTo(0,-16.5*s-bob); g.stroke();
-    g.fillStyle='#e6eaf1';
-    for(const rv of [[-4.6,-27.5],[4.6,-27.5],[-4.6,-18.5],[4.6,-18.5]])
-      { g.beginPath(); g.arc(rv[0]*s,rv[1]*s-bob,0.75*s,0,TAU); g.fill(); }
-    g.strokeStyle='rgba(255,255,255,'+(a2?0.36:0.22)+')'; g.lineWidth=1.7*s;
-    g.beginPath(); g.moveTo(-4*s,-28.6*s-bob); g.quadraticCurveTo(-5.4*s,-23*s, -4.2*s,-17.6*s-bob); g.stroke();
-    if(a2){ // hot glint crawling the steel
-      const gp=(G.time*0.55+ph)%5.2;
-      if(gp<0.4){ const ga=Math.sin(gp/0.4*Math.PI);
-        g.strokeStyle='rgba(255,255,255,'+(0.7*ga)+')'; g.lineWidth=2.2*s;
-        g.beginPath(); g.moveTo(-6*s+gp*30*s,-29.5*s-bob); g.lineTo(-8*s+gp*30*s,-16*s-bob); g.stroke(); } }
-    // tassets guarding the hips
-    g.fillStyle=a2?'#a8afbb':'#8a919d';
-    g.beginPath(); g.moveTo(-6.5*s,-15.5*s-bob); g.lineTo(-1*s,-15.5*s-bob); g.lineTo(-2*s,-11*s-bob); g.lineTo(-7*s,-11.8*s-bob); g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(1*s,-15.5*s-bob); g.lineTo(6.5*s,-15.5*s-bob); g.lineTo(7*s,-11.8*s-bob); g.lineTo(2*s,-11*s-bob); g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    if(a2){ // gorget at the throat
-      g.fillStyle='#c2c8d2';
-      g.beginPath(); g.ellipse(0,-30.5*s-bob,4.6*s,2.2*s,0,0,TAU); g.fill(); g.stroke();
-    }
-    } else {
-      // backplate: harness straps crossing the shoulders
-      g.strokeStyle='#4a3a26'; g.lineWidth=1.6*s;
+    if(!away){ // chest lacing
+      g.strokeStyle=shade(shirt,-28); g.lineWidth=1;
       g.beginPath();
-      g.moveTo(-5.5*s,-29.5*s-bob); g.lineTo(5*s,-17.5*s-bob);
-      g.moveTo( 5.5*s,-29.5*s-bob); g.lineTo(-5*s,-17.5*s-bob);
+      g.moveTo(-1.6,-21.2+B); g.lineTo(1.6,-18.8+B);
+      g.moveTo(1.6,-21.2+B); g.lineTo(-1.6,-18.8+B);
       g.stroke();
-      g.fillStyle='#c9a24e';
-      g.beginPath(); g.arc(0,-23.4*s-bob,1.3*s,0,TAU); g.fill();
-      g.strokeStyle='rgba(25,28,34,0.4)'; g.lineWidth=1*s;
-      g.beginPath(); g.moveTo(-6*s,-21*s-bob); g.lineTo(6*s,-21*s-bob); g.stroke();
+    }
+    if(away){ // back seam
+      g.strokeStyle=shade(shirt,-22); g.lineWidth=1.1;
+      g.beginPath(); g.moveTo(0,-24+B); g.lineTo(0,-9); g.stroke();
+    }
+    // belt
+    g.fillStyle='#2c2118';
+    g.beginPath(); g.roundRect(-8.8,-11.5,17.6,3.2,1.5); g.fill();
+    if(!away){ g.fillStyle='#e0b45a'; g.fillRect(-2,-11.2,4,2.6);
+      g.fillStyle='#8a6d30'; g.fillRect(-1,-10.5,2,1.2); }
+    if(o.apron && !away){
+      g.fillStyle=o.apron;
+      g.beginPath(); g.moveTo(-5,-20+B); g.lineTo(5,-20+B);
+      g.lineTo(6,-2); g.lineTo(-6,-2); g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    }
+    if((o.armor|0)>=1){
+      const a2=(o.armor|0)>=2;
+      const pg=g.createLinearGradient(-8,-24,8,-8);
+      pg.addColorStop(0,'#cdd3dd'); pg.addColorStop(1,'#848b97');
+      g.fillStyle=pg;
+      g.beginPath();
+      g.moveTo(-7.6,-23+B);
+      g.quadraticCurveTo(-9.4,-15.5, -7.8,-9.5);
+      g.quadraticCurveTo(0,-7.6, 7.8,-9.5);
+      g.quadraticCurveTo(9.4,-15.5, 7.6,-23+B);
+      g.quadraticCurveTo(0,-25.6+B, -7.6,-23+B);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+      g.fillStyle='rgba(255,255,255,0.22)'; // plate sheen
+      g.beginPath(); g.ellipse(-3.6,-18.5+B,2.6,5,0.35,0,TAU); g.fill();
+      if(!away){
+        g.strokeStyle='rgba(25,28,34,0.5)'; g.lineWidth=1;
+        g.beginPath(); g.moveTo(0,-23+B); g.lineTo(0,-10); g.stroke();
+        g.fillStyle='#39404b';
+        for(const rx of [-4.5,4.5]){ g.beginPath(); g.arc(rx,-19+B,0.8,0,TAU); g.fill(); }
+      } else {
+        g.strokeStyle='#4a3a26'; g.lineWidth=1.6;
+        g.beginPath();
+        g.moveTo(-6,-22.5+B); g.lineTo(5.5,-11.5);
+        g.moveTo(6,-22.5+B); g.lineTo(-5.5,-11.5); g.stroke();
+      }
+      if(a2 || o.pauldrons){
+        g.fillStyle='#b9c0cb';
+        for(const px of [-8.6,8.6]){
+          g.beginPath(); g.ellipse(px,-21.5+B,3.4,2.7,0,0,TAU); g.fill();
+          g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        }
+      }
     }
   }
-  // shoulders: steel pauldrons or cloth pads
-  if(o.pauldrons || (o.armor|0)>=1){
-    for(const px of [-8*s,8*s]){
-      const pg=g.createLinearGradient(px-4*s,-31*s-bob,px+4*s,-25*s-bob);
-      pg.addColorStop(0,'#c2c8d2'); pg.addColorStop(0.5,'#8a919d'); pg.addColorStop(1,'#5c626d');
-      g.fillStyle=pg;
-      g.beginPath(); g.ellipse(px,-28.5*s-bob,4.2*s,3.2*s,0,Math.PI,0); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.1; g.stroke();
-      g.fillStyle='#dfe3ea'; g.beginPath(); g.arc(px,-30*s-bob,0.9*s,0,TAU); g.fill();
-    }
-  } else if(!o.robe){
-    g.fillStyle=shade(shirt,-16);
-    g.beginPath(); g.ellipse(-8*s,-28.5*s-bob,3.4*s,2.6*s,0,0,TAU); g.fill(); g.strokeStyle=OUT; g.stroke();
-    g.beginPath(); g.ellipse(8*s,-28.5*s-bob,3.4*s,2.6*s,0,0,TAU); g.fill(); g.stroke();
+  if(o.necklace && !away){
+    g.strokeStyle='rgba(0,0,0,0.4)'; g.lineWidth=1;
+    g.beginPath(); g.arc(0,-24.5+B,4.2,Math.PI*0.15,Math.PI*0.85); g.stroke();
+    g.fillStyle=o.necklace;
+    g.beginPath(); g.arc(0,-20+B,1.5,0,TAU); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
   }
 
-  // arms
-  const drawArm=(shx,phase)=>{
-    // two segments: upper arm swings, forearm bends at the elbow
-    const fwd=clamp((shx<0?1:-1)*phase/0.42, -1, 1);
-    const bend=0.3 + 0.4*Math.max(0,fwd);
-    g.save(); g.translate(shx,-27.5*s-bob); g.rotate(phase);
-    g.fillStyle=sleeve;
-    g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,5.4*s,1.8*s); g.fill();
+  /* ---------------- sausage arms with mitt hands ---------------- */
+  const armY=-20.5+B*0.8;
+  const drawArm=(side,ang)=>{
+    g.save();
+    g.translate(side*8.2,armY);
+    g.rotate(side*0.28 + ang);
+    g.fillStyle=o.robe? o.robe : shirt;
+    g.beginPath(); g.roundRect(-2.1,0,4.2,7.4,2.1); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.translate(0,4.9*s); g.rotate(Math.sign(shx)*-bend);
-    g.translate(0,-0.4*s);
-    g.fillStyle=sleeve;
-    g.beginPath(); g.roundRect(-1.8*s,0,3.6*s,5.4*s,1.7*s); g.fill();
-    g.stroke();
-    g.translate(0,-4.2*s);
-    if((o.armor|0)>=2){ // steel bracer
-      const bg=g.createLinearGradient(-2*s,4*s,2*s,8*s);
-      bg.addColorStop(0,'#c2c8d2'); bg.addColorStop(1,'#6c727d');
-      g.fillStyle=bg;
-      g.beginPath(); g.roundRect(-2.1*s,4.6*s,4.2*s,3.8*s,1.4*s); g.fill(); g.stroke();
-    } else {
-      g.fillStyle=shade(sleeve,-18); // rolled cuff
-      g.fillRect(-1.9*s,7*s,3.8*s,1.6*s);
-    }
-    g.fillStyle=skin;
-    g.beginPath(); g.ellipse(0,9.3*s,2.25*s,2.6*s,0,0,TAU); g.fill(); g.stroke();
-    g.beginPath(); g.arc(-Math.sign(shx)*1.9*s, 8.8*s, 1.05*s, 0, TAU); g.fill(); g.stroke(); // thumb toward the body
-    g.strokeStyle='rgba(30,20,12,0.3)'; g.lineWidth=0.9*s; // knuckle line
-    g.beginPath(); g.arc(0,8.6*s,1.5*s,Math.PI*1.15,Math.PI*1.85); g.stroke();
+    g.fillStyle=skin; // big mitt
+    g.beginPath(); g.arc(0,8.6,3.0,0,TAU); g.fill(); g.stroke();
+    g.beginPath(); g.arc(-side*2.1,7.8,1.15,0,TAU); g.fill(); g.stroke(); // thumb
     g.restore();
   };
-  drawArm(-8.6*s, walking? armSw:0.12);
-  if(!o.weapon || stowed) drawArm( 8.6*s, walking? -armSw:-0.12);
+  const armSwing=walking? sw1*0.5 : 0.05;
+  const stowed = away && o.weapon;
+  drawArm(-1, flip>0? armSwing : -armSwing);
+  if(!o.weapon || stowed) drawArm(1, flip>0? -armSwing : armSwing);
 
-  // quiver rides the back — behind the body from the front...
-  if(o.quiver && !away){ quiverAt(); }
-  // round shield on the off-hand
-  if(o.shield){
-    g.save(); g.translate(-10.5*s*flip,-19*s-bob); if(flip<0) g.scale(-1,1);
-    g.fillStyle=o.shield;
-    g.beginPath(); g.arc(0,0,6.4*s,0,TAU); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
-    g.strokeStyle=shade(o.shield,-30); g.lineWidth=1.6*s;
-    g.beginPath(); g.arc(0,0,4.4*s,0,TAU); g.stroke();
-    g.fillStyle='#9aa1ab'; g.beginPath(); g.arc(0,0,1.9*s,0,TAU); g.fill();
-    g.fillStyle='#dfe3ea'; g.beginPath(); g.arc(-0.5*s,-0.5*s,0.7*s,0,TAU); g.fill();
+  /* ---------------- back layers when walking away ---------------- */
+  if(o.quiver && away){
+    g.save(); g.translate(5.5,-24+B); g.rotate(-0.5);
+    g.fillStyle='#5a3d24'; g.beginPath(); g.roundRect(-2.6,-2,5.2,12,2); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    g.strokeStyle='#c9b990'; g.lineWidth=1.3;
+    g.beginPath(); g.moveTo(-1,-2); g.lineTo(-2.2,-6.5); g.moveTo(1.2,-2); g.lineTo(1.4,-7); g.stroke();
+    g.fillStyle='#e05648';
+    g.beginPath(); g.moveTo(-2.2,-6.5); g.lineTo(-3.6,-9); g.lineTo(-1,-8); g.closePath(); g.fill();
     g.restore();
   }
-
-  // walking away: the cloak drapes OVER the back, quiver & stowed weapon on top
-  if(o.cloak && away){
-    const sway=Math.sin((o.step||G.time*2))*1.6*s;
-    g.fillStyle=o.cloak;
-    g.beginPath();
-    g.moveTo(-7.6*s,-28.5*s-bob);
-    g.quadraticCurveTo(-10.5*s+sway,-14*s, -8.5*s+sway*1.4,-2.5*s);
-    g.lineTo(8.5*s+sway*1.2,-2.5*s);
-    g.quadraticCurveTo(10.5*s+sway,-14*s, 7.6*s,-28.5*s-bob);
-    g.quadraticCurveTo(0,-31.4*s-bob, -7.6*s,-28.5*s-bob);
-    g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.strokeStyle=shade(o.cloak,-30); g.lineWidth=1.1*s;
-    g.beginPath();
-    g.moveTo(-3.5*s,-25*s-bob); g.quadraticCurveTo(-4.5*s+sway*0.8,-14*s, -3.5*s+sway,-4*s);
-    g.moveTo( 2.5*s,-25*s-bob); g.quadraticCurveTo( 3.5*s+sway*0.8,-13*s,  3*s+sway,-4*s);
-    g.stroke();
-    g.fillStyle=shade(o.cloak,12);
-    g.beginPath(); g.moveTo(-7*s,-28.3*s-bob); g.quadraticCurveTo(0,-31*s-bob,7*s,-28.3*s-bob);
-    g.quadraticCurveTo(0,-27.4*s-bob,-7*s,-28.3*s-bob); g.closePath(); g.fill();
-  }
-  if(o.quiver && away){ quiverAt(); }
   if(stowed){
-    // weapon slung across the back while walking away
-    g.save(); g.translate(-4*s, -28*s - bob); g.rotate(-0.55);
-    if(o.weapon==='sword'){
-      const wt = o.wtier==null? 1 : o.wtier;
-      const bl = (wt===2? 17.5 : wt===1? 15 : 12.5)*s;
-      const bc = wt===2? '#e9eef6' : wt===1? '#d4d9e0' : '#a9a292';
-      const cc = wt===2? '#b9c6da' : wt===1? '#9aa1ab' : '#7e786a';
-      g.fillStyle= wt===0? '#6e5a40' : '#8a6238'; g.fillRect(-1.4*s, 2*s, 2.8*s, 5*s);
-      if(wt===2){ g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,7.6*s,1.6*s,0,TAU); g.fill(); }
-      else if(wt===1){ g.fillStyle='#c9a24e'; g.beginPath(); g.arc(0,7.6*s,1.5*s,0,TAU); g.fill(); }
-      g.fillStyle= wt===2? '#c9a24e' : '#8a6238'; g.fillRect(-3.6*s, 0.4*s, 7.2*s, 2.2*s);
-      g.fillStyle=bc; g.fillRect(-1.4*s, 0.4*s-bl, 2.8*s, bl);
-      g.fillStyle=cc; g.fillRect(0, 0.4*s-bl, 1.4*s, bl);
-      if(wt===0){ g.fillStyle='rgba(96,70,48,0.55)';
-        g.fillRect(-1.4*s, 0.4*s-bl*0.5, 0.9*s, 1.4*s); g.fillRect(0.5*s, 0.4*s-bl*0.8, 0.8*s, 1.2*s); }
-      if(wt===2){ g.strokeStyle='rgba(255,170,90,0.4)'; g.lineWidth=0.8*s;
-        g.beginPath(); g.moveTo(0,0); g.lineTo(0,0.4*s-bl*0.8); g.stroke(); }
-      g.beginPath(); g.moveTo(-1.4*s,0.4*s-bl); g.lineTo(0,0.4*s-bl-3.4*s); g.lineTo(1.4*s,0.4*s-bl); g.closePath();
-      g.fillStyle=bc; g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.strokeRect(-1.4*s,0.4*s-bl,2.8*s,bl);
-    } else if(o.weapon==='axe' || o.weapon==='pick'){
-      g.fillStyle='#8a6238'; g.fillRect(-1.3*s,-13*s,2.6*s,20*s);
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.strokeRect(-1.3*s,-13*s,2.6*s,20*s);
-      if(o.weapon==='axe'){
-        g.fillStyle='#b8bec8'; g.beginPath();
-        g.moveTo(0,-13*s); g.quadraticCurveTo(7*s,-11.5*s,5.6*s,-5.5*s); g.lineTo(0,-7*s); g.closePath(); g.fill();
-      } else {
-        g.strokeStyle='#b8bec8'; g.lineWidth=2.6*s;
-        g.beginPath(); g.arc(0,-9*s,6*s,Math.PI*1.15,Math.PI*1.85); g.stroke();
-      }
-    } else if(o.weapon==='bow'){
-      g.strokeStyle='#6e4a2b'; g.lineWidth=2.4*s;
-      g.beginPath(); g.arc(0,-3*s,10*s,-Math.PI*0.45,Math.PI*0.45); g.stroke();
-      g.strokeStyle='#e8e2d2'; g.lineWidth=1.3;
-      g.beginPath();
-      g.moveTo(10*s*Math.cos(-Math.PI*0.45), -3*s+10*s*Math.sin(-Math.PI*0.45));
-      g.lineTo(10*s*Math.cos( Math.PI*0.45), -3*s+10*s*Math.sin( Math.PI*0.45)); g.stroke();
+    g.save(); g.translate(0,-25+B); g.rotate(-0.7);
+    if(o.weapon==='bow'){
+      g.strokeStyle='#7a5a34'; g.lineWidth=2.2;
+      g.beginPath(); g.arc(0,0,8,Math.PI*0.6,Math.PI*1.4); g.stroke();
+      g.strokeStyle='rgba(235,230,215,0.85)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(-4.7,-6.4); g.lineTo(-4.7,6.4); g.stroke();
     } else if(o.weapon==='staff'){
-      g.fillStyle='#4f3520'; g.fillRect(-1.3*s,-17*s,2.6*s,26*s);
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.strokeRect(-1.3*s,-17*s,2.6*s,26*s);
-      g.fillStyle='rgba(160,220,255,0.25)'; g.beginPath(); g.arc(0,-19*s,5.5*s,0,TAU); g.fill();
-      g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-19*s,3.2*s,0,TAU); g.fill();
-    } else if(o.weapon==='rod'){
-      g.strokeStyle='#8a6238'; g.lineWidth=2*s;
-      g.beginPath(); g.moveTo(-1*s,6*s); g.lineTo(2.5*s,-18*s); g.stroke();
+      g.strokeStyle='#6e5738'; g.lineWidth=2.4;
+      g.beginPath(); g.moveTo(-7,7); g.lineTo(7,-7); g.stroke();
+      g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(7,-7,2.2,0,TAU); g.fill();
+    } else {
+      const wt=o.wtier==null?1:o.wtier;
+      g.fillStyle= wt===2? '#dfe5ee' : wt===1? '#cfd4dc' : '#9a9floor'.slice(0,7)||'#9a9689';
+      g.fillStyle= wt===2? '#dfe5ee' : wt===1? '#cfd4dc' : '#9a9689';
+      g.save(); g.rotate(Math.PI*0.25);
+      g.beginPath(); g.roundRect(-1.4,-12,2.8, wt===2?15:13, 1.2); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      g.fillStyle= wt===2? '#e0b45a' : '#6e5738';
+      g.fillRect(-3.2,1.5,6.4,1.8);
+      g.restore();
     }
     g.restore();
   }
-  // head: cranium dome tapering into the jaw — an egg, not a ball
-  g.fillStyle=skin;
-  g.beginPath();
-  g.arc(0,-39.2*s-bob,8.6*s,Math.PI,0);
-  g.quadraticCurveTo( 8.6*s,-33.5*s-bob,  4.6*s,-30.1*s-bob);
-  g.quadraticCurveTo( 0,-28.1*s-bob, -4.6*s,-30.1*s-bob);
-  g.quadraticCurveTo(-8.6*s,-33.5*s-bob, -8.6*s,-39.2*s-bob);
-  g.closePath(); g.fill();
-  g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-  g.fillStyle='rgba(0,0,0,0.10)';
-  g.beginPath(); g.arc(0,-35.6*s-bob,7.1*s,Math.PI*0.18,Math.PI*0.82); g.fill();
-  if(!away){
-    g.fillStyle='rgba(20,14,10,0.22)'; // chin shadow grounding the head
-    g.beginPath(); g.ellipse(0,-29.4*s-bob,3.6*s,1.5*s,0,0,TAU); g.fill();
-  }
 
-  // long hair falls behind shoulders (before hats)
-  if(o.hairstyle==='long' && o.hat!=='hood'){
-    g.fillStyle=o.hair||'#3a2a1a';
-    g.beginPath();
-    g.moveTo(-8*s,-42*s-bob);
-    g.quadraticCurveTo(-11*s,-30*s, -9*s,-22*s-bob);
-    g.lineTo(-5.5*s,-24*s-bob); g.lineTo(-7.8*s,-38*s-bob); g.closePath(); g.fill();
-    g.beginPath();
-    g.moveTo(8*s,-42*s-bob);
-    g.quadraticCurveTo(11*s,-30*s, 9*s,-22*s-bob);
-    g.lineTo(5.5*s,-24*s-bob); g.lineTo(7.8*s,-38*s-bob); g.closePath(); g.fill();
-  }
-  // hats & hair
-  if(o.hat==='hood'){
-    g.fillStyle=o.hair; g.beginPath(); g.arc(0,-39*s-bob,9.8*s,Math.PI*0.92,Math.PI*2.08); g.fill();
-    g.strokeStyle=OUT; g.stroke();
-    g.beginPath(); g.moveTo(-9.4*s,-39*s-bob); g.lineTo(0,-54*s-bob); g.lineTo(9.4*s,-39*s-bob); g.closePath(); g.fill(); g.stroke();
-    g.fillStyle='rgba(0,0,0,0.35)';
-    g.beginPath(); g.ellipse(0,-40*s-bob,7*s,4.5*s,0,0,TAU); g.fill();
-  }
-  else if(o.hat==='wizard'){
-    g.fillStyle=o.hatColor||'#3a4a6f';
-    g.beginPath(); g.ellipse(0,-43*s-bob,13.5*s,4.2*s,0,0,TAU); g.fill();
-    g.strokeStyle=OUT; g.stroke();
-    g.beginPath(); g.moveTo(-8*s,-44*s-bob);
-    g.quadraticCurveTo(-2*s,-54*s, 2.5*s,-62*s-bob);
-    g.quadraticCurveTo(6*s,-52*s, 8*s,-44*s-bob); g.closePath(); g.fill(); g.stroke();
-    g.fillStyle='#ffd76a';
-    g.beginPath(); g.arc(1*s,-52*s-bob,1.4*s,0,TAU); g.fill();
-    g.beginPath(); g.arc(-2.5*s,-47*s-bob,1*s,0,TAU); g.fill();
-  }
-  else if(o.hat==='straw'){ g.fillStyle='#c9a24e'; g.beginPath(); g.ellipse(0,-43*s-bob,13*s,4.5*s,0,0,TAU); g.fill(); g.strokeStyle=OUT; g.stroke();
-    g.fillStyle='#b6913e'; g.beginPath(); g.arc(0,-44*s-bob,7*s,Math.PI,0); g.fill(); g.stroke(); }
-  else if(o.hat==='crown'){ g.fillStyle=o.hair||'#3a2a1a'; g.beginPath(); g.arc(0,-41*s-bob,8.5*s,Math.PI,0); g.fill(); g.strokeStyle=OUT; g.stroke();
-    g.fillStyle='#ffd76a'; g.fillRect(-7*s,-49*s-bob,14*s,4*s);
-    g.beginPath(); g.moveTo(-7*s,-49*s-bob); g.lineTo(-4.5*s,-54*s-bob); g.lineTo(-2*s,-49*s-bob); g.lineTo(0,-54*s-bob); g.lineTo(2*s,-49*s-bob); g.lineTo(4.5*s,-54*s-bob); g.lineTo(7*s,-49*s-bob); g.closePath(); g.fill();
-    g.strokeStyle='rgba(120,80,10,0.7)'; g.stroke();
-    g.fillStyle='#e05648'; g.beginPath(); g.arc(0,-47*s-bob,1.2*s,0,TAU); g.fill(); }
-  else if(o.hat==='circlet'){
-    g.fillStyle=o.hair||'#3a2a1a';
-    g.beginPath(); g.arc(0,-41*s-bob,8.4*s,Math.PI*0.92,Math.PI*2.08); g.fill();
-    g.strokeStyle=OUT; g.stroke();
-    g.strokeStyle='#c9a24e'; g.lineWidth=1.6*s;
-    g.beginPath(); g.arc(0,-38.6*s-bob,8.4*s,Math.PI*1.08,Math.PI*1.92); g.stroke();
-    g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-45.8*s-bob,1.4*s,0,TAU); g.fill();
-  }
-  else if((o.armor|0)>=2 && !o.hat){
-    const hg=g.createLinearGradient(-8*s,-46*s-bob,8*s,-38*s-bob);
-    hg.addColorStop(0,'#d4dae4'); hg.addColorStop(0.6,'#98a0ad'); hg.addColorStop(1,'#69707c');
-    g.fillStyle=hg;
-    g.beginPath(); g.arc(0,-40*s-bob,8.8*s,Math.PI*0.95,Math.PI*2.05); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-    g.fillStyle='#98a0ad'; // nose guard
-    g.fillRect(-1*s,-41*s-bob,2*s,6.5*s);
-    g.strokeStyle='rgba(25,28,34,0.5)'; g.lineWidth=1.3;
-    g.beginPath(); g.moveTo(0,-48.6*s-bob); g.lineTo(0,-40*s-bob); g.stroke();
-    g.fillStyle='#e6eaf1'; g.beginPath(); g.arc(0,-47*s-bob,0.9*s,0,TAU); g.fill();
-  }
-  else if(o.hairstyle==='bald'){
-    g.fillStyle='rgba(255,255,255,0.10)';
-    g.beginPath(); g.arc(-2.5*s,-43*s-bob,3.2*s,0,TAU); g.fill();
-  }
-  else if(o.hairstyle==='bun'){
-    g.fillStyle=o.hair||'#3a2a1a';
-    g.beginPath(); g.arc(0,-41*s-bob,8.4*s,Math.PI*0.92,Math.PI*2.08); g.fill();
-    g.strokeStyle=OUT; g.stroke();
-    g.beginPath(); g.arc(0,-48.5*s-bob,3.4*s,0,TAU); g.fill(); g.stroke();
-    g.strokeStyle='#c9a24e'; g.lineWidth=1.3;
-    g.beginPath(); g.arc(0,-48.5*s-bob,2*s,0,TAU); g.stroke();
-  }
-  else {
-    const hc=o.hair||'#3a2a1a';
-    g.fillStyle=hc;
-    g.beginPath(); g.arc(0,-41*s-bob,8.4*s,Math.PI*0.92,Math.PI*2.08); g.fill();
-    g.strokeStyle=OUT; g.stroke();
-    // swept strand clusters give the mass direction
-    g.strokeStyle=shade(hc,-22); g.lineWidth=1.1*s; g.lineCap='round';
-    g.beginPath();
-    g.moveTo(-5.8*s,-42.5*s-bob); g.quadraticCurveTo(-3*s,-47.5*s-bob, 1.5*s,-48.2*s-bob);
-    g.moveTo(-2.5*s,-41.8*s-bob); g.quadraticCurveTo(0.5*s,-46*s-bob, 4.5*s,-46.8*s-bob);
-    g.moveTo( 2*s,-42*s-bob);    g.quadraticCurveTo(4.8*s,-44.8*s-bob, 7*s,-43.2*s-bob);
-    g.stroke();
-    g.strokeStyle=shade(hc,26); g.lineWidth=1.2*s;
-    g.beginPath();
-    g.moveTo(-4.6*s,-44.6*s-bob); g.quadraticCurveTo(-1.5*s,-48.4*s-bob, 2.6*s,-48.6*s-bob);
-    g.stroke();
-    g.lineCap='butt';
-    // a stray fringe strand over the brow
-    g.strokeStyle=shade(hc,-14); g.lineWidth=1*s;
-    g.beginPath(); g.moveTo(2.8*s,-45.5*s-bob); g.quadraticCurveTo(4*s,-43*s-bob, 3.4*s,-41.6*s-bob); g.stroke();
-  }
-  // beard
-  if(o.beard && !away){
-    g.fillStyle=o.beard;
-    g.beginPath();
-    g.moveTo(-6.5*s,-36*s-bob);
-    g.quadraticCurveTo(-6*s,-27*s, 0,-25.5*s-bob-(o.beardLong?-3*s:0));
-    g.quadraticCurveTo(6*s,-27*s, 6.5*s,-36*s-bob);
-    g.quadraticCurveTo(0,-33*s-bob, -6.5*s,-36*s-bob);
-    g.closePath(); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    g.strokeStyle='rgba(0,0,0,0.18)';
-    g.beginPath(); g.moveTo(0,-33*s-bob); g.lineTo(0,-27*s-bob); g.stroke();
-  }
-  // necklace pendant
-  if(o.necklace && !away){
-    g.strokeStyle='#c9a24e'; g.lineWidth=1.3;
-    g.beginPath(); g.arc(0,-30*s-bob,4*s,Math.PI*0.15,Math.PI*0.85); g.stroke();
-    g.fillStyle=o.necklace===true?'#7fd4ff':o.necklace;
-    g.beginPath(); g.arc(0,-25.5*s-bob,1.5*s,0,TAU); g.fill();
-  }
+  /* ---------------- THE HEAD: half the hero ---------------- */
+  g.save();
+  g.translate(0,-33.5+B*1.15);
+  if(o.hero){ g.scale(1.12,1.12); } // the hero's head is grander still
+  if(walking) g.rotate(sw1*0.035);
+  const HR=13.0, HRY=12.2;
+  // ball with soft top-light — round, not flat
+  const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
+  hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
+  g.fillStyle=hg;
+  g.beginPath(); g.ellipse(0,0,HR,HRY,0,0,TAU); g.fill();
+  g.strokeStyle=OUT; g.lineWidth=2.0; g.stroke();
+
   if(away){
-    // back of the head: hair (or bare scalp) — no face from behind
+    /* back of the giant head: hair dome */
     if(o.hat!=='hood'){
       if(o.hairstyle==='bald'){
-        g.fillStyle='rgba(0,0,0,0.10)';
-        g.beginPath(); g.arc(0,-36*s-bob,7.6*s,Math.PI*0.1,Math.PI*0.9); g.fill();
+        g.fillStyle='rgba(255,255,255,0.16)';
+        g.beginPath(); g.ellipse(-3.5,-4,4.5,3.2,-0.4,0,TAU); g.fill();
       } else {
-        g.fillStyle=o.hair||'#3a2a1a';
-        g.beginPath(); g.arc(0,-38.6*s-bob,8.1*s,0,TAU); g.fill();
-        g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-        g.fillStyle=shade(o.hair||'#3a2a1a',16);
-        g.beginPath(); g.arc(-2.2*s,-42*s-bob,4*s,Math.PI*1.05,Math.PI*1.8); g.fill();
-        g.strokeStyle='rgba(0,0,0,0.2)'; g.lineWidth=1.3;
-        g.beginPath(); g.moveTo(0,-45*s-bob); g.quadraticCurveTo(1.2*s,-38*s,0.4*s,-31.5*s-bob); g.stroke();
+        const hgb=g.createLinearGradient(0,-13,0,9);
+        hgb.addColorStop(0,shade(hc,12)); hgb.addColorStop(1,shade(hc,-6));
+        g.fillStyle=hgb;
+        g.beginPath();
+        g.ellipse(0,-1.2,HR*0.98,HRY*0.95,0,Math.PI,0);
+        g.lineTo(HR*0.95,4.5);
+        g.quadraticCurveTo(HR*0.6,8.8, HR*0.32,5.8);
+        g.quadraticCurveTo(0,9.6, -HR*0.32,5.8);
+        g.quadraticCurveTo(-HR*0.6,8.8, -HR*0.95,4.5);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+        g.fillStyle=hc; // crown tuft breaks the dome
+        g.beginPath();
+        g.moveTo(-2.5,-11.2); g.quadraticCurveTo(-1.5,-15.4, 2.4,-14.6);
+        g.quadraticCurveTo(1.2,-12.6, 2.8,-10.8); g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+        g.fillStyle='rgba(255,250,235,0.18)';
+        g.beginPath(); g.ellipse(-3.5,-7.5,4,1.8,-0.3,0,TAU); g.fill();
+        g.fillStyle=shade(hc,-9);
+        g.beginPath();
+        g.moveTo(HR*0.95,1.5); g.lineTo(HR*0.95,4.5);
+        g.quadraticCurveTo(HR*0.6,8.8, HR*0.32,5.8);
+        g.quadraticCurveTo(0,9.6, -HR*0.32,5.8);
+        g.quadraticCurveTo(-HR*0.6,8.8, -HR*0.95,4.5);
+        g.lineTo(-HR*0.95,1.5);
+        g.quadraticCurveTo(0,4.6, HR*0.95,1.5);
+        g.closePath(); g.fill();
       }
     }
   } else {
-    // face: small almond eyes with clamped gaze, blinking, soft brows, hint of a mouth
-    const ex = sxd*(profile?2.0:1.2)*s, ey = syd*0.9*s;
-    const blink = ((G.time + ph*1.7) % 4.3) < 0.13;
-    g.fillStyle='#241a10';
+    /* the face — where all the charm lives. The iso camera looks DOWN
+       at people: the face sits low on the skull, crown above. */
+    g.save(); g.translate(0,2.3);
+    const fx=profile? flip*3.2 : (o.dir? clamp((dx-dy)*1.6,-2.2,2.2) : 0);
+    const fy=clamp(scrY*1.2,-1,1.6);
+    const blink=((G.time+ph*1.7)%4.3)<0.13;
     if(profile){
-      // side view: single leading eye, nose on the silhouette edge
-      const lx=flip*3.2*s+ex*0.4;
-      if(blink){
-        g.lineWidth=1.1*s; g.strokeStyle='#241a10';
-        g.beginPath(); g.moveTo(lx-1.1*s,-38*s-bob+ey); g.lineTo(lx+1.1*s,-38*s-bob+ey); g.stroke();
-      } else {
-        g.beginPath(); g.ellipse(lx,-38*s-bob+ey,1.32*s,1.75*s,0,0,TAU); g.fill();
-        g.fillStyle='rgba(255,255,255,0.9)';
-        g.beginPath(); g.arc(lx+flip*0.4*s,-38.6*s-bob+ey,0.5*s,0,TAU); g.fill();
-      }
+      // nose bump on the silhouette
       g.fillStyle=skin;
+      g.beginPath(); g.arc(flip*HR*0.98, 1.8, 2.3, 0, TAU); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+      g.fillStyle=skin;
+      g.beginPath(); g.arc(flip*HR*0.86, 1.8, 2.6, 0, TAU); g.fill(); // blend seam
+      // one huge eye
+      if(blink){
+        g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
+        g.beginPath(); g.moveTo(flip*2.2,-2.2); g.quadraticCurveTo(flip*4.8,-1.1,flip*7.4,-2.2); g.stroke();
+        g.lineCap='butt';
+      } else {
+        g.fillStyle='#241a10';
+        g.beginPath(); g.ellipse(flip*4.9,-2.2+fy,2.15,3.15,0,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.92)';
+        g.beginPath(); g.arc(flip*4.35,-3.3+fy,0.8,0,TAU); g.fill();
+        g.strokeStyle='rgba(24,16,10,0.7)'; g.lineWidth=1.3;
+        g.beginPath(); g.arc(flip*4.9,-2.2+fy,2.5,Math.PI*1.14,Math.PI*1.86); g.stroke();
+      }
+      g.strokeStyle='#2e2418'; g.lineWidth=1.6; // brow
+      g.beginPath(); g.moveTo(flip*1.8,-7.6); g.quadraticCurveTo(flip*5,-8.8,flip*8,-7.2); g.stroke();
+      g.strokeStyle='#5a3a28'; g.lineWidth=1.15; g.lineCap='round'; // mouth
+      g.beginPath(); g.moveTo(flip*7.6,4.6); g.quadraticCurveTo(flip*8.9,5.2,flip*10,4.5); g.stroke();
+      g.lineCap='butt';
+      g.fillStyle='rgba(220,100,70,0.2)';
+      g.beginPath(); g.ellipse(flip*3,3.2,2.4,1.7,0,0,TAU); g.fill();
+    } else {
+      const eSp=4.35, eyeY=-1.5+fy;
+      const expr=o.expr||'calm';
+      if(expr==='hurt'){
+        g.strokeStyle='#241a10'; g.lineWidth=1.7; g.lineCap='round';
+        g.beginPath();
+        g.moveTo(-eSp+fx-2,eyeY-1.6); g.lineTo(-eSp+fx+1.6,eyeY);
+        g.moveTo(-eSp+fx-2,eyeY+1.6); g.lineTo(-eSp+fx+1.6,eyeY);
+        g.moveTo( eSp+fx+2,eyeY-1.6); g.lineTo( eSp+fx-1.6,eyeY);
+        g.moveTo( eSp+fx+2,eyeY+1.6); g.lineTo( eSp+fx-1.6,eyeY);
+        g.stroke(); g.lineCap='butt';
+      } else if(expr==='happy'){
+        g.strokeStyle='#241a10'; g.lineWidth=1.8; g.lineCap='round';
+        g.beginPath();
+        g.arc(-eSp+fx,eyeY+0.6,2.3,Math.PI*1.15,Math.PI*1.85);
+        g.moveTo(eSp+fx+2.3*Math.cos(Math.PI*1.15),eyeY+0.6+2.3*Math.sin(Math.PI*1.15));
+        g.arc( eSp+fx,eyeY+0.6,2.3,Math.PI*1.15,Math.PI*1.85);
+        g.stroke(); g.lineCap='butt';
+      } else if(blink){
+        g.strokeStyle='#241a10'; g.lineWidth=1.6; g.lineCap='round';
+        g.beginPath();
+        g.moveTo(-eSp+fx-2.6,eyeY); g.quadraticCurveTo(-eSp+fx,eyeY+1.1,-eSp+fx+2.6,eyeY);
+        g.moveTo( eSp+fx-2.6,eyeY); g.quadraticCurveTo( eSp+fx,eyeY+1.1, eSp+fx+2.6,eyeY);
+        g.stroke(); g.lineCap='butt';
+      } else {
+        for(const e of [-1,1]){
+          const ex2=e*eSp+fx*0.9;
+          g.fillStyle='#241a10'; // warm dark almond
+          g.beginPath(); g.ellipse(ex2+fx*0.15,eyeY,2.3,3.3,0,0,TAU); g.fill();
+          g.fillStyle='rgba(255,255,255,0.92)';
+          g.beginPath(); g.arc(ex2-0.65,eyeY-1.1,0.85,0,TAU); g.fill();
+          g.fillStyle='rgba(255,255,255,0.4)';
+          g.beginPath(); g.arc(ex2+0.55,eyeY+0.9,0.38,0,TAU); g.fill();
+          g.strokeStyle='rgba(24,16,10,0.7)'; g.lineWidth=1.3; // soft upper lid
+          g.beginPath(); g.arc(ex2,eyeY,2.6,Math.PI*1.14,Math.PI*1.86); g.stroke();
+        }
+      }
+      // filled tapered brows, tilted by mood
+      g.fillStyle='#2e2418';
+      const bT= (o.expr==='battle')? 1.6 : (o.expr==='hurt')? -1.3 : (o.expr==='happy')? -0.7 : 0;
+      for(const e of [-1,1]){
+        g.beginPath();
+        g.moveTo(e*(eSp+2.5)+fx,-6.3-bT*0.4);
+        g.quadraticCurveTo(e*eSp+fx,-8.1+bT*0.3, e*(eSp-2.5)+fx,-6.7+bT);
+        g.quadraticCurveTo(e*eSp+fx,-7.2+bT*0.3, e*(eSp+2.5)+fx,-5.8-bT*0.4);
+        g.closePath(); g.fill();
+      }
+      // button nose with a light catch
+      g.fillStyle=shade(skin,-13);
+      g.beginPath(); g.ellipse(fx*0.4,2.6,1.6,1.25,0,0,TAU); g.fill();
+      g.fillStyle='rgba(255,240,220,0.5)';
+      g.beginPath(); g.arc(fx*0.4-0.45,2.2,0.42,0,TAU); g.fill();
+      // the mouth carries the mood
+      g.strokeStyle='#5a3a28'; g.lineCap='round';
+      if(o.expr==='battle'){
+        g.lineWidth=1.4;
+        g.beginPath(); g.moveTo(fx*0.4-2.1,4.5); g.lineTo(fx*0.4+2.1,4.5); g.stroke();
+      } else if(o.expr==='hurt'){
+        g.lineWidth=1.3;
+        g.beginPath();
+        g.moveTo(fx*0.4-2.2,4.9);
+        g.quadraticCurveTo(fx*0.4-1,4.0, fx*0.4,4.9);
+        g.quadraticCurveTo(fx*0.4+1,5.8, fx*0.4+2.2,4.9);
+        g.stroke();
+      } else if(o.expr==='happy'){
+        g.fillStyle='#5a3020';
+        g.beginPath();
+        g.moveTo(fx*0.4-2.8,3.8); g.quadraticCurveTo(fx*0.4,7.2, fx*0.4+2.8,3.8);
+        g.quadraticCurveTo(fx*0.4,4.9, fx*0.4-2.8,3.8);
+        g.closePath(); g.fill();
+        g.lineWidth=1.1; g.strokeStyle='rgba(30,18,12,0.6)'; g.stroke();
+      } else {
+        g.lineWidth=1.25;
+        g.beginPath();
+        g.moveTo(fx*0.4-2.3,4.1); g.quadraticCurveTo(fx*0.4,5.3, fx*0.4+2.3,4.1);
+        g.stroke();
+      }
+      g.lineCap='butt';
+      // WW blush
+      g.fillStyle='rgba(220,100,70,0.2)';
       g.beginPath();
-      g.moveTo(flip*7.8*s,-38.5*s-bob);
-      g.quadraticCurveTo(flip*10.2*s,-37*s-bob, flip*7.6*s,-35.6*s-bob);
+      g.ellipse(-8+fx*0.5,3,2.4,1.7,0,0,TAU);
+      g.ellipse( 8+fx*0.5,3,2.4,1.7,0,0,TAU); g.fill();
+    }
+    /* beard hugs the giant chin */
+    if(o.beard){
+      const bl=o.beardLong?5:0;
+      g.fillStyle=o.beard;
+      g.beginPath(); // full beard wrapping the jaw, cheek to cheek
+      g.moveTo(-9.4,-0.5);
+      g.quadraticCurveTo(-10.4,7+bl*0.5, -5.5,11.5+bl);
+      g.quadraticCurveTo(0,14.2+bl*1.2, 5.5,11.5+bl);
+      g.quadraticCurveTo(10.4,7+bl*0.5, 9.4,-0.5);
+      g.quadraticCurveTo(6.5,3.4, 3.6,3.2);
+      g.quadraticCurveTo(0,2.6, -3.6,3.2);
+      g.quadraticCurveTo(-6.5,3.4, -9.4,-0.5);
       g.closePath(); g.fill();
-      g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=0.8*s;
-      g.beginPath(); g.moveTo(flip*8.2*s,-38*s-bob);
-      g.quadraticCurveTo(flip*9.6*s,-37*s-bob, flip*8*s,-36*s-bob); g.stroke();
-    } else if(blink){
-      g.lineWidth=1.1*s; g.strokeStyle='#241a10';
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      g.fillStyle=shade(o.beard,-10); // depth under the lip
+      g.beginPath(); g.ellipse(0,8.5+bl*0.7,4.6,2.2,0,0,TAU); g.fill();
+      // mustache over the top edge
+      g.fillStyle=shade(o.beard,6);
       g.beginPath();
-      g.moveTo(-4.1*s+ex,-38*s-bob+ey); g.lineTo(-1.9*s+ex,-38*s-bob+ey);
-      g.moveTo( 1.9*s+ex,-38*s-bob+ey); g.lineTo( 4.1*s+ex,-38*s-bob+ey); g.stroke();
-    } else {
-      g.beginPath();
-      g.ellipse(-3.1*s+ex,-38*s-bob+ey,1.35*s,1.8*s,0,0,TAU);
-      g.ellipse( 3.1*s+ex,-38*s-bob+ey,1.35*s,1.8*s,0,0,TAU); g.fill();
-      g.fillStyle='rgba(255,255,255,0.9)';
-      g.beginPath();
-      g.arc(-3.1*s+ex-0.4*s,-38.6*s-bob+ey,0.52*s,0,TAU);
-      g.arc( 3.1*s+ex-0.4*s,-38.6*s-bob+ey,0.52*s,0,TAU); g.fill();
+      g.moveTo(0,2.4);
+      g.quadraticCurveTo(-3.4,1.2, -5.4,3.6);
+      g.quadraticCurveTo(-3,4.6, -0.6,4);
+      g.quadraticCurveTo(0,3.8, 0.6,4);
+      g.quadraticCurveTo(3,4.6, 5.4,3.6);
+      g.quadraticCurveTo(3.4,1.2, 0,2.4);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
+      // the mouth survives the beard
+      g.strokeStyle='rgba(30,18,12,0.75)'; g.lineWidth=1.2; g.lineCap='round';
+      g.beginPath(); g.moveTo(-1.7,5.6); g.quadraticCurveTo(0,6.5, 1.7,5.6); g.stroke();
+      g.lineCap='butt';
     }
-    // soft form shadow fading across the unlit side — no hard edge
-    g.save();
-    g.beginPath();
-    g.arc(0,-39.2*s-bob,8.6*s,Math.PI,0);
-    g.quadraticCurveTo( 8.6*s,-33.5*s-bob,  4.6*s,-30.1*s-bob);
-    g.quadraticCurveTo( 0,-28.1*s-bob, -4.6*s,-30.1*s-bob);
-    g.quadraticCurveTo(-8.6*s,-33.5*s-bob, -8.6*s,-39.2*s-bob);
-    g.closePath(); g.clip();
-    const fsh=g.createLinearGradient(-8.6*s,0,2.4*s,0);
-    fsh.addColorStop(0,'rgba(24,16,11,0.20)'); fsh.addColorStop(1,'rgba(24,16,11,0)');
-    g.fillStyle=fsh;
-    g.fillRect(-8.6*s,-48*s-bob,11*s,20.5*s);
-    g.restore();
-    // warm cheek tint — a whisper of blood under the skin (front only)
-    if(!away){
-    g.fillStyle='rgba(200,90,60,0.11)';
-    g.beginPath();
-    g.ellipse(-4.6*s+ex*0.5,-35.2*s-bob+ey*0.5,1.8*s,1.2*s,0,0,TAU);
-    g.ellipse( 4.6*s+ex*0.5,-35.2*s-bob+ey*0.5,1.8*s,1.2*s,0,0,TAU); g.fill();
-    }
-    // warm sun rim-light, bolder for a cel edge
-    const rim=0.3*(1-nightAmount()*0.75);
-    if(rim>0.03){
-      g.strokeStyle='rgba(255,225,170,'+rim+')'; g.lineWidth=2.2*s;
-      g.beginPath(); g.arc(0,-38*s-bob,8.1*s,Math.PI*0.72,Math.PI*1.28); g.stroke();
-    }
-    g.strokeStyle='rgba(30,20,12,0.55)'; g.lineWidth=0.9*s;
-    g.beginPath();
-    if(profile){
-      const bx=flip*3.2*s+ex*0.3;
-      g.moveTo(bx-1.4*s,-40.6*s-bob+ey*0.5); g.lineTo(bx+1.4*s,-40.8*s-bob+ey*0.5);
-    } else {
-      g.moveTo(-4.4*s+ex*0.6,-40.6*s-bob+ey*0.5); g.lineTo(-1.7*s+ex*0.6,-40.8*s-bob+ey*0.5);
-      g.moveTo( 1.7*s+ex*0.6,-40.8*s-bob+ey*0.5); g.lineTo( 4.4*s+ex*0.6,-40.6*s-bob+ey*0.5);
-    }
-    g.stroke();
-    if(!o.beard){
-      g.strokeStyle='rgba(90,45,30,0.6)'; g.lineWidth=0.8*s;
-      g.beginPath(); g.moveTo(-1.4*s+ex*0.5,-33.6*s-bob+ey*0.4);
-      g.quadraticCurveTo(0+ex*0.5,-33.1*s-bob+ey*0.4, 1.4*s+ex*0.5,-33.6*s-bob+ey*0.4); g.stroke();
-    }
+    g.restore(); // face drop
   }
 
-  // weapon arm: shoulder-pivoting arm with the weapon socketed in the hand
-  if(o.weapon && !stowed) drawWeaponArm(8.6*s*flip);
-  function drawWeaponArm(px){
-    g.save();
-    g.translate(px, -27.5*s - bob);
-    g.scale(flip,1);
-    const sw = o.swing||0;
-    g.rotate(-0.15 + sw*1.9 + (walking? -armSw*0.25 : 0));
-    // upper arm (sleeve)
-    g.fillStyle=sleeve;
-    g.beginPath(); g.roundRect(-1.9*s,0,3.8*s,8.5*s,1.8*s); g.fill();
+  /* ---------------- hair & hats on the giant head ---------------- */
+  const helm2=(o.armor|0)>=2 && !o.hat;
+  if(!o.hat && !helm2 && o.hairstyle!=='bald'){
+    if(profile){
+      // side view: mass swept back over the crown to a point at the nape
+      const hgp=g.createLinearGradient(0,-16,0,4);
+      hgp.addColorStop(0,shade(hc,12)); hgp.addColorStop(1,shade(hc,-6));
+      g.fillStyle=hgp;
+      g.beginPath(); // hair blankets the whole back & top of the skull; only the face is carved out
+      g.moveTo(flip*HR*0.66,-3.2);
+      g.quadraticCurveTo(flip*HR*0.92,-9.5, flip*2,-14.6);
+      g.quadraticCurveTo(flip*-8,-15.4, flip*-HR*1.02,-6.5);
+      g.quadraticCurveTo(flip*-HR*1.24,1.5, flip*-HR*0.8,7.8);
+      g.lineTo(flip*-HR*0.55,4.8);
+      g.quadraticCurveTo(flip*-HR*0.2,6.2, flip*1.6,3.4);
+      g.quadraticCurveTo(flip*HR*0.4,0.2, flip*HR*0.44,-2.4);
+      g.lineTo(flip*HR*0.58,-5.2);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+      g.fillStyle='rgba(255,250,235,0.20)';
+      g.beginPath(); g.ellipse(flip*-2,-11.5,3.8,1.7,flip*0.25,0,TAU); g.fill();
+      g.fillStyle=shade(hc,-9); // nape tone
+      g.beginPath();
+      g.moveTo(flip*-HR*1.02,-6.5);
+      g.quadraticCurveTo(flip*-HR*1.24,1.5, flip*-HR*0.8,7.8);
+      g.lineTo(flip*-HR*0.55,4.8);
+      g.quadraticCurveTo(flip*-HR*0.78,-1.5, flip*-HR*0.68,-7.2);
+      g.closePath(); g.fill();
+    }
+    else if(!away){
+      const hgr=g.createLinearGradient(0,-13,0,-2);
+      hgr.addColorStop(0,shade(hc,12)); hgr.addColorStop(1,shade(hc,-4));
+      g.fillStyle=hgr;
+      g.beginPath();
+      g.moveTo(-HR*0.98,0.8);
+      g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
+      g.quadraticCurveTo(-4.8,-16.2, 0.6,-14.0);
+      g.lineTo(-0.6,-11.4);
+      g.quadraticCurveTo(4.4,-15.6, 8.0,-12.0);
+      g.quadraticCurveTo(HR*1.1,-8.0, HR*0.94,0.6);
+      g.quadraticCurveTo(6.4,-3.2, 5.2,-4.6);
+      g.quadraticCurveTo(3.4,-6.4, 1.9,-4.1);
+      g.quadraticCurveTo(0.2,-6.8, -1.7,-4.3);
+      g.quadraticCurveTo(-3.5,-6.5, -5.3,-4.1);
+      g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+      g.fillStyle='rgba(255,250,235,0.20)'; // dome gloss
+      g.beginPath(); g.ellipse(-3.8,-10.4,3.8,1.7,-0.3,0,TAU); g.fill();
+      g.fillStyle=shade(hc,-9);
+      g.beginPath();
+      g.moveTo(-HR*0.98,0.8);
+      g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
+      g.quadraticCurveTo(-6.4,-8.5, -5.3,-4.1);
+      g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
+      g.closePath(); g.fill();
+    }
+    if(o.hairstyle==='long'){
+      for(const e of (away?[-1,1]:[-1,1])){
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(e*HR*0.9,-2);
+        g.quadraticCurveTo(e*HR*1.25,6, e*HR*0.95,13);
+        g.lineTo(e*HR*0.62,11.5);
+        g.quadraticCurveTo(e*HR*0.85,4, e*HR*0.72,-3);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+      }
+    }
+    if(o.hairstyle==='bun'){
+      g.fillStyle=hc;
+      g.beginPath(); g.arc(away?0:-8.5, away?-11.5:-10.5, 3.4, 0, TAU); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    }
+  }
+  if(o.hairstyle==='bald' && !o.hat && !helm2 && !away){
+    g.fillStyle='rgba(255,255,255,0.16)';
+    g.beginPath(); g.ellipse(-3.5,-7,4.2,2.8,-0.35,0,TAU); g.fill();
+  }
+  if(o.hat==='hood'){
+    g.fillStyle=o.hatColor||'#4a3a5a';
+    g.beginPath();
+    g.ellipse(0,-1.5,HR*1.12,HRY*1.1,0,Math.PI*0.98,Math.PI*2.02);
+    g.quadraticCurveTo(HR*1.1,6, HR*0.8,8.5);
+    g.lineTo(-HR*0.8,8.5);
+    g.quadraticCurveTo(-HR*1.1,6, -HR*1.12,-1.8);
+    g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+    if(!away){ g.fillStyle='rgba(10,6,4,0.5)';
+      g.beginPath(); g.ellipse(0,-1,HR*0.78,HRY*0.72,0,Math.PI*1.05,Math.PI*1.95); g.fill(); }
+  } else if(o.hat==='straw'){
+    g.fillStyle='#d9b96a';
+    g.beginPath(); g.ellipse(0,-8.5,HR*1.35,4.6,0,0,TAU); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-    // gripping fist
-    g.translate(0, 9.6*s);
+    g.fillStyle='#c9a955';
+    g.beginPath(); g.ellipse(0,-11,HR*0.62,4.4,0,Math.PI,0); g.fill(); g.stroke();
+  } else if(o.hat==='wizard'){
+    g.fillStyle=o.hatColor||'#3a4a6f';
+    g.beginPath(); g.ellipse(0,-8,HR*1.2,3.8,0,0,TAU); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    g.beginPath();
+    g.moveTo(-HR*0.72,-8.5);
+    g.quadraticCurveTo(-2,-24, 4.5,-27);
+    g.quadraticCurveTo(3.5,-20, HR*0.72,-8.5);
+    g.closePath(); g.fill(); g.stroke();
+    if(o.trim){ g.fillStyle=o.trim; g.beginPath(); g.arc(4.5,-27,1.5,0,TAU); g.fill(); }
+  } else if(o.hat==='crown'){
+    g.fillStyle='#e0b45a';
+    g.beginPath();
+    g.moveTo(-7.5,-9);
+    g.lineTo(-7.5,-14); g.lineTo(-4.5,-11.2); g.lineTo(-1.5,-15);
+    g.lineTo(1.5,-11.2); g.lineTo(4.5,-15); g.lineTo(7.5,-14);
+    g.lineTo(7.5,-9);
+    g.quadraticCurveTo(0,-11.5, -7.5,-9);
+    g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    g.fillStyle='#e05648'; g.beginPath(); g.arc(0,-11.6,1.1,0,TAU); g.fill();
+  } else if(o.hat==='circlet'){
+    g.strokeStyle='#e0b45a'; g.lineWidth=1.8;
+    g.beginPath(); g.ellipse(0,-7.5,HR*0.86,4,0,Math.PI*1.05,Math.PI*1.95); g.stroke();
+    if(!away){ g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-10.6,1.3,0,TAU); g.fill(); }
+  } else if(helm2){
+    g.fillStyle='#b9c0cb';
+    g.beginPath(); g.ellipse(0,-3.5,HR*1.02,HRY*0.85,0,Math.PI*0.98,Math.PI*2.02); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+    if(!away){ g.fillStyle='#8f96a2'; g.fillRect(-1.1,-4,2.2,6.5); }
+    g.strokeStyle='rgba(25,28,34,0.5)'; g.lineWidth=1;
+    g.beginPath(); g.ellipse(0,-3.5,HR*1.02,HRY*0.85,0,Math.PI*1.25,Math.PI*1.75); g.stroke();
+  }
+  g.restore(); // head
+
+  /* ---------------- weapon arm ---------------- */
+  if(o.weapon && !stowed){
+    const swv=o.swing||0;
+    g.save();
+    g.translate(flip*8.2, armY);
+    g.scale(flip,1);
+    g.rotate(0.35 + swv*1.9 + (walking? -sw1*0.18:0));
+    g.fillStyle=o.robe? o.robe : shirt;
+    g.beginPath(); g.roundRect(-2.1,0,4.2,7.6,2.1); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    // fist
+    g.translate(0,8.6);
     g.fillStyle=skin;
-    g.beginPath(); g.roundRect(-2.4*s,-2.2*s,4.8*s,4.6*s,1.8*s); g.fill(); g.stroke();
-    g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=0.9*s; // curled fingers
-    g.beginPath(); g.moveTo(-1.9*s,-0.2*s); g.lineTo(1.9*s,-0.2*s); g.stroke();
-    g.fillStyle=skin; // thumb wraps the top
-    g.beginPath(); g.ellipse(0.4*s,-2.1*s,1.5*s,0.95*s,0,0,TAU); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
-    // weapon, gripped at the hand
-    g.rotate(-0.45 + sw*0.2);
-    const GRIP={sword:-2.5, axe:8, pick:8, bow:8, staff:9, rod:-2}[o.weapon]||0;
-    g.translate(0, GRIP*s);
+    g.beginPath(); g.roundRect(-2.8,-2.6,5.6,5.2,2.1); g.fill(); g.stroke();
+    g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(-2.1,-0.2); g.lineTo(2.1,-0.2); g.stroke();
+    // weapon
+    g.rotate(-0.5 + swv*0.2);
     if(o.weapon==='sword'){
-      const wt = o.wtier==null? 1 : o.wtier;
-      const bl = (wt===2? 21 : wt===1? 18 : 14.5)*s;                 // blade length grows with tier
-      const bc = wt===2? '#e9eef6' : wt===1? '#d4d9e0' : '#a9a292';  // worn grey → iron → bright steel
-      const cc = wt===2? '#b9c6da' : wt===1? '#9aa1ab' : '#7e786a';
-      const top=-2*s-bl;
-      g.fillStyle=bc; g.fillRect(-1.5*s,top,3*s,bl);
-      g.fillStyle=cc; g.fillRect(0,top,1.5*s,bl);
-      if(wt===0){ // notched, rust-bitten edge
-        g.fillStyle='rgba(96,70,48,0.55)';
-        g.fillRect(-1.5*s, top+bl*0.42, 1.0*s, 1.6*s);
-        g.fillRect( 0.6*s, top+bl*0.72, 0.9*s, 1.3*s);
-        g.fillRect(-0.6*s, top+bl*0.15, 0.8*s, 1.0*s);
-      }
-      if(wt===2){ // steel fuller with a faint ember rune-line
-        g.strokeStyle='rgba(255,170,90,'+(0.30+0.22*Math.sin(G.time*3+ph))+')';
-        g.lineWidth=0.9*s;
-        g.beginPath(); g.moveTo(0,-3.5*s); g.lineTo(0, top+bl*0.16); g.stroke();
-      }
-      if(wt>=1){
-        const gt=(G.time*(wt===2?1.35:0.8)+ph)%4.6;
-        if(gt<0.3){ const ga=Math.sin(gt/0.3*Math.PI);
-          g.strokeStyle='rgba(255,255,255,'+(0.9*ga)+')'; g.lineWidth=1.6*s;
-          g.beginPath(); g.moveTo(-1.5*s,top+1*s+gt*bl*2.2); g.lineTo(1.5*s,top-1*s+gt*bl*2.2); g.stroke(); }
-      }
-      g.beginPath(); g.moveTo(-1.5*s,top); g.lineTo(0,top-4*s); g.lineTo(1.5*s,top); g.closePath();
-      g.fillStyle=bc; g.fill();
-      g.strokeStyle='rgba(18,12,8,0.55)'; g.lineWidth=1.3; g.strokeRect(-1.5*s,top,3*s,bl);
-      if(wt===2){ // winged gold crossguard
-        g.fillStyle='#c9a24e';
-        g.beginPath(); g.moveTo(-5.5*s,-1.5*s); g.lineTo(-4*s,-4*s); g.lineTo(0,-3*s);
-        g.lineTo(4*s,-4*s); g.lineTo(5.5*s,-1.5*s); g.lineTo(0,-0.5*s); g.closePath(); g.fill();
-        g.strokeStyle='rgba(18,12,8,0.55)'; g.stroke();
-      } else {
-        g.fillStyle='#8a6238'; g.fillRect(-4*s,-3*s,8*s,3*s);
-      }
-      g.fillStyle= wt===0? '#6e5a40' : '#8a6238'; g.fillRect(-1.5*s,0,3*s,5*s);
-      if(wt===2){
-        const pp=0.7+0.3*Math.sin(G.time*4+ph);
-        g.fillStyle='rgba(255,154,60,'+(0.30*pp)+')'; g.beginPath(); g.arc(0,5.4*s,3.2*s,0,TAU); g.fill();
-        g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,5.4*s,1.7*s,0,TAU); g.fill();
-      } else if(wt===1){
-        g.fillStyle='#c9a24e'; g.beginPath(); g.arc(0,5.4*s,1.6*s,0,TAU); g.fill();
-      } }
-    if(o.weapon==='axe'){ g.fillStyle='#8a6238'; g.fillRect(-1.5*s,-18*s,3*s,20*s);
-      g.fillStyle='#b8bec8'; g.beginPath(); g.moveTo(0,-18*s); g.quadraticCurveTo(9*s,-16*s,7*s,-8*s); g.lineTo(0,-10*s); g.closePath(); g.fill(); }
-    if(o.weapon==='pick'){ g.fillStyle='#8a6238'; g.fillRect(-1.5*s,-18*s,3*s,20*s);
-      g.strokeStyle='#b8bec8'; g.lineWidth=3*s; g.beginPath(); g.arc(0,-13*s,7*s,Math.PI*1.15,Math.PI*1.85); g.stroke(); }
-    if(o.weapon==='bow'){ g.strokeStyle='#6e4a2b'; g.lineWidth=2.6*s;
-      g.beginPath(); g.arc(0,-8*s,9*s,-Math.PI*0.45,Math.PI*0.45); g.stroke();
-      g.strokeStyle='#8a6238'; g.lineWidth=1.2*s;
-      g.beginPath(); g.arc(0,-8*s,9*s,-Math.PI*0.42,Math.PI*0.42); g.stroke();
-      g.strokeStyle='#e8e2d2'; g.lineWidth=1.3;
-      g.beginPath(); g.moveTo(9*s*Math.cos(-Math.PI*0.45), -8*s+9*s*Math.sin(-Math.PI*0.45));
-      g.lineTo(9*s*Math.cos(Math.PI*0.45), -8*s+9*s*Math.sin(Math.PI*0.45)); g.stroke(); }
-    if(o.weapon==='staff'){ g.fillStyle='#4f3520'; g.fillRect(-1.5*s,-22*s,3*s,26*s);
-      g.strokeStyle='rgba(18,12,8,0.55)'; g.strokeRect(-1.5*s,-22*s,3*s,26*s);
-      const pulse=0.85+0.15*Math.sin(G.time*5);
-      g.fillStyle='rgba(160,220,255,'+(0.30*pulse)+')'; g.beginPath(); g.arc(0,-24*s,7.5*s*pulse,0,TAU); g.fill();
-      g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(0,-24*s,4*s,0,TAU); g.fill();
-      g.fillStyle='#dff4ff'; g.beginPath(); g.arc(-1*s,-25*s,1.6*s,0,TAU); g.fill(); }
-    if(o.weapon==='rod'){ g.strokeStyle='#8a6238'; g.lineWidth=2*s;
-      g.beginPath(); g.moveTo(0,2*s); g.lineTo(4*s,-24*s); g.stroke();
-      g.strokeStyle='#e8e2d2'; g.lineWidth=1.3; g.beginPath(); g.moveTo(4*s,-24*s); g.lineTo(6*s,-12*s); g.stroke(); }
+      const wt=o.wtier==null?1:o.wtier;
+      const bl= wt===2? 19 : wt===1? 16 : 13;
+      g.fillStyle= wt===2? '#e8edf4' : wt===1? '#cfd4dc' : '#9a9689';
+      g.beginPath();
+      g.moveTo(-1.6,-3); g.lineTo(-1.6,-3-bl+3); g.lineTo(0,-3-bl); g.lineTo(1.6,-3-bl+3); g.lineTo(1.6,-3);
+      g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.1; g.stroke();
+      if(wt===2){ g.strokeStyle='rgba(255,154,60,0.75)'; g.lineWidth=1;
+        g.beginPath(); g.moveTo(0,-4.5); g.lineTo(0,-3-bl+4); g.stroke(); }
+      g.fillStyle= wt===2? '#e0b45a' : '#6e5738';
+      g.fillRect(-3.6,-3.4,7.2,1.9);
+      g.fillStyle= wt===2? '#e0b45a' : '#4a3a26';
+      g.beginPath(); g.arc(0,1.6,1.5,0,TAU); g.fill();
+      if(wt===2){ g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,1.6,0.8,0,TAU); g.fill(); }
+    } else if(o.weapon==='bow'){
+      g.strokeStyle='#7a5a34'; g.lineWidth=2.4;
+      g.beginPath(); g.arc(0,-1,9,Math.PI*0.62,Math.PI*1.38); g.stroke();
+      g.strokeStyle='rgba(235,230,215,0.85)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(-3.3,-8.3); g.lineTo(-3.3,6.3); g.stroke();
+    } else if(o.weapon==='staff'){
+      g.strokeStyle='#6e5738'; g.lineWidth=2.6;
+      g.beginPath(); g.moveTo(0,5); g.lineTo(0,-13); g.stroke();
+      g.fillStyle='#7fd4ff';
+      const pl=0.6+0.4*Math.sin(G.time*4);
+      g.beginPath(); g.arc(0,-14.5,2.3,0,TAU); g.fill();
+      g.fillStyle='rgba(127,212,255,'+(0.35*pl)+')';
+      g.beginPath(); g.arc(0,-14.5,3.8,0,TAU); g.fill();
+    } else if(o.weapon==='axe'){
+      g.strokeStyle='#6e5738'; g.lineWidth=2.4;
+      g.beginPath(); g.moveTo(0,3); g.lineTo(0,-10); g.stroke();
+      g.fillStyle='#9a9689';
+      g.beginPath();
+      g.moveTo(0,-10); g.quadraticCurveTo(6.5,-9.5, 5.5,-4);
+      g.quadraticCurveTo(2.5,-6, 0,-6); g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.1; g.stroke();
+    } else if(o.weapon==='pick'){
+      g.strokeStyle='#6e5738'; g.lineWidth=2.4;
+      g.beginPath(); g.moveTo(0,3); g.lineTo(0,-10); g.stroke();
+      g.fillStyle='#8f8a7d';
+      g.beginPath();
+      g.moveTo(-6.5,-8.5); g.quadraticCurveTo(0,-13.5, 6.5,-8.5);
+      g.quadraticCurveTo(0,-10.5, -6.5,-8.5); g.closePath(); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.1; g.stroke();
+    } else if(o.weapon==='rod'){
+      g.strokeStyle='#6e5738'; g.lineWidth=1.8;
+      g.beginPath(); g.moveTo(0,3); g.lineTo(0,-12); g.stroke();
+      g.strokeStyle='rgba(220,220,225,0.6)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(0,-12); g.quadraticCurveTo(4,-10, 4.5,-5); g.stroke();
+    }
     g.restore();
   }
+
+  /* ---------------- shield on the off-hand ---------------- */
+  if(o.shield && !away){
+    g.save(); g.translate(-flip*10.5,-14+B*0.6);
+    g.fillStyle='#7a5a34';
+    g.beginPath(); g.ellipse(0,0,4.6,5.4,0,0,TAU); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+    g.fillStyle='#e0b45a'; g.beginPath(); g.arc(0,0,1.6,0,TAU); g.fill();
+    g.restore();
+  }
+
+  /* ---------------- name tag hook (unchanged contract) ---------------- */
   g.restore();
 }
+
 function drawSlime(g,sx,sy,m){
   const sq = 1 + Math.sin(m.anim*6)*0.12;
   const w = 15*sq, h=12/sq;
@@ -2386,13 +2016,6 @@ function iconCanvas(kind,sz=40){
     g.translate(w/2,h/2); const s=w/40;
     g.scale(s,s);
     switch(kind){
-      case 'fire':
-        g.fillStyle='#5a3d24'; g.rotate(0.4); g.fillRect(-10,6,20,4.5); g.rotate(-0.8); g.fillRect(-10,6,20,4.5); g.rotate(0.4);
-        g.fillStyle='#ff8a3c'; g.beginPath();
-        g.moveTo(-7,8); g.quadraticCurveTo(-6,-6,0,-12); g.quadraticCurveTo(6,-6,7,8); g.closePath(); g.fill();
-        g.fillStyle='#ffd76a'; g.beginPath();
-        g.moveTo(-3.5,8); g.quadraticCurveTo(0,-2,3.5,8); g.closePath(); g.fill();
-        break;
       case 'wood': g.rotate(0.5); g.fillStyle='#8a6238'; g.beginPath(); g.roundRect(-13,-6,26,12,5); g.fill();
         g.fillStyle='#c9a06a'; g.beginPath(); g.ellipse(-13,0,4,6,0,0,TAU); g.fill();
         g.strokeStyle='#a57e4d'; g.beginPath(); g.ellipse(-13,0,2,3,0,0,TAU); g.stroke();
@@ -2443,7 +2066,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','fire'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }
@@ -2476,7 +2099,7 @@ const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,
   hp:100, maxhp:100, mp:30, maxmp:30,
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
-  weapon:'melee', unlocked:{melee:false,bow:false,staff:false}, wick:100,
+  weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
   swordTier:0, // 0 rusty, 1 iron
   atkCd:0, swing:0, hurtT:0, lastCombat:-99, regenT:0,
   inv:{potion:2, seed:0}, gold:0,
@@ -2639,7 +2262,6 @@ function inSafeZone(x,y){
     const z=ZONES[k];
     if(z && dist(x,y,z.x,z.y) < (z.r||6)+1.5) return true;
   }
-  if(G.fires && G.fires.some(f=>dist(x,y,f.x,f.y)<2.8)) return true; // firelight keeps the dark at bay
   return false;
 }
 function spawnMob(kind,x,y,elite){
@@ -2687,6 +2309,7 @@ function addXP(skill,amt){
     burst(P.x,P.y-0.5,'#ffd76a',16); Snd.levelup();
     shockwave(P.x,P.y,'rgba(255,215,106,0.9)',40);
     banner(SKILLS[skill].name.toUpperCase()+' — LEVEL '+sk.lvl, SKILLS[skill].perk);
+    P.cheerT=3;
   }
   refreshSkillsPanel();
 }
@@ -2719,6 +2342,7 @@ function acceptQuest(id){
   updateQuestUI();
 }
 function completeQuest(id){
+  P.cheerT=3; // wear the win on your face
   const q=QUESTS[id];
   if(q.kind==='gather') for(const it in q.need) take(it,q.need[it]);
   P.quests[id]='done';
@@ -2786,6 +2410,9 @@ function questTargetPos(id){
     if(id==='remember') return {x:ZONES.tower.x,y:ZONES.tower.y};
     if(id==='embers') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='mossbrew') return {x:ZONES.forest.x,y:ZONES.forest.y};
+    if(id==='roadclear') return {x:ZONES.highlands.x,y:ZONES.highlands.y};
+    if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
+    if(id==='nets') return {x:ZONES.dock.x-2,y:ZONES.dock.y};
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
@@ -2794,7 +2421,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
@@ -2923,6 +2550,37 @@ function shopButtons(npc,btns){
       if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
         setDialog('“Sip it slow — or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
       else setDialog('“Coin first, tonic after. Island rules.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='brant' && qs('setsail')!=='done'){
+    btns.unshift({label:'Ask for passage to Barik', fn:()=>{
+      const rem=ISLE_IDS.filter(id=>qs(id)!=='done').length;
+      setDialog('“Happy to haul you across to <b>Barik</b>, friend — she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='sela'){
+    btns.unshift({label:'Buy Bread (5g)', fn:()=>{
+      if(P.gold>=5){ P.gold-=5; giveQuiet('bread',1); Snd.coin(); refreshUI();
+        setDialog('“Still warm. Don\'t tell the gulls.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Five coin. The oven doesn\'t run on kindness.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Buy Cooked Fish (7g)', fn:()=>{
+      if(P.gold>=7){ P.gold-=7; giveQuiet('cookedfish',1); Snd.coin(); refreshUI();
+        setDialog('“Caught at dawn, crisped at noon.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Seven, friend. Fish don\'t catch themselves.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
+  if(npc.id==='ivo'){
+    btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
+      if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
+        setDialog('“Brewed bitter so you remember to stay alive.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Eight gold. Healing\'s cheap; herbs aren\'t.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+    btns.unshift({label:'Buy Bluecap (4g)', fn:()=>{
+      if(P.gold>=4){ P.gold-=4; giveQuiet('mushroom',1); Snd.coin(); refreshUI();
+        setDialog('“Glows a little. That\'s how you know it\'s working.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
+      else setDialog('“Four coin a cap.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
   if(npc.id==='willa'){
@@ -3129,8 +2787,7 @@ const HOT = [
   {id:'melee', icon:'sword', key:'1', wpn:true},
   {id:'bow', icon:'bow', key:'2', wpn:true},
   {id:'staff', icon:'staff', key:'3', wpn:true},
-  {id:'potion', icon:'potion', key:'4', wpn:false},
-  {id:'fire', icon:'fire', key:'5', wpn:false}
+  {id:'potion', icon:'potion', key:'4', wpn:false}
 ];
 function buildHotbar(){
   const hb=document.getElementById('hotbar'); hb.innerHTML='';
@@ -3144,7 +2801,7 @@ function buildHotbar(){
     const key=document.createElement('div'); key.className='key'; key.textContent=h.key; s.appendChild(key);
     if(!h.wpn){ const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv.potion||0; s.appendChild(c); }
     if(locked){ const l=document.createElement('div'); l.className='lock'; l.textContent='🔒'; s.appendChild(l); }
-    const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else if(h.id==='fire') placeCampfire(); else useItem('potion'); };
+    const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem('potion'); };
     s.onclick=act;
     if(s.addEventListener) s.addEventListener('touchstart',(e)=>{
       e.preventDefault(); e.stopPropagation(); act();
@@ -3218,7 +2875,7 @@ function refreshSkillsPanel(){
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue; any=true;
@@ -3255,7 +2912,8 @@ function questProgressText(id){
 const ISLE_IDS=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord'];
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], masterwork:['skeletons'],
-  wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'] };
+  wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'],
+  nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
     if(!P.quests[id] && UNLOCK_AFTER[id].every(p=>qs(p)==='done')){
@@ -3281,7 +2939,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};
@@ -3298,8 +2956,6 @@ function refreshUI(){
   document.getElementById('hpFill').style.width=(P.hp/P.maxhp*100)+'%';
   document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
   document.getElementById('mpFill').style.width=(P.mp/P.maxmp*100)+'%';
-  document.getElementById('wkFill').style.width=((P.wick??100))+'%';
-  document.getElementById('wkLbl').textContent='✹ Wick '+Math.round(P.wick??100)+' — tap';
   document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
   document.getElementById('goldTxt').textContent=P.gold;
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv.potion||0;
@@ -3666,7 +3322,6 @@ function updatePlayer(dt){
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(keys['shift']) tryRoll();
-  if(keys['q']){ if(!P._qHeld){ P._qHeld=1; emberBurst(); } } else P._qHeld=0;
   if(P.rollT>0){
     moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt);
     P.anim+=P.speed*2.7*dt*3.1; P.moving=true;
@@ -3739,6 +3394,7 @@ function updatePlayer(dt){
   P.swing=Math.max(0,P.swing-dt);
   P.gatherT=Math.max(0,(P.gatherT||0)-dt);
   P.hurtT=Math.max(0,P.hurtT-dt);
+  if(P.cheerT) P.cheerT=Math.max(0,P.cheerT-dt);
   if(input.attack || (input.mouseDown && !isTouch)) tryAttack(input.mouseDown);
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
@@ -3827,12 +3483,11 @@ function updateMobs(dt){
       continue;
     }
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
-    if(m.fearT) m.fearT=Math.max(0,m.fearT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
-      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && !(m.fearT>0)){ m.state='chase'; if(m.boss){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); } }
+      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y)){ m.state='chase'; if(m.boss){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); } }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
       if(m.tx!=null){ const dx=m.tx-m.x, dy=m.ty-m.y, l=Math.hypot(dx,dy);
@@ -3845,7 +3500,7 @@ function updateMobs(dt){
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
       m.face=dx<0?-1:1;
-      if(!m.boss && (inSafeZone(P.x,P.y) || m.fearT>0)){ m.state='idle'; m.tx=null; m.windup=0; }
+      if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
       if(l>stop) moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
       // telegraphed strike: wind up, then the blow lands — roll through it!
@@ -3944,34 +3599,6 @@ function updateWorld(dt){
       const per = 13 - P.skills.farming.lvl; // faster with skill
       if(pl.t> Math.max(7,per)){ pl.t=0; pl.stage++;
         if(pl.stage===4) burst(pl.x+0.5,pl.y+0.3,'#ffd76a',6,1.2); } }
-  }
-  for(const f of (G.fires||[])){
-    const s=worldToScreen(f.x,f.y);
-    if(s.x<-60||s.x>VW+60||s.y<-80||s.y>VH+80) continue;
-    const dying=Math.min(1,f.t/12), fl=(0.85+0.15*Math.sin(G.time*11+f.x))*dying;
-    drawShadowAt(cx,s.x,s.y,9);
-    cx.fillStyle='#6b6258';
-    for(let a=0;a<6;a++){ const th=a/6*TAU+f.x;
-      cx.beginPath(); cx.ellipse(s.x+Math.cos(th)*12, s.y+Math.sin(th)*6, 3.2,2.2,0,0,TAU); cx.fill(); }
-    cx.fillStyle='#5a3d24';
-    cx.save(); cx.translate(s.x,s.y-2);
-    cx.rotate(0.5); cx.fillRect(-9,-2.4,18,4.8);
-    cx.rotate(-1.0); cx.fillRect(-9,-2.4,18,4.8);
-    cx.restore();
-    cx.globalCompositeOperation='lighter';
-    const fh=14*fl;
-    cx.fillStyle='rgba(255,140,50,'+(0.75*fl)+')';
-    cx.beginPath();
-    cx.moveTo(s.x-6*fl,s.y-3);
-    cx.quadraticCurveTo(s.x-4+Math.sin(G.time*13+f.y)*2, s.y-3-fh, s.x+Math.sin(G.time*9)*1.5, s.y-6-fh*1.5);
-    cx.quadraticCurveTo(s.x+4+Math.sin(G.time*11)*2, s.y-3-fh, s.x+6*fl, s.y-3);
-    cx.closePath(); cx.fill();
-    cx.fillStyle='rgba(255,220,140,'+(0.8*fl)+')';
-    cx.beginPath();
-    cx.moveTo(s.x-3*fl,s.y-3);
-    cx.quadraticCurveTo(s.x+Math.sin(G.time*15)*1.2, s.y-4-fh*0.9, s.x+3*fl, s.y-3);
-    cx.closePath(); cx.fill();
-    cx.globalCompositeOperation='source-over';
   }
   // particles & floats
   for(const pt of G.parts){
@@ -4384,8 +4011,8 @@ function drawDecor(b,s){
   }
 }
 function drawNPC(n,s){
-  drawShadowAt(cx,s.x,s.y,13);
-  drawHumanoid(cx,s.x,s.y,{...n.look, size:(n.look.size||1)*1.15, dir:n.face, step:n.anim, name:n.name, ph:n.hx*0.7+n.hy*1.3});
+  drawShadowAt(cx,s.x,s.y,14);
+  drawHumanoid(cx,s.x,s.y,{...n.look, size:(n.look.size||1)*1.28, dir:n.face, step:n.anim, name:n.name, ph:n.hx*0.7+n.hy*1.3});
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(n.name, s.x+1, s.y-52*(n.look.size||1)+1);
@@ -4478,18 +4105,21 @@ function drawMob(m,s){
   }
 }
 function drawPlayer(s){
-  drawShadowAt(cx,s.x,s.y,13);
+  drawShadowAt(cx,s.x,s.y,14);
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
     ((P.gatherT||0)>0? P.gatherKind :
      P.fishing? 'rod' : (P.unlocked.melee? 'sword' : null)); // kit in hand while gathering; no phantom blade before the forge
   // one adventurer, one outfit — weapons only change what's in your hands
-  const look={skin:'#d8a97a',hair:'#3a2a1a',shirt:'#55483a',pants:'#3c3833',cloak:'#5a2f24',
+  const expr = P.hurtT>0? 'hurt'
+    : (P.cheerT||0)>0? 'happy'
+    : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
+  const look={hero:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     pauldrons:P.swordTier>0, shield: P.swordTier>0? '#6e4a2b':null, trim:P.swordTier>0?'#8a6d30':null,
     hat: has('crown',1)?'crown':null};
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;
-  drawHumanoid(cx,s.x,s.y,{...look, size:1.18,
+  drawHumanoid(cx,s.x,s.y,{...look, size:1.32,
     dir:P.dir, step:P.moving?P.anim:0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
@@ -4832,21 +4462,23 @@ function drawGritGrade(){
    WORLD LAYER — tutorial isle, the mainland, sailing between them
    ===================================================================== */
 const ISLE_ZONES = ZONES; // the tutorial isle's zones (initial)
-const MAIN_ZONES = {
-  village:  {x:30, y:100, r:8,  name:'Greyharbor'},
-  dock:     {x:22, y:102, r:4,  name:'Harbor Docks'},
-  forest:   {x:58, y:88,  r:13, name:'Blackpine Reach'},
-  highlands:{x:92, y:64,  r:12, name:'Wolfcrag Highlands'},
-  ruins:    {x:66, y:32,  r:11, name:'Barrowfield'},
-  meadow:   {x:102,y:100, r:11, name:'The Mirefen'},
-  tower:    {x:100,y:26,  r:6,  name:'Stormwatch Peak'}
+const MAIN_ZONES = { // the isle of Barik — five times the home shores
+  village:  {x:54, y:179, r:12, name:'Greyharbor'},
+  dock:     {x:39, y:182, r:6,  name:'Harbor Docks'},
+  forest:   {x:104,y:157, r:22, name:'Blackpine Reach'},
+  highlands:{x:164,y:114, r:20, name:'Wolfcrag Highlands'},
+  ruins:    {x:118,y:57,  r:19, name:'Barrowfield'},
+  meadow:   {x:182,y:179, r:19, name:'The Mirefen'},
+  tower:    {x:179,y:46,  r:9,  name:'Stormwatch Peak'},
+  farm:     {x:206,y:150, r:13, name:'Barik Farmsteads'},
+  mines:    {x:64, y:104, r:10, name:'Old Barik Mines'}
 };
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES — CHAPTER I',
     gen:()=>genIsleAll() },
-  main:{ W:140, H:140, seed:99177, zones:MAIN_ZONES,
-    spawn:{x:23.5,y:102.5}, title:'GREYHARBOR — THE MAINLAND', sub:'CHAPTER II — THE WILD SHORES',
+  main:{ W:250, H:250, seed:99177, zones:MAIN_ZONES,
+    spawn:{x:40.5,y:182.5}, title:'BARIK', sub:'CHAPTER II — THE WILD SHORES',
     gen:()=>genMainAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -4859,7 +4491,15 @@ function addCrowsFor(){
     ph:Math.random()*TAU,spd:rnd(0.25,0.4)});
 }
 function genIsleAll(){
-  genWorld(); bakeSolids(); placeObjects(); buildFoam();
+  genWorld();
+  // the harbor channel: open ocean reaches the boat (no more landlocked ship)
+  for(let x=0;x<=27;x++){
+    setTile(x,62,T.DEEP); setTile(x,63,T.DEEP);
+    if(tileAt(x,61)!==T.DEEP) setTile(x,61,T.SHALLOW);
+    if(tileAt(x,64)!==T.DEEP) setTile(x,64,T.SHALLOW);
+  }
+  for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=1;dx++) setTile(25+dx,62+dy,T.DEEP);
+  bakeSolids(); placeObjects(); buildFoam();
   if(P.projects && P.projects.lanes) placeLaneLamps();
   ensureGravelord(false);
   spawnNPCs(); spawnMobs();
@@ -4888,9 +4528,16 @@ function genMainland(){
   carveDisc(ZONES.highlands.x,ZONES.highlands.y,ZONES.highlands.r,T.GRASS,false);
   carveDisc(ZONES.ruins.x,ZONES.ruins.y,ZONES.ruins.r,T.RUIN,false);
   carveDisc(ZONES.tower.x,ZONES.tower.y,ZONES.tower.r,T.RUIN,false);
+  carveDisc(ZONES.farm.x,ZONES.farm.y,ZONES.farm.r,T.GRASS,false);
+  carveDisc(ZONES.mines.x,ZONES.mines.y,ZONES.mines.r,T.RUIN,false);
+  // farmsteads: tilled soil strips
+  for(let i=0;i<7;i++){
+    const fx=ZONES.farm.x-8+((i%3)*6), fy=ZONES.farm.y-6+(Math.floor(i/3)*5);
+    for(let dy=0;dy<3;dy++) for(let dx=0;dx<4;dx++) setTile(fx+dx,fy+dy,T.SOIL);
+  }
   // mirefen: sodden soil blotches
   const mr=mulberry32(SEED+5);
-  for(let i=0;i<40;i++){ const a=mr()*TAU, dd=mr()*ZONES.meadow.r;
+  for(let i=0;i<90;i++){ const a=mr()*TAU, dd=mr()*ZONES.meadow.r;
     const x=Math.round(ZONES.meadow.x+Math.cos(a)*dd), y=Math.round(ZONES.meadow.y+Math.sin(a)*dd);
     carveDisc(x,y,1+Math.floor(mr()*2),T.SOIL,true); }
   // harbor bay + long docks
@@ -4908,6 +4555,8 @@ function genMainland(){
   carveLine(ZONES.highlands.x,ZONES.highlands.y-4, ZONES.ruins.x+6,ZONES.ruins.y+4, T.PATH,0);
   carveLine(V.x+3,V.y+2, ZONES.meadow.x-4,ZONES.meadow.y-2, T.PATH,0);
   carveLine(ZONES.ruins.x+4,ZONES.ruins.y-4, ZONES.tower.x-2,ZONES.tower.y+3, T.PATH,0);
+  carveLine(ZONES.meadow.x+4,ZONES.meadow.y-6, ZONES.farm.x-4,ZONES.farm.y+4, T.PATH,0);
+  carveLine(ZONES.forest.x-8,ZONES.forest.y-10, ZONES.mines.x+4,ZONES.mines.y+4, T.PATH,0);
   // shore cleanup
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(tileAt(x,y)===T.SHALLOW){
@@ -4927,13 +4576,17 @@ function placeObjectsMain(){
     const p=(t===T.FOREST)?0.22:0.05;
     if(r()<p) addNode('tree',x,y);
   }
-  for(let i=0;i<70;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
+  for(let i=0;i<300;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     const t=tileAt(x,y);
     if((t===T.GRASS||t===T.FOREST||t===T.RUIN)&&!solidAt(x,y)&&r()<0.7) addNode('rock',x,y); }
-  for(let i=0;i<12;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
+  for(let i=0;i<50;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     if(tileAt(x,y)===T.FOREST&&!solidAt(x,y)) addNode('mushroom',x,y); }
+  const mnr=mulberry32(SEED+17); // the Old Mines: a rich ring of stone
+  for(let i=0;i<16;i++){ const a=mnr()*TAU, dd=2+mnr()*(ZONES.mines.r-3);
+    const x=Math.round(ZONES.mines.x+Math.cos(a)*dd), y=Math.round(ZONES.mines.y+Math.sin(a)*dd);
+    if(walkTile(tileAt(x,y))&&!solidAt(x,y)) addNode('rock',x,y); }
   let placed=0;
-  for(let tries=0;tries<5000&&placed<8;tries++){
+  for(let tries=0;tries<12000&&placed<20;tries++){
     const x=rndiR(r,3,MAPW-4), y=rndiR(r,3,MAPH-4);
     if(tileAt(x,y)===T.SHALLOW){
       let land=false;
@@ -4954,7 +4607,7 @@ function placeObjectsMain(){
   // beach shells on the mainland strand
   const shr=mulberry32(SEED+61);
   let shells=0;
-  for(let tries=0; tries<5000 && shells<9; tries++){
+  for(let tries=0; tries<12000 && shells<22; tries++){
     const x=rndiR(shr,3,MAPW-4), y=rndiR(shr,3,MAPH-4);
     if(tileAt(x,y)===T.SAND && !solidAt(x,y) && !G.nodes.some(n=>n.kind==='shell'&&dist(n.tx,n.ty,x,y)<7)){
       addNode('shell',x,y); shells++;
@@ -4962,14 +4615,24 @@ function placeObjectsMain(){
   }
   // barrow stones
   const br=mulberry32(SEED+31);
-  for(let i=0;i<12;i++){ const a=br()*TAU, dd=2+br()*(ZONES.ruins.r-3);
+  for(let i=0;i<22;i++){ const a=br()*TAU, dd=2+br()*(ZONES.ruins.r-3);
     const x=Math.round(ZONES.ruins.x+Math.cos(a)*dd), y=Math.round(ZONES.ruins.y+Math.sin(a)*dd);
     if(walkTile(tileAt(x,y))&&!solidAt(x,y)){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:br()<0.7}); setSolid(x,y,1); } }
-  // Greyharbor town
+  // Greyharbor, port town of Barik
   const V=ZONES.village;
   addBuilding('house', V.x-3,V.y-2,"Harbor house");
   addBuilding('house2',V.x+3,V.y-3,"Warden's post");
   addBuilding('barn',  V.x+4,V.y+3,'Trade hall');
+  addBuilding('house', V.x-5,V.y+3,"Sela's Provisions");
+  addBuilding('house2',V.x+7,V.y,"Ivo's Herbary");
+  const FZ=ZONES.farm;
+  addBuilding('barn', FZ.x+4,FZ.y-4,"Hedda's barn");
+  addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse');
+  addBuilding('lamp',FZ.x,FZ.y,'');
+  const MZ=ZONES.mines;
+  addBuilding('lamp',MZ.x+1,MZ.y-1,'');
+  G.decor.push({kind:'pillar',x:MZ.x-1.5,y:MZ.y+0.5,broken:true}); setSolid(MZ.x-2,MZ.y,1);
+  G.decor.push({kind:'pillar',x:MZ.x+2.5,y:MZ.y+1.5,broken:false}); setSolid(MZ.x+2,MZ.y+1,1);
   addBuilding('lamp',V.x-1,V.y-1,''); addBuilding('lamp',V.x+2,V.y+1,'');
   addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y-1,''); addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y+2,'');
   addBuilding('boat', ZONES.dock.x-5.5,ZONES.dock.y+0.5,'');
@@ -4978,7 +4641,7 @@ function placeObjectsMain(){
   setSolid(ZONES.tower.x,ZONES.tower.y,1);
   // scattered loot caches
   const cr=mulberry32(SEED+55);
-  for(const zk of ['forest','highlands','ruins','meadow']){
+  for(const zk of ['forest','highlands','ruins','meadow','farm','mines']){
     const z=ZONES[zk], a=cr()*TAU, dd=2+cr()*(z.r-2);
     const sp=findOpenNear(Math.round(z.x+Math.cos(a)*dd),Math.round(z.y+Math.sin(a)*dd),4);
     if(sp){ G.decor.push({kind:'chest',x:sp[0]+0.5,y:sp[1]+0.5,opened:false}); setSolid(sp[0],sp[1],1); }
@@ -5002,6 +4665,25 @@ function spawnNPCsMain(){
     {skin:'#b98f68',hair:'#a8a099',shirt:'#5a5348',pants:'#3a352c',hat:'straw',beard:'#a8a099',beardLong:true},
     ["Emberwick? Quaint little training ground, that isle.",
      "They say a storm-relic sits atop the Peak. Guarded, of course."],1.2));
+}
+function spawnBarikFolk(){
+  const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
+  G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-4.5,V.y+1.5,
+    {skin:'#d3a377',hair:'#3c2f22',shirt:'#7a4a36',pants:'#4a3a2c',apron:'#c9b48e',hairstyle:'bun'},
+    ["Bread, fish, and no questions — Greyharbor's finest counter.",
+     "The farmsteads east keep us fed. Mostly."],1.2));
+  G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x+6.5,V.y+1.8,
+    {skin:'#c9a884',hair:'#5a6a4a',shirt:'#46603c',pants:'#35402c',robe:'#3f5a3a',trim:'#9ab87a'},
+    ["Everything on Barik either heals you or bites you. I sell the first kind.",
+     "Bluecaps, tonics, tidebalm. The wilds provide — I just bottle it."],1.0));
+  G.npcs.push(makeNPC('hedda','Farmer Hedda', FZ.x+1.5,FZ.y+1.5,
+    {skin:'#d8ab7d',hair:'#b8863e',shirt:'#8a6a3a',pants:'#5a4630',apron:'#7a5a3a',hairstyle:'bun'},
+    ["Soil's good here. It's everything ELSE that's the problem.",
+     "Slimes from the Mirefen eat a season's work in a night."],1.4));
+  G.npcs.push(makeNPC('torv','Torv the Delver', MZ.x+1.5,MZ.y+2.5,
+    {skin:'#b98f68',hair:'#3a3a3c',shirt:'#4a4440',pants:'#332f2c',beard:'#4a4a4c',armor:1},
+    ["These shafts fed three generations before the wilds took the road.",
+     "Stone's still down there. Just needs hands brave enough."],0.9));
 }
 function spawnMobsMain(){
   const packs=[
@@ -5028,12 +4710,53 @@ function spawnMobsMain(){
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
-  spawnNPCsMain(); spawnMobsMain();
+  spawnNPCsMain(); spawnBarikFolk(); spawnMobsMain();
   addCrowsFor();
   G.forgePos=null;
   buildMapBase();
 }
 
+/* ---------- Barik's quest wave ---------- */
+QUESTS.welcome2={ giver:'kell', title:'The Warden\'s Ledger', kind:'talk', talkTo:'sela',
+  brief:'New boots off the Emberwick ferry — I can smell the tutorial on you. Barik\'s bigger, hungrier, and less forgiving. Get provisioned before you get ambitious: Sela runs the counter south of the well. Tell her the Warden sent you.',
+  log:'Introduce yourself to Sela the Provisioner in Greyharbor.',
+  doneText:'Kell sent you? Then you\'re either useful or doomed. Let\'s find out which — Barik has work for both kinds.',
+  rw:{gold:15, xp:{melee:40}}, unlocks:['nets','roadclear'] };
+QUESTS.nets={ giver:'sela', title:'Nets of Barik', kind:'gather', need:{fish:6},
+  brief:'The trawlers won\'t round the point while wolves haunt the cliff road, so my counter\'s bare. Six fresh fish from any Barik shallows keeps Greyharbor fed a week.',
+  log:'Catch 6 fish in Barik\'s shallows for Sela.',
+  doneText:'Fat ones, too. The harbor eats tonight — and pays this morning.',
+  rw:{gold:45, item:{bread:2}, xp:{fishing:160}} };
+QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', kill:{wolf:8},
+  brief:'The road from Greyharbor to Blackpine belongs to the wolves after dusk. Eight pelts thins the packs enough for the carts to run. Mind the crimson-ringed ones.',
+  log:'Slay 8 wolves along Barik\'s roads and highlands.',
+  doneText:'The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin.',
+  rw:{gold:80, xp:{melee:200, archery:120}} };
+QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushroom:6},
+  brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
+  log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',
+  doneText:'Smell that? That\'s Barik in a pot. Take your share and your coin.',
+  rw:{gold:40, item:{bread:2}, xp:{forage:180}}, unlocks:['hedda2'] };
+QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{slime:6},
+  brief:'Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.',
+  log:'Destroy 6 slimes around the Mirefen and Farmsteads.',
+  doneText:'Rows are clean, seed\'s safe, and I owe you a harvest\'s gratitude. Coin will have to stand in for it.',
+  rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}} };
+QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{stone:10},
+  brief:'Three generations of Barik built with stone from these shafts — then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
+  log:'Mine 10 stone around the Old Barik Mines for Torv.',
+  doneText:'Listen to that ring. The old girl\'s awake. Barik builds again — starting with your pay.',
+  rw:{gold:55, xp:{mining:220}}, unlocks:['torv2'] };
+QUESTS.torv2={ giver:'torv', title:'The Old Vein', kind:'gather', need:{ore:4},
+  brief:'Stone keeps walls up; ore keeps forges lit. The deep rock here still carries iron if you\'ve the arm for it. Four ore and Greyharbor\'s smith stays in business.',
+  log:'Break 4 iron ore from Barik\'s stone for Torv.',
+  doneText:'Good iron. Honest iron. The kind that remembers being a mountain.',
+  rw:{gold:75, xp:{mining:260}} };
+QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
+  brief:'Ground shell, kelp ash, and patience — tidebalm knits cuts the sea gives. The strand west of the docks throws up shells after every tide. Five whole ones, unbroken.',
+  log:'Collect 5 shells from Barik\'s beaches for Ivo.',
+  doneText:'Unbroken, every one. You\'d make a fair herbalist if the sword ever bores you. Balm\'s share is yours.',
+  rw:{gold:35, item:{potion:2}, xp:{forage:140}} };
 /* ---------- the bounty quest & relic ---------- */
 QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:{elite:8},
   brief:"The wilds have turned. Crimson-ringed beasts — elites, we call them — press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
@@ -5266,6 +4989,9 @@ function switchWorld(id){
   if(id==='main') award('globetrotter');
   if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';
   if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
+  if(id==='main'){
+    for(const q2 of ['welcome2','hedda1','torv1','ivo1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
+  }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   banner(def.title,def.sub); Snd.quest();
@@ -5483,13 +5209,7 @@ function drawLighting(night){
     const fl=0.92+0.08*Math.sin(G.time*7+i*2.1);
     punch(s.x,s.y-40,(b.kind==='lamp'?105:78)*fl,0.95);
   }
-  for(const f of (G.fires||[])){
-    const s=worldToScreen(f.x,f.y);
-    const fl=(0.9+0.1*Math.sin(G.time*9+f.x))*Math.min(1,f.t/12);
-    punch(s.x,s.y-10,125*fl,0.95);
-  }
-  { const s=worldToScreen(P.x,P.y);
-    punch(s.x,s.y-18, 88*(0.55+0.45*((P.wick??100)/100)), 0.8); }
+  { const s=worldToScreen(P.x,P.y); punch(s.x,s.y-18,88,0.8); }
   for(const p of G.projs){ if(p.kind==='bolt'){ const s=worldToScreen(p.x,p.y); punch(s.x,s.y-12,64,0.95); } }
   for(const f of G.fireflies){ const s=worldToScreen(f.x,f.y); punch(s.x,s.y-14,16,0.5); }
   cx.setTransform(DPR,0,0,DPR,0,0);
@@ -5599,8 +5319,7 @@ const ACH={
   globetrotter:{t:'Across the Strait',d:'Reach the mainland.'},
   kingslayer:{t:'Kingslayer',d:'Fell the Hollow King.'},
   wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'},
-  wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'},
-  lightbearer:{t:'Lightbearer',d:'Kindle 5 campfires against the dark.'}
+  wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'}
 };
 function award(id){
   if(!ACH[id] || P.ach[id]) return;
@@ -5637,7 +5356,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,wick:Math.round(P.wick??100),tut:P.tut||{},tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
@@ -5675,9 +5394,7 @@ function loadCode(str){
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
-  P.wick = d.wick==null? 100 : clamp(d.wick,0,100);
-  P.tut = d.tut||{};
-  if(!P.tut.wick) setTimeout(showWickTut, 2200); // never dismissed = shown on every load, until it is
+
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
   P.disc=d.disc||{}; unpackExpl(d.expl);
@@ -5702,7 +5419,10 @@ function loadCode(str){
    Y potion, bumpers swap weapon, Start quest log ---------- */
 let gpPrev=[];
 function pollGamepad(){
-  const pads = navigator.getGamepads? navigator.getGamepads() : null;
+  if(pollGamepad._blocked) return;
+  let pads=null;
+  try{ pads = navigator.getGamepads? navigator.getGamepads() : null; }
+  catch(e){ pollGamepad._blocked=true; input.gpDir=null; return; } // permissions policy denies gamepad here — stop asking
   const gp = pads && pads[0];
   input.gpDir=null;
   if(!gp) return;
@@ -6009,12 +5729,12 @@ function renderInterior(){
    AUTO-SAVE — quietly persists to this browser's local storage
    ===================================================================== */
 const CFG=(()=>{ try{ return Object.assign({mus:1,sfx:1,shake:1,flash:1,diff:1},
-  JSON.parse(localStorage.getItem('emberwickCfg')||'{}')); }catch(e){ return {mus:1,sfx:1,shake:1,flash:1,diff:1}; } })();
-function saveCfg(){ try{ localStorage.setItem('emberwickCfg',JSON.stringify(CFG)); }catch(e){} }
+  JSON.parse(SafeStore.get('emberwickCfg')||'{}')); }catch(e){ return {mus:1,sfx:1,shake:1,flash:1,diff:1}; } })();
+function saveCfg(){ try{ SafeStore.set('emberwickCfg',JSON.stringify(CFG)); }catch(e){} }
 const store={
-  get(){ try{ return localStorage.getItem('emberwickSave'); }catch(e){ return null; } },
-  set(v){ try{ localStorage.setItem('emberwickSave',v); }catch(e){} },
-  clear(){ try{ localStorage.removeItem('emberwickSave'); }catch(e){} }
+  get(){ try{ return SafeStore.get('emberwickSave'); }catch(e){ return null; } },
+  set(v){ try{ SafeStore.set('emberwickSave',v); }catch(e){} },
+  clear(){ try{ SafeStore.del('emberwickSave'); }catch(e){} }
 };
 let autoT=0;
 function autoSave(){
@@ -6065,9 +5785,6 @@ function togglePause(force){
   document.getElementById('pausePanel').style.display = G.paused? 'flex':'none';
   if(G.paused){ closeAllPanels(); closeDialog(); buildPauseStats(); syncCfgUI(); autoSave(); }
 }
-document.getElementById('burstBtn').onclick=()=>emberBurst();
-if(document.getElementById('burstBtn').addEventListener)
-  document.getElementById('burstBtn').addEventListener('touchstart',(e)=>{e.preventDefault();e.stopPropagation();emberBurst();},{passive:false});
 document.getElementById('btnPause').onclick=()=>togglePause();
 document.getElementById('resumeBtn').onclick=()=>togglePause(false);
 document.getElementById('quitTitleBtn').onclick=()=>{
@@ -6495,7 +6212,6 @@ function frame(ts){
   G.time+=dt;
   if(CINE){ updateCine(dt); render(); if(CINE) drawCineOverlay(); return; }
   P.stats.time=(P.stats.time||0)+dt;
-  updateWick(dt);
   if(!G.interior) stampExplore(dt);
   if(G.interior){
     updateInterior(dt);
@@ -6552,78 +6268,6 @@ function boot(){
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
 }
-/* =====================================================================
-   THE WICK — you carry a flame. Night drains it; hearth, spring,
-   campfire and daylight feed it. A bright wick knits flesh; a dim
-   wick shrinks your circle of light.
-   ===================================================================== */
-function nearFire(x,y,r){ return G.fires && G.fires.some(f=>dist(x,y,f.x,f.y)<r); }
-function updateWick(dt){
-  G.fires=G.fires||[];
-  let d;
-  if(G.interior) d=20;
-  else{
-    const na=nightAmount();
-    d=(1-na)*1.2 - na*1.4*(1+(WX.rain||0)*0.8);
-    if(nearFire(P.x,P.y,2.8)) d=12;
-    else{
-      const sp=ZONES.springs;
-      if(G.worldId==='isle' && sp && dist(P.x,P.y,sp.x,sp.y)<(sp.r||5)+1) d=Math.max(d,8);
-      else for(const b of G.decor){ if(b.kind==='forge' && dist(P.x,P.y,b.x,b.y)<3.4){ d=Math.max(d,6); break; } }
-    }
-    if(na>0.4 && !P._duskHint){ P._duskHint=1;
-      toast('Dark falls, and your <b>wick</b> begins to burn low. Flame feeds it — hearths, the hot springs, or a <b>campfire</b> (\ud83d\udd25, 2 wood).',6000); }
-  }
-  P.wick=clamp((P.wick??100)+d*dt,0,100);
-  if(P.wick>70 && P.hp<P.maxhp && !P.dead) P.hp=Math.min(P.maxhp, P.hp+0.5*dt);
-  if(P.wick<20 && !P._wkLow){ P._wkLow=1;
-    toast('Your wick <b style="color:#ff9a3c">gutters</b>. The dark leans closer — find flame.',5200); }
-  else if(P.wick>=32) P._wkLow=0;
-  for(let i=G.fires.length-1;i>=0;i--){
-    const f=G.fires[i]; f.t-=dt;
-    if(Math.random()<dt*3) G.parts.push({x:f.x+rnd(-0.2,0.2),y:f.y+rnd(-0.1,0.1),vx:rnd(-0.15,0.15),vy:rnd(-1.1,-0.6),life:rnd(0.4,0.8),color: Math.random()<0.6?'rgba(255,170,80,0.7)':'rgba(120,120,125,0.4)',size:rnd(1.8,3.2),grav:-0.3});
-    if(f.t<=0) G.fires.splice(i,1);
-  }
-}
-function placeCampfire(){
-  G.fires=G.fires||[];
-  if(G.state!=='play'||P.dead||G.paused) return;
-  if(G.interior){ toast('There\'s already a hearth in here.'); return; }
-  if((P.inv.wood||0)<2){ toast('A campfire needs <b>2 wood</b>.'); return; }
-  const t=tileAt(P.x|0,P.y|0);
-  if(t<T.SAND){ toast('Fire and seawater disagree.'); return; }
-  take('wood',2);
-  G.fires.push({x:P.x,y:P.y,t:90,max:90});
-  burst(P.x,P.y-0.3,'#ffb066',14); Snd.tone(220,0.2,'triangle',0.07,0.6); buzz(10);
-  P.stats.firesLit=(P.stats.firesLit||0)+1;
-  if(P.stats.firesLit>=5) award('lightbearer');
-  if(!P._fireHint){ P._fireHint=1;
-    toast('The fire takes. Beasts <b>fear the light</b> — none will trouble you beside it, and your wick drinks deep.',5600); }
-}
-function emberBurst(){
-  if(G.state!=='play'||P.dead||G.interior||dlg.open||G.paused) return;
-  if((P._buCd||0)>G.time) return;
-  if((P.wick||0)<35){ toast('Your wick is too dim — <b>35 flame</b> to burst. Warm yourself first.'); Snd.tone(150,0.14,'sine',0.05); return; }
-  P.wick-=35; P._buCd=G.time+6;
-  burst(P.x,P.y-0.5,'#ffcf8a',30); burst(P.x,P.y-0.5,'#ff8a3c',18);
-  G.shake=Math.max(G.shake,0.35); buzz(20);
-  Snd.tone(660,0.25,'triangle',0.08,-0.4); Snd.tone(330,0.4,'sine',0.06,-0.3);
-  for(const m of G.mobs){
-    if(m.dead) continue;
-    const l=dist(P.x,P.y,m.x,m.y); if(l>6.5) continue;
-    const bone=(m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss');
-    m.windup=0; m.hitCd=Math.max(m.hitCd||0,2.2);
-    const kx=(m.x-P.x)/(l||1), ky=(m.y-P.y)/(l||1);
-    if(bone){
-      damageMob(m,8,{x:kx*0.5,y:ky*0.5},'magic');
-      if(!m.dead){
-        m.fearT=2.2; m.state='idle'; m.tx=null;
-        moveEntity(m,kx*1.6,ky*1.6);
-        addFloat('FLEE!', m.x, m.y-2.1, '#ffd76a');
-      }
-    } else moveEntity(m,kx*1.0,ky*1.0);
-  }
-}
 let CINE=null;
 function startCinematic(){
   CINE={t:0, dur:6.6, from:{x:P.x-8.5, y:P.y+7}, to:{x:P.x, y:P.y},
@@ -6641,20 +6285,7 @@ function endCine(){
   banner('EMBERWICK ISLE','TUTORIAL SHORES — CHAPTER I');
   setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well — look for the <b style="color:var(--ember)">!</b>',5200),600);
   Snd.quest();
-  setTimeout(showWickTut, 2400);
 }
-function showWickTut(){
-  if(P.tut && P.tut.wick) return;
-  document.getElementById('wickTut').style.display='flex';
-}
-document.getElementById('wkBar').onclick=()=>{ document.getElementById('wickTut').style.display='flex'; };
-if(document.getElementById('wkBar').addEventListener)
-  document.getElementById('wkBar').addEventListener('touchstart',(e)=>{e.preventDefault();e.stopPropagation();document.getElementById('wickTut').style.display='flex';},{passive:false});
-document.getElementById('wickTutBtn').onclick=()=>{
-  P.tut=P.tut||{}; P.tut.wick=1;
-  document.getElementById('wickTut').style.display='none';
-  autoSave();
-};
 function drawCineOverlay(){
   const bh=Math.min(1, CINE.t/0.45, (CINE.dur-CINE.t)/0.6)*Math.min(76, VH*0.115);
   cx.setTransform(DPR,0,0,DPR,0,0);
@@ -6689,6 +6320,7 @@ function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
+  if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving — progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   P.quests.welcome='avail';
   updateQuestUI();
   startCinematic();
