@@ -175,7 +175,8 @@ const G = {
 };
 const inb = (x,y)=> x>=0&&y>=0&&x<MAPW&&y<MAPH;
 const tileAt = (x,y)=> inb(x,y) ? G.map[y*MAPW+x] : T.DEEP;
-const setTile = (x,y,t)=> { if(inb(x,y)) G.map[y*MAPW+x]=t; };
+const setTile = (x,y,t)=> { if(inb(x,y)){ G.map[y*MAPW+x]=t;
+  if(typeof invalidateGround==='function') invalidateGround(); } };
 const solidAt = (x,y)=> !inb(x,y) || G.solid[y*MAPW+x]===1;
 const setSolid = (x,y,v)=> { if(inb(x,y)) G.solid[y*MAPW+x]=v; };
 const walkTile = t => (t>=T.SAND); // sand and above are land
