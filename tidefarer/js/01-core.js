@@ -117,6 +117,11 @@ let VW=0, VH=0, DPR=1;
    SAFE = minimal-GPU mode (also skips dynamic lighting). The adaptive perf
    tuner (js/24-perf.js) lowers these on weak GPUs; SAFE is forced by ?safe. */
 let RQ=1, LOWFX=false, SAFE=false;
+/* Benchmark hooks: DBG flags gate individual render passes so js/26-bench.js
+   can attribute real (GPU-side) cost per pass via differential timing (?bench).
+   All default on, so normal play is unchanged. BENCH pauses the auto-tuner. */
+let BENCH=false;
+const DBG={ground:1, entities:1, particles:1, floats:1, vignette:1};
 function resize(){
   VW = window.innerWidth; VH = window.innerHeight;
   const base = Math.min(window.devicePixelRatio||1, 2);

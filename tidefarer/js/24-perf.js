@@ -46,6 +46,7 @@ const _frame=frame;
 frame=function(ts){
   _frame(ts);
   if(safe) return; // pinned
+  if(BENCH){ prev=ts; return; } // benchmark harness is driving; don't auto-tune
   if(G.paused || document.hidden ||
      document.body.classList.contains('photoing')){ prev=ts; return; }
   if(prev){ const dt=ts-prev; if(dt>0 && dt<2000){ acc+=dt; cnt++; } }

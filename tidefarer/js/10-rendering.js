@@ -21,7 +21,7 @@ function render(){
   minX=Math.floor(minX)-2; maxX=Math.ceil(maxX)+2; minY=Math.floor(minY)-2; maxY=Math.ceil(maxY)+4;
 
   // ---- ground pass ----
-  for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
+  if(DBG.ground) for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
@@ -80,7 +80,7 @@ function render(){
   for(const pt of G.parts){ if(pt.pickup) items.push({d:pt.x+pt.y, kind:'pickup', o:pt}); }
   items.sort((a,b)=>a.d-b.d);
 
-  for(const it of items){
+  if(DBG.entities) for(const it of items){
     const o=it.o, s=worldToScreen(o.x,o.y);
     switch(it.kind){
       case 'node': drawNode(o,s); break;
@@ -95,7 +95,7 @@ function render(){
   }
 
   // ---- particles & floats ----
-  for(const pt of G.parts){
+  if(DBG.particles) for(const pt of G.parts){
     if(pt.pickup) continue;
     const s=worldToScreen(pt.x,pt.y);
     cx.globalAlpha=clamp(pt.life*2.2,0,1);
@@ -137,7 +137,7 @@ function render(){
       cx.globalAlpha=1;
     }
   }
-  for(const f of G.floats){
+  if(DBG.floats) for(const f of G.floats){
     const s=worldToScreen(f.x,f.y);
     cx.globalAlpha=clamp(f.life,0,1);
     cx.font='bold '+Math.round(13*(f.scale||1))+'px Verdana';
@@ -237,7 +237,7 @@ function render(){
   // vignette
   const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  cx.fillStyle=vg; cx.fillRect(0,0,VW,VH);
+  if(DBG.vignette){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
 
   drawMinimap();
 }
