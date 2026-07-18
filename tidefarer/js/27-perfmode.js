@@ -14,13 +14,14 @@
 try{
   const q=(location.search||'').toLowerCase();
   if(q.indexOf('lowgfx')>=0 || q.indexOf('perfmode')>=0){
-    PERF=true; try{ SafeStore.set('tf_perf','1'); }catch(e){}
+    PERF=true; LOWFX=true; try{ SafeStore.set('tf_perf','1'); }catch(e){}
     if(typeof resize==='function') resize();
   }
 }catch(e){}
 
 function setPerfMode(on){
   PERF = !!on;
+  if(PERF) LOWFX = true;   // engage aggressive low-gfx stripping immediately
   try{ SafeStore.set('tf_perf', PERF?'1':'0'); }catch(e){}
   if(typeof resize==='function') resize();
   syncPerfUI();
