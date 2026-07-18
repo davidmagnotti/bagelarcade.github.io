@@ -1,0 +1,4 @@
+# Local tooling for regenerating app-assets (see app-assets/_source)
+node_modules/
+package.json
+package-lock.json
