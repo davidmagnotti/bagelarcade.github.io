@@ -131,8 +131,8 @@ function render(){
     }
   }
   }
-  if(!LOWFX) drawFoam(minX,maxX,minY,maxY);
-  drawDecals(minX,maxX,minY,maxY);   // gore decals restored in low-gfx (build 27)
+  if(fxOn('foam')) drawFoam(minX,maxX,minY,maxY);
+  if(fxOn('decals')) drawDecals(minX,maxX,minY,maxY);
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
@@ -171,7 +171,7 @@ function render(){
   }
 
   // ---- particles & floats ----
-  if(DBG.particles) for(const pt of G.parts){   // particles restored in low-gfx (build 27)
+  if(DBG.particles && fxOn('particles')) for(const pt of G.parts){
     if(pt.pickup) continue;
     const s=worldToScreen(pt.x,pt.y);
     cx.globalAlpha=clamp(pt.life*2.2,0,1);
@@ -201,7 +201,7 @@ function render(){
   }
   // fireflies
   const night=nightAmount();
-  if(night>0.1){   // fireflies: a few small arcs - cheap enough to keep in low-gfx
+  if(fxOn('fireflies') && night>0.1){
     for(const f of G.fireflies){
       const s=worldToScreen(f.x,f.y);
       const a=(0.4+0.6*Math.abs(Math.sin(f.ph)))*Math.min(1,f.life);
@@ -241,13 +241,12 @@ function render(){
   }
 
   // ---- carrion crows & coastal gulls (cheap: a few line strokes) - kept in low-gfx
-  drawCrows();
-  drawGulls();
-  drawFog();                       // restored in low-gfx (build 27)
-  if(!LOWFX){ WX.drawCloudShadows(); }   // cloud shadows: broad fills, still low-gfx-off
+  if(fxOn('birds')){ drawCrows(); drawGulls(); }
+  if(fxOn('fog')) drawFog();
+  if(fxOn('cloudShadows')) WX.drawCloudShadows();
 
   // ---- dynamic darkness with carved light pools ----
-  if(!LOWFX && night>0.02){
+  if(fxOn('lighting') && night>0.02){
     drawLighting(night);
     // warm additive glow around flames
     cx.globalCompositeOperation='lighter';
@@ -306,11 +305,11 @@ function render(){
   // cinematic grade: cool shadows, film grain (full-screen blend passes -
   // costly on weak desktop GPUs). Skip on the title/menu so the loading
   // screen stays light, and skip entirely at the lowest quality tier.
-  if(!LOWFX && G.state==='play') drawGritGrade();
+  if(fxOn('grade') && G.state==='play') drawGritGrade();
   // vignette
   const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  if(DBG.vignette){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }   // 1 gradient fill - cheap, kept in low-gfx
+  if(DBG.vignette && fxOn('vignette')){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
 
   // The minimap is a second on-screen canvas; redrawing it every frame forces
   // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.

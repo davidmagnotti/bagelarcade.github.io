@@ -95,7 +95,7 @@ syncCfgUI=function(){
 const bloomCv=document.createElement('canvas');
 const bloomCx=bloomCv.getContext('2d');
 function drawRadiance(){
-  if(!CFG.bloom || LOWFX || G.state!=='play' || !cv.width) return;
+  if(!CFG.bloom || !fxOn('bloom') || G.state!=='play' || !cv.width) return;
   const bw=Math.max(1,(cv.width/6)|0), bh=Math.max(1,(cv.height/6)|0);
   if(bloomCv.width!==bw || bloomCv.height!==bh){ bloomCv.width=bw; bloomCv.height=bh; }
   bloomCx.clearRect(0,0,bw,bh);
