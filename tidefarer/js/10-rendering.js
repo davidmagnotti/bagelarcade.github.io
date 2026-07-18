@@ -42,8 +42,9 @@ function render(){
             cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
           }
         }
-      } else {
+      } else if(!LOWFX){
         // soft terrain transitions: higher terrain bleeds over lower
+        // (up to 4 extra drawImage per land tile - a big draw-call cost)
         const mc=terrainCls(t);
         if(mc<4){
           const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
