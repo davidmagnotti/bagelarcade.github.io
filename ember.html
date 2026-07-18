@@ -196,7 +196,11 @@
   .skbar .fill{height:100%;background:linear-gradient(90deg,#8bc34a,#c8e06a);}
   .skrow .perk{font-size:10px;color:var(--parch-dim);width:110px;}
   /* quest log */
-  .qlogItem{border:2px solid #4a3826;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#1d140b;}
+  .qlogItem{border:2px solid #4a3826;border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#1d140b;cursor:pointer;transition:border-color .15s;}
+  .qlogItem:hover{border-color:#6a5236;}
+  .qlogItem .qdet{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed #3a2c1c;font-size:12px;line-height:1.5;color:var(--parch);}
+  .qlogItem.open .qdet{display:block;}
+  .qlogItem.open{border-color:var(--ember);}
   .qlogItem.done{opacity:.55;}
   .qlogItem .qt{font-family:Georgia,serif;color:var(--ember);font-size:14px;}
   .qlogItem .qd{font-size:12px;color:var(--parch);margin-top:3px;line-height:1.4;}
@@ -334,6 +338,9 @@
 <div class="panel" id="questPanel">
   <div class="closeX" data-close="questPanel">✕</div>
   <h2>Quest Log</h2>
+  <input id="qsearch" type="text" placeholder="Search quests &amp; lore..." autocomplete="off"
+    style="width:100%;box-sizing:border-box;margin:0 0 8px 0;padding:7px 10px;border-radius:8px;
+    border:1.5px solid #4a3a26;background:#241a10;color:var(--parch);font:inherit;font-size:13px;">
   <div id="qlog"></div>
 </div>
 
@@ -2057,6 +2064,19 @@ function iconCanvas(kind,sz=40){
         g.beginPath(); g.arc(6,-3,5.5,4.2,3.0); g.stroke();
         g.beginPath(); g.moveTo(-2,1); g.lineTo(-8,11); g.moveTo(2,1); g.lineTo(8,11); g.stroke();
         g.fillStyle='#ffce7a'; g.beginPath(); g.arc(0,-1,2.6,0,TAU); g.fill(); break;
+      case 'bread': g.fillStyle='#d8a45c'; g.beginPath(); g.ellipse(0,1,11,7.5,0,0,TAU); g.fill();
+        g.fillStyle='#eec27e'; g.beginPath(); g.ellipse(-1,-1.5,9,5,0,0,TAU); g.fill();
+        g.strokeStyle='#9a6a34'; g.lineWidth=1.6; g.lineCap='round';
+        g.beginPath(); g.moveTo(-6,-3); g.lineTo(-3,1); g.moveTo(-1,-4); g.lineTo(2,0); g.moveTo(4,-3); g.lineTo(7,1); g.stroke(); g.lineCap='butt'; break;
+      case 'cookedfish': g.fillStyle='#b97f46'; g.beginPath(); g.ellipse(-2,0,10,6,0,0,TAU); g.fill();
+        g.beginPath(); g.moveTo(7,0); g.lineTo(14,-6); g.lineTo(14,6); g.closePath(); g.fill();
+        g.strokeStyle='#7a4a1e'; g.lineWidth=1.6;
+        g.beginPath(); g.moveTo(-8,-4); g.lineTo(-5,4); g.moveTo(-3,-5); g.lineTo(0,4); g.moveTo(2,-4); g.lineTo(4,3); g.stroke();
+        g.fillStyle='#4a2c10'; g.beginPath(); g.arc(-8,-1,1.3,0,TAU); g.fill(); break;
+      case 'apple': g.fillStyle='#d84a4a'; g.beginPath(); g.arc(-3,2,7.5,0,TAU); g.arc(3,2,7.5,0,TAU); g.fill();
+        g.fillStyle='#f08a8a'; g.beginPath(); g.ellipse(-4,-1,3,4,0.4,0,TAU); g.fill();
+        g.strokeStyle='#5a3a1a'; g.lineWidth=2; g.beginPath(); g.moveTo(0,-5); g.quadraticCurveTo(1,-9,3,-10); g.stroke();
+        g.fillStyle='#5a9a3a'; g.beginPath(); g.ellipse(6,-9,4,2.2,-0.5,0,TAU); g.fill(); break;
       case 'wood': g.rotate(0.5); g.fillStyle='#8a6238'; g.beginPath(); g.roundRect(-13,-6,26,12,5); g.fill();
         g.fillStyle='#c9a06a'; g.beginPath(); g.ellipse(-13,0,4,6,0,0,TAU); g.fill();
         g.strokeStyle='#a57e4d'; g.beginPath(); g.ellipse(-13,0,2,3,0,0,TAU); g.stroke();
@@ -2107,7 +2127,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }
@@ -2141,7 +2161,7 @@ const P = {
   hp:100, maxhp:100, mp:30, maxmp:30,
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
-  level:1, xpL:0, bank:0, vault:{}, bind:null, horse:0, riding:0, home:0, homeUp:{},
+  level:1, xpL:0, bank:0, vault:{}, quickItem:'potion', bind:null, horse:0, riding:0, home:0, homeUp:{},
   swordTier:0, // 0 rusty, 1 iron
   atkCd:0, swing:0, hurtT:0, lastCombat:-99, regenT:0,
   inv:{potion:2, seed:0}, gold:0,
@@ -2414,6 +2434,10 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
+  if(id==='ribbon1'){ P.quests.ribbon2='active';
+    toast('<b>Quest updated:</b> A Ribbon for Wren - steal back Mira\u2019s silk from the brigand camp north of Blackpine.',5600); }
+  if(id==='ribbon2'){ P.quests.ribbon3='active';
+    toast('<b>Quest updated:</b> A Ribbon for Wren - bring the Sunset Ribbon to Captain Corvo at the east cove.',5600); }
   if(id==='ribbon3'){ P.prog.eastSail=1;
     banner('NEW HORIZONS','THE EAST STRAIT OPENS SOON');
     setTimeout(()=>toast('Corvo readies his sloop. <b>A new island</b> waits past the shoals. Coming in a future update.',6000),1500); }
@@ -2824,7 +2848,8 @@ window.addEventListener('keydown',e=>{
   if(k==='1') selectWeapon('melee');
   if(k==='2') selectWeapon('bow');
   if(k==='3') selectWeapon('staff');
-  if(k==='4') useItem('potion');
+  if(k==='4') useItem(P.quickItem||'potion');
+  if(k==='r') cycleQuickItem();
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }
@@ -2876,7 +2901,7 @@ function pickClickTarget(wx,wy){
   for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});
   for(const b of G.decor){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
-    else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done')) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
+    else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
     else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
@@ -2995,6 +3020,7 @@ function closeAllPanels(){ ['invPanel','skillPanel','questPanel','mapPanel'].for
 document.querySelectorAll('.closeX').forEach(el=> el.onclick=()=> document.getElementById(el.dataset.close).style.display='none');
 document.getElementById('btnInv').onclick=()=>togglePanel('invPanel');
 document.getElementById('btnQuests').onclick=()=>togglePanel('questPanel');
+document.getElementById('qsearch').oninput=()=>refreshQuestLog();
 document.getElementById('btnSkills').onclick=()=>togglePanel('skillPanel');
 document.getElementById('btnMap').onclick=()=>togglePanel('mapPanel');
 document.getElementById('miniWrap').onclick=()=>togglePanel('mapPanel');
@@ -3017,15 +3043,42 @@ function buildHotbar(){
     const ic=document.createElement('canvas'); ic.width=ic.height=40;
     ic.getContext('2d').drawImage(ICONS[h.icon],0,0); s.appendChild(ic);
     const key=document.createElement('div'); key.className='key'; key.textContent=h.key; s.appendChild(key);
-    if(!h.wpn){ const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv.potion||0; s.appendChild(c); }
-
-    const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem('potion'); };
+    if(!h.wpn){
+      // the quick slot: whatever consumable is currently attuned to it
+      const qi=P.quickItem||'potion';
+      ic.getContext('2d').clearRect(0,0,40,40);
+      ic.getContext('2d').drawImage(ICONS[qi]||ICONS.potion,0,0);
+      const c=document.createElement('div'); c.className='cnt'; c.textContent=P.inv[qi]||0; s.appendChild(c);
+      const sw=document.createElement('div'); sw.textContent='\u21c4';
+      sw.style.cssText='position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;'+
+        'background:#3a2c1c;border:1.5px solid #7a5f43;color:#f0e2c0;font-size:12px;line-height:19px;'+
+        'text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.6);z-index:2;';
+      const cyc=(e)=>{ e.preventDefault(); e.stopPropagation(); Snd.init(); cycleQuickItem(); };
+      sw.onclick=cyc;
+      if(sw.addEventListener) sw.addEventListener('touchstart',cyc,{passive:false});
+      s.appendChild(sw);
+    }
+    const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem(P.quickItem||'potion'); };
     s.onclick=act;
     if(s.addEventListener) s.addEventListener('touchstart',(e)=>{
       e.preventDefault(); e.stopPropagation(); act();
     },{passive:false});
     hb.appendChild(s);
   });
+}
+const QUICK_ITEMS=['potion','bread','cookedfish','apple','fish','wheat'];
+function cycleQuickItem(){
+  const cur=QUICK_ITEMS.indexOf(P.quickItem||'potion');
+  for(let i=1;i<=QUICK_ITEMS.length;i++){
+    const k=QUICK_ITEMS[(cur+i)%QUICK_ITEMS.length];
+    if((P.inv[k]||0)>0 || k==='potion'){
+      P.quickItem=k; buildHotbar();
+      toast('Quick slot: <b>'+ITEMS[k].name+'</b> \u00d7'+(P.inv[k]||0)+' <i>(heals '+ITEMS[k].heal+')</i>',2000);
+      Snd.pickup();
+      hintOnce('quickswap','Tap the <b>\u21c4</b> badge (or press <b>R</b>) any time to swap the quick slot between tonics and food.');
+      return;
+    }
+  }
 }
 function selectWeapon(w){
   if(w==='melee' && !P.unlocked.melee) return; // grayed slots speak for themselves
@@ -3034,7 +3087,7 @@ function selectWeapon(w){
   P.weapon=w; buildHotbar();
 }
 function useItem(item){
-  if(!has(item,1)) { if(item==='potion') toast('No tonics left - Elder Maren sells them for 8 gold.'); return; }
+  if(!has(item,1)) { toast(item==='potion'? 'No tonics left - Elder Maren sells them for 8 gold.' : 'No '+(ITEMS[item]?ITEMS[item].name.toLowerCase():item)+' left - tap the \u21c4 badge to swap the quick slot.'); return; }
   const def=ITEMS[item];
   if(def.use==='heal'){
     if(P.hp>=P.maxhp){ toast('You\'re already at full health.'); return; }
@@ -3090,19 +3143,35 @@ function refreshSkillsPanel(){
       '<div class="perk">'+SKILLS[k].perk+'</div></div>');
   }
 }
+const QLOG_OPEN={};
 function refreshQuestLog(){
   if(document.getElementById('questPanel').style.display!=='block') return;
   const box=document.getElementById('qlog'); box.innerHTML='';
+  const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
+  const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
   const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3'];
   let any=false;
   for(const id of order){
-    const st=qs(id); if(!st || st==='avail') continue; any=true;
+    const st=qs(id); if(!st || st==='avail') continue;
+    // staged chains show only their current chapter, not every superseded one
     const q=QUESTS[id];
-    box.insertAdjacentHTML('beforeend','<div class="qlogItem'+(st==='done'?' done':'')+'">'+
-      '<div class="qt">'+q.title+(st==='done'?' ✓':'')+'</div>'+
+    if(q.stageOf){
+      let superseded=false;
+      for(const id2 of order){ const q2=QUESTS[id2];
+        if(q2 && q2.stageOf===q.stageOf && q2.stage>q.stage && qs(id2)){ superseded=true; break; } }
+      if(superseded) continue;
+    }
+    if(!(matches(q.title)||matches(q.log)||matches(q.brief))) continue;
+    any=true;
+    const el=document.createElement('div');
+    el.className='qlogItem'+(st==='done'?' done':'')+(QLOG_OPEN[id]?' open':'');
+    el.innerHTML='<div class="qt">'+q.title+(q.stageOf?' <span style="color:var(--parch-dim);font-weight:normal;">('+q.stage+'/3)</span>':'')+(st==='done'?' ✓':'')+'</div>'+
       '<div class="qd">'+q.log+'</div>'+
       (st==='active'? '<div class="qp'+(questReady(id)?' ready':'')+'">'+questProgressText(id)+'</div>':'')+
-      '</div>');
+      '<div class="qdet"><i>\u201c'+q.brief+'\u201d</i><br><span style="color:var(--parch-dim);">- '+npcName(q.giver)+
+      (st==='active'?' \u00b7 Objective: '+(questProgressText(id)||q.log):'')+'</span></div>';
+    el.onclick=()=>{ QLOG_OPEN[id]=!QLOG_OPEN[id]; el.classList.toggle('open',!!QLOG_OPEN[id]); Snd.step&&Snd.step(6); };
+    box.appendChild(el);
   }
   const avail = order.filter(id=>qs(id)==='avail');
   if(avail.length) box.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">'+avail.length+' villager'+(avail.length>1?'s have':' has')+' work for you - look for the <b style="color:var(--ember)">!</b> marks.</div>');
@@ -3111,7 +3180,7 @@ function refreshQuestLog(){
   let lh='<div style="margin-top:12px;border-top:1px solid #3a2c1c;padding-top:8px;">'+
     '<div class="qt" style="color:var(--ember);">Lore Journal - '+read.length+'/'+total+'</div>';
   if(read.length){
-    for(const k of read){ if(LORE[k]) lh+='<div class="qlogItem" style="margin-top:6px;"><div class="qt" style="font-size:12px;">'+LORE[k].title+'</div><div class="qd">'+LORE[k].text+'</div></div>'; }
+    for(const k of read){ if(LORE[k] && (matches(LORE[k].title)||matches(LORE[k].text))) lh+='<div class="qlogItem" style="margin-top:6px;"><div class="qt" style="font-size:12px;">'+LORE[k].title+'</div><div class="qd">'+LORE[k].text+'</div></div>'; }
   } else lh+='<div class="qd" style="font-size:11px;color:var(--parch-dim);">Books wait indoors; old stones wait among the ruins. Read them.</div>';
   lh+='</div>';
   box.insertAdjacentHTML('beforeend',lh);
@@ -3179,7 +3248,7 @@ function refreshUI(){
   document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
   document.getElementById('goldTxt').textContent=P.gold;
   const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
-  const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv.potion||0;
+  const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv[P.quickItem||'potion']||0;
 }
 /* =====================================================================
    GAMEPLAY SYSTEMS
@@ -3247,7 +3316,7 @@ function nearestInteract(){
     }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
-    if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done')){ const d=dist(P.x,P.y,b.x,b.y);
+    if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
   for(const pl of G.plots){
@@ -3520,7 +3589,7 @@ function damageMob(m,dmg,knock,skill){
   if(Math.random()<0.12){ dmg=Math.round(dmg*1.6); crit=true; }
   const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
   dmg=Math.max(1,Math.round(dmg*Math.max(0.35,1-0.09*lvdiff))); // high-level foes shrug
-  m.hp-=dmg; m.hurtT=0.18; m.state='chase';
+  m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
   splat(m.x,m.y,GORE[m.kind]||GORE.wolf,false);
@@ -3842,7 +3911,8 @@ function updateMobs(dt){
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
-      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y)){ m.state='chase'; if(m.boss){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); } }
+      m.noAggroT=Math.max(0,(m.noAggroT||0)-dt);
+      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){ m.state='chase'; if(m.boss){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); } }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
       if(m.tx!=null){ const dx=m.tx-m.x, dy=m.ty-m.y, l=Math.hypot(dx,dy);
@@ -3851,7 +3921,10 @@ function updateMobs(dt){
       // leash
       if(pd>d.aggro*2.2 || P.dead || dist(m.x,m.y,m.hx,m.hy)>14){
         m.state='idle';
-        if(!m.boss && !m.bigBoss) m.hp=Math.min(m.maxhp,m.hp+m.maxhp*0.3); // bosses keep their wounds
+        m.noAggroT=4; // walk it off: ignore the player while heading home
+        if(!m.boss && !m.bigBoss && G.time-(m.leashHealT||0)>10){ // bosses keep their wounds
+          m.hp=Math.min(m.maxhp,m.hp+m.maxhp*0.3); m.leashHealT=G.time;
+        }
         m.tx=m.hx; m.ty=m.hy; continue;
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
@@ -4404,7 +4477,12 @@ function drawSign(b,s,BS){
   cx.restore();
 }
 function drawDecor(b,s){
-  if(b.cache && qs('ribbon2')!=='active' && qs('ribbon2')!=='done') return; // unseen until you learn of it
+  if(b.cache && !qs('ribbon2')) return; // unseen until Mira tells you of it
+  if(b.cache && !b.opened && Math.random()<0.06){
+    // a wink of dawn-colored silk between the boards - hard to miss once you know
+    G.parts.push({x:b.x+rnd(-0.4,0.4), y:b.y-rnd(0.6,1.3), vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.7),
+      life:0.8, color:Math.random()<0.5?'#ffb0c8':'#ffe2ec', size:2.5, grav:0});
+  }
   if(b.kind==='tuft'){
     const sw=Math.sin(G.time*1.7+b.ph)*2.2;
     cx.strokeStyle='#688f4b'; cx.lineWidth=1.5; cx.lineCap='round';
@@ -5569,19 +5647,19 @@ QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
   log:'Collect 5 shells from Barik\'s beaches for Ivo.',
   doneText:'Unbroken, every one. You\'d make a fair herbalist if the sword ever bores you. Balm\'s share is yours.',
   rw:{gold:35, item:{potion:2}, xp:{fishing:140}} };
-QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'mira', xpL:90,
+QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'mira', xpL:90, stageOf:'ribbon', stage:1,
   brief:'East past the shoals sits an island the charts pretend not to see. Bring my girl Wren a fine ribbon for her birthday and I will sail you there myself. Mira at Thimble and Thread in Greyharbor weaves the best on Barik.',
-  log:'Ask Mira the Seamstress in Greyharbor about a ribbon.',
+  log:'(1/3) Ask Mira the Seamstress in Greyharbor about a ribbon.',
   doneText:'A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come.',
   rw:{} };
-QUESTS.ribbon2={ giver:'mira', title:'Stolen Thread', kind:'gather', need:{silk:1}, xpL:200,
+QUESTS.ribbon2={ giver:'mira', title:'A Ribbon for Wren', kind:'gather', need:{silk:1}, xpL:200, stageOf:'ribbon', stage:2,
   brief:'If you can walk into that camp and walk out again: my silk sits in a chest they guard, north of the deep pines. Bring me one bolt and I will weave the finest ribbon Barik has seen.',
-  log:'Steal back a bolt of silk from the brigand camp north of Blackpine.',
+  log:'(2/3) Steal back a bolt of silk from the brigand camp north of Blackpine.',
   doneText:'Dawn-colored, and not a thread pulled. Give me a moment... there. A Sunset Ribbon, and my thanks stitched into it.',
   rw:{item:{ribbon:1}, gold:40} };
-QUESTS.ribbon3={ giver:'corvo', title:'The Tide Turns', kind:'gather', need:{ribbon:1}, xpL:260,
+QUESTS.ribbon3={ giver:'corvo', title:'A Ribbon for Wren', kind:'gather', need:{ribbon:1}, xpL:260, stageOf:'ribbon', stage:3,
   brief:'You have it? Wren will be over the moon and halfway back.',
-  log:'Bring the Sunset Ribbon to Captain Corvo at the east cove.',
+  log:'(3/3) Bring the Sunset Ribbon to Captain Corvo at the east cove.',
   doneText:'She will wear it till the color goes. A bargain is a bargain: when the tide turns, we sail east. Watch the horizon, friend. New shores are coming.',
   rw:{gold:150} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
@@ -6303,7 +6381,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
@@ -6344,7 +6422,7 @@ function loadCode(str){
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
   if(typeof d.dyt==='number') G.dayT=d.dyt;
-  P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.vault=d.vault||{}; P.gritLv=d.gritLv||0; P.gritN=d.gritN||0; P.spell=d.spell||'bolt'; P.spells=d.spells||{}; P.bind=d.bind||null;
+  P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.vault=d.vault||{}; P.gritLv=d.gritLv||0; P.gritN=d.gritN||0; P.spell=d.spell||'bolt'; P.spells=d.spells||{}; P.quickItem=d.qi||'potion'; P.bind=d.bind||null;
   P.horse=d.hs?1:0; P.home=d.hm?1:0; P.homeUp=d.hu||{};
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
@@ -6397,7 +6475,7 @@ function pollGamepad(){
     if(b(0)) tryAttack(false);
     if(edge(1)) tryRoll();
     if(edge(2)) doInteract();
-    if(edge(3)) useItem('potion');
+    if(edge(3)) useItem(P.quickItem||'potion');
     if(edge(4)||edge(5)){
       const order=['melee','bow','staff'].filter(w=> w==='melee'||P.unlocked[w]);
       let i=order.indexOf(P.weapon); if(i<0) i=0;
