@@ -1361,6 +1361,17 @@ function spawnMobsCrown(){
   const yd2=findOpenNear(Math.round(BA.x-3),Math.round(BA.y+4),5);
   if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
 }
+function updateCrownFolkMood(){
+  if(!(P.story && P.story.kingTold)) return;
+  const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
+  // after the audience, the King speaks openly of the hunt he has charged you with
+  set('aldous',['Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son.',
+    'You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.',
+    'Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them.']);
+  set('perrin',['His Majesty has not stood so straight in decades. Whatever passed between you gave the old grief a direction. That is no small gift.',
+    'A royal writ, an open purse, and the King\'s own hope riding on you. Do not squander them.']);
+  set('brea',['Hear it! The King has named the traveler his own hand abroad - go where they go, and you go with the crown\'s blessing!']);
+}
 function genCrownAll(){
   genCrown(); bakeSolids(); placeObjectsCrown(); buildFoam();
   spawnCrownFolk(); spawnMobsCrown();
@@ -1461,6 +1472,11 @@ QUESTS.thaw={ giver:'bryn', title:'The Weeping Warden', kind:'kill', kill:{frost
   log:'Climb to the Weeping Glacier and free the bound ice Warden to thaw the strait. (Lv 13 - dress warm.)',
   doneText:'Water in the strait and tears on the glacier - you gave us back our guardian and our sea in one stroke. Hearthhold will drink your name warm for a generation. Take this, and our thanks.',
   rw:{gold:340, item:{potion:3}, xp:{melee:460, archery:460, magic:460}} };
+QUESTS.audience={ giver:'brea', title:'An Audience with the King', kind:'talk', talkTo:'aldous', xpL:520,
+  brief:'You are the one, aren\'t you - the traveler unmaking the old curses, isle by isle. Word of it reaches the throne faster than any ship. His Majesty King Aldous would look upon the curse-breaker himself. He keeps his court before the palace gate, up the Processional. Go to him. One does not keep a grieving king waiting.',
+  log:'Climb the Processional to the Tideglass Palace and present yourself to King Aldous.',
+  doneText:'',   // the audience is a scripted scene in the King's own dialogue
+  rw:{gold:400, xp:{melee:520, archery:520, magic:520}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1921,6 +1937,10 @@ function switchWorld(id){
       setTimeout(()=>toast('<b>The Frozen Isle</b> - the strait is locked to solid ice and the cold bites like a curse, because it is one. <b>Bryn the Kettlewarden</b> keeps a fire in the village.',7000),1400); }
   }
   if(id==='crown'){
+    // the King grants an audience once you've broken at least one of Vath's
+    // curses on the isles (vathMet) - the herald offers it in the plaza.
+    if(P.story && P.story.vathMet && !(P.story.act>=3) && !P.quests.audience) P.quests.audience='avail';
+    if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1;
       setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. A whole kingdom to walk. And on its throne, they say, a king who has grieved for thirty years. <b>King Aldous</b> keeps his court before the palace gate.',8000),1400); }
   }

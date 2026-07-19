@@ -40,6 +40,29 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
+  // The Royal Audience - a scripted scene that opens Act III. The King receives
+  // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
+  // and he tells the tragedy that binds Vath to the throne, then charges you.
+  if(npc.id==='aldous' && qs('audience')==='active'){
+    const p3=()=>{
+      setDialog('<i>He turns the truth over like a blade he has carried too long.</i> “The curses shattering across my isles - the wyrm, the leviathan, the screaming aerie, the weeping strait - they are all one hand\'s work. His hand. I would know Vath\'s bindings anywhere; he practiced them at this very court. He did not drown thirty years ago. He has been out there all this time, and my son with him, or my son\'s grave.” <i>The King rises.</i> “I can send armies against a border. I cannot send them against a ghost. But you - you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy. Go with the crown behind you.”',
+        [{label:'I will find him.', cls:'gold', fn:()=>{
+            P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
+            completeQuest('audience');
+            if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
+            banner('ACT III','THE ENCHANTER\'S TIDE');
+            setDialog('<i>The King presses a heavy purse and a folded writ into your hands - his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited thirty years; I can wait a little longer, now that someone is finally looking.”',
+              [{label:'Continue',fn:()=>buildDialogContent(npc)}]);
+        }}]);
+    };
+    const p2=()=>{
+      setDialog('“Thirty years past, I had a wife I did not deserve and a son not yet a season old. My queen wished to show the boy the isles her own mother came from - Emberwick, out past the eastern shoals. My court enchanter counseled the voyage, chose the ship, sailed with them to see them safe. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers, and grief, and nothing else. No queen. No child. No enchanter. I buried three empty coffins and called Vath a loyal man drowned in my service.”',
+        [{label:'…And now?', fn:p3}]);
+    };
+    setDialog('<i>The King studies you a long moment - then his eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself, and the guarded weariness returns.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit, if you like. Let me tell you why the sight of you unsteadies me.”',
+      [{label:'Listen', fn:p2}]);
+    return;
+  }
   if(npc.id==='castell' && qs('feud2')==='active'){
     setDialog('“So the Queen sends her hound at last.” <i>The Castellan sets his helm and draws a long, notched blade.</i> “You should have stayed your side of the road, Barik-friend. Come - the March will bury one of us.”',
       [{label:'Draw steel', cls:'gold', fn:()=>{ closeDialog(); challengeCastellan(npc); }},
