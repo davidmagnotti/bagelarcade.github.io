@@ -134,6 +134,9 @@ function loadCode(str){
   } else if(d.world==='frost'){
     switchWorld('frost');
     applyWorldFlags(d.flags&&d.flags.frost);
+  } else if(d.world==='crown'){
+    switchWorld('crown');
+    applyWorldFlags(d.flags&&d.flags.crown);
   }
   P.x=d.x; P.y=d.y;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
