@@ -153,6 +153,10 @@ function questTargetPos(id){
     if(id==='vhunt'){ const mg=G.mobs.find(m=>m.kind==='mage'&&!m.dead); // track Vath as he flees
       return mg? {x:mg.x,y:mg.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null); }
     if(id==='tide') return (typeof leviathanHome==='function') ? leviathanHome() : (ZONES.dock? {x:ZONES.dock.x,y:ZONES.dock.y} : null);
+    if(id==='roost'){ // guide to the tome if you're inside the sealed roost, else to the tunnel mouth
+      const tome=G.decor && G.decor.find(b=>b.kind==='tome' && !b.destroyed);
+      if(tome && ZONES.sanctum && dist(P.x,P.y,ZONES.sanctum.x,ZONES.sanctum.y)<8) return {x:tome.x,y:tome.y};
+      return ZONES.tunnel? {x:ZONES.tunnel.x,y:ZONES.tunnel.y} : null; }
     if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
@@ -162,7 +166,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','tide'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','tide','roost'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

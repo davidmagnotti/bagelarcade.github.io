@@ -565,6 +565,42 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='tunnelmouth'){
+    const g=cx; drawShadowAt(g,s.x,s.y,14);
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#4a4038'; g.beginPath(); // stacked-stone arch
+    g.moveTo(-22,4); g.quadraticCurveTo(-20,-26,0,-30); g.quadraticCurveTo(20,-26,22,4); g.closePath(); g.fill();
+    g.strokeStyle='#231d18'; g.lineWidth=2.4; g.stroke();
+    g.fillStyle='#0c0a08'; g.beginPath(); g.moveTo(-12,4); g.quadraticCurveTo(0,-22,12,4); g.closePath(); g.fill();
+    g.strokeStyle='#6a5c4c'; g.lineWidth=1.4; // shoring timbers
+    g.beginPath(); g.moveTo(-13,4); g.lineTo(-13,-14); g.moveTo(13,4); g.lineTo(13,-14); g.moveTo(-14,-14); g.lineTo(14,-14); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='tome'){
+    const g=cx; drawShadowAt(g,s.x,s.y,10);
+    g.save(); g.translate(s.x,s.y);
+    if(b.destroyed){ // a scorch of ash where it burned
+      g.fillStyle='rgba(40,30,44,0.7)'; g.beginPath(); g.ellipse(0,-2,10,5,0,0,TAU); g.fill();
+      g.restore(); return;
+    }
+    // stone lectern
+    g.fillStyle='#5a5048'; g.beginPath(); g.moveTo(-6,0); g.lineTo(6,0); g.lineTo(4,-14); g.lineTo(-4,-14); g.closePath(); g.fill();
+    g.strokeStyle='#2c261f'; g.lineWidth=1.6; g.stroke();
+    // the book, hovering, breathing violet light
+    const bob=Math.sin(G.time*2)*2, gl=0.5+0.5*Math.sin(G.time*3);
+    g.fillStyle='rgba(199,123,255,'+(0.22*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,-26+bob,20,0,TAU); g.fill();
+    g.save(); g.translate(0,-26+bob);
+    g.fillStyle='#3a2050'; g.beginPath(); g.moveTo(-11,-7); g.lineTo(0,-9); g.lineTo(11,-7); g.lineTo(11,7); g.lineTo(0,9); g.lineTo(-11,7); g.closePath(); g.fill();
+    g.strokeStyle='#8a5ac0'; g.lineWidth=1.4; g.stroke();
+    g.fillStyle='#e8d8ff'; g.beginPath(); g.moveTo(-10,-6); g.lineTo(0,-8); g.lineTo(0,8); g.lineTo(-10,6); g.closePath(); g.fill(); // left page
+    g.fillStyle='#d8c4f0'; g.beginPath(); g.moveTo(10,-6); g.lineTo(0,-8); g.lineTo(0,8); g.lineTo(10,6); g.closePath(); g.fill();
+    g.strokeStyle='rgba(120,60,180,'+gl.toFixed(2)+')'; g.lineWidth=1; // glyphs crawling on the pages
+    for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(-8,-3+i*3); g.lineTo(-2,-3.5+i*3); g.moveTo(3,-3+i*3); g.lineTo(9,-3.5+i*3); g.stroke(); }
+    g.fillStyle='#c77bff'; g.beginPath(); g.arc(0,0,2.2+Math.sin(G.time*5)*0.6,0,TAU); g.fill(); // a violet eye at the spine
+    g.restore();
+    if(Math.random()<0.12) G.parts.push({x:b.x,y:b.y-1.6,vx:rnd(-0.15,0.15),vy:-rnd(0.2,0.6),life:rnd(0.8,1.6),color:'#c77bff',size:rnd(1.5,3),grav:-0.03});
+    g.restore(); return;
+  }
   if(b.kind==='woodpile'){
     const g=cx; drawShadowAt(g,s.x,s.y,16);
     g.save(); g.translate(s.x,s.y);
@@ -849,6 +885,44 @@ function drawMob(m,s){
       g.strokeStyle='rgba(199,123,255,'+gl.toFixed(2)+')'; g.lineWidth=2.2;
       g.beginPath(); g.arc(fl*6,hy,24,0,TAU); g.stroke(); }
     g.restore(); g.lineCap='butt';
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='raptor'){
+    const g=cx, fl=(m.face||1), t=G.time+m.anim, flap=Math.sin(t*11);
+    drawShadowAt(g,s.x,s.y,8);
+    g.save(); g.translate(s.x,s.y-16+Math.sin(t*3)*3); // wheels and swoops
+    g.fillStyle= m.hurtT>0?'#e0a0a0':'#4a4038';
+    g.beginPath(); g.moveTo(0,-2); g.quadraticCurveTo(-fl*16,-8-flap*8,-fl*23,2+flap*4); g.quadraticCurveTo(-fl*12,2,0,4); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(0,-2); g.quadraticCurveTo(fl*16,-8+flap*8,fl*23,2-flap*4); g.quadraticCurveTo(fl*12,2,0,4); g.closePath(); g.fill();
+    g.fillStyle='#5a4a3a'; g.beginPath(); g.ellipse(0,0,6,8,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(20,14,8,0.7)'; g.lineWidth=1.4; g.stroke();
+    g.fillStyle='#6a5844'; g.beginPath(); g.arc(fl*3,-7,4,0,TAU); g.fill();
+    g.fillStyle='#e8b23c'; g.beginPath(); g.moveTo(fl*6,-7); g.lineTo(fl*11,-5); g.lineTo(fl*6,-4); g.closePath(); g.fill();
+    g.fillStyle='#c77bff'; g.beginPath(); g.arc(fl*4,-8,1.5,0,TAU); g.fill(); // maddened violet eye
+    g.strokeStyle='#3a2c1c'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-2,6); g.lineTo(-3,10); g.moveTo(2,6); g.lineTo(3,10); g.stroke();
+    g.restore();
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='serpent'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, bodyC='#3a6a3a';
+    drawShadowAt(g,s.x,s.y,20);
+    g.save(); g.translate(s.x,s.y); g.scale(1.5,1.5);
+    for(let i=2;i>=0;i--){ const bx=fl*(-13-i*15), by=2-i*2-Math.sin(t*2+i)*2;
+      g.fillStyle= i%2?bodyC:shade(bodyC,10);
+      g.beginPath(); g.ellipse(bx,by,13-i*1.5,7-i,0,0,TAU); g.fill();
+      g.strokeStyle='rgba(10,26,10,0.6)'; g.lineWidth=2; g.stroke();
+      g.fillStyle='#c9c060'; g.beginPath(); g.ellipse(bx,by+3,7-i,2.4,0,0,TAU); g.fill(); }
+    const hy=-40-Math.sin(t*1.7)*4;
+    g.strokeStyle=bodyC; g.lineWidth=13; g.lineCap='round';
+    g.beginPath(); g.moveTo(fl*2,2); g.quadraticCurveTo(fl*10,-24,fl*6,hy+10); g.stroke();
+    g.save(); g.translate(fl*6,hy);
+    g.fillStyle=shade(bodyC,8); g.beginPath(); g.ellipse(fl*4,0,13,9,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(10,26,10,0.7)'; g.lineWidth=2.2; g.stroke();
+    g.fillStyle='#fff'; g.beginPath(); g.moveTo(fl*12,4); g.lineTo(fl*14,9); g.lineTo(fl*10,5); g.closePath(); g.fill();
+    g.strokeStyle='#d0405a'; g.lineWidth=1.4; g.beginPath(); g.moveTo(fl*13,2); g.lineTo(fl*21,2); g.lineTo(fl*24,0); g.moveTo(fl*21,2); g.lineTo(fl*24,4); g.stroke();
+    g.fillStyle= hurt?'#ffd0d0':'#e8c040'; g.beginPath(); g.arc(fl*7,-2,3,0,TAU); g.fill();
+    g.fillStyle='#0a1408'; g.fillRect(fl*6.2-0.8,-4,1.6,4);
+    g.restore(); g.restore(); g.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='dummy'){

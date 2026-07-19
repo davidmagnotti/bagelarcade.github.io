@@ -128,6 +128,9 @@ function loadCode(str){
   } else if(d.world==='wind'){
     switchWorld('wind');
     applyWorldFlags(d.flags&&d.flags.wind);
+  } else if(d.world==='aerie'){
+    switchWorld('aerie');
+    applyWorldFlags(d.flags&&d.flags.aerie);
   }
   P.x=d.x; P.y=d.y;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
