@@ -659,7 +659,7 @@ function drawDecor(b,s){
   // castle & resort sprites are 2.5x native; their small draw factors keep the
   // final on-screen size right while staying crisp. The Aldermere palace towers
   // over the whole game at grand scale.
-  const BS=b.kind==='castle'?(b.grand?4.0:0.42) : (b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
+  const BS=b.kind==='castle'?(b.grand?4.0:0.42) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){

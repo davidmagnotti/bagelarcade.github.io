@@ -30,7 +30,8 @@ function enterHouse(b){
     tower:{line:'Star charts, humming glass, and a faint smell of ozone.'},
     castle:{line:'Banners, cold stone, and a hearth that has heard a hundred oaths.'},
     hut:{line:'Woven mats, hanging nets, and the sweet smell of dried palm.'},
-    resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'}
+    resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'},
+    igloo:{line:'Curved snow-block walls, a fire pit at the heart, and furs enough to sleep through any storm.'}
   };
   const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [16,11] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
@@ -57,6 +58,11 @@ function enterHouse(b){
     F('table',4.7,8.4,0.9,0.6); F('stool',3.8,9.1,0.35,0.3); F('stool',5.6,9.1,0.35,0.3);
   }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
+  if(b.kind==='igloo'){ I.igloo=1;
+    F('hearth',I.w/2,I.h/2-0.3,0.9,0.5);                    // the central fire pit
+    F('bed',2.1,2.2,1.05,0.7); F('rug',I.w/2,I.h-2.4,0,0,false);
+    F('shelf',I.w-2.4,1.35,1.0,0.3); F('crate',I.w-1.9,I.h-1.9,0.55,0.45); F('barrel',2.2,I.h-2.0,0.45,0.4);
+  }
   if(b.kind==='castle'){
     F('rug',7.5,5.0,0,0,false);
     F('throne',7.5,1.7,1.0,0.6);
@@ -436,6 +442,11 @@ function renderInterior(){
       cx.fillStyle=(x+y)%2? '#eae2d0':'#ddd3bd';
       cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
       cx.strokeStyle='rgba(255,255,255,0.25)'; cx.lineWidth=1; cx.stroke();
+    } else if(I.igloo){
+      // packed snow & ice floor
+      cx.fillStyle=(x+y)%2? '#e4ebf4':'#d3ddea';
+      cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(150,175,205,0.3)'; cx.lineWidth=1; cx.stroke();
     } else {
       cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
     }
@@ -444,20 +455,38 @@ function renderInterior(){
   const WH= I.lair? 96 : 62;   // the lair is a cathedral-tall cavern
   for(let x=0;x<I.w;x++){
     const a=w2s(x,0), b=w2s(x+1,0);
-    cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.resort? (x%2?'#e6dcc6':'#d8cdb4') : (x%2? '#4a3626':'#443122');
+    cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.resort? (x%2?'#e6dcc6':'#d8cdb4') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : (x%2? '#4a3626':'#443122');
     cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
     cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
   }
   for(let y=0;y<I.h;y++){
     const a=w2s(0,y), b=w2s(0,y+1);
-    cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.resort? (y%2?'#d8cdb4':'#cabfa6') : (y%2? '#3a2a1c':'#352718');
+    cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.resort? (y%2?'#d8cdb4':'#cabfa6') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : (y%2? '#3a2a1c':'#352718');
     cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
     cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
   }
   if(I.lair) drawLairScene(w2s,I);
   if(I.resort) drawResortScene(w2s,I);
+  if(I.igloo){
+    // faint horizontal snow-block courses on the two walls
+    cx.strokeStyle='rgba(150,175,205,0.35)'; cx.lineWidth=1;
+    for(let c=1;c<=3;c++){ const yo=c*18;
+      let a=w2s(0,0), b2=w2s(I.w,0); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2-yo); cx.lineTo(b2.x-TW/2,b2.y-TH/2-yo); cx.stroke();
+      let c2=w2s(0,0), d2=w2s(0,I.h); cx.beginPath(); cx.moveTo(c2.x-TW/2,c2.y-TH/2-yo); cx.lineTo(d2.x-TW/2,d2.y-TH/2-yo); cx.stroke(); }
+    // the central fire pit
+    const hf=I.furn.find(f=>f.type==='hearth');
+    if(hf){ const s=w2s(hf.x,hf.y);
+      const gg=cx.createRadialGradient(s.x,s.y-8,4,s.x,s.y-8,96); gg.addColorStop(0,'rgba(255,184,96,0.24)'); gg.addColorStop(1,'rgba(255,184,96,0)');
+      cx.fillStyle=gg; cx.fillRect(s.x-96,s.y-96,192,192);
+      cx.fillStyle='#5a554e'; cx.beginPath(); cx.ellipse(s.x,s.y+2,22,10,0,0,TAU); cx.fill();  // stone ring
+      cx.fillStyle='#241f1a'; cx.beginPath(); cx.ellipse(s.x,s.y,14,6,0,0,TAU); cx.fill();
+      cx.fillStyle='#3a2a1c'; cx.fillRect(s.x-12,s.y-3,24,3);  // logs
+      for(let i=0;i<4;i++){ const fl=Math.sin(I.t*8+i*1.7)*3; cx.fillStyle=['#ff9a3c','#ffce7a','#e05648','#ffb26b'][i];
+        cx.beginPath(); cx.moveTo(s.x-9+i*6,s.y-2); cx.quadraticCurveTo(s.x-7+i*6+fl,s.y-22-i*2,s.x-5+i*6,s.y-2); cx.closePath(); cx.fill(); }
+      if(Math.random()<0.3) G.parts.push({x:hf.x,y:hf.y-0.2,vx:rnd(-0.15,0.15),vy:-rnd(0.5,1.2),life:rnd(0.5,1.1),color:Math.random()<0.5?'#ffb26b':'rgba(180,180,180,0.5)',size:rnd(1.2,2.6),grav:-0.08}); }
+  }
   // window with moody light on the north wall
-  if(!I.lair && !I.resort){ const s=w2s(7.0,0.05);
+  if(!I.lair && !I.resort && !I.igloo){ const s=w2s(7.0,0.05);
     const night=nightAmount();
     cx.fillStyle= night>0.4? '#1c2a4a' : '#c9d8e8';
     cx.fillRect(s.x-12,s.y-52,24,20);
@@ -500,6 +529,7 @@ function renderInterior(){
   const wg=cx.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,Math.max(VW,VH)*0.62);
   if(I.lair){ wg.addColorStop(0,'rgba(255,90,30,0.10)'); wg.addColorStop(1,'rgba(20,0,0,0.66)'); }
   else if(I.resort){ wg.addColorStop(0,'rgba(255,240,200,0.10)'); wg.addColorStop(1,'rgba(40,60,80,0.30)'); } // bright, airy daylight
+  else if(I.igloo){ wg.addColorStop(0,'rgba(255,188,110,0.10)'); wg.addColorStop(1,'rgba(46,66,98,0.46)'); } // firelight in a cold shell
   else { wg.addColorStop(0,'rgba(255,170,90,0.06)'); wg.addColorStop(1,'rgba(0,0,0,0.55)'); }
   cx.fillStyle=wg; cx.fillRect(0,0,VW,VH);
   drawGritGrade();

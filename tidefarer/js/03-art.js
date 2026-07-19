@@ -321,6 +321,7 @@ function buildSprites(){
   // buildings
   SPR.house = makeCanvas(150,140,(g,w,h)=> drawHouse(g,w,h,'#c9b28a','#a3502f','#7c3d22'));
   SPR.house2= makeCanvas(150,140,(g,w,h)=> drawHouse(g,w,h,'#bcae95','#5d7a97','#48607a'));
+  SPR.igloo = makeCanvas(150,140,(g,w,h)=> drawIgloo(g,w,h));
   SPR.forge = makeCanvas(150,146,(g,w,h)=>{ drawHouse(g,w,h,'#9c8f7c','#5a5a60','#464650');
     // anvil out front
     g.fillStyle='#43434a'; g.fillRect(w/2-40,h-26,20,7); g.fillRect(w/2-34,h-19,8,7);
@@ -453,6 +454,40 @@ function buildSprites(){
   trinketFn.awn='#3a6a9a';
   SPR.fruitstand = makeCanvas(74,72, stallSprite(fruitFn));
   SPR.stall = makeCanvas(74,72, stallSprite(trinketFn));
+}
+function drawIgloo(g,w,h){
+  const bx=w/2, base=h-12, rx=54, ry=64;
+  const snow='#e9eef6', snow2='#dbe3ee', line='rgba(120,142,172,0.5)';
+  // ground shadow
+  g.fillStyle='rgba(28,40,62,0.15)'; g.beginPath(); g.ellipse(bx,base+4,rx*0.94,15,0,0,TAU); g.fill();
+  // the snow dome (upper half of an ellipse)
+  g.fillStyle=snow; g.beginPath(); g.ellipse(bx,base,rx,ry,0,Math.PI,TAU); g.closePath(); g.fill();
+  // soft light-to-shadow shading across the dome
+  g.save(); g.beginPath(); g.ellipse(bx,base,rx,ry,0,Math.PI,TAU); g.closePath(); g.clip();
+  const gr=g.createLinearGradient(bx-rx,0,bx+rx,0);
+  gr.addColorStop(0,'rgba(255,255,255,0.30)'); gr.addColorStop(0.45,'rgba(255,255,255,0)'); gr.addColorStop(1,'rgba(92,112,146,0.40)');
+  g.fillStyle=gr; g.fillRect(bx-rx,base-ry,rx*2,ry);
+  // snow-block courses (curved) + staggered seams
+  g.strokeStyle=line; g.lineWidth=1.3;
+  for(let i=1;i<=4;i++){ const yy=base-ry*i/5, rr=rx*Math.sqrt(Math.max(0,1-Math.pow((base-yy)/ry,2)));
+    g.beginPath(); g.moveTo(bx-rr,yy); g.quadraticCurveTo(bx,yy+3,bx+rr,yy); g.stroke();
+    const step=rr/(3.4-i*0.2), off=(i%2)*step/2;
+    for(let sx=bx-rr+off; sx<bx+rr; sx+=step){ g.beginPath(); g.moveTo(sx,yy); g.lineTo(sx+ry*0.02,yy+ry/5); g.stroke(); }
+  }
+  g.restore();
+  // crown block
+  g.fillStyle=snow2; g.beginPath(); g.arc(bx,base-ry+5,5.5,0,TAU); g.fill();
+  g.strokeStyle=line; g.lineWidth=1.2; g.stroke();
+  // entrance tunnel projecting toward the viewer, with a dark arched mouth
+  g.fillStyle=snow; g.beginPath(); g.ellipse(bx-4,base+6,22,17,0,Math.PI,TAU); g.closePath(); g.fill();
+  g.save(); g.beginPath(); g.ellipse(bx-4,base+6,22,17,0,Math.PI,TAU); g.closePath(); g.clip();
+  const tg=g.createLinearGradient(bx-26,0,bx+18,0);
+  tg.addColorStop(0,'rgba(255,255,255,0.25)'); tg.addColorStop(1,'rgba(92,112,146,0.35)');
+  g.fillStyle=tg; g.fillRect(bx-26,base-12,44,20); g.restore();
+  g.fillStyle='#26313f'; g.beginPath(); g.moveTo(bx-16,base+7); g.quadraticCurveTo(bx-4,base-13,bx+8,base+7); g.closePath(); g.fill();
+  g.strokeStyle=line; g.lineWidth=1.3; g.beginPath(); g.moveTo(bx-16,base+7); g.quadraticCurveTo(bx-4,base-13,bx+8,base+7); g.stroke();
+  // a warm glow spilling from the doorway
+  g.fillStyle='rgba(255,196,120,0.28)'; g.beginPath(); g.ellipse(bx-4,base+6,7,4,0,0,TAU); g.fill();
 }
 function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   const bw=96*scale, bh=52*scale, bx=w/2, byBase=h-10;

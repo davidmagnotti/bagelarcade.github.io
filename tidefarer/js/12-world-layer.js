@@ -1118,9 +1118,11 @@ function genFrost(){
 }
 function placeObjectsFrost(){
   const Z=FROST_ZONES, V=Z.village, D=Z.dock, GL=Z.glacier, RW=Z.rimewood;
-  addBuilding('house2', V.x-4, V.y-3, 'Hearthhold longhall');
-  addBuilding('house', V.x+3, V.y-2, 'The Kettle & Hearth (Inn)');
-  addBuilding('house2', V.x+5, V.y+3, 'Icewright\'s shed');
+  // Hearthhold is a huddle of snow-block igloos against the cold
+  addBuilding('igloo', V.x-4, V.y-3, 'Hearthhold igloo');
+  addBuilding('igloo', V.x+3, V.y-2, 'The Kettle & Hearth (Inn)');
+  addBuilding('igloo', V.x+5, V.y+3, 'The Icewright\'s igloo');
+  addBuilding('igloo', V.x-6, V.y+2, 'Frostferry lodge');
   addBuilding('well', V.x, V.y, 'Frostspring well');
   addBuilding('lamp', D.x, D.y-1, ''); addBuilding('boat', D.x-4, D.y+2, '');
   addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
