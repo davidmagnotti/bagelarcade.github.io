@@ -255,9 +255,9 @@ function placeObjectsMain(){
   // the homestead, for sale
   const FZ2=ZONES.farm;
   addBuilding('house', FZ2.x+10,FZ2.y+3,'Homestead (FOR SALE)');
-  // Vael March raider camp
+  // Vael March raider camp - the war-tent is the Castellan's barred stronghold
   const VM=ZONES.vael;
-  addBuilding('house2',VM.x,VM.y,'Vael war-tent');
+  addBuilding('house2',VM.x,VM.y,'Vael war-tent').locked=1;
   // war chests in dangerous country - worth the walk, worth the wait
   for(const [wz,wlv] of [[ZONES.highlands,4],[ZONES.ruins,6],[ZONES.desert,12],[ZONES.vael,12],[ZONES.undermaw,11],[ZONES.spire,3]]){
     const wsp=findOpenNear(wz.x+3,wz.y+3,6);
@@ -369,10 +369,31 @@ function spawnRealmFolk(){
     {skin:'#d3a377',hair:'#5a4a3a',shirt:'#4a3a5a',pants:'#332c3c',apron:'#8a7a5a',hairstyle:'bun'},
     ["The vault holds what the grave cannot take. Deposit while you breathe.",
      "Greyharbor's ledger balances daily. Unlike its taverns."],0.5));
-  G.npcs.push(makeNPC('castell','Castellan of the Vael', VM.x-6.5,VM.y+6.5,
-    {skin:'#c09070',hair:'#3a3230',shirt:'#5e2a2a',pants:'#3a2020',cloakless:1,armor:1,beard:'#3a3230'},
-    ["Turn back, Barik-friend. The March answers to its own crown now.",
-     "The Queen's cousin pays iron for iron. You've been warned once."],0.4));
+  // The Castellan stands at the war-tent until you call him out (feud2); after
+  // he's challenged he's a boss on the field, and once beaten he's gone for good.
+  if(qs('feud2')!=='done' && !P.prog.vaelFought)
+    G.npcs.push(makeNPC('castell','Castellan of the Vael', VM.x-6.5,VM.y+6.5,
+      {skin:'#c09070',hair:'#3a3230',shirt:'#5e2a2a',pants:'#3a2020',cloakless:1,armor:1,beard:'#3a3230'},
+      ["Turn back, Barik-friend. The March answers to its own crown now.",
+       "The Queen's cousin pays iron for iron. You've been warned once."],0.4));
+}
+function spawnVaelCaptain(x,y){
+  const cap=spawnMob('raidcap', x, y);
+  if(cap){ cap.boss=true; cap.bigBoss=true; cap.title='CASTELLAN OF THE VAEL';
+    cap.hx=x; cap.hy=y; cap.respawnT=-1; }
+  return cap;
+}
+function challengeCastellan(npc){
+  if(G.mobs && G.mobs.some(m=>m.kind==='raidcap' && !m.dead)) return;
+  P.prog.vaelFought=1;
+  const i=G.npcs.findIndex(n=>n.id==='castell'); if(i>=0) G.npcs.splice(i,1);
+  const VM=ZONES.vael;
+  const ox=Math.round(npc?npc.x:VM.x-6.5), oy=Math.round(npc?npc.y:VM.y+6.5);
+  const sp=findOpenNear(ox, oy, 5) || [ox, oy];
+  const cap=spawnVaelCaptain(sp[0], sp[1]);
+  if(cap){ cap.state='chase'; cap.noAggroT=0; }
+  banner('THE VAEL CASTELLAN','BREAK THE MARCH - PULL THE STANDARD DOWN');
+  if(Snd.boss) Snd.boss(); G.shake=0.85; autoSave();
 }
 function spawnBarikInn(){
   const V=ZONES.village;
@@ -417,6 +438,11 @@ function spawnMobsMain(){
   spawnMob('skeleton',ZONES.tower.x-2,ZONES.tower.y+1,true);
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
   spawnMob('skeleton',ZONES.tower.x,ZONES.tower.y+3,true);
+  // the Castellan is loose on the field again if you challenged him and left (reload)
+  if(P.prog.vaelFought && qs('feud2')!=='done'){
+    const VM=ZONES.vael, sp=findOpenNear(Math.round(VM.x-6.5),Math.round(VM.y+6.5),6)||[VM.x-6,VM.y+6];
+    spawnVaelCaptain(sp[0],sp[1]);
+  }
 }
 function spiralPath(cx,cy,rStart,rEnd,turns,tile){
   // an ascending switchback of PATH tiles winding from rStart in to rEnd
@@ -768,8 +794,13 @@ QUESTS.vhunt={ giver:'moli', title:'Hunt the Emberbinder', kind:'kill', kill:{ma
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
   log:'Drive off 6 Vael Raiders in the north-east March.',
-  doneText:'Six hoods emptied. My cousin will sulk for a season - Barik thanks you in gold and in standing.',
-  rw:{gold:220, item:{potion:2}, xp:{melee:300, archery:300, magic:300}}, unlocks:['sting1'] };
+  doneText:'Six hoods emptied. My cousin will sulk for a season - Barik thanks you in gold and in standing. But the March still has a spine: the man who holds his war-tent. Come back when you have the stomach for him.',
+  rw:{gold:220, item:{potion:2}, xp:{melee:300, archery:300, magic:300}}, unlocks:['sting1','feud2'] };
+QUESTS.feud2={ giver:'maelis', title:'Break the March', kind:'kill', kill:{raidcap:1}, xpL:300,
+  brief:'Driving off his hirelings only bloodied my cousin\'s nose. The March will not kneel while his <b>Castellan</b> holds the war-tent - a captain worth ten raiders, and he knows it. Go to the north-east March, call the man out, and put his standard in the dirt. Come ready, and come armored.',
+  log:'Confront and defeat the Castellan of the Vael at the war-tent in the north-east March. (Lv 14 - come ready.)',
+  doneText:'The Castellan down and the standard fallen? Then the March is mine in all but name, and my cousin has no sword left to hide behind. Barik will remember this - and so will I. Take a captain\'s due.',
+  rw:{gold:340, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.sting1={ giver:'maelis', title:'Sunscour Cull', kind:'kill', kill:{scorpion:5}, xpL:220,
   brief:'The Sunscour breeds armored horrors that drag off goats, carts, and the occasional tax collector. Cull five. I am told their shells turn all but the truest blows - Lv 13, my wardens reckon.',
   log:'Slay 5 Sunscour Scorpions in the desert valley.',
@@ -1111,8 +1142,12 @@ function attemptSail(){
   sailing=true;
   const fade=document.getElementById('fadeOv');
   fade.style.opacity=1; Snd.splash();
+  // isle -> Barik; the Sunward Isle sails home to Barik; Barik's dock returns
+  // to the tutorial isle. (East never routed to 'main', so it fell through to
+  // 'isle' and dumped you on the tutorial shore - fixed.)
+  const dest = G.worldId==='east' ? 'main' : G.worldId==='isle' ? 'main' : 'isle';
   setTimeout(()=>{
-    switchWorld(G.worldId==='isle' ? 'main' : 'isle');
+    switchWorld(dest);
     setTimeout(()=>{ fade.style.opacity=0; sailing=false; },100);
   },780);
 }

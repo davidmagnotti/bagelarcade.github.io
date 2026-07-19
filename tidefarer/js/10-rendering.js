@@ -572,7 +572,7 @@ function drawDecor(b,s){
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
-    const mx=s.x+2, mb=s.y-6;
+    const mx=s.x+2, mb=s.y-10;
     cx.strokeStyle='#4f3a24'; cx.lineWidth=3;
     cx.beginPath(); cx.moveTo(mx,mb); cx.lineTo(mx,mb-52); cx.stroke();
     cx.strokeStyle='#3a2c1c'; cx.lineWidth=2;
@@ -594,6 +594,25 @@ function drawDecor(b,s){
       cx.beginPath(); cx.roundRect(s.x-14,mb-45,32,7,3); cx.fill();
       cx.strokeStyle='rgba(60,45,25,0.5)'; cx.lineWidth=1; cx.stroke();
     }
+  } else if(b.kind==='boat' && G.worldId!=='isle'){
+    // Barik & the Sunward Isle: a proper moored sloop, always rigged
+    const mx=s.x+1, mb=s.y-16, bil=Math.sin(G.time*1.5+b.x)*2.2;
+    cx.strokeStyle='#4f3a24'; cx.lineWidth=3.4;
+    cx.beginPath(); cx.moveTo(mx,mb); cx.lineTo(mx,mb-62); cx.stroke();          // mast
+    cx.strokeStyle='#3a2c1c'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(mx-18,mb-54); cx.lineTo(mx+18,mb-54); cx.stroke(); // yard
+    cx.fillStyle='rgba(238,232,216,0.97)';                                       // billowing sail
+    cx.beginPath();
+    cx.moveTo(mx-17,mb-53);
+    cx.quadraticCurveTo(mx-24-bil,mb-31, mx-15-bil,mb-10);
+    cx.lineTo(mx+16+bil*0.6,mb-12);
+    cx.quadraticCurveTo(mx+22,mb-33, mx+17,mb-53);
+    cx.closePath(); cx.fill();
+    cx.strokeStyle='rgba(60,45,25,0.5)'; cx.lineWidth=1.5; cx.stroke();
+    cx.strokeStyle='rgba(150,60,45,0.7)'; cx.lineWidth=2;                        // a red seam
+    cx.beginPath(); cx.moveTo(mx-9,mb-52); cx.lineTo(mx-9-bil*0.4,mb-11); cx.stroke();
+    cx.fillStyle='#b23a2a';                                                      // masthead pennant
+    cx.beginPath(); cx.moveTo(mx,mb-62); cx.lineTo(mx+15+bil,mb-59); cx.lineTo(mx,mb-56); cx.closePath(); cx.fill();
   }
   if(b.kind==='forge' || b.kind==='house' || b.kind==='house2'){
     // procedural chimney smoke, anchored to the seated chimney tip
@@ -797,6 +816,24 @@ function drawMob(m,s){
       hat:'hood',hatColor:'#4a1f1f',armor:1,pauldrons:true,weapon:'sword',wtier:1,
       swing:m.swing||0, hurt:m.hurtT>0, size:1.24,
       dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)});
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='raidcap'){
+    drawShadowAt(cx,s.x,s.y,18);
+    // a red horsehair crest above the captain's helm, streaming as he moves
+    const fl=(m.face||1), cr=Math.sin(m.anim*7);
+    drawHumanoid(cx,s.x,s.y,{skin:'#b0855f',hair:'#241d1a',shirt:'#7a2320',pants:'#2c1c1c',
+      hat:'hood',hatColor:'#3a1616',armor:2,pauldrons:true,trim:'#c8a24a',weapon:'sword',wtier:2,
+      swing:m.swing||0, hurt:m.hurtT>0, size:1.5,
+      dir:{x:fl,y:0.3}, step:Math.sin(m.anim*7)});
+    cx.save(); cx.translate(s.x, s.y-46);
+    cx.strokeStyle='#b23a2a'; cx.lineWidth=3.4; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-2,0);
+    cx.quadraticCurveTo(-fl*6+cr*2,-9, -fl*12+cr*4,-6);
+    cx.stroke();
+    cx.strokeStyle='#8f2a20'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(-2,1); cx.quadraticCurveTo(-fl*5+cr*2,-5,-fl*10+cr*3,-1); cx.stroke();
+    cx.restore(); cx.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='mage'){

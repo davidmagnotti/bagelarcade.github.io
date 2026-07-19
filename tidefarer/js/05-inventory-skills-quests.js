@@ -142,6 +142,7 @@ function questTargetPos(id){
     if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='nets') return {x:ZONES.dock.x-2,y:ZONES.dock.y};
     if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};
+    if(id==='feud2') return {x:ZONES.vael.x-6.5,y:ZONES.vael.y+6.5};
     if(id==='sting1') return {x:ZONES.desert.x,y:ZONES.desert.y};
     if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
     if(id==='wyrm') return ZONES.caldera? {x:ZONES.caldera.x,y:ZONES.caldera.y} : null; // guide up Mount Kea to the caldera
@@ -157,7 +158,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

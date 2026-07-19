@@ -350,10 +350,37 @@ function buildSprites(){
     g.strokeStyle='#4a3218'; g.lineWidth=2; g.beginPath(); g.moveTo(w/2,h-46); g.lineTo(w/2,h-32); g.stroke();
     g.fillStyle='#8a6238'; g.fillRect(w/2-4,h-34,8,7);
   });
-  SPR.boat = makeCanvas(90,60,(g,w,h)=>{
-    g.fillStyle='#7c4f2c'; g.beginPath(); g.moveTo(8,h-28); g.quadraticCurveTo(w/2,h-4,w-8,h-28); g.lineTo(w-16,h-38); g.quadraticCurveTo(w/2,h-24,16,h-38); g.closePath(); g.fill();
-    g.fillStyle='#95633a'; g.beginPath(); g.moveTo(16,h-38); g.quadraticCurveTo(w/2,h-24,w-16,h-38); g.lineTo(w-20,h-42); g.quadraticCurveTo(w/2,h-30,20,h-42); g.closePath(); g.fill();
-    g.strokeStyle='#5c3d22'; g.lineWidth=2; g.beginPath(); g.moveTo(w/2-4,h-40); g.lineTo(w/2+10,h-56); g.stroke();
+  SPR.boat = makeCanvas(124,82,(g,w,h)=>{
+    const cxp=w/2, hullTop=h-40, hullBot=h-8;
+    // waterline shadow the hull sits in
+    g.fillStyle='rgba(18,38,58,0.20)'; g.beginPath(); g.ellipse(cxp,h-7,54,11,0,0,TAU); g.fill();
+    // hull body - curved sheer, deeper belly
+    g.beginPath();
+    g.moveTo(10,hullTop);
+    g.quadraticCurveTo(cxp,hullTop-9, w-10,hullTop);        // gunwale sweeps up at prow & stern
+    g.quadraticCurveTo(w-1,hullTop+11, w-18,hullBot-3);     // stern quarter
+    g.quadraticCurveTo(cxp,hullBot+9, 18,hullBot-3);        // keel belly
+    g.quadraticCurveTo(1,hullTop+11, 10,hullTop);           // prow
+    g.closePath();
+    const hg=g.createLinearGradient(0,hullTop,0,hullBot);
+    hg.addColorStop(0,'#9c6c40'); hg.addColorStop(0.55,'#82552f'); hg.addColorStop(1,'#5f3d22');
+    g.fillStyle=hg; g.fill();
+    g.strokeStyle='#38240f'; g.lineWidth=2.6; g.stroke();
+    // planking seams
+    g.strokeStyle='rgba(38,24,12,0.38)'; g.lineWidth=1.3;
+    for(let i=1;i<=3;i++){ const yy=hullTop+(hullBot-hullTop)*i/4;
+      g.beginPath(); g.moveTo(15,yy); g.quadraticCurveTo(cxp,yy+7,w-15,yy); g.stroke(); }
+    // dark interior lip
+    g.fillStyle='#43301d';
+    g.beginPath(); g.moveTo(13,hullTop+1); g.quadraticCurveTo(cxp,hullTop-7,w-13,hullTop+1);
+    g.quadraticCurveTo(cxp,hullTop+9,13,hullTop+1); g.closePath(); g.fill();
+    // bright gunwale rail
+    g.strokeStyle='#b78a52'; g.lineWidth=3.2;
+    g.beginPath(); g.moveTo(10,hullTop); g.quadraticCurveTo(cxp,hullTop-9,w-10,hullTop); g.stroke();
+    // a thwart (bench seat) and a stubby prow post
+    g.strokeStyle='#6b4728'; g.lineWidth=4.5;
+    g.beginPath(); g.moveTo(cxp-20,hullTop+7); g.lineTo(cxp+20,hullTop+7); g.stroke();
+    g.lineWidth=3.4; g.beginPath(); g.moveTo(13,hullTop+1); g.lineTo(8,hullTop-8); g.stroke();
   });
   SPR.lamp = makeCanvas(30,86,(g,w,h)=>{
     g.fillStyle='#3c2e1d'; g.fillRect(w/2-3,26,6,h-36);
