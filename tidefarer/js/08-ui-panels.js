@@ -11,9 +11,16 @@ function togglePanel(id){
     if(id==='questPanel') refreshQuestLog();
     if(id==='mapPanel') drawBigMap();
   }
+  syncMenuPause();
 }
-function closeAllPanels(){ ['invPanel','skillPanel','questPanel','mapPanel'].forEach(id=> document.getElementById(id).style.display='none'); }
-document.querySelectorAll('.closeX').forEach(el=> el.onclick=()=> document.getElementById(el.dataset.close).style.display='none');
+function closeAllPanels(){ ['invPanel','skillPanel','questPanel','mapPanel'].forEach(id=> document.getElementById(id).style.display='none'); syncMenuPause(); }
+/* Opening the bag, map, skills or quest log freezes the world (and unfreezes
+   on close) so you can read and swap gear without something gnawing on you. */
+function syncMenuPause(){
+  const open=['invPanel','skillPanel','questPanel','mapPanel'].some(id=>document.getElementById(id).style.display==='block');
+  G.menuPause = open?1:0;
+}
+document.querySelectorAll('.closeX').forEach(el=> el.onclick=()=>{ document.getElementById(el.dataset.close).style.display='none'; syncMenuPause(); });
 document.getElementById('btnInv').onclick=()=>togglePanel('invPanel');
 document.getElementById('btnQuests').onclick=()=>togglePanel('questPanel');
 document.getElementById('qsearch').oninput=()=>refreshQuestLog();
@@ -102,6 +109,18 @@ function equipArmor(t){
   toast('<b style="color:#ffd76a">Equipped:</b> '+(t===0?'Traveler\'s Clothes':t===1?'Iron Armor':'Steel Plate'));
   refreshInvPanel();
 }
+function weaponMeta(id){
+  if(id==='melee') return {name:['Rusty Sword','Iron Sword','Steel Sword'][P.swordTier||0], icon:'sword', dmg:meleeDmg()};
+  if(id==='bow')   return {name:"Hunter's Bow", icon:'bow', dmg:bowDmg()};
+  if(id==='staff') return {name:'Emberwood Staff', icon:'staff', dmg:magicDmg()};
+  return {name:'Fists', icon:'sword', dmg:2};
+}
+function equipWeapon(id){
+  if(!P.unlocked[id]){ toast('That weapon isn’t yours yet - see Bram’s forge or Sable’s range.'); return; }
+  P.weapon=id; buildHotbar(); Snd.pickup();
+  toast('<b style="color:#ffd76a">Wielding:</b> '+weaponMeta(id).name);
+  refreshInvPanel();
+}
 let INV_SEL=null;
 function refreshInvPanel(){
   if(document.getElementById('invPanel').style.display!=='block') return;
@@ -110,18 +129,47 @@ function refreshInvPanel(){
   const AR=[{t:0,n:"Traveler's Clothes",d:'No protection, full freedom.'},
             {t:1,n:'Iron Armor',d:'Turns aside 15% of every blow.'},
             {t:2,n:'Steel Plate',d:'Turns aside 30% of every blow.'}];
-  // ---- equipment: a worn slot plus a gear shelf; tap to swap ----
-  let eq='<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:5px;">EQUIPMENT</div>'+
-    '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">';
+  // ---- equipment: worn weapon + armor, each with a tap-to-swap shelf ----
+  let eq='<div style="grid-column:1/-1;">'+
+    '<div style="font-size:11px;letter-spacing:2px;color:#9a917f;margin-bottom:6px;">EQUIPMENT</div>';
+  // -- weapon row --
+  const wpns=['melee','bow','staff'].filter(id=>P.unlocked[id]);
+  eq+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">';
+  if(wpns.length){
+    const cur=P.unlocked[P.weapon]?P.weapon:wpns[0];
+    const wm=weaponMeta(cur);
+    eq+='<div style="text-align:center;">'+
+      '<div class="islot" style="border-color:var(--ember);box-shadow:0 0 8px rgba(255,150,60,.25) inset;" title="'+wm.name+' - equipped">'+
+        '<canvas width="40" height="40" data-eqicon="'+wm.icon+'"></canvas></div>'+
+      '<div style="font-size:10px;color:var(--parch);max-width:64px;margin-top:2px;line-height:1.25;">'+wm.name+
+        '<br><span style="color:#9be07f;">'+wm.dmg+' dmg</span></div></div>';
+    const others=wpns.filter(id=>id!==cur);
+    if(others.length){
+      eq+='<div><div style="font-size:10px;color:var(--parch-dim);margin-bottom:3px;">Weapons - tap to wield:</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+      others.forEach(id=>{ const m=weaponMeta(id);
+        eq+='<div class="islot gearTile" onclick="equipWeapon(\''+id+'\')" title="'+m.name+' - '+m.dmg+' dmg">'+
+          '<canvas width="40" height="40" data-eqicon="'+m.icon+'"></canvas></div>'; });
+      eq+='</div></div>';
+    }
+  } else {
+    eq+='<div style="text-align:center;">'+
+      '<div class="islot" style="opacity:.45;"><canvas width="40" height="40" data-eqicon="sword"></canvas></div>'+
+      '<div style="font-size:10px;color:var(--parch-dim);max-width:64px;margin-top:2px;">Unarmed</div></div>'+
+      '<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Bram\u2019s forge will arm you.</div>';
+  }
+  eq+='</div>';
+  // -- armor row --
   const worn=AR[P.armor||0];
+  eq+='<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;">';
   eq+='<div id="eqArmor" style="text-align:center;">'+
     '<div class="islot" style="border-color:var(--ember);box-shadow:0 0 8px rgba(255,150,60,.25) inset;" '+
       'onclick="unequipArmor()" title="'+worn.n+' - tap to take off">'+
       '<canvas width="40" height="40" data-eqicon="armor'+(P.armor||0)+'"></canvas></div>'+
-    '<div style="font-size:10px;color:var(--parch-dim);max-width:56px;margin-top:2px;">'+worn.n+'</div></div>';
+    '<div style="font-size:10px;color:var(--parch);max-width:64px;margin-top:2px;line-height:1.25;">'+worn.n+'</div></div>';
   const shelf=AR.filter(a=>a.t<=own && a.t!==(P.armor||0) && a.t>0);
   if(shelf.length){
-    eq+='<div><div style="font-size:10px;color:var(--parch-dim);margin-bottom:3px;">In your pack - tap to wear:</div>'+
+    eq+='<div><div style="font-size:10px;color:var(--parch-dim);margin-bottom:3px;">Armor - tap to wear:</div>'+
       '<div style="display:flex;gap:6px;">';
     shelf.forEach(a=>{
       eq+='<div class="islot gearTile" data-t="'+a.t+'" onclick="equipArmor('+a.t+')" title="'+a.n+' - '+a.d+'">'+
@@ -132,15 +180,26 @@ function refreshInvPanel(){
     eq+='<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Bram\u2019s forge sells iron for your ribs.</div>';
   }
   eq+='</div>';
+  // -- passive charms / relics (always-on bonuses) --
+  const tr=[];
+  if(has('charm',1)) tr.push('Ember Charm <span style="color:#9be07f">+3</span>');
+  if(has('relic',1)) tr.push('Stormwatch Relic <span style="color:#9be07f">+4</span>');
+  if(has('fang',1))  tr.push('Greymaw\u2019s Fang <span style="color:#9be07f">+8 melee</span>');
+  if(has('crown',1)) tr.push('Hollow Crown <span style="color:#9be07f">+25 HP</span>');
+  if(tr.length) eq+='<div style="font-size:11px;color:var(--parch-dim);margin-bottom:6px;">'+
+    '<b style="color:#9a917f;letter-spacing:1px;">CHARMS </b>'+tr.join(' \u00b7 ')+'</div>';
+  eq+='<div style="font-size:11px;color:var(--parch-dim);border-top:1px solid #3a2c1c;padding-top:7px;margin-bottom:2px;">Forge stronger swords, armor &amp; tools at <b>Bram\u2019s forge</b>.</div>';
+  eq+='</div>';
   grid.insertAdjacentHTML('beforeend',eq);
   grid.querySelectorAll('canvas[data-eqicon]').forEach(cv2=>{
     cv2.getContext('2d').drawImage(ICONS[cv2.dataset.eqicon]||iconCanvas('stone'),0,0);
   });
   // ---- the satchel: tap selects; the action card below does the doing ----
   const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0);
-  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="font-size:12px;color:var(--parch-dim);">Satchel\u2019s empty. The island provides - go poke it.</div>'); return; }
+  if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:12px;color:var(--parch-dim);">Satchel\u2019s empty. The island provides - go poke it.</div>'); return; }
   if(INV_SEL && !(P.inv[INV_SEL]>0)) INV_SEL=null;
-  const row=document.createElement('div'); row.style.cssText='display:flex;flex-wrap:wrap;gap:6px;';
+  grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:11px;letter-spacing:2px;color:#9a917f;margin:2px 0 4px;">SATCHEL</div>');
+  const row=document.createElement('div'); row.style.cssText='grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;';
   keysList.forEach(k=>{
     const s=document.createElement('div'); s.className='islot'+(INV_SEL===k?' invsel':''); s.title=ITEMS[k].name+' - '+ITEMS[k].desc;
     const ic=document.createElement('canvas'); ic.width=ic.height=40; ic.getContext('2d').drawImage(ICONS[k]||iconCanvas('stone'),0,0);
@@ -158,7 +217,7 @@ function refreshInvPanel(){
   if(INV_SEL){
     const k=INV_SEL, it=ITEMS[k];
     const canUse=!!it.use, canQuick=QUICK_ITEMS.includes(k);
-    let act='<div id="invAct" style="margin-top:10px;border:2px solid var(--ember);border-radius:10px;padding:10px 12px;background:#241a10;">'+
+    let act='<div id="invAct" style="grid-column:1/-1;margin-top:10px;border:2px solid var(--ember);border-radius:10px;padding:10px 12px;background:#241a10;">'+
       '<div style="font-weight:bold;">'+it.name+' \u00d7'+P.inv[k]+'</div>'+
       '<div style="font-size:12px;color:var(--parch-dim);margin:3px 0 8px;">'+it.desc+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
@@ -168,7 +227,7 @@ function refreshInvPanel(){
     act+='</div></div>';
     grid.insertAdjacentHTML('beforeend',act);
   } else {
-    grid.insertAdjacentHTML('beforeend','<div style="font-size:11px;color:var(--parch-dim);margin-top:8px;">Tap an item for options; \u21c4 marks your quick slot.</div>');
+    grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:11px;color:var(--parch-dim);margin-top:8px;">Tap an item for options; \u21c4 marks your quick slot.</div>');
   }
 }
 function unequipArmor(){
