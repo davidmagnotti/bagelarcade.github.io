@@ -798,6 +798,9 @@ function genWind(){
   const D=Z.dock;
   for(let k=1;k<=WIND_JETTY;k++){ const jy=Math.round(D.y+2+k);
     for(let o=-1;o<=1;o++){ if(inb(D.x+o,jy)){ setTile(D.x+o,jy,T.PLANK); setSolid(D.x+o,jy,0); } } }
+  // a moorage of open water alongside the pier, so the ferry floats on the sea
+  for(let by=D.y+4;by<=D.y+8;by++) for(let bx=D.x+2;bx<=D.x+3;bx++)
+    if(inb(bx,by) && tileAt(bx,by)!==T.PLANK) setTile(bx,by,T.SHALLOW);
 }
 const WIND_JETTY=16;
 function leviathanHome(){ const D=WIND_ZONES.dock; return {x:D.x+0.5, y:D.y+2+WIND_JETTY+1.5}; }
@@ -807,24 +810,32 @@ function placeObjectsWind(){
   addBuilding('resort', R.x, R.y, 'The Breakers Resort');
   addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
   addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
-  // the working town
-  addBuilding('house', T2.x+4, T2.y-3, 'The Trade Winds Inn');   // "(Inn)"? no - keep a real inn below
-  addBuilding('house2',T2.x-4, T2.y-2, 'Harbor Guildhall');
-  addBuilding('house', T2.x-1, T2.y+4, 'Windsurf Inn (Inn)');
-  addBuilding('house2',T2.x+6, T2.y+3, 'Sailmaker\'s loft');
-  addBuilding('well',  T2.x, T2.y, 'Town well');
-  // Trade Row: fruit stands + knick-knack stalls around the plaza
-  addBuilding('fruitstand', M.x-3, M.y-1, 'Fruit stand');
-  addBuilding('fruitstand', M.x+3, M.y-2, 'Grocer\'s cart');
-  addBuilding('stall', M.x-2, M.y+3, 'Curios & knick-knacks');
-  addBuilding('stall', M.x+3, M.y+2, 'Shell trinkets');
-  addBuilding('stall', M.x, M.y+4,  'Windvane whittler');
-  // harbor
-  addBuilding('boat', D.x-4, D.y+2, '');
+  // the windmill is a colossus - give it a broad base you cannot slip right
+  // behind, so its footprint reads as big as it looks
+  for(let dy=-4;dy<=1;dy++) for(let dx=-3;dx<=3;dx++) setSolid(MI.x+dx, MI.y+dy, 1);
+  // ---- the working town: two tidy terraces facing the green, well at centre ----
+  addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
+  addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');
+  addBuilding('house2', T2.x-8, T2.y-1, 'The Chandlery');
+  addBuilding('house',  T2.x+7, T2.y-1, 'Breezy Cottage');
+  addBuilding('house',  T2.x-5, T2.y+5, 'Windsurf Inn (Inn)');
+  addBuilding('house2', T2.x+3, T2.y+5, 'Sailmaker\'s Loft');
+  addBuilding('well',   T2.x, T2.y, 'Town well');
+  // ---- Trade Row: a proper market, stalls lined in two neat rows either side
+  // of the plaza aisle, east and west kept open for the roads ----
+  const NORTH=[['fruitstand','Fruit stand'],['stall','Shell trinkets'],['fruitstand','Grocer\'s cart'],['stall','Rope & tackle'],['fruitstand','Spice-plum stall']];
+  const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
+  NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
+  SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
+  // harbor - the ferry moored on the open water alongside the pier
+  addBuilding('boat', D.x+2, D.y+6, '');
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('lamp', D.x+3, D.y+1, '');
-  addBuilding('lamp', M.x-4, M.y+1, ''); addBuilding('lamp', M.x+4, M.y-1, '');
+  addBuilding('lamp', M.x-6, M.y, ''); addBuilding('lamp', M.x+6, M.y, '');
   addBuilding('lamp', R.x-4, R.y+3, ''); addBuilding('lamp', R.x+4, R.y+3, '');
+  // town-green lamps at the terrace corners
+  addBuilding('lamp', T2.x-6, T2.y-4, ''); addBuilding('lamp', T2.x+5, T2.y-4, '');
+  addBuilding('lamp', T2.x-6, T2.y+4, ''); addBuilding('lamp', T2.x+5, T2.y+4, '');
   // greenery - leafy town trees & bluff palms so the city feels lived-in
   const pr=mulberry32(SEED+11);
   for(let i=0;i<200;i++){
@@ -869,11 +880,11 @@ function spawnWindFolk(){
     ['Grain still grinds and the wind still blows - that much the sea can\'t spoil.',
      'The wheel and the mill kept this city fed for a hundred years. We\'ll not stop now.'],0.5));
   // Market vendors
-  G.npcs.push(makeNPC('pia','Pia of Trade Row', M.x-3, M.y-2.2,
+  G.npcs.push(makeNPC('pia','Pia of Trade Row', M.x-2.5, M.y-1.5,
     {skin:'#c99a6e',hair:'#241c16',shirt:'#c85a3a',pants:'#3a2c26',hairstyle:'long'},
     ['Mangoes, sugar-melon, spice-plums - all island-grown, none of it shipped, so it\'s cheap and it\'s fresh.',
      'Buy something, friend? A stall with no customers is just a sad little roof.'],0.4));
-  G.npcs.push(makeNPC('tolen','Tolen the Whittler', M.x+3, M.y+2.2,
+  G.npcs.push(makeNPC('tolen','Tolen the Whittler', M.x+2.5, M.y+1.5,
     {skin:'#a9784e',hair:'#3a352c',shirt:'#4a6a8a',pants:'#33302a'},
     ['Windvanes, whistles, little carved gulls - knick-knacks to remember Windsurf by.',
      'Made all these by hand. Wind gives me the wood off the bluffs, I give it back a shape.'],0.5));
