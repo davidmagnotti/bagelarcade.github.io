@@ -12,7 +12,8 @@ const PAL = {
   deep:'#1e4066', deep2:'#1a3a5e', shallow:'#39708f', shallow2:'#427a99',
   sand:'#c8b482', sand2:'#bda873', grass:'#5b8544', grass2:'#527b3c', grassHi:'#688f4b',
   forest:'#3e6030', forest2:'#38592b', ruin:'#6f6a63', ruin2:'#66615a',
-  path:'#9a7d51', path2:'#8f7348', soil:'#61411f', soil2:'#573a1c', plank:'#7d5834', plank2:'#71502e'
+  path:'#9a7d51', path2:'#8f7348', soil:'#61411f', soil2:'#573a1c', plank:'#7d5834', plank2:'#71502e',
+  snow:'#e9eef6', snow2:'#dce4ef', ice:'#b7d6e8', ice2:'#a3c8df'
 };
 
 const TILE_SPR = {}; // [tileType][variant]
@@ -81,7 +82,8 @@ function buildTiles(){
     [T.DEEP]:[PAL.deep,PAL.deep2], [T.SHALLOW]:[PAL.shallow,PAL.shallow2],
     [T.SAND]:[PAL.sand,PAL.sand2], [T.GRASS]:[PAL.grass,PAL.grass2],
     [T.FOREST]:[PAL.forest,PAL.forest2], [T.RUIN]:[PAL.ruin,PAL.ruin2],
-    [T.PATH]:[PAL.path,PAL.path2], [T.SOIL]:[PAL.soil,PAL.soil2], [T.PLANK]:[PAL.plank,PAL.plank2]
+    [T.PATH]:[PAL.path,PAL.path2], [T.SOIL]:[PAL.soil,PAL.soil2], [T.PLANK]:[PAL.plank,PAL.plank2],
+    [T.SNOW]:[PAL.snow,PAL.snow2], [T.ICE]:[PAL.ice,PAL.ice2]
   };
   for(const t in specs){
     TILE_SPR[t]=[];

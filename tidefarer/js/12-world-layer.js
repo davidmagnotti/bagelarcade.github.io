@@ -44,6 +44,13 @@ const AERIE_ZONES = {
   tunnel:  {x:84, y:78,  r:3,  name:'The Underclimb', lv:[0,0]},         // tunnel entrance
   ridge:   {x:120,y:98,  r:11, name:'Windbite Ridge', lv:[0,0]}
 };
+const FROST_ZONES = {
+  dock:     {x:40, y:120, r:6,  name:'Frostferry Landing', lv:[0,0]},
+  village:  {x:62, y:106, r:10, name:'Hearthhold', lv:[0,0]},
+  glacier:  {x:96, y:58,  r:16, name:'The Weeping Glacier', lv:[12,14]}, // guardian, at the frozen heart
+  strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
+  rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
+};
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES - CHAPTER I',
@@ -59,7 +66,10 @@ const WORLD_DEFS = {
     gen:()=>genWindAll() },
   aerie:{ W:150, H:150, seed:51789, zones:AERIE_ZONES,
     spawn:{x:38.5,y:120.5}, title:'THE AERIE ISLE', sub:'WHERE THE SKY ITSELF WAS TURNED AGAINST YOU',
-    gen:()=>genAerieAll() }
+    gen:()=>genAerieAll() },
+  frost:{ W:150, H:150, seed:88243, zones:FROST_ZONES,
+    spawn:{x:40.5,y:120.5}, title:'THE FROZEN ISLE', sub:'A STRAIT LOCKED IN CURSED WINTER',
+    gen:()=>genFrostAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -1047,6 +1057,107 @@ function genAerieAll(){
   spawnAerieFolk(); spawnMobsAerie();
   buildMapBase();
 }
+/* =====================================================================
+   THE FROZEN ISLE - Vath locked the strait in an unnatural winter by
+   binding the island's old guardian, a warden of living ice. Free it
+   (it is a victim, not a foe) and the cold lets go.
+   ===================================================================== */
+function genFrost(){
+  const rng=mulberry32(SEED);
+  const CX2=75, CY2=90, R0=54;
+  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*10-5);
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const dx=x-CX2, dy=y-CY2, d=Math.hypot(dx,dy), a=Math.atan2(dy,dx);
+    const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
+    const rad=R0+wob[wi]+5*Math.sin(a*5+3.3);
+    let t=T.DEEP;
+    if(d<rad-6) t=T.SNOW; else if(d<rad-1) t=T.SAND; else if(d<rad+2) t=T.SHALLOW; // snowy shore
+    G.map[y*MAPW+x]=t;
+  }
+  const Z=FROST_ZONES;
+  // the Rimewood: a stand of frosted pines
+  carveDisc(Z.rimewood.x,Z.rimewood.y,Z.rimewood.r,T.FOREST,true);
+  // the Weeping Glacier: a broad walkable sheet of ice at the frozen heart
+  carveDisc(Z.glacier.x,Z.glacier.y,Z.glacier.r,T.ICE,true);
+  // the Frozen Strait: the sea itself locked to ice off the east shore
+  for(let y=Z.strait.y-Z.strait.r;y<=Z.strait.y+Z.strait.r;y++) for(let x=Z.strait.x-Z.strait.r;x<=Z.strait.x+Z.strait.r;x++){
+    if(inb(x,y) && dist(x,y,Z.strait.x,Z.strait.y)<=Z.strait.r){ const tt=tileAt(x,y);
+      if(tt===T.DEEP||tt===T.SHALLOW) setTile(x,y,T.ICE); } }
+  // village + dock clearings (packed snow)
+  carveDisc(Z.village.x,Z.village.y,9,T.SNOW,false);
+  carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
+  // roads of trodden snow (paths)
+  carveLine(Z.dock.x,Z.dock.y, Z.village.x,Z.village.y, T.PATH,0);
+  carveLine(Z.village.x,Z.village.y, Z.glacier.x,Z.glacier.y-Z.glacier.r+2, T.PATH,0);
+}
+function placeObjectsFrost(){
+  const Z=FROST_ZONES, V=Z.village, D=Z.dock, GL=Z.glacier, RW=Z.rimewood;
+  addBuilding('house2', V.x-4, V.y-3, 'Hearthhold longhall');
+  addBuilding('house', V.x+3, V.y-2, 'The Kettle & Hearth (Inn)');
+  addBuilding('house2', V.x+5, V.y+3, 'Icewright\'s shed');
+  addBuilding('well', V.x, V.y, 'Frostspring well');
+  addBuilding('lamp', D.x, D.y-1, ''); addBuilding('boat', D.x-4, D.y+2, '');
+  addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
+  addBuilding('lamp', GL.x-3, GL.y+GL.r-1, ''); addBuilding('lamp', GL.x+3, GL.y+GL.r-1, '');
+  // frosted pines through the Rimewood and the lower slopes
+  const pr=mulberry32(SEED+17);
+  for(let gy=-RW.r;gy<=RW.r;gy++) for(let gx=-RW.r;gx<=RW.r;gx++){ const px=RW.x+gx, py=RW.y+gy;
+    if(Math.hypot(gx,gy)<=RW.r && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr()<0.3){ const n=addNode('tree',px,py); n.snow=1; } }
+  for(let i=0;i<150;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
+    if(t===T.SNOW&&pr()<0.14){ if(solidAt(ax,ay)) continue; if(dist(ax,ay,V.x,V.y)<4||dist(ax,ay,D.x,D.y)<4) continue; const n=addNode('tree',ax,ay); n.snow=1; } }
+  // ice-crags to mine on the glacier margins
+  for(let i=0;i<28;i++){ const a=pr()*TAU, rr=6+pr()*(GL.r-4);
+    const ax=Math.round(GL.x+Math.cos(a)*rr), ay=Math.round(GL.y+Math.sin(a)*rr*0.92);
+    if(inb(ax,ay) && tileAt(ax,ay)===T.ICE && !solidAt(ax,ay) && dist(ax,ay,GL.x,GL.y)>4) addNode('rock',ax,ay); }
+  G.critters=[];
+}
+function spawnFrostFolk(){
+  const Z=FROST_ZONES, V=Z.village;
+  G.npcs.push(makeNPC('bryn','Bryn the Kettlewarden', V.x+0.5, V.y+2.5,
+    {skin:'#c2a488',hair:'#cfc7b8',shirt:'#4a5a72',pants:'#33384a',beard:'#cfc7b8'},
+    ['Two moons of this, and the strait still hard as a smith\'s anvil. No boat in, no fish out. Hearthhold is eating its own boots.',
+     'The Warden used to keep our winters kind - it wept meltwater every spring and the strait ran free. Then a robed man walked onto the glacier, and the ice stopped weeping.'],0.4));
+  G.npcs.push(makeNPC('sigrid','Sigrid the Icewright', V.x+4.5, V.y+3.5,
+    {skin:'#b58a5e',hair:'#8a7a5e',shirt:'#5a6a5a',pants:'#3a3a2c',hairstyle:'bun'},
+    ['Wrap up warm and mind the glacier - the Warden is up there, and it is not itself.',
+     'It was never a monster, friend. It is the kindest thing on this rock. Whatever holds it now is not.'],0.4));
+}
+function spawnFrostWarden(){
+  if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
+  const GL=FROST_ZONES.glacier, sp=findOpenNear(Math.round(GL.x), Math.round(GL.y), 5) || [GL.x, GL.y];
+  const w=spawnMob('frostwarden', sp[0], sp[1]);
+  if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; }
+  return w;
+}
+function spawnMobsFrost(){
+  const Z=FROST_ZONES;
+  if(qs('thaw')==='active' && !(P.story && P.story.frostFreed)) spawnFrostWarden();
+  const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
+  if(yd) spawnMob('dummy',yd[0],yd[1]);
+}
+function freeWarden(m){
+  m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
+  Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
+  shockwave(m.x,m.y,'rgba(180,225,245,0.95)',95);
+  for(let i=0;i<32;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.8),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.05}); }
+  P.story.frostFreed=1; P.story.vathMet=1;
+  banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
+  if(qs('thaw')==='active') completeQuest('thaw');
+  updateFrostFolkMood();
+  setTimeout(()=>toast('The violet cracks and sloughs away like spring ice, and the Warden bows its great head and <b>weeps</b> - real meltwater, running warm down the glacier toward the strait. On a shard of frost, already melting: <b style="color:#c9a0ff">“Four. You unmake faster than I can make, deckhand. That is not supposed to be possible. What are you?”</b>',10000),1400);
+}
+function updateFrostFolkMood(){
+  if(!(P.story && P.story.frostFreed)) return;
+  const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
+  set('bryn',['You hear it? Water. Running water! The strait\'s breaking up floe by floe - there\'ll be a fishing boat out by morning.','The Warden weeps again and Hearthhold with it, from joy. We owe you our whole winter, friend.']);
+  set('sigrid',['The glacier drips like a spring morning. I could kiss you, but my lips would freeze - so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian AND our sea.']);
+}
+function genFrostAll(){
+  genFrost(); bakeSolids(); placeObjectsFrost(); buildFoam();
+  spawnFrostFolk(); spawnMobsFrost();
+  buildMapBase();
+}
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
@@ -1137,6 +1248,11 @@ QUESTS.roost={ giver:'wrenna', title:'The Screaming Aerie', kind:'special', xpL:
   log:'Take the Underclimb tunnel up into the sealed Roost Heart. Slay the serpent warden, then destroy the cursed tome.',
   doneText:'The screaming stopped, and my old grey hen landed on my shoulder like nothing was ever wrong. You gave a whole island back its sky. There is no thanks big enough - but here is what I have, and it is yours.',
   rw:{gold:320, item:{potion:3}, xp:{melee:440, archery:440, magic:440}} };
+QUESTS.thaw={ giver:'bryn', title:'The Weeping Warden', kind:'kill', kill:{frostwarden:1}, xpL:460,
+  brief:'Our Warden kept these winters gentle for a hundred years - wept the strait free every spring. Then the robed man walked onto the glacier and the weeping stopped, and the cold has only deepened since. It is bound, not turned. Climb the ice road, break whatever holds it, and give the old thing back its tears. Hearthhold is freezing to death down here.',
+  log:'Climb to the Weeping Glacier and free the bound ice Warden to thaw the strait. (Lv 13 - dress warm.)',
+  doneText:'Water in the strait and tears on the glacier - you gave us back our guardian and our sea in one stroke. Hearthhold will drink your name warm for a generation. Take this, and our thanks.',
+  rw:{gold:340, item:{potion:3}, xp:{melee:460, archery:460, magic:460}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1518,7 +1634,8 @@ function sailTo(dest, msg){
 function boatMenu(){
   // once the seas are calm every dock is a ferry hub - sail to any known isle
   const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-             ['Sail to Windsurf Isle','wind'],['Sail to the Aerie Isle','aerie']];
+             ['Sail to Windsurf Isle','wind'],['Sail to the Aerie Isle','aerie'],
+             ['Sail to the Frozen Isle','frost']];
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';
@@ -1588,6 +1705,12 @@ function switchWorld(id){
     if(qs('roost')!=='done' && !P.quests.roost) P.quests.roost='avail';
     if(!P.prog.aerieSeen){ P.prog.aerieSeen=1;
       setTimeout(()=>toast('<b>The Aerie Isle</b> - and even from the landing you hear it: a sky full of screaming. Nothing with wings will let you near the great plateau. <b>Wrenna the Rookmother</b> is in the village.',7000),1400); }
+  }
+  if(id==='frost'){
+    if(qs('thaw')!=='done' && !P.quests.thaw) P.quests.thaw='avail';
+    if(P.story && P.story.frostFreed) updateFrostFolkMood();
+    if(!P.prog.frostSeen){ P.prog.frostSeen=1;
+      setTimeout(()=>toast('<b>The Frozen Isle</b> - the strait is locked to solid ice and the cold bites like a curse, because it is one. <b>Bryn the Kettlewarden</b> keeps a fire in the village.',7000),1400); }
   }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();

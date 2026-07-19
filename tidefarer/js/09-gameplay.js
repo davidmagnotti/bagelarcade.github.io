@@ -389,6 +389,7 @@ function damageMob(m,dmg,knock,skill){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe
+    else if(m.kind==='frostwarden' && !m.freed){ m.hp=1; freeWarden(m); } // the ice guardian is freed, not felled
     else killMob(m, skill);
   }
 }
@@ -842,6 +843,20 @@ function updateMobs(dt){
           moveEntity(m, dx/l*d.speed*2.6*dt, dy/l*d.speed*2.6*dt);
           if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.3,color:'rgba(190,190,200,0.5)',size:3});
         }
+      }
+      if(m.kind==='frostwarden'){
+        // a slow siege-engine of ice: closes ground and flings frost shards,
+        // fanning wider volleys as the binding drives it harder (lower HP)
+        m.shootCd-=dt;
+        if(m.shootCd<=0 && l>2 && l<12){
+          m.shootCd = m.hp<m.maxhp*0.5? 1.6 : 2.4; m.swing=0.3;
+          const spread = m.hp<m.maxhp*0.5? [-0.26,0,0.26] : [0];
+          for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
+            G.projs.push({kind:'shard',x:m.x,y:m.y-1.1,vx:Math.cos(ca)*8,vy:Math.sin(ca)*8,life:1.8,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
+          if(Snd.magic) Snd.magic();
+        }
+        if((m.swing||0)>0.14 && Math.random()<0.5){ // frost breath as the slam lands
+          G.parts.push({x:m.x+rnd(-1.5,1.5),y:m.y-0.6,vx:rnd(-0.4,0.4),vy:-rnd(0.3,0.9),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.04}); }
       }
       if(m.kind==='leviathan'){
         // bound in the deep - never leaves the water, but hurls spouts and

@@ -215,6 +215,7 @@ const MOBDEF = {
   leviathan:{hp:1500, dmg:34, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
   raptor:{hp:64, dmg:24, speed:4.5, aggro:11, xp:70, gold:[0,0], lvl:12, name:'Screaming Raptor'},
   serpent:{hp:1300, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},
+  frostwarden:{hp:1700, dmg:36, speed:1.9, aggro:13, xp:800, gold:[0,0], lvl:13, name:'The Weeping Warden'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'}
 };
 function inSafeZone(x,y){
