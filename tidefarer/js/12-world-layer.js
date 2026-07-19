@@ -376,7 +376,8 @@ function spawnRealmFolk(){
   G.npcs.push((()=>{ const cv2=makeNPC('corvo','Captain Corvo', 330.5,243.2,
     {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
     ['East past the shoals sits an island the charts pretend not to see.',
-     'My girl Wren turns twelve at the next full tide. I promised her something fine.'],0.3); cv2.nightOwl=true; return cv2; })());
+     'My girl Wren turns twelve at the next full tide. I promised her something fine.',
+     'Think on it: first my ribbons go missing, so my ferry sits idle. Then they say a dragon shut the eastern sky. Now word is Windsurf\'s own harbor has turned deadly. One door after another, latched between the isles - and always, they say, by some soft-spoken fellow who never raises his voice.'],0.3); cv2.nightOwl=true; return cv2; })());
   G.npcs.push((()=>{ const hm=makeNPC('hermit','Moss-Brother Fen', ZONES.forest.x+9.5,ZONES.forest.y-6.6,
     {skin:'#c9a27b',hair:'#9aa08a',shirt:'#4a5a3a',pants:'#3a4230',robe:'#54644a'},
     ['Sixty years the pines kept my secret. You brought an axe to a riddle - fair enough.',
@@ -611,17 +612,17 @@ function spawnEastFolk(){
       ['Eh, down off Kea in one piece? Come in, come in - the mat is soft and the hearth is warm.',
        'Ten gold, a woven mat, and the reef to hum you under. Sleep as long as the tide pleases.'],0.7);
     inn.nightOwl=true; G.npcs.push(inn); }
-  // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to
-  // get it. Once the wyrm is freed she's fled to the grove, no longer in the village
+  // Vath - a visiting Emberbinder who covets the dragon's fire and will lie to
+  // get it. Once the wyrm is freed he's fled to the grove, no longer in the village
   // (quest-state gated so it survives reloads).
   if(qs('wyrm')!=='done')
-    G.npcs.push(makeNPC('vashti','Vashti the Emberbinder', V.x-8.5,V.y-4.5,
-      {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,hairstyle:'long'},
+    G.npcs.push(makeNPC('vath','Vath the Emberbinder', V.x-8.5,V.y-4.5,
+      {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'},
       ['The mountain\'s heat is... wasted, on a sleeping beast.',
        'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0.3));
 }
 /* The caldera set-piece: told the wyrm is evil, you climb Mount Kea and step
-   INTO his lair, where he turns out kind. Vashti's binding takes him mid-word;
+   INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
    you're driven out to the caldera to break the spell in a fight. */
 function dragonLairSpeak(){
   if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's already raging at the caldera
@@ -641,10 +642,10 @@ function dragonLairSpeak(){
     return;
   }
   lairDialog('Ashwing',
-    '“You climbed my mountain with a blade. Vashti’s errand, I would wager - she covets my fire, bottled.”',
+    '“You climbed my mountain with a blade. Vath’s errand, I would wager - he covets my fire, bottled.”',
     [{label:'Continue', fn:()=> lairDialog('Ashwing',
       '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
-      [{label:'Continue', fn:()=> lairDialog('Vashti',
+      [{label:'Continue', fn:()=> lairDialog('Vath',
         '<b style="color:#c77bff">Violet fire floods the lair.</b> A voice pours from the walls: “Sentiment. Sleep, wyrm - or kill for me.” Ashwing’s eyes kindle red; his wings crack against the stone. There is no room to face him here.',
         [{label:'Steel yourself, get out', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
 }
@@ -674,7 +675,7 @@ function awakenDragon(){
 function startMageHunt(){
   if(P.mageHuntStarted) return;
   P.mageHuntStarted=1;
-  const vi=G.npcs.findIndex(n=>n.id==='vashti'); if(vi>=0) G.npcs.splice(vi,1); // she flees the village
+  const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); // he flees the village
   P.quests.vhunt='active'; P.prog.vhunt=0;
   const GR=EAST_ZONES.grove;
   if(!G.mobs.some(m=>m.kind==='mage' && !m.dead)){
@@ -707,8 +708,9 @@ function spawnMobsEast(){
   const yd2=findOpenNear(Math.round(EAST_ZONES.village.x+12), Math.round(EAST_ZONES.village.y+7), 5);
   if(yd1) spawnMob('dummy',yd1[0],yd1[1]);
   if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
-  // if the hunt is underway (e.g. after a reload), Vashti waits in the grove
-  if(qs('vhunt')==='active'){
+  // if the hunt is underway and Vath hasn't yet been driven off (reload case),
+  // he waits in the grove. Once bested (prog>=1) he's fled for good - no respawn.
+  if(qs('vhunt')==='active' && (P.prog.vhunt||0)<1){
     const GR=EAST_ZONES.grove, sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x,GR.y];
     const mg=spawnMob('mage', sp[0], sp[1]); if(mg){ mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
   }
@@ -944,15 +946,15 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
   log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
   doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
   rw:{surf:true, gold:30} };
-QUESTS.wyrm={ giver:'vashti', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
+QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
-QUESTS.vhunt={ giver:'moli', title:'Hunt the Emberbinder', kind:'kill', kill:{mage:1}, xpL:300,
-  brief:'That robed one was never a friend to Kohana, eh. Run her down in the grove before she binds another soul - then come and sit, and we will call it square.',
-  log:'Run down Vashti the Emberbinder in the palm grove.',
-  doneText:'Her binding goes quiet with her, and the isle breathes easy again. Ashwing owes you dragonfire; Kohana owes you this. Take it, friend, with all our thanks.',
+QUESTS.vhunt={ giver:'moli', title:'The Enchanter in the Grove', kind:'kill', kill:{mage:1}, xpL:300,
+  brief:'That robed one - Vath, he calls himself - was never a friend to Kohana, eh. Drive him from the grove before he binds another soul, then come and sit, and we will call it square.',
+  log:'Confront Vath the Emberbinder in the palm grove and drive him off.',
+  doneText:'Slipped you like water through a fist, did he? Aye - his kind always does. But you had him on his knees, and the isle breathes easier for it. He will surface again somewhere; when he does, you will be ready. Take this, with Kohana\'s thanks.',
   rw:{gold:180, item:{potion:2}, xp:{melee:300, archery:300, magic:300}} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
@@ -1248,6 +1250,10 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,170,200,0.85)',44);
     burst(b.x,b.y-0.5,'#ffb0c8',14,2.2);
     Snd.quest();
+    // The first fingerprint of the enchanter: someone paid to have these ribbons
+    // stolen - and it grounded Corvo's ferry. A pattern the player won't see yet.
+    if(!P.story.vathNamed){ P.story.vathNamed=1;
+      setTimeout(()=>toast('Tucked beneath the silk: a <b>coin older than the kingdom</b>, and a scrap in a fine, unhurried hand - <i>\u201cfor the ribbons, and for your silence.\u201d</i> It is signed with one word: <b style="color:#c9a0ff">Vath</b>. A cornered brigand spits as you pass: \u201cPolite fellow. Paid in old coin. Said it was only ribbons - what\'s the harm in a few ribbons?\u201d',9500),1600); }
     return;
   }
   if(b.rich){
