@@ -77,8 +77,9 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='lairmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>enterLair()});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
-    else if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='resort')
-      cand.push({type:'inter',x:b.x,y:b.y+(b.kind==='resort'?2.2:0.9),r:1.4,range:1.7,go:()=>enterHouse(b)});
+    else if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='resort'||b.kind==='castle'){
+      const dy=b.grand?6.5:b.kind==='resort'?2.2:0.9;
+      cand.push({type:'inter',x:b.x,y:b.y+dy,r:1.5,range:b.grand?2.2:1.7,go:()=>enterHouse(b)}); }
   }
   let bi=null; bd=999;
   for(const c of cand){ const d=dist(wx,wy,c.x,c.y); if(d<c.r && d<bd){ bd=d; bi=c; } }
@@ -93,12 +94,12 @@ function interiorClick(sx,sy){
   const wx=(ox/(TW/2)+oy/(TH/2))/2, wy=(oy/(TH/2)-ox/(TW/2))/2;
   let best=null, bd=1.0;
   for(const f of I.furn){
-    if(!{bed:1,hearth:1,anvil:1,orb:1,books:1,shelf:1,barrel:1,hay:1,crate:1,frontdesk:1,poolguest:1,dragon:1}[f.type]) continue;
+    if(!{bed:1,hearth:1,anvil:1,orb:1,books:1,shelf:1,barrel:1,hay:1,crate:1,frontdesk:1,poolguest:1,dragon:1,king:1,stairs:1}[f.type]) continue;
     const d=dist(wx,wy,f.x,f.y);
     if(d<bd){ bd=d; best=f; }
   }
   if(best){ I.click={x:best.x,y:best.y+0.9,f:best}; return; }
-  if(dist(wx,wy,I.exit.x,I.exit.y)<1.1){ I.click={x:I.exit.x,y:I.exit.y,exit:true}; return; }
+  if(I.exit && dist(wx,wy,I.exit.x,I.exit.y)<1.1){ I.click={x:I.exit.x,y:I.exit.y,exit:true}; return; }
   I.click={x:clamp(wx,0.95,I.w-0.95), y:clamp(wy,2.1,I.h-0.65)};
 }
 
