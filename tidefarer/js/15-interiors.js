@@ -29,9 +29,10 @@ function enterHouse(b){
     barn:{line:'Hay, harness, and something purring out of sight.'},
     tower:{line:'Star charts, humming glass, and a faint smell of ozone.'},
     castle:{line:'Banners, cold stone, and a hearth that has heard a hundred oaths.'},
-    hut:{line:'Woven mats, hanging nets, and the sweet smell of dried palm.'}
+    hut:{line:'Woven mats, hanging nets, and the sweet smell of dried palm.'},
+    resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'}
   };
-  const dims = b.kind==='castle'? [15,9] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
+  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [12,8] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
@@ -42,6 +43,7 @@ function enterHouse(b){
   if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
   if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
   if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
+  if(b.kind==='resort'){ F('rug',6.0,4.6,0,0,false); F('hearth',2.0,1.35,1.1,0.35); F('table',4.4,3.2,0.9,0.6); F('stool',3.4,4.0,0.35,0.3); F('stool',5.4,4.0,0.35,0.3); F('table',8.6,3.4,0.9,0.6); F('stool',9.6,4.2,0.35,0.3); F('bed',9.8,2.4,1.0,0.7); F('shelf',6.2,1.3,1.2,0.3); F('barrel',10.4,5.2,0.45,0.4); }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='castle'){
     F('rug',7.5,5.0,0,0,false);

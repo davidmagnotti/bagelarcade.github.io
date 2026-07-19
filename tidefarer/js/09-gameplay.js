@@ -73,9 +73,10 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
     }
-    if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'){
-      const d=dist(P.x,P.y,b.x,b.y+0.9);
-      if(d<1.6 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
+    if(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'){
+      const dy=b.kind==='resort'?2.2:0.9;
+      const d=dist(P.x,P.y,b.x,b.y+dy);
+      if(d<1.8 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
     }
     if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }
