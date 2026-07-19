@@ -88,7 +88,7 @@ function pickClickTarget(wx,wy){
 function interiorClick(sx,sy){
   sx-=LB.x; sy-=LB.y;   // undo Performance Mode letterbox offset
   const I=G.interior;
-  const ccx=isoX(I.w/2,I.h/2), ccy=isoY(I.w/2,I.h/2);
+  const cc=interiorCenter(I); const ccx=cc.x, ccy=cc.y;
   const ox=sx-(VW/2-ccx), oy=sy-(VH/2+14-ccy);
   const wx=(ox/(TW/2)+oy/(TH/2))/2, wy=(oy/(TH/2)-ox/(TW/2))/2;
   let best=null, bd=1.0;
