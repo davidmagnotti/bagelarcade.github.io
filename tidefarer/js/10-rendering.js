@@ -861,32 +861,42 @@ function drawMob(m,s){
   }
   if(m.kind==='leviathan'){
     const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, freed=m.freed;
-    const bodyC = freed? '#3a7a8a' : '#274d5a';
-    g.save(); g.translate(s.x,s.y); g.scale(1.7,1.7); // a leviathan, not a garden snake
-    g.fillStyle='rgba(180,225,245,0.20)'; g.beginPath(); g.ellipse(0,5,48,15,0,0,TAU); g.fill(); // disturbed water
+    const bodyC = freed? '#3a7a8a' : '#1d3b46';            // darker, colder, meaner
+    const spine = freed? '#7fd0e0' : '#2c5866';
+    g.save(); g.translate(s.x,s.y); g.scale(3.4,3.4);      // twice the beast it was
+    g.fillStyle='rgba(180,225,245,0.20)'; g.beginPath(); g.ellipse(0,5,52,17,0,0,TAU); g.fill(); // churned water
     for(let i=2;i>=0;i--){ const bx=fl*(-15 - i*17), by=3 - Math.sin(t*2+i)*3 - i*1.5; // breaching coils
       g.fillStyle= i%2? bodyC : shade(bodyC,10);
       g.beginPath(); g.ellipse(bx,by,14-i*1.5,8-i,0,Math.PI,TAU); g.fill();
-      g.strokeStyle='rgba(8,26,32,0.6)'; g.lineWidth=2; g.stroke();
-      g.fillStyle= freed? '#7fd0e0':'#3f7d8d'; g.beginPath(); g.moveTo(bx-6,by-5); g.lineTo(bx,by-14); g.lineTo(bx+6,by-5); g.closePath(); g.fill();
+      g.strokeStyle='rgba(6,20,26,0.7)'; g.lineWidth=2; g.stroke();
+      g.fillStyle=spine; // a crest of jagged dorsal spines on every coil
+      for(const sx of [-6,0,6]){ g.beginPath(); g.moveTo(bx+sx-3,by-3); g.lineTo(bx+sx,by-15); g.lineTo(bx+sx+3,by-3); g.closePath(); g.fill(); }
     }
     const hy=-46 - Math.sin(t*1.6)*4; // rearing neck
-    g.strokeStyle=bodyC; g.lineWidth=15; g.lineCap='round';
+    g.strokeStyle=bodyC; g.lineWidth=17; g.lineCap='round';
     g.beginPath(); g.moveTo(fl*2,2); g.quadraticCurveTo(fl*11,-26, fl*6,hy+12); g.stroke();
+    g.fillStyle=spine; // spines climbing the throat
+    for(let k=0;k<4;k++){ const nt=k/4, npx=fl*(2+9*nt), npy=2+(hy+10)*nt;
+      g.beginPath(); g.moveTo(npx-fl*4,npy); g.lineTo(npx-fl*11,npy-8); g.lineTo(npx+fl*1,npy-4); g.closePath(); g.fill(); }
     g.save(); g.translate(fl*6, hy);
-    g.fillStyle=shade(bodyC,8); g.beginPath(); g.ellipse(fl*3,0,16,11,0,0,TAU); g.fill();
-    g.strokeStyle='rgba(8,26,32,0.7)'; g.lineWidth=2.4; g.stroke();
-    g.fillStyle=shade(bodyC,-16); g.beginPath(); g.moveTo(fl*15,2); g.quadraticCurveTo(fl*27,4,fl*25,11); g.quadraticCurveTo(fl*13,11,fl*11,4); g.closePath(); g.fill(); // jaw
-    g.fillStyle= freed? '#7fd0e0':'#3f7d8d';
-    g.beginPath(); g.moveTo(-fl*2,-8); g.lineTo(-fl*9,-21); g.lineTo(fl*2,-10); g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(fl*6,-9); g.lineTo(fl*4,-23); g.lineTo(fl*13,-9); g.closePath(); g.fill();
+    g.fillStyle=shade(bodyC,8); g.beginPath(); g.ellipse(fl*3,0,18,12,0,0,TAU); g.fill(); // heavy skull
+    g.strokeStyle='rgba(6,20,26,0.8)'; g.lineWidth=2.6; g.stroke();
+    g.fillStyle=shade(bodyC,-18); g.beginPath(); g.moveTo(fl*15,3); g.quadraticCurveTo(fl*30,6,fl*27,14); g.quadraticCurveTo(fl*13,13,fl*11,5); g.closePath(); g.fill(); // gaping jaw
+    g.fillStyle='#eaf3f2'; // rows of jagged fangs, upper and lower
+    for(let ti=0;ti<6;ti++){ const txp=fl*(12+ti*2.6);
+      g.beginPath(); g.moveTo(txp,2); g.lineTo(txp+fl*1.1,6.5); g.lineTo(txp+fl*2.2,2); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(txp,11); g.lineTo(txp+fl*1.1,6.5); g.lineTo(txp+fl*2.2,11); g.closePath(); g.fill(); }
+    g.fillStyle=spine; // swept-back horns
+    g.beginPath(); g.moveTo(-fl*2,-8); g.lineTo(-fl*11,-24); g.lineTo(fl*2,-10); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(fl*6,-9); g.lineTo(fl*4,-26); g.lineTo(fl*14,-9); g.closePath(); g.fill();
+    g.fillStyle=shade(bodyC,-10); g.beginPath(); g.moveTo(fl*3,-6); g.lineTo(fl*13,-8); g.lineTo(fl*12,-1); g.closePath(); g.fill(); // heavy brow
     g.fillStyle= freed? '#bfe8ff' : (hurt?'#ffd0d0':'#c77bff');
-    g.beginPath(); g.arc(fl*8,-2,3.6,0,TAU); g.fill();
-    g.fillStyle='#0a1418'; g.beginPath(); g.arc(fl*9,-2,1.7,0,TAU); g.fill();
+    g.beginPath(); g.arc(fl*9,-1,3.4,0,TAU); g.fill();
+    g.fillStyle='#0a1418'; g.beginPath(); g.ellipse(fl*10,-1,1.1,2.1,0,0,TAU); g.fill(); // slit pupil
     g.restore();
     if(!freed){ const gl=0.35+0.3*Math.sin(t*3); // Vath's violet binding
-      g.strokeStyle='rgba(199,123,255,'+gl.toFixed(2)+')'; g.lineWidth=2.2;
-      g.beginPath(); g.arc(fl*6,hy,24,0,TAU); g.stroke(); }
+      g.strokeStyle='rgba(199,123,255,'+gl.toFixed(2)+')'; g.lineWidth=2.4;
+      g.beginPath(); g.arc(fl*6,hy,26,0,TAU); g.stroke(); }
     g.restore(); g.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }

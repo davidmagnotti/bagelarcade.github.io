@@ -768,7 +768,9 @@ function genWind(){
     const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
     const rad=R0+wob[wi]+5*Math.sin(a*5+0.7);
     let t=T.DEEP;
-    if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+2) t=T.SHALLOW;
+    // a broad ring of light shallows (~7 tiles) hems the island, so the windsurf
+    // board has real water to range across before the dark deep begins
+    if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+7) t=T.SHALLOW;
     G.map[y*MAPW+x]=t;
   }
   const Z=WIND_ZONES;
@@ -791,6 +793,10 @@ function genWind(){
   // the harbor breakwater: a plank jetty reaching out over the water, where the
   // bound leviathan haunts the strait (the treacherous-tide quest happens here)
   const D=Z.dock;
+  // the Leviathan's arena: a broad patch of LIGHT water out past the breakwater,
+  // so once you have the board you windsurf off the jetty and range around the
+  // beast to fight it, instead of poking it from a plank
+  carveDisc(D.x, D.y+2+WIND_JETTY+1, 8, T.SHALLOW, false);
   for(let k=1;k<=WIND_JETTY;k++){ const jy=Math.round(D.y+2+k);
     for(let o=-1;o<=1;o++){ if(inb(D.x+o,jy)){ setTile(D.x+o,jy,T.PLANK); setSolid(D.x+o,jy,0); } } }
   // a moorage of open water alongside the pier, so the ferry floats on the sea
