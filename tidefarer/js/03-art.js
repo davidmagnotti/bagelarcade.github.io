@@ -1084,9 +1084,13 @@ function drawHumanoid(g,sx,sy,o){
   if(o.weapon && !stowed){
     const swv=o.swing||0;
     g.save();
+    const isSword=o.weapon==='sword';
     g.translate(flip*8.2, armY);
     g.scale(flip,1);
-    g.rotate(0.35 + swv*1.9 + (walking? -sw1*0.18:0));
+    // Sword rests out to the side (blade angled up & away from the body) so it
+    // reads as held in the hand instead of floating over the chest; its swing
+    // sweeps up into that rest. Bow/staff/tools keep the original arm pose.
+    g.rotate((isSword? -0.5 : 0.35) + swv*(isSword? -1.6 : 1.9) + (walking? -sw1*0.18:0));
     g.fillStyle=o.robe? o.robe : shirt;
     g.beginPath(); g.roundRect(-2.1,0,4.2,7.6,2.1); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
@@ -1097,7 +1101,7 @@ function drawHumanoid(g,sx,sy,o){
     g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=1;
     g.beginPath(); g.moveTo(-2.1,-0.2); g.lineTo(2.1,-0.2); g.stroke();
     // weapon
-    g.rotate(-0.5 + swv*0.2);
+    g.rotate((isSword? 0.0 : -0.5) + swv*(isSword? -0.6 : 0.2));
     if(o.weapon==='sword'){
       const wt=o.wtier==null?1:o.wtier;
       const bl= wt===2? 19 : wt===1? 16 : 13;
