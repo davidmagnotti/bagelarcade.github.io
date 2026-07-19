@@ -372,6 +372,7 @@ function damageMob(m,dmg,knock,skill){
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls - he slips away
+    else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe
     else killMob(m, skill);
   }
 }
@@ -741,7 +742,9 @@ function updateMobs(dt){
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
       m.noAggroT=Math.max(0,(m.noAggroT||0)-dt);
-      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){ m.state='chase'; if(m.boss){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); } }
+      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){ m.state='chase';
+        if(m.kind==='boss'){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); }
+        else if(m.bigBoss && Snd.boss) Snd.boss(); }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
       if(m.tx!=null){ const dx=m.tx-m.x, dy=m.ty-m.y, l=Math.hypot(dx,dy);
@@ -761,7 +764,7 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
-      if(l>stop && !((m.snareT||0)>0)){
+      if(l>stop && !((m.snareT||0)>0) && !m.rooted){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
@@ -823,6 +826,28 @@ function updateMobs(dt){
           moveEntity(m, dx/l*d.speed*2.6*dt, dy/l*d.speed*2.6*dt);
           if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.3,color:'rgba(190,190,200,0.5)',size:3});
         }
+      }
+      if(m.kind==='leviathan'){
+        // bound in the deep - never leaves the water, but hurls spouts and
+        // rears to slam anything on the breakwater. Volleys wider when hurt.
+        m.rooted=1;
+        m.shootCd-=dt;
+        if(m.shootCd<=0 && l>1.3 && l<14){
+          m.shootCd = m.hp<m.maxhp*0.5? 1.5 : 2.3; m.swing=0.3;
+          const spread = m.hp<m.maxhp*0.5? [-0.3,0,0.3] : [0];
+          for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
+            G.projs.push({kind:'spout',x:m.x,y:m.y-1.0,vx:Math.cos(ca)*7,vy:Math.sin(ca)*7,life:2.0,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
+          if(Snd.splash) Snd.splash();
+        }
+        m.lungeCd=(m.lungeCd||3)-dt;
+        if(m.lungeCd<=0 && l<9){
+          m.lungeCd=rnd(3.6,5.4); m.lunge=0.55;
+          addFloat('SURGE', m.x, m.y-3.2, '#8fd8ff', 1.2); G.shake=Math.max(G.shake,0.24);
+          if(Snd.splash) Snd.splash();
+        }
+        if((m.lunge||0)>0){ m.lunge-=dt;
+          if(m.lunge<=0 && l<2.6 && !P.dead) hurtPlayer(Math.round(d.dmg*1.2), m); // the slam lands
+          for(let k=0;k<3;k++) G.parts.push({x:m.x+rnd(-2,2),y:m.y+rnd(-1,1),vx:rnd(-0.4,0.4),vy:-rnd(0.5,1.4),life:0.55,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.06}); }
       }
       if(m.kind==='dragon'){
         // periodic charging lunge with a roar

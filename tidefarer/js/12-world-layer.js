@@ -758,7 +758,14 @@ function genWind(){
   carveLine(Z.town.x,Z.town.y, Z.resort.x,Z.resort.y, T.PATH,0);
   carveLine(Z.town.x,Z.town.y, Z.wheel.x,Z.wheel.y, T.PATH,0);
   carveLine(Z.market.x,Z.market.y, Z.bluffs.x,Z.bluffs.y, T.PATH,0);
+  // the harbor breakwater: a plank jetty reaching out over the water, where the
+  // bound leviathan haunts the strait (the treacherous-tide quest happens here)
+  const D=Z.dock;
+  for(let k=1;k<=WIND_JETTY;k++){ const jy=Math.round(D.y+2+k);
+    for(let o=-1;o<=1;o++){ if(inb(D.x+o,jy)){ setTile(D.x+o,jy,T.PLANK); setSolid(D.x+o,jy,0); } } }
 }
+const WIND_JETTY=16;
+function leviathanHome(){ const D=WIND_ZONES.dock; return {x:D.x+0.5, y:D.y+2+WIND_JETTY+1.5}; }
 function placeObjectsWind(){
   const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, MI=Z.mill, WH=Z.wheel, D=Z.dock, B=Z.bluffs;
   // landmarks
@@ -842,11 +849,43 @@ function spawnWindFolk(){
      'The day a boat can cross again, I\'ll have this town in canvas by nightfall.'],0.5));
 }
 function spawnMobsWind(){
-  // a peaceful city - only harmless yard critters and practice targets for now.
-  // (The sea-beast that haunts the straits arrives with the next chapter.)
   const D=WIND_ZONES.dock;
   const yd=findOpenNear(Math.round(D.x+4),Math.round(D.y-3),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
+  // The Bound Leviathan haunts the breakwater until the tide is calmed. It
+  // reappears here on reload if the fight was underway but unfinished.
+  if(qs('tide')==='active' && !(P.story && P.story.tideCalm)) spawnLeviathan();
+}
+function spawnLeviathan(){
+  if(G.mobs && G.mobs.some(m=>m.kind==='leviathan' && !m.dead)) return null;
+  const h=leviathanHome();
+  const lv=spawnMob('leviathan', h.x-0.5, h.y-0.5);
+  if(lv){ lv.boss=true; lv.bigBoss=true; lv.rooted=1; lv.title='THE BOUND LEVIATHAN';
+    lv.hx=h.x; lv.hy=h.y; lv.x=h.x; lv.y=h.y; lv.state='chase'; lv.noAggroT=0; lv.respawnT=-1; }
+  return lv;
+}
+function freeLeviathan(m){
+  // Beaten, the binding shatters - the beast is a victim, not a foe. It sinks
+  // calm, the strait goes glassy, and Vath's violet mark is left behind on the water.
+  m.freed=1; m.dead=true; m.respawnT=-1; m.state='idle';
+  Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
+  shockwave(m.x,m.y,'rgba(150,220,245,0.95)',95);
+  for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
+    G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,life:rnd(0.8,1.7),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); }
+  P.story.tideCalm=1; P.story.vathMet=1;
+  banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
+  if(qs('tide')==='active') completeQuest('tide');
+  updateWindFolkMood();
+  setTimeout(()=>toast('The leviathan sinks - not slain, but <b>unbound</b> - and the killing water goes glass-flat. Where it dove, a slick of <b style="color:#c9a0ff">violet light</b> curls and fades. On the last swell rides a scrap of vellum in a fine, unhurried hand: <b style="color:#c9a0ff">“You freed my dragon. You freed my wyrm of the deep. Twice now. - V.”</b> He is ahead of you still, and no longer sure of himself.',10000),1400);
+}
+function updateWindFolkMood(){
+  // once the strait reopens, the town's talk turns from despair to bustle
+  if(!(P.story && P.story.tideCalm)) return;
+  const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
+  set('rell',['Boats in the harbor again! First hull to cross in a season put in this morning.','Whatever you did out past the breakwater - the water\'s a mill-pond now. Windsurf owes you its livelihood.']);
+  set('coralie',['We have GUESTS! Three rooms let by noon. The Breakers is alive again - come, the salt baths are hot.','Bless you, traveller. The awnings are down and the sea view is open for trade.']);
+  set('pia',['Sold clean out of sugar-melon by midday - sailors buy like it\'s a festival!','Trade Row hums again. Take a spice-plum, on the house, for what you did.']);
+  set('nessa',['Every loom in my loft is running - the fleet wants canvas and they want it yesterday!','Told you: the day a boat could cross, I\'d have this town in sail by nightfall. And so I have.']);
 }
 function genWindAll(){
   genWind(); bakeSolids(); placeObjectsWind(); buildFoam();
@@ -946,6 +985,11 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
   log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
   doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
   rw:{surf:true, gold:30} };
+QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
+  brief:'You feel it in the water, past my breakwater - a wrongness, cold and patient. No hull has crossed since it woke, and Windsurf is starving for want of a sail. It is no natural beast; it moves like something bound. Walk the jetty and face it, friend - end this, and you give this whole city back its sea.',
+  log:'Confront the Bound Leviathan at the harbor breakwater and end the curse on the strait.',
+  doneText:'The water\'s a mill-pond and the boats are already casting off. You didn\'t just kill a monster - you handed a dying city its livelihood. Windsurf will tell this one for a hundred years.',
+  rw:{gold:300, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1308,17 +1352,37 @@ function attemptSail(){
     }
     return;
   }
-  sailing=true;
-  const fade=document.getElementById('fadeOv');
-  fade.style.opacity=1; Snd.splash();
-  // isle -> Barik; the Sunward Isle sails home to Barik; Barik's dock returns
-  // to the tutorial isle. (East never routed to 'main', so it fell through to
-  // 'isle' and dumped you on the tutorial shore - fixed.)
-  const dest = G.worldId==='east' ? 'main' : G.worldId==='isle' ? 'main' : 'isle';
-  setTimeout(()=>{
-    switchWorld(dest);
-    setTimeout(()=>{ fade.style.opacity=0; sailing=false; },100);
-  },780);
+  // Windsurf is walled off by the killing tide until you calm the strait.
+  if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){
+    toast('The strait past the breakwater churns like a cauldron - no hull could live in it. <b>Ashwing</b> can still fly you home; or <b>calm the water first</b>.',5200);
+    return;
+  }
+  // once the seas are calm, any boat is a ferry - pick a destination
+  if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
+  // default single-hop routing before the archipelago reopens
+  sailTo(G.worldId==='east' ? 'main' : G.worldId==='isle' ? 'main' : 'isle');
+}
+function sailTo(dest, msg){
+  if(sailing) return; sailing=true;
+  const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1; Snd.splash();
+  if(msg) toast(msg,3000);
+  setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
+}
+function boatMenu(){
+  const dests = G.worldId==='wind' ? [['Sail to the Sunward Isle','east'],['Sail home to Barik','main']]
+    : G.worldId==='east' ? [['Sail to Windsurf Isle','wind'],['Sail home to Barik','main']]
+    : [['Sail to Windsurf Isle','wind'],['Sail to the tutorial isle','isle']]; // main
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Ferry';
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.fillStyle='#8f6a3e'; pg.beginPath(); pg.moveTo(12,44); pg.quadraticCurveTo(36,60,60,44); pg.lineTo(52,38); pg.quadraticCurveTo(36,48,20,38); pg.closePath(); pg.fill();
+  pg.strokeStyle='#4f3a24'; pg.lineWidth=3; pg.beginPath(); pg.moveTo(36,38); pg.lineTo(36,14); pg.stroke();
+  pg.fillStyle='#e8e0d0'; pg.beginPath(); pg.moveTo(36,16); pg.quadraticCurveTo(50,22,36,34); pg.closePath(); pg.fill();
+  setDialog('“Calm seas at last, friend - the whole archipelago\'s open again. Where to?”',
+    dests.map(([lbl,dst])=>({label:lbl, fn:()=>{ closeDialog(); sailTo(dst); }}))
+      .concat([{label:'Stay ashore',ghost:true,fn:closeDialog}]));
 }
 function snapshotWorld(){
   WORLDS[G.worldId]={map:G.map,solid:G.solid,variant:G.variant,nodes:G.nodes,decor:G.decor,
@@ -1366,8 +1430,12 @@ function switchWorld(id){
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
-  if(id==='wind' && !P.prog.windSeen){ P.prog.windSeen=1;
-    setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something has scared every boat from the water. <b>Rell the Harbormaster</b> waits at the docks.',7000),1400); }
+  if(id==='wind'){
+    if(qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    if(P.story && P.story.tideCalm) updateWindFolkMood();
+    if(!P.prog.windSeen){ P.prog.windSeen=1;
+      setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something has scared every boat from the water. <b>Rell the Harbormaster</b> waits at the docks.',7000),1400); }
+  }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
