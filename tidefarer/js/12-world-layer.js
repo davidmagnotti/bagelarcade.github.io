@@ -982,9 +982,9 @@ function genAerie(){
     if(inb(x,y)){ const dd=dist(x,y,Z.aerie.x,Z.aerie.y);
       if(dd>Z.aerie.r && dd<=Z.aerie.r+3 && tileAt(x,y)===T.GRASS) setTile(x,y,T.SOIL); }
   }
-  // the sealed Roost Heart: a small clearing ringed by cliff, reachable only
-  // through the Underclimb tunnel warp (never on foot from the plateau)
-  carveDisc(Z.sanctum.x, Z.sanctum.y, Z.sanctum.r-1, T.GRASS, false);
+  // the sealed Roost Heart: a ruined stone dungeon at the plateau's crown,
+  // ringed by cliff and reachable only through the Underclimb tunnel warp
+  carveDisc(Z.sanctum.x, Z.sanctum.y, Z.sanctum.r-1, T.RUIN, false);
   for(let a=0;a<TAU;a+=0.10){ for(let rr=Z.sanctum.r; rr<=Z.sanctum.r+1; rr++){
     const rx=Math.round(Z.sanctum.x+Math.cos(a)*rr), ry=Math.round(Z.sanctum.y+Math.sin(a)*rr);
     if(inb(rx,ry)){ setTile(rx,ry,T.RUIN); setSolid(rx,ry,1); } } }
@@ -1013,6 +1013,10 @@ function placeObjectsAerie(){
   // the cursed tome, at the heart of the sealed roost
   G.decor.push({kind:'tome', x:S.x+0.5, y:S.y+0.5, destroyed:false});
   setSolid(Math.round(S.x), Math.round(S.y), 1);
+  // dungeon dressing: a ruined colonnade ringing the roost heart (decorative -
+  // they frame the arena without blocking the fight)
+  for(let i=0;i<6;i++){ const a=i/6*TAU + 0.5, px=S.x+Math.cos(a)*(S.r-1.3), py=S.y+Math.sin(a)*(S.r-1.3);
+    if(inb(Math.round(px),Math.round(py))) G.decor.push({kind:i%2?'pillarBroken':'pillar', x:px+0.5, y:py+0.5, broken:i%2===1, loreKey:'roost'}); }
   // greenery on the lower slopes; wind-bent trees
   const pr=mulberry32(SEED+13);
   for(let i=0;i<170;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
@@ -1038,13 +1042,21 @@ function spawnAerieFolk(){
 }
 function spawnMobsAerie(){
   const Z=AERIE_ZONES;
-  // the raptors that wall off the plateau - many, aggressive, respawning, until
-  // the tome that maddened them is destroyed
+  // the raptors that WALL OFF the plateau - a dense, aggressive guard ring so
+  // you truly can't cross the big section on foot, plus patrols wheeling across
+  // it, until the tome that maddened them is destroyed. They leash back to their
+  // posts, so the plateau stays guarded.
   if(!(P.story && P.story.aerieFreed)){
-    const pr=mulberry32(SEED+29), S=Z.sanctum;
-    for(let i=0;i<10;i++){ const a=pr()*TAU, rr=6+pr()*(Z.aerie.r-5);
-      const sp=findOpenNear(Math.round(Z.aerie.x+Math.cos(a)*rr), Math.round(Z.aerie.y+Math.sin(a)*rr), 4);
-      if(sp && dist(sp[0],sp[1],S.x,S.y) > S.r+2) spawnMob('raptor', sp[0], sp[1]); }
+    const pr=mulberry32(SEED+29), A=Z.aerie, S=Z.sanctum;
+    const guardOK=(sp)=> sp && dist(sp[0],sp[1],S.x,S.y) > S.r+2;
+    // a ring around the plateau rim - no gap to slip through
+    for(let i=0;i<18;i++){ const a=(i/18)*TAU + pr()*0.16, rr=A.r-3+pr()*3;
+      const sp=findOpenNear(Math.round(A.x+Math.cos(a)*rr), Math.round(A.y+Math.sin(a)*rr*0.95), 6);
+      if(guardOK(sp)){ const rp=spawnMob('raptor', sp[0], sp[1]); if(rp) rp.aggro=14; } }
+    // interior patrols
+    for(let i=0;i<7;i++){ const a=pr()*TAU, rr=3+pr()*(A.r-6);
+      const sp=findOpenNear(Math.round(A.x+Math.cos(a)*rr), Math.round(A.y+Math.sin(a)*rr), 5);
+      if(guardOK(sp)){ const rp=spawnMob('raptor', sp[0], sp[1]); if(rp) rp.aggro=14; } }
   } else { // freed: gentle birds wheel the crags again
     G.critters=G.critters||[];
     const pr=mulberry32(SEED+31);
