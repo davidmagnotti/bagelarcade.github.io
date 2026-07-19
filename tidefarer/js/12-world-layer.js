@@ -530,21 +530,21 @@ function spawnEastFolk(){
      'A bow is a held breath. Learn to let it go.'],0.4));
   G.npcs.push(makeNPC('huk','Huk the Boarfather', V.x+5.5,V.y+1.8,
     {skin:'#8f6a48',hair:'#26201a',shirt:'#6a3a2a',pants:'#33261c'},
-    ['The bristlebacks fatten on fallen coconuts. So do I.',
-     'A hunter feeds the village. A show-off feeds the flies.'],0.5));
+    ['No hurry, eh? A boar you chase today is a boar you chase tomorrow.',
+     'The bristlebacks fatten on fallen coconuts. So do I - no shame in a soft life.'],0.5));
   G.npcs.push(makeNPC('kaia','Kaia the Wavewright', V.x-5.5,V.y+2.6,
     {skin:'#c99a6e',hair:'#2c2a3a',shirt:'#3a6a72',pants:'#2c3a40',hairstyle:'long'},
-    ['The wind is a road, if your feet are brave enough.',
-     'I shaped my first board at nine. The sea shaped me back.'],0.6));
+    ['The wind is a road, friend. Ride it easy and it carries you far.',
+     'Shaped my first board at nine. The sea shaped me right back - we came out even.'],0.6));
   G.npcs.push(makeNPC('moli','Elder Moli', V.x-0.5,V.y-1.6,
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
-    ['Kea grumbles, the palms bow, the reef sings. The island talks - listen.',
-     'Old Ashwing has warmed this isle since my mother\'s mother. Whatever that robed woman says.'],0.7));
+    ['Kea grumbles, the palms bow, the reef sings. Sit a while - let the island talk to you.',
+     'Old Ashwing has warmed these waters since my mother\'s mother. Pay that robed woman no mind.'],0.7));
   // Lani keeps the Kohana longhut - rest here to mend and set your waking-place
   { const inn=makeNPC('lani','Lani of the Longhut', V.x-4, V.y-1.1,
       {skin:'#b58a5e',hair:'#241a14',shirt:'#3f7a5e',pants:'#3a3026',apron:'#c9b48a',hairstyle:'bun'},
-      ['A traveller who climbed Kea and lived? The best bed in the longhut is yours.',
-       'Ten gold, a woven mat, and the reef to sing you down. You will sleep like the tide.'],0.7);
+      ['Eh, down off Kea in one piece? Come in, come in - the mat is soft and the hearth is warm.',
+       'Ten gold, a woven mat, and the reef to hum you under. Sleep as long as the tide pleases.'],0.7);
     inn.nightOwl=true; G.npcs.push(inn); }
   // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to
   // get it. Once the wyrm is freed she's fled to the grove, no longer in the village
@@ -718,19 +718,19 @@ QUESTS.ribbon3={ giver:'corvo', title:'A Ribbon for Wren', kind:'gather', need:{
   doneText:'She will wear it till the color goes. A bargain is a bargain - and the tide is with us NOW. Say the word, any time, and we run east for the Sunward Isle.',
   rw:{gold:150} };
 QUESTS.hunt1={ giver:'huk', title:'Bristleback Cull', kind:'kill', kill:{boar:6}, xpL:170,
-  brief:'The bristlebacks breed faster than the palms can feed them, and they have started on our gardens. Thin the sounder - six boars - and Kohana eats well either way.',
+  brief:'The bristlebacks breed quicker than the palms can feed them, eh, and now they are into our gardens. Thin the sounder for me - six boars - and Kohana eats easy either way. No rush about it.',
   log:'Hunt 6 bristleback boars in Palmwatch Grove or on the ash slopes.',
-  doneText:'Six, clean. You hunt like you mean it. Come back when you want to meet Kiko - she only likes people who can keep up.',
+  doneText:'Six, clean - you hunt like you mean it, friend. Come see me when you are ready to meet Kiko. She only takes to folk who can keep her pace.',
   rw:{gold:90, item:{boarmeat:3}, xp:{archery:160}} };
 QUESTS.tame1={ giver:'huk', title:'The Long-Legged Friend', kind:'gather', need:{apple:3}, xpL:200,
-  brief:'Kiko is a moa - tall as a door and faster than gossip. She will carry a friend, and friendship with Kiko costs exactly three crisp apples. Barik orchards grow them; so do lucky axe swings.',
+  brief:'Kiko is a moa - tall as a door, quicker than gossip. She will carry a friend, and friendship with Kiko runs exactly three crisp apples. Barik orchards grow them; so does a lucky axe swing. Take your time.',
   log:'Bring Huk 3 orchard apples to win over Kiko the Moa.',
-  doneText:'She likes you. That settles it - Kiko is yours to whistle for. Press M, or ask me, and hold on with your knees.',
+  doneText:'Ha - she likes you. That is settled, then. Kiko is yours to whistle for - press M, or just ask me, and hold on with your knees.',
   rw:{moa:true} };
 QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wood:8, crystal:1}, xpL:220,
-  brief:'Bring me eight good lengths of timber and one ember crystal to cure the resin, and I will shape you a board that treats the sea like a street. The Windward Reef is only the first place it will take you.',
+  brief:'Bring me eight good lengths of timber and one ember crystal to cure the resin, yeah, and I will shape you a board that treats the sea like a shady lane. The Windward Reef is only the first place it carries you.',
   log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
-  doneText:'There. Kaia-work, signed in the grain. Step onto the water and the board will find your feet. The reef is yours - so is every shore you can see.',
+  doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
   rw:{surf:true, gold:30} };
 QUESTS.wyrm={ giver:'vashti', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
@@ -738,9 +738,9 @@ QUESTS.wyrm={ giver:'vashti', title:'The Wyrm of Mount Kea', kind:'kill', kill:{
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.vhunt={ giver:'moli', title:'Hunt the Emberbinder', kind:'kill', kill:{mage:1}, xpL:300,
-  brief:'That robed woman was no friend to Kohana. Run her down before she binds another soul.',
+  brief:'That robed one was never a friend to Kohana, eh. Run her down in the grove before she binds another soul - then come and sit, and we will call it square.',
   log:'Run down Vashti the Emberbinder in the palm grove.',
-  doneText:'Her binding dies with her, and the isle can breathe. Ashwing owes you dragonfire - and Kohana owes you this. Take it, with our thanks.',
+  doneText:'Her binding goes quiet with her, and the isle breathes easy again. Ashwing owes you dragonfire; Kohana owes you this. Take it, friend, with all our thanks.',
   rw:{gold:180, item:{potion:2}, xp:{melee:300, archery:300, magic:300}} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
