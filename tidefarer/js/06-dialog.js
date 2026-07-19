@@ -110,16 +110,16 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Ask for passage to Barik', fn:()=>{
       const rem=ISLE_IDS.filter(id=>qs(id)!=='done').length;
       setDialog('“Happy to haul you across to <b>Barik</b>, friend - she\'s a grand green thing, five times these shores. But a captain doesn\'t ferry loose ends. Square away the island first: <b style="color:var(--ember)">'+rem+'</b> matter'+(rem===1?'':'s')+' still open in your ledger. Finish every quest here, then we sail.”',
-        shopButtons(npc,[
+        [
           {label:'No really - I\'m ready.', fn:()=>{
             setDialog('“Ok, if you\'re sure…” <i>He squints at you the way sailors squint at weather.</i> “…are you <b>sure</b>? Barik doesn\'t grade on a curve, and the isle\'s work will still be waiting.”',
-              shopButtons(npc,[
+              [
                 {label:'Yes. Set sail.', fn:()=>{ P.earlySail=1; closeDialog(); departEarly(); }},
                 {label:'On second thought…', ghost:true, fn:closeDialog}
-              ]));
+              ]);
           }},
           {label:'Farewell',ghost:true,fn:closeDialog}
-        ]));
+        ]);
     }});
   }
   if(npc.id==='corvo' && P.prog.eastSail){
