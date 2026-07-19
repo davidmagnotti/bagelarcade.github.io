@@ -778,11 +778,6 @@ function genWind(){
   carveDisc(Z.mill.x,Z.mill.y,Z.mill.r,T.GRASS,false);
   carveDisc(Z.bluffs.x,Z.bluffs.y,Z.bluffs.r,T.GRASS,false);
   carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
-  // the millstream: a thin freshwater channel the waterwheel turns on, running to the sea
-  for(let i=0;i<=26;i++){ const f=i/26;
-    const x=Math.round(Z.wheel.x + (Z.dock.x-Z.wheel.x)*f), y=Math.round(Z.wheel.y + (Z.dock.y-Z.wheel.y)*f);
-    for(let o=-1;o<=1;o++) if(inb(x+o,y)) setTile(x+o,y, o===0?T.SHALLOW:T.SAND);
-  }
   // a cobbled plaza in the market and resort forecourt
   carveDisc(Z.market.x,Z.market.y,3,T.PATH,false);
   carveDisc(Z.resort.x,Z.resort.y+3,2,T.PATH,false);
