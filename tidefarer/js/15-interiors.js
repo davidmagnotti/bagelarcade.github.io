@@ -3,6 +3,7 @@
    ===================================================================== */
 function enterHouse(b){
   if(G.interior) return;
+  if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
   const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
   const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || lblL.includes('your homestead');
   if(nightL>0.5 && !alwaysOpen){

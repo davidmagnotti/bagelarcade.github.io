@@ -31,6 +31,14 @@ function setDialog(text,btns){
   });
 }
 function buildDialogContent(npc){
+  // Castellan of the Vael: once you carry Maelis's writ (feud2), calling on him
+  // is a challenge - a taunt, then a boss fight. Otherwise he only warns you off.
+  if(npc.id==='castell' && qs('feud2')==='active'){
+    setDialog('“So the Queen sends her hound at last.” <i>The Castellan sets his helm and draws a long, notched blade.</i> “You should have stayed your side of the road, Barik-friend. Come - the March will bury one of us.”',
+      [{label:'Draw steel', cls:'gold', fn:()=>{ closeDialog(); challengeCastellan(npc); }},
+       {label:'Hold - not yet', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // 1) talk-quest completion
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].kind==='talk' && QUESTS[id].talkTo===npc.id){
