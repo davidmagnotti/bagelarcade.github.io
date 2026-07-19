@@ -145,7 +145,7 @@ function render(){
     if(n.tx<minX-1||n.tx>maxX+1||n.ty<minY-1||n.ty>maxY+1) continue;
     items.push({d:n.x+n.y, kind:'node', o:n});
   }
-  for(const b of G.decor){ if(b.x<minX-2||b.x>maxX+2||b.y<minY-2||b.y>maxY+2) continue;
+  for(const b of G.decor){ const cm=b.grand?28:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
     items.push({d:b.x+b.y, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
@@ -618,8 +618,8 @@ function drawDecor(b,s){
     g.restore(); g.restore(); cx.lineCap='butt'; return;
   }
   if(b.kind==='windmill'){
-    const g=cx; drawShadowAt(g,s.x,s.y,80);
-    g.save(); g.translate(s.x,s.y); g.scale(3.4,3.4); // a true landmark mill
+    const g=cx; drawShadowAt(g,s.x,s.y,150);
+    g.save(); g.translate(s.x,s.y); g.scale(5.4,5.4); // a colossal landmark mill
     const th=90;
     g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(13,-th); g.lineTo(21,0); g.closePath();
     g.fillStyle='#dccdb0'; g.fill();
@@ -637,8 +637,8 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='waterwheel'){
-    const g=cx; drawShadowAt(g,s.x,s.y,74);
-    g.save(); g.translate(s.x,s.y); g.scale(3.2,3.2); // a great turning wheel
+    const g=cx; drawShadowAt(g,s.x,s.y,140);
+    g.save(); g.translate(s.x,s.y); g.scale(5.2,5.2); // a colossal turning wheel
     g.fillStyle='#c9b48a'; g.fillRect(-24,-48,42,48);
     g.fillStyle='#8f5a44'; g.beginPath(); g.moveTo(-28,-48); g.lineTo(-3,-66); g.lineTo(22,-48); g.closePath(); g.fill();
     g.fillStyle='#5c3d22'; g.fillRect(-16,-20,12,20);
@@ -655,8 +655,10 @@ function drawDecor(b,s){
   }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : b.kind==='volcano'?66 : b.kind==='resort'?96 : 30);
-  const BS=(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.7 : 1;
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?300:58) : b.kind==='volcano'?66 : b.kind==='resort'?200 : 30);
+  // the castle sprite is now 2.5x native; 0.42 keeps ordinary keeps their old
+  // size, while the Aldermere palace towers over the whole game at grand scale.
+  const BS=b.kind==='castle'?(b.grand?4.0:0.42) : (b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?5.0 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
