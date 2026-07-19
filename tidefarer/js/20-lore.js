@@ -110,15 +110,35 @@ function resortDesk(){
         : {label:'I\'m short the coin', ghost:true, fn:closeDialog},
       {label:'Just admiring the lobby', ghost:true, fn:closeDialog} ]);
 }
+function resortGuestChat(f){
+  const gp=Math.floor(f.x*13+f.y*7);
+  const names=['Lady Coralind','Sir Pemberton','Old Salt Tam','Merri the Trader','Wynn the Idler','Doran of the Row'];
+  const lines=[
+    'The salt baths cured my knee - or the sea air did. Either way I\'m not leaving till the gold runs out.',
+    'You didn\'t hear it from me, but the strait\'s safe again. First holiday I\'ve dared in a year.',
+    'A whole resort near enough to ourselves. Terrible for Coralie, wonderful for the quiet.',
+    'They say a hot spring under the isle heats the pool. I say don\'t question a warm swim.',
+    'I came for a night. That was three weeks ago. The lounger has my shape in it now.',
+    'Mind the deep end - I dropped a whole sugar-plum in there and never saw it again.'
+  ];
+  const name=names[gp%names.length], line=lines[gp%lines.length];
+  dlg.open=true; document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent=name;
+  const pg=document.getElementById('dportrait').getContext('2d'); pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+  drawHumanoid(pg,0,0,{skin:['#e6c39a','#caa27b','#a9784e','#8f6a48'][gp%4],hair:['#3a2e26','#6a5a44','#2a241e','#cfc7b8'][(gp>>1)%4],shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4],pants:'#3a4a6a',dir:{x:0,y:1},step:0});
+  pg.restore();
+  setDialog('“'+line+'”', [{label:'Enjoy your stay', ghost:true, fn:closeDialog}]);
+}
 function interiorHotspot(){
   const I=G.interior; if(!I) return null;
   let best=null, bestD=1e9;
   for(const f of I.furn){
     const lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat'}[f.type];
     if(!lbl) continue;
     // the wyrm & the wide reception desk need a hotspot that reaches past them
-    const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : 1.45;
+    const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : 1.55;
     const d=dist(P.x,P.y,f.x,f.y);
     if(d<reach && d<bestD){ bestD=d; best={f,label:lbl}; }
   }
@@ -139,6 +159,7 @@ function useHotspot(h){
       'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
   }
   else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }
+  else if(f.type==='poolguest'){ resortGuestChat(f); }
   else if(f.type==='frontdesk'){ resortDesk(); }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') openStation('The Anvil', craftMenu);

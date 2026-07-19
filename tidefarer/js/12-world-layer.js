@@ -809,6 +809,9 @@ function placeObjectsWind(){
   const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, MI=Z.mill, WH=Z.wheel, D=Z.dock, B=Z.bluffs;
   // landmarks
   addBuilding('resort', R.x, R.y, 'The Breakers Resort');
+  // the resort building is big - give it a solid base under its whole facade so
+  // you can't slip in around the corners; you enter only at the front door.
+  for(let dy=-3;dy<=0;dy++) for(let dx=-4;dx<=4;dx++) setSolid(R.x+dx, R.y+dy, 1);
   addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
   addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
   // the windmill is a colossus - give it a broad base you cannot slip right

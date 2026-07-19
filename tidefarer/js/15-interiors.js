@@ -4,8 +4,11 @@
 function enterHouse(b){
   if(G.interior) return;
   if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
+  // you always dismount at the door - no riding indoors
+  if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
   const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
-  const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || lblL.includes('your homestead');
+  // the resort (and inns/towers/your home) keeps its doors open around the clock
+  const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || b.kind==='resort' || lblL.includes('your homestead');
   if(nightL>0.5 && !alwaysOpen){
     let minD=1e9; for(const zk of ['village','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
     if((b.kind==='house'||b.kind==='house2') && minD>24){
@@ -428,8 +431,10 @@ function drawFurniture(f,s){
       break;
     case 'poolguest':
       { const gp=Math.floor(f.x*13+f.y*7);
+        drawShadowAt(cx,s.x,s.y,12);
         drawHumanoid(cx, s.x, s.y, {skin:['#e6c39a','#caa27b','#a9784e','#8f6a48'][gp%4], hair:['#3a2e26','#6a5a44','#2a241e','#cfc7b8'][(gp>>1)%4],
-          shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4], pants:'#3a4a6a', dir:{x:(gp%2?1:-1),y:1}, step:0, size:0.96}); }
+          shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4], pants:'#3a4a6a', dir:{x:(gp%2?1:-1),y:1}, step:0, size:1.28});
+        cx.font='9px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.5)'; cx.fillText('Guest',s.x+1,s.y-40); cx.fillStyle='#ffe9a8'; cx.fillText('Guest',s.x,s.y-41); }
       break;
   }
 }
