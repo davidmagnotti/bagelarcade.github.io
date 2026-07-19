@@ -81,13 +81,15 @@ function rummage(f){
 }
 function interiorHotspot(){
   const I=G.interior; if(!I) return null;
-  let best=null, bd=1.45;
+  let best=null, bestD=1e9;
   for(const f of I.furn){
     const lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
       books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak'}[f.type];
     if(!lbl) continue;
+    // the wyrm is huge and solid, so his hotspot has to reach past his footprint
+    const reach = f.type==='dragon'? 3.2 : 1.45;
     const d=dist(P.x,P.y,f.x,f.y);
-    if(d<bd){ bd=d; best={f,label:lbl}; }
+    if(d<reach && d<bestD){ bestD=d; best={f,label:lbl}; }
   }
   return best;
 }
