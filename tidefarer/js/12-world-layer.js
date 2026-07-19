@@ -1202,8 +1202,10 @@ function genCrown(){
   carveDisc(Z.temple.x,Z.temple.y,Z.temple.r,T.PATH,false);
   carveDisc(Z.barracks.x,Z.barracks.y,Z.barracks.r,T.PATH,false);
   carveDisc(Z.highrow.x,Z.highrow.y,Z.highrow.r,T.PATH,false);
-  carveDisc(Z.palace.x,Z.palace.y,Z.palace.r,T.GRASS,false);      // palace lawns
-  carveDisc(Z.palace.x,Z.palace.y,6,T.PATH,false);                // the forecourt itself
+  // broad palace grounds - carved wide (r+6) so the colossal keep has a walkable
+  // green ring on every side, with a grand paved forecourt sweeping to the gate
+  carveDisc(Z.palace.x,Z.palace.y-2,Z.palace.r+6,T.GRASS,false);  // palace lawns
+  carveDisc(Z.palace.x,Z.palace.y+7,10,T.PATH,false);             // the grand forecourt
   carveDisc(Z.garden.x,Z.garden.y,Z.garden.r,T.GRASS,false);      // the queen's garden
   // harbor bay + the king's quay
   const D=Z.dock;
@@ -1255,11 +1257,18 @@ function genCrown(){
 function placeObjectsCrown(){
   const Z=CROWN_ZONES, D=Z.dock, H=Z.harbor, M=Z.market, PL=Z.plaza, T2=Z.temple,
         PA=Z.palace, GA=Z.garden, BA=Z.barracks, HR=Z.highrow;
-  // ---- the Tideglass Palace: the crown of the city ----
-  addBuilding('castle', PA.x, PA.y-2, 'The Tideglass Palace');
-  addBuilding('tower', PA.x-9, PA.y+3, ''); addBuilding('tower', PA.x+9, PA.y+3, '');
-  // gate lamps and forecourt banners
-  addBuilding('lamp', PA.x-4, PA.y+7, ''); addBuilding('lamp', PA.x+4, PA.y+7, '');
+  // ---- the Tideglass Palace: the crown of the city, and the single largest
+  // structure in the game. A colossal keep you can walk the whole way around. ----
+  const pal=addBuilding('castle', PA.x, PA.y-3, 'The Tideglass Palace');
+  pal.grand=true;
+  // a vast solid footprint - the palace mass itself, set BACK from the anchor
+  // (an iso building rises up-screen, i.e. away from the camera) so the wall you
+  // bump into lines up with the gate you see, not empty forecourt.
+  for(let dy=-10;dy<=1;dy++) for(let dx=-9;dx<=9;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
+  // grand forecourt lamps, set well out from the gate so they don't vanish
+  // under the towering facade
+  addBuilding('lamp', PA.x-7, PA.y+9, ''); addBuilding('lamp', PA.x+7, PA.y+9, '');
+  addBuilding('lamp', PA.x-11, PA.y+2, ''); addBuilding('lamp', PA.x+11, PA.y+2, '');
   // ---- the Cathedral of the Tide ----
   addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide');
   addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
@@ -1608,7 +1617,9 @@ function buildExtraSprites(){
   });
   // Barik Keep, drawn as an honest castle: curtain wall, flanking towers,
   // crenellated keep, royal banner, and a portcullis gate
-  SPR.castle=makeCanvas(300,224,(g)=>{
+  // rendered at 2.5x native resolution so it stays crisp when the Aldermere
+  // palace is drawn at landmark scale (all coordinate literals below are 1x)
+  SPR.castle=makeCanvas(750,560,(g)=>{ g.scale(2.5,2.5);
     const OUT='rgba(20,14,8,0.9)', stone='#8f8b83', stoneD='#6e6a63', stoneL='#a8a49b';
     const cren=(x0,x1,y,wd)=>{ for(let x=x0;x<x1;x+=wd*1.7){ g.fillRect(x,y,wd,wd); g.strokeRect(x,y,wd,wd); } };
     g.lineWidth=2; g.strokeStyle=OUT;
