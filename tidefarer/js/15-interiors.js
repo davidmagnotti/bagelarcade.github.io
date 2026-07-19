@@ -48,25 +48,26 @@ function enterHouse(b){
     // The Breakers is a bespoke open-air resort: a marble lobby with a front
     // desk, ornate flowering vases and potted palms, opening onto a sunlit pool
     // where guests lounge and chat. drawResortScene paints the pool from I.pool.
-    I.resort=1; I.follow=1;                       // a grand hall, larger than the screen
-    I.pool={x0:15.5,y0:2.5,x1:27.5,y1:12.5};       // a big resort pool in the back-right
-    F('frontdesk',5.0,3.0,2.2,0.9);
-    // ornate vases & potted palms lining the walls and walkways
-    F('vase',1.5,5.5,0.5,0.5); F('vase',1.5,10.0,0.5,0.5); F('vase',1.5,14.5,0.5,0.5);
-    F('vase',9.5,1.5,0.5,0.5); F('vase',13.5,1.5,0.5,0.5); F('vase',28.2,15.5,0.5,0.5);
-    F('plant',2.0,2.0,0.6,0.6); F('plant',7.5,1.6,0.6,0.6); F('plant',2.2,17.6,0.6,0.6);
-    F('plant',12.5,17.8,0.6,0.6); F('plant',14.2,9.5,0.6,0.6); F('plant',14.2,13.5,0.6,0.6);
-    F('plant',28.2,2.0,0.6,0.6);
-    // loungers & sunbathing guests ringing the pool (south & west edges)
-    F('lounger',17.0,13.6,1.0,0.55); F('lounger',19.5,14.2,1.0,0.55); F('lounger',22.0,13.6,1.0,0.55);
-    F('lounger',24.5,14.2,1.0,0.55); F('lounger',27.0,13.6,1.0,0.55);
-    F('poolguest',17.4,13.0,0.4,0.4); F('poolguest',20.6,13.6,0.4,0.4); F('poolguest',23.6,13.0,0.4,0.4);
-    F('poolguest',26.4,14.0,0.4,0.4); F('poolguest',15.0,6.5,0.4,0.4); F('poolguest',15.0,10.5,0.4,0.4);
-    // a café / bar cluster front-left, and the entrance rug
-    F('table',6.0,15.0,0.9,0.6); F('stool',5.0,15.8,0.35,0.3); F('stool',7.0,15.8,0.35,0.3);
-    F('table',9.5,16.5,0.9,0.6); F('stool',8.6,17.3,0.35,0.3); F('stool',10.4,17.3,0.35,0.3);
-    F('table',3.5,11.5,0.9,0.6); F('stool',3.5,12.6,0.35,0.3);
+    // Two areas: an indoor marble LOBBY at the front (where you enter), and an
+    // open-air pool COURTYARD out the back, joined by an arched gateway.
+    I.resort=1; I.follow=1;
+    I.partY=13; I.gate={x0:13.2,x1:16.8};           // the courtyard entrance archway
+    I.pool={x0:16.5,y0:2,x1:28,y1:11};              // the pool, outdoors in the courtyard
+    // ---- LOBBY (indoor, y >= 13). Furniture kept to the upper rows so the
+    // whole y17-19 strip stays a clear walkway from the door to the desk. ----
+    F('frontdesk',5.0,15.2,2.2,0.9);
+    F('table',10.5,15.3,0.9,0.6); F('stool',9.4,15.3,0.35,0.3); F('stool',11.6,15.3,0.35,0.3);
+    F('table',22.0,15.3,0.9,0.6); F('stool',20.9,15.3,0.35,0.3); F('stool',23.1,15.3,0.35,0.3);
+    F('vase',1.5,14.4,0.5,0.5); F('vase',28.3,14.4,0.5,0.5); F('vase',1.5,18.5,0.5,0.5); F('vase',28.3,18.5,0.5,0.5);
+    F('plant',2.2,13.4,0.6,0.6); F('plant',27.4,13.4,0.6,0.6);
     F('rug',15.0,18.4,0,0,false);
+    // ---- COURTYARD (open-air, y < 13): pool, loungers, sunbathers, palms ----
+    F('lounger',17.2,11.7,1.0,0.55); F('lounger',19.8,11.7,1.0,0.55); F('lounger',22.4,11.7,1.0,0.55);
+    F('lounger',25.0,11.7,1.0,0.55); F('lounger',27.4,11.7,1.0,0.55);
+    F('poolguest',17.6,11.1,0.4,0.4); F('poolguest',20.4,11.2,0.4,0.4); F('poolguest',23.2,11.1,0.4,0.4);
+    F('poolguest',26.2,11.2,0.4,0.4); F('poolguest',15.4,5.0,0.4,0.4); F('poolguest',15.4,8.5,0.4,0.4);
+    F('plant',2.0,2.0,0.6,0.6); F('plant',13.0,2.0,0.6,0.6); F('plant',28.4,2.0,0.6,0.6); F('plant',2.0,11.2,0.6,0.6);
+    F('vase',14.6,4.5,0.5,0.5); F('vase',14.6,9.0,0.5,0.5);
   }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='igloo'){ I.igloo=1;
@@ -160,6 +161,8 @@ function interiorBlocked(x,y,r){
   for(const f of I.furn) if(f.solid && Math.abs(x-f.x)<f.hw+r && Math.abs(y-f.y)<f.hh+r) return true;
   if(I.lava) for(const L of I.lava){ const dx=(x-L.x)/(L.rx+r), dy=(y-L.y)/(L.ry+r); if(dx*dx+dy*dy<1) return true; }
   if(I.pool){ const p=I.pool; if(x+r>p.x0 && x-r<p.x1 && y+r>p.y0 && y-r<p.y1) return true; } // walk around the water, not through it
+  if(I.partY!=null && y+r>I.partY-0.4 && y-r<I.partY+0.4){ // the lobby/courtyard partition, save for the arch
+    const g=I.gate; if(!(g && x-r>g.x0 && x+r<g.x1)) return true; }
   return false;
 }
 function updateInterior(dt){
@@ -238,8 +241,35 @@ function drawLairScene(w2s,I){
   }
 }
 function drawResortScene(w2s,I){
-  const p=I.pool; if(!p) return; const t=I.t;
-  // a stone coping ring one tile around the pool, then rippling water within
+  const t=I.t, partY=(I.partY!=null?I.partY:I.h), g=I.gate||{x0:-9,x1:-9};
+  const TALL=62, LOW=15;
+  const wallQuad=(a,b,H,fill,cap)=>{
+    cx.fillStyle=fill;
+    cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+    cx.lineTo(b.x-TW/2,b.y-TH/2-H); cx.lineTo(a.x-TW/2,a.y-TH/2-H); cx.closePath(); cx.fill();
+    if(cap){ cx.fillStyle=cap; cx.beginPath();
+      cx.moveTo(a.x-TW/2,a.y-TH/2-H); cx.lineTo(b.x-TW/2,b.y-TH/2-H); cx.lineTo(b.x-TW/2,b.y-TH/2-H-3); cx.lineTo(a.x-TW/2,a.y-TH/2-H-3); cx.closePath(); cx.fill(); }
+  };
+  // --- north wall (y=0): the courtyard's far side -> a low garden balustrade,
+  // open sky above it ---
+  for(let x=0;x<I.w;x++) wallQuad(w2s(x,0),w2s(x+1,0),LOW, x%2?'#d3ccb6':'#c7c0aa', '#eae4d4');
+  // --- west wall (x=0): tall & cream in the lobby, low garden out in the court ---
+  for(let y=0;y<I.h;y++){ const tall=y>=partY;
+    wallQuad(w2s(0,y),w2s(0,y+1), tall?TALL:LOW, tall?(y%2?'#e6dcc6':'#d8cdb4'):(y%2?'#d3ccb6':'#c7c0aa'), tall?null:'#eae4d4'); }
+  // --- the partition between lobby and courtyard, with an arched gateway.
+  // Kept a shade darker than the marble so it reads clearly as a dividing wall ---
+  for(let x=0;x<I.w;x++){ if(x+0.5>g.x0 && x+0.5<g.x1) continue;   // the archway opening
+    wallQuad(w2s(x,partY),w2s(x+1,partY),TALL, x%2?'#c3b797':'#b4a884', '#d8cdb4'); }
+  // arch: columns at the gateway edges + a curved lintel
+  const L=w2s(g.x0,partY), R=w2s(g.x1,partY);
+  cx.fillStyle='#ddd2b9'; cx.fillRect(L.x-TW/2-4,L.y-TH/2-TALL,8,TALL); cx.fillRect(R.x-TW/2-4,R.y-TH/2-TALL,8,TALL);
+  cx.strokeStyle='#ddd2b9'; cx.lineWidth=9; cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(L.x-TW/2,L.y-TH/2-TALL+6);
+  cx.quadraticCurveTo((L.x+R.x)/2-TW/2, Math.min(L.y,R.y)-TH/2-TALL-26, R.x-TW/2,R.y-TH/2-TALL+6); cx.stroke();
+  cx.lineCap='butt';
+  cx.fillStyle='#c9a24e'; cx.beginPath(); cx.arc((L.x+R.x)/2-TW/2, Math.min(L.y,R.y)-TH/2-TALL-18, 3.5,0,TAU); cx.fill(); // keystone stud
+  // --- the pool: coping ring + rippling water ---
+  const p=I.pool; if(!p) return;
   for(let y=Math.floor(p.y0)-1; y<=Math.ceil(p.y1)+1; y++) for(let x=Math.floor(p.x0)-1; x<=Math.ceil(p.x1)+1; x++){
     const inside = x+0.5>=p.x0 && x+0.5<=p.x1 && y+0.5>=p.y0 && y+0.5<=p.y1;
     const rim = !inside && x+0.5>=p.x0-1 && x+0.5<=p.x1+1 && y+0.5>=p.y0-1 && y+0.5<=p.y1+1;
@@ -444,8 +474,13 @@ function interiorCenter(I){
 }
 function renderInterior(){
   cx.setTransform(DPR,0,0,DPR,0,0);
-  cx.fillStyle='#0b0906'; cx.fillRect(0,0,VW,VH);
   const I=G.interior;
+  if(I.resort){ // open sky, so the low-walled pool courtyard reads as outdoors
+    const sg=cx.createLinearGradient(0,0,0,VH);
+    sg.addColorStop(0,'#bcdff2'); sg.addColorStop(0.4,'#dcecf6'); sg.addColorStop(1,'#141210');
+    cx.fillStyle=sg;
+  } else cx.fillStyle='#0b0906';
+  cx.fillRect(0,0,VW,VH);
   const cc=interiorCenter(I);
   const ccx=cc.x, ccy=cc.y;
   const w2s=(x,y)=>({x:isoX(x,y)-ccx+VW/2, y:isoY(x,y)-ccy+VH/2+14});
@@ -458,10 +493,11 @@ function renderInterior(){
       if((x*5+y*3)%7===0){ cx.fillStyle='rgba(255,110,40,0.10)'; // faint ember cracks in the rock
         cx.beginPath(); cx.moveTo(s.x-6,s.y); cx.lineTo(s.x,s.y-3); cx.lineTo(s.x+6,s.y+1); cx.stroke&&cx.stroke(); cx.strokeStyle='rgba(255,120,50,0.16)'; cx.lineWidth=1; cx.stroke(); }
     } else if(I.resort){
-      // polished marble checkerboard
-      cx.fillStyle=(x+y)%2? '#eae2d0':'#ddd3bd';
+      // marble in the lobby; open patio stone out in the pool courtyard
+      const courtyard = I.partY!=null && y < I.partY;
+      cx.fillStyle= courtyard? ((x+y)%2? '#ccc6b0':'#c1baa2') : ((x+y)%2? '#eae2d0':'#ddd3bd');
       cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
-      cx.strokeStyle='rgba(255,255,255,0.25)'; cx.lineWidth=1; cx.stroke();
+      cx.strokeStyle= courtyard? 'rgba(120,110,88,0.28)':'rgba(255,255,255,0.25)'; cx.lineWidth=1; cx.stroke();
     } else if(I.igloo){
       // packed snow & ice floor
       cx.fillStyle=(x+y)%2? '#e4ebf4':'#d3ddea';
@@ -471,19 +507,22 @@ function renderInterior(){
       cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
     }
   }
-  // walls: north (y=0) and west (x=0)
+  // walls: north (y=0) and west (x=0). The resort draws its own zoned walls
+  // (tall lobby, low garden courtyard, arched partition) in drawResortScene.
   const WH= I.lair? 96 : 62;   // the lair is a cathedral-tall cavern
-  for(let x=0;x<I.w;x++){
-    const a=w2s(x,0), b=w2s(x+1,0);
-    cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.resort? (x%2?'#e6dcc6':'#d8cdb4') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : (x%2? '#4a3626':'#443122');
-    cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
-    cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
-  }
-  for(let y=0;y<I.h;y++){
-    const a=w2s(0,y), b=w2s(0,y+1);
-    cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.resort? (y%2?'#d8cdb4':'#cabfa6') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : (y%2? '#3a2a1c':'#352718');
-    cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
-    cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+  if(!I.resort){
+    for(let x=0;x<I.w;x++){
+      const a=w2s(x,0), b=w2s(x+1,0);
+      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : (x%2? '#4a3626':'#443122');
+      cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+      cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+    }
+    for(let y=0;y<I.h;y++){
+      const a=w2s(0,y), b=w2s(0,y+1);
+      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : (y%2? '#3a2a1c':'#352718');
+      cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+      cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+    }
   }
   if(I.lair) drawLairScene(w2s,I);
   if(I.resort) drawResortScene(w2s,I);
