@@ -443,6 +443,7 @@ function playerDie(){
 document.getElementById('respawnBtn').onclick=()=>{
   document.getElementById('deadOv').style.display='none';
   P.dead=false; P.hp=Math.round(P.maxhp*0.6); P.mp=P.maxmp;
+  P.poisonT=0; P._venAcc=0; // venom does not carry through death
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
     toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach - Goldwarden Bree, Greyharbor.)</i>',6200); }
@@ -453,9 +454,10 @@ document.getElementById('respawnBtn').onclick=()=>{
         lost.push(dl+' '+(ITEMS[lk]?ITEMS[lk].name.toLowerCase():lk)); } }
     if(lost.length) setTimeout(()=>toast('Scavengers picked your satchel while you lay senseless: <b>'+lost.join(', ')+'</b> gone. <i>(Goods in Bree\u2019s vault are safe.)</i>',7500),1200);
   }
+  // respawn on the shore you fell on - never yank the hero across the sea to
+  // another island. Honour a bind only if it's on this world; else its village.
   const b=P.bind;
-  if(b && b.w && b.w!==G.worldId) switchWorld(b.w);
-  if(b){ P.x=b.x; P.y=b.y; }
+  if(b && b.w===G.worldId){ P.x=b.x; P.y=b.y; }
   else { P.x=ZONES.village.x+0.5; P.y=ZONES.village.y+2.5; }
   P.hurtT=1.5; refreshUI(); autoSave();
 };
