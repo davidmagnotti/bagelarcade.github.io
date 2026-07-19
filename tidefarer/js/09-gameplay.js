@@ -25,7 +25,9 @@ function circleBlocked(x,y,r,waterOK){
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,-r],[0,r],[-r,0],[r,0]]){
     const tx=Math.floor(x+ox), ty=Math.floor(y+oy);
     if(solidAt(tx,ty)){
-      if(waterOK && inb(tx,ty) && tileAt(tx,ty)<=T.SHALLOW) continue; // the board rides what blocks boots
+      // the windsurf board rides only the LIGHT water near shore - shallows -
+      // never the dark deep-water beyond. That keeps you close to land.
+      if(waterOK && inb(tx,ty) && tileAt(tx,ty)===T.SHALLOW) continue;
       return true;
     }
   }
