@@ -540,6 +540,12 @@ function spawnEastFolk(){
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
     ['Kea grumbles, the palms bow, the reef sings. The island talks - listen.',
      'Old Ashwing has warmed this isle since my mother\'s mother. Whatever that robed woman says.'],0.7));
+  // Lani keeps the Kohana longhut - rest here to mend and set your waking-place
+  { const inn=makeNPC('lani','Lani of the Longhut', V.x-4, V.y-1.1,
+      {skin:'#b58a5e',hair:'#241a14',shirt:'#3f7a5e',pants:'#3a3026',apron:'#c9b48a',hairstyle:'bun'},
+      ['A traveller who climbed Kea and lived? The best bed in the longhut is yours.',
+       'Ten gold, a woven mat, and the reef to sing you down. You will sleep like the tide.'],0.7);
+    inn.nightOwl=true; G.npcs.push(inn); }
   // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to
   // get it. Once the wyrm is freed she's fled to the grove, no longer in the village
   // (quest-state gated so it survives reloads).
