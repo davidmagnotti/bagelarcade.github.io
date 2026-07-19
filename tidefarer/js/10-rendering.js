@@ -618,8 +618,8 @@ function drawDecor(b,s){
     g.restore(); g.restore(); cx.lineCap='butt'; return;
   }
   if(b.kind==='windmill'){
-    const g=cx; drawShadowAt(g,s.x,s.y,26);
-    g.save(); g.translate(s.x,s.y);
+    const g=cx; drawShadowAt(g,s.x,s.y,80);
+    g.save(); g.translate(s.x,s.y); g.scale(3.4,3.4); // a true landmark mill
     const th=90;
     g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(13,-th); g.lineTo(21,0); g.closePath();
     g.fillStyle='#dccdb0'; g.fill();
@@ -637,8 +637,8 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='waterwheel'){
-    const g=cx; drawShadowAt(g,s.x,s.y,24);
-    g.save(); g.translate(s.x,s.y);
+    const g=cx; drawShadowAt(g,s.x,s.y,74);
+    g.save(); g.translate(s.x,s.y); g.scale(3.2,3.2); // a great turning wheel
     g.fillStyle='#c9b48a'; g.fillRect(-24,-48,42,48);
     g.fillStyle='#8f5a44'; g.beginPath(); g.moveTo(-28,-48); g.lineTo(-3,-66); g.lineTo(22,-48); g.closePath(); g.fill();
     g.fillStyle='#5c3d22'; g.fillRect(-16,-20,12,20);
@@ -655,8 +655,8 @@ function drawDecor(b,s){
   }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : b.kind==='volcano'?66 : 30);
-  const BS=(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16:1;
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : b.kind==='volcano'?66 : b.kind==='resort'?96 : 30);
+  const BS=(b.kind==='house'||b.kind==='house2'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.7 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
