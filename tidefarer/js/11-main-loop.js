@@ -140,7 +140,7 @@ function drawCrows(){
 }
 
 /* ---------- film grain + cinematic grade ---------- */
-let grainCv=null;
+let grainCv=null, grainPat=null;
 function drawGritGrade(){
   // NOTE: the old 'saturation' desaturate pass was removed - that non-separable
   // blend mode is extremely slow and can hard-crash integrated GPUs on Windows
@@ -159,9 +159,9 @@ function drawGritGrade(){
   cx.globalCompositeOperation='overlay';
   cx.globalAlpha=0.07;
   const jx=(Math.floor(G.time*24)*53)%192, jy=(Math.floor(G.time*24)*97)%192;
-  const pat=cx.createPattern(grainCv,'repeat');
+  if(!grainPat) grainPat=cx.createPattern(grainCv,'repeat');  // pattern is static - build once
   cx.save(); cx.translate(-jx,-jy);
-  cx.fillStyle=pat; cx.fillRect(0,0,VW+192,VH+192);
+  cx.fillStyle=grainPat; cx.fillRect(0,0,VW+192,VH+192);
   cx.restore();
   cx.globalCompositeOperation='source-over'; cx.globalAlpha=1;
 }

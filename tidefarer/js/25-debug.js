@@ -69,7 +69,9 @@ frame=function(ts){
           'state '+(typeof G!=='undefined'?G.state:'?')+mem+
           '   worstframe '+worst.toFixed(0)+'ms\n'+
           'RQ='+(typeof RQ!=='undefined'?RQ.toFixed(2):'?')+' LOWFX='+(typeof LOWFX!=='undefined'?LOWFX:'?')+
-          ' DPR='+DPR.toFixed(2)+'  canvas '+cv.width+'x'+cv.height+'\n';
+          ' DPR='+DPR.toFixed(2)+'  canvas '+cv.width+'x'+cv.height+'\n'+
+          (typeof GPUINFO==='object'? 'canvas raster: '+GPUINFO.class+
+            ' ('+(GPUINFO.perIter||0).toFixed(2)+'ms/iter)\n' : '');
     for(const [k,v] of stages) s+='  '+v.toFixed(1).padStart(5)+'ms  '+k+'\n';
     box.textContent=s;
     if(uiN%64===0) console.log('[perf]\n'+s); // easy copy from DevTools console

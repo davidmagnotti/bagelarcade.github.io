@@ -32,7 +32,13 @@ try{
 }catch(e){}
 if(safe) SAFE=true;
 
-let tier = safe ? MAX : 0;
+/* The boot probe (js/01b-gpu-probe.js) flags a software-rasterized canvas. When
+   it does, start one tier down (rq 0.80 - a barely-perceptible resolution drop)
+   instead of waiting ~1s of janky full-detail frames for the live tuner to react.
+   Kept to a single, near-invisible step so a false positive on a capable machine
+   costs almost nothing (the tuner is one-way-down and can't climb back up). */
+const softCanvas = (typeof SOFTCANVAS!=='undefined') && SOFTCANVAS;
+let tier = safe ? MAX : (softCanvas ? 1 : 0);
 let acc=0, cnt=0, prev=0, cooldownUntil=0;
 
 function apply(){

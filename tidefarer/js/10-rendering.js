@@ -15,6 +15,9 @@ function screenToWorld(sx,sy){
    used when LOWFX; full-detail devices keep the crisp per-tile pass. */
 let groundCache=null, sceneryCache=null, gcOX=0, gcOY=0, gcWorld=null, scnWorld=null;
 const GC_S=0.5;
+/* The vignette's radial gradient never changes except when the viewport
+   resizes, yet it was rebuilt every single frame. Cache it, keyed by size. */
+let _vgCache=null, _vgKey='';
 function gcDims(){
   const OX=(MAPH-1)*(TW/2)+TW, OY=TH;
   const W=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
@@ -306,10 +309,16 @@ function render(){
   // costly on weak desktop GPUs). Skip on the title/menu so the loading
   // screen stays light, and skip entirely at the lowest quality tier.
   if(fxOn('grade') && G.state==='play') drawGritGrade();
-  // vignette
-  const vg=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
-  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
-  if(DBG.vignette && fxOn('vignette')){ cx.fillStyle=vg; cx.fillRect(0,0,VW,VH); }
+  // vignette (gradient geometry only depends on VW/VH - build once, reuse)
+  if(DBG.vignette && fxOn('vignette')){
+    const vk=VW+'x'+VH;
+    if(_vgKey!==vk){
+      _vgCache=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
+      _vgCache.addColorStop(0,'rgba(0,0,0,0)'); _vgCache.addColorStop(1,'rgba(0,0,0,0.45)');
+      _vgKey=vk;
+    }
+    cx.fillStyle=_vgCache; cx.fillRect(0,0,VW,VH);
+  }
 
   // The minimap is a second on-screen canvas; redrawing it every frame forces
   // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.
