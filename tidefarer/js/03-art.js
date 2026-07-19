@@ -190,6 +190,74 @@ function buildSprites(){
       g.beginPath(); g.ellipse(w/2,h-30,26,10,0,0,Math.PI); g.fill();
     }));
   }
+  // palms x3 variants - pre-rendered like the trees so the Sunward Isle grove
+  // draws as cheap sprites (one drawImage each) instead of hundreds of paths/frame.
+  SPR.palm = [];
+  const palmCfg = [
+    {lean:10, N:11, base:30, trunk:58, front:'#4f9e4d', back:'#2c6837', top:'#5fb058'},
+    {lean:6,  N:12, base:28, trunk:62, front:'#549f4a', back:'#2e6b34', top:'#63b45a'},
+    {lean:15, N:10, base:32, trunk:56, front:'#4c9a52', back:'#2a6538', top:'#5cae5e'}
+  ];
+  for(let v=0;v<3;v++){
+    const PC=palmCfg[v];
+    SPR.palm.push(makeCanvas(104,112,(g,w,h)=>{
+      const R1=mulberry32(700+v*29);
+      const TH=PC.trunk, lean=PC.lean;
+      g.translate(w/2, h-8);
+      // trunk: tapered, gently curved, leaning
+      const tg=g.createLinearGradient(-6,0,8,-TH);
+      tg.addColorStop(0,'#6f5230'); tg.addColorStop(0.5,'#9a7444'); tg.addColorStop(1,'#b08a52');
+      g.fillStyle=tg;
+      g.beginPath();
+      g.moveTo(-5.4,0);
+      g.quadraticCurveTo(-2.6,-TH*0.55, lean-2.4,-TH);
+      g.lineTo(lean+2.8,-TH);
+      g.quadraticCurveTo(4.4,-TH*0.55, 5.4,0);
+      g.closePath(); g.fill();
+      g.strokeStyle='rgba(24,15,7,0.55)'; g.lineWidth=1.6; g.stroke();
+      // root flare
+      g.fillStyle='#6f5230';
+      g.beginPath(); g.moveTo(-5.4,0); g.quadraticCurveTo(-9.5,-1,-11.5,1.5); g.lineTo(-4,1.5); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(5.4,0);  g.quadraticCurveTo(9.5,-1,11.5,1.5);  g.lineTo(4,1.5);  g.closePath(); g.fill();
+      // bark rings following the curve
+      g.strokeStyle='rgba(40,26,12,0.4)'; g.lineWidth=1.2;
+      for(let i=1;i<=9;i++){ const u=i/10, rx=2*(1-u)*u*(-2.6)+u*u*lean, ry=-TH*u;
+        g.beginPath(); g.moveTo(rx-4.6*(1-u*0.5),ry); g.quadraticCurveTo(rx,ry+2.6,rx+4.6*(1-u*0.5),ry); g.stroke(); }
+      // crown
+      g.translate(lean,-TH);
+      const frond=(ang,len,droop,col,rib,wid)=>{
+        const dx=Math.cos(ang), dy=Math.sin(ang);
+        const mx=dx*len*0.5, my=dy*len*0.5-3, tx=dx*len, ty=dy*len+droop;
+        const px=-dy, py=dx;
+        g.fillStyle=col;                              // broad blade, base bulge -> point
+        g.beginPath();
+        g.moveTo(px*wid*0.5, py*wid*0.5);
+        g.quadraticCurveTo(mx+px*wid, my+py*wid, tx, ty);
+        g.quadraticCurveTo(mx-px*wid, my-py*wid, -px*wid*0.5, -py*wid*0.5);
+        g.quadraticCurveTo(px*0.2, py*0.2, px*wid*0.5, py*wid*0.5);
+        g.fill();
+        g.strokeStyle=rib; g.lineWidth=1; g.lineCap='round';   // midrib
+        g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(mx,my,tx,ty); g.stroke();
+        g.lineWidth=0.9;                              // leaflet ticks -> feathered look
+        for(let i=1;i<=6;i++){ const u=i/7, rx=2*(1-u)*u*mx+u*u*tx, ry=2*(1-u)*u*my+u*u*ty, ll=wid*(1-u*0.6);
+          g.beginPath();
+          g.moveTo(rx,ry); g.lineTo(rx+px*ll+dx*ll*0.5, ry+py*ll+dy*ll*0.5);
+          g.moveTo(rx,ry); g.lineTo(rx-px*ll+dx*ll*0.5, ry-py*ll+dy*ll*0.5);
+          g.stroke(); }
+      };
+      const N=PC.N;
+      for(let f=0;f<N;f++){ const t=f/(N-1), ang=Math.PI*(1.06-t*1.12);
+        frond(ang, PC.base+1+R1()*5, 11+Math.sin(t*Math.PI)*5, PC.back,'rgba(18,45,20,0.5)', 6.2); }
+      for(let f=0;f<N;f++){ const t=f/(N-1), ang=Math.PI*(1.0-t*1.0);
+        frond(ang, PC.base-4+R1()*5, 14+Math.sin(t*Math.PI)*7, PC.front,'rgba(20,55,22,0.45)', 5.2); }
+      frond(-Math.PI*0.5-0.55, PC.base-6, 6, PC.top,'rgba(20,55,22,0.4)', 4.4);
+      frond(-Math.PI*0.5+0.55, PC.base-7, 6, PC.top,'rgba(20,55,22,0.4)', 4.4);
+      frond(-Math.PI*0.5,      PC.base-9, 3, PC.top,'rgba(20,55,22,0.4)', 4.0);
+      // coconut cluster tucked under the crown
+      g.fillStyle='#6b4a2a'; g.strokeStyle='rgba(20,12,6,0.8)'; g.lineWidth=1;
+      for(const [cxo,cyo] of [[-3,2],[2,3],[-0.5,4.5]]){ g.beginPath(); g.arc(cxo,cyo,2.7,0,TAU); g.fill(); g.stroke(); }
+    }));
+  }
   SPR.stump = makeCanvas(84,104,(g,w,h)=>{
     g.fillStyle='#6e4a2b'; g.beginPath(); g.ellipse(w/2,h-16,13,7,0,0,TAU); g.fill();
     g.fillStyle='#8a6238'; g.fillRect(w/2-13,h-26,26,10);
@@ -1084,9 +1152,13 @@ function drawHumanoid(g,sx,sy,o){
   if(o.weapon && !stowed){
     const swv=o.swing||0;
     g.save();
+    const isSword=o.weapon==='sword';
     g.translate(flip*8.2, armY);
     g.scale(flip,1);
-    g.rotate(0.35 + swv*1.9 + (walking? -sw1*0.18:0));
+    // Sword rests out to the side (blade angled up & away from the body) so it
+    // reads as held in the hand instead of floating over the chest; its swing
+    // sweeps up into that rest. Bow/staff/tools keep the original arm pose.
+    g.rotate((isSword? -0.5 : 0.35) + swv*(isSword? -1.6 : 1.9) + (walking? -sw1*0.18:0));
     g.fillStyle=o.robe? o.robe : shirt;
     g.beginPath(); g.roundRect(-2.1,0,4.2,7.6,2.1); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
@@ -1097,7 +1169,7 @@ function drawHumanoid(g,sx,sy,o){
     g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=1;
     g.beginPath(); g.moveTo(-2.1,-0.2); g.lineTo(2.1,-0.2); g.stroke();
     // weapon
-    g.rotate(-0.5 + swv*0.2);
+    g.rotate((isSword? 0.0 : -0.5) + swv*(isSword? -0.6 : 0.2));
     if(o.weapon==='sword'){
       const wt=o.wtier==null?1:o.wtier;
       const bl= wt===2? 19 : wt===1? 16 : 13;

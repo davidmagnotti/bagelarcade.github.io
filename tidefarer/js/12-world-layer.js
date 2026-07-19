@@ -525,6 +525,7 @@ function spawnMobsEast(){
 function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
   spawnEastFolk(); spawnMobsEast();
+  buildMapBase(); // without this the map keeps the previous world's base image
 }
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();

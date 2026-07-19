@@ -145,7 +145,7 @@
   .qcard .qp.ready, .qlogItem .qp.ready{color:#ffd76a;text-shadow:0 0 8px rgba(255,215,106,.5);}
   #pausePanel{position:fixed;inset:0;background:rgba(8,5,3,.78);z-index:40;display:none;
     align-items:center;justify-content:center;}
-  #pauseCard{width:min(480px,94vw);max-height:88vh;overflow-y:auto;padding:18px 20px;border-radius:14px;
+  #pauseCard{width:min(480px,94vw);max-height:88vh;overflow-y:auto;padding:0 20px 18px;border-radius:14px;
     background:
       radial-gradient(circle at 22% 10%, rgba(255,255,255,.06), transparent 45%),
       linear-gradient(165deg,#3a372f 0%,#2b2922 55%,#1f1d18 100%);
@@ -153,6 +153,26 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.5), 0 12px 40px rgba(0,0,0,.7);}
   #pauseCard h2{font-size:20px;color:var(--ember);text-align:center;letter-spacing:2px;margin-bottom:10px;
     text-shadow:0 -1px 0 rgba(0,0,0,.8);}
+  /* Sticky header so Resume is always reachable without scrolling on mobile.
+     Full-width opaque bar (negative side margins span the card padding) that
+     hides content sliding underneath as you scroll. The card's top padding is
+     removed so the bar sits flush and leaves no gap for content to peek above. */
+  #pauseTopBar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin:0 -20px 4px;padding:14px 20px 11px;border-radius:14px 14px 0 0;
+    background:linear-gradient(180deg,#3a372f 0%,#312e28 100%);
+    border-bottom:1px solid #4a473e;box-shadow:0 5px 10px rgba(0,0,0,.3);}
+  #pauseTopBar h2{margin:0;flex:1;text-align:left;}
+  #resumeTopBtn{flex:0 0 auto;white-space:nowrap;padding:9px 16px;font-size:13px;animation:none;}
+  #pauseScrollHint{text-align:center;font-size:11px;letter-spacing:.5px;color:#9a917f;
+    margin:2px 0 6px;opacity:.9;animation:pauseHintBob 1.8s ease-in-out infinite;}
+  @keyframes pauseHintBob{0%,100%{opacity:.55;}50%{opacity:.95;}}
+  /* fade + chevron pinned to the bottom edge of the scroll area; JS hides it
+     once you've scrolled to the end (.atEnd). */
+  #pauseMoreCue{position:sticky;bottom:-18px;z-index:3;margin:6px -20px -18px;padding:16px 0 8px;
+    text-align:center;font-size:16px;color:#ffd76a;pointer-events:none;
+    background:linear-gradient(0deg,#1f1d18 30%,rgba(31,29,24,.85) 60%,transparent 100%);
+    transition:opacity .25s ease;animation:pauseHintBob 1.8s ease-in-out infinite;}
+  #pauseMoreCue.atEnd{opacity:0;}
   .pRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px;color:var(--parch);}
   .pRow input[type=range]{flex:1;max-width:200px;accent-color:#ff9a3c;}
   .pSeg{display:flex;gap:6px;}
