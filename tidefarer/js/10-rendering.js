@@ -667,10 +667,17 @@ function drawMob(m,s){
     // deep hood
     cx.fillStyle='#0e1220';
     cx.beginPath(); cx.ellipse(0,-14,7,6.4,0,0,TAU); cx.fill();
-    // ember eyes
-    const gl=0.7+0.3*Math.sin(m.anim*7);
-    cx.fillStyle='rgba(140,200,255,'+gl.toFixed(2)+')';
-    cx.beginPath(); cx.arc(-2.6*(m.face||1),-14.5,1.5,0,TAU); cx.arc(2.2*(m.face||1),-14.5,1.2,0,TAU); cx.fill();
+    // ember eyes - narrowed and angled inward into a hostile scowl; round dots
+    // read as a friendly wide-eyed stare, which a wraith should never have.
+    const gl=0.7+0.3*Math.sin(m.anim*7), fl=m.face||1;
+    for(const [ex,ang,rx] of [[-3,0.55,2.5],[3,-0.55,2.2]]){
+      cx.save(); cx.translate(ex*fl,-14.6); cx.rotate(fl*ang);
+      cx.fillStyle='rgba(120,190,255,'+(0.25*gl).toFixed(2)+')';   // outer glow
+      cx.beginPath(); cx.ellipse(0,0,rx+1.4,1.9,0,0,TAU); cx.fill();
+      cx.fillStyle='rgba(150,205,255,'+gl.toFixed(2)+')';          // bright slit
+      cx.beginPath(); cx.ellipse(0,0,rx,0.95,0,0,TAU); cx.fill();
+      cx.restore();
+    }
     // reaching claw when mid-strike
     if(m.swing>0){
       cx.strokeStyle='rgba(140,200,255,0.8)'; cx.lineWidth=2; cx.lineCap='round';
