@@ -183,7 +183,7 @@ const G = {
   cam:{x:0,y:0}, shake:0, killFeedTimer:0,
   hitStop:0, slowmo:0, flash:0, lightning:0,
   clouds:[], foam:[], forgePos:null,
-  decals:[], fogs:[], crows:[],
+  decals:[], fogs:[], crows:[], critters:[],
   flags:{}, hintShown:{}, fireflies:[],
   paused:false
 };

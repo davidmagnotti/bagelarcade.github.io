@@ -151,6 +151,7 @@ function render(){
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead) items.push({d:m.x+m.y, kind:'mob', o:m}); }
   if(G.cat) items.push({d:G.cat.x+G.cat.y, kind:'cat', o:G.cat});
+  if(G.critters) for(const c of G.critters) items.push({d:c.x+c.y, kind:'critter', o:c});
   if(!P.dead) items.push({d:P.x+P.y, kind:'player', o:P});
   for(const p of G.projs) items.push({d:p.x+p.y, kind:'proj', o:p});
   for(const pt of G.parts){ if(pt.pickup) items.push({d:pt.x+pt.y, kind:'pickup', o:pt}); }
@@ -164,6 +165,7 @@ function render(){
       case 'npc': drawNPC(o,s); break;
       case 'mob': drawMob(o,s); break;
       case 'cat': drawShadowAt(cx,s.x,s.y,9); drawCat(cx,s.x,s.y,o); break;
+      case 'critter': drawShadowAt(cx,s.x,s.y, o.kind==='crab'?7:8); drawCritter(cx,s.x,s.y,o); break;
       case 'player': drawPlayer(s); break;
       case 'proj': drawProj(o,s); break;
       case 'pickup': drawPickup(o,s); break;
