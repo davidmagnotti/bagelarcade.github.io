@@ -137,6 +137,11 @@ function shopButtons(npc,btns){
       setTimeout(()=>{ switchWorld('east'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
     }});
   }
+  if(npc.id==='rell'){
+    btns.unshift({label:'Signal Ashwing - fly back to Kohana', fn:()=>{
+      flyToWorld('east','You run Rell\'s signal-kite up the mast. Before long a green shape wheels out of the sun - Ashwing, come to carry you home.');
+    }});
+  }
   if(npc.id==='corvoE'){
     btns.unshift({label:'Sail home to Barik', fn:()=>{
       closeDialog();

@@ -123,6 +123,9 @@ function loadCode(str){
     // hero into open water. Rebuild the east world so its coords are valid.
     switchWorld('east');
     applyWorldFlags(d.flags&&d.flags.east);
+  } else if(d.world==='wind'){
+    switchWorld('wind');
+    applyWorldFlags(d.flags&&d.flags.wind);
   }
   P.x=d.x; P.y=d.y;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;

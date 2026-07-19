@@ -480,7 +480,8 @@ document.getElementById('respawnBtn').onclick=()=>{
   // another island. Honour a bind only if it's on this world; else its village.
   const b=P.bind;
   if(b && b.w===G.worldId){ P.x=b.x; P.y=b.y; }
-  else { P.x=ZONES.village.x+0.5; P.y=ZONES.village.y+2.5; }
+  else { const home=ZONES.village||ZONES.town||(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
+    P.x=home.x+0.5; P.y=home.y+2.5; }
   P.hurtT=1.5; refreshUI(); autoSave();
 };
 document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv').style.display='none'; };
