@@ -53,6 +53,7 @@ function saveCode(){
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
     unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
+    story:P.story||{act:1,necklace:true},
     disc:P.disc||{},expl:packExpl(),flags};
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
 }
@@ -109,6 +110,7 @@ function loadCode(str){
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
+  P.story=d.story||{act:1,necklace:true}; if(P.story.necklace===undefined) P.story.necklace=true;
   P.disc=d.disc||{}; unpackExpl(d.expl);
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);

@@ -565,6 +565,22 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='woodpile'){
+    const g=cx; drawShadowAt(g,s.x,s.y,16);
+    g.save(); g.translate(s.x,s.y);
+    const drawLog=(x,y)=>{ g.fillStyle='#b08a52'; g.beginPath(); g.arc(x,y,4.4,0,TAU); g.fill();
+      g.strokeStyle='#6a4a2c'; g.lineWidth=1; g.stroke();
+      g.strokeStyle='rgba(90,60,30,0.5)'; g.beginPath(); g.arc(x,y,2.5,0,TAU); g.stroke();
+      g.beginPath(); g.arc(x,y,1,0,TAU); g.stroke(); };
+    for(let r=0;r<3;r++){ const n=5-r; for(let i=0;i<n;i++) drawLog(-((n-1)*4.5)+i*9, -4 - r*7); }
+    // the top course radiates in the royal five-point mark
+    g.save(); g.translate(0,-26);
+    g.strokeStyle='#9a7440'; g.lineWidth=3.2; g.lineCap='round';
+    for(let i=0;i<5;i++){ const a=-Math.PI/2+i*TAU/5; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*9,Math.sin(a)*9*0.6); g.stroke(); }
+    g.fillStyle='#c8a25a'; g.beginPath(); g.arc(0,0,2.4,0,TAU); g.fill();
+    g.strokeStyle='#6a4a2c'; g.lineWidth=1; g.stroke();
+    g.restore(); g.restore(); cx.lineCap='butt'; return;
+  }
   if(b.kind==='windmill'){
     const g=cx; drawShadowAt(g,s.x,s.y,26);
     g.save(); g.translate(s.x,s.y);
@@ -1042,6 +1058,7 @@ function drawPlayerFigure(s){
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
   const look={hero:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     pauldrons:P.swordTier>0, trim:P.swordTier>0?'#8a6d30':null,
+    crest:!!(P.story && P.story.necklace),  // the crest necklace, worn from wake-up
     hat: has('crown',1)?'crown':null};
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more

@@ -828,6 +828,22 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.arc(0,-20+B,1.5,0,TAU); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
   }
+  if(o.crest && !away){
+    // the royal-crest necklace: a gilded medallion stamped with a five-point star
+    g.strokeStyle='rgba(190,158,74,0.9)'; g.lineWidth=1.3;
+    g.beginPath(); g.arc(0,-24.6+B,4.6,Math.PI*0.1,Math.PI*0.9); g.stroke();
+    g.save(); g.translate(0,-19.2+B);
+    g.fillStyle='#e0be54'; g.beginPath(); g.arc(0,0,2.9,0,TAU); g.fill();
+    g.strokeStyle='#8a6a20'; g.lineWidth=0.9; g.stroke();
+    g.fillStyle='#4a3a6a'; // royal-violet field
+    g.beginPath(); g.arc(0,0,2.1,0,TAU); g.fill();
+    g.fillStyle='#f3e08c'; // the star mark
+    for(let i=0;i<5;i++){ const a=-Math.PI/2 + i*TAU/5;
+      const x=Math.cos(a)*1.7, y=Math.sin(a)*1.7; g[i?'lineTo':'moveTo'](x,y);
+      const a2=a+TAU/10, x2=Math.cos(a2)*0.7, y2=Math.sin(a2)*0.7; g.lineTo(x2,y2); }
+    g.closePath(); g.fill();
+    g.restore();
+  }
 
   /* ---------------- arms, front views (drawn over the body) ---------------- */
   if(claspIdle){

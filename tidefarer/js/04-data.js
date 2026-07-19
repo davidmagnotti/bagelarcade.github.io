@@ -34,6 +34,9 @@ const P = {
   inv:{potion:2, seed:0}, gold:0,
   skills:{}, // {lvl, xp}
   quests:{}, prog:{}, kills:{},
+  // "The Enchanter's Tide" main-story state. The necklace is worn from wake-up;
+  // the reveals (act 3+) stay dormant behind flags until then.
+  story:{act:1, necklace:true},
   fishing:null, // {node, t, biteAt, bit}
   dead:false, petPip:false
 };
@@ -165,7 +168,7 @@ function spawnNPCs(){
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false);
       b.nightOwl=true; return b; })(), // a captain sleeps aboard - findable at any hour
     (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
-      ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.'],0.5);
+      ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that.'],0.5);
       f.nightOwl=true; return f; })(),
     (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 40.5,58.6,
       {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038'},
@@ -177,7 +180,16 @@ function spawnNPCs(){
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',49.5,60.5,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long'},
-      ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0)
+      ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0),
+    // The Woodworker - the most forgettable soul on the island. (He is more than
+    // that; the clues are planted from hour one and pay off far, far later.)
+    (()=>{ const w=makeNPC('woody','The Woodworker',57.5,50.5,
+      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short'},
+      ['Nice day for it. Every day is a nice day for it, really.',
+       'I carve little boats, mostly. For someone. I forget who - but they will turn up.',
+       'Where am I from? Ha. Woke here one morning, the wood needed chopping, so I chopped. Been happy since.',
+       'That tune in my head? No idea the name. My hands seem to, though - I stack the logs to it.'],0.25);
+      w.hums=true; return w; })()
   ];
   // Pip the cat
   G.cat = {x:34.5, y:31.5, face:1, anim:0, wt:2, found:false, home:{x:34.5,y:31.5}};

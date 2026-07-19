@@ -72,6 +72,10 @@ function genIsleAll(){
   if(P.projects && P.projects.lanes) placeLaneLamps();
   ensureGravelord(false);
   spawnNPCs(); spawnMobs();
+  // the Woodworker's woodpile - split logs always stacked to the same five-point
+  // figure. The very same mark rides on the castaway's necklace. (Clue, hour one.)
+  G.decor.push({kind:'woodpile', x:56.3, y:50.6, crest:true});
+  setSolid(56,50,1);
   addCrowsFor();
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
   buildMapBase();
