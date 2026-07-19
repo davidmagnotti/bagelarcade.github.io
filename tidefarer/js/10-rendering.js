@@ -653,7 +653,8 @@ function drawDecor(b,s){
     g.fillStyle='#3a2c1c'; g.beginPath(); g.arc(0,0,3,0,TAU); g.fill();
     g.restore(); g.restore(); return;
   }
-  const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
+  const S= b.kind==='bazaar' ? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
+         : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?130 : 30);
   // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a

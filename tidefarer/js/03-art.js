@@ -462,6 +462,30 @@ function buildSprites(){
   trinketFn.awn='#3a6a9a';
   SPR.fruitstand = makeCanvas(74,72, stallSprite(fruitFn));
   SPR.stall = makeCanvas(74,72, stallSprite(trinketFn));
+  // ---- the ornate Grand Bazaar stall (capital): gilded posts, a peaked
+  // striped-silk canopy with a scalloped gold valance, a carved counter of
+  // piled goods on a rich carpet, and a finial pennant. Three canopy colours. ----
+  const bazaarStall=(canopyA,goods)=> (g,w,h)=>{
+    const bx=w/2, base=h-10, ivory='#efe6d2';
+    g.fillStyle='rgba(0,0,0,0.18)'; g.beginPath(); g.ellipse(bx,base+3,37,8,0,0,TAU); g.fill();
+    g.fillStyle='#5a1f2c'; g.fillRect(bx-30,base-1,60,6); g.fillStyle='#c9a24e'; g.fillRect(bx-30,base+1,60,1.5);   // carpet + gold edge
+    g.fillStyle='#6a4a2c'; g.fillRect(bx-30,base-22,60,16); g.strokeStyle='#3a2818'; g.lineWidth=1.4; g.strokeRect(bx-30,base-22,60,16); // counter
+    g.fillStyle='#c9a24e'; g.fillRect(bx-31,base-25,62,3);                                                          // gold rail
+    g.fillStyle='#4a3320'; g.fillRect(bx-27,base-6,5,7); g.fillRect(bx+22,base-6,5,7);                              // legs
+    for(let i=0;i<6;i++){ g.fillStyle=goods[i%goods.length]; g.beginPath(); g.arc(bx-22+i*9,base-25,3.4,0,TAU); g.fill(); g.strokeStyle='rgba(0,0,0,0.22)'; g.lineWidth=0.8; g.stroke(); } // goods
+    g.fillStyle='#7a5a34'; g.fillRect(bx-32,base-60,5,40); g.fillRect(bx+27,base-60,5,40);                          // gilded posts
+    g.fillStyle='#c9a24e'; g.fillRect(bx-33,base-63,7,4); g.fillRect(bx+26,base-63,7,4);
+    g.save(); g.beginPath(); g.moveTo(bx-41,base-53); g.lineTo(bx,base-77); g.lineTo(bx+41,base-53); g.closePath(); g.clip(); // peaked canopy
+    for(let i=-6;i<=6;i++){ g.fillStyle=i%2?canopyA:ivory; g.fillRect(bx+i*7,base-78,7,40); }
+    g.restore();
+    g.strokeStyle='#c9a24e'; g.lineWidth=2; g.beginPath(); g.moveTo(bx-41,base-53); g.lineTo(bx,base-77); g.lineTo(bx+41,base-53); g.stroke();
+    g.fillStyle='#c9a24e'; for(let i=0;i<9;i++){ g.beginPath(); g.arc(bx-36+i*9, base-52, 4.5, 0, Math.PI); g.fill(); } // scalloped valance
+    g.strokeStyle='#3a2818'; g.lineWidth=2; g.beginPath(); g.moveTo(bx,base-77); g.lineTo(bx,base-89); g.stroke();     // finial + pennant
+    g.fillStyle=canopyA; g.beginPath(); g.moveTo(bx,base-89); g.lineTo(bx+13,base-85); g.lineTo(bx,base-81); g.closePath(); g.fill();
+  };
+  SPR.bazaar=[ makeCanvas(100,104, bazaarStall('#b23a2a',['#e0c060','#c85a7a','#7fb05b'])),
+               makeCanvas(100,104, bazaarStall('#2a6a7a',['#e0803a','#8fc0dd','#e0c060'])),
+               makeCanvas(100,104, bazaarStall('#5a3a72',['#c85a7a','#e0c060','#8fc0dd'])) ];
 }
 function drawIgloo(g,w,h){
   const bx=w/2, base=h-12, rx=54, ry=64;
