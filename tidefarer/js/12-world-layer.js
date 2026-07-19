@@ -54,7 +54,7 @@ const FROST_ZONES = {
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
   harbor:  {x:52, y:140, r:11, name:'The Salt Quarter', lv:[0,0]},
-  market:  {x:74, y:126, r:12, name:'The Grand Bazaar', lv:[0,0]},
+  market:  {x:74, y:126, r:15, name:'The Grand Bazaar', lv:[0,0]},
   plaza:   {x:96, y:102, r:13, name:'Crown Plaza', lv:[0,0]},
   temple:  {x:118,y:112, r:8,  name:'The Cathedral of the Tide', lv:[0,0]},
   palace:  {x:100,y:64,  r:16, name:'The Tideglass Palace', lv:[0,0]},
@@ -1307,15 +1307,24 @@ function placeObjectsCrown(){
   addBuilding('house2', PL.x+6, PL.y-3, 'The Mint');
   addBuilding('stall', PL.x-3, PL.y+4, ''); addBuilding('stall', PL.x+3, PL.y+4, '');
   for(const [lx,ly] of [[-7,0],[7,0],[0,-7],[-5,6],[5,6]]) addBuilding('lamp', PL.x+lx, PL.y+ly, '');
-  // ---- the Grand Bazaar: rows of stalls and fruit ----
-  addBuilding('house', M.x-6, M.y-4, 'The Spice Row');
-  addBuilding('house', M.x+5, M.y-4, 'The Cloth Hall');
-  addBuilding('house2', M.x-5, M.y+4, 'The Coin & Cup (Inn)');
-  const mr=mulberry32(SEED+21);
-  for(let i=0;i<10;i++){ const a=mr()*TAU, rr=3+mr()*(M.r-3);
-    const sx=Math.round(M.x+Math.cos(a)*rr), sy=Math.round(M.y+Math.sin(a)*rr*0.9);
-    if(inb(sx,sy)&&walkTile(tileAt(sx,sy))&&!solidAt(sx,sy)) addBuilding(mr()<0.5?'stall':'fruitstand', sx, sy, ''); }
-  for(const [lx,ly] of [[-8,-6],[8,-6],[-8,6],[8,6]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
+  // ---- the Grand Bazaar: a giant, ornate market ----
+  addBuilding('well', M.x, M.y, 'The Merchants\' Fountain');            // grand central fountain
+  let vi=0;
+  const bz=(x,y)=>{ x=Math.round(x); y=Math.round(y);
+    if(inb(x,y)&&walkTile(tileAt(x,y))&&!solidAt(x,y)){ const s=addBuilding('bazaar',x,y,''); if(s) s.variant=(vi++)%3; } };
+  // four long rows of ornate stalls flanking a central promenade (fountain at
+  // its heart), east & west wings, and 2-tile aisles you weave between
+  for(const ry of [M.y-8,M.y-5,M.y+5,M.y+8]) for(let x=M.x-12;x<=M.x+12;x+=3){ if(Math.abs(x-M.x)<2) continue; bz(x,ry); }
+  for(const rx of [M.x-13,M.x+13]) for(let y=M.y-6;y<=M.y+6;y+=3){ if(Math.abs(y-M.y)<2) continue; bz(rx,y); }
+  addBuilding('fruitstand', M.x-2, M.y-2, ''); addBuilding('fruitstand', M.x+2, M.y+2, '');
+  // a colonnade of tall pillars framing the bazaar
+  for(let i=0;i<10;i++){ const a=i/10*TAU, px=Math.round(M.x+Math.cos(a)*(M.r-1)), py=Math.round(M.y+Math.sin(a)*(M.r-1)*0.9);
+    if(inb(px,py)&&walkTile(tileAt(px,py))&&!solidAt(px,py)) G.decor.push({kind:'pillar',x:px+0.5,y:py+0.5}); }
+  // grand shop halls at the market's ends
+  addBuilding('house2', M.x-7, M.y-12, 'The Spice Hall');
+  addBuilding('house2', M.x+7, M.y-12, 'The Cloth Hall');
+  addBuilding('house',  M.x, M.y+12, 'The Coin & Cup (Inn)');
+  for(const [lx,ly] of [[-12,-10],[12,-10],[-12,10],[12,10],[0,-11],[0,11]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
   // ---- the Salt Quarter: working harbor ----
   addBuilding('house', H.x-4, H.y-4, 'The Netmenders');
   addBuilding('house', H.x+4, H.y-2, 'The Saltcellar (Tavern)');
