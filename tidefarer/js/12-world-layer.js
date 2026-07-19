@@ -51,6 +51,17 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
+const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
+  dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
+  harbor:  {x:52, y:140, r:11, name:'The Salt Quarter', lv:[0,0]},
+  market:  {x:74, y:126, r:12, name:'The Grand Bazaar', lv:[0,0]},
+  plaza:   {x:96, y:102, r:13, name:'Crown Plaza', lv:[0,0]},
+  temple:  {x:118,y:112, r:8,  name:'The Cathedral of the Tide', lv:[0,0]},
+  palace:  {x:100,y:64,  r:16, name:'The Tideglass Palace', lv:[0,0]},
+  garden:  {x:130,y:78,  r:11, name:"The Drowned Queen's Garden", lv:[0,0]},
+  barracks:{x:70, y:80,  r:9,  name:'The Garrison', lv:[0,0]},
+  highrow: {x:126,y:140, r:11, name:'Highrow', lv:[0,0]}
+};
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES - CHAPTER I',
@@ -69,7 +80,10 @@ const WORLD_DEFS = {
     gen:()=>genAerieAll() },
   frost:{ W:150, H:150, seed:88243, zones:FROST_ZONES,
     spawn:{x:40.5,y:120.5}, title:'THE FROZEN ISLE', sub:'A STRAIT LOCKED IN CURSED WINTER',
-    gen:()=>genFrostAll() }
+    gen:()=>genFrostAll() },
+  crown:{ W:180, H:180, seed:61137, zones:CROWN_ZONES,
+    spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
+    gen:()=>genCrownAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -1158,6 +1172,200 @@ function genFrostAll(){
   spawnFrostFolk(); spawnMobsFrost();
   buildMapBase();
 }
+
+/* =====================================================================
+   ALDERMERE - the royal capital. A great walled city climbing from the
+   harbor to the Tideglass Palace, where a grieving king has ruled alone
+   since the sea took his queen and their infant heir a lifetime ago.
+   The grandest, most populous world in the game - a whole kingdom to
+   walk. (The reveal that binds it to Emberwick waits behind Act 3.)
+   ===================================================================== */
+function genCrown(){
+  const hN=makeNoise(SEED,10), mN=makeNoise(SEED+41,7), vR=mulberry32(SEED+9);
+  const CX2=96, CY2=96;
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const nx=x/MAPW, ny=y/MAPH;
+    const d=dist(x,y,CX2,CY2)/(MAPW*0.50);
+    let h=hN(nx,ny)*0.66 + hN(nx*2.4,ny*2.4)*0.34;
+    h-=Math.pow(d,2.1)*0.92;
+    let t;
+    if(h<0.17) t=T.DEEP; else if(h<0.245) t=T.SHALLOW; else if(h<0.29) t=T.SAND;
+    else t=(mN(nx,ny)>0.60)?T.FOREST:T.GRASS;
+    G.map[y*MAPW+x]=t; G.variant[y*MAPW+x]=Math.floor(vR()*4);
+  }
+  const Z=CROWN_ZONES;
+  // district clearings - packed civic ground (paths) for the built-up wards,
+  // green for the palace lawns and the memorial garden
+  carveDisc(Z.harbor.x,Z.harbor.y,Z.harbor.r,T.PATH,false);
+  carveDisc(Z.market.x,Z.market.y,Z.market.r,T.PATH,false);
+  carveDisc(Z.plaza.x,Z.plaza.y,Z.plaza.r,T.PATH,false);
+  carveDisc(Z.temple.x,Z.temple.y,Z.temple.r,T.PATH,false);
+  carveDisc(Z.barracks.x,Z.barracks.y,Z.barracks.r,T.PATH,false);
+  carveDisc(Z.highrow.x,Z.highrow.y,Z.highrow.r,T.PATH,false);
+  carveDisc(Z.palace.x,Z.palace.y,Z.palace.r,T.GRASS,false);      // palace lawns
+  carveDisc(Z.palace.x,Z.palace.y,6,T.PATH,false);                // the forecourt itself
+  carveDisc(Z.garden.x,Z.garden.y,Z.garden.r,T.GRASS,false);      // the queen's garden
+  // harbor bay + the king's quay
+  const D=Z.dock;
+  carveDisc(D.x-5,D.y,6,T.DEEP,false);
+  for(let y=D.y-8;y<=D.y+8;y++) for(let x=D.x-12;x<=D.x+5;x++){
+    if(inb(x,y)&&tileAt(x,y)===T.DEEP&&(walkTile(tileAt(x+1,y))||walkTile(tileAt(x-1,y))||walkTile(tileAt(x,y+1))||walkTile(tileAt(x,y-1)))) setTile(x,y,T.SHALLOW);
+  }
+  for(let x=D.x-4;x<=D.x+3;x++){ setTile(x,D.y,T.PLANK); setTile(x,D.y+1,T.PLANK); }
+  // the Processional - one grand paved avenue from the quay up to the palace
+  // gate, threading every ward, plus feeder streets. landBridge first so no
+  // stretch of coast can sever the road.
+  function landBridge(x0,y0,x1,y1){
+    const steps=Math.ceil(dist(x0,y0,x1,y1))*2, laid=[];
+    for(let i=0;i<=steps;i++){
+      const x=Math.round(lerp(x0,x1,i/steps)), y=Math.round(lerp(y0,y1,i/steps));
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+        if(Math.abs(dx)+Math.abs(dy)>1) continue;
+        if(inb(x+dx,y+dy) && !walkTile(tileAt(x+dx,y+dy))){ setTile(x+dx,y+dy,T.SAND); laid.push([x+dx,y+dy]); }
+      }
+    }
+    for(const [lx,ly] of laid) for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++)
+      if(inb(lx+dx,ly+dy) && tileAt(lx+dx,ly+dy)===T.DEEP) setTile(lx+dx,ly+dy,T.SHALLOW);
+  }
+  const AVE=[
+    [D.x+3,D.y, Z.harbor.x,Z.harbor.y],
+    [Z.harbor.x,Z.harbor.y, Z.market.x,Z.market.y],
+    [Z.market.x,Z.market.y, Z.plaza.x,Z.plaza.y],
+    [Z.plaza.x,Z.plaza.y, Z.palace.x,Z.palace.y+6],
+    [Z.plaza.x+4,Z.plaza.y, Z.temple.x,Z.temple.y],
+    [Z.market.x+6,Z.market.y-2, Z.highrow.x,Z.highrow.y],
+    [Z.plaza.x,Z.plaza.y-4, Z.barracks.x+4,Z.barracks.y+2],
+    [Z.palace.x+6,Z.palace.y, Z.garden.x,Z.garden.y],
+    [Z.highrow.x,Z.highrow.y-4, Z.garden.x,Z.garden.y+4]
+  ];
+  for(const r of AVE) landBridge(r[0],r[1],r[2],r[3]);
+  for(const r of AVE) carveLine(r[0],r[1],r[2],r[3], T.PATH,1);   // broad avenue
+  // a low green belt of royal parkland ringing the palace hill
+  carveDisc(Z.palace.x-10,Z.palace.y+10,6,T.FOREST,true);
+  carveDisc(Z.palace.x+12,Z.palace.y+8,5,T.FOREST,true);
+  // shore cleanup - drop orphaned shallow tiles back to deep
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(tileAt(x,y)===T.SHALLOW){
+      let landNear=false;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) if(walkTile(tileAt(x+dx,y+dy))) landNear=true;
+      if(!landNear) setTile(x,y,T.DEEP);
+    }
+  }
+}
+function placeObjectsCrown(){
+  const Z=CROWN_ZONES, D=Z.dock, H=Z.harbor, M=Z.market, PL=Z.plaza, T2=Z.temple,
+        PA=Z.palace, GA=Z.garden, BA=Z.barracks, HR=Z.highrow;
+  // ---- the Tideglass Palace: the crown of the city ----
+  addBuilding('castle', PA.x, PA.y-2, 'The Tideglass Palace');
+  addBuilding('tower', PA.x-9, PA.y+3, ''); addBuilding('tower', PA.x+9, PA.y+3, '');
+  // gate lamps and forecourt banners
+  addBuilding('lamp', PA.x-4, PA.y+7, ''); addBuilding('lamp', PA.x+4, PA.y+7, '');
+  // ---- the Cathedral of the Tide ----
+  addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide');
+  addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
+  // ---- Crown Plaza: the civic heart ----
+  addBuilding('well', PL.x, PL.y, 'The Kings\' Fountain');
+  addBuilding('house2', PL.x-6, PL.y-4, 'The Hall of Charts');
+  addBuilding('house2', PL.x+6, PL.y-3, 'The Mint');
+  addBuilding('stall', PL.x-3, PL.y+4, ''); addBuilding('stall', PL.x+3, PL.y+4, '');
+  for(const [lx,ly] of [[-7,0],[7,0],[0,-7],[-5,6],[5,6]]) addBuilding('lamp', PL.x+lx, PL.y+ly, '');
+  // ---- the Grand Bazaar: rows of stalls and fruit ----
+  addBuilding('house', M.x-6, M.y-4, 'The Spice Row');
+  addBuilding('house', M.x+5, M.y-4, 'The Cloth Hall');
+  addBuilding('house2', M.x-5, M.y+4, 'The Coin & Cup (Inn)');
+  const mr=mulberry32(SEED+21);
+  for(let i=0;i<10;i++){ const a=mr()*TAU, rr=3+mr()*(M.r-3);
+    const sx=Math.round(M.x+Math.cos(a)*rr), sy=Math.round(M.y+Math.sin(a)*rr*0.9);
+    if(inb(sx,sy)&&walkTile(tileAt(sx,sy))&&!solidAt(sx,sy)) addBuilding(mr()<0.5?'stall':'fruitstand', sx, sy, ''); }
+  for(const [lx,ly] of [[-8,-6],[8,-6],[-8,6],[8,6]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
+  // ---- the Salt Quarter: working harbor ----
+  addBuilding('house', H.x-4, H.y-4, 'The Netmenders');
+  addBuilding('house', H.x+4, H.y-2, 'The Saltcellar (Tavern)');
+  addBuilding('boat', D.x-4, D.y+3, ''); addBuilding('boat', D.x+4, D.y-3, '');
+  addBuilding('lamp', D.x, D.y-2, ''); addBuilding('lamp', H.x-6, H.y+4, ''); addBuilding('lamp', H.x+6, H.y+4, '');
+  // ---- the Garrison ----
+  addBuilding('house2', BA.x, BA.y-2, 'The Garrison');
+  addBuilding('barn', BA.x-5, BA.y+3, 'Armory');
+  addBuilding('lamp', BA.x-4, BA.y-4, ''); addBuilding('lamp', BA.x+4, BA.y-4, '');
+  // ---- Highrow: noble townhouses ----
+  for(let i=0;i<6;i++){ const hx=HR.x-8+((i%3)*7), hy=HR.y-5+(Math.floor(i/3)*8);
+    if(inb(hx,hy)&&walkTile(tileAt(hx,hy))) addBuilding(i%2?'house2':'house', hx, hy, ''); }
+  addBuilding('well', HR.x, HR.y+1, '');
+  for(const [lx,ly] of [[-9,0],[9,0],[0,7]]) addBuilding('lamp', HR.x+lx, HR.y+ly, '');
+  // ---- the Drowned Queen's Garden: a place of quiet mourning ----
+  addBuilding('well', GA.x, GA.y, "The Weeping Font");   // a memorial fountain
+  const gr=mulberry32(SEED+33);
+  for(let gy=-GA.r;gy<=GA.r;gy++) for(let gx=-GA.r;gx<=GA.r;gx++){ const px=GA.x+gx, py=GA.y+gy;
+    if(Math.hypot(gx,gy)<=GA.r && inb(px,py) && tileAt(px,py)===T.GRASS && !solidAt(px,py)){
+      if(gr()<0.10) addNode('tree',px,py);
+      else if(gr()<0.22) G.decor.push({kind:'flower',x:px+0.5,y:py+0.5,c:gr()<0.5?'#cfe0ff':'#e6d0ff',ph:gr()*TAU}); } }
+  // parkland trees ringing the palace lawns
+  const pr=mulberry32(SEED+52);
+  for(let i=0;i<70;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
+    if(tileAt(ax,ay)===T.FOREST && !solidAt(ax,ay) && pr()<0.5){
+      if(dist(ax,ay,PA.x,PA.y)<PA.r-2) continue; addNode('tree',ax,ay); } }
+  // grass tufts + wildflowers softening the avenues
+  for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
+    if(tileAt(ax,ay)===T.GRASS && !solidAt(ax,ay)){
+      if(pr()<0.5) G.decor.push({kind:'tuft',x:ax+0.5,y:ay+0.5,ph:pr()*TAU}); } }
+  G.critters=[];
+}
+function spawnCrownFolk(){
+  const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, H=Z.harbor, GA=Z.garden, BA=Z.barracks, D=Z.dock;
+  // ---- King Aldous: grieving sovereign, before the palace gate ----
+  G.npcs.push(makeNPC('aldous','King Aldous', PA.x+0.5, PA.y+5.5,
+    {skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',necklace:'#c9a24e'},
+    ['A stranger, and from the isles by your salt. Be welcome in Aldermere. We have grandeur enough - it is gladness we run short of.',
+     'This whole city was built for a family of three. I am the one left rattling in it.',
+     'They tell me to remarry, to name an heir from the cousins. I tell them the sea still owes me an answer first.',
+     'You have the look of someone the tide keeps throwing back. I know that look. I wear it.'],0.15));
+  // ---- Lord Steward Perrin: runs the kingdom day to day ----
+  G.npcs.push(makeNPC('perrin','Lord Steward Perrin', PA.x-4.5, PA.y+6.5,
+    {skin:'#c79a6a',hair:'#5a4a38',shirt:'#4a4a5a',pants:'#33303c',robe:'#3a3a4c',trim:'#9a9aa8',hairstyle:'short'},
+    ['His Majesty grieves in public now, which is new. For thirty years he did it behind a shut door.',
+     'Do not speak of the lost prince within the King\'s hearing unless you mean to ruin his week. The whole court steps around it.',
+     'Aldermere runs on ledgers and patience. I supply both.'],0.2));
+  // ---- Captain of the Guard ----
+  G.npcs.push(makeNPC('halvard','Captain Halvard', BA.x+0.5, BA.y+2.5,
+    {skin:'#b5825a',hair:'#3a2f26',shirt:'#5a2f2f',pants:'#33282a',beard:'#3a2f26',hairstyle:'short'},
+    ['The Garrison drills dawn to dark. A soft capital is a short one.',
+     'You carry yourself like you\'ve put down worse than street thieves. Good. The realm can always use another arm.',
+     'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2));
+  // ---- the Herald: town crier in the plaza ----
+  G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
+    {skin:'#8a5a3a',hair:'#2a2018',shirt:'#7a5a2f',pants:'#4a3a24',hairstyle:'bun'},
+    ['Hear it! The strait to the Frozen Isle runs free again - trade convoys sail within the fortnight!',
+     'Hear it! The skies over the Aerie have quieted; her Rookmother sends her thanks to the unnamed traveler!',
+     'Word comes off every isle at once - old curses breaking like ice in spring. The city cannot decide if it is a miracle or a warning.'],0.1));
+  // ---- the Gardener, tending the memorial ----
+  G.npcs.push(makeNPC('isolde','Isolde the Gardener', GA.x+0.5, GA.y+2.5,
+    {skin:'#c99a72',hair:'#7a6a4a',shirt:'#4a5a44',pants:'#3a3a2c',hairstyle:'bun'},
+    ['This is the Queen\'s garden. She loved the sea-colored blooms - so I keep them, though she has not walked here in thirty years.',
+     'They never found her. Nor the babe. The King had the font built so there\'d be a place to weep that wasn\'t the shoreline.',
+     'Strange - some travelers stand at the font and go pale, as if they half-remember it. You look a little that way yourself.'],0.15));
+  // ---- market + harbor flavor ----
+  G.npcs.push(makeNPC('doran','Doran the Factor', M.x+0.5, M.y+2.5,
+    {skin:'#a0703f',hair:'#3a2f26',shirt:'#5a4a7a',pants:'#3a3244',beard:'#3a2f26'},
+    ['Silk from the Sunward Isle, ore from Barik, ice-wine from the Frozen strait once it thaws - the Bazaar sells the whole map.',
+     'Coin talks in Aldermere, friend, and lately it can\'t stop talking about you.'],0.3));
+  G.npcs.push(makeNPC('mabley','Old Mabley', H.x+0.5, H.y+2.5,
+    {skin:'#b58a5e',hair:'#cfc7b8',shirt:'#3a5a5a',pants:'#2f3a3a',beard:'#cfc7b8',beardLong:true},
+    ['Sixty years mending nets on this quay. Watched the young prince\'s ship sail out. Watched it never come back.',
+     'Bad water that season. Bad water and, some say, a bad man aboard. But that\'s an old sailor talking.'],0.25));
+}
+function spawnMobsCrown(){
+  const Z=CROWN_ZONES, BA=Z.barracks;
+  // the capital is a safe city - a training yard for the garrison, no foes
+  const yd=findOpenNear(Math.round(BA.x+3),Math.round(BA.y+4),5);
+  if(yd) spawnMob('dummy',yd[0],yd[1]);
+  const yd2=findOpenNear(Math.round(BA.x-3),Math.round(BA.y+4),5);
+  if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+}
+function genCrownAll(){
+  genCrown(); bakeSolids(); placeObjectsCrown(); buildFoam();
+  spawnCrownFolk(); spawnMobsCrown();
+  buildMapBase();
+}
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
@@ -1635,7 +1843,7 @@ function boatMenu(){
   // once the seas are calm every dock is a ferry hub - sail to any known isle
   const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
              ['Sail to Windsurf Isle','wind'],['Sail to the Aerie Isle','aerie'],
-             ['Sail to the Frozen Isle','frost']];
+             ['Sail to the Frozen Isle','frost'],['Sail to Aldermere, the Capital','crown']];
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';
@@ -1711,6 +1919,10 @@ function switchWorld(id){
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
     if(!P.prog.frostSeen){ P.prog.frostSeen=1;
       setTimeout(()=>toast('<b>The Frozen Isle</b> - the strait is locked to solid ice and the cold bites like a curse, because it is one. <b>Bryn the Kettlewarden</b> keeps a fire in the village.',7000),1400); }
+  }
+  if(id==='crown'){
+    if(!P.prog.crownSeen){ P.prog.crownSeen=1;
+      setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. A whole kingdom to walk. And on its throne, they say, a king who has grieved for thirty years. <b>King Aldous</b> keeps his court before the palace gate.',8000),1400); }
   }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
