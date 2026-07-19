@@ -925,6 +925,33 @@ function drawMob(m,s){
     g.restore(); g.restore(); g.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='frostwarden'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, freed=m.freed;
+    drawShadowAt(g,s.x,s.y,36);
+    g.save(); g.translate(s.x,s.y); g.scale(2.6,2.6);
+    const ice='#bcd8e8', iceDk='#8fb8cf';
+    g.fillStyle=iceDk; g.fillRect(-9,-14,7,14); g.fillRect(3,-14,7,14); // legs
+    g.fillStyle=ice; g.beginPath(); g.moveTo(-13,-40); g.lineTo(13,-40); g.lineTo(11,-12); g.lineTo(-11,-12); g.closePath(); g.fill();
+    g.strokeStyle='rgba(40,70,90,0.6)'; g.lineWidth=1.6; g.stroke();
+    g.fillStyle='#d8eef8'; // jagged ice shoulders
+    g.beginPath(); g.moveTo(-13,-40); g.lineTo(-20,-47); g.lineTo(-10,-34); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(13,-40); g.lineTo(20,-47); g.lineTo(10,-34); g.closePath(); g.fill();
+    g.strokeStyle=iceDk; g.lineWidth=6; g.lineCap='round'; // arms
+    g.beginPath(); g.moveTo(-12,-36); g.lineTo(-17,-16); g.stroke();
+    g.beginPath(); g.moveTo(12,-36); g.lineTo(17,-16); g.stroke();
+    g.fillStyle=ice; g.beginPath(); g.arc(-17,-14,5,0,TAU); g.arc(17,-14,5,0,TAU); g.fill();
+    g.fillStyle='#cfe6f2'; g.beginPath(); g.moveTo(-7,-52); g.lineTo(7,-52); g.lineTo(5,-40); g.lineTo(-5,-40); g.closePath(); g.fill();
+    g.strokeStyle='rgba(40,70,90,0.6)'; g.lineWidth=1.4; g.stroke();
+    g.fillStyle= freed? '#8fd0e0' : (hurt?'#ffd0d0':'#c77bff'); // eyes
+    g.fillRect(-4,-49,3,3); g.fillRect(1,-49,3,3);
+    if(!freed){ const gl=0.5+0.4*Math.sin(t*3); // the violet binding core
+      g.fillStyle='rgba(199,123,255,'+gl.toFixed(2)+')'; g.beginPath(); g.arc(0,-26,6,0,TAU); g.fill();
+      g.fillStyle='#c77bff'; g.beginPath(); g.moveTo(0,-31); g.lineTo(4,-26); g.lineTo(0,-21); g.lineTo(-4,-26); g.closePath(); g.fill();
+    } else { g.strokeStyle='rgba(160,220,240,0.7)'; g.lineWidth=1.4; // meltwater
+      g.beginPath(); g.moveTo(-4,-38); g.lineTo(-4,-20); g.moveTo(4,-36); g.lineTo(4,-18); g.stroke(); }
+    g.restore(); g.lineCap='butt';
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;
@@ -1218,6 +1245,13 @@ function drawProj(p,s){
     cx.fillStyle='rgba(150,60,210,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#c77bff'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
     cx.fillStyle='#f0e0ff'; cx.beginPath(); cx.arc(s.x,s.y-12,2.3,0,TAU); cx.fill();
+  } else if(p.kind==='shard'){
+    const a=Math.atan2(p.vy,p.vx);
+    cx.save(); cx.translate(s.x,s.y-12); cx.rotate(a);
+    cx.fillStyle='rgba(150,210,235,0.35)'; cx.beginPath(); cx.arc(0,0,9,0,TAU); cx.fill();
+    cx.fillStyle='#bfe8ff'; cx.beginPath(); cx.moveTo(9,0); cx.lineTo(-4,-4); cx.lineTo(-1,0); cx.lineTo(-4,4); cx.closePath(); cx.fill();
+    cx.fillStyle='#e6f6ff'; cx.beginPath(); cx.moveTo(7,0); cx.lineTo(-1,-2); cx.lineTo(-1,2); cx.closePath(); cx.fill();
+    cx.restore();
   } else if(p.kind==='spout'){
     // a hurled gout of seawater, trailing droplets
     cx.fillStyle='rgba(120,190,220,0.32)'; cx.beginPath(); cx.arc(s.x,s.y-12,11,0,TAU); cx.fill();
@@ -1286,7 +1320,8 @@ function drawMarkers(){
 
 /* ---- minimap & big map ---- */
 const MAPCOL={[T.DEEP]:'#2b5c8f',[T.SHALLOW]:'#4d8fc0',[T.SAND]:'#e2cf93',[T.GRASS]:'#6da34d',
-  [T.FOREST]:'#527f3c',[T.RUIN]:'#8f8b83',[T.PATH]:'#b7965f',[T.SOIL]:'#7a5230',[T.PLANK]:'#9c6f42'};
+  [T.FOREST]:'#527f3c',[T.RUIN]:'#8f8b83',[T.PATH]:'#b7965f',[T.SOIL]:'#7a5230',[T.PLANK]:'#9c6f42',
+  [T.SNOW]:'#e9eef6',[T.ICE]:'#b7d6e8'};
 let mapBase=null;
 function buildMapBase(){
   mapBase=makeCanvas(MAPW,MAPH,(g)=>{

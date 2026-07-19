@@ -23,7 +23,7 @@ const SafeStore=(()=>{
 /* ---------------- constants & helpers ---------------- */
 const TW = 64, TH = 32;                 // iso tile size
 let MAPW = 112, MAPH = 112;
-const T = { DEEP:0, SHALLOW:1, SAND:2, GRASS:3, FOREST:4, RUIN:5, PATH:6, SOIL:7, PLANK:8 };
+const T = { DEEP:0, SHALLOW:1, SAND:2, GRASS:3, FOREST:4, RUIN:5, PATH:6, SOIL:7, PLANK:8, SNOW:9, ICE:10 };
 const clamp = (v,a,b)=> v<a?a : v>b?b : v;
 const lerp = (a,b,t)=> a+(b-a)*t;
 const dist = (ax,ay,bx,by)=> Math.hypot(ax-bx, ay-by);
