@@ -63,6 +63,13 @@ function buildDialogContent(npc){
       [{label:'Listen', fn:p2}]);
     return;
   }
+  // Rell won't send you at the Leviathan until you have a windsurf - the beast
+  // lives out on the water, past the reach of his jetty. He points you to Tolen.
+  if(npc.id==='rell' && !(P.unlocked&&P.unlocked.surf) && qs('tide')!=='done'){
+    setDialog('“Face it? On foot?” <i>Rell barks a joke of a laugh.</i> “My jetty only reaches so far, friend, and that thing <b>swims</b>. You\'ll want a <b>windsurf</b> to meet it out on the light water - and <b>Tolen the Whittler</b>, up at Trade Row, is the only hand on this rock who can shape you one. Get yourself a board. Then come back, and I\'ll point you at the beast.”',
+      shopButtons(npc,[{label:'I\'ll go see Tolen', ghost:true, fn:closeDialog}]));
+    return;
+  }
   if(npc.id==='castell' && qs('feud2')==='active'){
     setDialog('“So the Queen sends her hound at last.” <i>The Castellan sets his helm and draws a long, notched blade.</i> “You should have stayed your side of the road, Barik-friend. Come - the March will bury one of us.”',
       [{label:'Draw steel', cls:'gold', fn:()=>{ closeDialog(); challengeCastellan(npc); }},
