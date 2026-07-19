@@ -974,7 +974,7 @@ function drawPlayerFigure(s){
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32,
-    dir:P.dir, step:P.moving?P.anim:0, stillT:P.stillT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
+    dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){

@@ -79,6 +79,7 @@ function frame(ts){
   requestAnimationFrame(frame);
   const raw=Math.min(0.05,(ts-lastT)/1000||0.016); lastT=ts;
   if(document.hidden) return;
+  if(typeof updateMountBtn==='function') updateMountBtn();
   pollGamepad();
   let dt=raw;
   if(G.hitStop>0){ G.hitStop-=raw; dt*=0.12; }        // impact freeze

@@ -352,4 +352,33 @@ function refreshUI(){
   document.getElementById('goldTxt').textContent=P.gold;
   const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv[P.quickItem||'potion']||0;
+  updateMountBtn();
+}
+/* Touch mount/dismount button - only shows once you own a mount and are
+   out in the world. Cheap-guarded so it can be pinged every frame. */
+let _mountBtnKey=null;
+function ownsMount(){ return !!(P.horse || (P.unlocked && P.unlocked.moa)); }
+function updateMountBtn(){
+  const btn=document.getElementById('mountBtn'); if(!btn) return;
+  const show = isTouch && ownsMount() && !G.interior && G.state==='play' && !P.dead;
+  const label = P.riding? 'Walk' : 'Ride';
+  const key = (show?1:0)+label;
+  if(key===_mountBtnKey) return;
+  _mountBtnKey=key;
+  btn.style.display = show? 'flex':'none';
+  btn.textContent = label;
+  btn.title = P.riding? 'Dismount' : 'Mount';
+}
+function toggleRide(){
+  if(G.state!=='play') return;
+  if(!ownsMount()){ return; }
+  if(G.interior){ toast('You can’t ride indoors.',1500); return; }
+  P.riding = P.riding? 0 : 1;
+  const moa = P.unlocked && P.unlocked.moa;
+  toast(P.riding
+    ? (moa? 'Kiko folds low - you swing aboard and grip with your knees. <b>Riding.</b>' : 'Chestnut trots up, ears forward. <b>Mounted.</b>')
+    : (moa? 'You hop down; Kiko struts off to bully a palm. <b>On foot.</b>' : 'Chestnut wanders to the nearest grass. <b>Dismounted.</b>'),
+    1800);
+  Snd.pickup && Snd.pickup();
+  updateMountBtn();
 }
