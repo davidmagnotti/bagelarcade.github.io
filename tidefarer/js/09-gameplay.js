@@ -57,6 +57,10 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y+1);
       if(d<2.2 && d<bd){ bd=d; best={type:'lore',key:'crypt',o:b,label:'Read'}; }
     }
+    if(b.kind==='woodpile'){
+      const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.9 && d<bd){ bd=d; best={type:'lore',key:'woodpile@isle',o:b,label:'Inspect'}; }
+    }
     if(b.kind==='well' && P.projects.well){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
@@ -666,6 +670,10 @@ function updateNPCs(dt){
   for(const n of G.npcs) n.hidden = night && !n.nightOwl;
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
+    if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)
+      n.humT=(n.humT===undefined? rnd(1,4):n.humT)-dt;
+      if(n.humT<=0){ n.humT=rnd(2.6,5.2); addFloat('♪', n.x, n.y-1.9, 'rgba(206,196,232,0.92)', 0.9); }
+    }
     n.chatT=(n.chatT===undefined? rnd(4,10) : n.chatT)-dt;
     if(n.chatT<=0){ n.chatT=rnd(10,20);
       if(dist(n.x,n.y,P.x,P.y)<6.5 && !dlg.open && G.state==='play'){

@@ -33,6 +33,13 @@ function setDialog(text,btns){
 function buildDialogContent(npc){
   // Castellan of the Vael: once you carry Maelis's writ (feud2), calling on him
   // is a challenge - a taunt, then a boss fight. Otherwise he only warns you off.
+  // A first-hour necklace moment: rare, short, and never explained (until Act 3).
+  if(npc.id==='maren' && P.story && !P.story.marenNecklace){
+    P.story.marenNecklace=1;
+    setDialog('<i>Elder Maren\'s eyes catch the pendant at your throat and hold there a beat too long.</i> “…Odd thing, for a castaway to wash up wearing. Old work. Fine work - finer than these shores have seen.” <i>Then she looks to the sea, and says no more of it.</i>',
+      [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
+    return;
+  }
   if(npc.id==='castell' && qs('feud2')==='active'){
     setDialog('“So the Queen sends her hound at last.” <i>The Castellan sets his helm and draws a long, notched blade.</i> “You should have stayed your side of the road, Barik-friend. Come - the March will bury one of us.”',
       [{label:'Draw steel', cls:'gold', fn:()=>{ closeDialog(); challengeCastellan(npc); }},

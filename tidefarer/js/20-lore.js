@@ -22,7 +22,8 @@ const LORE={
   crypt:{title:'The Hollow Crypt', text:'“The arch above the crypt bears the royal cipher, defaced by grief or fury. Inside the threshold, a single line remains legible: <i>He kept the crown. It kept him. Now it keeps us all awake.</i> The stone is cold in a way the sun cannot fix.”'},
   tower:{title:'The Ember Wars', text:'“Before the lanterns, the isle burned. Mages of the old court bound their fire into crystals - the same warm stones you still find veined in ruin-rock. When the court fell, only the crystals remembered how to be warm.”'},
   house:{title:'Songs of the Well', text:'“The well was dug by the first family, who swore its water could knit a wound shut overnight. They also swore the last king refused to drink - said kindness would rust his crown. He kept the crown. It kept him.”'},
-  barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes - old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'}
+  barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes - old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'},
+  'woodpile@isle':{title:'The Woodpile', text:'“Split logs, stacked with a quiet craftsman\'s care - and every pile crowned by the same figure: five points struck clean from a single centre. A child\'s star, you\'d guess, but the hand that lays it never wavers by a finger\'s width, as if it could stack this shape asleep. <i>You have seen this mark somewhere before.</i> You cannot, for your life, think where.”'}
 };
 function readLore(key){
   if(!LORE[key] && key.endsWith('@m')) key=key.slice(0,-2);
