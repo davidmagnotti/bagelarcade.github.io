@@ -33,7 +33,7 @@ function enterHouse(b){
     resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'},
     igloo:{line:'Curved snow-block walls, a fire pit at the heart, and furs enough to sleep through any storm.'}
   };
-  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [16,11] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
+  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [30,20] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
@@ -48,14 +48,25 @@ function enterHouse(b){
     // The Breakers is a bespoke open-air resort: a marble lobby with a front
     // desk, ornate flowering vases and potted palms, opening onto a sunlit pool
     // where guests lounge and chat. drawResortScene paints the pool from I.pool.
-    I.resort=1; I.pool={x0:8.4,y0:1.5,x1:14.5,y1:6.3};
-    F('frontdesk',3.3,2.5,1.7,0.8);
-    F('vase',1.4,3.8,0.5,0.5); F('vase',1.4,6.8,0.5,0.5); F('vase',6.7,1.4,0.5,0.5);
-    F('plant',1.5,1.6,0.6,0.6); F('plant',4.9,1.5,0.6,0.6); F('plant',6.7,7.4,0.6,0.6);
-    F('lounger',9.5,7.7,1.0,0.55); F('lounger',11.6,8.4,1.0,0.55); F('lounger',13.4,7.5,1.0,0.55);
-    F('poolguest',9.7,7.1,0.4,0.4); F('poolguest',12.5,6.9,0.4,0.4); F('poolguest',13.6,8.8,0.4,0.4);
-    F('rug',8.0,9.5,0,0,false);
-    F('table',4.7,8.4,0.9,0.6); F('stool',3.8,9.1,0.35,0.3); F('stool',5.6,9.1,0.35,0.3);
+    I.resort=1; I.follow=1;                       // a grand hall, larger than the screen
+    I.pool={x0:15.5,y0:2.5,x1:27.5,y1:12.5};       // a big resort pool in the back-right
+    F('frontdesk',5.0,3.0,2.2,0.9);
+    // ornate vases & potted palms lining the walls and walkways
+    F('vase',1.5,5.5,0.5,0.5); F('vase',1.5,10.0,0.5,0.5); F('vase',1.5,14.5,0.5,0.5);
+    F('vase',9.5,1.5,0.5,0.5); F('vase',13.5,1.5,0.5,0.5); F('vase',28.2,15.5,0.5,0.5);
+    F('plant',2.0,2.0,0.6,0.6); F('plant',7.5,1.6,0.6,0.6); F('plant',2.2,17.6,0.6,0.6);
+    F('plant',12.5,17.8,0.6,0.6); F('plant',14.2,9.5,0.6,0.6); F('plant',14.2,13.5,0.6,0.6);
+    F('plant',28.2,2.0,0.6,0.6);
+    // loungers & sunbathing guests ringing the pool (south & west edges)
+    F('lounger',17.0,13.6,1.0,0.55); F('lounger',19.5,14.2,1.0,0.55); F('lounger',22.0,13.6,1.0,0.55);
+    F('lounger',24.5,14.2,1.0,0.55); F('lounger',27.0,13.6,1.0,0.55);
+    F('poolguest',17.4,13.0,0.4,0.4); F('poolguest',20.6,13.6,0.4,0.4); F('poolguest',23.6,13.0,0.4,0.4);
+    F('poolguest',26.4,14.0,0.4,0.4); F('poolguest',15.0,6.5,0.4,0.4); F('poolguest',15.0,10.5,0.4,0.4);
+    // a café / bar cluster front-left, and the entrance rug
+    F('table',6.0,15.0,0.9,0.6); F('stool',5.0,15.8,0.35,0.3); F('stool',7.0,15.8,0.35,0.3);
+    F('table',9.5,16.5,0.9,0.6); F('stool',8.6,17.3,0.35,0.3); F('stool',10.4,17.3,0.35,0.3);
+    F('table',3.5,11.5,0.9,0.6); F('stool',3.5,12.6,0.35,0.3);
+    F('rug',15.0,18.4,0,0,false);
   }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='igloo'){ I.igloo=1;
@@ -423,11 +434,20 @@ function drawWallDecor(kind,w2s,I){
       cx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; cx.moveTo(x,y+2); cx.lineTo(x+Math.cos(a)*13,y+2+Math.sin(a)*13); } cx.lineWidth=2; cx.stroke(); });
   }
 }
+// Interior camera: small rooms frame on their centre (whole room visible);
+// big rooms (I.follow, e.g. the grand resort) track the player so you can
+// wander a space larger than the screen.
+function interiorCenter(I){
+  I=I||G.interior;
+  if(I && I.follow) return {x:isoX(P.x,P.y), y:isoY(P.x,P.y)};
+  return {x:isoX(I.w/2,I.h/2), y:isoY(I.w/2,I.h/2)};
+}
 function renderInterior(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   cx.fillStyle='#0b0906'; cx.fillRect(0,0,VW,VH);
   const I=G.interior;
-  const ccx=isoX(I.w/2,I.h/2), ccy=isoY(I.w/2,I.h/2);
+  const cc=interiorCenter(I);
+  const ccx=cc.x, ccy=cc.y;
   const w2s=(x,y)=>({x:isoX(x,y)-ccx+VW/2, y:isoY(x,y)-ccy+VH/2+14});
   // floor
   for(let y=0;y<I.h;y++) for(let x=0;x<I.w;x++){
