@@ -87,15 +87,38 @@ function rummage(f){
     else toast('Packing straw and disappointment.'); }
   Snd.step(8);
 }
+function resortDesk(){
+  const COST=150, I=G.interior;
+  dlg.open=true; document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Front Desk';
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.35,1.35);
+  drawHumanoid(pg,0,0,{skin:'#caa27b',hair:'#3a2e26',shirt:'#5a3a6a',pants:'#33303c',trim:'#c9a24e',dir:{x:0,y:1},step:0});
+  pg.restore();
+  const canPay=(P.gold||0)>=COST;
+  setDialog('“Welcome to <b>The Breakers</b> - the finest suite on any shore. Sea views, salt baths, linens turned down at dusk. A night with us is <b>'+COST+' gold</b>.”'
+      + (canPay? '' : '<br><i>(You are '+(COST-(P.gold||0))+' gold short.)</i>'),
+    [ canPay
+        ? {label:'Take a suite ('+COST+'g)', cls:'gold', fn:()=>{
+            P.gold-=COST; P.hp=P.maxhp; P.mp=P.maxmp;
+            if(I&&I.ret) P.bind={w:G.worldId,x:I.ret.x,y:I.ret.y};   // wake here if you fall
+            refreshUI(); Snd.quest&&Snd.quest(); autoSave&&autoSave();
+            setDialog('<i>The concierge rings the brass bell and hands you a heavy key. A whole night of true rest - the sea breathing beyond the shutters, salt on the warm air.</i> “Sleep well. Your room is kept for you now.”<br><i>(Fully restored. You will wake at the Breakers if you fall.)</i>',
+              [{label:'Wonderful',fn:closeDialog}]);
+          }}
+        : {label:'I\'m short the coin', ghost:true, fn:closeDialog},
+      {label:'Just admiring the lobby', ghost:true, fn:closeDialog} ]);
+}
 function interiorHotspot(){
   const I=G.interior; if(!I) return null;
   let best=null, bestD=1e9;
   for(const f of I.furn){
     const lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk'}[f.type];
     if(!lbl) continue;
-    // the wyrm is huge and solid, so his hotspot has to reach past his footprint
-    const reach = f.type==='dragon'? 3.2 : 1.45;
+    // the wyrm & the wide reception desk need a hotspot that reaches past them
+    const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : 1.45;
     const d=dist(P.x,P.y,f.x,f.y);
     if(d<reach && d<bestD){ bestD=d; best={f,label:lbl}; }
   }
@@ -116,6 +139,7 @@ function useHotspot(h){
       'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
   }
   else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }
+  else if(f.type==='frontdesk'){ resortDesk(); }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') openStation('The Anvil', craftMenu);
   else if(f.type==='orb'){
