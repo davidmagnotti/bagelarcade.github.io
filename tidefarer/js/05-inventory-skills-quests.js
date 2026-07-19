@@ -71,8 +71,8 @@ function completeQuest(id){
   if(rw.staff){ P.unlocked.staff=true; toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.'); }
   if(rw.surf){ P.unlocked.surf=true;
     toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
-  if(rw.moa){ P.unlocked.moa=true; P.riding=1;
-    toast('<b style="color:var(--ember)">Kiko the Moa is yours!</b> Press <b>M</b> to mount and dismount - the fastest legs on any shore.',6500); }
+  if(rw.moa){ P.unlocked.moa=true; P.riding=1; if(typeof updateMountBtn==='function') updateMountBtn();
+    toast('<b style="color:var(--ember)">Kiko the Moa is yours!</b> '+(isTouch?'Tap <b>Ride</b> (right side)':'Press <b>M</b>')+' to mount and dismount - the fastest legs on any shore.',6500); }
   if(rw.dash2){ P.unlocked.dash2=true;
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }

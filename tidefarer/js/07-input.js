@@ -16,7 +16,7 @@ window.addEventListener('keydown',e=>{
   if(k==='3') selectWeapon('staff');
   if(k==='4') useItem(P.quickItem||'potion');
   if(k==='r') cycleQuickItem();
-  if(k==='m' && (P.horse||P.unlocked&&P.unlocked.moa) && !G.interior && G.state==='play'){ P.riding=P.riding?0:1; toast(P.riding?'<b>Mounted.</b>':'<b>Dismounted.</b>',1400); }
+  if(k==='m'){ toggleRide(); }
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }
@@ -170,4 +170,6 @@ function pressable(el,down,up){
 }
 pressable(attackBtn, ()=>{ input.attack=true; }, ()=>{ input.attack=false; });
 pressable(interactBtn, ()=>{ doInteract(); });
+const mountBtn=document.getElementById('mountBtn');
+if(mountBtn) pressable(mountBtn, ()=>{ toggleRide(); });
 
