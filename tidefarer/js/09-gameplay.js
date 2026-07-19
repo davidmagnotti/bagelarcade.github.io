@@ -76,9 +76,9 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
     }
     if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'){
-      const dy=b.kind==='resort'?2.2:0.9;
+      const dy=b.grand?6.5:b.kind==='resort'?2.2:0.9;
       const d=dist(P.x,P.y,b.x,b.y+dy);
-      if(d<1.8 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
+      if(d<(b.grand?2.4:1.8) && d<bd){ bd=d; best={type:'door',o:b,label:b.grand?'Enter the palace':'Enter'}; }
     }
     if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }
@@ -104,8 +104,9 @@ function doInteract(){
   if(G.interior){
     if(dlg.open){ closeDialog(); return; }
     const hs=interiorHotspot();
-    const nearExit=dist(P.x,P.y,G.interior.exit.x,G.interior.exit.y)<1.6;
-    if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,G.interior.exit.x,G.interior.exit.y))){
+    const ex=G.interior.exit;
+    const nearExit=ex && dist(P.x,P.y,ex.x,ex.y)<1.6;
+    if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,ex.x,ex.y))){
       useHotspot(hs); return;
     }
     if(nearExit) exitHouse();

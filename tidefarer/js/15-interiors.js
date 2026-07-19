@@ -1,8 +1,84 @@
 /* =====================================================================
    INTERIORS - step inside the buildings
    ===================================================================== */
+// The Tideglass Palace: a grand two-storey interior. Level 0 is the great
+// hall - a colonnaded throne room around a massive open courtyard with the
+// King and his guards; level 1 is the ramparts, with the four corner towers,
+// the crenellated wall-walk, and its garrison. A stairwell swaps between them.
+function palaceInterior(level){
+  const I = (level===1)
+    ? {kind:'castle', palace:1, level:1, sky:1, w:34, h:22, t:0, furn:[], ret:null,
+       exit:null, stairLanding:{x:17,y:17}, courtyard:null}
+    : {kind:'castle', palace:1, level:0, w:32, h:26, t:0, furn:[], ret:null,
+       exit:{x:16,y:24.4}, stairLanding:{x:28,y:22}, courtyard:{x0:9,y0:8,x1:23,y1:18}};
+  const F=(type,x,y,hw,hh,solid,extra)=>{ const f={type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false}; if(extra) Object.assign(f,extra); I.furn.push(f); };
+  if(level===1){
+    // RAMPARTS: four corner towers, the crenellated wall-walk, guards, stairs down
+    F('towertop',3,3,1.2,1.0); F('towertop',31,3,1.2,1.0); F('towertop',3,19,1.2,1.0); F('towertop',31,19,1.2,1.0);
+    F('banner',11,1.3,0.9,0.25); F('banner',23,1.3,0.9,0.25);
+    for(let x=6;x<=28;x+=2) F('crenel',x,1.6,0,0,false);       // the wall's teeth (decorative)
+    for(const gx of [9,15,20,26]) F('guard',gx,4,0.4,0.4);      // the wall garrison
+    F('guard',7,11,0.4,0.4); F('guard',27,13,0.4,0.4);
+    F('stairs',17,18,0.9,0.6,true,{dir:'down'});
+  } else {
+    // GROUND: throne dais + long colonnaded halls + the open central courtyard
+    F('rug',16,3.4,0,0,false);
+    F('throne',16,2.0,1.0,0.6); F('king',16,1.5,0.6,0.55);
+    F('guard',12.5,2.6,0.4,0.4); F('guard',19.5,2.6,0.4,0.4);
+    F('banner',8.5,1.3,0.9,0.25); F('banner',23.5,1.3,0.9,0.25);
+    F('hearth',2.4,1.35,1.1,0.35); F('hearth',29.6,1.35,1.1,0.35);
+    for(let y=5;y<=21;y+=2){ F('column',4,y,0.55,0.5); F('column',28,y,0.55,0.5); }   // long side halls
+    // the massive central courtyard: an open garden around a grand fountain
+    F('palacefountain',16,13,1.6,1.1);
+    F('plant',10.5,9,0.6,0.6); F('plant',21.5,9,0.6,0.6); F('plant',10.5,17,0.6,0.6); F('plant',21.5,17,0.6,0.6);
+    F('guard',6,10,0.4,0.4); F('guard',26,16,0.4,0.4);          // hall guards
+    F('rug',16,23,0,0,false);
+    F('stairs',28,22,0.9,0.6,true,{dir:'up'});
+  }
+  I.follow=1;   // both floors are larger than the screen; the camera tracks you
+  return I;
+}
+function useStairs(dir){
+  const cur=G.interior; if(!cur||!cur.palace) return;
+  const nI=palaceInterior(dir==='up'?1:0);
+  nI.ret=cur.ret;
+  // Swap synchronously so the level change always lands - the fade is purely
+  // cosmetic and must never gate the actual transition.
+  G.interior=nI;
+  const L=nI.stairLanding; P.x=L.x; P.y=L.y+1.4; P.moving=false; P.click=null;
+  if(typeof Snd!=='undefined' && Snd.step) Snd.step(3);
+  banner(dir==='up'?'THE RAMPARTS':'THE GREAT HALL', dir==='up'?'THE FOUR TOWERS OF ALDERMERE':'THE TIDEGLASS THRONE');
+  const fade=document.getElementById('fadeOv');
+  if(fade){ fade.style.opacity=1; setTimeout(()=>{ fade.style.opacity=0; },140); }
+}
+function palaceKingSpeak(){
+  if(qs('audience')==='active'){ // let the throne room host the audience too
+    const king=G.npcs && G.npcs.find(n=>n.id==='aldous');
+    if(king && typeof buildDialogContent==='function'){ dlg.open=true; dlg.npc=king;
+      document.getElementById('dialog').style.display='block'; document.getElementById('dname').textContent=king.name;
+      drawPortrait&&drawPortrait(king); buildDialogContent(king); return; }
+  }
+  dlg.open=true; document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='King Aldous';
+  const pg=document.getElementById('dportrait').getContext('2d'); pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+  drawHumanoid(pg,0,0,{skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',dir:{x:0,y:1},step:0});
+  pg.restore();
+  const told = P.story && P.story.kingTold;
+  const line = told
+    ? 'The hall is quieter than it looks, traveler. Thirty years I have paced this floor waiting for word of my son. Bring me an ending - any ending - and these old stones will ring again.'
+    : 'Welcome to the Tideglass, traveler. Walk the courtyard, take the air on the ramparts. A palace this size is mostly for echoes now, but the doors are open to a curse-breaker.';
+  setDialog('“'+line+'”', [{label:'Your Majesty', ghost:true, fn:closeDialog}]);
+}
 function enterHouse(b){
   if(G.interior) return;
+  if(b.grand){ // the Aldermere palace opens into its own grand two-storey interior
+    if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
+    const I=palaceInterior(0); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
+    P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
+    banner('THE TIDEGLASS PALACE','THE GREAT HALL OF ALDERMERE'); Snd.quest&&Snd.quest();
+    closeAllPanels&&closeAllPanels(); return;
+  }
   if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
   // you always dismount at the door - no riding indoors
   if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
@@ -436,6 +512,49 @@ function drawFurniture(f,s){
           shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4], pants:'#3a4a6a', dir:{x:(gp%2?1:-1),y:1}, step:0, size:1.28});
         cx.font='9px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.5)'; cx.fillText('Guest',s.x+1,s.y-40); cx.fillStyle='#ffe9a8'; cx.fillText('Guest',s.x,s.y-41); }
       break;
+    case 'king':
+      drawShadowAt(cx,s.x,s.y,13);
+      drawHumanoid(cx, s.x, s.y-2, {skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',dir:{x:0,y:1},step:0,size:1.3});
+      cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('King Aldous',s.x+1,s.y-49); cx.fillStyle='#ffe9a8'; cx.fillText('King Aldous',s.x,s.y-50);
+      break;
+    case 'guard':
+      { const fl=(Math.floor(f.x*3+f.y*5)%2)?1:-1;
+        drawShadowAt(cx,s.x,s.y,11);
+        drawHumanoid(cx, s.x, s.y, {skin:'#c79a6a',hair:'#3a2f26',shirt:'#5a6478',pants:'#3a4050',trim:'#c9a24e',dir:{x:fl,y:1},step:0,size:1.24});
+        cx.strokeStyle='#5a4630'; cx.lineWidth=2.4; cx.beginPath(); cx.moveTo(s.x+fl*9,s.y+1); cx.lineTo(s.x+fl*9,s.y-42); cx.stroke();   // spear
+        cx.fillStyle='#c9ccd4'; cx.beginPath(); cx.moveTo(s.x+fl*9,s.y-42); cx.lineTo(s.x+fl*6,s.y-49); cx.lineTo(s.x+fl*12,s.y-49); cx.closePath(); cx.fill(); }
+      break;
+    case 'stairs':
+      { cx.save(); cx.translate(s.x,s.y);
+        for(let i=0;i<5;i++){ cx.fillStyle=i%2?'#8f8b83':'#7a766e'; cx.fillRect(-17+i*2,-i*6,34-i*4,8); cx.strokeStyle='rgba(0,0,0,0.3)'; cx.lineWidth=1; cx.strokeRect(-17+i*2,-i*6,34-i*4,8); }
+        cx.fillStyle='#ffd76a'; cx.font='bold 13px Georgia'; cx.textAlign='center'; cx.fillText(f.dir==='up'?'▲':'▼', 0, -36+Math.sin(G.time*3)*2);
+        cx.restore(); }
+      break;
+    case 'palacefountain':
+      { const t=(G.interior?G.interior.t:G.time); cx.save(); cx.translate(s.x,s.y);
+        cx.fillStyle='rgba(0,0,0,0.14)'; cx.beginPath(); cx.ellipse(0,6,46,14,0,0,TAU); cx.fill();
+        cx.fillStyle='#b8b4ab'; cx.beginPath(); cx.ellipse(0,0,44,21,0,0,TAU); cx.fill();
+        cx.fillStyle='#8f8b83'; cx.beginPath(); cx.ellipse(0,0,44,21,0,0,TAU); cx.stroke();
+        cx.fillStyle='#5aa0d0'; cx.beginPath(); cx.ellipse(0,-1,35,15,0,0,TAU); cx.fill();
+        cx.fillStyle='rgba(255,255,255,0.4)'; for(let i=0;i<4;i++){ const a=t*1.4+i*1.6; cx.beginPath(); cx.ellipse(Math.cos(a)*17,Math.sin(a)*7,4,2,0,0,TAU); cx.fill(); }
+        cx.fillStyle='#a8a49b'; cx.fillRect(-5,-32,10,30); cx.fillStyle='#c9a24e'; cx.beginPath(); cx.arc(0,-34,5,0,TAU); cx.fill();
+        cx.strokeStyle='rgba(150,205,235,0.6)'; cx.lineWidth=2; for(let i=0;i<5;i++){ const a=-Math.PI/2+(i-2)*0.42; cx.beginPath(); cx.moveTo(0,-34); cx.quadraticCurveTo(Math.cos(a)*15,-44,Math.cos(a)*24,-24); cx.stroke(); }
+        cx.restore(); }
+      break;
+    case 'towertop':
+      { cx.save(); cx.translate(s.x,s.y);
+        cx.fillStyle='#8f8b83'; cx.fillRect(-17,-74,34,76); cx.fillStyle='#6e6a63'; cx.fillRect(-17,-74,11,76);
+        cx.fillStyle='#a8a49b'; for(let i=0;i<5;i++) cx.fillRect(-17+i*7.4,-82,5,11);
+        cx.fillStyle='#241a10'; cx.fillRect(-5,-52,10,17); cx.fillStyle='#ffce7a'; cx.fillRect(-3,-50,6,8);
+        cx.strokeStyle='#3a2a1a'; cx.lineWidth=2.4; cx.beginPath(); cx.moveTo(0,-82); cx.lineTo(0,-98); cx.stroke();
+        cx.fillStyle='#6a3a5e'; cx.beginPath(); cx.moveTo(0,-98); cx.lineTo(17,-93); cx.lineTo(0,-88); cx.closePath(); cx.fill();
+        cx.restore(); }
+      break;
+    case 'crenel':
+      cx.fillStyle='#8f8b83'; cx.fillRect(s.x-8,s.y-15,16,15);
+      cx.fillStyle='#a8a49b'; cx.fillRect(s.x-8,s.y-20,6,6); cx.fillRect(s.x+2,s.y-20,6,6);
+      cx.strokeStyle='rgba(0,0,0,0.25)'; cx.lineWidth=1; cx.strokeRect(s.x-8,s.y-15,16,15);
+      break;
   }
 }
 function drawWallDecor(kind,w2s,I){
@@ -480,7 +599,7 @@ function interiorCenter(I){
 function renderInterior(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   const I=G.interior;
-  if(I.resort){ // open sky, so the low-walled pool courtyard reads as outdoors
+  if(I.resort || I.sky){ // open sky - resort courtyard, or the palace ramparts
     const sg=cx.createLinearGradient(0,0,0,VH);
     sg.addColorStop(0,'#bcdff2'); sg.addColorStop(0.4,'#dcecf6'); sg.addColorStop(1,'#141210');
     cx.fillStyle=sg;
@@ -508,23 +627,29 @@ function renderInterior(){
       cx.fillStyle=(x+y)%2? '#e4ebf4':'#d3ddea';
       cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
       cx.strokeStyle='rgba(150,175,205,0.3)'; cx.lineWidth=1; cx.stroke();
+    } else if(I.palace){
+      // grey flagstone; the central courtyard is an open green atrium
+      const court = I.courtyard && x+0.5>=I.courtyard.x0 && x+0.5<=I.courtyard.x1 && y+0.5>=I.courtyard.y0 && y+0.5<=I.courtyard.y1;
+      cx.fillStyle= court? ((x+y)%2?'#6f9a54':'#658c4c') : ((x+y)%2? '#8f8b83':'#807c74');
+      cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
+      cx.strokeStyle= court? 'rgba(40,70,30,0.25)':'rgba(40,36,30,0.35)'; cx.lineWidth=1; cx.stroke();
     } else {
       cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
     }
   }
   // walls: north (y=0) and west (x=0). The resort draws its own zoned walls
   // (tall lobby, low garden courtyard, arched partition) in drawResortScene.
-  const WH= I.lair? 96 : 62;   // the lair is a cathedral-tall cavern
-  if(!I.resort){
+  const WH= I.lair? 96 : I.palace? 76 : 62;   // the lair & the great hall run tall
+  if(!I.resort && !I.sky){   // the ramparts are open to the sky - no enclosing walls
     for(let x=0;x<I.w;x++){
       const a=w2s(x,0), b=w2s(x+1,0);
-      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : (x%2? '#4a3626':'#443122');
+      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : I.palace? (x%2?'#6e6a63':'#615d57') : (x%2? '#4a3626':'#443122');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
     }
     for(let y=0;y<I.h;y++){
       const a=w2s(0,y), b=w2s(0,y+1);
-      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : (y%2? '#3a2a1c':'#352718');
+      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : I.palace? (y%2?'#615d57':'#55524c') : (y%2? '#3a2a1c':'#352718');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
     }
@@ -550,7 +675,7 @@ function renderInterior(){
       if(Math.random()<0.3) G.parts.push({x:hf.x,y:hf.y-0.2,vx:rnd(-0.15,0.15),vy:-rnd(0.5,1.2),life:rnd(0.5,1.1),color:Math.random()<0.5?'#ffb26b':'rgba(180,180,180,0.5)',size:rnd(1.2,2.6),grav:-0.08}); }
   }
   // window with moody light on the north wall
-  if(!I.lair && !I.resort && !I.igloo){ const s=w2s(7.0,0.05);
+  if(!I.lair && !I.resort && !I.igloo && !I.palace){ const s=w2s(7.0,0.05);
     const night=nightAmount();
     cx.fillStyle= night>0.4? '#1c2a4a' : '#c9d8e8';
     cx.fillRect(s.x-12,s.y-52,24,20);
@@ -573,8 +698,8 @@ function renderInterior(){
     }
   }
   drawWallDecor(I.kind,w2s,I);
-  // door mat + glow at the exit
-  { const s=w2s(I.exit.x,I.exit.y+0.5);
+  // door mat + glow at the exit (the ramparts have no door - you leave by the stairs down)
+  if(I.exit){ const s=w2s(I.exit.x,I.exit.y+0.5);
     cx.fillStyle='rgba(255,215,106,'+(0.15+0.1*Math.sin(G.time*3))+')';
     cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5);
     cx.beginPath(); cx.arc(0,0,26,0,TAU); cx.fill(); cx.restore();
@@ -594,12 +719,14 @@ function renderInterior(){
   if(I.lair){ wg.addColorStop(0,'rgba(255,90,30,0.10)'); wg.addColorStop(1,'rgba(20,0,0,0.66)'); }
   else if(I.resort){ wg.addColorStop(0,'rgba(255,240,200,0.10)'); wg.addColorStop(1,'rgba(40,60,80,0.30)'); } // bright, airy daylight
   else if(I.igloo){ wg.addColorStop(0,'rgba(255,188,110,0.10)'); wg.addColorStop(1,'rgba(46,66,98,0.46)'); } // firelight in a cold shell
+  else if(I.palace){ if(I.sky){ wg.addColorStop(0,'rgba(255,240,205,0.08)'); wg.addColorStop(1,'rgba(50,66,92,0.34)'); } // bright ramparts
+                     else { wg.addColorStop(0,'rgba(255,210,140,0.07)'); wg.addColorStop(1,'rgba(10,8,14,0.5)'); } } // torchlit hall
   else { wg.addColorStop(0,'rgba(255,170,90,0.06)'); wg.addColorStop(1,'rgba(0,0,0,0.55)'); }
   cx.fillStyle=wg; cx.fillRect(0,0,VW,VH);
   drawGritGrade();
   // interact affordance: hotspots beat the door when closer
   const hs=interiorHotspot();
-  const nearExit=dist(P.x,P.y,I.exit.x,I.exit.y)<1.5;
+  const nearExit=I.exit && dist(P.x,P.y,I.exit.x,I.exit.y)<1.5;
   const ib=document.getElementById('interactBtn');
   let label=null, at=null;
   if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,I.exit.x,I.exit.y))){
