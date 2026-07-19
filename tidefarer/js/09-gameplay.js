@@ -65,6 +65,10 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y+0.9);
       if(d<1.6 && d<bd){ bd=d; best={type:'door',o:b,label:'Enter'}; }
     }
+    if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }
+    if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
@@ -104,6 +108,8 @@ function doInteract(){
     return;
   }
   if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
+  if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
+  if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
