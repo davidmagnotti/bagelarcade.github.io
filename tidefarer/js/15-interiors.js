@@ -69,6 +69,17 @@ function enterHouse(b){
     F('table',6.0,2.6,1.3,0.6); F('books',6.0,1.3,1.4,0.3);
     F('crate',4.0,5.2,0.55,0.45); F('crate',8.2,5.2,0.55,0.45); F('rug',6.0,4.2,0,0,false);
   }
+  // Windsurf Isle: give each named building its own lore (read the shelf/books)
+  // and a signature furnishing, so no two insides feel the same.
+  if(G.worldId==='wind'){
+    const lbl=String(b.label||'').toLowerCase();
+    if(lbl.includes('guildhall')){ I.loreKey='guildhall@wind'; F('books',I.w/2,1.35,1.3,0.3); F('table',I.w/2,3.4,1.2,0.6); }
+    else if(lbl.includes('sailmaker')){ I.loreKey='sailloft@wind'; F('net',I.w/2+1.6,1.3,1.3,0.3); F('crate',2.2,4.9,0.55,0.45); }
+    else if(lbl.includes('chandlery')){ I.loreKey='chandlery@wind'; F('barrel',2.1,4.7,0.45,0.4); F('crate',3.2,5.3,0.55,0.45); F('crate',I.w-2.0,4.7,0.55,0.45); }
+    else if(lbl.includes('cottage')){ I.loreKey='cottage@wind'; F('rug',I.w/2-1.2,I.h-2.6,0,0,false); }
+    else if(lbl.includes('inn')){ I.loreKey='inn@wind'; F('bed',I.w-1.9,4.5,1.0,0.7); }
+    else if(b.kind==='resort'){ I.loreKey='resort@wind'; }
+  }
   G.interior=I;
   P.click=null;
   P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;

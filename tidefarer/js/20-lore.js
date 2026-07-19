@@ -23,7 +23,14 @@ const LORE={
   tower:{title:'The Ember Wars', text:'“Before the lanterns, the isle burned. Mages of the old court bound their fire into crystals - the same warm stones you still find veined in ruin-rock. When the court fell, only the crystals remembered how to be warm.”'},
   house:{title:'Songs of the Well', text:'“The well was dug by the first family, who swore its water could knit a wound shut overnight. They also swore the last king refused to drink - said kindness would rust his crown. He kept the crown. It kept him.”'},
   barn:{title:"A Farmer's Almanac", text:'“Wheat here ripens in minutes - old island magic, Willa calls it. The almanac disagrees: it says the soil remembers being loved, and simply hurries to please. Also: beware the grey wolf that casts no howl. It saves them.”'},
-  'woodpile@isle':{title:'The Woodpile', text:'“Split logs, stacked with a quiet craftsman\'s care - and every pile crowned by the same figure: five points struck clean from a single centre. A child\'s star, you\'d guess, but the hand that lays it never wavers by a finger\'s width, as if it could stack this shape asleep. <i>You have seen this mark somewhere before.</i> You cannot, for your life, think where.”'}
+  'woodpile@isle':{title:'The Woodpile', text:'“Split logs, stacked with a quiet craftsman\'s care - and every pile crowned by the same figure: five points struck clean from a single centre. A child\'s star, you\'d guess, but the hand that lays it never wavers by a finger\'s width, as if it could stack this shape asleep. <i>You have seen this mark somewhere before.</i> You cannot, for your life, think where.”'},
+  // ---- Windsurf Isle: a trading city choked by the closed strait ----
+  'guildhall@wind':{title:'The Harbor Guild Ledger', text:'“Forty years of manifests in a dozen clerks\' hands, and then a cliff: <i>Season of the Still Water - 0 sailings, 0 tariffs, 0 cargo.</i> The last entry is not a number at all: <i>We are a port with no sea. The Guild votes to burn the debt-books rather than read them aloud. Someone must go out past the reef and LOOK at the thing.</i>”'},
+  'sailloft@wind':{title:"Nessa's Pattern Book", text:'“Sail patterns drafted to the inch - mains, jibs, a storm-trysail stitched in red thread \'for the day someone dares the strait again.\' Tucked in the spine, a scrap: <i>a sailmaker with no boats is a poet with no words. I keep cutting canvas anyway. Hope is a kind of hemming - you fold the frayed edge under and carry on.</i>”'},
+  'inn@wind':{title:'The Windsurf Inn Register', text:'“Guest after guest, then blank pages soft with dust. The innkeep still writes the date at the top of each empty leaf, every morning, in a neat and stubborn hand. On the counter, a bell nobody has rung in a season - and beside it, polished daily: <i>RING FOR ROOMS. WE KEEP THE FIRE LIT.</i>”'},
+  'chandlery@wind':{title:'The Chandler\'s Inventory', text:'“Rope, pitch, lamp-oil, hardtack, fish-hooks by the gross - a whole shop provisioned for voyages that never cast off. A hand-lettered card leans in the window, hopeful and unbought: <i>OUTFITTING FOR THE FIRST SHIP THROUGH. Half price to whoever proves it can be done.</i>”'},
+  'cottage@wind':{title:'A Windowsill Diary', text:'“A child\'s diary, kept in wax crayon and total certainty. <i>Day 1: the monster is real. Day 6: I drew it. It has too many arms. Day 20: grown-ups are sad about boats. I am not sad, I am going to FIGHT it when I am big.</i> The last page is just a stick figure with a very large sword. It looks a little like you.”'},
+  'resort@wind':{title:'The Breakers Guest Book', text:'“Rapturous reviews in a dozen hands - <i>the salt baths! the sunsets!</i> - and then nothing but Coralie\'s own careful entries, keeping the ritual alive for no one: <i>Weather fair. Baths warmed. Awnings swept. Should a single guest arrive, they will find us ready.</i> She has signed and dated every empty week.”'}
 };
 function readLore(key){
   if(!LORE[key] && key.endsWith('@m')) key=key.slice(0,-2);
@@ -116,8 +123,8 @@ function useHotspot(h){
     P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
     addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
   }
-  else if(f.type==='books') readLore((I.kind==='tower'?'tower': I.kind==='castle'?'castle':'barn')+(G.worldId==='main'?'@m':''));
-  else if(f.type==='shelf') readLore((I.kind==='house2'?'house2':'house')+(G.worldId==='main'?'@m':''));
+  else if(f.type==='books') readLore(I.loreKey || ((I.kind==='tower'?'tower': I.kind==='castle'?'castle':'barn')+(G.worldId==='main'?'@m':'')));
+  else if(f.type==='shelf') readLore(I.loreKey || ((I.kind==='house2'?'house2':'house')+(G.worldId==='main'?'@m':'')));
   else if(f.type==='cavechest'){
     if(P.prog.caveChest){ toast('The great chest sits empty. The dark remembers you took its heart.',3200); }
     else { P.prog.caveChest=1; giveGold(220); give('potion',3); gainLXP(180);
