@@ -113,7 +113,7 @@ const Amb={
     }
     this.cawT=(this.cawT||rnd(4,10))-dt;
     if(this.cawT<=0){ this.cawT=rnd(5,14);
-      if(dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<14 || dist(P.x,P.y,ZONES.tower.x,ZONES.tower.y)<10) Snd.caw(); }
+      if((ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<14) || (ZONES.tower && dist(P.x,P.y,ZONES.tower.x,ZONES.tower.y)<10)) Snd.caw(); }
   }
 };
 
@@ -264,15 +264,15 @@ function ambientFX(dt){
   ambT-=dt; if(ambT>0) return; ambT=0.28;
   const t=tileAt(Math.floor(P.x),Math.floor(P.y));
   const night=nightAmount();
-  if((t===T.FOREST||dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<9) && Math.random()<0.7){
+  if((t===T.FOREST||(ZONES.forest&&dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<9)) && Math.random()<0.7){
     G.parts.push({x:P.x+rnd(-8,8), y:P.y+rnd(-8,8), vx:rnd(0.2,0.6), vy:rnd(0.1,0.4),
       life:rnd(2.5,4.5), color:Math.random()<0.5?'#a8bf62':'#7fa050', size:3, leaf:true, ph:Math.random()*TAU});
   }
-  if(night<0.3 && dist(P.x,P.y,ZONES.meadow.x,ZONES.meadow.y)<8 && Math.random()<0.8){
+  if(night<0.3 && ZONES.meadow && dist(P.x,P.y,ZONES.meadow.x,ZONES.meadow.y)<8 && Math.random()<0.8){
     G.parts.push({x:P.x+rnd(-7,7), y:P.y+rnd(-7,7), vx:rnd(-0.15,0.15), vy:rnd(-0.15,0.15),
       life:rnd(2,4), color:'rgba(255,240,180,0.8)', size:2, glow:true});
   }
-  if(night<0.35 && dist(P.x,P.y,ZONES.meadow.x,ZONES.meadow.y)<9 && Math.random()<0.35){
+  if(night<0.35 && ZONES.meadow && dist(P.x,P.y,ZONES.meadow.x,ZONES.meadow.y)<9 && Math.random()<0.35){
     G.parts.push({x:P.x+rnd(-8,8), y:P.y+rnd(-8,8), vx:rnd(-0.4,0.4), vy:rnd(-0.4,0.4),
       life:rnd(4,7), bfly:true, ph:Math.random()*TAU,
       color: Math.random()<0.5? '#e8c14d' : '#c9d6ff', size:3});

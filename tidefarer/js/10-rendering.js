@@ -565,6 +565,42 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='windmill'){
+    const g=cx; drawShadowAt(g,s.x,s.y,26);
+    g.save(); g.translate(s.x,s.y);
+    const th=90;
+    g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(13,-th); g.lineTo(21,0); g.closePath();
+    g.fillStyle='#dccdb0'; g.fill();
+    g.fillStyle='rgba(0,0,0,0.13)'; g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(-5,-th); g.lineTo(-10,0); g.closePath(); g.fill();
+    g.strokeStyle='rgba(120,105,78,0.5)'; g.lineWidth=1; for(let yy=-th+12; yy<-6; yy+=15){ const wd=13+(21-13)*(-yy/th); g.beginPath(); g.moveTo(-wd,yy); g.lineTo(wd,yy); g.stroke(); }
+    g.fillStyle='#5c3d22'; g.fillRect(-6,-20,12,20);
+    g.fillStyle='#8fc0dd'; g.fillRect(-5,-54,10,10); g.strokeStyle='#5c3d22'; g.lineWidth=1.4; g.strokeRect(-5,-54,10,10);
+    g.fillStyle='#7a4a3a'; g.beginPath(); g.moveTo(-16,-th); g.lineTo(0,-th-22); g.lineTo(16,-th); g.closePath(); g.fill();
+    const rot=G.time*0.8 + b.x*0.7; g.translate(0,-th-3);
+    for(let i=0;i<4;i++){ const a=rot+i*Math.PI/2, ex=Math.cos(a)*36, ey=Math.sin(a)*36;
+      g.strokeStyle='#5c3d22'; g.lineWidth=3.2; g.beginPath(); g.moveTo(0,0); g.lineTo(ex,ey); g.stroke();
+      g.fillStyle='rgba(238,232,216,0.94)'; const px=Math.cos(a+0.32)*31, py=Math.sin(a+0.32)*31;
+      g.beginPath(); g.moveTo(ex*0.18,ey*0.18); g.lineTo(ex,ey); g.lineTo(px,py); g.closePath(); g.fill(); }
+    g.fillStyle='#3a2c1c'; g.beginPath(); g.arc(0,0,4,0,TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='waterwheel'){
+    const g=cx; drawShadowAt(g,s.x,s.y,24);
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#c9b48a'; g.fillRect(-24,-48,42,48);
+    g.fillStyle='#8f5a44'; g.beginPath(); g.moveTo(-28,-48); g.lineTo(-3,-66); g.lineTo(22,-48); g.closePath(); g.fill();
+    g.fillStyle='#5c3d22'; g.fillRect(-16,-20,12,20);
+    g.fillStyle='#8fc0dd'; g.fillRect(0,-40,10,10); g.strokeStyle='#5c3d22'; g.lineWidth=1.4; g.strokeRect(0,-40,10,10);
+    const rot=G.time*1.0, wcx=26, wcy=-14, rr=21;
+    g.save(); g.translate(wcx,wcy);
+    g.fillStyle='rgba(140,205,225,0.45)'; g.beginPath(); g.ellipse(0,rr-2,18,5,0,0,TAU); g.fill();
+    g.strokeStyle='#6a4a2c'; g.lineWidth=3; g.beginPath(); g.arc(0,0,rr,0,TAU); g.stroke(); g.beginPath(); g.arc(0,0,rr*0.5,0,TAU); g.stroke();
+    for(let i=0;i<8;i++){ const a=rot+i*Math.PI/4;
+      g.strokeStyle='#6a4a2c'; g.lineWidth=2.4; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); g.stroke();
+      g.save(); g.translate(Math.cos(a)*rr,Math.sin(a)*rr); g.rotate(a); g.fillStyle='#7a5432'; g.fillRect(-5,-2.5,10,5); g.restore(); }
+    g.fillStyle='#3a2c1c'; g.beginPath(); g.arc(0,0,3,0,TAU); g.fill();
+    g.restore(); g.restore(); return;
+  }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?58 : b.kind==='volcano'?66 : 30);

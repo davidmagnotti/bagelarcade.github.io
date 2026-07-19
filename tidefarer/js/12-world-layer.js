@@ -27,6 +27,15 @@ const EAST_ZONES = {
   caldera: {x:88, y:50,  r:5,  name:'The Caldera', lv:[7,9]},
   reef:    {x:150,y:84,  r:8,  name:'Windward Reef', lv:[0,0]}
 };
+const WIND_ZONES = {
+  dock:   {x:42, y:122, r:6,  name:'Windsurf Harbor', lv:[0,0]},
+  town:   {x:66, y:100, r:12, name:'Windsurf City', lv:[0,0]},
+  market: {x:82, y:94,  r:6,  name:'Trade Row', lv:[0,0]},
+  resort: {x:44, y:82,  r:8,  name:'The Breakers Resort', lv:[0,0]},
+  mill:   {x:100,y:72,  r:6,  name:'Millward Rise', lv:[0,0]},
+  wheel:  {x:58, y:68,  r:5,  name:'Waterwheel Row', lv:[0,0]},
+  bluffs: {x:114,y:112, r:12, name:'Windward Bluffs', lv:[0,0]}
+};
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES - CHAPTER I',
@@ -36,7 +45,10 @@ const WORLD_DEFS = {
     gen:()=>genMainAll() },
   east:{ W:176, H:176, seed:44721, zones:EAST_ZONES,
     spawn:{x:44.5,y:120.5}, title:'THE SUNWARD ISLE', sub:'CHAPTER III - PALMS, ASH, AND OPEN WATER',
-    gen:()=>genEastAll() }
+    gen:()=>genEastAll() },
+  wind:{ W:150, H:150, seed:73310, zones:WIND_ZONES,
+    spawn:{x:42.5,y:122.5}, title:'WINDSURF ISLE', sub:'AN INDUSTRIOUS CITY BEYOND TREACHEROUS WATER',
+    gen:()=>genWindAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -614,8 +626,9 @@ function dragonLairSpeak(){
     return;
   }
   if(qs('wyrm')==='done'){
-    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.”',
-      [{label:'Farewell', fn:closeDialog}]);
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns to the smoke-hole above.</i> “And when horizons itch at you - there is a city out past the wild water. <b>Windsurf</b>. No keel can cross to it now; the straits have turned cruel. My wings do not care what the sea thinks. Say the word and I will carry you.”',
+      [{label:'Fly me to Windsurf Isle', cls:'gold', fn:()=>{ askDragonFlight(); }},
+       {label:'Rest a while', ghost:true, fn:closeDialog}]);
     return;
   }
   if(qs('wyrm')!=='active'){
@@ -700,6 +713,152 @@ function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
   spawnEastFolk(); spawnMobsEast();
   buildMapBase(); // without this the map keeps the previous world's base image
+}
+/* =====================================================================
+   WINDSURF ISLE - an industrious city reachable only by Ashwing's wing
+   (the straits are too treacherous for boats until the sea-beast falls)
+   ===================================================================== */
+function genWind(){
+  const rng=mulberry32(SEED);
+  const CX2=74, CY2=90, R0=54;
+  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*9-4);
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const dx=x-CX2, dy=y-CY2, d=Math.hypot(dx,dy), a=Math.atan2(dy,dx);
+    const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
+    const rad=R0+wob[wi]+5*Math.sin(a*5+0.7);
+    let t=T.DEEP;
+    if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+2) t=T.SHALLOW;
+    G.map[y*MAPW+x]=t;
+  }
+  const Z=WIND_ZONES;
+  carveDisc(Z.town.x,Z.town.y,Z.town.r,T.GRASS,false);
+  carveDisc(Z.market.x,Z.market.y,Z.market.r,T.GRASS,false);
+  carveDisc(Z.resort.x,Z.resort.y,Z.resort.r,T.GRASS,false);
+  carveDisc(Z.mill.x,Z.mill.y,Z.mill.r,T.GRASS,false);
+  carveDisc(Z.bluffs.x,Z.bluffs.y,Z.bluffs.r,T.GRASS,false);
+  carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
+  // the millstream: a thin freshwater channel the waterwheel turns on, running to the sea
+  for(let i=0;i<=26;i++){ const f=i/26;
+    const x=Math.round(Z.wheel.x + (Z.dock.x-Z.wheel.x)*f), y=Math.round(Z.wheel.y + (Z.dock.y-Z.wheel.y)*f);
+    for(let o=-1;o<=1;o++) if(inb(x+o,y)) setTile(x+o,y, o===0?T.SHALLOW:T.SAND);
+  }
+  // a cobbled plaza in the market and resort forecourt
+  carveDisc(Z.market.x,Z.market.y,3,T.PATH,false);
+  carveDisc(Z.resort.x,Z.resort.y+3,2,T.PATH,false);
+  // roads knitting the city together
+  carveLine(Z.dock.x,Z.dock.y, Z.town.x,Z.town.y, T.PATH,0);
+  carveLine(Z.town.x,Z.town.y, Z.market.x,Z.market.y, T.PATH,0);
+  carveLine(Z.market.x,Z.market.y, Z.mill.x,Z.mill.y, T.PATH,0);
+  carveLine(Z.town.x,Z.town.y, Z.resort.x,Z.resort.y, T.PATH,0);
+  carveLine(Z.town.x,Z.town.y, Z.wheel.x,Z.wheel.y, T.PATH,0);
+  carveLine(Z.market.x,Z.market.y, Z.bluffs.x,Z.bluffs.y, T.PATH,0);
+}
+function placeObjectsWind(){
+  const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, MI=Z.mill, WH=Z.wheel, D=Z.dock, B=Z.bluffs;
+  // landmarks
+  addBuilding('resort', R.x, R.y, 'The Breakers Resort');
+  addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
+  addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
+  // the working town
+  addBuilding('house', T2.x+4, T2.y-3, 'The Trade Winds Inn');   // "(Inn)"? no - keep a real inn below
+  addBuilding('house2',T2.x-4, T2.y-2, 'Harbor Guildhall');
+  addBuilding('house', T2.x-1, T2.y+4, 'Windsurf Inn (Inn)');
+  addBuilding('house2',T2.x+6, T2.y+3, 'Sailmaker\'s loft');
+  addBuilding('well',  T2.x, T2.y, 'Town well');
+  // Trade Row: fruit stands + knick-knack stalls around the plaza
+  addBuilding('fruitstand', M.x-3, M.y-1, 'Fruit stand');
+  addBuilding('fruitstand', M.x+3, M.y-2, 'Grocer\'s cart');
+  addBuilding('stall', M.x-2, M.y+3, 'Curios & knick-knacks');
+  addBuilding('stall', M.x+3, M.y+2, 'Shell trinkets');
+  addBuilding('stall', M.x, M.y+4,  'Windvane whittler');
+  // harbor
+  addBuilding('boat', D.x-4, D.y+2, '');
+  addBuilding('lamp', D.x, D.y-1, '');
+  addBuilding('lamp', D.x+3, D.y+1, '');
+  addBuilding('lamp', M.x-4, M.y+1, ''); addBuilding('lamp', M.x+4, M.y-1, '');
+  addBuilding('lamp', R.x-4, R.y+3, ''); addBuilding('lamp', R.x+4, R.y+3, '');
+  // greenery - leafy town trees & bluff palms so the city feels lived-in
+  const pr=mulberry32(SEED+11);
+  for(let i=0;i<200;i++){
+    const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
+    if((t===T.GRASS&&pr()<0.24)||(t===T.SAND&&pr()<0.16)){
+      if(solidAt(ax,ay)) continue;
+      if(dist(ax,ay,T2.x,T2.y)<4||dist(ax,ay,M.x,M.y)<4||dist(ax,ay,D.x,D.y)<4) continue;
+      const n=addNode('tree',ax,ay); if(t===T.SAND||dist(ax,ay,B.x,B.y)<B.r) n.palm=1;
+    }
+  }
+  // shells & a few beach flowers
+  for(let i=0;i<22;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
+    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay); }
+  // friendly town critters: hens & cats about the plaza, crabs on the sand, gulls handled globally
+  G.critters=[];
+  const critter=(kind,x,y,range,col)=>{ if(!inb(x,y)||solidAt(x,y)) return;
+    G.critters.push({kind,x:x+0.5,y:y+0.5,home:{x:x+0.5,y:y+0.5},tx:null,ty:null,
+      wt:rnd(0.5,4),face:pr()<0.5?-1:1,anim:pr()*6,range:range||2.5,col,moving:false}); };
+  const FOWL=['#efe7d6','#b07a44','#8a7a5e'], CRAB=['#d8492e','#e0803a'];
+  for(let i=0;i<7;i++){ const a=pr()*TAU, rr=3+pr()*6;
+    critter('fowl', Math.round(T2.x+Math.cos(a)*rr), Math.round(T2.y+Math.sin(a)*rr), 3, FOWL[i%FOWL.length]); }
+  for(let i=0;i<2;i++){ critter('cat', Math.round(M.x+pr()*3-1), Math.round(M.y+pr()*3-1), 3.5, '#c9c2b6'); }
+  for(let i=0;i<7;i++){ const a=pr()*TAU, rr=2+pr()*5;
+    const cx2=Math.round(D.x+Math.cos(a)*rr), cy2=Math.round(D.y+Math.sin(a)*rr);
+    if(inb(cx2,cy2)&&tileAt(cx2,cy2)===T.SAND) critter('crab', cx2, cy2, 3, CRAB[i%CRAB.length]); }
+}
+function spawnWindFolk(){
+  const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, D=Z.dock, MI=Z.mill, WH=Z.wheel;
+  // Rell - harbormaster at the docks: explains the treacherous waters (the PR-B hook)
+  G.npcs.push(makeNPC('rell','Rell the Harbormaster', D.x+1.5, D.y+0.5,
+    {skin:'#a9784e',hair:'#2a2622',shirt:'#33566e',pants:'#2c3540',beard:'#2a2622'},
+    ['Off Ashwing\'s back? Then you\'re one of a lucky few - no hull\'s crossed our straits in a season.',
+     'Something churns the deep water out past the reef. It eats boats, and it\'s eating this town.'],0.4));
+  // Mayor / concierge of the resort
+  G.npcs.push(makeNPC('coralie','Coralie of the Breakers', R.x+1.5, R.y+2.5,
+    {skin:'#caa27b',hair:'#3a2e26',shirt:'#5a7a6a',pants:'#3a3a44',apron:'#e0d4bc',hairstyle:'bun'},
+    ['Welcome to the Breakers! Sea view, salt baths, and not a single guest all month, alas.',
+     'Windsurf lives on visitors. No boats, no visitors - and the awnings gather dust.'],0.5));
+  // Millwright at the windmill
+  G.npcs.push(makeNPC('burl','Burl the Millwright', MI.x-1.5, MI.y+2.2,
+    {skin:'#b0855f',hair:'#6a5a44',shirt:'#7a6a4a',pants:'#4a3f30'},
+    ['Grain still grinds and the wind still blows - that much the sea can\'t spoil.',
+     'The wheel and the mill kept this city fed for a hundred years. We\'ll not stop now.'],0.5));
+  // Market vendors
+  G.npcs.push(makeNPC('pia','Pia of Trade Row', M.x-3, M.y-2.2,
+    {skin:'#c99a6e',hair:'#241c16',shirt:'#c85a3a',pants:'#3a2c26',hairstyle:'long'},
+    ['Mangoes, sugar-melon, spice-plums - all island-grown, none of it shipped, so it\'s cheap and it\'s fresh.',
+     'Buy something, friend? A stall with no customers is just a sad little roof.'],0.4));
+  G.npcs.push(makeNPC('tolen','Tolen the Whittler', M.x+3, M.y+2.2,
+    {skin:'#a9784e',hair:'#3a352c',shirt:'#4a6a8a',pants:'#33302a'},
+    ['Windvanes, whistles, little carved gulls - knick-knacks to remember Windsurf by.',
+     'Made all these by hand. Wind gives me the wood off the bluffs, I give it back a shape.'],0.5));
+  // a townsperson on the green
+  G.npcs.push(makeNPC('nessa','Nessa the Sailmaker', T2.x+5.5, T2.y+3.5,
+    {skin:'#8f6a48',hair:'#2a241e',shirt:'#5a4472',pants:'#332c3c',hairstyle:'bun'},
+    ['I stitch the finest sails on any shore - and every one of them hangs idle in my loft.',
+     'The day a boat can cross again, I\'ll have this town in canvas by nightfall.'],0.5));
+}
+function spawnMobsWind(){
+  // a peaceful city - only harmless yard critters and practice targets for now.
+  // (The sea-beast that haunts the straits arrives with the next chapter.)
+  const D=WIND_ZONES.dock;
+  const yd=findOpenNear(Math.round(D.x+4),Math.round(D.y-3),5);
+  if(yd) spawnMob('dummy',yd[0],yd[1]);
+}
+function genWindAll(){
+  genWind(); bakeSolids(); placeObjectsWind(); buildFoam();
+  spawnWindFolk(); spawnMobsWind();
+  buildMapBase();
+}
+/* Ashwing's wing is the only road to Windsurf until the straits are cleared. */
+function flyToWorld(id, msg){
+  if(G._flying) return; G._flying=1;
+  closeDialog(); if(G.interior) exitHouse();
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
+  if(msg) toast(msg,4200);
+  if(Snd.boss) Snd.boss();
+  setTimeout(()=>{ switchWorld(id); autoSave(); setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },220); },900);
+}
+function askDragonFlight(){
+  P.prog.windKnown=1;
+  flyToWorld('wind','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke, out over water too wild for any keel.');
 }
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
@@ -1197,6 +1356,8 @@ function switchWorld(id){
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  if(id==='wind' && !P.prog.windSeen){ P.prog.windSeen=1;
+    setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something has scared every boat from the water. <b>Rell the Harbormaster</b> waits at the docks.',7000),1400); }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
