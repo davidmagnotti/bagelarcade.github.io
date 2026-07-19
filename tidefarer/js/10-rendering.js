@@ -820,6 +820,37 @@ function drawMob(m,s){
     if(Math.random()<0.25) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.2,0.8), 'rgba(140,170,220,0.5)', 1, 1.0);
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='leviathan'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, freed=m.freed;
+    const bodyC = freed? '#3a7a8a' : '#274d5a';
+    g.save(); g.translate(s.x,s.y); g.scale(1.7,1.7); // a leviathan, not a garden snake
+    g.fillStyle='rgba(180,225,245,0.20)'; g.beginPath(); g.ellipse(0,5,48,15,0,0,TAU); g.fill(); // disturbed water
+    for(let i=2;i>=0;i--){ const bx=fl*(-15 - i*17), by=3 - Math.sin(t*2+i)*3 - i*1.5; // breaching coils
+      g.fillStyle= i%2? bodyC : shade(bodyC,10);
+      g.beginPath(); g.ellipse(bx,by,14-i*1.5,8-i,0,Math.PI,TAU); g.fill();
+      g.strokeStyle='rgba(8,26,32,0.6)'; g.lineWidth=2; g.stroke();
+      g.fillStyle= freed? '#7fd0e0':'#3f7d8d'; g.beginPath(); g.moveTo(bx-6,by-5); g.lineTo(bx,by-14); g.lineTo(bx+6,by-5); g.closePath(); g.fill();
+    }
+    const hy=-46 - Math.sin(t*1.6)*4; // rearing neck
+    g.strokeStyle=bodyC; g.lineWidth=15; g.lineCap='round';
+    g.beginPath(); g.moveTo(fl*2,2); g.quadraticCurveTo(fl*11,-26, fl*6,hy+12); g.stroke();
+    g.save(); g.translate(fl*6, hy);
+    g.fillStyle=shade(bodyC,8); g.beginPath(); g.ellipse(fl*3,0,16,11,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(8,26,32,0.7)'; g.lineWidth=2.4; g.stroke();
+    g.fillStyle=shade(bodyC,-16); g.beginPath(); g.moveTo(fl*15,2); g.quadraticCurveTo(fl*27,4,fl*25,11); g.quadraticCurveTo(fl*13,11,fl*11,4); g.closePath(); g.fill(); // jaw
+    g.fillStyle= freed? '#7fd0e0':'#3f7d8d';
+    g.beginPath(); g.moveTo(-fl*2,-8); g.lineTo(-fl*9,-21); g.lineTo(fl*2,-10); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(fl*6,-9); g.lineTo(fl*4,-23); g.lineTo(fl*13,-9); g.closePath(); g.fill();
+    g.fillStyle= freed? '#bfe8ff' : (hurt?'#ffd0d0':'#c77bff');
+    g.beginPath(); g.arc(fl*8,-2,3.6,0,TAU); g.fill();
+    g.fillStyle='#0a1418'; g.beginPath(); g.arc(fl*9,-2,1.7,0,TAU); g.fill();
+    g.restore();
+    if(!freed){ const gl=0.35+0.3*Math.sin(t*3); // Vath's violet binding
+      g.strokeStyle='rgba(199,123,255,'+gl.toFixed(2)+')'; g.lineWidth=2.2;
+      g.beginPath(); g.arc(fl*6,hy,24,0,TAU); g.stroke(); }
+    g.restore(); g.lineCap='butt';
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;
@@ -1113,6 +1144,13 @@ function drawProj(p,s){
     cx.fillStyle='rgba(150,60,210,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#c77bff'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
     cx.fillStyle='#f0e0ff'; cx.beginPath(); cx.arc(s.x,s.y-12,2.3,0,TAU); cx.fill();
+  } else if(p.kind==='spout'){
+    // a hurled gout of seawater, trailing droplets
+    cx.fillStyle='rgba(120,190,220,0.32)'; cx.beginPath(); cx.arc(s.x,s.y-12,11,0,TAU); cx.fill();
+    cx.fillStyle='#6fb6d8'; cx.beginPath(); cx.ellipse(s.x,s.y-12,6,4.4,Math.atan2(p.vy,p.vx),0,TAU); cx.fill();
+    cx.fillStyle='#e6f6ff'; cx.beginPath(); cx.arc(s.x-1.5,s.y-13.5,2.2,0,TAU); cx.fill();
+    for(let i=0;i<3;i++){ cx.fillStyle='rgba(190,232,255,0.7)';
+      cx.beginPath(); cx.arc(s.x-p.vx*i*0.7, s.y-12-p.vy*i*0.7, 1.5,0,TAU); cx.fill(); }
   } else { // bone
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(G.time*10);
     cx.fillStyle='#eceee6'; cx.fillRect(-6,-1.6,12,3.2);
