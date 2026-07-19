@@ -320,25 +320,18 @@ function render(){
 function drawNode(n,s){
   if(n.kind==='tree' && n.palm){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
-    drawShadowAt(cx,s.x,s.y,13);
-    const sway2=Math.sin(G.time*1.1+n.x*0.7)*0.05;
-    cx.save(); cx.translate(s.x,s.y); cx.rotate(sway2);
-    cx.strokeStyle='#8a6a42'; cx.lineWidth=5; cx.lineCap='round';
-    cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(6,-22,12,-40); cx.stroke();
-    cx.strokeStyle='rgba(20,14,8,0.55)'; cx.lineWidth=1.2;
-    for(let yy=-6;yy>-36;yy-=6){ cx.beginPath(); cx.moveTo(yy*-0.3+2,yy); cx.lineTo(yy*-0.3+7,yy-1); cx.stroke(); }
-    cx.translate(12,-40);
-    for(let f=0;f<6;f++){
-      const fa=f/6*TAU+0.3;
-      cx.strokeStyle='#4e8a4a'; cx.lineWidth=3.5; cx.lineCap='round';
-      cx.beginPath(); cx.moveTo(0,0);
-      cx.quadraticCurveTo(Math.cos(fa)*12,Math.sin(fa)*7-6, Math.cos(fa)*20,Math.sin(fa)*11-1);
-      cx.stroke();
+    drawShadowAt(cx,s.x,s.y,15);
+    const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.7+n.sway)*1.1;
+    const dmg = n.maxhp? 1-n.hp/n.maxhp : 0;
+    cx.save(); cx.translate(s.x+sh*0.3, s.y);
+    cx.rotate(sh*0.004 + dmg*0.06*(n.sway>Math.PI?-1:1));
+    cx.drawImage(SPR.palm[n.variant%3], -52, -104);
+    if(dmg>0){ // axe notch in the trunk
+      cx.fillStyle='#e8dcbd';
+      cx.beginPath(); cx.moveTo(-5,-16); cx.lineTo(-5+8*dmg,-13); cx.lineTo(-5,-10); cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(40,25,12,0.7)'; cx.lineWidth=1; cx.stroke();
     }
-    cx.fillStyle='#8a6a3a';
-    cx.beginPath(); cx.arc(-3,1,2.4,0,TAU); cx.arc(2,2.5,2.4,0,TAU); cx.fill();
-    cx.strokeStyle='rgba(20,14,8,0.8)'; cx.lineWidth=1; cx.stroke();
-    cx.restore(); cx.lineCap='butt';
+    cx.restore();
     if(n.hp<n.maxhp){ drawNodeHp&&drawNodeHp(n,s); }
     return;
   }
