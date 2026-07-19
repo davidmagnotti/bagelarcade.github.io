@@ -144,6 +144,8 @@ function questTargetPos(id){
     if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};
     if(id==='sting1') return {x:ZONES.desert.x,y:ZONES.desert.y};
     if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
+    if(id==='wyrm') return ZONES.caldera? {x:ZONES.caldera.x,y:ZONES.caldera.y} : null; // guide up Mount Kea to the caldera
+    if(id==='hunt1') return ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null;
     if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
