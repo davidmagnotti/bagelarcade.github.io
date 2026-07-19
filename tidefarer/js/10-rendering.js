@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -503,6 +503,33 @@ function drawDecor(b,s){
     g.beginPath(); g.ellipse(0,-26,10,11.5,0,0,TAU); g.stroke();
     g.restore(); return;
   }
+  if(b.kind==='lava'){
+    const g=cx, r=b.r||3, rx=r*TW/2, ry=r*TH/2, gl=0.6+0.4*Math.sin(G.time*2.1+b.x);
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(255,120,40,'+(0.16*gl).toFixed(3)+')';     // heat glow
+    g.beginPath(); g.ellipse(0,0,rx*1.3,ry*1.3,0,0,TAU); g.fill();
+    g.fillStyle='#241610';                                        // charred rock rim
+    g.beginPath(); g.ellipse(0,0,rx,ry,0,0,TAU); g.fill();
+    const grd=g.createRadialGradient(0,-ry*0.15,rx*0.12,0,0,rx);  // molten body
+    grd.addColorStop(0,'#ffe07a'); grd.addColorStop(0.35,'#ff8a1e');
+    grd.addColorStop(0.75,'#c62a10'); grd.addColorStop(1,'#5a1606');
+    g.fillStyle=grd;
+    g.beginPath(); g.ellipse(0,0,rx*0.86,ry*0.86,0,0,TAU); g.fill();
+    // drifting crust islands
+    const cr=mulberry32((b.x*53+b.y*29)>>>0);
+    for(let i=0;i<5;i++){
+      const a=cr()*TAU+G.time*0.25*(cr()<0.5?1:-1), rr=cr()*rx*0.5;
+      const px=Math.cos(a)*rr, py=Math.sin(a)*rr*0.55;
+      g.fillStyle='rgba(30,18,12,0.9)';
+      g.beginPath(); g.ellipse(px,py,2.6+cr()*3,1.6+cr()*1.6,a,0,TAU); g.fill();
+      g.strokeStyle='rgba(255,150,60,'+(0.5*gl).toFixed(2)+')'; g.lineWidth=1;
+      g.beginPath(); g.ellipse(px,py,2.6+cr()*3,1.6+cr()*1.6,a,0,TAU); g.stroke();
+    }
+    // bright bloom at the center
+    g.fillStyle='rgba(255,230,150,'+(0.35*gl).toFixed(2)+')';
+    g.beginPath(); g.ellipse(0,-ry*0.1,rx*0.3,ry*0.3,0,0,TAU); g.fill();
+    g.restore(); return;
+  }
   if(b.kind==='cavemouth'){
     const g=cx; g.save(); g.translate(s.x,s.y);
     g.fillStyle='#3a3f47'; // rock brow
@@ -647,6 +674,14 @@ function drawMob(m,s){
       cx.stroke(); }
   }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
+  if(m.kind==='dragon'){
+    cx.save(); cx.translate(s.x,s.y); cx.scale(1.5,1.5); drawDragon(cx,0,0,m); cx.restore();
+    const nm=m.name||MOBDEF[m.kind].name;
+    cx.font='bold 12px Georgia'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(nm,s.x+1,s.y-114);
+    cx.fillStyle= m.enspelled? '#ff9a7a' : '#9fe8c0'; cx.fillText(nm,s.x,s.y-115);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='wraith'){
     const bobW=Math.sin(m.anim*3.2)*2.5;
     drawShadowAt(cx,s.x,s.y,9);

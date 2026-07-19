@@ -1294,6 +1294,89 @@ function drawSkeleton(g,sx,sy,m){
   g.restore();
   g.restore();
 }
+function drawDragon(cx,sx,sy,m){
+  const fl=m.face||1, ens=!!m.enspelled, OUTL='rgba(20,12,8,0.9)';
+  const t=G.time, breathe=Math.sin(t*1.6)*1.2, wing=Math.sin(t*2.2)*0.18;
+  drawShadowAt(cx,sx,sy,26);
+  cx.save(); cx.translate(sx,sy); cx.scale(fl,1);
+  if(m.hurtT>0) cx.translate(rnd(-1.5,1.5),0);
+  const scaleC = ens? '#3a2740' : '#3f8f6a';
+  const scaleHi= ens? '#5a3a66' : '#5cb488';
+  const belly  = ens? '#6a4a2e' : '#e6cf87';
+  const wingMem= ens? '#2a1836' : '#2f6b52';
+  const horn   = ens? '#d8c8b0' : '#efe3c4';
+  const eyeCol = ens? '#ff4530' : '#ffd25a';
+  // tail
+  cx.strokeStyle=scaleC; cx.lineWidth=13; cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(-4,-8); cx.quadraticCurveTo(-30,2,-20,-24); cx.stroke();
+  cx.lineWidth=6; cx.beginPath(); cx.moveTo(-20,-24); cx.quadraticCurveTo(-16,-34,-24,-38); cx.stroke();
+  cx.fillStyle=eyeCol;
+  cx.beginPath(); cx.moveTo(-24,-38); cx.lineTo(-30,-46); cx.lineTo(-19,-44); cx.closePath(); cx.fill();
+  // near wing
+  cx.save(); cx.translate(6,-40); cx.rotate(-0.5+wing);
+  cx.fillStyle=wingMem;
+  cx.beginPath(); cx.moveTo(0,0);
+  cx.quadraticCurveTo(34,-30, 52,-14); cx.lineTo(44,-2); cx.quadraticCurveTo(40,-12,30,-6);
+  cx.lineTo(30,4); cx.quadraticCurveTo(26,-6,16,0); cx.lineTo(14,10); cx.quadraticCurveTo(8,2,0,8);
+  cx.closePath(); cx.fill(); cx.strokeStyle=OUTL; cx.lineWidth=2; cx.stroke();
+  cx.strokeStyle=shade(wingMem,26); cx.lineWidth=2.2;
+  cx.beginPath(); cx.moveTo(2,2); cx.lineTo(46,-10); cx.moveTo(4,4); cx.lineTo(30,0); cx.moveTo(4,6); cx.lineTo(16,6); cx.stroke();
+  cx.restore();
+  // far wing hint
+  cx.save(); cx.translate(-2,-42); cx.rotate(0.4-wing); cx.scale(-0.7,0.8);
+  cx.fillStyle=shade(wingMem,-14);
+  cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(30,-26,46,-12); cx.lineTo(38,2); cx.quadraticCurveTo(20,-4,0,8); cx.closePath(); cx.fill();
+  cx.restore();
+  // body
+  const bg=cx.createLinearGradient(-18,-60,18,-6);
+  bg.addColorStop(0,scaleHi); bg.addColorStop(0.6,scaleC); bg.addColorStop(1,shade(scaleC,-16));
+  cx.fillStyle=bg;
+  cx.beginPath(); cx.moveTo(-16,-8+breathe*0.2);
+  cx.quadraticCurveTo(-22,-42, -6,-58); cx.quadraticCurveTo(10,-70, 20,-52);
+  cx.quadraticCurveTo(26,-30, 18,-8); cx.quadraticCurveTo(2,2, -16,-8);
+  cx.closePath(); cx.fill(); cx.strokeStyle=OUTL; cx.lineWidth=2.4; cx.stroke();
+  // belly
+  cx.fillStyle=belly;
+  cx.beginPath(); cx.moveTo(-9,-10); cx.quadraticCurveTo(-13,-38,-2,-52);
+  cx.quadraticCurveTo(10,-44,12,-24); cx.quadraticCurveTo(12,-10,2,-6);
+  cx.quadraticCurveTo(-4,-6,-9,-10); cx.closePath(); cx.fill();
+  cx.strokeStyle='rgba(120,90,40,0.5)'; cx.lineWidth=1;
+  for(let i=0;i<4;i++){ const yy=-16-i*9; cx.beginPath(); cx.moveTo(-8,yy); cx.quadraticCurveTo(2,yy+3,11,yy-1); cx.stroke(); }
+  if(ens){ cx.strokeStyle='rgba(255,70,40,0.85)'; cx.lineWidth=1.6; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-12,-20); cx.lineTo(-6,-30); cx.lineTo(-9,-40);
+    cx.moveTo(16,-24); cx.lineTo(9,-34); cx.lineTo(13,-46); cx.stroke(); }
+  // legs & claws
+  cx.strokeStyle=OUTL; cx.lineWidth=2;
+  for(const lx of [-12,10]){
+    cx.save(); cx.translate(lx,-6);
+    cx.fillStyle=scaleC; cx.beginPath(); cx.roundRect(-5,-8,10,12,4); cx.fill(); cx.stroke();
+    cx.fillStyle=horn;
+    for(const tx of [-3,0,3]){ cx.beginPath(); cx.moveTo(tx,4); cx.lineTo(tx-1.4,9); cx.lineTo(tx+1.4,9); cx.closePath(); cx.fill(); }
+    cx.restore();
+  }
+  // head
+  cx.save(); cx.translate(8,-54); cx.rotate(-0.15+breathe*0.02);
+  cx.fillStyle=horn; cx.strokeStyle=OUTL; cx.lineWidth=1.6;
+  for(const hx of [-6,4]){ cx.beginPath(); cx.moveTo(hx,-6); cx.quadraticCurveTo(hx-3,-18,hx+2,-22); cx.quadraticCurveTo(hx+4,-14,hx+5,-6); cx.closePath(); cx.fill(); cx.stroke(); }
+  const hg=cx.createLinearGradient(-12,-10,12,8); hg.addColorStop(0,scaleHi); hg.addColorStop(1,scaleC);
+  cx.fillStyle=hg;
+  cx.beginPath(); cx.moveTo(-11,-6); cx.quadraticCurveTo(-12,-14,-2,-15);
+  cx.quadraticCurveTo(12,-15,16,-2); cx.quadraticCurveTo(22,4,15,7);
+  cx.quadraticCurveTo(16,12,9,11); cx.quadraticCurveTo(-2,12,-9,6); cx.quadraticCurveTo(-13,2,-11,-6);
+  cx.closePath(); cx.fill(); cx.strokeStyle=OUTL; cx.lineWidth=2.2; cx.stroke();
+  cx.fillStyle=shade(scaleC,-18); cx.beginPath(); cx.arc(15,4,1.3,0,TAU); cx.fill();
+  if(ens){ cx.save(); cx.translate(2,-4); cx.rotate(0.4);
+    cx.fillStyle='rgba(255,90,40,0.4)'; cx.beginPath(); cx.ellipse(0,0,5,3,0,0,TAU); cx.fill();
+    cx.fillStyle=eyeCol; cx.beginPath(); cx.ellipse(0,0,3.6,1.5,0,0,TAU); cx.fill();
+    cx.fillStyle='#3a0a06'; cx.beginPath(); cx.ellipse(0,0,1.1,1.4,0,0,TAU); cx.fill(); cx.restore();
+  } else { cx.fillStyle=eyeCol; cx.beginPath(); cx.arc(2,-3,3.4,0,TAU); cx.fill();
+    cx.fillStyle='#2a1a06'; cx.beginPath(); cx.arc(2.8,-2.6,1.5,0,TAU); cx.fill();
+    cx.fillStyle='#fff'; cx.beginPath(); cx.arc(1,-4,1,0,TAU); cx.fill(); }
+  cx.strokeStyle=OUTL; cx.lineWidth=1.6;
+  cx.beginPath(); cx.moveTo(-6,-9); cx.quadraticCurveTo(2,-12,9,-8); cx.stroke();
+  cx.restore();
+  cx.restore();
+}
 function drawCat(g,sx,sy,c){
   const flip=c.face<0?-1:1;
   g.save(); g.translate(sx,sy); g.scale(flip,1);

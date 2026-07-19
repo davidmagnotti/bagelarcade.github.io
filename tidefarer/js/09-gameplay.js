@@ -186,8 +186,10 @@ function hitNode(n){
         give('ore',1); addFloat('+1 iron ore',n.x,n.y-2,'#c9ced6',1.1);
         hintOnce('ore','<b>Iron ore!</b> Take it to Bram - two ore and a stick of wood smelt into an iron bar.');
       }
-      const nearVein = dist(n.x,n.y,ZONES.ruins.x,ZONES.ruins.y)<13 ||
-        (ZONES.highlands && dist(n.x,n.y,ZONES.highlands.x,ZONES.highlands.y)<13);
+      const nearVein = (ZONES.ruins && dist(n.x,n.y,ZONES.ruins.x,ZONES.ruins.y)<13) ||
+        (ZONES.highlands && dist(n.x,n.y,ZONES.highlands.x,ZONES.highlands.y)<13) ||
+        (ZONES.volcano && dist(n.x,n.y,ZONES.volcano.x,ZONES.volcano.y)<ZONES.volcano.r) ||
+        tileAt(Math.floor(n.x),Math.floor(n.y))===T.RUIN; // ember crystals vein the volcano rock
       if(nearVein && Math.random()<0.16){
         give('crystal',1); addFloat('+1 ember crystal',n.x,n.y-2.4,'#ff9a3c',1.15);
         burst(n.x,n.y-0.6,'#ff9a3c',10,2);
@@ -316,7 +318,7 @@ function gainLXP(n){
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
-    const w=m.bigBoss?54:26, top= m.kind==='scorpion'? -30 : -52;
+    const w=m.bigBoss?54:26, top= m.kind==='scorpion'? -30 : m.kind==='dragon'? -100 : -52;
     cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(s.x-w/2,s.y+top,w,4);
     cx.fillStyle='#e05648'; cx.fillRect(s.x-w/2,s.y+top,w*clamp(m.hp/m.maxhp,0,1),4);
   }
@@ -324,7 +326,7 @@ function drawMobBars(m,s){
     const dl=(m.lvl||1)-(P.level||1);
     cx.font='bold 9px Georgia'; cx.textAlign='center';
     cx.fillStyle= dl>=3?'#ff6a5a': dl>=1?'#ffd76a': dl<=-3?'#8a94a0':'#e8e0d0';
-    const top2= m.kind==='scorpion'? -36 : m.boss?-102: m.kind==='alpha'?-94: -58;
+    const top2= m.kind==='scorpion'? -36 : m.kind==='dragon'? -128 : m.boss?-102: m.kind==='alpha'?-94: -58;
     cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=2.6;
     cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
     cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
@@ -347,6 +349,14 @@ function damageMob(m,dmg,knock,skill){
   splat(m.x,m.y,GORE[m.kind]||GORE.wolf,false);
   if(skill==='melee') G.hitStop=Math.max(G.hitStop, crit?0.09:0.045);
   burst(m.x,m.y-0.5, m.kind==='slime'?'#7fca6a': m.kind==='wolf'?'#8a8d96':'#eceee6', 6, 2);
+  // ranged hits chain a combo too - melee builds it in the swing code, but bow
+  // and staff never did, so the archery/magic training drills (which ask for a
+  // COMBO x2) were impossible to clear. Consecutive ranged hits now count.
+  if(skill==='archery' || skill==='magic'){
+    P.comboT=1.4;
+    P.combo=(P.combo||0)+1;
+    if(P.combo===2) addFloat('COMBO x2', P.x, P.y-2, '#ffce7a', 1.1);
+  }
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0) killMob(m, skill);
 }
@@ -375,6 +385,16 @@ function killMob(m,skill){
     banner('GREYMAW FALLS','THE HIGHLANDS GO QUIET');
     give('fang',1);
     toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
+  }
+  if(m.kind==='dragon'){
+    // you didn't slay the wyrm - you broke the spell binding him
+    Snd.boss(); G.shake=0.9; G.slowmo=1.15;
+    shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
+    banner('THE SPELL BREAKS','ASHWING IS FREED');
+    P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
+    if(typeof freeDragon==='function') freeDragon(m.x,m.y);
+    toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sinks to the ash, himself again. “...You could have run. You freed me instead. Take my thanks, little flame - and know the mountain is warm for you now.” Of Vashti, only scorched sand remains.',8500);
+    if(qs('wyrm')==='active') completeQuest('wyrm');
   }
   if(m.boss){
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
@@ -744,6 +764,25 @@ function updateMobs(dt){
           if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.3,color:'rgba(190,190,200,0.5)',size:3});
         }
       }
+      if(m.kind==='dragon'){
+        // periodic charging lunge with a roar
+        m.lungeCd=(m.lungeCd||4)-dt;
+        if(m.lungeCd<=0 && l>2.2 && l<9){
+          m.lungeCd=rnd(4,6); m.lunge=0.5;
+          addFloat('ROAR', m.x, m.y-3.4, '#ff9a5a', 1.3);
+          if(Snd.noise) Snd.noise(0.32,0.08,240,0.7);
+          G.shake=Math.max(G.shake,0.25);
+        }
+        if((m.lunge||0)>0){ m.lunge-=dt;
+          moveEntity(m, dx/l*d.speed*2.4*dt, dy/l*d.speed*2.4*dt);
+          for(let k=0;k<2;k++) G.parts.push({x:m.x+rnd(-1,1),y:m.y-0.6,vx:0,vy:-rnd(0.5,1.2),
+            life:0.5,color:Math.random()<0.5?'#ff8a44':'#ffd24a',size:rnd(2,4),grav:-0.1});
+        }
+        // fire-breath flourish as the bite lands
+        if((m.swing||0)>0.15 && Math.random()<0.7){ const ba=Math.atan2(dy,dx)+rnd(-0.35,0.35), rr=rnd(0.6,3.6);
+          G.parts.push({x:m.x+Math.cos(ba)*rr, y:m.y-0.6+Math.sin(ba)*rr*0.7, vx:Math.cos(ba)*1.7, vy:Math.sin(ba)*1.7,
+            life:0.42, color:Math.random()<0.5?'#ff7a1e':'#ffd24a', size:rnd(2.5,5), grav:0}); }
+      }
       if(m.boss){
         // ranged bone bolt + summons
         m.shootCd-=dt;
@@ -837,11 +876,13 @@ function updateWorld(dt){
   for(const f of G.fireflies){ f.ph+=dt*2; f.life-=dt;
     f.x+=Math.cos(f.ph*0.7)*dt*0.5; f.y+=Math.sin(f.ph*0.9)*dt*0.5; }
   G.fireflies=G.fireflies.filter(f=>f.life>0 && dist(f.x,f.y,P.x,P.y)<16);
-  if(G.worldId==='east' && ZONES.volcano && Math.random()<dt*3){
-    G.parts.push({x:ZONES.volcano.x+rnd(-1,1), y:ZONES.volcano.y-rnd(0,0.6),
-      vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.6), life:rnd(1.5,2.6),
-      color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.1});
+  if(G.worldId==='east' && ZONES.caldera && Math.random()<dt*4){
+    const CC=ZONES.caldera;
+    G.parts.push({x:CC.x+rnd(-2,2), y:CC.y-rnd(0,0.6),
+      vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.7), life:rnd(1.6,2.8),
+      color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.12});
   }
+  if(G.worldId==='east') updateDragonEvent(dt);
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist
   if(night>0.55 && !G.interior && !P.dead && !inSafeZone(P.x,P.y)){

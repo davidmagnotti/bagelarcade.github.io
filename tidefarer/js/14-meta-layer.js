@@ -105,6 +105,12 @@ function loadCode(str){
   if(d.world==='main'){
     switchWorld('main');
     applyWorldFlags(d.flags&&d.flags.main);
+  } else if(d.world==='east'){
+    // the Sunward Isle was never restored on load - the loader stayed on the
+    // tutorial isle while applying the saved east coordinates, dropping the
+    // hero into open water. Rebuild the east world so its coords are valid.
+    switchWorld('east');
+    applyWorldFlags(d.flags&&d.flags.east);
   }
   P.x=d.x; P.y=d.y;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
