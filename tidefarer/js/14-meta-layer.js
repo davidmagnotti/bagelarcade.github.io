@@ -90,7 +90,7 @@ function loadCode(str){
   // never saw the inside-the-volcano scene, the faint-not-die twist, or the
   // mage-hunt follow-up. A new-version completion always leaves a `vhunt` quest
   // behind; an old one never does - so wyrm-done-but-no-vhunt uniquely marks an
-  // old save. Roll the whole Ashwing chain back so Vashti returns to Kohana and
+  // old save. Roll the whole Ashwing chain back so Vath returns to Kohana and
   // it can be replayed fresh. Guarded so it only ever fires once.
   if(qs('wyrm')==='done' && !P.quests.vhunt && !P.prog.wyrmReplayed){
     P.prog.wyrmReplayed=1;

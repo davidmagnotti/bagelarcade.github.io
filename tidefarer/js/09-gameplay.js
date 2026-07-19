@@ -371,8 +371,22 @@ function damageMob(m,dmg,knock,skill){
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
+    else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls - he slips away
     else killMob(m, skill);
   }
+}
+function vathEscapes(m){
+  // The enchanter is not surprised, and he does not die. He studies you - the
+  // pendant, most of all - and is simply gone. (He surfaces again, isle by isle.)
+  m.escaped=1; m.dead=true; m.respawnT=-1; m.state='idle';
+  Snd.magic(); G.slowmo=0.85;
+  shockwave(m.x,m.y,'rgba(199,123,255,0.85)',60);
+  for(let i=0;i<28;i++){ const a=Math.random()*TAU, sp=rnd(1,4.2);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.7,1.6),color:'#c77bff',size:rnd(2,4),grav:-0.1}); }
+  P.story.vathMet=1; P.prog.vhunt=Math.max(P.prog.vhunt||0,1);
+  banner('VATH SLIPS AWAY','THE ENCHANTER WAS NOT SURPRISED');
+  toast('<b>Vath does not fall.</b> Beaten to one knee, he only tilts his head and <i>looks</i> at you - at the pendant at your throat - a beat too long. <b style="color:#c9a0ff">“…You shouldn\'t be possible,”</b> he says, almost kindly. Then the violet folds inward and he is <b>gone</b>, the way smoke is gone.',9000);
+  if(typeof killCredit==='function') killCredit('mage'); // "drove him off" - vhunt turns in at Moli
 }
 function dragonFaints(m){
   // beaten down, the binding shatters - Ashwing swoons and comes to himself
@@ -383,7 +397,7 @@ function dragonFaints(m){
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
   P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
   if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
-  toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sways, then sinks to the ash - breathing, himself again. “...You could have run me through. You broke the chain instead. My thanks, little flame.” <br>He lifts his head: “The Emberbinder fled into the palm grove. Do not let her bind another.”',9000);
+  toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sways, then sinks to the ash - breathing, himself again. “...You could have run me through. You broke the chain instead. My thanks, little flame.” <br>His great eye narrows: “...The binder\'s fire reached for you, too, on the climb - I felt it grope for your mind. It found no hold. That is not luck, little flame. But I do not know what it is.” <br>“He fled into the palm grove. Do not let him bind another.”',10000);
   if(qs('wyrm')==='active') completeQuest('wyrm');
   if(typeof startMageHunt==='function') startMageHunt();
   // a breath later he rouses and beats away to rest in his lair
@@ -412,7 +426,7 @@ function killMob(m,skill){
   if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
   if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
     shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46);
-    toast('<b>Vashti’s binding unravels with her.</b> “...the fire was to be mine,” she breathes - and the violet goes out. The grove falls quiet.',6000); }
+    toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
   if(m.kind==='alpha'){
@@ -787,7 +801,7 @@ function updateMobs(dt){
         }
       }
       if(m.kind==='mage'){
-        // Vashti kites and flings hex bolts - sometimes a three-fanned volley
+        // Vath kites and flings hex bolts - sometimes a three-fanned volley
         if(l<3.5 && l>0.01) moveEntity(m, -dx/l*d.speed*1.15*dt, -dy/l*d.speed*1.15*dt);
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>1.6 && l<11){

@@ -890,7 +890,7 @@ function drawMob(m,s){
   }
   if(m.kind==='mage'){
     drawShadowAt(cx,s.x,s.y,13);
-    drawHumanoid(cx,s.x,s.y,{skin:'#c2a892',hair:'#241a2e',hairstyle:'long',robe:'#4a2a5e',rune:true,
+    drawHumanoid(cx,s.x,s.y,{skin:'#c2a892',hair:'#241a2e',beard:'#2a2038',robe:'#4a2a5e',rune:true,
       weapon:'staff', swing:m.swing||0, hurt:m.hurtT>0, size:1.18,
       dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)*0.5});
     if((m.swing||0)>0.05){ const gl=0.6+0.4*Math.sin(G.time*10); // a hex charge in her hand

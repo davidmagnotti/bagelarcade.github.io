@@ -105,7 +105,7 @@ function killCredit(kind){
     if(q.kind==='kill' && q.kill[kind]!=null){
       P.prog[id]=Math.min(q.kill[kind],(P.prog[id]||0)+1);
       const left=q.kill[kind]-P.prog[id];
-      if(kind!=='dragon') // the wyrm fight resolves itself at the caldera - no "return to Vashti"
+      if(kind!=='dragon') // the wyrm fight resolves itself at the caldera - no "return to Vath"
         toast(((MOBDEF[kind]&&MOBDEF[kind].name)||'Elite foe')+' defeated - '+(left>0? left+' to go' : '<b style="color:#9be07f">objective complete! Return to '+npcName(q.giver)+'</b>'));
     }
   }
@@ -147,7 +147,7 @@ function questTargetPos(id){
     if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
     if(id==='wyrm') return ZONES.caldera? {x:ZONES.caldera.x,y:ZONES.caldera.y} : null; // guide up Mount Kea to the caldera
     if(id==='hunt1') return ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null;
-    if(id==='vhunt'){ const mg=G.mobs.find(m=>m.kind==='mage'&&!m.dead); // track Vashti as she flees
+    if(id==='vhunt'){ const mg=G.mobs.find(m=>m.kind==='mage'&&!m.dead); // track Vath as he flees
       return mg? {x:mg.x,y:mg.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null); }
     if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
