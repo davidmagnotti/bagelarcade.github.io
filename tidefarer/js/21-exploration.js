@@ -94,7 +94,7 @@ function frame(ts){
     render();
     return;
   }
-  if(G.paused){ render(); return; }
+  if(G.paused || G.menuPause){ render(); return; }
   G.time+=dt;
   if(CINE){ updateCine(dt); render(); if(CINE) drawCineOverlay(); return; }
   P.stats.time=(P.stats.time||0)+dt;
