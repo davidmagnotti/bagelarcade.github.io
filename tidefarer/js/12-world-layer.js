@@ -1478,6 +1478,11 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
   log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
   doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
   rw:{surf:true, gold:30} };
+QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', need:{wood:6, shell:3}, xpL:240,
+  brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails - I\'ll get the sail off Nessa myself - and the light water out to the breakwater is yours.',
+  log:'Bring Tolen the Whittler 6 wood and 3 spiral shells so he can shape you a windsurf board. (Chop the palms; comb the beach for shells.)',
+  doneText:'There she is - rails inlaid, Nessa\'s sail stepped and true. Set it on the shallows and the board finds your feet. Now you can meet that thing on the water where it lives. Mind the deep, though - the board only rides the LIGHT water near shore. Go see Rell.',
+  rw:{surf:true, gold:40} };
 QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
   brief:'You feel it in the water, past my breakwater - a wrongness, cold and patient. No hull has crossed since it woke, and Windsurf is starving for want of a sail. It is no natural beast; it moves like something bound. Walk the jetty and face it, friend - end this, and you give this whole city back its sea.',
   log:'Confront the Bound Leviathan at the harbor breakwater and end the curse on the strait.',
@@ -1943,10 +1948,14 @@ function switchWorld(id){
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='wind'){
-    if(qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    const hasBoard = !!(P.unlocked && P.unlocked.surf);
+    // you must earn a windsurf before Rell will send you at the Leviathan - the
+    // beast lives on the water, past the reach of any jetty. Tolen shapes boards.
+    if(!hasBoard && qs('board')!=='done' && !P.quests.board) P.quests.board='avail';
+    if(hasBoard && qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
     if(P.story && P.story.tideCalm) updateWindFolkMood();
     if(!P.prog.windSeen){ P.prog.windSeen=1;
-      setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something has scared every boat from the water. <b>Rell the Harbormaster</b> waits at the docks.',7000),1400); }
+      setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something in the strait has scared every boat off the water. <b>Rell the Harbormaster</b> waits at the docks - though you\'ll need a <b>windsurf</b> to reach what he fears.',8000),1400); }
   }
   if(id==='aerie'){
     if(qs('roost')!=='done' && !P.quests.roost) P.quests.roost='avail';
