@@ -720,9 +720,10 @@ function drawMob(m,s){
     cx.quadraticCurveTo(-11,-2,-9,-14);
     cx.closePath(); cx.fill();
     cx.strokeStyle='rgba(140,170,220,0.35)'; cx.lineWidth=1.4; cx.stroke();
-    // deep hood
+    // deep hood - a shallow brow-cap sitting just over the eyes. A taller ellipse
+    // left a dark rounded void below the eyes that read as a gaping mouth.
     cx.fillStyle='#0e1220';
-    cx.beginPath(); cx.ellipse(0,-14,7,6.4,0,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(0,-16.6,7,3.5,0,0,TAU); cx.fill();
     // ember eyes - narrowed and angled inward into a hostile scowl; round dots
     // read as a friendly wide-eyed stare, which a wraith should never have.
     const gl=0.7+0.3*Math.sin(m.anim*7), fl=m.face||1;
