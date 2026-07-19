@@ -1275,10 +1275,10 @@ function placeObjectsCrown(){
   // structure in the game. A colossal keep you can walk the whole way around. ----
   const pal=addBuilding('castle', PA.x, PA.y-3, 'The Tideglass Palace');
   pal.grand=true;
-  // a vast solid footprint - the palace mass itself, set BACK from the anchor
-  // (an iso building rises up-screen, i.e. away from the camera) so the wall you
-  // bump into lines up with the gate you see, not empty forecourt.
-  for(let dy=-10;dy<=1;dy++) for(let dx=-9;dx<=9;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
+  // solid footprint under the keep's visible mass, set BACK from the anchor (an
+  // iso building rises up-screen) so you bump the wall base you see and cannot
+  // walk in under the facade.
+  for(let dy=-7;dy<=1;dy++) for(let dx=-9;dx<=9;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
   // grand forecourt lamps, set well out from the gate so they don't vanish
   // under the towering facade
   addBuilding('lamp', PA.x-7, PA.y+9, ''); addBuilding('lamp', PA.x+7, PA.y+9, '');
@@ -1636,9 +1636,10 @@ function buildExtraSprites(){
   });
   // Barik Keep, drawn as an honest castle: curtain wall, flanking towers,
   // crenellated keep, royal banner, and a portcullis gate
-  // rendered at 2.5x native resolution so it stays crisp when the Aldermere
-  // palace is drawn at landmark scale (all coordinate literals below are 1x)
-  SPR.castle=makeCanvas(750,560,(g)=>{ g.scale(2.5,2.5);
+  // Rendered at 5x native resolution (crisp at landmark scale) and cropped to
+  // the building base (height 200, not 224) so the sprite's bottom edge is the
+  // wall base - it seats on the ground instead of floating. Coords below are 1x.
+  SPR.castle=makeCanvas(1500,1000,(g)=>{ g.scale(5,5);
     const OUT='rgba(20,14,8,0.9)', stone='#8f8b83', stoneD='#6e6a63', stoneL='#a8a49b';
     const cren=(x0,x1,y,wd)=>{ for(let x=x0;x<x1;x+=wd*1.7){ g.fillRect(x,y,wd,wd); g.strokeRect(x,y,wd,wd); } };
     g.lineWidth=2; g.strokeStyle=OUT;

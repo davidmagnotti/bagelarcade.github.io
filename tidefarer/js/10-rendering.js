@@ -655,11 +655,10 @@ function drawDecor(b,s){
   }
   const S=SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?300:58) : b.kind==='volcano'?66 : b.kind==='resort'?130 : 30);
-  // castle & resort sprites are 2.5x native; their small draw factors keep the
-  // final on-screen size right while staying crisp. The Aldermere palace towers
-  // over the whole game at grand scale.
-  const BS=b.kind==='castle'?(b.grand?4.0:0.42) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?130 : 30);
+  // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a
+  // big-but-crisp, well-seated keep. Barik's keep stays its small size at 0.2.
+  const BS=b.kind==='castle'?(b.grand?0.9:0.2) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
