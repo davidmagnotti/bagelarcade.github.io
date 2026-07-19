@@ -32,7 +32,7 @@ function enterHouse(b){
     hut:{line:'Woven mats, hanging nets, and the sweet smell of dried palm.'},
     resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'}
   };
-  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [12,8] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
+  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [16,11] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
@@ -43,7 +43,19 @@ function enterHouse(b){
   if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
   if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
   if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
-  if(b.kind==='resort'){ F('rug',6.0,4.6,0,0,false); F('hearth',2.0,1.35,1.1,0.35); F('table',4.4,3.2,0.9,0.6); F('stool',3.4,4.0,0.35,0.3); F('stool',5.4,4.0,0.35,0.3); F('table',8.6,3.4,0.9,0.6); F('stool',9.6,4.2,0.35,0.3); F('bed',9.8,2.4,1.0,0.7); F('shelf',6.2,1.3,1.2,0.3); F('barrel',10.4,5.2,0.45,0.4); }
+  if(b.kind==='resort'){
+    // The Breakers is a bespoke open-air resort: a marble lobby with a front
+    // desk, ornate flowering vases and potted palms, opening onto a sunlit pool
+    // where guests lounge and chat. drawResortScene paints the pool from I.pool.
+    I.resort=1; I.pool={x0:8.4,y0:1.5,x1:14.5,y1:6.3};
+    F('frontdesk',3.3,2.5,1.7,0.8);
+    F('vase',1.4,3.8,0.5,0.5); F('vase',1.4,6.8,0.5,0.5); F('vase',6.7,1.4,0.5,0.5);
+    F('plant',1.5,1.6,0.6,0.6); F('plant',4.9,1.5,0.6,0.6); F('plant',6.7,7.4,0.6,0.6);
+    F('lounger',9.5,7.7,1.0,0.55); F('lounger',11.6,8.4,1.0,0.55); F('lounger',13.4,7.5,1.0,0.55);
+    F('poolguest',9.7,7.1,0.4,0.4); F('poolguest',12.5,6.9,0.4,0.4); F('poolguest',13.6,8.8,0.4,0.4);
+    F('rug',8.0,9.5,0,0,false);
+    F('table',4.7,8.4,0.9,0.6); F('stool',3.8,9.1,0.35,0.3); F('stool',5.6,9.1,0.35,0.3);
+  }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='castle'){
     F('rug',7.5,5.0,0,0,false);
@@ -130,6 +142,7 @@ function interiorBlocked(x,y,r){
   if(x-r<0.75||x+r>I.w-0.75||y-r<1.9||y+r>I.h-0.45) return true;
   for(const f of I.furn) if(f.solid && Math.abs(x-f.x)<f.hw+r && Math.abs(y-f.y)<f.hh+r) return true;
   if(I.lava) for(const L of I.lava){ const dx=(x-L.x)/(L.rx+r), dy=(y-L.y)/(L.ry+r); if(dx*dx+dy*dy<1) return true; }
+  if(I.pool){ const p=I.pool; if(x+r>p.x0 && x-r<p.x1 && y+r>p.y0 && y-r<p.y1) return true; } // walk around the water, not through it
   return false;
 }
 function updateInterior(dt){
@@ -205,6 +218,23 @@ function drawLairScene(w2s,I){
       cx.beginPath(); cx.ellipse(Math.cos(a)*rx*0.55, Math.sin(a)*ry*0.55, 5,2.6,0,0,TAU); cx.fill(); }
     cx.restore();
     if(Math.random()<0.3) G.parts.push({x:L.x+rnd(-L.rx,L.rx), y:L.y, vx:rnd(-0.2,0.2), vy:-rnd(0.6,1.7), life:rnd(0.8,1.9), color:Math.random()<0.6?'#ff9a44':'#ffd858', size:rnd(1.5,3), grav:-0.12});
+  }
+}
+function drawResortScene(w2s,I){
+  const p=I.pool; if(!p) return; const t=I.t;
+  // a stone coping ring one tile around the pool, then rippling water within
+  for(let y=Math.floor(p.y0)-1; y<=Math.ceil(p.y1)+1; y++) for(let x=Math.floor(p.x0)-1; x<=Math.ceil(p.x1)+1; x++){
+    const inside = x+0.5>=p.x0 && x+0.5<=p.x1 && y+0.5>=p.y0 && y+0.5<=p.y1;
+    const rim = !inside && x+0.5>=p.x0-1 && x+0.5<=p.x1+1 && y+0.5>=p.y0-1 && y+0.5<=p.y1+1;
+    const s=w2s(x+0.5,y+0.5);
+    const dia=()=>{ cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill(); };
+    if(inside){
+      const sh=0.5+0.5*Math.sin(t*1.6+x*0.9+y*0.7);
+      cx.fillStyle= sh>0.5? '#4fb2da' : '#3f98c8'; dia();
+      if(((x*5+y*3+Math.floor(t*2))%9)===0){ cx.fillStyle='rgba(255,255,255,0.5)'; cx.beginPath(); cx.ellipse(s.x,s.y-1,4,2,0,0,TAU); cx.fill(); }
+    } else if(rim){
+      cx.fillStyle=(x+y)%2? '#d7cdb6':'#cabfa6'; dia();
+    }
   }
 }
 function drawFurniture(f,s){
@@ -309,6 +339,51 @@ function drawFurniture(f,s){
         for(let yy=s.y-76; yy<s.y; yy+=14){ cx.beginPath(); cx.moveTo(s.x-11,yy); cx.lineTo(s.x+11,yy); cx.stroke(); }
       }
       break;
+    case 'frontdesk':
+      iBox(s,2.7,1.0,20,'#6a4a30','#4a3320','#3a2718');            // wooden counter
+      cx.fillStyle='#d8cbb0'; cx.fillRect(s.x-30,s.y-27,60,5);     // marble top
+      cx.strokeStyle='rgba(0,0,0,0.2)'; cx.lineWidth=1; cx.strokeRect(s.x-30,s.y-27,60,5);
+      cx.fillStyle='#e8dcbd'; cx.fillRect(s.x-10,s.y-27,14,4);     // open ledger
+      cx.fillStyle='#c9a24e'; cx.beginPath(); cx.arc(s.x+18,s.y-29,3,0,TAU); cx.fill(); // brass bell
+      cx.fillStyle='#8a6d30'; cx.fillRect(s.x+16.5,s.y-26,3,2);
+      // hanging RECEPTION sign
+      cx.fillStyle='#3a5c6a'; cx.fillRect(s.x-18,s.y-60,36,15);
+      cx.strokeStyle='#c9a24e'; cx.lineWidth=1.5; cx.strokeRect(s.x-18,s.y-60,36,15);
+      cx.fillStyle='#ffe9a8'; cx.font='bold 8px Georgia'; cx.textAlign='center'; cx.fillText('RECEPTION', s.x, s.y-50);
+      // the concierge behind the counter
+      drawHumanoid(cx, s.x-3, s.y-22, {skin:'#caa27b',hair:'#3a2e26',shirt:'#5a3a6a',pants:'#33303c',trim:'#c9a24e',dir:{x:0,y:1},step:0,size:0.82});
+      break;
+    case 'vase':
+      cx.fillStyle='#356a86'; cx.beginPath();                      // glazed ceramic vase
+      cx.moveTo(s.x-7,s.y-2); cx.quadraticCurveTo(s.x-11,s.y-16,s.x-5,s.y-24);
+      cx.lineTo(s.x+5,s.y-24); cx.quadraticCurveTo(s.x+11,s.y-16,s.x+7,s.y-2); cx.closePath(); cx.fill();
+      cx.strokeStyle='#c9a24e'; cx.lineWidth=1.5; cx.stroke();
+      cx.fillStyle='rgba(255,255,255,0.25)'; cx.beginPath(); cx.ellipse(s.x-3,s.y-15,2,6,0,0,TAU); cx.fill();
+      { const fc=['#e86a8a','#ffd76a','#c9a0ff','#ff9a5a','#f0f0f0','#e86a8a'];
+        for(let i=0;i<6;i++){ const a=-Math.PI/2+(i-2.5)*0.5, fx=s.x+Math.cos(a)*10, fy=s.y-27+Math.sin(a)*9;
+          cx.strokeStyle='#4f7a3a'; cx.lineWidth=1.4; cx.beginPath(); cx.moveTo(s.x,s.y-24); cx.lineTo(fx,fy); cx.stroke();
+          cx.fillStyle=fc[i]; cx.beginPath(); cx.arc(fx,fy,3.2,0,TAU); cx.fill(); } }
+      break;
+    case 'plant':
+      iBox(s,0.75,0.75,10,'#a05a3a','#7a4028','#5e3020');           // terracotta pot
+      cx.strokeStyle='#3e7a3a'; cx.lineWidth=2.6; cx.lineCap='round'; // palm fronds
+      for(let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.42;
+        cx.beginPath(); cx.moveTo(s.x,s.y-11); cx.quadraticCurveTo(s.x+Math.cos(a)*11,s.y-28,s.x+Math.cos(a)*21,s.y-30-Math.sin(Math.abs(a))*3); cx.stroke(); }
+      cx.lineCap='butt';
+      break;
+    case 'lounger':
+      cx.save(); cx.translate(s.x,s.y);
+      cx.strokeStyle='#5a4630'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-14,3); cx.lineTo(-17,9); cx.moveTo(11,3); cx.lineTo(14,9); cx.stroke(); // legs
+      cx.fillStyle='#eae0c8'; cx.beginPath(); cx.moveTo(-15,3); cx.lineTo(11,3); cx.lineTo(18,-13); cx.lineTo(-8,-13); cx.closePath(); cx.fill(); // reclined cushion
+      cx.strokeStyle='#c98a4a'; cx.lineWidth=1.6; cx.stroke();
+      cx.strokeStyle='rgba(120,90,50,0.4)'; cx.lineWidth=1; for(let i=-2;i<=2;i++){ cx.beginPath(); cx.moveTo(i*5+1,3); cx.lineTo(i*5+6,-13); cx.stroke(); }
+      cx.restore();
+      break;
+    case 'poolguest':
+      { const gp=Math.floor(f.x*13+f.y*7);
+        drawHumanoid(cx, s.x, s.y, {skin:['#e6c39a','#caa27b','#a9784e','#8f6a48'][gp%4], hair:['#3a2e26','#6a5a44','#2a241e','#cfc7b8'][(gp>>1)%4],
+          shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4], pants:'#3a4a6a', dir:{x:(gp%2?1:-1),y:1}, step:0, size:0.96}); }
+      break;
   }
 }
 function drawWallDecor(kind,w2s,I){
@@ -356,6 +431,11 @@ function renderInterior(){
       cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
       if((x*5+y*3)%7===0){ cx.fillStyle='rgba(255,110,40,0.10)'; // faint ember cracks in the rock
         cx.beginPath(); cx.moveTo(s.x-6,s.y); cx.lineTo(s.x,s.y-3); cx.lineTo(s.x+6,s.y+1); cx.stroke&&cx.stroke(); cx.strokeStyle='rgba(255,120,50,0.16)'; cx.lineWidth=1; cx.stroke(); }
+    } else if(I.resort){
+      // polished marble checkerboard
+      cx.fillStyle=(x+y)%2? '#eae2d0':'#ddd3bd';
+      cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(255,255,255,0.25)'; cx.lineWidth=1; cx.stroke();
     } else {
       cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
     }
@@ -364,19 +444,20 @@ function renderInterior(){
   const WH= I.lair? 96 : 62;   // the lair is a cathedral-tall cavern
   for(let x=0;x<I.w;x++){
     const a=w2s(x,0), b=w2s(x+1,0);
-    cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : (x%2? '#4a3626':'#443122');
+    cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.resort? (x%2?'#e6dcc6':'#d8cdb4') : (x%2? '#4a3626':'#443122');
     cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
     cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
   }
   for(let y=0;y<I.h;y++){
     const a=w2s(0,y), b=w2s(0,y+1);
-    cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : (y%2? '#3a2a1c':'#352718');
+    cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.resort? (y%2?'#d8cdb4':'#cabfa6') : (y%2? '#3a2a1c':'#352718');
     cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
     cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
   }
   if(I.lair) drawLairScene(w2s,I);
+  if(I.resort) drawResortScene(w2s,I);
   // window with moody light on the north wall
-  if(!I.lair){ const s=w2s(7.0,0.05);
+  if(!I.lair && !I.resort){ const s=w2s(7.0,0.05);
     const night=nightAmount();
     cx.fillStyle= night>0.4? '#1c2a4a' : '#c9d8e8';
     cx.fillRect(s.x-12,s.y-52,24,20);
@@ -418,6 +499,7 @@ function renderInterior(){
   // ambient grade: volcanic red-orange for the lair, cozy warm elsewhere
   const wg=cx.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,Math.max(VW,VH)*0.62);
   if(I.lair){ wg.addColorStop(0,'rgba(255,90,30,0.10)'); wg.addColorStop(1,'rgba(20,0,0,0.66)'); }
+  else if(I.resort){ wg.addColorStop(0,'rgba(255,240,200,0.10)'); wg.addColorStop(1,'rgba(40,60,80,0.30)'); } // bright, airy daylight
   else { wg.addColorStop(0,'rgba(255,170,90,0.06)'); wg.addColorStop(1,'rgba(0,0,0,0.55)'); }
   cx.fillStyle=wg; cx.fillRect(0,0,VW,VH);
   drawGritGrade();
