@@ -374,7 +374,6 @@ function damageMob(m,dmg,knock,skill){
   m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
-  splat(m.x,m.y,GORE[m.kind]||GORE.wolf,false);
   if(skill==='melee') G.hitStop=Math.max(G.hitStop, crit?0.09:0.045);
   burst(m.x,m.y-0.5, m.kind==='slime'?'#7fca6a': m.kind==='wolf'?'#8a8d96':'#eceee6', 6, 2);
   // ranged hits chain a combo too - melee builds it in the swing code, but bow
@@ -433,7 +432,6 @@ function killMob(m,skill){
   const d=MOBDEF[m.kind];
   burst(m.x,m.y-0.4,'#fff',14,3);
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);
-  splat(m.x,m.y,GORE[m.kind]||GORE.wolf,true);
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
   if(m.boss) award('kingslayer');
@@ -490,7 +488,6 @@ function hurtPlayer(dmg,src){
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
   burst(P.x,P.y-0.5,'#e05648',8); Snd.hurt(); G.shake=Math.max(G.shake,0.25);
   G.flash=0.28; G.hitStop=Math.max(G.hitStop,0.05);
-  splat(P.x,P.y,GORE.player,false);
   if(src){ const dx=P.x-src.x, dy=P.y-src.y, l=Math.hypot(dx,dy)||1; moveEntity(P,dx/l*0.5,dy/l*0.5); }
   refreshUI();
   if(P.hp<=0){ P.hp=0; playerDie(); }
@@ -503,6 +500,14 @@ document.getElementById('respawnBtn').onclick=()=>{
   document.getElementById('deadOv').style.display='none';
   P.dead=false; P.hp=Math.round(P.maxhp*0.6); P.mp=P.maxmp;
   P.poisonT=0; P._venAcc=0; // venom does not carry through death
+  // when a foe kills you it recovers fully - no chipping a boss down across
+  // repeated deaths. Every living mob is healed to full and sent home to rest.
+  for(const m of G.mobs){
+    if(m.dead) continue;
+    m.hp=m.maxhp; m.state='idle'; m.hurtT=0; m.noAggroT=2.5;
+    m.summoned=[false,false];               // bosses may summon their guard anew
+    if(typeof m.hx==='number'){ m.x=m.hx; m.y=m.hy; }   // sent back to its post
+  }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
     toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach - Goldwarden Bree, Greyharbor.)</i>',6200); }
