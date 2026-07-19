@@ -85,6 +85,21 @@ function enterCave(){
   toast('<b>The Undermaw</b> - the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
   Snd.step(8);
 }
+function enterLair(){
+  if(G.interior) return;
+  const I={kind:'cave', w:11, h:8, ret:{x:P.x,y:P.y+0.4}, exit:{x:5.5,y:7.0}, t:0, furn:[], cave:1, lair:1};
+  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  const dragonOut = G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead); // he's raging at the caldera
+  if(!dragonOut) F('dragon',5.5,3.2,2.2,1.4,true);   // Ashwing (asleep, or freed & resting)
+  F('lavavent',2.2,2.4,0.5,0.4,false);
+  F('lavavent',9.0,2.6,0.5,0.4,false);
+  G.interior=I; P.click=null;
+  P.x=5.5; P.y=6.2; P.moving=false; P.fishing=null; P.combo=0;
+  toast(dragonOut ? '<b>Ashwing’s Lair</b> - empty, and shaking. He rages on the caldera above.'
+    : qs('wyrm')==='done' ? '<b>Ashwing’s Lair</b> - warm and still. The old dragon dozes, safe now.'
+    : '<b>Ashwing’s Lair</b> - heat shimmers off the stone. Something vast turns to regard you.',4600);
+  Snd.step(8);
+}
 function exitHouse(){
   const r=G.interior.ret;
   G.interior=null;
@@ -225,6 +240,22 @@ function drawFurniture(f,s){
       cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5); cx.rotate(0);
       cx.fillStyle='rgba(143,74,58,0.85)'; cx.beginPath(); cx.arc(0,0,34,0,TAU); cx.fill();
       cx.strokeStyle='#c9a24e'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,0,26,0,TAU); cx.stroke();
+      cx.restore();
+      break;
+    case 'lavavent':
+      { const gl=0.55+0.45*Math.sin(G.interior.t*2.3+s.x);
+        cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5);
+        cx.fillStyle='rgba(255,120,40,'+(0.28*gl).toFixed(2)+')'; cx.beginPath(); cx.arc(0,0,22,0,TAU); cx.fill();
+        cx.fillStyle='#2a1610'; cx.beginPath(); cx.arc(0,0,13,0,TAU); cx.fill();
+        cx.fillStyle='#ff8a1e'; cx.beginPath(); cx.arc(0,0,9,0,TAU); cx.fill();
+        cx.fillStyle='rgba(255,225,150,'+(0.7*gl).toFixed(2)+')'; cx.beginPath(); cx.arc(-2,-2,4,0,TAU); cx.fill();
+        cx.restore();
+        if(Math.random()<0.2) G.parts.push({x:f.x,y:f.y,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1),life:rnd(0.6,1.2),color:Math.random()<0.5?'#ff8a44':'rgba(90,84,80,0.5)',size:rnd(1.5,3),grav:-0.1});
+      }
+      break;
+    case 'dragon':
+      cx.save(); cx.translate(s.x,s.y); cx.scale(1.7,1.7);
+      drawDragon(cx,0,0,{face:1, enspelled:false, anim:1, hurtT:0});
       cx.restore();
       break;
   }

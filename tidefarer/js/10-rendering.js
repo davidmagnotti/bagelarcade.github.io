@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -530,6 +530,25 @@ function drawDecor(b,s){
     g.beginPath(); g.ellipse(0,-ry*0.1,rx*0.3,ry*0.3,0,0,TAU); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='lairmouth'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const pulse=0.5+0.5*Math.sin(G.time*2.4);
+    g.fillStyle='rgba(255,120,40,'+(0.14+0.12*pulse)+')'; // heat haze
+    g.beginPath(); g.ellipse(0,-8,34,20,0,0,TAU); g.fill();
+    g.fillStyle='#2e241d'; // charred rock brow
+    g.beginPath();
+    g.moveTo(-28,4); g.quadraticCurveTo(-26,-28, 0,-32);
+    g.quadraticCurveTo(26,-28, 28,4); g.closePath(); g.fill();
+    g.strokeStyle='#140f0b'; g.lineWidth=2.6; g.stroke();
+    g.fillStyle='#160a06'; // the maw
+    g.beginPath(); g.moveTo(-14,4); g.quadraticCurveTo(0,-22,14,4); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,140,50,'+(0.35+0.3*pulse)+')'; // fire-glow within
+    g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,220,140,'+(0.5*pulse)+')';
+    g.beginPath(); g.moveTo(-5,4); g.quadraticCurveTo(0,-8,5,4); g.closePath(); g.fill();
+    if(Math.random()<0.25) G.parts.push({x:b.x,y:b.y-0.6,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1),life:rnd(0.7,1.3),color:Math.random()<0.5?'#ff8a44':'rgba(90,84,80,0.5)',size:rnd(1.5,3),grav:-0.1});
+    g.restore(); return;
+  }
   if(b.kind==='cavemouth'){
     const g=cx; g.save(); g.translate(s.x,s.y);
     g.fillStyle='#3a3f47'; // rock brow
@@ -777,6 +796,16 @@ function drawMob(m,s){
       dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)});
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='mage'){
+    drawShadowAt(cx,s.x,s.y,13);
+    drawHumanoid(cx,s.x,s.y,{skin:'#c2a892',hair:'#241a2e',hairstyle:'long',robe:'#4a2a5e',rune:true,
+      weapon:'staff', swing:m.swing||0, hurt:m.hurtT>0, size:1.18,
+      dir:{x:m.face||1,y:0.3}, step:Math.sin(m.anim*7)*0.5});
+    if((m.swing||0)>0.05){ const gl=0.6+0.4*Math.sin(G.time*10); // a hex charge in her hand
+      cx.fillStyle='rgba(199,123,255,'+(0.75*gl).toFixed(2)+')';
+      cx.beginPath(); cx.arc(s.x+(m.face||1)*9, s.y-26, 4.2, 0,TAU); cx.fill(); }
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   drawShadowAt(cx,s.x,s.y, m.boss?20: m.kind==='slime'?11:13);
   if(m.windup>0){
     // danger ring + rising crouch: your cue to dodge
@@ -987,6 +1016,10 @@ function drawProj(p,s){
     cx.fillStyle='rgba(255,154,60,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#ffce7a'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
     cx.fillStyle='#fff3d0'; cx.beginPath(); cx.arc(s.x,s.y-12,2.4,0,TAU); cx.fill();
+  } else if(p.kind==='hex'){
+    cx.fillStyle='rgba(150,60,210,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
+    cx.fillStyle='#c77bff'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
+    cx.fillStyle='#f0e0ff'; cx.beginPath(); cx.arc(s.x,s.y-12,2.3,0,TAU); cx.fill();
   } else { // bone
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(G.time*10);
     cx.fillStyle='#eceee6'; cx.fillRect(-6,-1.6,12,3.2);

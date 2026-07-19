@@ -513,6 +513,8 @@ function placeObjectsEast(){
   for(let y=C.y-C.r;y<=C.y+C.r;y++) for(let x=C.x-C.r;x<=C.x+C.r;x++){
     if(inb(x,y) && dist(x,y,C.x,C.y)<=C.r-1.2) setSolid(x,y,1);
   }
+  // Ashwing's lair - a fissure in the caldera wall you can step into
+  G.decor.push({kind:'lairmouth', x:C.x+0.5, y:C.y+C.r+1.5});
   // reef treasure
   G.decor.push({kind:'chest', x:EAST_ZONES.reef.x+0.5, y:EAST_ZONES.reef.y+0.5, opened:false, rich:8});
 }
@@ -538,42 +540,75 @@ function spawnEastFolk(){
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
     ['Kea grumbles, the palms bow, the reef sings. The island talks - listen.',
      'Old Ashwing has warmed this isle since my mother\'s mother. Whatever that robed woman says.'],0.7));
-  // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to get it
-  G.npcs.push(makeNPC('vashti','Vashti the Emberbinder', V.x-8.5,V.y-4.5,
-    {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,hairstyle:'long'},
-    ['The mountain\'s heat is... wasted, on a sleeping beast.',
-     'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0.3));
+  // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to
+  // get it. Once the wyrm is freed she's fled to the grove, no longer in the village
+  // (quest-state gated so it survives reloads).
+  if(qs('wyrm')!=='done')
+    G.npcs.push(makeNPC('vashti','Vashti the Emberbinder', V.x-8.5,V.y-4.5,
+      {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,hairstyle:'long'},
+      ['The mountain\'s heat is... wasted, on a sleeping beast.',
+       'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0.3));
 }
-/* The caldera set-piece: told the wyrm is evil, you climb - and find him kind.
-   Then Vashti's binding takes him and you must break it in a fight. Driven by
-   proximity + timers so it needs no special dialog plumbing. */
-function updateDragonEvent(dt){
-  if(qs('wyrm')!=='active' || P.eastDragonFought) return;
-  const C=ZONES.caldera; if(!C) return;
-  if(!G._dragStage && dist(P.x,P.y,C.x,C.y)<8){
-    G._dragStage=1; G._dragT=0;
-    banner('ASHWING','THE WYRM OF MOUNT KEA');
-    toast('A great emerald dragon lifts his head from the caldera’s warmth. <b>“You climbed all this ash to end me? Little flame - I have kept this isle green since your grandmothers were girls. Who filled your ear with murder?”</b>',7500);
-    if(Snd.quest) Snd.quest();
+/* The caldera set-piece: told the wyrm is evil, you climb Mount Kea and step
+   INTO his lair, where he turns out kind. Vashti's binding takes him mid-word;
+   you're driven out to the caldera to break the spell in a fight. */
+function dragonLairSpeak(){
+  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's already raging at the caldera
+    lairDialog('Ashwing’s Lair','The lair is empty and shaking. Above you, the mountain roars - Ashwing is loose on the caldera. Go and break the spell.',
+      [{label:'Go up', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); }}]);
     return;
   }
-  if(G._dragStage===1){ G._dragT+=dt;
-    if(G._dragT>5){ G._dragStage=2; G._dragT=0;
-      toast('<b style="color:#c77bff">Violet fire lances up the ash road.</b> Vashti’s voice follows it: “Sentiment. Sleep, wyrm - or kill for me.” The binding closes over Ashwing; his eyes kindle red and his wings snap wide.',7500);
-      G.shake=0.9; if(Snd.magic) Snd.magic();
-    }
+  if(qs('wyrm')==='done'){
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.”',
+      [{label:'Farewell', fn:closeDialog}]);
     return;
   }
-  if(G._dragStage===2){ G._dragT+=dt;
-    if(G._dragT>3.5){ G._dragStage=3;
-      const sp=findOpenNear(Math.round(C.x), Math.round(C.y+7), 7) || [C.x, C.y+7];
-      const dr=spawnMob('dragon', sp[0], sp[1]);
-      if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.state='chase'; dr.noAggroT=0;
-        dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
-      banner('ASHWING, ENTHRALLED','BREAK THE SPELL');
-      if(Snd.boss) Snd.boss();
-    }
+  if(qs('wyrm')!=='active'){
+    lairDialog('Ashwing','“You wear no binder’s violet - then we have no quarrel, traveller. Mind the heat on your way down.”',
+      [{label:'Leave him be', fn:closeDialog}]);
     return;
+  }
+  lairDialog('Ashwing',
+    '“You climbed my mountain with a blade. Vashti’s errand, I would wager - she covets my fire, bottled.”',
+    [{label:'Continue', fn:()=> lairDialog('Ashwing',
+      '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
+      [{label:'Continue', fn:()=> lairDialog('Vashti',
+        '<b style="color:#c77bff">Violet fire floods the lair.</b> A voice pours from the walls: “Sentiment. Sleep, wyrm - or kill for me.” Ashwing’s eyes kindle red; his wings crack against the stone. There is no room to face him here.',
+        [{label:'Steel yourself, get out', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
+}
+function lairDialog(name,text,btns){
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent=name;
+  const pc=document.getElementById('dportrait');
+  if(pc){ const pg=pc.getContext('2d'); pg.clearRect(0,0,pc.width,pc.height);
+    pg.fillStyle='#241a10'; pg.fillRect(0,0,pc.width,pc.height);
+    pg.save(); pg.translate(pc.width/2, pc.height-4); pg.scale(0.6,0.6);
+    try{ drawDragon(pg,0,0,{face:1,enspelled:false,anim:1,hurtT:0}); }catch(e){} pg.restore(); }
+  setDialog(text,btns);
+}
+function awakenDragon(){
+  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)) return; // one Ashwing at a time
+  const C=ZONES.caldera||EAST_ZONES.caldera;
+  const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
+        || findOpenNear(Math.round(C.x), Math.round(C.y+7), 8) || [C.x, C.y+7];
+  const dr=spawnMob('dragon', sp[0], sp[1]);
+  if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.state='chase'; dr.noAggroT=0;
+    dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
+  P.metDragon=1;
+  banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
+  if(Snd.boss) Snd.boss(); G.shake=0.9;
+}
+function startMageHunt(){
+  if(P.mageHuntStarted) return;
+  P.mageHuntStarted=1;
+  const vi=G.npcs.findIndex(n=>n.id==='vashti'); if(vi>=0) G.npcs.splice(vi,1); // she flees the village
+  P.quests.vhunt='active'; P.prog.vhunt=0;
+  const GR=EAST_ZONES.grove;
+  if(!G.mobs.some(m=>m.kind==='mage' && !m.dead)){
+    const sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
+    const mg=spawnMob('mage', sp[0], sp[1]);
+    if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
   }
 }
 function freeDragon(x,y){
@@ -600,6 +635,11 @@ function spawnMobsEast(){
   const yd2=findOpenNear(Math.round(EAST_ZONES.village.x+12), Math.round(EAST_ZONES.village.y+7), 5);
   if(yd1) spawnMob('dummy',yd1[0],yd1[1]);
   if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+  // if the hunt is underway (e.g. after a reload), Vashti waits in the grove
+  if(qs('vhunt')==='active'){
+    const GR=EAST_ZONES.grove, sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x,GR.y];
+    const mg=spawnMob('mage', sp[0], sp[1]); if(mg){ mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
+  }
 }
 function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
@@ -691,6 +731,11 @@ QUESTS.wyrm={ giver:'vashti', title:'The Wyrm of Mount Kea', kind:'kill', kill:{
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
+QUESTS.vhunt={ giver:'moli', title:'Hunt the Emberbinder', kind:'kill', kill:{mage:1}, xpL:300,
+  brief:'That robed woman was no friend to Kohana. Run her down before she binds another soul.',
+  log:'Run down Vashti the Emberbinder in the palm grove.',
+  doneText:'Her binding dies with her, and the isle can breathe. Ashwing owes you dragonfire - and Kohana owes you this. Take it, with our thanks.',
+  rw:{gold:180, item:{potion:2}, xp:{melee:300, archery:300, magic:300}} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
   log:'Drive off 6 Vael Raiders in the north-east March.',
