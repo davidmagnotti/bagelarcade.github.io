@@ -476,6 +476,9 @@ function placeObjectsEast(){
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('boat', D.x-5.5, D.y+2.5, '');
   addBuilding('lamp', V.x+9, V.y+6, '');
+  // torches flanking the foot of the ash road so the climb up Mount Kea is unmistakable
+  addBuilding('lamp', VO.x-3, VO.y+VO.r-1, '');
+  addBuilding('lamp', VO.x+3, VO.y+VO.r-1, '');
   const pr2=mulberry32(SEED+7);
   // the grove proper: thick palms
   const GR=EAST_ZONES.grove;
@@ -582,9 +585,9 @@ function freeDragon(x,y){
 function spawnMobsEast(){
   const packs=[
     ['boar', EAST_ZONES.grove, 8, 0.2],
-    ['boar', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+14, r:8}, 5, 0.3],
-    // ash-scorpions haunt the lower slopes - away from the caldera so the wyrm fight stays clean
-    ['scorpion', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+13, r:9}, 3, 0.3]
+    // bristlebacks forage the ash slopes - some elite, but no desert scorpions
+    // walling off the climb (they were Lv 13, brutal for a Chapter III isle)
+    ['boar', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+13, r:10}, 6, 0.35]
   ];
   for(const [kind,z,count,el] of packs){
     for(let i=0;i<count;i++){
