@@ -502,6 +502,29 @@ function placeObjectsEast(){
     const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
     if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay);
   }
+  // a lush frame of palms ringing the village clearing so it doesn't feel bare
+  for(let i=0;i<80;i++){
+    const a=pr2()*TAU, rr=8+pr2()*8;
+    const ax=Math.round(V.x+Math.cos(a)*rr), ay=Math.round(V.y+Math.sin(a)*rr);
+    if(inb(ax,ay) && (tileAt(ax,ay)===T.GRASS||tileAt(ax,ay)===T.FOREST) && !solidAt(ax,ay)
+       && dist(ax,ay,V.x,V.y)>7.5 && dist(ax,ay,D.x,D.y)>4 && pr2()<0.72){
+      const n=addNode('tree',ax,ay); n.palm=1;
+    }
+  }
+  // friendly island critters that just wander - hens & cats about the village,
+  // crabs scuttling the cove beach
+  G.critters=[];
+  const critter=(kind,x,y,range,col)=>{ if(!inb(x,y)||solidAt(x,y)) return;
+    G.critters.push({kind,x:x+0.5,y:y+0.5,home:{x:x+0.5,y:y+0.5},tx:null,ty:null,
+      wt:rnd(0.5,4),face:pr2()<0.5?-1:1,anim:pr2()*6,range:range||2.5,col,moving:false}); };
+  const FOWL=['#efe7d6','#b07a44','#8a7a5e','#d8c9a0'], CRAB=['#d8492e','#e0803a','#c23a5a'];
+  for(let i=0;i<9;i++){ const a=pr2()*TAU, rr=3+pr2()*6;
+    critter('fowl', Math.round(V.x+Math.cos(a)*rr), Math.round(V.y+Math.sin(a)*rr), 3, FOWL[i%FOWL.length]); }
+  for(let i=0;i<2;i++){ const a=pr2()*TAU, rr=2+pr2()*5;
+    critter('cat', Math.round(V.x+Math.cos(a)*rr), Math.round(V.y+Math.sin(a)*rr), 3.5, '#e8933a'); }
+  for(let i=0;i<8;i++){ const a=pr2()*TAU, rr=2+pr2()*6;
+    const cx2=Math.round(D.x+Math.cos(a)*rr), cy2=Math.round(D.y+Math.sin(a)*rr);
+    if(inb(cx2,cy2) && tileAt(cx2,cy2)===T.SAND) critter('crab', cx2, cy2, 3, CRAB[i%CRAB.length]); }
   // ash-rocks & ember-ore studding the volcano slopes (mining + the ember crystals)
   for(let i=0;i<52;i++){
     const a=pr2()*TAU, rr=6+pr2()*(VO.r-5);
@@ -1096,7 +1119,7 @@ function attemptSail(){
 function snapshotWorld(){
   WORLDS[G.worldId]={map:G.map,solid:G.solid,variant:G.variant,nodes:G.nodes,decor:G.decor,
     plots:G.plots,npcs:G.npcs,mobs:G.mobs,foam:G.foam,crows:G.crows,forgePos:G.forgePos,
-    decals:G.decals,cat:G.cat,base:mapBase};
+    decals:G.decals,cat:G.cat,critters:G.critters,base:mapBase};
 }
 function switchWorld(id){
   snapshotWorld();
@@ -1107,11 +1130,11 @@ function switchWorld(id){
     const w=WORLDS[id];
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;
     G.plots=w.plots; G.npcs=w.npcs; G.mobs=w.mobs; G.foam=w.foam; G.crows=w.crows;
-    G.forgePos=w.forgePos; G.decals=w.decals; G.cat=w.cat; mapBase=w.base;
+    G.forgePos=w.forgePos; G.decals=w.decals; G.cat=w.cat; G.critters=w.critters||[]; mapBase=w.base;
   } else {
     G.map=new Uint8Array(MAPW*MAPH); G.solid=new Uint8Array(MAPW*MAPH); G.variant=new Uint8Array(MAPW*MAPH);
     G.nodes=[]; G.decor=[]; G.plots=[]; G.npcs=[]; G.mobs=[]; G.foam=[]; G.crows=[];
-    G.decals=[]; G.cat=null; G.forgePos=null;
+    G.decals=[]; G.cat=null; G.critters=[]; G.forgePos=null;
     def.gen();
   }
   G.worldId=id;

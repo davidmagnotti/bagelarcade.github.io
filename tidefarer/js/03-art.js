@@ -1391,6 +1391,56 @@ function drawCat(g,sx,sy,c){
   g.fillStyle='#203018'; g.beginPath(); g.arc(10.5,-14.5,1.2,0,TAU); g.arc(7,-14.5,1.2,0,TAU); g.fill();
   g.restore();
 }
+/* ---- friendly island critters that just wander ---- */
+function drawFowl(g,sx,sy,c){
+  const flip=(c.face||1)<0?-1:1, t=c.anim||0, OUT='rgba(20,12,8,0.9)';
+  const bob=c.moving? Math.sin(t*12)*1.0 : Math.sin(t*2)*0.5;
+  const peck=(!c.moving && Math.sin(t*1.5)>0.55)? 3.2:0;
+  g.save(); g.translate(sx,sy); g.scale(flip,1);
+  const body=c.col||'#efe7d6', comb='#d24a3a', beak='#e0a83a';
+  const step=c.moving?Math.sin(t*12)*1.4:0;
+  g.strokeStyle='#c98a3a'; g.lineWidth=1.5; g.lineCap='round';
+  g.beginPath(); g.moveTo(-2,-2); g.lineTo(-3-step,2.5); g.moveTo(2,-2); g.lineTo(1+step,2.5); g.stroke();
+  g.fillStyle=shade(body,-26);
+  g.beginPath(); g.moveTo(-5,-9); g.quadraticCurveTo(-13,-16,-10,-7); g.quadraticCurveTo(-9,-5,-5,-6); g.closePath(); g.fill();
+  g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+  g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=1.4;
+  g.beginPath(); g.ellipse(-1,-7+bob*0.2,6.5,5.6,0,0,TAU); g.fill(); g.stroke();
+  g.fillStyle=shade(body,14); g.beginPath(); g.ellipse(-2.5,-9,2.6,1.8,-0.3,0,TAU); g.fill();
+  g.save(); g.translate(4.5,-11+bob*0.3+peck);
+  g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=1.3; g.beginPath(); g.arc(0,0,3.6,0,TAU); g.fill(); g.stroke();
+  g.fillStyle=comb; g.beginPath(); g.arc(-1.4,-3.8,1.1,0,TAU); g.arc(0.4,-4.4,1.2,0,TAU); g.arc(2,-3.8,1,0,TAU); g.fill();
+  g.beginPath(); g.arc(1.2,3.2,1.1,0,TAU); g.fill();
+  g.fillStyle=beak; g.beginPath(); g.moveTo(3.2,-0.2); g.lineTo(7,0.6); g.lineTo(3.2,2); g.closePath(); g.fill();
+  g.strokeStyle=OUT; g.lineWidth=0.8; g.stroke();
+  g.fillStyle='#201810'; g.beginPath(); g.arc(1.4,-0.8,0.95,0,TAU); g.fill();
+  g.restore();
+  g.restore();
+}
+function drawCrab(g,sx,sy,c){
+  const t=c.anim||0, sway=Math.sin(t*10)*(c.moving?1.6:0.4), OUT='rgba(20,12,8,0.9)';
+  g.save(); g.translate(sx,sy);
+  const body=c.col||'#d8492e';
+  g.strokeStyle=shade(body,-16); g.lineWidth=1.4; g.lineCap='round';
+  for(let i=0;i<3;i++){ const yy=-4-i*1.6, ln=5+i*1.2;
+    g.beginPath(); g.moveTo(-4.5,yy); g.lineTo(-4.5-ln, yy-1.5+sway); g.stroke();
+    g.beginPath(); g.moveTo(4.5,yy); g.lineTo(4.5+ln, yy-1.5-sway); g.stroke(); }
+  g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=1.3;
+  for(const s2 of [-1,1]){ g.save(); g.translate(s2*8,-9); g.rotate(s2*0.3);
+    g.beginPath(); g.ellipse(0,0,3.4,2.4,0,0,TAU); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(s2*1,-1.5); g.lineTo(s2*4,-3); g.stroke(); g.restore(); }
+  g.fillStyle=body; g.beginPath(); g.ellipse(0,-6,7.2,5.2,0,0,TAU); g.fill(); g.stroke();
+  g.fillStyle=shade(body,20); g.beginPath(); g.ellipse(-2,-7.6,2.6,1.5,0,0,TAU); g.fill();
+  g.strokeStyle=body; g.lineWidth=1.7; g.beginPath(); g.moveTo(-2.4,-10); g.lineTo(-2.8,-13.4); g.moveTo(2.4,-10); g.lineTo(2.8,-13.4); g.stroke();
+  g.fillStyle='#f4efe2'; g.beginPath(); g.arc(-2.8,-13.8,1.4,0,TAU); g.arc(2.8,-13.8,1.4,0,TAU); g.fill();
+  g.fillStyle='#201810'; g.beginPath(); g.arc(-2.8,-13.8,0.7,0,TAU); g.arc(2.8,-13.8,0.7,0,TAU); g.fill();
+  g.restore();
+}
+function drawCritter(g,sx,sy,c){
+  if(c.kind==='fowl') drawFowl(g,sx,sy,c);
+  else if(c.kind==='crab') drawCrab(g,sx,sy,c);
+  else drawCat(g,sx,sy,c);
+}
 /* crops */
 function drawCrop(g,sx,sy,stage,t){
   const sway = Math.sin(t*2+sx)*1.5;

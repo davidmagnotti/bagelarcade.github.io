@@ -678,6 +678,7 @@ function updateNPCs(dt){
       else n.tx=null;
     }
   }
+  updateCritters(dt);
   // Pip
   const c=G.cat; if(!c) return;
   c.anim+=dt;
@@ -863,6 +864,24 @@ function updateProjs(dt){
   G.projs=G.projs.filter(p=>p.life>0);
 }
 
+function updateCritters(dt){
+  const cs=G.critters; if(!cs || !cs.length) return;
+  for(const c of cs){
+    c.anim=(c.anim||0)+dt;
+    c.wt-=dt;
+    if(c.wt<=0){
+      c.wt=rnd(c.kind==='crab'?1.4:2.5, c.kind==='crab'?4:7);
+      if(Math.random()<0.4) c.tx=null; // pause to peck / bask
+      else { c.tx=c.home.x+rnd(-c.range,c.range); c.ty=c.home.y+rnd(-c.range,c.range); }
+    }
+    if(c.tx!=null){
+      const dx=c.tx-c.x, dy=c.ty-c.y, l=Math.hypot(dx,dy);
+      if(l>0.15){ const sp=c.kind==='crab'?1.0:1.35;
+        moveEntity(c, dx/l*sp*dt, dy/l*sp*dt, 0.16); c.face=dx<0?-1:1; c.moving=true; }
+      else { c.tx=null; c.moving=false; }
+    } else c.moving=false;
+  }
+}
 function updateWorld(dt){
   // nodes respawn
   for(const n of G.nodes){
