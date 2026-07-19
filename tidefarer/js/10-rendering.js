@@ -894,7 +894,7 @@ function drawPlayerFigure(s){
     : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
   const look={hero:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
-    pauldrons:P.swordTier>0, shield: P.swordTier>0? '#6e4a2b':null, trim:P.swordTier>0?'#8a6d30':null,
+    pauldrons:P.swordTier>0, trim:P.swordTier>0?'#8a6d30':null,
     hat: has('crown',1)?'crown':null};
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
