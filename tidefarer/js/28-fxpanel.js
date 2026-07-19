@@ -17,7 +17,6 @@ const GROUPS = [
   ]],
   ['Cheap (on by default)', [
     ['fog','Ground fog'],
-    ['decals','Blood & gore'],
     ['particles','Particles'],
     ['fireflies','Fireflies'],
     ['birds','Birds'],
