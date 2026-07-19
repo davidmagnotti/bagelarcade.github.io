@@ -413,9 +413,11 @@ function buildSprites(){
     g.fillStyle='#9a968e'; g.beginPath(); g.moveTo(w/2-64,h-72); g.lineTo(w/2,h-104); g.lineTo(w/2+64,h-72); g.closePath(); g.fill();
     g.fillStyle='rgba(120,220,160,0.5)'; g.beginPath(); g.arc(w/2,h-88,5,0,TAU); g.fill();
   });
-  SPR.resort = makeCanvas(150,132,(g,w,h)=>{
-    const bx=w/2, base=h-14, bw=106, bh=66;
-    g.fillStyle='rgba(0,0,0,0.18)'; g.beginPath(); g.ellipse(bx,base+4,72,14,0,0,TAU); g.fill();
+  // rendered at 2.5x native resolution (crisp when drawn at landmark scale), and
+  // with the building base seated at the very bottom of the canvas so it never
+  // floats above its ground shadow no matter how large it is drawn.
+  SPR.resort = makeCanvas(375,350,(g)=>{ g.scale(2.5,2.5);
+    const bx=75, base=138, bw=106, bh=66;   // logical 150x140 drawing space
     g.fillStyle='#ead9be'; g.fillRect(bx-bw/2, base-bh, bw, bh);
     g.fillStyle='#d8c3a2'; for(let i=0;i<=4;i++) g.fillRect(bx-bw/2+i*(bw/4)-2, base-bh, 4, bh); // pilasters
     for(let row=0; row<2; row++){ const wy=base-bh+9+row*27;
