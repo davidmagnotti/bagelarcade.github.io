@@ -85,6 +85,18 @@ function loadCode(str){
   P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
   P.quests=d.quests||{}; P.prog=d.prog||{};
+  // One-time migration: anyone who felled the wyrm under the PRE-rework version
+  // never saw the inside-the-volcano scene, the faint-not-die twist, or the
+  // mage-hunt follow-up. A new-version completion always leaves a `vhunt` quest
+  // behind; an old one never does - so wyrm-done-but-no-vhunt uniquely marks an
+  // old save. Roll the whole Ashwing chain back so Vashti returns to Kohana and
+  // it can be replayed fresh. Guarded so it only ever fires once.
+  if(qs('wyrm')==='done' && !P.quests.vhunt && !P.prog.wyrmReplayed){
+    P.prog.wyrmReplayed=1;
+    delete P.quests.wyrm;   // re-offered as 'avail' on entering the east isle
+    delete P.prog.vhunt;
+    P.metDragon=0; P.mageHuntStarted=0; P.eastDragonFought=0; P.eastDragonFreed=0;
+  }
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
