@@ -772,8 +772,11 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.arc(2.3,0.4,2.9,0,TAU); g.fill(); g.stroke();
     g.restore();
   } else if(!away){
-    drawArm(-1, flip>0? armSwing : -armSwing);
-    if(!o.weapon) drawArm(1, flip>0? -armSwing : armSwing);
+    // the off-hand arm must sit opposite the weapon hand (drawn at flip*8.2);
+    // hardcoding side -1 put both arms on the same side when facing left (flip<0),
+    // so the sword read as floating off the body. Mirror the sides with flip.
+    drawArm(-flip, flip>0? armSwing : -armSwing);
+    if(!o.weapon) drawArm(flip, flip>0? -armSwing : armSwing);
   }
   /* ---------------- back layers when walking away ---------------- */
   if(o.quiver && away){
@@ -1220,16 +1223,6 @@ function drawHumanoid(g,sx,sy,o){
       g.strokeStyle='rgba(220,220,225,0.6)'; g.lineWidth=1;
       g.beginPath(); g.moveTo(0,-12); g.quadraticCurveTo(4,-10, 4.5,-5); g.stroke();
     }
-    g.restore();
-  }
-
-  /* ---------------- shield on the off-hand ---------------- */
-  if(o.shield && !away){
-    g.save(); g.translate(-flip*10.5,-14+B*0.6);
-    g.fillStyle='#7a5a34';
-    g.beginPath(); g.ellipse(0,0,4.6,5.4,0,0,TAU); g.fill();
-    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
-    g.fillStyle='#e0b45a'; g.beginPath(); g.arc(0,0,1.6,0,TAU); g.fill();
     g.restore();
   }
 
