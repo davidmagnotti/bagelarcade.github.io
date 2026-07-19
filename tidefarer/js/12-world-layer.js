@@ -20,11 +20,12 @@ const MAIN_ZONES = { // BARIK - ten times the home shores
   vael:     {x:318,y:40,  r:20, name:'The Vael March', lv:[11,14]}
 };
 const EAST_ZONES = {
-  dock:    {x:38, y:118, r:7,  name:'Palm Cove', lv:[0,0]},
-  village: {x:72, y:110, r:10, name:'Kohana Village', lv:[0,0]},
-  grove:   {x:118,y:132, r:12, name:'Palmwatch Grove', lv:[4,6]},
-  volcano: {x:110,y:52,  r:14, name:'Mount Kea', lv:[6,8]},
-  reef:    {x:170,y:96,  r:9,  name:'Windward Reef', lv:[0,0]}
+  dock:    {x:44, y:120, r:6,  name:'Palm Cove', lv:[0,0]},
+  village: {x:74, y:106, r:10, name:'Kohana Village', lv:[0,0]},
+  grove:   {x:116,y:116, r:11, name:'Palmwatch Grove', lv:[4,6]},
+  volcano: {x:88, y:52,  r:22, name:'Mount Kea', lv:[6,8]},
+  caldera: {x:88, y:50,  r:5,  name:'The Caldera', lv:[7,9]},
+  reef:    {x:150,y:84,  r:8,  name:'Windward Reef', lv:[0,0]}
 };
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
@@ -33,8 +34,8 @@ const WORLD_DEFS = {
   main:{ W:355, H:355, seed:99177, zones:MAIN_ZONES,
     spawn:{x:57.5,y:259.5}, title:'BARIK', sub:'CHAPTER II - THE WILD SHORES',
     gen:()=>genMainAll() },
-  east:{ W:200, H:200, seed:44721, zones:EAST_ZONES,
-    spawn:{x:38.5,y:118.5}, title:'THE SUNWARD ISLE', sub:'CHAPTER III - PALMS, ASH, AND OPEN WATER',
+  east:{ W:176, H:176, seed:44721, zones:EAST_ZONES,
+    spawn:{x:44.5,y:120.5}, title:'THE SUNWARD ISLE', sub:'CHAPTER III - PALMS, ASH, AND OPEN WATER',
     gen:()=>genEastAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -417,32 +418,55 @@ function spawnMobsMain(){
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
   spawnMob('skeleton',ZONES.tower.x,ZONES.tower.y+3,true);
 }
+function spiralPath(cx,cy,rStart,rEnd,turns,tile){
+  // an ascending switchback of PATH tiles winding from rStart in to rEnd
+  const steps=Math.max(1,Math.ceil((rStart-rEnd)*turns*7));
+  for(let i=0;i<=steps;i++){
+    const f=i/steps, r=rStart-(rStart-rEnd)*f, a=f*turns*TAU + 1.2;
+    const x=Math.round(cx+Math.cos(a)*r), y=Math.round(cy+Math.sin(a)*r*0.92);
+    for(let dx=-1;dx<=1;dx++) for(let dy=-1;dy<=1;dy++){
+      if(inb(x+dx,y+dy) && walkTile(tileAt(x+dx,y+dy))) setTile(x+dx,y+dy,tile);
+    }
+  }
+}
 function genEast(){
   const rng=mulberry32(SEED);
-  const CX2=100, CY2=100;
-  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*12-6);
+  const CX2=88, CY2=88, R0=58;
+  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*10-5);
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     const dx=x-CX2, dy=y-CY2, d=Math.hypot(dx,dy), a=Math.atan2(dy,dx);
     const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
-    const rad=72+wob[wi]+6*Math.sin(a*5+1.7);
+    const rad=R0+wob[wi]+5*Math.sin(a*5+1.7);
     let t=T.DEEP;
     if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+2) t=T.SHALLOW;
     G.map[y*MAPW+x]=t;
   }
-  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,5,T.SAND,false);
-  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,8,T.SHALLOW,true);
-  carveDisc(EAST_ZONES.volcano.x,EAST_ZONES.volcano.y,13,T.RUIN,false);
-  carveDisc(EAST_ZONES.volcano.x,EAST_ZONES.volcano.y+8,10,T.GRASS,false);
-  carveDisc(EAST_ZONES.grove.x,EAST_ZONES.grove.y,11,T.FOREST,false);
+  const V=EAST_ZONES.volcano, C=EAST_ZONES.caldera;
+  // Mount Kea - a broad walkable massif of ash-rock rising over the north shore
+  carveDisc(V.x, V.y, V.r, T.RUIN, true);
+  // a scorched-soil apron so the rock blends down into the palms
+  for(let y=V.y-V.r-4;y<=V.y+V.r+4;y++) for(let x=V.x-V.r-4;x<=V.x+V.r+4;x++){
+    if(inb(x,y)){ const dd=dist(x,y,V.x,V.y);
+      if(dd>V.r && dd<=V.r+3 && tileAt(x,y)===T.GRASS) setTile(x,y,T.SOIL); }
+  }
+  // switchback path climbing to the caldera rim
+  spiralPath(V.x, V.y+2, V.r-2, C.r+1, 2.15, T.PATH);
+  carveDisc(C.x, C.y, C.r-1, T.RUIN, false); // clean caldera floor (lava sits on top as decor)
+  // reef sandbar offshore
+  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,4,T.SAND,false);
+  carveDisc(EAST_ZONES.reef.x,EAST_ZONES.reef.y,7,T.SHALLOW,true);
+  // the palm grove
+  carveDisc(EAST_ZONES.grove.x,EAST_ZONES.grove.y,EAST_ZONES.grove.r,T.FOREST,false);
+  // village clearing & dock cove
   carveDisc(EAST_ZONES.village.x,EAST_ZONES.village.y,9,T.GRASS,false);
   carveDisc(EAST_ZONES.dock.x,EAST_ZONES.dock.y,5,T.SAND,false);
+  // roads
   carveLine(EAST_ZONES.dock.x,EAST_ZONES.dock.y, EAST_ZONES.village.x,EAST_ZONES.village.y, T.PATH,0);
   carveLine(EAST_ZONES.village.x,EAST_ZONES.village.y, EAST_ZONES.grove.x,EAST_ZONES.grove.y, T.PATH,0);
-  carveLine(EAST_ZONES.village.x,EAST_ZONES.village.y, EAST_ZONES.volcano.x,EAST_ZONES.volcano.y+9, T.PATH,0);
+  carveLine(EAST_ZONES.village.x,EAST_ZONES.village.y, V.x,V.y+V.r-1, T.PATH,0);
 }
 function placeObjectsEast(){
-  const V=EAST_ZONES.village, D=EAST_ZONES.dock, VO=EAST_ZONES.volcano;
-  addBuilding('volcano', VO.x, VO.y, 'Mount Kea');
+  const V=EAST_ZONES.village, D=EAST_ZONES.dock, VO=EAST_ZONES.volcano, C=EAST_ZONES.caldera;
   addBuilding('hut', V.x-4, V.y-3, 'Kohana longhut (Inn)');
   addBuilding('hut', V.x+3, V.y-4, 'Weaver hut');
   addBuilding('hut', V.x+6, V.y+1, 'Hunting hut');
@@ -451,35 +475,43 @@ function placeObjectsEast(){
   addBuilding('well', V.x, V.y, 'Spring well');
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('boat', D.x-5.5, D.y+2.5, '');
-  addBuilding('lamp', V.x+10, V.y+7, '');
+  addBuilding('lamp', V.x+9, V.y+6, '');
   const pr2=mulberry32(SEED+7);
   // the grove proper: thick palms
   const GR=EAST_ZONES.grove;
-  for(let gy=-11;gy<=11;gy++) for(let gx=-11;gx<=11;gx++){
+  for(let gy=-GR.r;gy<=GR.r;gy++) for(let gx=-GR.r;gx<=GR.r;gx++){
     const px=GR.x+gx, py=GR.y+gy;
-    if(Math.hypot(gx,gy)<=11 && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr2()<0.22){
+    if(Math.hypot(gx,gy)<=GR.r && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr2()<0.26){
       const n=addNode('tree',px,py); n.palm=1;
     }
   }
-  for(let i=0;i<300;i++){
+  // palms scattered across the whole isle - denser now so the smaller island still feels lush
+  for(let i=0;i<360;i++){
     const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
     const t=tileAt(ax,ay);
-    if((t===T.FOREST || (t===T.GRASS&&pr2()<0.18) || (t===T.SAND&&pr2()<0.3)) && !solidAt(ax,ay)
-       && dist(ax,ay,V.x,V.y)>6 && dist(ax,ay,D.x,D.y)>4){
+    if((t===T.FOREST || (t===T.GRASS&&pr2()<0.26) || (t===T.SAND&&pr2()<0.28)) && !solidAt(ax,ay)
+       && dist(ax,ay,V.x,V.y)>6 && dist(ax,ay,D.x,D.y)>4 && dist(ax,ay,VO.x,VO.y)>VO.r-2){
       const n=addNode('tree',ax,ay); n.palm=1;
     }
   }
+  // shells on the beaches
   for(let i=0;i<26;i++){
     const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
     if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay);
   }
-  for(let i=0;i<20;i++){
-    const ax=VO.x+Math.floor(pr2()*22-11), ay=VO.y+Math.floor(pr2()*22-11);
-    if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay)) addNode('rock',ax,ay);
+  // ash-rocks & ember-ore studding the volcano slopes (mining + the ember crystals)
+  for(let i=0;i<52;i++){
+    const a=pr2()*TAU, rr=6+pr2()*(VO.r-5);
+    const ax=Math.round(VO.x+Math.cos(a)*rr), ay=Math.round(VO.y+Math.sin(a)*rr*0.92);
+    if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay) && dist(ax,ay,C.x,C.y)>C.r+1) addNode('rock',ax,ay);
   }
-  G.decor.push({kind:'chest',x:EAST_ZONES.reef.x+0.5,y:EAST_ZONES.reef.y+0.5,opened:false,rich:8});
-  const vc=findOpenNear(VO.x+3,VO.y+5,6);
-  if(vc){ G.decor.push({kind:'chest',x:vc[0]+0.5,y:vc[1]+0.5,opened:false,rich:9}); setSolid(vc[0],vc[1],1); }
+  // the caldera: a molten pool at the summit's heart (glowing, impassable)
+  G.decor.push({kind:'lava', x:C.x+0.5, y:C.y+0.5, r:C.r-1});
+  for(let y=C.y-C.r;y<=C.y+C.r;y++) for(let x=C.x-C.r;x<=C.x+C.r;x++){
+    if(inb(x,y) && dist(x,y,C.x,C.y)<=C.r-1.2) setSolid(x,y,1);
+  }
+  // reef treasure
+  G.decor.push({kind:'chest', x:EAST_ZONES.reef.x+0.5, y:EAST_ZONES.reef.y+0.5, opened:false, rich:8});
 }
 function spawnEastFolk(){
   const V=EAST_ZONES.village, D=EAST_ZONES.dock;
@@ -502,13 +534,57 @@ function spawnEastFolk(){
   G.npcs.push(makeNPC('moli','Elder Moli', V.x-0.5,V.y-1.6,
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
     ['Kea grumbles, the palms bow, the reef sings. The island talks - listen.',
-     'Guests of the tide are guests of Kohana.'],0.7));
+     'Old Ashwing has warmed this isle since my mother\'s mother. Whatever that robed woman says.'],0.7));
+  // Vashti - a visiting Emberbinder who covets the dragon's fire and will lie to get it
+  G.npcs.push(makeNPC('vashti','Vashti the Emberbinder', V.x-8.5,V.y-4.5,
+    {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,hairstyle:'long'},
+    ['The mountain\'s heat is... wasted, on a sleeping beast.',
+     'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0.3));
+}
+/* The caldera set-piece: told the wyrm is evil, you climb - and find him kind.
+   Then Vashti's binding takes him and you must break it in a fight. Driven by
+   proximity + timers so it needs no special dialog plumbing. */
+function updateDragonEvent(dt){
+  if(qs('wyrm')!=='active' || P.eastDragonFought) return;
+  const C=ZONES.caldera; if(!C) return;
+  if(!G._dragStage && dist(P.x,P.y,C.x,C.y)<8){
+    G._dragStage=1; G._dragT=0;
+    banner('ASHWING','THE WYRM OF MOUNT KEA');
+    toast('A great emerald dragon lifts his head from the caldera’s warmth. <b>“You climbed all this ash to end me? Little flame - I have kept this isle green since your grandmothers were girls. Who filled your ear with murder?”</b>',7500);
+    if(Snd.quest) Snd.quest();
+    return;
+  }
+  if(G._dragStage===1){ G._dragT+=dt;
+    if(G._dragT>5){ G._dragStage=2; G._dragT=0;
+      toast('<b style="color:#c77bff">Violet fire lances up the ash road.</b> Vashti’s voice follows it: “Sentiment. Sleep, wyrm - or kill for me.” The binding closes over Ashwing; his eyes kindle red and his wings snap wide.',7500);
+      G.shake=0.9; if(Snd.magic) Snd.magic();
+    }
+    return;
+  }
+  if(G._dragStage===2){ G._dragT+=dt;
+    if(G._dragT>3.5){ G._dragStage=3;
+      const sp=findOpenNear(Math.round(C.x), Math.round(C.y+7), 7) || [C.x, C.y+7];
+      const dr=spawnMob('dragon', sp[0], sp[1]);
+      if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.state='chase'; dr.noAggroT=0;
+        dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
+      banner('ASHWING, ENTHRALLED','BREAK THE SPELL');
+      if(Snd.boss) Snd.boss();
+    }
+    return;
+  }
+}
+function freeDragon(x,y){
+  // he dissolves into warm light and beats back to his mountain, himself again
+  for(let i=0;i<32;i++){ const a=Math.random()*TAU, sp=rnd(1,4.5);
+    G.parts.push({x:x, y:y-0.6, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.2, life:rnd(0.8,1.7),
+      color:Math.random()<0.5?'#ffd24a':'#ff8a44', size:rnd(2,5), grav:-0.22}); }
 }
 function spawnMobsEast(){
   const packs=[
     ['boar', EAST_ZONES.grove, 8, 0.2],
-    ['boar', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+12, r:8}, 5, 0.3],
-    ['scorpion', EAST_ZONES.volcano, 4, 0.4]
+    ['boar', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+14, r:8}, 5, 0.3],
+    // ash-scorpions haunt the lower slopes - away from the caldera so the wyrm fight stays clean
+    ['scorpion', {x:EAST_ZONES.volcano.x, y:EAST_ZONES.volcano.y+13, r:9}, 3, 0.3]
   ];
   for(const [kind,z,count,el] of packs){
     for(let i=0;i<count;i++){
@@ -607,6 +683,11 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
   log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
   doneText:'There. Kaia-work, signed in the grain. Step onto the water and the board will find your feet. The reef is yours - so is every shore you can see.',
   rw:{surf:true, gold:30} };
+QUESTS.wyrm={ giver:'vashti', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
+  brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
+  log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
+  doneText:'Ashwing sleeps easy now, and so does Kohana.',
+  rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,
   brief:'My cousin of the Vael March styles himself a king and pays raiders in my own minted coin. Six of his red hoods driven from my roads will remind him whose realm feeds his. Go armed, traveler - they are Lv 12 men and proud of it.',
   log:'Drive off 6 Vael Raiders in the north-east March.',
@@ -1003,7 +1084,7 @@ function switchWorld(id){
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
-  if(id==='east') for(const q3 of ['hunt1','surf1']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);

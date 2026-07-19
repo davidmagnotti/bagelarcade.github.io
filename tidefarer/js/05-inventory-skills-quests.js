@@ -105,7 +105,8 @@ function killCredit(kind){
     if(q.kind==='kill' && q.kill[kind]!=null){
       P.prog[id]=Math.min(q.kill[kind],(P.prog[id]||0)+1);
       const left=q.kill[kind]-P.prog[id];
-      toast(((MOBDEF[kind]&&MOBDEF[kind].name)||'Elite foe')+' defeated - '+(left>0? left+' to go' : '<b style="color:#9be07f">objective complete! Return to '+npcName(q.giver)+'</b>'));
+      if(kind!=='dragon') // the wyrm fight resolves itself at the caldera - no "return to Vashti"
+        toast(((MOBDEF[kind]&&MOBDEF[kind].name)||'Elite foe')+' defeated - '+(left>0? left+' to go' : '<b style="color:#9be07f">objective complete! Return to '+npcName(q.giver)+'</b>'));
     }
   }
   updateQuestUI();
