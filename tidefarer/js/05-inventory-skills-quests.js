@@ -146,6 +146,8 @@ function questTargetPos(id){
     if(id==='undermaw1') return {x:ZONES.undermaw.x,y:ZONES.undermaw.y};
     if(id==='wyrm') return ZONES.caldera? {x:ZONES.caldera.x,y:ZONES.caldera.y} : null; // guide up Mount Kea to the caldera
     if(id==='hunt1') return ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null;
+    if(id==='vhunt'){ const mg=G.mobs.find(m=>m.kind==='mage'&&!m.dead); // track Vashti as she flees
+      return mg? {x:mg.x,y:mg.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null); }
     if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};

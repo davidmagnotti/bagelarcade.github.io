@@ -84,7 +84,7 @@ function interiorHotspot(){
   let best=null, bd=1.45;
   for(const f of I.furn){
     const lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak'}[f.type];
     if(!lbl) continue;
     const d=dist(P.x,P.y,f.x,f.y);
     if(d<bd){ bd=d; best={f,label:lbl}; }
@@ -105,6 +105,7 @@ function useHotspot(h){
       'Tempting - but the whole village would hear of it by lunch.',
       'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
   }
+  else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') openStation('The Anvil', craftMenu);
   else if(f.type==='orb'){

@@ -333,6 +333,7 @@ function drawMobBars(m,s){
   }
 }
 function damageMob(m,dmg,knock,skill){
+  if(m.fainted) return; // a felled, freed dragon takes no more harm
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
@@ -358,7 +359,29 @@ function damageMob(m,dmg,knock,skill){
     if(P.combo===2) addFloat('COMBO x2', P.x, P.y-2, '#ffce7a', 1.1);
   }
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
-  if(m.hp<=0) killMob(m, skill);
+  if(m.hp<=0){
+    if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
+    else killMob(m, skill);
+  }
+}
+function dragonFaints(m){
+  // beaten down, the binding shatters - Ashwing swoons and comes to himself
+  m.fainted=1; m.enspelled=false; m.state='idle'; m.tx=null;
+  m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
+  Snd.boss(); G.shake=0.9; G.slowmo=1.15;
+  shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
+  banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
+  P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
+  if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
+  toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sways, then sinks to the ash - breathing, himself again. “...You could have run me through. You broke the chain instead. My thanks, little flame.” <br>He lifts his head: “The Emberbinder fled into the palm grove. Do not let her bind another.”',9000);
+  if(qs('wyrm')==='active') completeQuest('wyrm');
+  if(typeof startMageHunt==='function') startMageHunt();
+  // a breath later he rouses and beats away to rest in his lair
+  setTimeout(()=>{ if(m && !m.dead){ m.dead=true; m.respawnT=-1;
+    for(let i=0;i<24;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
+      G.parts.push({x:m.x,y:m.y-0.6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.4,life:rnd(0.9,1.8),
+        color:Math.random()<0.5?'#ffd24a':'#8fd0a0',size:rnd(2,5),grav:-0.2}); }
+  } }, 4500);
 }
 function killMob(m,skill){
   buzz(13);
@@ -377,6 +400,9 @@ function killMob(m,skill){
   // drops
   const g=rndi(d.gold[0],d.gold[1])*(m.elite?3:1);
   if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
+  if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
+    shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46);
+    toast('<b>Vashti’s binding unravels with her.</b> “...the fire was to be mine,” she breathes - and the violet goes out. The grove falls quiet.',6000); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
   if(m.kind==='alpha'){
@@ -385,16 +411,6 @@ function killMob(m,skill){
     banner('GREYMAW FALLS','THE HIGHLANDS GO QUIET');
     give('fang',1);
     toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
-  }
-  if(m.kind==='dragon'){
-    // you didn't slay the wyrm - you broke the spell binding him
-    Snd.boss(); G.shake=0.9; G.slowmo=1.15;
-    shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
-    banner('THE SPELL BREAKS','ASHWING IS FREED');
-    P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
-    if(typeof freeDragon==='function') freeDragon(m.x,m.y);
-    toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sinks to the ash, himself again. “...You could have run. You freed me instead. Take my thanks, little flame - and know the mountain is warm for you now.” Of Vashti, only scorched sand remains.',8500);
-    if(qs('wyrm')==='active') completeQuest('wyrm');
   }
   if(m.boss){
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
@@ -754,6 +770,18 @@ function updateMobs(dt){
           Snd.bow();
         }
       }
+      if(m.kind==='mage'){
+        // Vashti kites and flings hex bolts - sometimes a three-fanned volley
+        if(l<3.5 && l>0.01) moveEntity(m, -dx/l*d.speed*1.15*dt, -dy/l*d.speed*1.15*dt);
+        m.shootCd-=dt;
+        if(m.shootCd<=0 && l>1.6 && l<11){
+          m.shootCd=1.9; m.swing=0.3;
+          const spread = m.hp<m.maxhp*0.5 ? [-0.22,0,0.22] : [0]; // desperate volleys when hurt
+          for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
+            G.projs.push({kind:'hex',x:m.x,y:m.y-0.9,vx:Math.cos(ca)*7.5,vy:Math.sin(ca)*7.5,life:1.7,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
+          if(Snd.magic) Snd.magic();
+        }
+      }
       if(m.kind==='alpha'){
         m.lungeCd=(m.lungeCd||3)-dt;
         if(m.lungeCd<=0 && l>2.2 && l<7.5){
@@ -811,6 +839,7 @@ function updateProjs(dt){
     p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
     if(p.kind==='bolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#ffb26b',size:3,grav:0});
     if(p.kind==='snarebolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.32,color:'#6fe0c8',size:3,grav:0});
+    if(p.kind==='hex'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#c77bff',size:3,grav:0});
     if(p.kind==='arrow'&&Math.random()<0.5) G.parts.push({x:p.x,y:p.y-0.35,vx:0,vy:0,life:0.18,color:'rgba(230,225,205,0.55)',size:2});
     const tx=Math.floor(p.x), ty=Math.floor(p.y);
     if(G.solid[ty*MAPW+tx]===1 && tileAt(tx,ty)>=T.SAND){ p.life=0; burst(p.x,p.y-0.3,'#c9b990',4,1.5); continue; }
@@ -884,7 +913,6 @@ function updateWorld(dt){
       vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.7), life:rnd(1.6,2.8),
       color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.12});
   }
-  if(G.worldId==='east') updateDragonEvent(dt);
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist
   if(night>0.55 && !G.interior && !P.dead && !inSafeZone(P.x,P.y)){
