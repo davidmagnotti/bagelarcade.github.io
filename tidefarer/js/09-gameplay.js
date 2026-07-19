@@ -61,6 +61,14 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'lore',key:'woodpile@isle',o:b,label:'Inspect'}; }
     }
+    if(b.kind==='tunnelmouth'){
+      const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'warp',o:b,label:'Enter'}; }
+    }
+    if(b.kind==='tome' && !b.destroyed){
+      const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'tome',o:b,label:'Destroy'}; }
+    }
     if(b.kind==='well' && P.projects.well){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
@@ -114,6 +122,8 @@ function doInteract(){
   if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
+  if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
+  if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
@@ -130,6 +140,12 @@ function doInteract(){
   if(it.type==='plot') usePlot(it.o);
 }
 function facePoint(x,y){ const dx=x-P.x, dy=y-P.y, l=Math.hypot(dx,dy)||1; P.dir={x:dx/l,y:dy/l}; }
+function warpTo(b){ // step through a tunnel to its far end (same world), with a fade
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8); P.click=null;
+  setTimeout(()=>{ P.x=b.tx; P.y=b.ty; P.moving=false;
+    G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+    setTimeout(()=>{ if(fd) fd.style.opacity=0; },130); }, 260);
+}
 
 /* ---- gathering ---- */
 function hitNode(n){
@@ -868,8 +884,7 @@ function updateMobs(dt){
           G.parts.push({x:m.x+Math.cos(ba)*rr, y:m.y-0.6+Math.sin(ba)*rr*0.7, vx:Math.cos(ba)*1.7, vy:Math.sin(ba)*1.7,
             life:0.42, color:Math.random()<0.5?'#ff7a1e':'#ffd24a', size:rnd(2.5,5), grav:0}); }
       }
-      if(m.boss){
-        // ranged bone bolt + summons
+      if(m.kind==='boss'){ // the Hollow King alone raises bone and calls the dead
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>2){
           m.shootCd=2.6;

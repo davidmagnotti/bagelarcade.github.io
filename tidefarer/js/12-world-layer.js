@@ -36,6 +36,14 @@ const WIND_ZONES = {
   wheel:  {x:58, y:68,  r:5,  name:'Waterwheel Row', lv:[0,0]},
   bluffs: {x:114,y:112, r:12, name:'Windward Bluffs', lv:[0,0]}
 };
+const AERIE_ZONES = {
+  dock:    {x:38, y:120, r:6,  name:'Skyfoot Landing', lv:[0,0]},
+  village: {x:58, y:104, r:10, name:'Rookhaven', lv:[0,0]},
+  aerie:   {x:102,y:56,  r:17, name:'The Screaming Aerie', lv:[11,13]}, // bird-walled plateau
+  sanctum: {x:102,y:52,  r:5,  name:'The Roost Heart', lv:[12,13]},      // tome + serpent, tunnel-only
+  tunnel:  {x:84, y:78,  r:3,  name:'The Underclimb', lv:[0,0]},         // tunnel entrance
+  ridge:   {x:120,y:98,  r:11, name:'Windbite Ridge', lv:[0,0]}
+};
 const WORLD_DEFS = {
   isle:{ W:112, H:112, seed:20260715, zones:ISLE_ZONES,
     spawn:{x:32.5,y:61.5}, title:'EMBERWICK ISLE', sub:'HOME SHORES - CHAPTER I',
@@ -48,7 +56,10 @@ const WORLD_DEFS = {
     gen:()=>genEastAll() },
   wind:{ W:150, H:150, seed:73310, zones:WIND_ZONES,
     spawn:{x:42.5,y:122.5}, title:'WINDSURF ISLE', sub:'AN INDUSTRIOUS CITY BEYOND TREACHEROUS WATER',
-    gen:()=>genWindAll() }
+    gen:()=>genWindAll() },
+  aerie:{ W:150, H:150, seed:51789, zones:AERIE_ZONES,
+    spawn:{x:38.5,y:120.5}, title:'THE AERIE ISLE', sub:'WHERE THE SKY ITSELF WAS TURNED AGAINST YOU',
+    gen:()=>genAerieAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -905,6 +916,137 @@ function askDragonFlight(){
   P.prog.windKnown=1;
   flyToWorld('wind','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke, out over water too wild for any keel.');
 }
+/* =====================================================================
+   THE AERIE ISLE - Vath turned the sky against the island. Screaming
+   raptors wall off the plateau; the only way in is the old Underclimb
+   tunnel, to a sealed roost-heart where a cursed tome (and its serpent
+   warden) must be destroyed to give the birds their minds back.
+   ===================================================================== */
+function aerieTunnelExit(){ const S=AERIE_ZONES.sanctum; return {x:S.x+0.5, y:S.y+2.5}; }
+function aerieTunnelEntry(){ const T2=AERIE_ZONES.tunnel; return {x:T2.x+0.5, y:T2.y+0.5}; }
+function genAerie(){
+  const rng=mulberry32(SEED);
+  const CX2=75, CY2=90, R0=54;
+  const wob=[]; for(let i=0;i<64;i++) wob.push(rng()*10-5);
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    const dx=x-CX2, dy=y-CY2, d=Math.hypot(dx,dy), a=Math.atan2(dy,dx);
+    const wi=((Math.floor((a+Math.PI)/TAU*64))%64+64)%64;
+    const rad=R0+wob[wi]+5*Math.sin(a*5+2.1);
+    let t=T.DEEP;
+    if(d<rad-7) t=T.GRASS; else if(d<rad-2) t=T.SAND; else if(d<rad+2) t=T.SHALLOW;
+    G.map[y*MAPW+x]=t;
+  }
+  const Z=AERIE_ZONES;
+  // the aerie: a broad walkable rock plateau the raptors patrol
+  carveDisc(Z.aerie.x, Z.aerie.y, Z.aerie.r, T.RUIN, true);
+  for(let y=Z.aerie.y-Z.aerie.r-4;y<=Z.aerie.y+Z.aerie.r+4;y++) for(let x=Z.aerie.x-Z.aerie.r-4;x<=Z.aerie.x+Z.aerie.r+4;x++){
+    if(inb(x,y)){ const dd=dist(x,y,Z.aerie.x,Z.aerie.y);
+      if(dd>Z.aerie.r && dd<=Z.aerie.r+3 && tileAt(x,y)===T.GRASS) setTile(x,y,T.SOIL); }
+  }
+  // the sealed Roost Heart: a small clearing ringed by cliff, reachable only
+  // through the Underclimb tunnel warp (never on foot from the plateau)
+  carveDisc(Z.sanctum.x, Z.sanctum.y, Z.sanctum.r-1, T.GRASS, false);
+  for(let a=0;a<TAU;a+=0.10){ for(let rr=Z.sanctum.r; rr<=Z.sanctum.r+1; rr++){
+    const rx=Math.round(Z.sanctum.x+Math.cos(a)*rr), ry=Math.round(Z.sanctum.y+Math.sin(a)*rr);
+    if(inb(rx,ry)){ setTile(rx,ry,T.RUIN); setSolid(rx,ry,1); } } }
+  // village clearing + dock cove
+  carveDisc(Z.village.x,Z.village.y,9,T.GRASS,false);
+  carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
+  // the tunnel-mouth clearing at the plateau's foot
+  carveDisc(Z.tunnel.x,Z.tunnel.y,2,T.RUIN,false);
+  // roads: dock -> village -> the underclimb
+  carveLine(Z.dock.x,Z.dock.y, Z.village.x,Z.village.y, T.PATH,0);
+  carveLine(Z.village.x,Z.village.y, Z.tunnel.x,Z.tunnel.y, T.PATH,0);
+}
+function placeObjectsAerie(){
+  const Z=AERIE_ZONES, V=Z.village, D=Z.dock, T2=Z.tunnel, S=Z.sanctum;
+  addBuilding('house2', V.x-4, V.y-3, 'Rookhaven roundhouse');
+  addBuilding('house', V.x+3, V.y-2, 'The Windward Rest (Inn)');
+  addBuilding('house2', V.x+5, V.y+3, 'Falconer\'s mews');
+  addBuilding('well', V.x, V.y, 'Cliffspring well');
+  addBuilding('lamp', D.x, D.y-1, ''); addBuilding('boat', D.x-4, D.y+2, '');
+  addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
+  // the two ends of the Underclimb: a tunnel mouth at the foot, and its exit
+  // inside the sealed Roost Heart. Interacting warps between them.
+  const ex=aerieTunnelExit(), en=aerieTunnelEntry();
+  G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, tx:ex.x, ty:ex.y-2.4, label:'the Underclimb'});
+  G.decor.push({kind:'tunnelmouth', x:S.x+0.5, y:S.y-1.5, tx:en.x, ty:en.y+1.4, label:'the way down'});
+  // the cursed tome, at the heart of the sealed roost
+  G.decor.push({kind:'tome', x:S.x+0.5, y:S.y+0.5, destroyed:false});
+  setSolid(Math.round(S.x), Math.round(S.y), 1);
+  // greenery on the lower slopes; wind-bent trees
+  const pr=mulberry32(SEED+13);
+  for(let i=0;i<170;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
+    if((t===T.GRASS&&pr()<0.22)||(t===T.SAND&&pr()<0.12)){ if(solidAt(ax,ay)) continue;
+      if(dist(ax,ay,V.x,V.y)<4||dist(ax,ay,D.x,D.y)<4) continue; addNode('tree',ax,ay); } }
+  for(let i=0;i<20;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
+    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay); }
+  for(let i=0;i<30;i++){ const a=pr()*TAU, rr=6+pr()*(Z.aerie.r-6); // ore on the crags
+    const ax=Math.round(Z.aerie.x+Math.cos(a)*rr), ay=Math.round(Z.aerie.y+Math.sin(a)*rr*0.92);
+    if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay) && dist(ax,ay,S.x,S.y)>S.r+1) addNode('rock',ax,ay); }
+  G.critters=[];
+}
+function spawnAerieFolk(){
+  const Z=AERIE_ZONES, V=Z.village;
+  G.npcs.push(makeNPC('wrenna','Wrenna the Rookmother', V.x+0.5, V.y+2.5,
+    {skin:'#b58a5e',hair:'#cfc7b8',shirt:'#5a6a4a',pants:'#3a3a2c',hairstyle:'bun'},
+    ['My birds raised me and I raised them, and now they\'d take my eyes if I climbed the plateau. Something up there has turned their hearts.',
+     'They were gentle a season ago. Then a robed man walked up the Underclimb and never walked down. The screaming started that night.'],0.4));
+  G.npcs.push(makeNPC('cade','Cade the Falconer', V.x+4.5, V.y+3.5,
+    {skin:'#a9784e',hair:'#3a2e26',shirt:'#4a5a6a',pants:'#33302a',beard:'#3a2e26'},
+    ['Don\'t go up the open slope, friend - you\'ll be ribbons before the first ledge.',
+     'There\'s an old miners\' tunnel, the Underclimb, comes up inside the roost itself. That\'s your only road in.'],0.4));
+}
+function spawnMobsAerie(){
+  const Z=AERIE_ZONES;
+  // the raptors that wall off the plateau - many, aggressive, respawning, until
+  // the tome that maddened them is destroyed
+  if(!(P.story && P.story.aerieFreed)){
+    const pr=mulberry32(SEED+29), S=Z.sanctum;
+    for(let i=0;i<10;i++){ const a=pr()*TAU, rr=6+pr()*(Z.aerie.r-5);
+      const sp=findOpenNear(Math.round(Z.aerie.x+Math.cos(a)*rr), Math.round(Z.aerie.y+Math.sin(a)*rr), 4);
+      if(sp && dist(sp[0],sp[1],S.x,S.y) > S.r+2) spawnMob('raptor', sp[0], sp[1]); }
+  } else { // freed: gentle birds wheel the crags again
+    G.critters=G.critters||[];
+    const pr=mulberry32(SEED+31);
+    for(let i=0;i<8;i++){ const a=pr()*TAU, rr=4+pr()*(Z.aerie.r-3);
+      const ax=Math.round(Z.aerie.x+Math.cos(a)*rr), ay=Math.round(Z.aerie.y+Math.sin(a)*rr);
+      if(inb(ax,ay)&&!solidAt(ax,ay)) G.critters.push({kind:'fowl',x:ax+0.5,y:ay+0.5,home:{x:ax+0.5,y:ay+0.5},tx:null,ty:null,wt:rnd(0.5,4),face:pr()<0.5?-1:1,anim:pr()*6,range:4,col:'#d8d2c4',moving:false}); }
+  }
+  // the serpent warden coils in the sealed roost heart until the tome is gone
+  if(!(P.story && P.story.aerieFreed)) spawnSerpent();
+  const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
+  if(yd) spawnMob('dummy',yd[0],yd[1]);
+}
+function spawnSerpent(){
+  if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)) return null;
+  const S=AERIE_ZONES.sanctum, sp=findOpenNear(Math.round(S.x), Math.round(S.y+2), 3) || [S.x, S.y+2];
+  const sn=spawnMob('serpent', sp[0], sp[1]);
+  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+  return sn;
+}
+function destroyTome(b){
+  if(b.destroyed) return;
+  if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)){
+    toast('The tome will not so much as singe while the <b>serpent warden</b> lives. Put the warden down first.',4600); return;
+  }
+  b.destroyed=true;
+  P.story.aerieFreed=1; P.story.vathMet=1;
+  Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.1;
+  shockwave(b.x,b.y,'rgba(199,123,255,0.9)',80);
+  for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
+    G.parts.push({x:b.x,y:b.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.7,1.6),color:Math.random()<0.5?'#c77bff':'#ff9a44',size:rnd(2,4.5),grav:-0.05}); }
+  // the raptors' minds return - the screaming stops mid-cry
+  for(const m of G.mobs){ if(m.kind==='raptor'){ m.dead=true; m.respawnT=-1; } }
+  banner('THE TOME BURNS','THE SKY REMEMBERS ITSELF - THE AERIE IS QUIET');
+  if(qs('roost')==='active') completeQuest('roost');
+  setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. On the last leaf, before it blackens, a line in that same unhurried hand: <b style="color:#c9a0ff">“Three. You are becoming a nuisance, deckhand.”</b> <i>Deckhand. The word snags on something you cannot reach.</i>',10000),1500);
+}
+function genAerieAll(){
+  genAerie(); bakeSolids(); placeObjectsAerie(); buildFoam();
+  spawnAerieFolk(); spawnMobsAerie();
+  buildMapBase();
+}
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
@@ -990,6 +1132,11 @@ QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{lev
   log:'Confront the Bound Leviathan at the harbor breakwater and end the curse on the strait.',
   doneText:'The water\'s a mill-pond and the boats are already casting off. You didn\'t just kill a monster - you handed a dying city its livelihood. Windsurf will tell this one for a hundred years.',
   rw:{gold:300, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
+QUESTS.roost={ giver:'wrenna', title:'The Screaming Aerie', kind:'special', xpL:440,
+  brief:'Since the robed man climbed the Underclimb and never came down, my birds would sooner kill than land. It is no fever, friend - it is a binding, and it sits in a book at the heart of the roost, behind a warden with far too many teeth. The open slope will end you. Take the tunnel up. Burn the thing. Give me back my sky.',
+  log:'Take the Underclimb tunnel up into the sealed Roost Heart. Slay the serpent warden, then destroy the cursed tome.',
+  doneText:'The screaming stopped, and my old grey hen landed on my shoulder like nothing was ever wrong. You gave a whole island back its sky. There is no thanks big enough - but here is what I have, and it is yours.',
+  rw:{gold:320, item:{potion:3}, xp:{melee:440, archery:440, magic:440}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1369,9 +1516,10 @@ function sailTo(dest, msg){
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
-  const dests = G.worldId==='wind' ? [['Sail to the Sunward Isle','east'],['Sail home to Barik','main']]
-    : G.worldId==='east' ? [['Sail to Windsurf Isle','wind'],['Sail home to Barik','main']]
-    : [['Sail to Windsurf Isle','wind'],['Sail to the tutorial isle','isle']]; // main
+  // once the seas are calm every dock is a ferry hub - sail to any known isle
+  const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
+             ['Sail to Windsurf Isle','wind'],['Sail to the Aerie Isle','aerie']];
+  const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent='The Ferry';
@@ -1435,6 +1583,11 @@ function switchWorld(id){
     if(P.story && P.story.tideCalm) updateWindFolkMood();
     if(!P.prog.windSeen){ P.prog.windSeen=1;
       setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something has scared every boat from the water. <b>Rell the Harbormaster</b> waits at the docks.',7000),1400); }
+  }
+  if(id==='aerie'){
+    if(qs('roost')!=='done' && !P.quests.roost) P.quests.roost='avail';
+    if(!P.prog.aerieSeen){ P.prog.aerieSeen=1;
+      setTimeout(()=>toast('<b>The Aerie Isle</b> - and even from the landing you hear it: a sky full of screaming. Nothing with wings will let you near the great plateau. <b>Wrenna the Rookmother</b> is in the village.',7000),1400); }
   }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();
