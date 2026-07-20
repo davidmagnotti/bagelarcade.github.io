@@ -1030,7 +1030,10 @@ function placeObjectsAerie(){
   // the Underclimb tunnel-mouth at the plateau's foot now bores straight down into
   // the catacomb beneath the Roost Heart. Interacting descends into the dungeon world.
   const en=aerieTunnelEntry();
-  G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, deep:1, label:'the Underclimb'});
+  G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, deep:1, label:'the Underclimb', name:'THE UNDERCLIMB ▼'});
+  // a cairn signpost beside the mouth so nobody mistakes it for a dead-end warp
+  G.decor.push({kind:'pillar', x:en.x-2.4, y:en.y+0.6, broken:false, loreKey:'underclimb'});
+  addBuilding('lamp', Math.round(en.x)-2, Math.round(en.y)+1, ''); addBuilding('lamp', Math.round(en.x)+2, Math.round(en.y)+1, '');
   // a TON of tumbled stone barricading the Underclimb - solid boulders scattered
   // thick around the mouth so you must weave through them (a narrow way stays open)
   { const tb=mulberry32(SEED+61);
@@ -1068,7 +1071,7 @@ function spawnAerieFolk(){
   G.npcs.push(makeNPC('cade','Cade the Falconer', V.x+4.5, V.y+3.5,
     {skin:'#a9784e',hair:'#3a2e26',shirt:'#4a5a6a',pants:'#33302a',beard:'#3a2e26'},
     ['Don\'t go up the open slope, friend - you\'ll be ribbons before the first ledge.',
-     'There\'s an old miners\' tunnel, the Underclimb, comes up inside the roost itself. That\'s your only road in.'],0.4));
+     'There\'s an old miners\' tunnel down by the plateau\'s foot - the Underclimb. It doesn\'t climb, whatever the old songs say; it drops into a catacomb under the roost. That\'s where the curse is anchored. Beat your way to the bottom, put down the warden, and burn the tome it guards - THEN the birds get their minds back.'],0.4));
 }
 function spawnMobsAerie(){
   const Z=AERIE_ZONES;
@@ -1210,7 +1213,11 @@ function genAerieDeepAll(){
 function enterAerieDungeon(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._aerieReturn={x:P.x, y:P.y+1.3}; P.click=null;
-  setTimeout(()=>{ switchWorld('aeriedeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+  setTimeout(()=>{ switchWorld('aeriedeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200);
+    if(!(P.story && P.story.aerieFreed)){
+      banner('THE UNDERCLIMB','A CATACOMB, NOT A ROOST - BEAT IT TO REACH THE TOME');
+      setTimeout(()=>toast('The tunnel does not climb - it <b>descends</b>, into cold bone-and-stone dark. The cursed tome lies at the very bottom, past two sealed gates and the thing that wardens it. <b>Clear the catacomb first;</b> the tome cannot be touched until its warden falls.',7000),1200);
+    } }, 300);
 }
 function exitAerieDungeon(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
@@ -1317,10 +1324,17 @@ function placeObjectsFrost(){
   for(let i=0;i<10;i++){ const a=pr()*TAU, rr=2+pr()*(RW.r-2);
     const ax=Math.round(RW.x+Math.cos(a)*rr), ay=Math.round(RW.y+Math.sin(a)*rr);
     if(inb(ax,ay) && tileAt(ax,ay)===T.SNOW && !solidAt(ax,ay) && dist(ax,ay,V.x,V.y)>5) addNode('rock',ax,ay); }
-  // the Rimefissure: a cave-mouth in the snowfield down into the ice dungeon
-  { const dm=findOpenNear(RW.x, RW.y+2, 6);
-    if(dm){ G.decor.push({kind:'dungeonmouth', x:dm[0]+0.5, y:dm[1]+0.5, label:'the Rimefissure'});
-      addBuilding('lamp', dm[0]-2, dm[1]+1, ''); addBuilding('lamp', dm[0]+2, dm[1]+1, ''); } }
+  // THE RIMEFISSURE: the way down into the ice dungeon. It used to hide off in a far
+  // corner of the Rimewood where nobody found it; now it yawns open right beside the
+  // glacier road, a short signposted spur of trodden snow leading to its lamplit mouth.
+  { const jx=Math.round(V.x + (GL.x-V.x)*0.44), jy=Math.round(V.y + (GL.y-V.y)*0.44); // a junction on the road up
+    const spot=findOpenNear(jx-5, jy+2, 8) || [jx-5, jy+2];
+    carveLine(jx, jy, spot[0], spot[1], T.PATH, 0);   // a spur peeling off the main road
+    for(let y=spot[1]-1;y<=spot[1]+1;y++) for(let x=spot[0]-1;x<=spot[0]+1;x++) if(inb(x,y) && !solidAt(x,y)) setTile(x,y,T.PATH); // a trodden clearing at the mouth
+    G.decor.push({kind:'dungeonmouth', x:spot[0]+0.5, y:spot[1]+0.5, label:'the Rimefissure', name:'THE RIMEFISSURE'});
+    addBuilding('lamp', spot[0]-2, spot[1]+1, ''); addBuilding('lamp', spot[0]+2, spot[1]+1, '');
+    addBuilding('lamp', jx, jy, '');                  // a lamp marks the turn off the road
+    G.decor.push({kind:'pillar', x:jx+0.5, y:jy+0.9, broken:false, loreKey:'rimefissure'}); } // a cairn signpost at the junction
   // ice-crags to mine on the glacier margins
   for(let i=0;i<28;i++){ const a=pr()*TAU, rr=6+pr()*(GL.r-4);
     const ax=Math.round(GL.x+Math.cos(a)*rr), ay=Math.round(GL.y+Math.sin(a)*rr*0.92);
@@ -1342,7 +1356,8 @@ function spawnFrostFolk(){
   G.npcs.push(makeNPC('bryn','Bryn the Kettlewarden', V.x+0.5, V.y+2.5,
     {skin:'#c2a488',hair:'#cfc7b8',shirt:'#4a5a72',pants:'#33384a',beard:'#cfc7b8'},
     ['Two moons of this, and the strait still hard as a smith\'s anvil. No boat in, no fish out. Hearthhold is eating its own boots.',
-     'The Warden used to keep our winters kind - it wept meltwater every spring and the strait ran free. Then a robed man walked onto the glacier, and the ice stopped weeping.'],0.4));
+     'The Warden used to keep our winters kind - it wept meltwater every spring and the strait ran free. Then a robed man walked onto the glacier, and the ice stopped weeping.',
+     'You\'ll want the Rimefissure if you mean to fix this at the root - a crack in the ice that opened the night the cold came, right off the glacier road. We put a cairn and lamps at the turn so none of ours wanders past it. Mind the sliding halls down there; the floor has opinions.'],0.4));
   G.npcs.push(makeNPC('sigrid','Sigrid the Icewright', V.x+4.5, V.y+3.5,
     {skin:'#b58a5e',hair:'#8a7a5e',shirt:'#5a6a5a',pants:'#3a3a2c',hairstyle:'bun'},
     ['Wrap up warm and mind the glacier - the Warden is up there, and it is not itself.',

@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -466,6 +466,13 @@ function drawSign(b,s,BS){
 }
 function drawDecor(b,s){
   if(b.cache && !qs('ribbon2')) return; // unseen until Mira tells you of it
+  // a floating name over a landmark (dungeon mouths etc.) that fades in as you near it
+  if(b.name){ const pd=dist(P.x,P.y,b.x,b.y);
+    if(pd<12){ const g=cx; g.save(); g.globalAlpha=Math.max(0,Math.min(1,(12-pd)/3.5));
+      g.font='bold 12px Georgia'; g.textAlign='center';
+      g.lineWidth=3.4; g.strokeStyle='rgba(0,0,0,0.8)'; g.strokeText(b.name, s.x, s.y-46);
+      g.fillStyle='#ffe9b0'; g.fillText(b.name, s.x, s.y-46);
+      g.restore(); } }
   if(b.cache && !b.opened && Math.random()<0.06){
     // a wink of dawn-colored silk between the boards - hard to miss once you know
     G.parts.push({x:b.x+rnd(-0.4,0.4), y:b.y-rnd(0.6,1.3), vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.7),
