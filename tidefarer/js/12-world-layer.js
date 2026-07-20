@@ -51,6 +51,7 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
+var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
   harbor:  {x:52, y:140, r:11, name:'The Salt Quarter', lv:[0,0]},
@@ -1298,15 +1299,26 @@ function placeObjectsCrown(){
   // line. This is left-right symmetric, matching what you see. rx/ry are the
   // tile centre's pixel offset from the building anchor (isoX=(x-y)*32, isoY=(x+y)*16).
   const axm=PA.x+0.5-(PA.y-2.5), aym=PA.x+0.5+(PA.y-2.5);   // anchor (x-y) and (x+y)
-  // Seal the WHOLE billboard footprint - from the base line (ry=10) all the way
-  // back to the sprite top (ry=-895) across its width (|rx|<=640). The lawn behind
-  // the palace is open, so if we only blocked the near band you could walk around
-  // a tower and tuck in behind the wall (occluded). This slant spans ~Y[PA.y-40 ..
-  // PA.y+8] in tile space, so the scan region must be generous to contain it.
+  // Seal the WHOLE billboard footprint - from the base line back to the sprite top
+  // (ry=-895) across its width (|rx|<=640). The lawn behind the palace is open, so
+  // if we only blocked the near band you could walk around a tower and tuck in
+  // behind the wall (occluded). This slant spans ~Y[PA.y-40 .. PA.y+8] in tile
+  // space, so the scan region must be generous to contain it.
+  //   The tile solids are RECEDED to ry<=-8 (their diamond fronts stop at/behind
+  // the wall base) so no diamond tip pokes into the forecourt; the crisp straight
+  // wall you actually bump is the continuous screen-space barrier below, so the
+  // edge reads as a clean line instead of a row of diamond teeth.
   for(let Y=PA.y-42;Y<=PA.y+8;Y++) for(let X=PA.x-40;X<=PA.x+32;X++){
     const rx=((X-Y)-axm)*32, ry=((X+Y)-aym)*16;
-    if(ry<=10 && ry>=-895 && Math.abs(rx)<=640) setSolid(X,Y,1);   // under the keep & behind the base
+    if(Math.abs(rx)>640 || ry<-895) continue;
+    if(ry<=-8) setSolid(X,Y,1);                              // under the keep & behind the base
+    else if(ry<=26 && walkTile(tileAt(X,Y))) setSolid(X,Y,0); // clear the front strip (incl. addBuilding's
+                                                              // default footprint) so the smooth barrier - not
+                                                              // stray tile teeth - is the wall you bump
   }
+  // The straight, sub-tile wall the player collides with (see palaceBarrier in
+  // circleBlocked). rx/ry as above; ry<=BASE is the wall's front face.
+  PALACE_BAR={axm, aym, base:10, back:-895, span:640};
   // The gate sits screen-centred (rx=0); the door trigger is a couple of tiles
   // out into the open forecourt so you can walk right up to the wall and enter.
   pal.door={x:PA.x+2, y:PA.y-1};
