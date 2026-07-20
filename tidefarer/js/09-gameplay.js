@@ -76,9 +76,9 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
     }
     if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'){
-      const dy=b.grand?6.5:b.kind==='resort'?2.2:0.9;
-      const d=dist(P.x,P.y,b.x,b.y+dy);
-      if(d<(b.grand?2.4:1.8) && d<bd){ bd=d; best={type:'door',o:b,label:b.grand?'Enter the palace':'Enter'}; }
+      const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
+      const d=dist(P.x,P.y,doorX,doorY);
+      if(d<(b.grand?2.6:1.8) && d<bd){ bd=d; best={type:'door',o:b,label:b.grand?'Enter the palace':'Enter'}; }
     }
     if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }

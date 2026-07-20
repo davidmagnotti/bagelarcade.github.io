@@ -1290,13 +1290,26 @@ function placeObjectsCrown(){
   // structure in the game. A colossal keep you can walk the whole way around. ----
   const pal=addBuilding('castle', PA.x, PA.y-3, 'The Tideglass Palace');
   pal.grand=true;
-  // Solid footprint under the keep's visible mass. The castle billboard is far
-  // wider than a normal building, so the wall base spans a broad band - the block
-  // must be wide enough that you cannot slip up alongside the gate and vanish
-  // behind (under) the painted curtain wall. Set BACK from the anchor (an iso
-  // building rises up-screen) so you bump the wall base you see, and kept clear
-  // of the forecourt rows in front (y>=PA.y+3) where you approach the gate.
-  for(let dy=-7;dy<=1;dy++) for(let dx=-14;dx<=14;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
+  // The palace is one flat, screen-centred billboard, so a tile-rectangle
+  // footprint projects to a skewed diamond - it blocks too early on one side and
+  // lets you walk under the wall on the other. Instead we solidify in SCREEN
+  // space: a tile is part of the keep when its on-screen centre falls under the
+  // opaque curtain wall (bottom band of the sprite) and at/behind the wall base
+  // line. This is left-right symmetric, matching what you see. rx/ry are the
+  // tile centre's pixel offset from the building anchor (isoX=(x-y)*32, isoY=(x+y)*16).
+  const axm=PA.x+0.5-(PA.y-2.5), aym=PA.x+0.5+(PA.y-2.5);   // anchor (x-y) and (x+y)
+  // Seal the WHOLE billboard footprint - from the base line (ry=10) all the way
+  // back to the sprite top (ry=-895) across its width (|rx|<=640). The lawn behind
+  // the palace is open, so if we only blocked the near band you could walk around
+  // a tower and tuck in behind the wall (occluded). This slant spans ~Y[PA.y-40 ..
+  // PA.y+8] in tile space, so the scan region must be generous to contain it.
+  for(let Y=PA.y-42;Y<=PA.y+8;Y++) for(let X=PA.x-40;X<=PA.x+32;X++){
+    const rx=((X-Y)-axm)*32, ry=((X+Y)-aym)*16;
+    if(ry<=10 && ry>=-895 && Math.abs(rx)<=640) setSolid(X,Y,1);   // under the keep & behind the base
+  }
+  // The gate sits screen-centred (rx=0); the door trigger is a couple of tiles
+  // out into the open forecourt so you can walk right up to the wall and enter.
+  pal.door={x:PA.x+2, y:PA.y-1};
   // grand forecourt lamps, set well out from the gate so they don't vanish
   // under the towering facade
   addBuilding('lamp', PA.x-7, PA.y+9, ''); addBuilding('lamp', PA.x+7, PA.y+9, '');
