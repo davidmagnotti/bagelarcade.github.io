@@ -1290,10 +1290,13 @@ function placeObjectsCrown(){
   // structure in the game. A colossal keep you can walk the whole way around. ----
   const pal=addBuilding('castle', PA.x, PA.y-3, 'The Tideglass Palace');
   pal.grand=true;
-  // solid footprint under the keep's visible mass, set BACK from the anchor (an
-  // iso building rises up-screen) so you bump the wall base you see and cannot
-  // walk in under the facade.
-  for(let dy=-7;dy<=1;dy++) for(let dx=-9;dx<=9;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
+  // Solid footprint under the keep's visible mass. The castle billboard is far
+  // wider than a normal building, so the wall base spans a broad band - the block
+  // must be wide enough that you cannot slip up alongside the gate and vanish
+  // behind (under) the painted curtain wall. Set BACK from the anchor (an iso
+  // building rises up-screen) so you bump the wall base you see, and kept clear
+  // of the forecourt rows in front (y>=PA.y+3) where you approach the gate.
+  for(let dy=-7;dy<=1;dy++) for(let dx=-14;dx<=14;dx++) setSolid(PA.x+dx, PA.y-3+dy, 1);
   // grand forecourt lamps, set well out from the gate so they don't vanish
   // under the towering facade
   addBuilding('lamp', PA.x-7, PA.y+9, ''); addBuilding('lamp', PA.x+7, PA.y+9, '');
