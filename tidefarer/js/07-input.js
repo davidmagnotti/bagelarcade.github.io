@@ -97,7 +97,7 @@ function interiorClick(sx,sy){
   const wx=(ox/(TW/2)+oy/(TH/2))/2, wy=(oy/(TH/2)-ox/(TW/2))/2;
   let best=null, bd=1.0;
   for(const f of I.furn){
-    if(!{bed:1,hearth:1,anvil:1,orb:1,books:1,shelf:1,barrel:1,hay:1,crate:1,frontdesk:1,poolguest:1,dragon:1,king:1,cook:1,stairs:1}[f.type]) continue;
+    if(!{bed:1,hearth:1,anvil:1,orb:1,books:1,shelf:1,barrel:1,hay:1,crate:1,frontdesk:1,poolguest:1,suitebed:1,dragon:1,king:1,cook:1,stairs:1}[f.type]) continue;
     const d=dist(wx,wy,f.x,f.y);
     if(d<bd){ bd=d; best=f; }
   }

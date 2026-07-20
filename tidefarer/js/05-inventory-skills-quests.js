@@ -82,6 +82,8 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Kiko the Moa is yours!</b> '+(isTouch?'Tap <b>Ride</b> (right side)':'Press <b>M</b>')+' to mount and dismount - the fastest legs on any shore.',6500); }
   if(rw.dash2){ P.unlocked.dash2=true;
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
+  if(rw.room){ P.resortRoom=1;
+    toast('<b style="color:var(--ember)">The Breakers suite is yours!</b> Coralie hands you the brass key - sleep in the canopy bed by the sea-window any time, no charge.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.hp){ P.maxhp+=rw.hp; P.hp=P.maxhp; toast('<b style="color:var(--ember)">+'+rw.hp+' max HP</b> - hardened by the deed.'); }
   if(rw.mp){ P.maxmp+=rw.mp; P.mp=P.maxmp; toast('<b style="color:var(--ember)">+'+rw.mp+' max mana</b> - your focus deepens.'); }

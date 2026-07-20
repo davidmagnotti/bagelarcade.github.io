@@ -1859,6 +1859,11 @@ QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{lev
   log:'Confront the Bound Leviathan at the harbor breakwater and end the curse on the strait.',
   doneText:'The water\'s a mill-pond and the boats are already casting off. You didn\'t just kill a monster - you handed a dying city its livelihood. Windsurf will tell this one for a hundred years.',
   rw:{gold:300, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
+QUESTS.breakers={ giver:'coralie', title:'The Breakers Reopens', kind:'gather', need:{silk:2, shell:4}, xpL:200,
+  brief:'The strait\'s open, the guests are trickling back, and I mean to give them a Breakers worth the crossing! But a year shuttered leaves a place threadbare. Bring me two bolts of good silk for fresh linens and four big spiral shells to dress the baths, would you? Do that, and I\'ll not only pay you - I\'ll keep our finest suite made up for YOU, on the house, for as long as you sail these waters.',
+  log:'Bring Coralie 2 silk and 4 spiral shells to refit The Breakers. (Silk from traders/the market; shells comb the beaches.)',
+  doneText:'Oh, they\'re PERFECT - the linens, the shells along the bath-rim, the whole place breathes again. Here\'s your pay, and here\'s your key: the sea-window suite is yours whenever you want it. Welcome home to the Breakers, friend.',
+  rw:{gold:130, room:true, item:{potion:2}, xp:{}} };
 QUESTS.roost={ giver:'wrenna', title:'The Screaming Aerie', kind:'special', xpL:440,
   brief:'Since the robed man climbed the Underclimb and never came down, my birds would sooner kill than land. It is no fever, friend - it is a binding, and it sits in a book at the heart of the roost, behind a warden with far too many teeth. The open slope will end you. Take the tunnel up. Burn the thing. Give me back my sky.',
   log:'Take the Underclimb tunnel up into the sealed Roost Heart. Slay the serpent warden, then destroy the cursed tome.',
@@ -2374,6 +2379,8 @@ function switchWorld(id){
     // beast lives on the water, past the reach of any jetty. Tolen shapes boards.
     if(!hasBoard && qs('board')!=='done' && !P.quests.board) P.quests.board='avail';
     if(hasBoard && qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    // once the strait is calm, Coralie can finally reopen the Breakers properly
+    if(P.story && P.story.tideCalm && qs('breakers')!=='done' && !P.quests.breakers) P.quests.breakers='avail';
     if(P.story && P.story.tideCalm) updateWindFolkMood();
     if(!P.prog.windSeen){ P.prog.windSeen=1;
       setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something in the strait has scared every boat off the water. <b>Rell the Harbormaster</b> waits at the docks - though you\'ll need a <b>windsurf</b> to reach what he fears.',8000),1400); }

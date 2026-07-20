@@ -105,13 +105,29 @@ function resortDesk(){
     [ canPay
         ? {label:'Take a suite ('+COST+'g)', cls:'gold', fn:()=>{
             P.gold-=COST; P.hp=P.maxhp; P.mp=P.maxmp;
+            P.resortRoom=1;                                          // the suite is yours from now on
             if(I&&I.ret) P.bind={w:G.worldId,x:I.ret.x,y:I.ret.y};   // wake here if you fall
             refreshUI(); Snd.quest&&Snd.quest(); autoSave&&autoSave();
-            setDialog('<i>The concierge rings the brass bell and hands you a heavy key. A whole night of true rest - the sea breathing beyond the shutters, salt on the warm air.</i> “Sleep well. Your room is kept for you now.”<br><i>(Fully restored. You will wake at the Breakers if you fall.)</i>',
+            setDialog('<i>The concierge rings the brass bell and presses a heavy brass key into your hand.</i> “Suite by the sea-window - just there, past the lobby, the one with the canopy bed.” <i>She beams.</i> “It\'s <b>kept for you now</b> - come back and sleep whenever the road wearies you, no charge. Rest well.”<br><i>(Fully restored. Your private suite is unlocked - sleep in it any time. You will wake at the Breakers if you fall.)</i>',
               [{label:'Wonderful',fn:closeDialog}]);
           }}
         : {label:'I\'m short the coin', ghost:true, fn:closeDialog},
       {label:'Just admiring the lobby', ghost:true, fn:closeDialog} ]);
+}
+function resortSuiteSleep(){
+  if(!P.resortRoom){
+    toast('The suite is made up and waiting, but it\'s <b>locked</b> - take a room at the <b>front desk</b> (150 gold, or ask Coralie about work) and the key is yours for good.',4600);
+    return;
+  }
+  const fade=document.getElementById('fadeOv'), I=G.interior;
+  fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
+  setTimeout(()=>{
+    G.dayT=0.02; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0;
+    if(I&&I.ret) P.bind={w:G.worldId, x:I.ret.x, y:I.ret.y};
+    refreshUI(); setTimeout(autoSave,300);
+    toast('You sink into <b>your suite\'s</b> canopy bed, the sea breathing beyond the shutters. Dawn finds you <b>fully mended</b> - and the Breakers will keep you if you fall.',4200);
+    setTimeout(()=>{ fade.style.opacity=0; },120);
+  },750);
 }
 function resortGuestChat(f){
   const gp=Math.floor(f.x*13+f.y*7);
@@ -138,7 +154,7 @@ function interiorHotspot(){
   let best=null, bestD=1e9;
   for(const f of I.furn){
     let lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', king:'Speak', cook:'Speak', stairs:'Stairs'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
     if(!lbl) continue;
@@ -165,6 +181,7 @@ function useHotspot(h){
   }
   else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }
   else if(f.type==='poolguest'){ resortGuestChat(f); }
+  else if(f.type==='suitebed'){ resortSuiteSleep(); }
   else if(f.type==='king'){ palaceKingSpeak(); }
   else if(f.type==='cook'){ cookSpeak(); }
   else if(f.type==='stairs'){ useStairs(f.dir); }
