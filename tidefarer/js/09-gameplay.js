@@ -482,6 +482,7 @@ function hurtPlayer(dmg,src){
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
+  if(has('wardstone',1)) dmg=Math.max(1, dmg-2);   // the Warden's Wardstone turns aside a sliver of every blow
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
@@ -613,7 +614,8 @@ function updatePlayer(dt){
     const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding;
     const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)
       *(P.riding? (P.unlocked&&P.unlocked.moa?2.1:1.55) :1)
-      *(onWater&&canSurf?1.8:1);
+      *(onWater&&canSurf?1.8:1)
+      *(has('boots',1)?1.14:1);
     moveEntity(P, mx*sp*dt, my*sp*dt, 0.28, canSurf);
     if(onWater&&canSurf&&Math.random()<dt*14)
       G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-mx*0.8+rnd(-0.4,0.4),vy:-my*0.8+rnd(-0.4,0.4),life:0.35,color:'#eaf6ff',size:2.4,grav:0});

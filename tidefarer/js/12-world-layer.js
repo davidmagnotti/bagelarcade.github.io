@@ -1466,7 +1466,7 @@ QUESTS.welcome2={ giver:'kell', title:'The Warden\'s Ledger', kind:'talk', talkT
   brief:'New boots off the Emberwick ferry - I can smell the tutorial on you. Barik\'s bigger, hungrier, and less forgiving. Get provisioned before you get ambitious: Sela runs the counter south of the well. Tell her the Warden sent you.',
   log:'Introduce yourself to Sela the Provisioner in Greyharbor.',
   doneText:'Kell sent you? Then you\'re either useful or doomed. Let\'s find out which - Barik has work for both kinds.',
-  rw:{gold:15, xp:{melee:40}}, unlocks:['nets','roadclear'] };
+  rw:{gold:15, item:{potion:2}, xp:{melee:40}}, unlocks:['nets','roadclear'] };
 QUESTS.nets={ giver:'sela', title:'Nets of Barik', kind:'gather', need:{fish:6},
   brief:'The trawlers won\'t round the point while wolves haunt the cliff road, so my counter\'s bare. Six fresh fish from any Barik shallows keeps Greyharbor fed a week.',
   log:'Catch 6 fish in Barik\'s shallows for Sela.',
@@ -1476,7 +1476,7 @@ QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', ki
   brief:'The road from Greyharbor to Blackpine belongs to the wolves after dusk. Eight pelts thins the packs enough for the carts to run. Mind the crimson-ringed ones.',
   log:'Slay 8 wolves along Barik\'s roads and highlands.',
   doneText:'The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin.',
-  rw:{gold:80, xp:{melee:200, archery:120}} };
+  rw:{gold:80, item:{wardstone:1}, xp:{melee:200, archery:120}} };
 QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushroom:6},
   brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
   log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',
@@ -1491,12 +1491,12 @@ QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{sto
   brief:'Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
   log:'Mine 10 stone around the Old Barik Mines for Torv.',
   doneText:'Listen to that ring. The old girl\'s awake. Barik builds again - starting with your pay.',
-  rw:{gold:55, xp:{mining:220}}, unlocks:['torv2'] };
+  rw:{gold:55, item:{crystal:1}, xp:{mining:220}}, unlocks:['torv2'] };
 QUESTS.torv2={ giver:'torv', title:'The Old Vein', kind:'gather', need:{ore:4},
   brief:'Stone keeps walls up; ore keeps forges lit. The deep rock here still carries iron if you\'ve the arm for it. Four ore and Greyharbor\'s smith stays in business.',
   log:'Break 4 iron ore from Barik\'s stone for Torv.',
   doneText:'Good iron. Honest iron. The kind that remembers being a mountain.',
-  rw:{gold:75, xp:{mining:260}} };
+  rw:{gold:75, item:{crystal:2}, xp:{mining:260}} };
 QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
   brief:'Ground shell, kelp ash, and patience - tidebalm knits cuts the sea gives. The strand west of the docks throws up shells after every tide. Five whole ones, unbroken.',
   log:'Collect 5 shells from Barik\'s beaches for Ivo.',
@@ -1505,8 +1505,8 @@ QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
 QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'mira', xpL:90, stageOf:'ribbon', stage:1,
   brief:'East past the shoals sits an island the charts pretend not to see. Bring my girl Wren a fine ribbon for her birthday and I will sail you there myself. Mira at Thimble and Thread in Greyharbor weaves the best on Barik.',
   log:'(1/3) Ask Mira the Seamstress in Greyharbor about a ribbon.',
-  doneText:'A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come.',
-  rw:{} };
+  doneText:'A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come. Here - take a couple of tonics for the road; the pines are no place to go dry.',
+  rw:{item:{potion:2}, xp:{archery:60}} };
 QUESTS.ribbon2={ giver:'mira', title:'A Ribbon for Wren', kind:'gather', need:{silk:1}, xpL:200, stageOf:'ribbon', stage:2,
   brief:'If you can walk into that camp and walk out again: my silk sits in a chest they guard, north of the deep pines. Bring me one bolt and I will weave the finest ribbon Barik has seen.',
   log:'(2/3) Steal back a bolt of silk from Thieves\' Hollow, north of Blackpine.',
@@ -1516,7 +1516,7 @@ QUESTS.ribbon3={ giver:'corvo', title:'A Ribbon for Wren', kind:'gather', need:{
   brief:'You have it? Wren will be over the moon and halfway back.',
   log:'(3/3) Bring the Sunset Ribbon to Captain Corvo at the east cove.',
   doneText:'She will wear it till the color goes. A bargain is a bargain - and the tide is with us NOW. Say the word, any time, and we run east for the Sunward Isle.',
-  rw:{gold:150} };
+  rw:{gold:150, item:{elixir:1}, xp:{archery:140}} };
 QUESTS.hunt1={ giver:'huk', title:'Bristleback Cull', kind:'kill', kill:{boar:6}, xpL:170,
   brief:'The bristlebacks breed quicker than the palms can feed them, eh, and now they are into our gardens. Thin the sounder for me - six boars - and Kohana eats easy either way. No rush about it.',
   log:'Hunt 6 bristleback boars in Palmwatch Grove or on the ash slopes.',
@@ -1556,7 +1556,7 @@ QUESTS.audience={ giver:'brea', title:'An Audience with the King', kind:'talk', 
   brief:'You are the one, aren\'t you - the traveler unmaking the old curses, isle by isle. Word of it reaches the throne faster than any ship. His Majesty King Aldous would look upon the curse-breaker himself. He keeps his court before the palace gate, up the Processional. Go to him. One does not keep a grieving king waiting.',
   log:'Climb the Processional to the Tideglass Palace and present yourself to King Aldous.',
   doneText:'',   // the audience is a scripted scene in the King's own dialogue
-  rw:{gold:400, xp:{melee:520, archery:520, magic:520}} };
+  rw:{gold:400, hp:12, item:{elixir:2}, xp:{melee:520, archery:520, magic:520}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1586,7 +1586,7 @@ QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone
   brief:'East of the Mirefen the ground splits - the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
   log:'Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)',
   doneText:'You found it and kept your skin - that\'s rarer than the gold. Whatever you carried out, you earned.',
-  rw:{gold:90, xp:{mining:200}} };
+  rw:{gold:90, item:{elixir:1}, xp:{mining:200}} };
 /* ---------- the bounty quest & relic ---------- */
 QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:{elite:8},
   brief:"The wilds have turned. Crimson-ringed beasts - elites, we call them - press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
@@ -1602,7 +1602,7 @@ QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{wolf:3},
   brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
   log:'Slay 3 wolves at Smuggler\'s Cove and claim the camp.',
   doneText:"Three pelts' worth of quiet. The cove's yours, friend - crack that chest open and think of me.",
-  rw:{gold:35, xp:{melee:120, archery:120}} };
+  rw:{gold:35, item:{crystal:1}, xp:{melee:120, archery:120}} };
 QUESTS.orchard={ giver:'willa', title:'Applewood', kind:'gather', need:{apple:5},
   brief:"The old orchard south-east still fruits - nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
   log:'Pick 5 apples in the Old Orchard.',
@@ -1612,12 +1612,12 @@ QUESTS.shells={ giver:'nia', title:'Seven Spirals (well, four)', kind:'gather', 
   brief:"Pip found a SHELL and it's the best thing I own. I need more! The beach hides spiral ones - bring me four and I'll trade you my second-best treasure. It's gold. Don't tell Maren where I got it.",
   log:'Gather 4 spiral shells from the beaches.',
   doneText:"FOUR! Look how they curl! Here - treasure for treasure. That's the rule of the beach.",
-  rw:{gold:15, xp:{fishing:80}} };
+  rw:{gold:15, item:{potion:1}, xp:{fishing:80}} };
 QUESTS.pearlq={ giver:'finn', title:'The One That Got Away', kind:'gather', need:{pearl:1},
   brief:"Thirty years I've fished this bay, and once - ONCE - I pulled up a pearl the size of a thumbnail. Dropped it in the drink showing off to Willa. Bring me one and I'll pay like a man buying back his youth.",
   log:'Catch a pearl while fishing (fishing skill improves the odds).',
   doneText:"There she is… no, keep your coin ready - HERE'S yours. Worth every piece to hold one again.",
-  rw:{gold:45, xp:{fishing:200}} };
+  rw:{gold:45, hp:5, xp:{fishing:200}} };
 QUESTS.remember={ giver:'orin', title:'The Island Remembers', kind:'gather', need:{page:3},
   brief:"Three texts survive on this isle: my tower's Ember Wars, Maren's Songs of the Well, and a farmer's almanac gathering dust in the barn. Read them, copy a page from each, and I'll pay you in something better than gold - understanding. Also crystals.",
   log:'Read the books inside the tower, Maren\'s cottage, and the barn (step inside and Read).',
@@ -1627,7 +1627,7 @@ QUESTS.embers={ giver:'kell', title:'Embers for the Watch', kind:'gather', need:
   brief:"Winter watches are long and the braziers burn cold. Ember crystals hold heat like a grudge - three of them would warm the watchtower till spring. Mine the ruin-stone at Barrowfield or the Wolfcrag.",
   log:'Mine 3 ember crystals from stone near Barrowfield or Wolfcrag.',
   doneText:"Warm at last. The night watch drinks to you tonight - and Greyharbor pays its debts.",
-  rw:{gold:60, xp:{magic:200, mining:150}} };
+  rw:{gold:60, item:{elixir:1}, xp:{magic:200, mining:150}} };
 QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', need:{mushroom:4},
   brief:"Visitors! Rare as dry socks out here. The blackpine bluecaps glow kinder than the isle's - four of them and I'll share the batch I'm brewing. A hermit's word is oak.",
   log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
@@ -1635,6 +1635,12 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
   rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
+// -- side-quest reward gear: a consumable and three always-on trinkets, so
+//    optional work pays in more than coin --
+ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60};
+ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
+ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
+ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
   brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
   log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
@@ -1837,6 +1843,31 @@ function buildExtraSprites(){
     g.strokeStyle='rgba(10,20,35,0.8)'; g.lineWidth=1.5;
     g.beginPath(); g.moveTo(20,4); g.lineTo(32,16); g.lineTo(20,36); g.lineTo(8,16); g.closePath(); g.stroke();
   });
+  // Greater Tonic: a fatter, brighter potion
+  ICONS.elixir=makeCanvas(40,40,(g)=>{
+    g.fillStyle='rgba(230,240,255,0.5)'; g.beginPath(); g.arc(20,23,11,0,TAU); g.fill(); g.fillRect(16,6,8,12);
+    g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(20,24,9,0,TAU); g.fill();
+    g.fillStyle='#c9f0ff'; g.beginPath(); g.arc(20,24,9,Math.PI*1.05,Math.PI*1.6); g.fill();
+    g.fillStyle='#8a6238'; g.fillRect(15,4,10,5);
+    g.fillStyle='rgba(255,255,255,0.8)'; g.beginPath(); g.arc(16,19,2.4,0,TAU); g.fill(); });
+  // Battleworn Charm: a cracked crimson gem on a cord
+  ICONS.warcharm=makeCanvas(40,40,(g)=>{
+    g.strokeStyle='#8a6238'; g.lineWidth=2; g.beginPath(); g.arc(20,6,8,Math.PI*0.15,Math.PI*0.85,true); g.stroke();
+    g.fillStyle='#c8354a'; g.beginPath(); g.moveTo(20,10); g.lineTo(30,22); g.lineTo(20,36); g.lineTo(10,22); g.closePath(); g.fill();
+    g.fillStyle='#ff6a7a'; g.beginPath(); g.moveTo(20,14); g.lineTo(26,22); g.lineTo(20,31); g.lineTo(14,22); g.closePath(); g.fill();
+    g.strokeStyle='rgba(40,8,12,0.7)'; g.lineWidth=1.3; g.beginPath(); g.moveTo(17,17); g.lineTo(22,28); g.stroke(); });
+  // Trailblazer Boots
+  ICONS.boots=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#6e4a2b'; g.beginPath(); g.moveTo(12,8); g.lineTo(20,8); g.lineTo(20,24); g.lineTo(31,24); g.lineTo(31,32); g.lineTo(12,32); g.closePath(); g.fill();
+    g.fillStyle='#4a3120'; g.fillRect(12,30,21,4);
+    g.strokeStyle='rgba(20,12,6,0.7)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(12,8); g.lineTo(20,8); g.lineTo(20,24); g.lineTo(31,24); g.lineTo(31,32); g.lineTo(12,32); g.closePath(); g.stroke();
+    g.fillStyle='#c9a24e'; g.fillRect(13,12,7,2.4); g.fillRect(13,16,7,2.4); });
+  // Warden's Wardstone: a rune-carved shield-stone
+  ICONS.wardstone=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#6f7a86'; g.beginPath(); g.moveTo(20,5); g.lineTo(33,11); g.lineTo(31,26); g.quadraticCurveTo(20,36,9,26); g.lineTo(7,11); g.closePath(); g.fill();
+    g.fillStyle='#9fb0bd'; g.beginPath(); g.moveTo(20,9); g.lineTo(29,13); g.lineTo(27,24); g.quadraticCurveTo(20,31,13,24); g.lineTo(11,13); g.closePath(); g.fill();
+    g.strokeStyle='#3a5a80'; g.lineWidth=2; g.beginPath(); g.moveTo(20,13); g.lineTo(20,25); g.moveTo(15,18); g.lineTo(25,18); g.stroke();
+    g.strokeStyle='rgba(20,28,36,0.7)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(20,5); g.lineTo(33,11); g.lineTo(31,26); g.quadraticCurveTo(20,36,9,26); g.lineTo(7,11); g.closePath(); g.stroke(); });
 }
 let TRAIN=null; // active training drill, if any
 function beginOpenChest(b){
