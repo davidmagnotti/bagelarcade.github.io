@@ -181,10 +181,10 @@ function placeObjects(){
   for(const [x,y] of pillars){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:r()<0.5}); setSolid(x,y,1); }
   G.decor.push({kind:'crypt',x:46.5,y:15.5}); // visual arch behind boss
   // buildings
-  addBuilding('house', 44,54, 'Maren\'s cottage');
-  addBuilding('forge', 53,56, 'The forge');
+  addBuilding('house', 44,54, 'Maren\'s cottage').closedMsg='<b>Maren\'s cottage</b> is dark, but for one candle. “Come back at a decent hour, castaway,” the Elder calls, not unkindly.';
+  addBuilding('forge', 53,56, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
   addBuilding('house2',44,61, 'Fisher row');
-  addBuilding('barn',  62,60, 'Willa\'s barn');
+  addBuilding('barn',  62,60, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
   addBuilding('tower', 56,33, 'Orin\'s tower');
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
