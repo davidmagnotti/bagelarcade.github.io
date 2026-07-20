@@ -1117,8 +1117,8 @@ function genFrost(){
     G.map[y*MAPW+x]=t;
   }
   const Z=FROST_ZONES;
-  // the Rimewood: a stand of frosted pines
-  carveDisc(Z.rimewood.x,Z.rimewood.y,Z.rimewood.r,T.FOREST,true);
+  // the Rimewood is a bare, wind-scoured snowfield now - nothing grows on this ice
+  carveDisc(Z.rimewood.x,Z.rimewood.y,Z.rimewood.r,T.SNOW,false);
   // the Weeping Glacier: a broad walkable sheet of ice at the frozen heart
   carveDisc(Z.glacier.x,Z.glacier.y,Z.glacier.r,T.ICE,true);
   // the Frozen Strait: the sea itself locked to ice off the east shore
@@ -1140,20 +1140,35 @@ function placeObjectsFrost(){
   addBuilding('igloo', V.x+5, V.y+3, 'The Icewright\'s igloo');
   addBuilding('igloo', V.x-6, V.y+2, 'Frostferry lodge');
   addBuilding('well', V.x, V.y, 'Frostspring well');
-  addBuilding('lamp', D.x, D.y-1, ''); addBuilding('boat', D.x-4, D.y+2, '');
+  addBuilding('lamp', D.x, D.y-1, '');
+  // the ferry boat floats just off the landing - walk OUT from the island centre
+  // toward open water and drop it on the first sea/ice tile (never on the beach)
+  { const cx2=75, cy2=90, ddx=D.x-cx2, ddy=D.y-cy2, dl=Math.hypot(ddx,ddy)||1;
+    for(let step=3; step<=16; step++){ const tx=Math.round(D.x+ddx/dl*step), ty=Math.round(D.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP||t===T.ICE){ addBuilding('boat', tx, ty, ''); break; } } } }
   addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
   addBuilding('lamp', GL.x-3, GL.y+GL.r-1, ''); addBuilding('lamp', GL.x+3, GL.y+GL.r-1, '');
-  // frosted pines through the Rimewood and the lower slopes
+  // NO TREES on the frozen isle - nothing grows on this ice. The Rimewood is a
+  // bare snowfield; a few extra ice-crags give the flats something to mine.
   const pr=mulberry32(SEED+17);
-  for(let gy=-RW.r;gy<=RW.r;gy++) for(let gx=-RW.r;gx<=RW.r;gx++){ const px=RW.x+gx, py=RW.y+gy;
-    if(Math.hypot(gx,gy)<=RW.r && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr()<0.3){ const n=addNode('tree',px,py); n.snow=1; } }
-  for(let i=0;i<150;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
-    if(t===T.SNOW&&pr()<0.14){ if(solidAt(ax,ay)) continue; if(dist(ax,ay,V.x,V.y)<4||dist(ax,ay,D.x,D.y)<4) continue; const n=addNode('tree',ax,ay); n.snow=1; } }
+  for(let i=0;i<10;i++){ const a=pr()*TAU, rr=2+pr()*(RW.r-2);
+    const ax=Math.round(RW.x+Math.cos(a)*rr), ay=Math.round(RW.y+Math.sin(a)*rr);
+    if(inb(ax,ay) && tileAt(ax,ay)===T.SNOW && !solidAt(ax,ay) && dist(ax,ay,V.x,V.y)>5) addNode('rock',ax,ay); }
   // ice-crags to mine on the glacier margins
   for(let i=0;i<28;i++){ const a=pr()*TAU, rr=6+pr()*(GL.r-4);
     const ax=Math.round(GL.x+Math.cos(a)*rr), ay=Math.round(GL.y+Math.sin(a)*rr*0.92);
     if(inb(ax,ay) && tileAt(ax,ay)===T.ICE && !solidAt(ax,ay) && dist(ax,ay,GL.x,GL.y)>4) addNode('rock',ax,ay); }
   G.critters=[];
+  // a friendly colony of penguins waddling the Frozen Strait and the snowy shore
+  const ST=Z.strait, pn=mulberry32(SEED+91); let pc=0;
+  for(let tries=0; tries<400 && pc<11; tries++){
+    const a=pn()*TAU, rr=pn()*(ST.r+5);
+    const ax=Math.round(ST.x+Math.cos(a)*rr), ay=Math.round(ST.y+Math.sin(a)*rr);
+    const t=inb(ax,ay)?tileAt(ax,ay):T.DEEP;
+    if((t===T.ICE||t===T.SNOW||t===T.SAND) && !solidAt(ax,ay)){
+      G.critters.push({kind:'penguin',x:ax+0.5,y:ay+0.5,home:{x:ax+0.5,y:ay+0.5},tx:null,ty:null,
+        wt:rnd(0.5,4),face:pn()<0.5?-1:1,anim:pn()*6,range:5,col:'#2b2f36',moving:false}); pc++; }
+  }
 }
 function spawnFrostFolk(){
   const Z=FROST_ZONES, V=Z.village;
@@ -1178,6 +1193,12 @@ function spawnMobsFrost(){
   if(qs('thaw')==='active' && !(P.story && P.story.frostFreed)) spawnFrostWarden();
   const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
+  // two vicious, high-level ice-maddened bears prowl the glacier margins and the
+  // Rimewood flats - a real threat, well away from the safe village
+  for(const [zx,zy] of [[Z.glacier.x-7, Z.glacier.y+6],[Z.rimewood.x+3, Z.rimewood.y-4]]){
+    const sp=findOpenNear(Math.round(zx), Math.round(zy), 7);
+    if(sp && dist(sp[0],sp[1],Z.village.x,Z.village.y)>16){ const b=spawnMob('polarbear', sp[0], sp[1]); if(b){ b.hx=sp[0]; b.hy=sp[1]; } }
+  }
 }
 function freeWarden(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';

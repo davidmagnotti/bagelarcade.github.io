@@ -840,6 +840,39 @@ function drawMob(m,s){
     cx.restore();
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='polarbear'){
+    const fl=m.face||1, gait=m.state==='chase'? Math.sin(m.anim*7)*2 : Math.sin(m.anim*2)*0.8;
+    const wnd=(m.windup>0);
+    drawShadowAt(cx,s.x,s.y,20);
+    cx.save(); cx.translate(s.x,s.y); cx.scale(fl,1);
+    const fur='#eef3f6', furD='#cdd8de';
+    // legs
+    cx.fillStyle=furD;
+    cx.beginPath(); cx.ellipse(-11,-3+gait,4,6,0,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(13,-3-gait,4,6,0,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(-6,-2-gait,4.5,6.5,0,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(8,-2+gait,4.5,6.5,0,0,TAU); cx.fill();
+    // big low body
+    cx.fillStyle=fur; cx.strokeStyle='rgba(120,140,150,0.5)'; cx.lineWidth=1.5;
+    cx.beginPath(); cx.ellipse(0,-14,18,11,0,0,TAU); cx.fill(); cx.stroke();
+    cx.fillStyle=furD; cx.beginPath(); cx.ellipse(-4,-18,10,5,0,0,TAU); cx.fill(); // shoulder hump
+    // head, low and forward
+    cx.fillStyle=fur; cx.beginPath(); cx.ellipse(17,-11,8,7,0,0,TAU); cx.fill(); cx.stroke();
+    cx.fillStyle='#e6eef2'; cx.beginPath(); cx.ellipse(23,-9,5,4,0,0,TAU); cx.fill(); // snout
+    cx.fillStyle='#3a4048'; cx.beginPath(); cx.arc(27,-9,1.6,0,TAU); cx.fill();       // nose
+    cx.fillStyle=furD; cx.beginPath(); cx.arc(13,-17,2.4,0,TAU); cx.fill();           // ear
+    cx.fillStyle= wnd? '#e0483a':'#7a2a2a'; cx.beginPath(); cx.arc(20,-12,1.3,0,TAU); cx.fill(); // eye - reddens when it rears
+    if((m.swing||0)>0.05 || wnd){ // a raking claw
+      cx.strokeStyle='#eef3f6'; cx.lineWidth=2.2;
+      for(let i=-1;i<=1;i++){ cx.beginPath(); cx.moveTo(26,-14+i*2); cx.lineTo(33,-16+i*3); cx.stroke(); } }
+    if(m.hurtT>0){ cx.fillStyle='rgba(255,120,110,0.4)'; cx.beginPath(); cx.ellipse(2,-14,20,13,0,0,TAU); cx.fill(); }
+    cx.restore();
+    const nm=m.name||MOBDEF[m.kind].name;
+    cx.font='bold 11px Georgia'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillText(nm,s.x+1,s.y-40);
+    cx.fillStyle='#e6748a'; cx.fillText(nm,s.x,s.y-41);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
   if(m.kind==='dragon'){
     cx.save(); cx.translate(s.x,s.y); cx.scale(1.5,1.5); drawDragon(cx,0,0,m); cx.restore();
