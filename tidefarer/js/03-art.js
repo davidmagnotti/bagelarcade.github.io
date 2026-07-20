@@ -1589,9 +1589,35 @@ function drawCrab(g,sx,sy,c){
   g.fillStyle='#201810'; g.beginPath(); g.arc(-2.8,-13.8,0.7,0,TAU); g.arc(2.8,-13.8,0.7,0,TAU); g.fill();
   g.restore();
 }
+function drawPenguin(g,sx,sy,c){
+  const flip=(c.face||1)<0?-1:1, t=c.anim||0, OUT='rgba(18,20,26,0.9)';
+  const waddle=c.moving? Math.sin(t*9)*2.2 : Math.sin(t*1.6)*0.6;
+  g.save(); g.translate(sx,sy); g.scale(flip,1); g.rotate(waddle*0.03);
+  // orange feet
+  const step=c.moving?Math.sin(t*9)*1.6:0;
+  g.fillStyle='#e0932a';
+  g.beginPath(); g.ellipse(-2.4-step,1.5,2.2,1.2,0,0,TAU); g.fill();
+  g.beginPath(); g.ellipse(2.4+step,1.5,2.2,1.2,0,0,TAU); g.fill();
+  // black body
+  g.fillStyle='#2b2f36'; g.strokeStyle=OUT; g.lineWidth=1.3;
+  g.beginPath(); g.ellipse(0,-7,7,9,0,0,TAU); g.fill(); g.stroke();
+  // little flippers
+  g.fillStyle='#232830';
+  g.beginPath(); g.ellipse(-6.5,-6,1.8,5,0.3,0,TAU); g.fill();
+  g.beginPath(); g.ellipse(6.5,-6,1.8,5,-0.3,0,TAU); g.fill();
+  // white belly
+  g.fillStyle='#f2efe6'; g.beginPath(); g.ellipse(0,-5,4.6,7,0,0,TAU); g.fill();
+  // head + face
+  g.fillStyle='#2b2f36'; g.beginPath(); g.arc(0,-14,4.6,0,TAU); g.fill();
+  g.fillStyle='#f2efe6'; g.beginPath(); g.ellipse(0.5,-13,3,2.6,0,0,TAU); g.fill();
+  g.fillStyle='#e0932a'; g.beginPath(); g.moveTo(2.5,-14); g.lineTo(6,-13); g.lineTo(2.5,-12); g.closePath(); g.fill(); // beak
+  g.fillStyle='#201810'; g.beginPath(); g.arc(1.6,-15,0.9,0,TAU); g.fill(); // eye
+  g.restore();
+}
 function drawCritter(g,sx,sy,c){
   if(c.kind==='fowl') drawFowl(g,sx,sy,c);
   else if(c.kind==='crab') drawCrab(g,sx,sy,c);
+  else if(c.kind==='penguin') drawPenguin(g,sx,sy,c);
   else drawCat(g,sx,sy,c);
 }
 /* crops */
