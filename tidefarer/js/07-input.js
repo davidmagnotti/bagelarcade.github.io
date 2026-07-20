@@ -78,8 +78,8 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
     else if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='resort'||b.kind==='castle'){
-      const dy=b.grand?6.5:b.kind==='resort'?2.2:0.9;
-      cand.push({type:'inter',x:b.x,y:b.y+dy,r:1.5,range:b.grand?2.2:1.7,go:()=>enterHouse(b)}); }
+      const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
+      cand.push({type:'inter',x:doorX,y:doorY,r:1.5,range:b.grand?2.6:1.7,go:()=>enterHouse(b)}); }
   }
   let bi=null; bd=999;
   for(const c of cand){ const d=dist(wx,wy,c.x,c.y); if(d<c.r && d<bd){ bd=d; bi=c; } }
