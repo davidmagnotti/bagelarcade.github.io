@@ -9,6 +9,7 @@ ITEMS.ribbon={name:'Sunset Ribbon', desc:'Mira\'s finest work. Made for a captai
 ITEMS.coconut={name:'Coconut', desc:'Sweet water, rich meat. Restores 15 HP.', use:'heal', heal:15};
 ITEMS.boarmeat={name:'Boar Meat', desc:'Rich and gamey. Restores 22 HP.', use:'heal', heal:22};
 ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.'};
+ITEMS.lettuce={name:'Crisp Lettuce', desc:'Restores 8 HP. The King\'s favorite, apparently.', use:'heal', heal:8};
 
 const LORE={
   castle:{title:'The Ledger of Queens', text:'“Three hundred years of harvests, tithes, and quiet mercies in Maelis’s own hand and her mothers’ before her. One margin note repeats every winter, every reign: <i>feed the March anyway.</i>”'},

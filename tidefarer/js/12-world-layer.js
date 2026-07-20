@@ -1401,8 +1401,16 @@ function placeObjectsCrown(){
   for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
     if(tileAt(ax,ay)===T.GRASS && !solidAt(ax,ay)){
       if(pr()<0.5) G.decor.push({kind:'tuft',x:ax+0.5,y:ay+0.5,ph:pr()*TAU}); } }
+  // ---- the Palace Kitchen Garden: tilled lettuce beds, raided by hares ----
+  const LG=crownLettucePlot();
+  for(let ly=-2;ly<=2;ly++) for(let lx=-3;lx<=3;lx++){ const px=LG.x+lx, py=LG.y+ly;
+    if(inb(px,py)&&walkTile(tileAt(px,py))&&!solidAt(px,py)){
+      if(tileAt(px,py)!==T.SOIL) setTile(px,py,T.SOIL);
+      if((lx+ly)%2===0) G.decor.push({kind:'lettuce',x:px+0.5,y:py+0.5,ph:(px*7+py*13)%6,nibbled:((px+py)%3===0)}); } }
   G.critters=[];
 }
+// the lettuce beds sit just southwest of the Drowned Queen's Garden
+function crownLettucePlot(){ const GA=CROWN_ZONES.garden; return {x:Math.round(GA.x-12), y:Math.round(GA.y+8)}; }
 function spawnCrownFolk(){
   const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, H=Z.harbor, GA=Z.garden, BA=Z.barracks, D=Z.dock;
   // ---- King Aldous: grieving sovereign, before the palace gate ----
@@ -1445,6 +1453,13 @@ function spawnCrownFolk(){
     {skin:'#b58a5e',hair:'#cfc7b8',shirt:'#3a5a5a',pants:'#2f3a3a',beard:'#cfc7b8',beardLong:true},
     ['Sixty years mending nets on this quay. Watched the young prince\'s ship sail out. Watched it never come back.',
      'Bad water that season. Bad water and, some say, a bad man aboard. But that\'s an old sailor talking.'],0.25));
+  // ---- Gale the Kitchen-Gardener: tends the palace lettuce beds ----
+  const LG=crownLettucePlot();
+  G.npcs.push(makeNPC('gale','Gale the Kitchen-Gardener', LG.x+0.5, LG.y+3.5,
+    {skin:'#b58a5e',hair:'#6a5a3a',shirt:'#5a7a44',pants:'#4a3e28',apron:'#8a7a54',hairstyle:'short'},
+    ['Thirty beds of lettuce, and every hare in the realm thinks it\'s a public garden.',
+     'The King won\'t touch a supper without greens. So the greens had better survive till supper.',
+     'You want honest work? There\'s always honest work where there\'s dirt.'],0.2));
   // ---- Odo the Victualler: supplies the palace kitchen; gives the kitchen-run ----
   G.npcs.push(makeNPC('odo','Odo the Victualler', M.x-3.5, M.y+3.5,
     {skin:'#c08850',hair:'#4a3a28',shirt:'#6a5a34',pants:'#4a3e28',apron:'#8a7048',beard:'#4a3a28'},
@@ -1459,6 +1474,9 @@ function spawnMobsCrown(){
   if(yd) spawnMob('dummy',yd[0],yd[1]);
   const yd2=findOpenNear(Math.round(BA.x-3),Math.round(BA.y+4),5);
   if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+  // garden hares raiding the palace lettuce beds - harmless pests for Gale's quest
+  const LG=crownLettucePlot();
+  for(const [dx,dy] of [[-2,-1],[2,0],[0,2]]){ const sp=findOpenNear(LG.x+dx, LG.y+dy, 4); if(sp) spawnMob('hare', sp[0], sp[1]); }
 }
 function updateCrownFolkMood(){
   if(!(P.story && P.story.kingTold)) return;
@@ -1586,6 +1604,11 @@ QUESTS.kitchenrun={ giver:'odo', title:"The Victualler's Errand", kind:'special'
   log:"Carry Odo's crate up to the Tideglass Palace and deliver it to Nan in the kitchen.",
   doneText:'',   // completes when you hand it to the cook inside
   rw:{gold:60, item:{elixir:1}, xp:{fishing:120}} };
+QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill', kill:{hare:3}, xpL:150,
+  brief:'You there, with the boots and the free afternoon! A warren of hares has decided my lettuce beds are the royal buffet - and the King does love his green. I can\'t chase and weed both. Shoo three of the little thieves off the beds for me - a firm bonk sends them bolting, no harm done - and I\'ll load you with the crispest heads in Aldermere.',
+  log:'Shoo 3 garden hares off the lettuce beds by the Drowned Queen\'s Garden.',
+  doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
+  rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -2098,6 +2121,7 @@ function switchWorld(id){
     // the palace gate is guarded; the kitchen-run delivery is how you earn the
     // run of the gate. Available from your first day in the capital.
     if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
+    if(qs('lettuce')!=='done' && !P.quests.lettuce) P.quests.lettuce='avail';
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1;
       setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. The palace gate is guarded: none pass without the King\'s leave. But the kitchens always want a runner - ask <b>Odo the Victualler</b> in the Bazaar.',8000),1400); }

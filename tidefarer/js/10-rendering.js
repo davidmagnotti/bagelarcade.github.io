@@ -495,6 +495,16 @@ function drawDecor(b,s){
     cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x+sw,s.y-9,1.5,0,TAU); cx.fill();
     return;
   }
+  if(b.kind==='lettuce'){
+    // a leafy head of lettuce - a rosette of blue-green leaves, some nibbled
+    cx.fillStyle='rgba(0,0,0,0.14)'; cx.beginPath(); cx.ellipse(s.x,s.y+1,7,3,0,0,TAU); cx.fill();
+    const nibbled=b.nibbled;
+    for(let i=0;i<7;i++){ const a=i*TAU/7 + (b.ph||0);
+      cx.fillStyle= i%2? '#6fa04a':'#7fb35a';
+      cx.beginPath(); cx.ellipse(s.x+Math.cos(a)*4, s.y-3+Math.sin(a)*2.4, 4, 3.2, a, 0, TAU); cx.fill(); }
+    cx.fillStyle= nibbled? '#8a9a52':'#a8d078'; cx.beginPath(); cx.ellipse(s.x, s.y-4, 3.4, 2.6, 0, 0, TAU); cx.fill();
+    return;
+  }
   if(b.kind==='target'){
     const g=cx; g.save(); g.translate(s.x,s.y);
     g.strokeStyle='#5a4630'; g.lineWidth=3;
@@ -811,6 +821,24 @@ function drawMob(m,s){
       cx.beginPath(); cx.moveTo(s.x+Math.cos(aa)*13,s.y+Math.sin(aa)*6);
       cx.quadraticCurveTo(s.x+Math.cos(aa)*10,s.y+Math.sin(aa)*4-7, s.x+Math.cos(aa)*8,s.y+Math.sin(aa)*3-3);
       cx.stroke(); }
+  }
+  if(m.kind==='hare'){
+    const hop=Math.abs(Math.sin(m.anim*6))* (m.state==='idle'&&m.tx==null?1.5:4);
+    drawShadowAt(cx,s.x,s.y,7);
+    const fl=m.face||1;
+    cx.save(); cx.translate(s.x, s.y-hop);
+    cx.fillStyle='#b8a894';                                   // body
+    cx.beginPath(); cx.ellipse(0,-6,8,7,0,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(fl*6,-9,5,4,0,0,TAU); cx.fill(); // head
+    cx.fillStyle='#cfc2b0'; cx.beginPath(); cx.ellipse(0,-3,6,5,0,0,TAU); cx.fill(); // belly
+    cx.fillStyle='#b8a894';                                   // ears
+    cx.beginPath(); cx.ellipse(fl*5,-16,1.8,5,fl*0.25,0,TAU); cx.fill();
+    cx.beginPath(); cx.ellipse(fl*8,-15,1.8,5,fl*0.35,0,TAU); cx.fill();
+    cx.fillStyle='#e8dcc8'; cx.beginPath(); cx.arc(-fl*5,-2,2.4,0,TAU); cx.fill(); // tail
+    cx.fillStyle='#2a2018'; cx.beginPath(); cx.arc(fl*7.5,-10,1,0,TAU); cx.fill(); // eye
+    if(m.hurtT>0){ cx.fillStyle='rgba(255,255,255,0.5)'; cx.beginPath(); cx.ellipse(0,-6,9,8,0,0,TAU); cx.fill(); }
+    cx.restore();
+    drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
   if(m.kind==='dragon'){
