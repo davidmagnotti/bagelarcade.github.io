@@ -827,14 +827,17 @@ function placeObjectsWind(){
   const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, MI=Z.mill, WH=Z.wheel, D=Z.dock, B=Z.bluffs;
   // landmarks
   addBuilding('resort', R.x, R.y, 'The Breakers Resort');
-  // the resort building is big - give it a solid base under its whole facade so
-  // you can't slip in around the corners; you enter only at the front door.
-  for(let dy=-3;dy<=0;dy++) for(let dx=-4;dx<=4;dx++) setSolid(R.x+dx, R.y+dy, 1);
+  // The Breakers now draws at a sane size, so its collision footprint is tighter -
+  // a solid base under the facade you can't slip behind, front door open to the south.
+  for(let dy=-2;dy<=0;dy++) for(let dx=-3;dx<=3;dx++) setSolid(R.x+dx, R.y+dy, 1);
   addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
   addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
   // the windmill is a colossus - give it a broad base you cannot slip right
   // behind, so its footprint reads as big as it looks
   for(let dy=-4;dy<=1;dy++) for(let dx=-3;dx<=3;dx++) setSolid(MI.x+dx, MI.y+dy, 1);
+  // the great waterwheel had NO collision - you could walk clean through it. Give
+  // it a solid footprint under the wheel and its mill-housing so it reads as real.
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 1);
   // ---- the working town: two tidy terraces facing the green, well at centre ----
   addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
   addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');
@@ -849,8 +852,14 @@ function placeObjectsWind(){
   const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
   NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
   SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
-  // harbor - the ferry moored on the open water alongside the pier
-  addBuilding('boat', D.x+2, D.y+6, '');
+  // Ashwing perches on the shore by the pier, exactly where he set you down - he
+  // is your way home, the way you came. (No boat until the strait is calmed.)
+  { const sp=findOpenNear(D.x+6, D.y-3, 7) || [D.x+6, D.y-3];
+    G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82});
+    setSolid(sp[0],sp[1],1); setSolid(sp[0]+1,sp[1],1); setSolid(sp[0],sp[1]-1,1); }
+  // the ferry only appears once you calm the strait and hulls can sail again;
+  // before that, Ashwing is the only way off the isle.
+  if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('lamp', D.x+3, D.y+1, '');
   addBuilding('lamp', M.x-6, M.y, ''); addBuilding('lamp', M.x+6, M.y, '');
@@ -941,6 +950,11 @@ function freeLeviathan(m){
   for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,life:rnd(0.8,1.7),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); }
   P.story.tideCalm=1; P.story.vathMet=1;
+  // the strait is safe: the ferry can finally moor at the pier (it was hidden while
+  // no hull could live in the water). Add it now so it's there without a reload.
+  if(G.worldId==='wind' && !G.decor.some(d=>d.kind==='boat')){
+    const D=WIND_ZONES.dock; addBuilding('boat', D.x+2, D.y+6, ''); invalidateScenery&&invalidateScenery();
+  }
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
@@ -972,6 +986,12 @@ function flyToWorld(id, msg){
 function askDragonFlight(){
   P.prog.windKnown=1;
   flyToWorld('wind','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke, out over water too wild for any keel.');
+}
+function askAshwingHome(){
+  setDialog('<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He carried you here across the wild strait; he will carry you back whenever you say the word.</i>',
+    [ {label:'Fly to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
+        flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the shore - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }},
+      {label:'Not just yet', ghost:true, fn:closeDialog} ]);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
