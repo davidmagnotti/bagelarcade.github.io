@@ -21,6 +21,31 @@ function openDialog(npc){
   buildDialogContent(npc);
 }
 function closeDialog(){ dlg.open=false; document.getElementById('dialog').style.display='none'; }
+// A bazaar stall you can buy from - opens a standalone shop panel (no NPC).
+function openStallShop(b){
+  const sh=b&&b.shop; if(!sh) return;
+  P.click=null; dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent=sh.name;
+  // a little market-stall portrait: striped canopy over a counter of goods
+  const pg=document.getElementById('dportrait').getContext('2d');
+  const cA=['#b5423a','#2f6f7a','#5a4472'][(b.variant||0)%3];
+  pg.fillStyle='#241a10'; pg.fillRect(0,0,72,72);
+  for(let i=0;i<7;i++){ pg.fillStyle=i%2?'#e7ddc9':cA; pg.fillRect(2+i*10,12,10,15); }
+  pg.fillStyle='#8a5a30'; pg.fillRect(8,44,56,20);
+  pg.fillStyle='#c9a24e'; pg.beginPath(); pg.arc(20,52,5,0,TAU); pg.arc(36,52,5,0,TAU); pg.fill();
+  pg.fillStyle='#7fb05b'; pg.fillRect(46,47,12,8);
+  const rebuild=(msg)=>{
+    const btns=sh.wares.map(w=>({label:'Buy '+ITEMS[w.item].name+' <b style="color:#ffd76a">'+w.price+'g</b>', fn:()=>{
+      if(P.gold>=w.price){ P.gold-=w.price; giveQuiet(w.item,1); if(Snd.coin)Snd.coin(); refreshUI();
+        rebuild('“Sold - one '+ITEMS[w.item].name+', and a fair price.”'); }
+      else rebuild('“'+w.price+' gold, friend. The crown taxes us dearly.”');
+    }}));
+    btns.push({label:'Maybe later', ghost:true, fn:closeDialog});
+    setDialog(msg || ('“'+sh.line+'”'), btns);
+  };
+  rebuild();
+}
 function setDialog(text,btns){
   document.getElementById('dtext').innerHTML=text;
   const bx=document.getElementById('dbtns'); bx.innerHTML='';
