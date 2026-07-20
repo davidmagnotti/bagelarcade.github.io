@@ -1445,6 +1445,12 @@ function spawnCrownFolk(){
     {skin:'#b58a5e',hair:'#cfc7b8',shirt:'#3a5a5a',pants:'#2f3a3a',beard:'#cfc7b8',beardLong:true},
     ['Sixty years mending nets on this quay. Watched the young prince\'s ship sail out. Watched it never come back.',
      'Bad water that season. Bad water and, some say, a bad man aboard. But that\'s an old sailor talking.'],0.25));
+  // ---- Odo the Victualler: supplies the palace kitchen; gives the kitchen-run ----
+  G.npcs.push(makeNPC('odo','Odo the Victualler', M.x-3.5, M.y+3.5,
+    {skin:'#c08850',hair:'#4a3a28',shirt:'#6a5a34',pants:'#4a3e28',apron:'#8a7048',beard:'#4a3a28'},
+    ['I feed a palace and half a garrison off this one cart. Ask me anything but for a discount.',
+     'The kitchen wants everything by supper and pays me by the moon. Such is the crown\'s trade.',
+     'Reliable legs are worth more than gold in this city, friend, and just as hard to find.'],0.25));
 }
 function spawnMobsCrown(){
   const Z=CROWN_ZONES, BA=Z.barracks;
@@ -1575,6 +1581,11 @@ QUESTS.audience={ giver:'brea', title:'An Audience with the King', kind:'talk', 
   log:'Climb the Processional to the Tideglass Palace and present yourself to King Aldous.',
   doneText:'',   // the audience is a scripted scene in the King's own dialogue
   rw:{gold:400, hp:12, item:{elixir:2}, xp:{melee:520, archery:520, magic:520}} };
+QUESTS.kitchenrun={ giver:'odo', title:"The Victualler's Errand", kind:'special', xpL:180,
+  brief:'You there - steady hands and no livery, perfect. My cart-boy\'s abed with the sweats and the palace kitchen is howling for this crate before the King\'s supper. The gate guards know my crate; carry it up the Processional and they\'ll wave you through the tradesman\'s door. Slip it to Nan the cook and you\'ll have done the crown a quiet favor - and earned the run of the gate besides.',
+  log:"Carry Odo's crate up to the Tideglass Palace and deliver it to Nan in the kitchen.",
+  doneText:'',   // completes when you hand it to the cook inside
+  rw:{gold:60, item:{elixir:1}, xp:{fishing:120}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
   brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
   log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
@@ -1659,6 +1670,7 @@ ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common toni
 ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
 ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
 ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
+ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
   brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
   log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
@@ -1880,6 +1892,13 @@ function buildExtraSprites(){
     g.fillStyle='#4a3120'; g.fillRect(12,30,21,4);
     g.strokeStyle='rgba(20,12,6,0.7)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(12,8); g.lineTo(20,8); g.lineTo(20,24); g.lineTo(31,24); g.lineTo(31,32); g.lineTo(12,32); g.closePath(); g.stroke();
     g.fillStyle='#c9a24e'; g.fillRect(13,12,7,2.4); g.fillRect(13,16,7,2.4); });
+  // Victualler's Crate: a roped wooden crate
+  ICONS.crate=makeCanvas(40,40,(g)=>{
+    g.fillStyle='#8a5a30'; g.fillRect(8,10,24,24);
+    g.fillStyle='#a06a38'; g.fillRect(8,10,24,4); g.fillRect(8,20,24,3);
+    g.strokeStyle='rgba(40,24,10,0.8)'; g.lineWidth=1.6; g.strokeRect(8,10,24,24);
+    g.strokeStyle='#5a3a1c'; g.lineWidth=1.3; g.beginPath(); g.moveTo(8,10); g.lineTo(32,34); g.moveTo(32,10); g.lineTo(8,34); g.stroke();
+    g.strokeStyle='#c9a24e'; g.lineWidth=2; g.beginPath(); g.moveTo(20,8); g.lineTo(20,36); g.stroke(); });
   // Warden's Wardstone: a rune-carved shield-stone
   ICONS.wardstone=makeCanvas(40,40,(g)=>{
     g.fillStyle='#6f7a86'; g.beginPath(); g.moveTo(20,5); g.lineTo(33,11); g.lineTo(31,26); g.quadraticCurveTo(20,36,9,26); g.lineTo(7,11); g.closePath(); g.fill();
@@ -2076,9 +2095,12 @@ function switchWorld(id){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.
     if(P.story && P.story.vathMet && !(P.story.act>=3) && !P.quests.audience) P.quests.audience='avail';
+    // the palace gate is guarded; the kitchen-run delivery is how you earn the
+    // run of the gate. Available from your first day in the capital.
+    if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1;
-      setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. A whole kingdom to walk. And on its throne, they say, a king who has grieved for thirty years. <b>King Aldous</b> keeps his court before the palace gate.',8000),1400); }
+      setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. The palace gate is guarded: none pass without the King\'s leave. But the kitchens always want a runner - ask <b>Odo the Victualler</b> in the Bazaar.',8000),1400); }
   }
   banner(def.title,def.sub); Snd.quest();
   updateQuestUI(); refreshUI();

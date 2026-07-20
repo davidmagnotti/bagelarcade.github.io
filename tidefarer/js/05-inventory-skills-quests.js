@@ -50,6 +50,7 @@ function questReady(id){
 function acceptQuest(id){
   P.quests[id]='active'; P.prog[id]=0;
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
+  if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
   if(id==='tide' && typeof spawnLeviathan==='function'){ // the beast surfaces at the breakwater
     spawnLeviathan();
