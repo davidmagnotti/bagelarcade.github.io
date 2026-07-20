@@ -75,6 +75,8 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='tome' && !b.destroyed) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.9,go:()=>destroyTome(b)});
     else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
     else if(b.kind==='lairmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>enterLair()});
+    else if(b.kind==='dungeonmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=> b.exit? exitFrostDungeon() : enterFrostDungeon()});
+    else if(b.kind==='icelever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullIceLever(b)});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
     else if(b.kind==='bazaar' && b.shop) cand.push({type:'inter',x:b.x,y:b.y+0.9,r:1.2,range:1.9,go:()=>openStallShop(b)});

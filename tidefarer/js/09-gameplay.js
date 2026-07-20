@@ -98,6 +98,10 @@ function nearestInteract(){
       if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
+    if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.3 && d<bd){ bd=d; best={type:'dungeon',o:b,label:b.exit?'Climb out':'Descend'}; } }
+    if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
@@ -141,6 +145,8 @@ function doInteract(){
   if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
+  if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
+  if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
   if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
@@ -408,6 +414,7 @@ function damageMob(m,dmg,knock,skill){
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe
     else if(m.kind==='frostwarden' && !m.freed){ m.hp=1; freeWarden(m); } // the ice guardian is freed, not felled
+    else if(m.kind==='icecolossus' && !m.freed){ m.hp=1; freeColossus(m); } // the Rimebound is another of Vath's cursed victims
     else killMob(m, skill);
   }
 }
@@ -610,6 +617,21 @@ function updatePlayer(dt){
     }
   }
   const ml=Math.hypot(mx,my);
+  // --- Frostdeep ice-slide: on the dungeon's slick ice you glide in one world
+  //     direction until a wall stops you or you glide off the ice onto footing ---
+  const onSlick = G.worldId==='frostdeep' && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
+  if(onSlick){
+    if(!P.slideDir && ml>0.25) P.slideDir = Math.abs(mx)>Math.abs(my)? {x:Math.sign(mx),y:0} : {x:0,y:Math.sign(my)};
+    if(P.slideDir){
+      const ss=7.0*dt; let moved=false;
+      const nx=P.x+P.slideDir.x*ss; if(!circleBlocked(nx,P.y,0.28)){ P.x=nx; moved=true; }
+      const ny=P.y+P.slideDir.y*ss; if(!circleBlocked(P.x,ny,0.28)){ P.y=ny; moved=true; }
+      P.dir=P.slideDir; P.moving=true; P.anim+=ss*3.1;
+      if(Math.random()<dt*20) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-P.slideDir.x*0.6,vy:-P.slideDir.y*0.6,life:0.4,color:'#eaf6ff',size:2.2,grav:0});
+      if(!moved || tileAt(Math.floor(P.x),Math.floor(P.y))!==T.ICE){ P.slideDir=null; Snd.step&&Snd.step(T.ICE); }
+    } else P.moving=false;
+  } else {
+  if(P.slideDir) P.slideDir=null;
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){
     mx/=ml; my/=ml;
@@ -631,6 +653,7 @@ function updatePlayer(dt){
         life:0.35,size:2.6,color: ut===T.SAND?'rgba(226,207,147,0.7)': ut===T.PATH?'rgba(180,160,130,0.6)':'rgba(120,150,90,0.55)'});
     }
     if(P.fishing){ P.fishing=null; addFloat('line reeled in',P.x,P.y-1.3,'#c9b990'); }
+  }
   }
   P.wellCd=Math.max(0,(P.wellCd||0)-dt);
   P.comboT=Math.max(0,(P.comboT||0)-dt); if(P.comboT===0) P.combo=0;
