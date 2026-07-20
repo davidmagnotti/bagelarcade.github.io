@@ -77,7 +77,7 @@ function nearestInteract(){
     }
     if(b.kind==='tunnelmouth'){
       const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.0 && d<bd){ bd=d; best={type:'warp',o:b,label:'Enter'}; }
+      if(d<2.0 && d<bd){ bd=d; best= b.deep? {type:'aeriedeep',o:b,label:b.up?'Climb out':'Descend'} : {type:'warp',o:b,label:'Enter'}; }
     }
     if(b.kind==='tome' && !b.destroyed){
       const d=dist(P.x,P.y,b.x,b.y);
@@ -148,6 +148,7 @@ function doInteract(){
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
+  if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
   if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
@@ -1088,6 +1089,7 @@ function updateWorld(dt){
     if(gone) toast('Dawn burns the night wraiths back to mist.',3200);
     G._nightWarned=false;
   }
+  if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
 function isNight(){ return nightAmount()>0.55; }

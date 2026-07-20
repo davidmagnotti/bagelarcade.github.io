@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -595,6 +595,38 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*11,-2-Math.cos(ang)*13); g.stroke();
     g.fillStyle= b.on? '#8fe0b0':'#7fd4ff'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
     if(!b.on){ g.fillStyle='rgba(127,212,255,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    g.restore(); return;
+  }
+  if(b.kind==='boneplate'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x);
+    // a sunken flagstone plate ringed in bone
+    g.fillStyle= lit? '#3a2c4a' : '#2a2622'; g.beginPath(); g.moveTo(0,-11); g.lineTo(15,-2); g.lineTo(0,7); g.lineTo(-15,-2); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#c77bff' : '#6a5c4c'; g.lineWidth= lit?2.2:1.6; g.stroke();
+    g.fillStyle= lit? 'rgba(199,123,255,'+(0.20+0.20*gl).toFixed(2)+')' : 'rgba(20,16,14,0.5)';
+    g.beginPath(); g.moveTo(0,-7); g.lineTo(10,-2); g.lineTo(0,4); g.lineTo(-10,-2); g.closePath(); g.fill();
+    if(b.ord){ // ordered sigil-plates show a roman numeral
+      g.fillStyle= lit? '#f0d8ff' : '#8a7c6c'; g.font='bold 11px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+      g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0, -2); g.textBaseline='alphabetic';
+    } else if(lit){ g.fillStyle='#e8d0ff'; g.beginPath(); g.arc(0,-2,2.2,0,TAU); g.fill(); }
+    g.restore(); return;
+  }
+  if(b.kind==='catgate'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(b.open){ // raised into the ceiling - just the top lintel and stubs remain
+      g.fillStyle='#3a332c'; g.fillRect(-30,-44,60,7);
+      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-30,-44,60,7);
+      g.fillStyle='#2a241e'; for(let i=-2;i<=2;i++){ g.fillRect(i*11-2,-44,4,7); }
+      g.restore(); return;
+    }
+    drawShadowAt(g,s.x,s.y,30);
+    // an iron portcullis dropped across the corridor
+    g.fillStyle='#3a332c'; g.fillRect(-30,-40,60,6);           // top lintel
+    g.strokeStyle='#1c1814'; g.lineWidth=1.6;
+    g.fillStyle='#4a423a';
+    for(let i=-2;i<=2;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
+    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-27,yy,54,3.5); }          // cross-bars
+    g.fillStyle='#5a5048'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
     g.restore(); return;
   }
   if(b.kind==='tunnelmouth'){
