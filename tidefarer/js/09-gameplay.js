@@ -21,8 +21,20 @@ function unstickEntity(e){
   }
   return false;
 }
+// The palace wall is one flat, screen-centred billboard, so tile solids give its
+// edge a diamond-toothed feel. This is the crisp, continuous line you actually
+// collide with: a point is inside the keep when its on-screen centre is under the
+// sprite (|rx|<=span) and at/behind the wall base (ry in [back, base]).
+function palaceBarrier(x,y){
+  if(!PALACE_BAR || G.worldId!=='crown') return false;
+  const B=PALACE_BAR;
+  const rx=((x-y)-B.axm)*32, ry=((x+y)-B.aym)*16;
+  return ry<=B.base && ry>=B.back && rx<=B.span && rx>=-B.span;
+}
 function circleBlocked(x,y,r,waterOK){
+  if(palaceBarrier(x,y)) return true;
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,-r],[0,r],[-r,0],[r,0]]){
+    if(palaceBarrier(x+ox,y+oy)) return true;   // radius-aware straight wall
     const tx=Math.floor(x+ox), ty=Math.floor(y+oy);
     if(solidAt(tx,ty)){
       // the windsurf board rides only the LIGHT water near shore - shallows -
