@@ -1134,25 +1134,80 @@ function drawMob(m,s){
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='boar'){
-    drawShadowAt(cx,s.x,s.y,13);
-    const trot=Math.sin(m.anim*9)*2, fl4=m.face||1;
-    cx.save(); cx.translate(s.x,s.y);
-    cx.strokeStyle='#4a3520'; cx.lineWidth=3; cx.lineCap='round';
-    cx.beginPath(); cx.moveTo(-7,-8); cx.lineTo(-7+trot,0); cx.moveTo(7,-8); cx.lineTo(7-trot,0); cx.stroke();
-    cx.fillStyle='#6a4c2e';
-    cx.beginPath(); cx.ellipse(0,-12,14,9,0,0,TAU); cx.fill();
-    cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.8; cx.stroke();
-    cx.fillStyle='#4e3820';
-    cx.beginPath(); cx.moveTo(-12,-19); cx.quadraticCurveTo(0,-24,12,-19); cx.quadraticCurveTo(0,-20,-12,-19); cx.closePath(); cx.fill();
-    cx.fillStyle='#7a5a38';
-    cx.beginPath(); cx.ellipse(fl4*13,-11,6.5,5.5,0,0,TAU); cx.fill();
-    cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.6; cx.stroke();
-    cx.fillStyle='#9a7a52'; cx.beginPath(); cx.ellipse(fl4*17.5,-10,2.6,2.2,0,0,TAU); cx.fill(); cx.stroke();
-    cx.fillStyle='#f0e8d8';
-    cx.beginPath(); cx.moveTo(fl4*16,-8); cx.quadraticCurveTo(fl4*20,-10,fl4*19,-13); cx.lineTo(fl4*17,-10); cx.closePath(); cx.fill(); cx.stroke();
-    cx.fillStyle='#17100a'; cx.beginPath(); cx.arc(fl4*12,-13,1.3,0,TAU); cx.fill();
-    if(m.hurtT>0){ cx.strokeStyle='#ffb26b'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,-12,17,0,TAU); cx.stroke(); }
-    cx.restore(); cx.lineCap='butt';
+    const fl=m.face||1;
+    drawShadowAt(cx,s.x,s.y,15);
+    // infer trot speed from real motion (smoothed) so the gait moves only when the boar does
+    if(m._lx==null){ m._lx=m.x; m._ly=m.y; }
+    const moved=Math.hypot(m.x-m._lx, m.y-m._ly); m._lx=m.x; m._ly=m.y;
+    m._gait=(m._gait||0) + ((moved>0.003?1:0) - (m._gait||0))*0.18;
+    const gait=m._gait;
+    const aggro = m.state==='chase' || (m.windup||0)>0 || (m.lunge||0)>0;
+    const charge= (m.windup||0)>0 || (m.lunge||0)>0;
+    const ph=m.anim*10;                      // stride phase
+    const bob=Math.sin(ph*0.5)*1.1*gait;     // body rises and falls with the stride
+    const headDown= charge?5 : aggro?2 : 0;  // head drops to gore
+    cx.save(); cx.translate(s.x,s.y); cx.lineCap='round'; cx.lineJoin='round';
+    // a two-jointed leg: hip -> knee -> hoof, swung by 'sw'
+    const leg=(bx,sw,col,hoof)=>{
+      const kx=bx+sw*0.9, hx=bx+sw*1.7;
+      cx.strokeStyle=col; cx.lineWidth=4;
+      cx.beginPath(); cx.moveTo(bx,-12+bob); cx.lineTo(kx,-6); cx.lineTo(hx,0.5); cx.stroke();
+      cx.strokeStyle=hoof; cx.lineWidth=4.6; cx.beginPath(); cx.moveTo(hx,-1.4); cx.lineTo(hx,0.8); cx.stroke();
+    };
+    // diagonal trot: the two diagonal pairs swing in opposition. Far pair first (behind body).
+    const A=Math.sin(ph)*3.4*gait, B=Math.sin(ph+Math.PI)*3.4*gait;
+    leg(-fl*7, A, '#382717', '#1b1109');   // far hind
+    leg(fl*9,  B, '#3d2a19', '#1b1109');    // far fore
+    // ---- body: barrel + high shoulder hump, shaded for volume ----
+    cx.fillStyle='#4f3622';
+    cx.beginPath(); cx.ellipse(0,-13+bob,15.5,10.5,0,0,TAU); cx.fill();        // barrel
+    cx.beginPath(); cx.ellipse(fl*7,-16+bob,9.5,8.5,0,0,TAU); cx.fill();       // shoulder hump toward the head
+    cx.fillStyle='#654627';                                                     // lit belly
+    cx.beginPath(); cx.ellipse(fl*1,-10+bob,13,6.8,0,0,TAU); cx.fill();
+    cx.fillStyle='rgba(26,17,9,0.38)';                                          // dark topline
+    cx.beginPath(); cx.ellipse(0,-18+bob,13.5,4.6,0,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(20,14,8,0.8)'; cx.lineWidth=2;
+    cx.beginPath(); cx.ellipse(0,-13+bob,15.5,10.5,0,0,TAU); cx.stroke();
+    // ---- tail (rear), flicking ----
+    const tw=Math.sin(m.anim*6)*3;
+    cx.strokeStyle='#2e2013'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(-fl*14,-15+bob); cx.quadraticCurveTo(-fl*20,-15, -fl*18+tw*0.4,-9); cx.stroke();
+    cx.fillStyle='#241a10'; cx.beginPath(); cx.arc(-fl*18+tw*0.4,-9,1.9,0,TAU); cx.fill();
+    // ---- the bristleback ridge: a mane of spines, taller at the shoulder, that shivers when roused ----
+    const N=10;
+    for(let i=0;i<=N;i++){ const t=i/N;
+      const bx=(-fl*13)+(fl*26)*t;
+      const arch=Math.sin(t*Math.PI);
+      const baseY=-19 - arch*3 + bob;
+      const sh = aggro? Math.sin(m.anim*30 + i*1.3)*1.3 : 0;   // angry bristles quiver
+      const hgt=4 + arch*3.2 + (aggro?2.2:0);
+      cx.strokeStyle='#241a10'; cx.lineWidth=2.2;
+      cx.beginPath(); cx.moveTo(bx,baseY+2); cx.lineTo(bx+sh*0.35, baseY-hgt+sh); cx.stroke();
+      cx.fillStyle='#7a5a38'; cx.beginPath(); cx.arc(bx+sh*0.35, baseY-hgt+sh, 0.9,0,TAU); cx.fill();
+    }
+    // ---- head ----
+    cx.save(); cx.translate(fl*13, -12+bob+headDown);
+    cx.fillStyle='#3d2a19'; cx.beginPath(); cx.moveTo(-fl*2,-6); cx.lineTo(fl*1.5,-12); cx.lineTo(fl*4.5,-4.5); cx.closePath(); cx.fill(); // ear
+    cx.fillStyle='#523822'; cx.beginPath(); cx.ellipse(fl*2,-1,7.6,6.6,0,0,TAU); cx.fill();      // skull/cheek
+    cx.fillStyle='#654627'; cx.beginPath(); cx.ellipse(fl*3,1.5,5.6,4.4,0,0,TAU); cx.fill();      // lit jowl
+    cx.fillStyle='#7a5a3c'; cx.beginPath(); cx.ellipse(fl*8.4,1.2,3.8,3.1,0,0,TAU); cx.fill();     // snout
+    cx.strokeStyle='rgba(20,14,8,0.7)'; cx.lineWidth=1.3; cx.stroke();
+    cx.fillStyle='#2a1d12'; cx.beginPath(); cx.arc(fl*9.4,0.4,0.85,0,TAU); cx.arc(fl*9.4,2.2,0.85,0,TAU); cx.fill(); // nostrils
+    cx.strokeStyle='#efe4cf'; cx.lineWidth=2.3;                                                    // tusk, curving up
+    cx.beginPath(); cx.moveTo(fl*6,3); cx.quadraticCurveTo(fl*9.4,2.6, fl*8.8,-1.6); cx.stroke();
+    cx.fillStyle='#140d07'; cx.beginPath(); cx.arc(fl*3,-2.6,1.6,0,TAU); cx.fill();                // eye
+    if(aggro){ cx.fillStyle='#ff7a3a'; cx.beginPath(); cx.arc(fl*3,-2.6,0.85,0,TAU); cx.fill(); }  // it sees red
+    cx.fillStyle='#fff'; cx.beginPath(); cx.arc(fl*3.6,-3.2,0.5,0,TAU); cx.fill();                 // glint
+    cx.restore();
+    // ---- near legs, on top of the body ----
+    leg(-fl*6, B, '#4c341f', '#241812');   // near hind
+    leg(fl*10, A, '#573c24', '#241812');    // near fore
+    // hoof dust when charging past, kept near the player so we never spawn it off-screen
+    if(gait>0.55 && dist(m.x,m.y,P.x,P.y)<16 && Math.random()<0.06)
+      G.parts.push({x:m.x-fl*0.3, y:m.y, vx:-fl*rnd(0.1,0.4), vy:-rnd(0.1,0.4), life:rnd(0.3,0.6), color:'rgba(122,96,62,0.7)', size:rnd(1.5,3), grav:0.02});
+    if(m.hurtT>0){ cx.globalAlpha=0.5; cx.fillStyle='#ffd9a8';
+      cx.beginPath(); cx.ellipse(0,-13+bob,17,12,0,0,TAU); cx.fill(); cx.globalAlpha=1; }
+    cx.restore(); cx.lineCap='butt'; cx.lineJoin='miter';
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='brigand'){
