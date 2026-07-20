@@ -1012,13 +1012,26 @@ function placeObjectsAerie(){
   addBuilding('house', V.x+3, V.y-2, 'The Windward Rest (Inn)');
   addBuilding('house2', V.x+5, V.y+3, 'Falconer\'s mews');
   addBuilding('well', V.x, V.y, 'Cliffspring well');
-  addBuilding('lamp', D.x, D.y-1, ''); addBuilding('boat', D.x-4, D.y+2, '');
+  addBuilding('lamp', D.x, D.y-1, '');
+  // the ferry boat floats just off the landing on open water (never on the beach)
+  { const cx2=75, cy2=90, ddx=D.x-cx2, ddy=D.y-cy2, dl=Math.hypot(ddx,ddy)||1;
+    for(let step=3; step<=16; step++){ const tx=Math.round(D.x+ddx/dl*step), ty=Math.round(D.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); break; } } } }
   addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
   // the two ends of the Underclimb: a tunnel mouth at the foot, and its exit
   // inside the sealed Roost Heart. Interacting warps between them.
   const ex=aerieTunnelExit(), en=aerieTunnelEntry();
   G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, tx:ex.x, ty:ex.y-2.4, label:'the Underclimb'});
   G.decor.push({kind:'tunnelmouth', x:S.x+0.5, y:S.y-1.5, tx:en.x, ty:en.y+1.4, label:'the way down'});
+  // a TON of tumbled stone barricading the Underclimb - solid boulders scattered
+  // thick around the mouth so you must weave through them (a narrow way stays open)
+  { const tb=mulberry32(SEED+61);
+    for(let i=0;i<52;i++){ const a=tb()*TAU, rr=2.2+tb()*6;
+      const bx=Math.round(T2.x+Math.cos(a)*rr), by=Math.round(T2.y+Math.sin(a)*rr);
+      if(inb(bx,by) && walkTile(tileAt(bx,by)) && !solidAt(bx,by)
+         && dist(bx,by,T2.x,T2.y)>1.6 && dist(bx,by,en.x,en.y)>1.6 && tb()<0.55){
+        G.decor.push({kind:tb()<0.5?'pillarBroken':'pillar', x:bx+0.5, y:by+0.5, broken:tb()<0.5, boulder:1});
+        setSolid(bx,by,1); } } }
   // the cursed tome, at the heart of the sealed roost
   G.decor.push({kind:'tome', x:S.x+0.5, y:S.y+0.5, destroyed:false});
   setSolid(Math.round(S.x), Math.round(S.y), 1);
@@ -1056,16 +1069,20 @@ function spawnMobsAerie(){
   // it, until the tome that maddened them is destroyed. They leash back to their
   // posts, so the plateau stays guarded.
   if(!(P.story && P.story.aerieFreed)){
-    const pr=mulberry32(SEED+29), A=Z.aerie, S=Z.sanctum;
+    const pr=mulberry32(SEED+29), A=Z.aerie, S=Z.sanctum, T2=Z.tunnel;
     const guardOK=(sp)=> sp && dist(sp[0],sp[1],S.x,S.y) > S.r+2;
-    // a ring around the plateau rim - no gap to slip through
-    for(let i=0;i<18;i++){ const a=(i/18)*TAU + pr()*0.16, rr=A.r-3+pr()*3;
+    // a dense double ring around the plateau rim - no gap to slip through
+    for(let i=0;i<26;i++){ const a=(i/26)*TAU + pr()*0.14, rr=A.r-3+pr()*3;
       const sp=findOpenNear(Math.round(A.x+Math.cos(a)*rr), Math.round(A.y+Math.sin(a)*rr*0.95), 6);
       if(guardOK(sp)){ const rp=spawnMob('raptor', sp[0], sp[1]); if(rp) rp.aggro=14; } }
     // interior patrols
-    for(let i=0;i<7;i++){ const a=pr()*TAU, rr=3+pr()*(A.r-6);
+    for(let i=0;i<10;i++){ const a=pr()*TAU, rr=3+pr()*(A.r-6);
       const sp=findOpenNear(Math.round(A.x+Math.cos(a)*rr), Math.round(A.y+Math.sin(a)*rr), 5);
       if(guardOK(sp)){ const rp=spawnMob('raptor', sp[0], sp[1]); if(rp) rp.aggro=14; } }
+    // a screaming flock hemming the Underclimb itself - the true gate is guarded
+    for(let i=0;i<8;i++){ const a=pr()*TAU, rr=2+pr()*4;
+      const sp=findOpenNear(Math.round(T2.x+Math.cos(a)*rr), Math.round(T2.y+Math.sin(a)*rr), 4);
+      if(sp && dist(sp[0],sp[1],T2.x,T2.y)>1.6){ const rp=spawnMob('raptor', sp[0], sp[1]); if(rp) rp.aggro=13; } }
   } else { // freed: gentle birds wheel the crags again
     G.critters=G.critters||[];
     const pr=mulberry32(SEED+31);
