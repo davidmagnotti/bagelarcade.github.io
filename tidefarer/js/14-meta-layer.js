@@ -51,7 +51,7 @@ function saveCode(){
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
     gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,
+    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,rr:P.resortRoom?1:0,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     story:P.story||{act:1,necklace:true},
     disc:P.disc||{},expl:packExpl(),flags};
@@ -106,7 +106,7 @@ function loadCode(str){
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
   if(typeof d.dyt==='number') G.dayT=d.dyt;
   P.level=d.lv||1; P.xpL=d.xl||0; P.bank=d.bk||0; P.vault=d.vault||{}; P.gritLv=d.gritLv||0; P.gritN=d.gritN||0; P.spell=d.spell||'bolt'; P.spells=d.spells||{}; P.quickItem=d.qi||'potion'; P.bind=d.bind||null;
-  P.horse=d.hs?1:0; P.home=d.hm?1:0; P.homeUp=d.hu||{};
+  P.horse=d.hs?1:0; P.home=d.hm?1:0; P.homeUp=d.hu||{}; P.resortRoom=d.rr?1:0;
 
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};

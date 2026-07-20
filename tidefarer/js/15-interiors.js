@@ -183,23 +183,27 @@ function enterHouse(b){
     // Two areas: an indoor marble LOBBY at the front (where you enter), and an
     // open-air pool COURTYARD out the back, joined by an arched gateway.
     I.resort=1; I.follow=1;
-    I.partY=13; I.gate={x0:13.2,x1:16.8};           // the courtyard entrance archway
-    I.pool={x0:16.5,y0:2,x1:28,y1:11};              // the pool, outdoors in the courtyard
-    // ---- LOBBY (indoor, y >= 13). Furniture kept to the upper rows so the
-    // whole y17-19 strip stays a clear walkway from the door to the desk. ----
-    F('frontdesk',5.0,15.2,2.2,0.9);
-    F('table',10.5,15.3,0.9,0.6); F('stool',9.4,15.3,0.35,0.3); F('stool',11.6,15.3,0.35,0.3);
-    F('table',22.0,15.3,0.9,0.6); F('stool',20.9,15.3,0.35,0.3); F('stool',23.1,15.3,0.35,0.3);
-    F('vase',1.5,14.4,0.5,0.5); F('vase',28.3,14.4,0.5,0.5); F('vase',1.5,18.5,0.5,0.5); F('vase',28.3,18.5,0.5,0.5);
-    F('plant',2.2,13.4,0.6,0.6); F('plant',27.4,13.4,0.6,0.6);
-    F('rug',15.0,18.4,0,0,false);
-    // ---- COURTYARD (open-air, y < 13): pool, loungers, sunbathers, palms ----
-    F('lounger',17.2,11.7,1.0,0.55); F('lounger',19.8,11.7,1.0,0.55); F('lounger',22.4,11.7,1.0,0.55);
-    F('lounger',25.0,11.7,1.0,0.55); F('lounger',27.4,11.7,1.0,0.55);
-    F('poolguest',17.6,11.1,0.4,0.4); F('poolguest',20.4,11.2,0.4,0.4); F('poolguest',23.2,11.1,0.4,0.4);
-    F('poolguest',26.2,11.2,0.4,0.4); F('poolguest',15.4,5.0,0.4,0.4); F('poolguest',15.4,8.5,0.4,0.4);
-    F('plant',2.0,2.0,0.6,0.6); F('plant',13.0,2.0,0.6,0.6); F('plant',28.4,2.0,0.6,0.6); F('plant',2.0,11.2,0.6,0.6);
-    F('vase',14.6,4.5,0.5,0.5); F('vase',14.6,9.0,0.5,0.5);
+    I.partY=13; I.gate={x0:12.6,x1:16.4};            // the courtyard entrance archway
+    I.pool={x0:17.5,y0:3,x1:27.5,y1:9.5};            // a trimmer pool, leaving broad deck to walk
+    I.suite={x0:22.4,y0:13.2,x1:29,y1:19.6};         // the private suite alcove, right of the lobby
+    // ---- LOBBY (indoor, y >= 13). Furniture hugs the walls so the whole
+    // centre stays an open floor to stroll and greet guests. ----
+    F('frontdesk',4.6,15.0,2.2,0.9);
+    F('table',9.0,14.6,0.9,0.6); F('stool',9.0,15.9,0.35,0.3);      // a reading nook by the desk
+    F('plant',1.9,13.5,0.6,0.6); F('vase',1.7,18.6,0.5,0.5);
+    F('rug',13.5,18.2,0,0,false);
+    // the private SUITE you unlock at the desk: a curtained alcove with a made
+    // canopy bed, a sea-view, a welcome basket and a soft rug.
+    F('suitebed',26.6,15.0,1.2,0.8);
+    F('rug',25.6,17.6,0,0,false); F('plant',28.4,13.7,0.6,0.6); F('vase',28.4,19.0,0.5,0.5);
+    F('vase',23.6,14.0,0.45,0.4);                                    // a welcome bouquet at the bedside
+    // ---- COURTYARD (open-air, y < 13): pool, a FEW loungers & guests, palms,
+    // parasols. Deliberately uncrowded - room to wander and chat. ----
+    F('lounger',19.4,11.3,1.0,0.55); F('lounger',25.6,11.3,1.0,0.55); F('lounger',6.6,9.4,1.0,0.55);
+    F('poolguest',22.5,11.4,0.4,0.4); F('poolguest',5.0,6.6,0.4,0.4); F('poolguest',14.7,4.6,0.4,0.4);
+    F('parasol',10.4,7.6,0.6,0.5); F('parasol',4.6,10.6,0.6,0.5);
+    F('plant',2.0,2.2,0.6,0.6); F('plant',12.2,2.0,0.6,0.6); F('plant',28.4,2.2,0.6,0.6); F('plant',2.0,11.4,0.6,0.6);
+    F('vase',13.8,6.4,0.5,0.5); F('vase',13.8,10.0,0.5,0.5);
   }
   if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
   if(b.kind==='igloo'){ I.igloo=1;
@@ -564,6 +568,37 @@ function drawFurniture(f,s){
         drawHumanoid(cx, s.x, s.y, {skin:['#e6c39a','#caa27b','#a9784e','#8f6a48'][gp%4], hair:['#3a2e26','#6a5a44','#2a241e','#cfc7b8'][(gp>>1)%4],
           shirt:['#e86a8a','#5aa0c0','#ffd76a','#7fb05b'][gp%4], pants:'#3a4a6a', dir:{x:(gp%2?1:-1),y:1}, step:0, size:1.28});
         cx.font='9px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.5)'; cx.fillText('Guest',s.x+1,s.y-40); cx.fillStyle='#ffe9a8'; cx.fillText('Guest',s.x,s.y-41); }
+      break;
+    case 'parasol':
+      cx.save(); cx.translate(s.x,s.y);
+      // a little round bistro table under a striped beach umbrella
+      cx.fillStyle='#c9b48a'; cx.beginPath(); cx.ellipse(0,-1,9,4.5,0,0,TAU); cx.fill();
+      cx.strokeStyle='#7a5a38'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(0,-2); cx.lineTo(0,-34); cx.stroke(); // pole
+      const seg=8;
+      for(let i=0;i<seg;i++){ const a0=Math.PI+ i/seg*Math.PI, a1=Math.PI+(i+1)/seg*Math.PI;
+        cx.fillStyle= i%2? '#e86a6a':'#f4ede0';
+        cx.beginPath(); cx.moveTo(0,-34); cx.lineTo(Math.cos(a0)*22,-30+Math.sin(a0)*6); cx.lineTo(Math.cos(a1)*22,-30+Math.sin(a1)*6); cx.closePath(); cx.fill(); }
+      cx.fillStyle='#c94a4a'; cx.beginPath(); cx.arc(0,-34,2,0,TAU); cx.fill();
+      cx.restore();
+      break;
+    case 'suitebed':
+      { const owned = !!P.resortRoom;
+        cx.save(); cx.translate(s.x,s.y);
+        // four posts + a canopy, drawn behind the mattress
+        cx.strokeStyle='#5a3f28'; cx.lineWidth=3;
+        for(const px of [-17,17]){ cx.beginPath(); cx.moveTo(px,4); cx.lineTo(px,-30); cx.stroke(); }
+        cx.fillStyle= owned? '#c98a4a':'#7a6a52';
+        cx.beginPath(); cx.moveTo(-20,-28); cx.lineTo(20,-28); cx.lineTo(16,-34); cx.lineTo(-16,-34); cx.closePath(); cx.fill(); // canopy valance
+        cx.restore();
+        // the mattress (reuse the bed blocks, warmer linens when it's yours)
+        iBox(s,2.1,1.35,10,'#6e5738','#4a3322','#3e2b1c');
+        iBox({x:s.x,y:s.y-10},2.0,1.25,8, owned?'#4f8fb0':'#7f8a6a', owned?'#3f7690':'#5e6a4c', owned?'#356080':'#4e5a40');
+        iBox({x:s.x-(0.55)*(TW/2),y:s.y-(0.55)*(TH/2)-18},0.75,0.95,5,'#f0e8d4','#d4c6a0','#bcaa82'); // plumped pillow
+        cx.font='9px Verdana'; cx.textAlign='center';
+        const lbl= owned? 'Your Suite' : 'Suite';
+        cx.fillStyle='rgba(0,0,0,0.5)'; cx.fillText(lbl,s.x+1,s.y-43); cx.fillStyle= owned? '#ffe9a8':'#c8bfa8'; cx.fillText(lbl,s.x,s.y-44);
+        if(!owned){ const gl=0.4+0.3*Math.sin(G.time*3); cx.fillStyle='rgba(200,190,168,'+gl.toFixed(2)+')'; cx.font='12px Georgia'; cx.fillText('🔒',s.x,s.y-30); }
+      }
       break;
     case 'king':
       drawShadowAt(cx,s.x,s.y,13);
