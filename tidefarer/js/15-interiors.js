@@ -70,10 +70,55 @@ function palaceKingSpeak(){
     : 'Welcome to the Tideglass, traveler. Walk the courtyard, take the air on the ramparts. A palace this size is mostly for echoes now, but the doors are open to a curse-breaker.';
   setDialog('“'+line+'”', [{label:'Your Majesty', ghost:true, fn:closeDialog}]);
 }
+// The palace kitchen: where the victualler's crate is delivered. A warm working
+// room with a great hearth, a prep table, and Nan the cook.
+function kitchenInterior(){
+  const I={kind:'kitchen', w:14, h:9, ret:null, exit:{x:7,y:8.1}, t:0, furn:[], kitchen:1};
+  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  F('hearth',2.2,1.35,1.1,0.35);
+  F('shelf',5,1.3,1.2,0.3); F('shelf',9.2,1.3,1.2,0.3);
+  F('table',7,3.6,1.7,0.7);
+  F('barrel',11.6,2.2,0.45,0.4); F('barrel',12.2,3.0,0.45,0.4);
+  F('crate',1.7,4.6,0.55,0.45); F('crate',2.5,5.1,0.55,0.45);
+  F('stool',6.0,4.9,0.35,0.3); F('stool',8.0,5.0,0.35,0.3);
+  F('rug',7,5.4,0,0,false);
+  F('cook',10.2,4.4,0.4,0.45);
+  return I;
+}
+function cookSpeak(){
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='Nan the Cook';
+  const pg=document.getElementById('dportrait').getContext('2d'); pg.fillStyle='#2a1c12'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+  drawHumanoid(pg,0,0,{skin:'#d8a878',hair:'#cfc7b8',shirt:'#8a4a3a',pants:'#5a4a3a',apron:'#e7ddc9',hairstyle:'bun',dir:{x:0,y:1},step:0});
+  pg.restore();
+  if(qs('kitchenrun')==='active' && has('crate',1)){
+    take('crate',1); if(P.story) P.story.palaceLeave=1;
+    completeQuest('kitchenrun');
+    setDialog('<i>Nan takes the crate without breaking stride, cracks the lid, sniffs, and grunts approval.</i> “Bless you, runner - saved my supper and my neck both. Odo’s a good sort under all that bluster.” <i>She tips her head toward the inner doors.</i> “His Majesty holds court within. The guards won’t stop you now - you came in on the crown’s own errand. Go on through, and mind your boots on the marble.”',
+      [{label:'Thank you, Nan', ghost:true, fn:closeDialog}]);
+    return;
+  }
+  setDialog('“The kitchen never sleeps, love. Thirty years I’ve fed a court of three and a garrison of two hundred - and not once has anyone finished their greens.”',
+    [{label:'Farewell', ghost:true, fn:closeDialog}]);
+}
 function enterHouse(b){
   if(G.interior) return;
-  if(b.grand){ // the Aldermere palace opens into its own grand two-storey interior
+  if(b.grand){ // the Aldermere palace - guarded; you need the King's leave to enter
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
+    const leave = qs('kitchenrun')==='done' || (P.story&&(P.story.palaceLeave||P.story.kingTold));
+    if(qs('kitchenrun')==='active' && has('crate',1)){
+      // in on the victualler's errand - the guards wave the crate through the kitchen door
+      const I=kitchenInterior(); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
+      P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
+      banner('THE PALACE KITCHEN','TRADESMAN’S ENTRANCE'); Snd.quest&&Snd.quest();
+      closeAllPanels&&closeAllPanels(); return;
+    }
+    if(!leave){
+      toast('Two guards cross their halberds at the gate. “None pass without the King’s leave, traveler.” Then one softens: “The kitchens want a runner, though - ask <b>Odo the Victualler</b> in the Bazaar, and come back with his crate.”',5800);
+      Snd.step(5); return;
+    }
     const I=palaceInterior(0); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
     P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
     banner('THE TIDEGLASS PALACE','THE GREAT HALL OF ALDERMERE'); Snd.quest&&Snd.quest();
@@ -521,6 +566,11 @@ function drawFurniture(f,s){
       drawHumanoid(cx, s.x, s.y-2, {skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',dir:{x:0,y:1},step:0,size:1.3});
       cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('King Aldous',s.x+1,s.y-49); cx.fillStyle='#ffe9a8'; cx.fillText('King Aldous',s.x,s.y-50);
       break;
+    case 'cook':
+      drawShadowAt(cx,s.x,s.y,12);
+      drawHumanoid(cx, s.x, s.y, {skin:'#d8a878',hair:'#cfc7b8',shirt:'#8a4a3a',pants:'#5a4a3a',apron:'#e7ddc9',hairstyle:'bun',dir:{x:-1,y:1},step:0,size:1.24});
+      cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('Nan the Cook',s.x+1,s.y-45); cx.fillStyle='#ffe9a8'; cx.fillText('Nan the Cook',s.x,s.y-46);
+      break;
     case 'guard':
       { const fl=(Math.floor(f.x*3+f.y*5)%2)?1:-1;
         drawShadowAt(cx,s.x,s.y,11);
@@ -687,7 +737,7 @@ function renderInterior(){
     cx.beginPath(); cx.moveTo(s.x,s.y-52); cx.lineTo(s.x,s.y-32); cx.moveTo(s.x-12,s.y-42); cx.lineTo(s.x+12,s.y-42); cx.stroke();
   }
   // hearth fire (house & forge)
-  if(I.kind==='house'||I.kind==='forge'){
+  if(I.kind==='house'||I.kind==='forge'||I.kind==='kitchen'){
     const hf=I.furn.find(f=>f.type==='hearth');
     const s=w2s(hf.x,0.1);
     cx.fillStyle='#57534c'; cx.fillRect(s.x-26,s.y-56,52,40);
