@@ -46,6 +46,50 @@ function circleBlocked(x,y,r,waterOK){
   return false;
 }
 
+/* ---- the Hollow King's wall of fire ----------------------------------------
+   When the hero steps north of the ruin mouth to meet the King, a wall of fire
+   roars up across the gate behind them, sealing the arena until the King falls
+   (or the hero is carried out of it). The gate tiles are made solid while lit. */
+let HOLLOW_FIRE = {active:false, t:0};
+function raiseHollowFire(){
+  if(HOLLOW_FIRE.active || !HOLLOW_GATE || !HOLLOW_GATE.length) return;
+  HOLLOW_FIRE.active=true; HOLLOW_FIRE.t=0;
+  for(const [x,y] of HOLLOW_GATE){
+    setSolid(x,y,1);
+    G.decor.push({kind:'kingfire', x:x+0.5, y:y+0.5, ph:Math.random()*TAU});
+  }
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(typeof banner==='function') banner('A WALL OF FIRE','THE RUINS SEAL - FELL THE KING TO PASS');
+  if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+  G.shake=Math.max(G.shake||0,0.7);
+}
+function dropHollowFire(){
+  if(!HOLLOW_FIRE.active) return;
+  HOLLOW_FIRE.active=false; HOLLOW_FIRE.t=0;
+  if(HOLLOW_GATE) for(const [x,y] of HOLLOW_GATE) setSolid(x,y,0);
+  G.decor = G.decor.filter(b=>b.kind!=='kingfire');
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+function updateHollowFire(dt){
+  if(G.worldId!=='isle') return;                  // arena only exists on Emberwick
+  const boss = G.mobs.find(m=>m.boss);
+  if(!boss || boss.dead){ dropHollowFire(); return; }  // King down (or gone) - lift the seal
+  if(!HOLLOW_FIRE.active){
+    // seal once the hero has stepped north of the gate, onto the King's ground
+    if(!P.dead && P.y < HOLLOW_GATEY-0.6 && P.x>HOLLOW_MINX-1 && P.x<HOLLOW_MAXX+1) raiseHollowFire();
+  } else {
+    HOLLOW_FIRE.t+=dt;
+    // hero carried out of the arena (death/respawn) - the fire gutters out
+    if(P.dead || P.y > HOLLOW_GATEY+0.6){ dropHollowFire(); return; }
+    // embers drifting up off the wall
+    if(typeof fxOn==='function' && fxOn('particles') && Math.random()<0.6){
+      const g=HOLLOW_GATE[(Math.random()*HOLLOW_GATE.length)|0];
+      if(g) G.parts.push({x:g[0]+0.5+rnd(-0.4,0.4), y:g[1]+0.4, vx:rnd(-0.2,0.2), vy:-rnd(0.8,1.6),
+        life:rnd(0.5,1.1), color:Math.random()<0.5?'#ff9a3c':'#ffd76a', size:rnd(1.5,3), grav:-0.15});
+    }
+  }
+}
+
 /* ---- nearest interactable ---- */
 function nearestInteract(){
   let best=null, bd=1.9;
@@ -486,6 +530,7 @@ function killMob(m,skill){
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
     banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
+    dropHollowFire();   // the seal breaks with him
     setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; },2400);
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts
   } else Snd.hit();
@@ -741,6 +786,8 @@ function updatePlayer(dt){
       G.parts.push({x:ZONES.springs.x+rnd(-1.5,1.5),y:ZONES.springs.y+rnd(-1.5,1.5),
         vx:rnd(-0.1,0),vy:rnd(-0.12,-0.04),life:rnd(1.5,2.5),color:'rgba(225,235,240,0.28)',size:6,grav:-0.15});
   }
+  if(G.worldId==='isle' && P.y>=HOLLOW_GATEY && P.y<HOLLOW_GATEY+8 && P.x>HOLLOW_MINX-2 && P.x<HOLLOW_MAXX+2)
+    hintOnce('kingwarn','Skull-boards hammered into the grass warn you back. Beyond them the ground turns to broken stone - and something older than the isle waits at its tip.');
   if(ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
   if(ZONES.forest && dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
 }
@@ -798,6 +845,7 @@ function updateNPCs(dt){
 }
 
 function updateMobs(dt){
+  updateHollowFire(dt);
   for(const m of G.mobs){
     if(m.dead){
       if(m.respawnT>0){ m.respawnT-=dt;

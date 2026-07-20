@@ -245,7 +245,8 @@ function spawnMobs(){
   for(const [x,y] of slimeSpots) spawnMob('slime',x,y);
   const wolfSpots=[[30,39],[35,36],[28,34],[37,42]];
   for(const [x,y] of wolfSpots){ const s=findOpenNear(x,y,3); if(s) spawnMob('wolf',s[0],s[1]); }
-  const skelSpots=[[42,18],[50,18],[44,23],[49,22],[46,19]];
+  // bone-guard the ground between the fire-gate and the King, at the northern spit
+  const skelSpots=[[43,18],[49,18],[45,14],[48,15],[46,12]];
   for(const [x,y] of skelSpots) spawnMob('skeleton',x,y);
-  spawnMob('boss',46,16.6);
+  spawnMob('boss',46,10);
 }

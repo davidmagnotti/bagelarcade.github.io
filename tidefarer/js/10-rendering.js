@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -549,6 +549,47 @@ function drawDecor(b,s){
     g.fillStyle='rgba(255,230,150,'+(0.35*gl).toFixed(2)+')';
     g.beginPath(); g.ellipse(0,-ry*0.1,rx*0.3,ry*0.3,0,0,TAU); g.fill();
     g.restore(); return;
+  }
+  if(b.kind==='kingfire'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const t=G.time*9 + (b.ph||0);
+    g.fillStyle='rgba(255,120,40,0.22)';                       // heat glow on the ground
+    g.beginPath(); g.ellipse(0,0,20,10,0,0,TAU); g.fill();
+    for(let i=-1;i<=1;i++){                                     // three licking tongues of flame
+      const fx=i*7, sway=Math.sin(t*0.6+i)*3, hh=26+Math.sin(t+i*2)*7;
+      const grd=g.createLinearGradient(fx,4,fx,-hh);
+      grd.addColorStop(0,'#7a1606'); grd.addColorStop(0.3,'#e23a10');
+      grd.addColorStop(0.7,'#ff8a1e'); grd.addColorStop(1,'#ffe07a');
+      g.fillStyle=grd;
+      g.beginPath();
+      g.moveTo(fx-6,4);
+      g.quadraticCurveTo(fx-5+sway,-hh*0.4, fx+sway,-hh);
+      g.quadraticCurveTo(fx+5+sway,-hh*0.4, fx+6,4);
+      g.closePath(); g.fill();
+    }
+    g.fillStyle='rgba(255,230,150,0.5)';                        // bright core
+    g.beginPath(); g.ellipse(0,-6,5,10,0,0,TAU); g.fill();
+    g.restore();
+    if(fxOn('particles') && Math.random()<0.22) G.parts.push({x:b.x+rnd(-0.3,0.3),y:b.y,
+      vx:rnd(-0.2,0.2),vy:-rnd(1,2),life:rnd(0.4,0.9),
+      color:Math.random()<0.5?'#ff8a44':'#ffd76a',size:rnd(1.5,3),grav:-0.2});
+    return;
+  }
+  if(b.kind==='warnsign'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(typeof drawShadowAt==='function') drawShadowAt(g,0,2,7);
+    g.strokeStyle='#5a4026'; g.lineWidth=3.2; g.lineCap='round';   // leaning post
+    g.beginPath(); g.moveTo(-2,2); g.lineTo(-4,-22); g.stroke();
+    g.save(); g.translate(-4,-20); g.rotate(-0.12);                 // the danger board
+    g.fillStyle='#6b4a2a'; g.fillRect(-13,-9,26,15);
+    g.strokeStyle='#3a2716'; g.lineWidth=1.5; g.strokeRect(-13,-9,26,15);
+    g.fillStyle='#e9e0cf';                                          // a skull, crudely daubed
+    g.beginPath(); g.ellipse(0,-2,5,4.5,0,0,TAU); g.fill();
+    g.fillRect(-2.5,1,5,3);
+    g.fillStyle='#20140b';
+    g.beginPath(); g.arc(-2,-2.5,1.3,0,TAU); g.arc(2,-2.5,1.3,0,TAU); g.fill();
+    g.restore(); g.restore();
+    return;
   }
   if(b.kind==='lairmouth'){
     const g=cx; g.save(); g.translate(s.x,s.y);

@@ -15,6 +15,14 @@ let ZONES = {
   forest: {x:33,y:38,r:9,  name:'Whisperwood'}
 };
 
+/* The Hollow King's arena, at the isle's cold northern tip. The ruins reach
+   far north; a stretch of open grass and a few warning-boards lead up to a
+   fire-gate that seals the hero in once the King rises. Computed in
+   shapeHollowKingApproach() and read by the fire mechanic in 09-gameplay. */
+let HOLLOW_GATE = [];              // walkable tiles across the ruin mouth (the seal)
+const HOLLOW_GATEY = 21;           // the gate row - grass approach lies just south
+let HOLLOW_MINX = 99, HOLLOW_MAXX = -99;
+
 function carveLine(x0,y0,x1,y1,tile,width){
   const steps = Math.ceil(dist(x0,y0,x1,y1))*2;
   for(let i=0;i<=steps;i++){
@@ -90,6 +98,43 @@ function genWorld(){
       if(!landNear) setTile(x,y,T.DEEP);
     }
   }
+  shapeHollowKingApproach();
+}
+
+/* Reshape the northern ruins into the Hollow King's approach:
+   push the broken headland further north, lay a calm stretch of grass before
+   the cursed ground, and record the fire-gate that seals the arena. */
+function shapeHollowKingApproach(){
+  const R = ZONES.ruins;
+  // --- drive the ruined headland north, out to the isle's lonely tip ---
+  // a pale sand spit is laid over the sea first, so the stone reads as shore-worn
+  for(let y=2;y<=16;y++) for(let x=37;x<=55;x++){
+    if(inb(x,y) && dist(x,y,46,9)<=7 && tileAt(x,y)===T.DEEP) setTile(x,y,T.SAND);
+  }
+  carveDisc(46,10,6,T.RUIN,false);   // the broken spit
+  carveDisc(46,7,3,T.RUIN,false);    // its furthest, coldest reach - the King's ground
+  // lap shallow water against the new shore so the spit reads as land, not island
+  for(let y=2;y<=15;y++) for(let x=36;x<=56;x++){
+    if(tileAt(x,y)!==T.DEEP) continue;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])
+      if(inb(x+dx,y+dy) && walkTile(tileAt(x+dx,y+dy))){ setTile(x,y,T.SHALLOW); break; }
+  }
+  // --- a stretch of open grass leads up to the danger (calm, then cursed) ---
+  for(let y=R.y+2;y<=R.y+12;y++) for(let x=R.x-12;x<=R.x+12;x++){
+    if(inb(x,y) && tileAt(x,y)===T.RUIN && dist(x,y,R.x,R.y)<=R.r+2) setTile(x,y,T.GRASS);
+  }
+  // a footpath threads the grass up to the very mouth of the ruins (the fire-gate)
+  carveLine(R.x, R.y+11, R.x, HOLLOW_GATEY+1, T.PATH, 0);
+  // --- record the fire-gate: every walkable tile across the ruin's mouth ---
+  HOLLOW_GATE = []; HOLLOW_MINX = 99; HOLLOW_MAXX = -99;
+  for(let x=R.x-13;x<=R.x+13;x++){
+    if(inb(x,HOLLOW_GATEY) && walkTile(tileAt(x,HOLLOW_GATEY))){
+      HOLLOW_GATE.push([x,HOLLOW_GATEY]);
+      if(x<HOLLOW_MINX) HOLLOW_MINX=x;
+      if(x>HOLLOW_MAXX) HOLLOW_MAXX=x;
+    }
+  }
+  if(typeof HOLLOW_FIRE!=='undefined'){ HOLLOW_FIRE.active=false; HOLLOW_FIRE.t=0; }
 }
 
 /* ---- object placement ---- */
@@ -176,10 +221,16 @@ function placeObjects(){
       if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<7)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
     }
   }
-  // ruin pillars & crypt platform
-  const pillars=[[41,16],[51,16],[41,24],[51,24],[43,20],[49,20],[46,25]];
+  // ruin pillars & crypt platform - clustered around the King's northern spit,
+  // with a pair framing the fire-gate at the ruin's mouth
+  const pillars=[[43,9],[49,9],[41,13],[51,13],[43,17],[49,17],[39,20],[53,20]];
   for(const [x,y] of pillars){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:r()<0.5}); setSolid(x,y,1); }
-  G.decor.push({kind:'crypt',x:46.5,y:15.5}); // visual arch behind boss
+  G.decor.push({kind:'crypt',x:46.5,y:8.5}); // visual arch behind the King, at the isle's tip
+  // warning-boards hammered into the grass before the cursed ground
+  for(const [wx,wy] of [[43,27],[49,28],[46,24]]){
+    const sp=findOpenNear(wx,wy,2);
+    if(sp) G.decor.push({kind:'warnsign',x:sp[0]+0.5,y:sp[1]+0.5});
+  }
   // buildings
   addBuilding('house', 44,54, 'Maren\'s cottage').closedMsg='<b>Maren\'s cottage</b> is dark, but for one candle. “Come back at a decent hour, castaway,” the Elder calls, not unkindly.';
   addBuilding('forge', 53,56, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
