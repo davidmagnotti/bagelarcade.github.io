@@ -79,6 +79,9 @@ function enterHouse(b){
     banner('THE TIDEGLASS PALACE','THE GREAT HALL OF ALDERMERE'); Snd.quest&&Snd.quest();
     closeAllPanels&&closeAllPanels(); return;
   }
+  // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
+  // the Mint...). b.locked keeps the old Vael war-tent default.
+  if(b.lockMsg){ toast(b.lockMsg,3800); Snd.step(5); return; }
   if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
   // you always dismount at the door - no riding indoors
   if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
@@ -87,7 +90,7 @@ function enterHouse(b){
   const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || b.kind==='resort' || lblL.includes('your homestead');
   if(nightL>0.5 && !alwaysOpen){
     let minD=1e9; for(const zk of ['village','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
-    if((b.kind==='house'||b.kind==='house2') && minD>24){
+    if((b.kind==='house'||b.kind==='house2') && minD>24 && !b.closedMsg){
       // remote hospitality: far from any town, folk take a knocker in
       give('bread',1);
       const fadeH=document.getElementById('fadeOv'); fadeH.style.opacity=1; Snd.tone(200,0.5,'sine',0.04,-60);
@@ -96,7 +99,8 @@ function enterHouse(b){
         setTimeout(()=>{ fadeH.style.opacity=0; },120); },750);
       return;
     }
-    toast(['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
+    // b.closedMsg: a custom "shut for the night" line for this door; else a generic one
+    toast(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
       '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
       'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)],3600);
     Snd.step(5); return;

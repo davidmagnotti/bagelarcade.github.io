@@ -281,7 +281,7 @@ function placeObjectsMain(){
   addBuilding('lamp',V.x-0.5,V.y+6,'');
   const FZ=ZONES.farm;
   addBuilding('barn', FZ.x+4,FZ.y-4,"Hedda's barn");
-  addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse');
+  addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse').closedMsg='The <b>Farmhouse</b> is dark - early to bed, early to the fields. A dog barks once, then thinks better of it.';
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
@@ -322,7 +322,7 @@ function placeObjectsMain(){
   addBuilding('lamp',330,244,'');
   addBuilding('boat',338.5,249.5,'');
   // Thimble & Thread, Greyharbor's clothier
-  addBuilding('house',V.x-7,V.y-1,'Thimble & Thread (Clothier)');
+  addBuilding('house',V.x-7,V.y-1,'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”';
   // a hermit hides in the deep pines - chop through the ring to find him
   { const HX=ZONES.forest.x+9, HY=ZONES.forest.y-7;
     carveDisc(HX,HY,4,T.FOREST,false);
@@ -1332,8 +1332,10 @@ function placeObjectsCrown(){
   addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
   // ---- Crown Plaza: the civic heart ----
   addBuilding('well', PL.x, PL.y, 'The Kings\' Fountain');
-  addBuilding('house2', PL.x-6, PL.y-4, 'The Hall of Charts');
-  addBuilding('house2', PL.x+6, PL.y-3, 'The Mint');
+  const hallCharts=addBuilding('house2', PL.x-6, PL.y-4, 'The Hall of Charts');
+  hallCharts.lockMsg='The <b>Hall of Charts</b> is crown business - cartographers and captains only. The clerk does not look up.';
+  const mint=addBuilding('house2', PL.x+6, PL.y-3, 'The Mint');
+  mint.lockMsg='The <b>Royal Mint</b>. Two guards, one very serious door, and no reason on earth to let you in.';
   addBuilding('stall', PL.x-3, PL.y+4, ''); addBuilding('stall', PL.x+3, PL.y+4, '');
   for(const [lx,ly] of [[-7,0],[7,0],[0,-7],[-5,6],[5,6]]) addBuilding('lamp', PL.x+lx, PL.y+ly, '');
   // ---- the Grand Bazaar: two tidy rows of fine, named stalls around the
@@ -1353,9 +1355,11 @@ function placeObjectsCrown(){
   // a colonnade of tall pillars framing the bazaar
   for(let i=0;i<10;i++){ const a=i/10*TAU, px=Math.round(M.x+Math.cos(a)*(M.r-1)), py=Math.round(M.y+Math.sin(a)*(M.r-1)*0.9);
     if(inb(px,py)&&walkTile(tileAt(px,py))&&!solidAt(px,py)) G.decor.push({kind:'pillar',x:px+0.5,y:py+0.5}); }
-  // grand shop halls at the market's ends
-  addBuilding('house2', M.x-7, M.y-12, 'The Spice Hall');
-  addBuilding('house2', M.x+7, M.y-12, 'The Cloth Hall');
+  // grand guild halls at the market's ends (members only); the inn stays open
+  const spiceHall=addBuilding('house2', M.x-7, M.y-12, 'The Spice Hall');
+  spiceHall.lockMsg='The <b>Spice Guild</b> admits members and coin, not sightseers. The door smells of cinnamon and closes in your face.';
+  const clothHall=addBuilding('house2', M.x+7, M.y-12, 'The Cloth Hall');
+  clothHall.lockMsg='The <b>Cloth Guild</b> hall. “Wholesale only, love,” calls a voice - and the latch does not lift.';
   addBuilding('house',  M.x, M.y+12, 'The Coin & Cup (Inn)');
   for(const [lx,ly] of [[-12,-10],[12,-10],[-12,10],[12,10],[0,-11],[0,11]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
   // ---- Kingsferry Quay: an open, uncluttered arrival - boats, lamps, a
@@ -1366,13 +1370,19 @@ function placeObjectsCrown(){
   // a short colonnade framing the quay so the arrival still reads as grand
   for(const [px3,py3] of [[H.x-5,H.y-3],[H.x-1,H.y-4],[H.x+3,H.y-4]])
     if(inb(px3,py3)&&walkTile(tileAt(px3,py3))&&!solidAt(px3,py3)) G.decor.push({kind:'pillar',x:px3+0.5,y:py3+0.5});
-  // ---- the Garrison ----
-  addBuilding('house2', BA.x, BA.y-2, 'The Garrison');
-  addBuilding('barn', BA.x-5, BA.y+3, 'Armory');
+  // ---- the Garrison (barred to civilians) ----
+  const garr=addBuilding('house2', BA.x, BA.y-2, 'The Garrison');
+  garr.lockMsg='The <b>Garrison</b> door is barred to civilians - Captain Halvard’s standing order.';
+  const armory=addBuilding('barn', BA.x-5, BA.y+3, 'Armory');
+  armory.lockMsg='The <b>Armory</b> is under lock and seal. Steel for soldiers, not strangers.';
   addBuilding('lamp', BA.x-4, BA.y-4, ''); addBuilding('lamp', BA.x+4, BA.y-4, '');
-  // ---- Highrow: noble townhouses ----
+  // ---- Highrow: noble townhouses (private - no wandering in off the street) ----
+  const highLines=['A <b>Highrow townhouse</b>. A footman cracks the door, takes in your salt-stained boots, and shuts it again - coolly.',
+    'A noble’s door, lacquered and unamused. “The family is not receiving,” a servant informs the air near your head.',
+    'A <b>Highrow residence</b>. The knocker is a gold gull; the answer is a very quiet, very final click.'];
   for(let i=0;i<6;i++){ const hx=HR.x-8+((i%3)*7), hy=HR.y-5+(Math.floor(i/3)*8);
-    if(inb(hx,hy)&&walkTile(tileAt(hx,hy))) addBuilding(i%2?'house2':'house', hx, hy, ''); }
+    if(inb(hx,hy)&&walkTile(tileAt(hx,hy))){ const nh=addBuilding(i%2?'house2':'house', hx, hy, '');
+      if(nh) nh.lockMsg=highLines[i%3]; } }
   addBuilding('well', HR.x, HR.y+1, '');
   for(const [lx,ly] of [[-9,0],[9,0],[0,7]]) addBuilding('lamp', HR.x+lx, HR.y+ly, '');
   // ---- the Drowned Queen's Garden: a place of quiet mourning ----
