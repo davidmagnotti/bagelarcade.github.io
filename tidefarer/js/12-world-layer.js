@@ -1327,6 +1327,11 @@ function placeObjectsCrown(){
   // under the towering facade
   addBuilding('lamp', PA.x-7, PA.y+9, ''); addBuilding('lamp', PA.x+7, PA.y+9, '');
   addBuilding('lamp', PA.x-11, PA.y+2, ''); addBuilding('lamp', PA.x+11, PA.y+2, '');
+  // ---- the Palace Kitchens: a separate tradesman's door round the west side,
+  // clear of the gate. Delivering Odo's crate to Nan here earns the run of the palace.
+  const kit=addBuilding('house2', PA.x-14, PA.y+8, 'The Palace Kitchens');
+  if(kit) kit.kitchen=1;
+  addBuilding('lamp', PA.x-14, PA.y+11, ''); addBuilding('lamp', PA.x-17, PA.y+7, '');
   // ---- the Cathedral of the Tide ----
   addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide');
   addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
