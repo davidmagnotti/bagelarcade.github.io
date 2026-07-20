@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -575,6 +575,28 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='dungeonmouth'){
+    const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
+    const pulse=0.5+0.5*Math.sin(G.time*2.0);
+    // a jagged ice-fissure ringed in blue rime
+    g.fillStyle='rgba(150,210,235,'+(0.14+0.10*pulse)+')'; g.beginPath(); g.ellipse(0,-6,30,18,0,0,TAU); g.fill();
+    g.fillStyle='#cfe6f0';   // ice brow / shards
+    g.beginPath(); g.moveTo(-26,6); g.lineTo(-20,-24); g.lineTo(-8,-14); g.lineTo(0,-32); g.lineTo(9,-13); g.lineTo(20,-24); g.lineTo(26,6); g.closePath(); g.fill();
+    g.strokeStyle='#6f9fb5'; g.lineWidth=2.2; g.stroke();
+    g.fillStyle='#0c1a24'; g.beginPath(); g.moveTo(-13,6); g.quadraticCurveTo(0,-18,13,6); g.closePath(); g.fill();  // the dark maw
+    g.fillStyle='rgba(150,90,220,'+(0.12+0.14*pulse)+')'; g.beginPath(); g.moveTo(-9,6); g.quadraticCurveTo(0,-12,9,6); g.closePath(); g.fill();  // a wrong violet glow within
+    g.restore(); return;
+  }
+  if(b.kind==='icelever'){
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#7f8a92'; g.beginPath(); g.ellipse(0,-1,6,3,0,0,TAU); g.fill();   // stone base
+    g.strokeStyle='#c9d6de'; g.lineWidth=3; g.lineCap='round';
+    const ang=b.on? 0.7 : -0.7;                                                     // the throw
+    g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*11,-2-Math.cos(ang)*13); g.stroke();
+    g.fillStyle= b.on? '#8fe0b0':'#7fd4ff'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
+    if(!b.on){ g.fillStyle='rgba(127,212,255,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    g.restore(); return;
+  }
   if(b.kind==='tunnelmouth'){
     const g=cx; drawShadowAt(g,s.x,s.y,14);
     g.save(); g.translate(s.x,s.y);
@@ -871,6 +893,39 @@ function drawMob(m,s){
     cx.font='bold 11px Georgia'; cx.textAlign='center';
     cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillText(nm,s.x+1,s.y-40);
     cx.fillStyle='#e6748a'; cx.fillText(nm,s.x,s.y-41);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='icecolossus'){
+    const sway=Math.sin(m.anim*1.6)*2, fl=m.face||1, wnd=(m.windup>0);
+    drawShadowAt(cx,s.x,s.y,30);
+    cx.save(); cx.translate(s.x,s.y+sway*0.3); cx.scale(fl,1);
+    const ice='#bfe4f2', iceD='#8fbcd0', iceL='#e6f6ff', vio='rgba(150,90,220,';
+    // enspelled aura
+    if(m.enspelled){ const gl=0.25+0.15*Math.sin(G.time*4);
+      cx.fillStyle=vio+gl.toFixed(2)+')'; cx.beginPath(); cx.ellipse(0,-30,34,40,0,0,TAU); cx.fill(); }
+    // legs
+    cx.fillStyle=iceD; cx.beginPath(); cx.ellipse(-12,-6,8,10,0,0,TAU); cx.fill(); cx.beginPath(); cx.ellipse(12,-6,8,10,0,0,TAU); cx.fill();
+    // huge crystalline torso
+    cx.fillStyle=ice; cx.strokeStyle='rgba(60,110,140,0.6)'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(-22,-14); cx.lineTo(-16,-52); cx.lineTo(0,-64); cx.lineTo(16,-52); cx.lineTo(22,-14); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=iceL; cx.beginPath(); cx.moveTo(-8,-52); cx.lineTo(0,-62); cx.lineTo(6,-40); cx.lineTo(-4,-30); cx.closePath(); cx.fill();
+    // jagged ice shards off the back
+    cx.fillStyle=iceD;
+    for(const [ox,oy,h2] of [[-20,-40,18],[-24,-24,14],[18,-44,16],[22,-26,12]]){ cx.beginPath(); cx.moveTo(ox,oy); cx.lineTo(ox-4,oy-h2); cx.lineTo(ox+4,oy-h2*0.6); cx.closePath(); cx.fill(); }
+    // arms - big frozen fists
+    cx.fillStyle=ice; cx.strokeStyle='rgba(60,110,140,0.6)';
+    cx.beginPath(); cx.ellipse(-24,-28+(wnd?-8:0),7,11,0.2,0,TAU); cx.fill(); cx.stroke();
+    cx.beginPath(); cx.ellipse(24,-28+(wnd?-8:0),7,11,-0.2,0,TAU); cx.fill(); cx.stroke();
+    // head + violet eyes
+    cx.fillStyle=iceL; cx.beginPath(); cx.ellipse(0,-58,10,9,0,0,TAU); cx.fill(); cx.stroke();
+    cx.fillStyle= m.freed? '#bfe8ff' : (wnd?'#ff6a5a':'#c77bff');
+    cx.beginPath(); cx.arc(-4,-59,2,0,TAU); cx.arc(4,-59,2,0,TAU); cx.fill();
+    if(m.hurtT>0){ cx.fillStyle='rgba(255,150,140,0.4)'; cx.beginPath(); cx.ellipse(0,-34,24,32,0,0,TAU); cx.fill(); }
+    cx.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    cx.font='bold 13px Georgia'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(nm,s.x+1,s.y-78);
+    cx.fillStyle= m.enspelled? '#c77bff':'#bfe8ff'; cx.fillText(nm,s.x,s.y-79);
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }

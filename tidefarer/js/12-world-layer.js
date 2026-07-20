@@ -51,6 +51,11 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
+const FROSTDEEP_ZONES = { // the ice-dungeon beneath the Frozen Isle
+  entry: {x:60, y:74, r:6,  name:'The Rimefissure', lv:[13,15]},
+  ice:   {x:60, y:48, r:16, name:'The Sliding Halls', lv:[13,15]},
+  boss:  {x:60, y:18, r:12, name:'The Frozen Heart', lv:[15,15]}
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -84,7 +89,10 @@ const WORLD_DEFS = {
     gen:()=>genFrostAll() },
   crown:{ W:180, H:180, seed:61137, zones:CROWN_ZONES,
     spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
-    gen:()=>genCrownAll() }
+    gen:()=>genCrownAll() },
+  frostdeep:{ W:120, H:88, seed:33377, zones:FROSTDEEP_ZONES,
+    spawn:{x:60.5,y:74.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A DUNGEON OF SLIDING ICE',
+    gen:()=>genFrostDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -1154,6 +1162,10 @@ function placeObjectsFrost(){
   for(let i=0;i<10;i++){ const a=pr()*TAU, rr=2+pr()*(RW.r-2);
     const ax=Math.round(RW.x+Math.cos(a)*rr), ay=Math.round(RW.y+Math.sin(a)*rr);
     if(inb(ax,ay) && tileAt(ax,ay)===T.SNOW && !solidAt(ax,ay) && dist(ax,ay,V.x,V.y)>5) addNode('rock',ax,ay); }
+  // the Rimefissure: a cave-mouth in the snowfield down into the ice dungeon
+  { const dm=findOpenNear(RW.x, RW.y+2, 6);
+    if(dm){ G.decor.push({kind:'dungeonmouth', x:dm[0]+0.5, y:dm[1]+0.5, label:'the Rimefissure'});
+      addBuilding('lamp', dm[0]-2, dm[1]+1, ''); addBuilding('lamp', dm[0]+2, dm[1]+1, ''); } }
   // ice-crags to mine on the glacier margins
   for(let i=0;i<28;i++){ const a=pr()*TAU, rr=6+pr()*(GL.r-4);
     const ax=Math.round(GL.x+Math.cos(a)*rr), ay=Math.round(GL.y+Math.sin(a)*rr*0.92);
@@ -1222,6 +1234,73 @@ function genFrostAll(){
   genFrost(); bakeSolids(); placeObjectsFrost(); buildFoam();
   spawnFrostFolk(); spawnMobsFrost();
   buildMapBase();
+}
+
+/* ---------- THE RIMEFISSURE: the ice-slide dungeon beneath the Frozen Isle ---------- */
+function genFrostDeep(){
+  // the whole map begins as solid frozen rock; we carve the chambers out of it
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
+  carve(52,68,68,80,T.RUIN);              // entrance hall
+  carve(58,58,62,68,T.RUIN);              // corridor A -> the Sliding Halls
+  carve(45,39,75,57,T.ICE);               // THE SLIDING HALLS - one great sheet of slick ice
+  setTile(45,39,T.RUIN); setSolid(45,39,0);   // the lever landing (a non-ice tile stops your slide here)
+  setTile(60,39,T.RUIN); setSolid(60,39,0);   // the gate approach (slide stops here, below the gate)
+  carve(58,29,62,37,T.RUIN);              // corridor B -> the boss chamber
+  for(let x=58;x<=62;x++){ setTile(x,38,T.RUIN); setSolid(x,38,1); }  // the DEEP GATE - solid until the lever is thrown
+  carve(40,8,80,28,T.RUIN);               // the Frozen Heart - boss chamber
+  carve(48,13,54,21,T.ICE); carve(66,13,72,21,T.ICE);   // decorative ice pools flanking the boss
+}
+function placeObjectsFrostDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:60.5, y:79.5, exit:1, label:'the way up'});  // back to the surface
+  setSolid(60,79,0); setTile(60,79,T.RUIN);
+  for(const [tx,ty] of [[54,70],[66,70],[47,41],[73,41],[46,20],[74,20],[60,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G.decor.push({kind:'icelever', x:45.5, y:39.5, on:false, label:'a frost-locked lever'});
+  G.decor.push({kind:'chest', x:60.5, y:10.5, deep:1});
+  G.critters=[];
+}
+function spawnMobsFrostDeep(){
+  const Z=FROSTDEEP_ZONES;
+  if(!(P.story && P.story.deepDone)){
+    const sp=findOpenNear(Z.boss.x, Z.boss.y, 6) || [Z.boss.x, Z.boss.y];
+    const b=spawnMob('icecolossus', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; }
+  }
+}
+function genFrostDeepAll(){
+  genFrostDeep(); placeObjectsFrostDeep(); spawnMobsFrostDeep(); buildMapBase();
+}
+function enterFrostDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._deepReturn={x:P.x, y:P.y+1.3}; P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('frostdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitFrostDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('frost');
+    const r=P._deepReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function pullIceLever(b){
+  if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
+  b.on=true; if(Snd.quest) Snd.quest();
+  for(let x=58;x<=62;x++){ setTile(x,38,T.RUIN); setSolid(x,38,0); }   // grind the gate open
+  shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
+  banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
+  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north, past the sliding halls - lies open.',5200);
+}
+function freeColossus(m){
+  m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
+  Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
+  shockwave(m.x,m.y,'rgba(190,230,250,0.95)',100);
+  for(let i=0;i<36;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
+    G.parts.push({x:m.x,y:m.y-0.5,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.9),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,5),grav:0.05}); }
+  if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
+  giveGold(150); give('elixir',2);
+  banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
+  setTimeout(()=>toast('The great ice-thing shudders and the violet light bleeds out of it - it was a beast once, a whale-of-the-deep that wandered too near the cold and never left. On the melting floor, a hand you are coming to know: <b style="color:#c9a0ff">"Five. You unmake my whole winter, deckhand. Come find me, then - I begin to want to see your face."</b>',10000),1400);
 }
 
 /* =====================================================================
@@ -2140,6 +2219,8 @@ function switchWorld(id){
     if(!P.prog.frostSeen){ P.prog.frostSeen=1;
       setTimeout(()=>toast('<b>The Frozen Isle</b> - the strait is locked to solid ice and the cold bites like a curse, because it is one. <b>Bryn the Kettlewarden</b> keeps a fire in the village.',7000),1400); }
   }
+  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
+    setTimeout(()=>toast('<b>The Rimefissure</b> - the ice underfoot in the sliding halls is slick as glass. <b>Step onto it and you glide</b> in one direction until a wall or solid footing stops you. Read the room, then push off.',9000),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.

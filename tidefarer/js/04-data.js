@@ -218,7 +218,8 @@ const MOBDEF = {
   frostwarden:{hp:1700, dmg:36, speed:1.9, aggro:13, xp:800, gold:[0,0], lvl:13, name:'The Weeping Warden'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'},
   hare:{hp:12, dmg:0, speed:2.6, aggro:0, xp:10, gold:[0,0], lvl:1, name:'Garden Hare'},   // a harmless lettuce thief - bonk it and it bolts
-  polarbear:{hp:680, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'}   // vicious, high-level frost predator
+  polarbear:{hp:680, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
+  icecolossus:{hp:1650, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'}   // Vath-cursed dungeon guardian - freed, not slain
 };
 function inSafeZone(x,y){
   for(const k of ['village','dock','farm']){
