@@ -44,6 +44,12 @@ const AERIE_ZONES = {
   tunnel:  {x:84, y:78,  r:3,  name:'The Underclimb', lv:[0,0]},         // tunnel entrance
   ridge:   {x:120,y:98,  r:11, name:'Windbite Ridge', lv:[0,0]}
 };
+const AERIEDEEP_ZONES = { // the catacomb beneath the Roost Heart, reached by the Underclimb
+  entry:   {x:75, y:116, r:8,  name:'The Underclimb Landing', lv:[12,14]},
+  ossuary: {x:75, y:86,  r:16, name:'The Ossuary',            lv:[12,14]},
+  gallery: {x:75, y:54,  r:16, name:'The Gallery of Sigils',  lv:[13,14]},
+  crypt:   {x:75, y:22,  r:14, name:"The Warden's Crypt",     lv:[14,14]}
+};
 const FROST_ZONES = {
   dock:     {x:40, y:120, r:6,  name:'Frostferry Landing', lv:[0,0]},
   village:  {x:62, y:106, r:10, name:'Hearthhold', lv:[0,0]},
@@ -92,7 +98,10 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:120, H:88, seed:33377, zones:FROSTDEEP_ZONES,
     spawn:{x:60.5,y:74.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A DUNGEON OF SLIDING ICE',
-    gen:()=>genFrostDeepAll() }
+    gen:()=>genFrostDeepAll() },
+  aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES,
+    spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
+    gen:()=>genAerieDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -1018,11 +1027,10 @@ function placeObjectsAerie(){
     for(let step=3; step<=16; step++){ const tx=Math.round(D.x+ddx/dl*step), ty=Math.round(D.y+ddy/dl*step);
       if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); break; } } } }
   addBuilding('lamp', V.x-6, V.y+4, ''); addBuilding('lamp', V.x+7, V.y-4, '');
-  // the two ends of the Underclimb: a tunnel mouth at the foot, and its exit
-  // inside the sealed Roost Heart. Interacting warps between them.
-  const ex=aerieTunnelExit(), en=aerieTunnelEntry();
-  G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, tx:ex.x, ty:ex.y-2.4, label:'the Underclimb'});
-  G.decor.push({kind:'tunnelmouth', x:S.x+0.5, y:S.y-1.5, tx:en.x, ty:en.y+1.4, label:'the way down'});
+  // the Underclimb tunnel-mouth at the plateau's foot now bores straight down into
+  // the catacomb beneath the Roost Heart. Interacting descends into the dungeon world.
+  const en=aerieTunnelEntry();
+  G.decor.push({kind:'tunnelmouth', x:en.x, y:en.y, deep:1, label:'the Underclimb'});
   // a TON of tumbled stone barricading the Underclimb - solid boulders scattered
   // thick around the mouth so you must weave through them (a narrow way stays open)
   { const tb=mulberry32(SEED+61);
@@ -1032,9 +1040,9 @@ function placeObjectsAerie(){
          && dist(bx,by,T2.x,T2.y)>1.6 && dist(bx,by,en.x,en.y)>1.6 && tb()<0.55){
         G.decor.push({kind:tb()<0.5?'pillarBroken':'pillar', x:bx+0.5, y:by+0.5, broken:tb()<0.5, boulder:1});
         setSolid(bx,by,1); } } }
-  // the cursed tome, at the heart of the sealed roost
-  G.decor.push({kind:'tome', x:S.x+0.5, y:S.y+0.5, destroyed:false});
-  setSolid(Math.round(S.x), Math.round(S.y), 1);
+  // the cursed tome and its warden no longer sit here in the open - they lie deep in
+  // the catacomb below now, past two sealed gates. The roost heart above is a hollow,
+  // wind-scoured ruin, the Underclimb its only throat.
   // dungeon dressing: a ruined colonnade ringing the roost heart (decorative -
   // they frame the arena without blocking the fight)
   for(let i=0;i<6;i++){ const a=i/6*TAU + 0.5, px=S.x+Math.cos(a)*(S.r-1.3), py=S.y+Math.sin(a)*(S.r-1.3);
@@ -1090,8 +1098,8 @@ function spawnMobsAerie(){
       const ax=Math.round(Z.aerie.x+Math.cos(a)*rr), ay=Math.round(Z.aerie.y+Math.sin(a)*rr);
       if(inb(ax,ay)&&!solidAt(ax,ay)) G.critters.push({kind:'fowl',x:ax+0.5,y:ay+0.5,home:{x:ax+0.5,y:ay+0.5},tx:null,ty:null,wt:rnd(0.5,4),face:pr()<0.5?-1:1,anim:pr()*6,range:4,col:'#d8d2c4',moving:false}); }
   }
-  // the serpent warden coils in the sealed roost heart until the tome is gone
-  if(!(P.story && P.story.aerieFreed)) spawnSerpent();
+  // the serpent warden no longer coils here - it guards the tome deep in the
+  // catacomb below (see spawnMobsAerieDeep). The plateau is walled by birds alone.
   const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
 }
@@ -1113,8 +1121,19 @@ function destroyTome(b){
   shockwave(b.x,b.y,'rgba(199,123,255,0.9)',80);
   for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:b.x,y:b.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.7,1.6),color:Math.random()<0.5?'#c77bff':'#ff9a44',size:rnd(2,4.5),grav:-0.05}); }
-  // the raptors' minds return - the screaming stops mid-cry
+  // the raptors' minds return - the screaming stops mid-cry. The tome now burns in
+  // the catacomb below, so calm both the current world AND the cached surface aerie
+  // (its raptors won't respawn, and gentle fowl will wheel the crags once you climb out).
   for(const m of G.mobs){ if(m.kind==='raptor'){ m.dead=true; m.respawnT=-1; } }
+  const aw=WORLDS['aerie'];
+  if(aw && aw.mobs){
+    for(const m of aw.mobs){ if(m.kind==='raptor'){ m.dead=true; m.respawnT=-1; } }
+    aw.critters=aw.critters||[];
+    const A=AERIE_ZONES.aerie, pr=mulberry32(51789+31);
+    for(let i=0;i<8;i++){ const a=pr()*TAU, rr=4+pr()*(A.r-3);
+      const ax=Math.round(A.x+Math.cos(a)*rr), ay=Math.round(A.y+Math.sin(a)*rr);
+      aw.critters.push({kind:'fowl',x:ax+0.5,y:ay+0.5,home:{x:ax+0.5,y:ay+0.5},tx:null,ty:null,wt:rnd(0.5,4),face:pr()<0.5?-1:1,anim:pr()*6,range:4,col:'#d8d2c4',moving:false}); }
+  }
   banner('THE TOME BURNS','THE SKY REMEMBERS ITSELF - THE AERIE IS QUIET');
   if(qs('roost')==='active') completeQuest('roost');
   setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. On the last leaf, before it blackens, a line in that same unhurried hand: <b style="color:#c9a0ff">“Three. You are becoming a nuisance, deckhand.”</b> <i>Deckhand. The word snags on something you cannot reach.</i>',10000),1500);
@@ -1123,6 +1142,125 @@ function genAerieAll(){
   genAerie(); bakeSolids(); placeObjectsAerie(); buildFoam();
   spawnAerieFolk(); spawnMobsAerie();
   buildMapBase();
+}
+
+/* ---------- THE UNDERCLIMB: the catacomb beneath the Roost Heart ----------
+   A gritty bone-and-stone dungeon roughly twice the island's span. You descend
+   the Underclimb, cross the Ossuary (a latch-plate puzzle), light the Gallery
+   of Sigils in the right order, then face the Tome-Warden serpent in its crypt.
+   Put the warden down, and the cursed tome behind it can finally be destroyed. */
+function genAerieDeep(){
+  // the whole map begins as solid catacomb rock; we cut the chambers out of it
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  const wall=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,1); } };
+  carve(66,108,84,124);   // the Underclimb Landing (entry hall)
+  carve(73,96,77,110);    // corridor A -> the Ossuary
+  carve(58,76,92,96);     // THE OSSUARY - plate puzzle chamber
+  carve(73,64,77,78);     // corridor B (the Bone Gate sits at y=70)
+  carve(58,42,92,64);     // THE GALLERY OF SIGILS - ordered-plate chamber
+  carve(73,32,77,44);     // corridor C (the Sepulchre Gate sits at y=38)
+  carve(52,10,98,32);     // THE WARDEN'S CRYPT - boss chamber
+  // the two sealed gates begin as solid stone across their corridors
+  for(let x=73;x<=77;x++){ setTile(x,70,T.RUIN); setSolid(x,70,1); }  // BONE GATE
+  for(let x=73;x<=77;x++){ setTile(x,38,T.RUIN); setSolid(x,38,1); }  // SEPULCHRE GATE
+  // decorative bone-pits flanking the crypt (non-blocking floor detail via tiles)
+}
+function placeObjectsAerieDeep(){
+  G.decor=G.decor||[];
+  // the way back up the Underclimb, in the landing hall
+  G.decor.push({kind:'tunnelmouth', x:75.5, y:122.5, deep:1, up:1, label:'the way up'});
+  setSolid(75,122,0); setTile(75,122,T.RUIN);
+  // torches lighting the long dark
+  for(const [tx,ty] of [[68,110],[82,110],[60,78],[90,78],[60,44],[90,44],[56,12],[94,12],[70,14],[80,14]])
+    if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // catacomb dressing: broken columns and a few readable crypts
+  for(const [px,py,br] of [[62,90,1],[88,90,0],[62,50,0],[88,50,1],[58,20,1],[92,20,0]])
+    G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
+  for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
+    G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
+  // PUZZLE 1 - THE OSSUARY: three bone-plates; stand on all three to raise the Bone Gate
+  for(const [tx,ty] of [[63,90],[75,80],[87,90]])
+    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'oss', set:false});
+  G.decor.push({kind:'catgate', x:75, y:70, open:false, gate:'bone', tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], label:'the Bone Gate'});
+  // PUZZLE 2 - THE GALLERY OF SIGILS: four numbered plates; tread them I,II,III,IV in
+  // order to open the Sepulchre Gate. Step out of order and the sigils darken and reset.
+  for(const [tx,ty,ord] of [[62,58,1],[88,58,2],[88,48,3],[62,48,4]])
+    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'seq', ord:ord, set:false});
+  G.decor.push({kind:'catgate', x:75, y:38, open:false, gate:'sep', tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], label:'the Sepulchre Gate'});
+  // the cursed tome, on its lectern at the crypt's far wall behind the warden
+  G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:false, deep:1});
+  setSolid(75,14,1);
+  // a warden's hoard, once the deed is done
+  G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
+  G.critters=[];
+  G._plateOn=null;   // reset the plate-tread tracker for this world
+}
+function spawnMobsAerieDeep(){
+  const Z=AERIEDEEP_ZONES;
+  if(!(P.story && P.story.aerieFreed)){
+    const sp=findOpenNear(Z.crypt.x, Z.crypt.y, 6) || [Z.crypt.x, Z.crypt.y];
+    const sn=spawnMob('serpent', sp[0], sp[1]);
+    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+  }
+}
+function genAerieDeepAll(){
+  genAerieDeep(); placeObjectsAerieDeep(); spawnMobsAerieDeep(); buildMapBase();
+}
+function enterAerieDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._aerieReturn={x:P.x, y:P.y+1.3}; P.click=null;
+  setTimeout(()=>{ switchWorld('aeriedeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitAerieDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.click=null;
+  setTimeout(()=>{ switchWorld('aerie');
+    const r=P._aerieReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function openCatGate(gate){
+  const b=G.decor.find(d=>d.kind==='catgate' && d.gate===gate);
+  if(!b || b.open) return;
+  b.open=true; if(Snd.quest) Snd.quest();
+  for(const [tx,ty] of b.tiles){ setSolid(tx,ty,0); setTile(tx,ty,T.RUIN); }
+  shockwave(b.x,b.y,'rgba(199,123,255,0.85)',55); G.shake=0.5;
+  invalidateScenery();
+  if(gate==='bone'){ banner('THE BONE GATE GRINDS UP','THE WAY NORTH IS OPEN'); toast('Old counterweights of stacked skulls shudder and the Bone Gate grinds up into the ceiling. The Gallery lies beyond.',5000); }
+  else { banner('THE SEPULCHRE GATE OPENS','THE WARDEN AWAITS BELOW'); toast('The sigils flare once, all four alight, and the Sepulchre Gate swings inward on the dark. Something vast uncoils in the crypt ahead.',5200); }
+}
+function updateAerieDeep(dt){
+  const gx=Math.floor(P.x), gy=Math.floor(P.y);
+  let onPlate=null;
+  for(const b of G.decor){ if(b.kind==='boneplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
+  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
+  if(id===G._plateOn) return;   // still on the same plate (or still on none) - nothing new
+  G._plateOn=id;
+  if(onPlate) stepPlate(onPlate);
+}
+function stepPlate(b){
+  if(b.set) return;   // treading an already-lit plate does nothing
+  if(b.group==='oss'){
+    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
+    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='oss');
+    if(grp.every(d=>d.set)) openCatGate('bone');
+    else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#e0c0ff',1.1);
+    return;
+  }
+  if(b.group==='seq'){
+    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='seq');
+    const nextNeeded=grp.filter(d=>d.set).length+1;
+    if(b.ord===nextNeeded){
+      b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
+      if(grp.every(d=>d.set)) openCatGate('sep');
+    } else {
+      // wrong order - the whole sequence darkens and resets
+      for(const d of grp) d.set=false;
+      Snd.hit&&Snd.hit(); G.shake=0.35; burst(b.x,b.y-0.2,'#5a4466',12,1.8);
+      toast('The sigils darken and go cold - trodden out of order. Begin again from <b>I</b>.',3600);
+    }
+    return;
+  }
 }
 /* =====================================================================
    THE FROZEN ISLE - Vath locked the strait in an unnatural winter by

@@ -71,7 +71,7 @@ function pickClickTarget(wx,wy){
     else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
     else if(b.kind==='woodpile') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>readLore('woodpile@isle')});
-    else if(b.kind==='tunnelmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:1.9,go:()=>warpTo(b)});
+    else if(b.kind==='tunnelmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:1.9,go:()=> b.deep? (b.up? exitAerieDungeon() : enterAerieDungeon()) : warpTo(b)});
     else if(b.kind==='tome' && !b.destroyed) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.9,go:()=>destroyTome(b)});
     else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
     else if(b.kind==='lairmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>enterLair()});
