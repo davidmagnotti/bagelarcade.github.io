@@ -105,23 +105,27 @@ function cookSpeak(){
 }
 function enterHouse(b){
   if(G.interior) return;
-  if(b.grand){ // the Aldermere palace - guarded; you need the King's leave to enter
+  if(b.grand){ // the Aldermere palace GATE - guarded; you need the King's leave
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     const leave = qs('kitchenrun')==='done' || (P.story&&(P.story.palaceLeave||P.story.kingTold));
-    if(qs('kitchenrun')==='active' && has('crate',1)){
-      // in on the victualler's errand - the guards wave the crate through the kitchen door
-      const I=kitchenInterior(); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
-      P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
-      banner('THE PALACE KITCHEN','TRADESMAN’S ENTRANCE'); Snd.quest&&Snd.quest();
-      closeAllPanels&&closeAllPanels(); return;
-    }
     if(!leave){
-      toast('Two guards cross their halberds at the gate. “None pass without the King’s leave, traveler.” Then one softens: “The kitchens want a runner, though - ask <b>Odo the Victualler</b> in the Bazaar, and come back with his crate.”',5800);
+      toast('Two guards cross their halberds at the gate. “None pass here without the King’s leave, traveler.” Then one softens: “Try the <b>kitchen door</b> round the west side - the cook always wants a runner. Ask <b>Odo the Victualler</b> in the Bazaar for his crate.”',6200);
       Snd.step(5); return;
     }
     const I=palaceInterior(0); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
     P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
     banner('THE TIDEGLASS PALACE','THE GREAT HALL OF ALDERMERE'); Snd.quest&&Snd.quest();
+    closeAllPanels&&closeAllPanels(); return;
+  }
+  if(b.kitchen){ // the palace kitchen - its own door and room, round the west side
+    if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
+    if(qs('kitchenrun')!=='active' && qs('kitchenrun')!=='done' && !(P.story&&P.story.palaceLeave)){
+      toast('The kitchen door is barred - crown’s tradesfolk only. “Bring me Odo’s crate and I’ll open up,” calls a voice within, over the clatter of pans.',4600);
+      Snd.step(5); return;
+    }
+    const I=kitchenInterior(); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
+    P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
+    banner('THE PALACE KITCHEN','TRADESMAN’S ENTRANCE'); Snd.quest&&Snd.quest();
     closeAllPanels&&closeAllPanels(); return;
   }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
@@ -570,6 +574,13 @@ function drawFurniture(f,s){
       drawShadowAt(cx,s.x,s.y,12);
       drawHumanoid(cx, s.x, s.y, {skin:'#d8a878',hair:'#cfc7b8',shirt:'#8a4a3a',pants:'#5a4a3a',apron:'#e7ddc9',hairstyle:'bun',dir:{x:-1,y:1},step:0,size:1.24});
       cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('Nan the Cook',s.x+1,s.y-45); cx.fillStyle='#ffe9a8'; cx.fillText('Nan the Cook',s.x,s.y-46);
+      if(typeof qs==='function' && qs('kitchenrun')==='active' && has('crate',1)){ // a clear "deliver here" cue
+        const gl=0.5+0.3*Math.sin(G.time*3);
+        cx.strokeStyle='rgba(255,215,106,'+gl.toFixed(2)+')'; cx.lineWidth=2;
+        cx.beginPath(); cx.ellipse(s.x,s.y-2,16,7,0,0,TAU); cx.stroke();
+        cx.fillStyle='#ffd76a'; cx.font='bold 18px Georgia'; cx.textAlign='center';
+        cx.fillText('!', s.x, s.y-58+Math.sin(G.time*3)*3);
+      }
       break;
     case 'guard':
       { const fl=(Math.floor(f.x*3+f.y*5)%2)?1:-1;
