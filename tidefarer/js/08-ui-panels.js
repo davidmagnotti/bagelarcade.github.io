@@ -69,7 +69,7 @@ function buildHotbar(){
     hb.appendChild(s);
   });
 }
-const QUICK_ITEMS=['potion','bread','cookedfish','boarmeat','coconut','apple','fish','wheat'];
+const QUICK_ITEMS=['potion','elixir','bread','cookedfish','boarmeat','coconut','apple','fish','wheat'];
 function cycleQuickItem(){
   const cur=QUICK_ITEMS.indexOf(P.quickItem||'potion');
   for(let i=1;i<=QUICK_ITEMS.length;i++){
@@ -183,8 +183,11 @@ function refreshInvPanel(){
   // -- passive charms / relics (always-on bonuses) --
   const tr=[];
   if(has('charm',1)) tr.push('Ember Charm <span style="color:#9be07f">+3</span>');
+  if(has('warcharm',1)) tr.push('Battleworn Charm <span style="color:#9be07f">+5</span>');
   if(has('relic',1)) tr.push('Stormwatch Relic <span style="color:#9be07f">+4</span>');
   if(has('fang',1))  tr.push('Greymaw\u2019s Fang <span style="color:#9be07f">+8 melee</span>');
+  if(has('wardstone',1)) tr.push('Warden\u2019s Wardstone <span style="color:#9be07f">-2 dmg taken</span>');
+  if(has('boots',1)) tr.push('Trailblazer Boots <span style="color:#9be07f">+14% speed</span>');
   if(has('crown',1)) tr.push('Hollow Crown <span style="color:#9be07f">+25 HP</span>');
   if(tr.length) eq+='<div style="font-size:11px;color:var(--parch-dim);margin-bottom:6px;">'+
     '<b style="color:#9a917f;letter-spacing:1px;">CHARMS </b>'+tr.join(' \u00b7 ')+'</div>';

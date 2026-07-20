@@ -26,9 +26,9 @@ function addXP(skill,amt){
   }
   refreshSkillsPanel();
 }
-function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
-function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('relic',1)?4:0); }
-function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('relic',1)?4:0); }
+function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
+function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
+function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
 function qs(id){ return P.quests[id]; }
@@ -82,6 +82,8 @@ function completeQuest(id){
   if(rw.dash2){ P.unlocked.dash2=true;
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
+  if(rw.hp){ P.maxhp+=rw.hp; P.hp=P.maxhp; toast('<b style="color:var(--ember)">+'+rw.hp+' max HP</b> - hardened by the deed.'); }
+  if(rw.mp){ P.maxmp+=rw.mp; P.mp=P.maxmp; toast('<b style="color:var(--ember)">+'+rw.mp+' max mana</b> - your focus deepens.'); }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   if(id==='ribbon1'){ P.quests.ribbon2='active';
     toast('<b>Quest updated:</b> A Ribbon for Wren - steal back Mira\u2019s silk from the brigand camp north of Blackpine.',5600); }
@@ -129,6 +131,11 @@ function rewardText(q){
   if(rw.kit) parts.push('a woodsman\'s <b>axe &amp; pick</b>');
   if(rw.bow) parts.push('<b style="color:var(--ember)">the Hunting Bow</b>');
   if(rw.staff) parts.push('<b style="color:var(--ember)">the Fire Staff</b>');
+  if(rw.surf) parts.push('<b style="color:var(--ember)">a windsurf board</b>');
+  if(rw.moa) parts.push('<b style="color:var(--ember)">Kiko the Moa</b>');
+  if(rw.dash2) parts.push('<b style="color:var(--ember)">the Double Dash</b>');
+  if(rw.hp) parts.push('<b style="color:#9be07f">+'+rw.hp+' max HP</b>');
+  if(rw.mp) parts.push('<b style="color:#9be07f">+'+rw.mp+' max mana</b>');
   if(rw.xp){ const sk=Object.keys(rw.xp).filter(s=>SKILLS[s]); if(sk.length) parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
   return parts.length? '<div class="rwline">Reward: '+parts.join(' · ')+'</div>' : '';
 }
