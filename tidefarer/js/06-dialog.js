@@ -205,10 +205,9 @@ function shopButtons(npc,btns){
     }});
   }
   if(npc.id==='corvoE'){
-    btns.unshift({label:'Sail home to Barik', fn:()=>{
-      closeDialog();
-      const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
-      setTimeout(()=>{ switchWorld('main'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
+    btns.unshift({label:'Where\'s the boat?', ghost:true, fn:()=>{
+      setDialog('“Right there off the landing, riding at anchor.” <i>He nods out at the water.</i> “Walk out and <b>step aboard the sloop</b> yourself when you\'re ready - give the word to the tiller and she\'ll run you home to Barik. I\'ll stay and mind Wren.”',
+        [{label:'Aye, Captain', ghost:true, fn:closeDialog}]);
     }});
   }
   if(npc.id==='sable'){

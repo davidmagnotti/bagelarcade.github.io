@@ -49,7 +49,8 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -624,6 +625,23 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='dungeonmouth' && b.ember){
+    const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
+    const pulse=0.5+0.5*Math.sin(G.time*2.3);
+    g.fillStyle='rgba(255,120,40,'+(0.14+0.12*pulse)+')'; // heat haze
+    g.beginPath(); g.ellipse(0,-8,32,20,0,0,TAU); g.fill();
+    g.fillStyle='#2e241d'; // charred basalt brow
+    g.beginPath(); g.moveTo(-27,5); g.quadraticCurveTo(-25,-27,0,-31); g.quadraticCurveTo(25,-27,27,5); g.closePath(); g.fill();
+    g.strokeStyle='#120d09'; g.lineWidth=2.6; g.stroke();
+    g.fillStyle='#160a06'; // the throat
+    g.beginPath(); g.moveTo(-14,5); g.quadraticCurveTo(0,-23,14,5); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,140,50,'+(0.36+0.3*pulse)+')'; // fire deep within
+    g.beginPath(); g.moveTo(-10,5); g.quadraticCurveTo(0,-16,10,5); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,224,140,'+(0.5*pulse)+')';
+    g.beginPath(); g.moveTo(-5,5); g.quadraticCurveTo(0,-9,5,5); g.closePath(); g.fill();
+    if(Math.random()<0.28) G.parts.push({x:b.x,y:b.y-0.6,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.7,1.4),color:Math.random()<0.5?'#ff8a44':'rgba(90,84,80,0.5)',size:rnd(1.5,3),grav:-0.1});
+    g.restore(); return;
+  }
   if(b.kind==='dungeonmouth'){
     const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
     const pulse=0.5+0.5*Math.sin(G.time*2.0);
@@ -682,6 +700,92 @@ function drawDecor(b,s){
     cx.save(); cx.translate(s.x,s.y); cx.scale(1.4,1.4);
     drawDragon(cx,0,0,{face:b.face||-1, enspelled:false, hurtT:0});
     cx.restore(); return;
+  }
+  if(b.kind==='cratersmoke'){
+    const g=cx, t=G.time; g.save(); g.translate(s.x,s.y);
+    // a red heat-glow boiling over the caldera
+    const gg=g.createRadialGradient(0,-16,4,0,-16,72);
+    gg.addColorStop(0,'rgba(255,120,40,0.22)'); gg.addColorStop(1,'rgba(255,60,20,0)');
+    g.fillStyle=gg; g.beginPath(); g.ellipse(0,-12,66,46,0,0,TAU); g.fill();
+    // a lazy rising smoke column - stacked, drifting puffs
+    for(let i=0;i<8;i++){ const yy=-18 - i*15 - ((t*10)%15);
+      const xx=Math.sin(t*0.5+i*0.8)*7*(1+i*0.12), rr=9+i*2.8, k=70-i*5;
+      g.fillStyle='rgba('+k+','+(k-4)+','+(k-8)+','+(0.28-i*0.03).toFixed(3)+')';
+      g.beginPath(); g.ellipse(xx,yy,rr,rr*0.8,0,0,TAU); g.fill(); }
+    if(Math.random()<0.5) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.4,0.4),vy:-rnd(1.2,2.6),life:rnd(0.8,1.8),color:Math.random()<0.6?'#ff8a44':'#ffd050',size:rnd(1.2,2.8),grav:-0.12});
+    g.restore(); return;
+  }
+  if(b.kind==='lavacrack'){
+    const g=cx, gl=0.45+0.4*Math.sin(G.time*2.2+b.seed*1.3);
+    g.save(); g.translate(s.x,s.y);
+    const cr=mulberry32((b.seed*131+7)>>>0);
+    const n=b.big?3:2, len=b.big?9:6;
+    g.strokeStyle='rgba(255,140,50,'+(0.5*gl+0.18).toFixed(3)+')'; g.lineWidth=b.big?2.4:1.5; g.lineCap='round';
+    for(let k=0;k<n;k++){ const a=cr()*TAU; let px=0,py=0;
+      g.beginPath(); g.moveTo(0,0);
+      for(let seg=0;seg<3;seg++){ px+=Math.cos(a)*len*(0.5+cr()*0.6); py+=Math.sin(a)*len*0.5*(0.5+cr()*0.6); g.lineTo(px,py); }
+      g.stroke(); }
+    g.fillStyle='rgba(255,220,120,'+(0.5*gl+0.28).toFixed(3)+')';
+    g.beginPath(); g.ellipse(0,0,b.big?2.6:1.6,b.big?1.5:1,0,0,TAU); g.fill();
+    if(b.big && Math.random()<0.04) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.5,1.4),life:rnd(0.6,1.2),color:'#ff8a44',size:rnd(1,2.2),grav:-0.05});
+    g.restore(); return;
+  }
+  if(b.kind==='emberplate'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x);
+    // a sunken basalt plate rimmed in iron; a font-bowl that kindles when trodden
+    g.fillStyle= lit? '#4a2a18' : '#241f1b'; g.beginPath(); g.moveTo(0,-11); g.lineTo(15,-2); g.lineTo(0,7); g.lineTo(-15,-2); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#ff9a3c' : '#5c4a38'; g.lineWidth= lit?2.2:1.6; g.stroke();
+    g.fillStyle= lit? 'rgba(255,150,60,'+(0.24+0.22*gl).toFixed(2)+')' : 'rgba(20,14,10,0.5)';
+    g.beginPath(); g.moveTo(0,-7); g.lineTo(10,-2); g.lineTo(0,4); g.lineTo(-10,-2); g.closePath(); g.fill();
+    if(b.ord){ g.fillStyle= lit? '#ffe0b0' : '#8a7160'; g.font='bold 11px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+      g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0, -2); g.textBaseline='alphabetic';
+    } else if(lit){ g.fillStyle='#ffe6c0'; g.beginPath(); g.arc(0,-2,2.2,0,TAU); g.fill(); }
+    if(lit && Math.random()<0.06) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ffb04a',size:rnd(1,2.2),grav:-0.06});
+    g.restore(); return;
+  }
+  if(b.kind==='firegate'){
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(b.open){ // hauled up into the rock - only the lintel and stubs remain
+      g.fillStyle='#3a2820'; g.fillRect(-30,-44,60,7); g.strokeStyle='#160d08'; g.lineWidth=1.4; g.strokeRect(-30,-44,60,7);
+      g.fillStyle='#2a1c14'; for(let i=-2;i<=2;i++){ g.fillRect(i*11-2,-44,4,7); }
+      g.restore(); return;
+    }
+    drawShadowAt(g,s.x,s.y,30);
+    // an iron portcullis with a molten underglow seeping through the bars
+    g.fillStyle='rgba(255,120,40,'+(0.10+0.10*Math.sin(G.time*2.4)).toFixed(3)+')';
+    g.beginPath(); g.ellipse(0,-6,30,16,0,0,TAU); g.fill();
+    g.fillStyle='#33261c'; g.fillRect(-30,-40,60,6);
+    g.strokeStyle='#140c06'; g.lineWidth=1.6;
+    g.fillStyle='#4a382a';
+    for(let i=-2;i<=2;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }
+    g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-27,yy,54,3.5); }
+    g.fillStyle='#5a4436'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); }
+    g.restore(); return;
+  }
+  if(b.kind==='emberlever'){
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#5c4a38'; g.beginPath(); g.ellipse(0,-1,6,3,0,0,TAU); g.fill();
+    g.strokeStyle='#c9b090'; g.lineWidth=3; g.lineCap='round';
+    const ang=b.on? 0.7 : -0.7;
+    g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*11,-2-Math.cos(ang)*13); g.stroke();
+    g.fillStyle= b.on? '#ff9a3c':'#ffcf6a'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
+    if(!b.on){ g.fillStyle='rgba(255,180,80,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    g.restore(); return;
+  }
+  if(b.kind==='dragonrest'){
+    // the old dragon dozing on his fire-shelf; hidden while his enthralled self rages
+    const out = G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead);
+    if(out) return;
+    const g=cx;
+    g.save(); g.translate(s.x,s.y); g.scale(1.4,1.4);
+    try{ drawDragon(g,0,0,{face:1, enspelled:false, hurtT:0}); }catch(e){}
+    g.restore();
+    // his name floats over the fire-shelf
+    g.font='bold 12px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.6)'; g.fillText('Ashwing',s.x+1,s.y-64);
+    g.fillStyle='#9fe8c0'; g.fillText('Ashwing',s.x,s.y-65);
+    return;
   }
   if(b.kind==='tunnelmouth'){
     const g=cx; drawShadowAt(g,s.x,s.y,14);

@@ -62,6 +62,13 @@ const FROSTDEEP_ZONES = { // the ice-dungeon beneath the Frozen Isle
   ice:   {x:60, y:48, r:16, name:'The Sliding Halls', lv:[13,15]},
   boss:  {x:60, y:18, r:12, name:'The Frozen Heart', lv:[15,15]}
 };
+const EASTDEEP_ZONES = { // THE EMBERDEEP - the fire-heart dungeon inside Mount Kea
+  entry:   {x:65, y:137, r:9,  name:'The Emberthroat',      lv:[6,8]},
+  font:    {x:65, y:105, r:18, name:'The Ember Font',       lv:[6,8]},   // visit-all plate puzzle
+  causeway:{x:65, y:71,  r:18, name:'The Sunken Causeway',  lv:[7,9]},   // lever / lava-drain puzzle
+  glyph:   {x:65, y:37,  r:16, name:'The Glyphwalk',        lv:[7,9]},   // ordered-plate puzzle
+  rest:    {x:65, y:10,  r:14, name:"Ashwing's Rest",       lv:[9,9]}    // the dragon, at the very end
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -101,7 +108,10 @@ const WORLD_DEFS = {
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
-    gen:()=>genAerieDeepAll() }
+    gen:()=>genAerieDeepAll() },
+  eastdeep:{ W:130, H:150, seed:55219, zones:EASTDEEP_ZONES,
+    spawn:{x:65.5,y:140.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - PUZZLE-LOCKED, AND OLD',
+    gen:()=>genEastDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 
@@ -570,7 +580,11 @@ function placeObjectsEast(){
   addBuilding('hut', V.x, V.y+5,  'Drying hut');
   addBuilding('well', V.x, V.y, 'Spring well');
   addBuilding('lamp', D.x, D.y-1, '');
-  addBuilding('boat', D.x-5.5, D.y+2.5, '');
+  // the boat rides at anchor just off the landing - walk OUT toward open water and
+  // drop it on the first sea tile, so YOU can climb aboard and set sail for home
+  { const cx2=88, cy2=88, ddx=D.x-cx2, ddy=D.y-cy2, dl=Math.hypot(ddx,ddy)||1;
+    for(let step=3; step<=16; step++){ const tx=Math.round(D.x+ddx/dl*step), ty=Math.round(D.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); break; } } } }
   addBuilding('lamp', V.x+9, V.y+6, '');
   // torches flanking the foot of the ash road so the climb up Mount Kea is unmistakable
   addBuilding('lamp', VO.x-3, VO.y+VO.r-1, '');
@@ -627,13 +641,23 @@ function placeObjectsEast(){
     const ax=Math.round(VO.x+Math.cos(a)*rr), ay=Math.round(VO.y+Math.sin(a)*rr*0.92);
     if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay) && dist(ax,ay,C.x,C.y)>C.r+1) addNode('rock',ax,ay);
   }
-  // the caldera: a molten pool at the summit's heart (glowing, impassable)
-  G.decor.push({kind:'lava', x:C.x+0.5, y:C.y+0.5, r:C.r-1});
+  // the caldera: a broad molten pool at the summit's heart (glowing, impassable)
+  G.decor.push({kind:'lava', x:C.x+0.5, y:C.y+0.5, r:C.r-0.3});
   for(let y=C.y-C.r;y<=C.y+C.r;y++) for(let x=C.x-C.r;x<=C.x+C.r;x++){
     if(inb(x,y) && dist(x,y,C.x,C.y)<=C.r-1.2) setSolid(x,y,1);
   }
-  // Ashwing's lair - a fissure in the caldera wall you can step into
-  G.decor.push({kind:'lairmouth', x:C.x+0.5, y:C.y+C.r+1.5});
+  // Mount Kea reads as a LIVE volcano: a smoke-and-ember plume boiling off the
+  // caldera, and glowing lava veins bleeding down the ash slopes
+  G.decor.push({kind:'cratersmoke', x:C.x+0.5, y:C.y-0.3});
+  { const pv=mulberry32(SEED+31);
+    for(let i=0;i<48;i++){ const a=pv()*TAU, rr=1.4+pv()*(VO.r-2);
+      const ax=Math.round(VO.x+Math.cos(a)*rr), ay=Math.round(VO.y+Math.sin(a)*rr*0.92);
+      if(inb(ax,ay) && tileAt(ax,ay)===T.RUIN && !solidAt(ax,ay) && dist(ax,ay,C.x,C.y)>C.r-0.5)
+        G.decor.push({kind:'lavacrack', x:ax+0.5, y:ay+0.5, seed:i, big: dist(ax,ay,C.x,C.y)<VO.r*0.5}); } }
+  // the fissure at the caldera's foot is now the throat of a dungeon - the
+  // fire-heart of Mount Kea, where old Ashwing rests at the very end
+  G.decor.push({kind:'dungeonmouth', ember:1, x:C.x+0.5, y:C.y+C.r+1.5, label:'the Emberthroat'});
+  addBuilding('lamp', C.x-2.5, C.y+C.r+1, ''); addBuilding('lamp', C.x+3.5, C.y+C.r+1, '');
   // reef treasure
   G.decor.push({kind:'chest', x:EAST_ZONES.reef.x+0.5, y:EAST_ZONES.reef.y+0.5, opened:false, rich:8});
 }
@@ -642,7 +666,7 @@ function spawnEastFolk(){
   G.npcs.push((()=>{ const c2=makeNPC('corvoE','Captain Corvo', D.x+1.5,D.y+1.2,
     {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
     ['Wren has not taken the ribbon off since we landed.',
-     'The sloop is provisioned. Say the word and we run for Barik.'],0.2); c2.nightOwl=true; return c2; })());
+     'The sloop\'s provisioned and riding at anchor off the landing. Whenever the island\'s done with you, just step aboard and cast off - she knows the way back to Barik.'],0.2); c2.nightOwl=true; return c2; })());
   G.npcs.push(makeNPC('sable','Sable of the Far Range', V.x+9.5,V.y+6.2,
     {skin:'#a97c58',hair:'#1e1a16',shirt:'#5e4a2a',pants:'#3a3026',hairstyle:'long'},
     ['Rook still owes me twenty gold. Tell him the wind remembers.',
@@ -678,29 +702,29 @@ function spawnEastFolk(){
    INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
    you're driven out to the caldera to break the spell in a fight. */
 function dragonLairSpeak(){
-  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's already raging at the caldera
-    lairDialog('Ashwing’s Lair','The lair is empty and shaking. Above you, the mountain roars - Ashwing is loose on the caldera. Go and break the spell.',
-      [{label:'Go up', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); }}]);
+  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's enthralled, right here in the chamber
+    lairDialog('Ashwing’s Rest','The violet has him. Ashwing rears over the fire-shelf, wings cracking the basalt - no more words to give. There is nowhere left to go but through him. <b>Break the spell.</b>',
+      [{label:'Face him', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); }}]);
     return;
   }
   if(qs('wyrm')==='done'){
-    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns to the smoke-hole above.</i> “And when horizons itch at you - there is a city out past the wild water. <b>Windsurf</b>. No keel can cross to it now; the straits have turned cruel. My wings do not care what the sea thinks. Say the word and I will carry you.”',
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up the long throat you climbed.</i> “And when horizons itch at you - there is a city out past the wild water. <b>Windsurf</b>. No keel can cross to it now; the straits have turned cruel. My wings do not care what the sea thinks. Say the word and I will carry you up and out.”',
       [{label:'Fly me to Windsurf Isle', cls:'gold', fn:()=>{ askDragonFlight(); }},
        {label:'Rest a while', ghost:true, fn:closeDialog}]);
     return;
   }
   if(qs('wyrm')!=='active'){
-    lairDialog('Ashwing','“You wear no binder’s violet - then we have no quarrel, traveller. Mind the heat on your way down.”',
+    lairDialog('Ashwing','“You wear no binder’s violet - then we have no quarrel, traveller. You came a long way down for an old lizard’s hello. Mind the heat on your way back up.”',
       [{label:'Leave him be', fn:closeDialog}]);
     return;
   }
   lairDialog('Ashwing',
-    '“You climbed my mountain with a blade. Vath’s errand, I would wager - he covets my fire, bottled.”',
+    '“You crossed my whole burning house with a blade in your fist. Vath’s errand, I would wager - he covets my fire, bottled.”',
     [{label:'Continue', fn:()=> lairDialog('Ashwing',
       '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
       [{label:'Continue', fn:()=> lairDialog('Vath',
-        '<b style="color:#c77bff">Violet fire floods the lair.</b> A voice pours from the walls: “Sentiment. Sleep, wyrm - or kill for me.” Ashwing’s eyes kindle red; his wings crack against the stone. There is no room to face him here.',
-        [{label:'Steel yourself, get out', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
+        '<b style="color:#c77bff">Violet fire floods the chamber.</b> A voice pours from the walls: “Sentiment. Sleep, wyrm - or kill for me.” Ashwing’s eyes kindle red; his wings crack against the stone. He is between you and the only way out.',
+        [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
 }
 function lairDialog(name,text,btns){
   dlg.open=true; dlg.npc=null;
@@ -715,9 +739,9 @@ function lairDialog(name,text,btns){
 }
 function awakenDragon(){
   if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)) return; // one Ashwing at a time
-  const C=ZONES.caldera||EAST_ZONES.caldera;
+  const C = G.worldId==='eastdeep' ? EASTDEEP_ZONES.rest : (ZONES.caldera||EAST_ZONES.caldera);
   const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
-        || findOpenNear(Math.round(C.x), Math.round(C.y+7), 8) || [C.x, C.y+7];
+        || findOpenNear(Math.round(C.x), Math.round(C.y+ (G.worldId==='eastdeep'?4:7)), 8) || [C.x, C.y+4];
   const dr=spawnMob('dragon', sp[0], sp[1]);
   if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.state='chase'; dr.noAggroT=0;
     dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
@@ -730,11 +754,16 @@ function startMageHunt(){
   P.mageHuntStarted=1;
   const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); // he flees the village
   P.quests.vhunt='active'; P.prog.vhunt=0;
-  const GR=EAST_ZONES.grove;
-  if(!G.mobs.some(m=>m.kind==='mage' && !m.dead)){
-    const sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
-    const mg=spawnMob('mage', sp[0], sp[1]);
-    if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
+  // Vath fled up into the palm grove on the SURFACE - only spawn him there when we
+  // are actually on the Sunward Isle (the fight is freed deep inside Mount Kea);
+  // spawnMobsEast re-places him when you climb back out.
+  if(G.worldId==='east'){
+    const GR=EAST_ZONES.grove;
+    if(!G.mobs.some(m=>m.kind==='mage' && !m.dead)){
+      const sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
+      const mg=spawnMob('mage', sp[0], sp[1]);
+      if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
+    }
   }
 }
 function freeDragon(x,y){
@@ -772,6 +801,158 @@ function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
   spawnEastFolk(); spawnMobsEast();
   buildMapBase(); // without this the map keeps the previous world's base image
+}
+
+/* ---------- THE EMBERDEEP: the puzzle dungeon inside Mount Kea ----------
+   You no longer just step into Ashwing's lair - you descend the caldera fissure
+   into a basalt dungeon roughly the island's own span, and CLIMB it room by room.
+   Three chambers, three different locks:
+     1. THE EMBER FONT  - light all three ember-fonts (tread every plate) to raise
+        the first gate.
+     2. THE SUNKEN CAUSEWAY - throw the old floodgate lever to drain the lava
+        channel and raise the second gate.
+     3. THE GLYPHWALK - tread the four fire-glyphs in order I->IV; a wrong step
+        darkens them and you begin again.
+   Only past all three does the last gate open onto Ashwing's Rest - the dragon
+   conversation is the END of the dungeon, exactly as the fire-heart should be. */
+const EDEEP = { // room bands and the tiles each sealed gate occupies (x 63..67)
+  gate1:{y:88, x0:63, x1:67}, gate2:{y:54, x0:63, x1:67}, gate3:{y:21, x0:63, x1:67}
+};
+function genEastDeep(){
+  // the whole map begins as solid basalt; we cut the chambers out of it
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(54,128,76,144);   // THE EMBERTHROAT - entry landing (the way up sits here)
+  carve(63,114,67,128);   // corridor A -> the Ember Font
+  carve(44,92,86,114);    // THE EMBER FONT - visit-all plate chamber
+  carve(63,80,67,92);     // corridor B (Gate 1 seals it at y=88)
+  carve(44,60,86,80);     // THE SUNKEN CAUSEWAY - lever chamber
+  carve(63,48,67,60);     // corridor C (Gate 2 seals it at y=54)
+  carve(46,28,84,48);     // THE GLYPHWALK - ordered-plate chamber
+  carve(63,16,67,28);     // corridor D (Gate 3 seals it at y=21)
+  carve(38,2,92,20);      // ASHWING'S REST - the end chamber (room to break the spell)
+  // the three sealed gates start as solid basalt across their corridors
+  for(const G2 of [EDEEP.gate1,EDEEP.gate2,EDEEP.gate3])
+    for(let x=G2.x0;x<=G2.x1;x++){ setTile(x,G2.y,T.RUIN); setSolid(x,G2.y,1); }
+}
+function edeepLava(x,y,r){ // a molten pool that both glows and blocks the floor
+  G.decor.push({kind:'lava', x:x+0.5, y:y+0.5, r});
+  for(let yy=Math.round(y-r);yy<=Math.round(y+r);yy++) for(let xx=Math.round(x-r);xx<=Math.round(x+r);xx++)
+    if(inb(xx,yy) && dist(xx,yy,x,y)<=r-0.2){ setSolid(xx,yy,1); }
+}
+function placeObjectsEastDeep(){
+  G.decor=G.decor||[];
+  const Z=EASTDEEP_ZONES;
+  // the way back up the Emberthroat, in the landing chamber
+  G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:65.5, y:142.5, label:'the way up'});
+  setSolid(65,142,0); setTile(65,142,T.RUIN);
+  // torches down the long dark
+  for(const [tx,ty] of [[57,132],[73,132],[47,96],[83,96],[47,64],[83,64],[49,32],[81,32],[44,6],[86,6],[65,5]])
+    if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- PUZZLE 1 - THE EMBER FONT: tread all three fonts to raise Gate 1 ----
+  edeepLava(65,105,3.2);                                   // a central molten font to route around
+  edeepLava(50,98,1.6); edeepLava(80,98,1.6);
+  for(const [tx,ty] of [[49,110],[65,96],[81,110]])
+    G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'font', set:false});
+  G.decor.push({kind:'firegate', gate:'g1', x:65.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
+  // ---- PUZZLE 2 - THE SUNKEN CAUSEWAY: throw the floodgate lever ----
+  // a broad lava channel bars the room; the lever is reached around its west end
+  for(let x=48;x<=82;x++){ if(x<58||x>72) edeepLava(x,71,1.1); }   // the channel (a walkable notch at x58..72)
+  edeepLava(60,71,1.0); edeepLava(70,71,1.0);
+  G.decor.push({kind:'emberlever', x:47.5, y:64.5, on:false, gate:'g2', label:'the floodgate lever'});
+  G.decor.push({kind:'firegate', gate:'g2', x:65.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
+  // ---- PUZZLE 3 - THE GLYPHWALK: tread the four glyphs I->IV in order ----
+  edeepLava(65,38,2.4);
+  for(const [tx,ty,ord] of [[50,42,1],[80,42,2],[80,32,3],[50,32,4]])
+    G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'glyph', ord, set:false});
+  G.decor.push({kind:'firegate', gate:'g3', x:65.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
+  // ---- ASHWING'S REST: the dragon dozes here; talking to him IS the finale ----
+  edeepLava(48,7,1.8); edeepLava(82,7,1.8);
+  G.decor.push({kind:'dragonrest', x:65.5, y:9.5});
+  G.decor.push({kind:'chest', x:53.5, y:14.5, deep:1, rich:9});
+  G.critters=[];
+  G._emberPlate=null;   // reset the plate-tread tracker for this world
+}
+function spawnMobsEastDeep(){
+  // bristlebacks have denned in the warm dark of the lower chambers (Chapter III
+  // level range) - a little resistance, but the LOCKS are the real challenge
+  const packs=[ [EASTDEEP_ZONES.font,3], [EASTDEEP_ZONES.causeway,3], [EASTDEEP_ZONES.glyph,2] ];
+  for(const [z,n] of packs){
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.6;
+      const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
+      if(sp) spawnMob('boar', sp[0], sp[1]); }
+  }
+}
+function genEastDeepAll(){
+  genEastDeep(); placeObjectsEastDeep(); spawnMobsEastDeep(); buildMapBase();
+}
+function enterEmberDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._emberReturn={x:P.x, y:P.y+1.3}; P.click=null;
+  setTimeout(()=>{ switchWorld('eastdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitEmberDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.click=null;
+  setTimeout(()=>{ switchWorld('east');
+    const r=P._emberReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function openFireGate(gate){
+  const b=G.decor.find(d=>d.kind==='firegate' && d.gate===gate);
+  if(!b || b.open) return;
+  b.open=true; if(Snd.quest) Snd.quest();
+  for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); }
+  shockwave(b.x0+2.5, b.gy+0.5, 'rgba(255,150,60,0.9)', 55); G.shake=0.5;
+  invalidateScenery();
+  const msg={ g1:['THE EMBERFONT GATE RISES','THE FONTS BURN AS ONE'],
+              g2:['THE CAUSEWAY GATE GRINDS UP','THE LAVA SINKS AWAY'],
+              g3:['THE DRAGON GATE OPENS','SOMETHING VAST STIRS BEYOND'] }[gate];
+  if(msg) banner(msg[0],msg[1]);
+  if(gate==='g1') toast('All three fonts flare gold at once and, deep in the wall, a counterweight lets go - the Emberfont Gate grinds up into the rock.',5000);
+  else if(gate==='g2') toast('Old iron shrieks and the floodgate hauls open - the lava channel drains hissing into the dark, and the Causeway Gate lifts.',5200);
+  else toast('The four glyphs blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
+}
+function pullEmberLever(b){
+  if(b.on){ toast('The floodgate is already thrown - the lava has drained north.',3200); return; }
+  b.on=true; if(Snd.quest) Snd.quest();
+  // drain the causeway channel: clear the lava decor + its solids across the room
+  G.decor=G.decor.filter(d=>!(d.kind==='lava' && d.y>60 && d.y<80));
+  for(let y=68;y<=74;y++) for(let x=46;x<=84;x++) if(inb(x,y)) setSolid(x,y,0);
+  invalidateScenery();
+  openFireGate('g2');
+}
+function stepEmberPlate(b){
+  if(b.set) return;
+  if(b.group==='font'){ // visit-all: tread each font once
+    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#ffb04a',10,1.6);
+    const grp=G.decor.filter(d=>d.kind==='emberplate' && d.group==='font');
+    if(grp.every(d=>d.set)) openFireGate('g1');
+    else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#ffd8a0',1.1);
+    return;
+  }
+  if(b.group==='glyph'){ // ordered: I,II,III,IV or it all resets
+    const grp=G.decor.filter(d=>d.kind==='emberplate' && d.group==='glyph');
+    const nextNeeded=grp.filter(d=>d.set).length+1;
+    if(b.ord===nextNeeded){
+      b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#ffb04a',10,1.6);
+      if(grp.every(d=>d.set)) openFireGate('g3');
+    } else {
+      for(const d of grp) d.set=false;
+      Snd.hit&&Snd.hit(); G.shake=0.35; burst(b.x,b.y-0.2,'#5a3020',12,1.8);
+      toast('The glyphs gutter and go black - trodden out of order. Begin again from <b>I</b>.',3600);
+    }
+    return;
+  }
+}
+function updateEastDeep(dt){
+  const gx=Math.floor(P.x), gy=Math.floor(P.y);
+  let onPlate=null;
+  for(const b of G.decor){ if(b.kind==='emberplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
+  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
+  if(id===G._emberPlate) return;   // still on the same plate (or none) - nothing new
+  G._emberPlate=id;
+  if(onPlate) stepEmberPlate(onPlate);
 }
 /* =====================================================================
    WINDSURF ISLE - an industrious city reachable only by Ashwing's wing
@@ -1916,8 +2097,8 @@ QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill'
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
-  brief:'You feel the heat off the mountain? A wyrm nests in the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road and put the beast down. An Emberbinder pays well for a dead dragon.',
-  log:'Climb Mount Kea and confront the wyrm at the caldera. (Lv 8+ recommended.)',
+  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. An Emberbinder pays well for a dead dragon.',
+  log:'Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.vhunt={ giver:'moli', title:'The Enchanter in the Grove', kind:'kill', kill:{mage:1}, xpL:300,
@@ -2399,6 +2580,16 @@ function switchWorld(id){
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  if(id==='east'){
+    // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you
+    // climb back out with the hunt underway, make sure Vath has surfaced in the
+    // grove and left the village - spawnMobsEast only runs on the isle's first gen.
+    if(P.mageHuntStarted){ const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); }
+    if(qs('vhunt')==='active' && (P.prog.vhunt||0)<1 && !G.mobs.some(m=>m.kind==='mage' && !m.dead)){
+      const GR=EAST_ZONES.grove, sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
+      const mg=spawnMob('mage', sp[0], sp[1]); if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
+    }
+  }
   if(id==='wind'){
     const hasBoard = !!(P.unlocked && P.unlocked.surf);
     // you must earn a windsurf before Rell will send you at the Leviathan - the
@@ -2424,6 +2615,8 @@ function switchWorld(id){
   }
   if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
     setTimeout(()=>toast('<b>The Rimefissure</b> - the ice underfoot in the sliding halls is slick as glass. <b>Step onto it and you glide</b> in one direction until a wall or solid footing stops you. Read the room, then push off.',9000),1400); }
+  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
+    setTimeout(()=>toast('<b>The Emberdeep</b> - Mount Kea is hollow, and locked. Three chambers bar the way up to Ashwing: <b>light every ember-font</b>, <b>throw the floodgate lever</b>, then <b>tread the four glyphs in order</b>. The dragon waits at the very top.',9500),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.

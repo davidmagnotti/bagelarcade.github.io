@@ -143,9 +143,13 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type:'dungeon',o:b,label:b.exit?'Climb out':'Descend'}; } }
+      if(d<2.3 && d<bd){ bd=d; best={type: b.ember?'emberdungeon':'dungeon',o:b,label:b.exit?'Climb out':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
+    if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'emberlever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
+    if(b.kind==='dragonrest'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<3.0 && d<bd){ bd=d; best={type:'dragonrest',o:b,label:'Speak'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
     if(b.kind==='ashwing'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -192,7 +196,10 @@ function doInteract(){
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
+  if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
+  if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
+  if(it.type==='dragonrest'){ facePoint(it.o.x,it.o.y); if(typeof dragonLairSpeak==='function') dragonLairSpeak(); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
   if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
   if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
@@ -1141,6 +1148,7 @@ function updateWorld(dt){
     G._nightWarned=false;
   }
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
+  if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
 function isNight(){ return nightAmount()>0.55; }
