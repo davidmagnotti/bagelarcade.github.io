@@ -143,6 +143,8 @@ function rewardText(q){
 function questTargetPos(id){
   const q=QUESTS[id];
   if(qs(id)==='active' && !questReady(id)){
+    if(id==='lettuce'){ const h=G.mobs&&G.mobs.find(m=>m.kind==='hare'&&!m.dead); if(h) return {x:h.x,y:h.y};
+      return (typeof crownLettucePlot==='function' && G.worldId==='crown')? crownLettucePlot() : null; }
     if(q.kind==='talk'){ const n=G.npcs.find(n=>n.id===q.talkTo); return n&&{x:n.x,y:n.y}; }
     if(id==='slimes') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='skeletons'||id==='king') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
