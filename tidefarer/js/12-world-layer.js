@@ -1659,7 +1659,13 @@ function placeObjectsCrown(){
   for(const [lx,ly] of [[-12,-10],[12,-10],[-12,10],[12,10],[0,-11],[0,11]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
   // ---- Kingsferry Quay: an open, uncluttered arrival - boats, lamps, a
   // dockside cart and a colonnade, but no houses crowding the first thing you see ----
-  addBuilding('boat', D.x-4, D.y+3, ''); addBuilding('boat', D.x+4, D.y-3, '');
+  // ONE ferry, moored on open water off the quay. (It used to place two - and one
+  // of them beached itself on the grass.) Walk out from the city centre toward the
+  // dock and drop the boat on the first sea tile, never on land.
+  { const cx2=96, cy2=96, ddx=D.x-cx2, ddy=D.y-cy2, dl=Math.hypot(ddx,ddy)||1;
+    let placed=false;
+    for(let step=2; step<=18 && !placed; step++){ const tx=Math.round(D.x+ddx/dl*step), ty=Math.round(D.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); placed=true; } } } }
   addBuilding('fruitstand', H.x-3, H.y+2, '');   // a dockside cart working the arriving crowds
   addBuilding('lamp', D.x, D.y-2, ''); addBuilding('lamp', H.x-6, H.y+4, ''); addBuilding('lamp', H.x+6, H.y+4, '');
   // a short colonnade framing the quay so the arrival still reads as grand
