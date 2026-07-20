@@ -662,6 +662,14 @@ function drawDecor(b,s){
   const BS=b.kind==='castle'?(b.grand?0.9:0.2) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
+  if(b.shop){ // a bobbing gold coin marks a stall you can buy from
+    const iy=s.y - S.height*BS + 10 - 12 + Math.sin(G.time*2.4 + b.x)*3;
+    cx.fillStyle='rgba(0,0,0,0.22)'; cx.beginPath(); cx.ellipse(s.x,iy+13,8,3,0,0,TAU); cx.fill();
+    cx.fillStyle='#c98f1e'; cx.beginPath(); cx.arc(s.x,iy,8,0,TAU); cx.fill();
+    cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x,iy,6.4,0,TAU); cx.fill();
+    cx.fillStyle='#c98f1e'; cx.font='bold 10px Georgia'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('E',s.x,iy+0.5);
+    cx.fillStyle='rgba(255,255,255,0.7)'; cx.beginPath(); cx.arc(s.x-2.4,iy-2.4,1.6,0,TAU); cx.fill();
+  }
   if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
     const mx=s.x+2, mb=s.y-10;
     cx.strokeStyle='#4f3a24'; cx.lineWidth=3;

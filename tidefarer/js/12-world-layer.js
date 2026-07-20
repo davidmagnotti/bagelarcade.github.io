@@ -1336,16 +1336,20 @@ function placeObjectsCrown(){
   addBuilding('house2', PL.x+6, PL.y-3, 'The Mint');
   addBuilding('stall', PL.x-3, PL.y+4, ''); addBuilding('stall', PL.x+3, PL.y+4, '');
   for(const [lx,ly] of [[-7,0],[7,0],[0,-7],[-5,6],[5,6]]) addBuilding('lamp', PL.x+lx, PL.y+ly, '');
-  // ---- the Grand Bazaar: a giant, ornate market ----
+  // ---- the Grand Bazaar: two tidy rows of fine, named stalls around the
+  // fountain - each a real shop you can buy from (a gold coin floats over it) ----
   addBuilding('well', M.x, M.y, 'The Merchants\' Fountain');            // grand central fountain
-  let vi=0;
-  const bz=(x,y)=>{ x=Math.round(x); y=Math.round(y);
-    if(inb(x,y)&&walkTile(tileAt(x,y))&&!solidAt(x,y)){ const s=addBuilding('bazaar',x,y,''); if(s) s.variant=(vi++)%3; } };
-  // four long rows of ornate stalls flanking a central promenade (fountain at
-  // its heart), east & west wings, and 2-tile aisles you weave between
-  for(const ry of [M.y-8,M.y-5,M.y+5,M.y+8]) for(let x=M.x-12;x<=M.x+12;x+=3){ if(Math.abs(x-M.x)<2) continue; bz(x,ry); }
-  for(const rx of [M.x-13,M.x+13]) for(let y=M.y-6;y<=M.y+6;y+=3){ if(Math.abs(y-M.y)<2) continue; bz(rx,y); }
-  addBuilding('fruitstand', M.x-2, M.y-2, ''); addBuilding('fruitstand', M.x+2, M.y+2, '');
+  const STALLS=[
+    {dx:-8,dy:-6, v:0, name:'The Tonic Cart',      line:'Tonics fresh-drawn - a swallow of courage for the road.',       wares:[['potion',8],['elixir',24]]},
+    {dx:0, dy:-6, v:1, name:"The King's Bakehouse", line:'Bread still warm and orchard apples, by royal license.',         wares:[['bread',5],['apple',3]]},
+    {dx:8, dy:-6, v:2, name:'The Fishmonger',       line:'Off the Kingsferry boats this morning - still arguing.',        wares:[['fish',3],['cookedfish',7]]},
+    {dx:-8,dy:6,  v:1, name:'The Emberwright',      line:'Ember crystals, warm as a grudge - good against cold nights.',  wares:[['crystal',18]]},
+    {dx:0, dy:6,  v:2, name:'The Greengrocer',      line:'Grain and greens off the palace fields, crisp this morning.',   wares:[['wheat',3],['coconut',6]]},
+    {dx:8, dy:6,  v:0, name:'The Chandlery',        line:'Salt-meat and sundries for a long walk inland.',               wares:[['boarmeat',10],['potion',8]]},
+  ];
+  for(const st of STALLS){ const s=addBuilding('bazaar', M.x+st.dx, M.y+st.dy, st.name);
+    if(s){ s.variant=st.v; s.shop={name:st.name, line:st.line, wares:st.wares.map(w=>({item:w[0],price:w[1]}))}; } }
+  addBuilding('fruitstand', M.x-12, M.y, ''); addBuilding('fruitstand', M.x+12, M.y, '');
   // a colonnade of tall pillars framing the bazaar
   for(let i=0;i<10;i++){ const a=i/10*TAU, px=Math.round(M.x+Math.cos(a)*(M.r-1)), py=Math.round(M.y+Math.sin(a)*(M.r-1)*0.9);
     if(inb(px,py)&&walkTile(tileAt(px,py))&&!solidAt(px,py)) G.decor.push({kind:'pillar',x:px+0.5,y:py+0.5}); }
@@ -1354,11 +1358,14 @@ function placeObjectsCrown(){
   addBuilding('house2', M.x+7, M.y-12, 'The Cloth Hall');
   addBuilding('house',  M.x, M.y+12, 'The Coin & Cup (Inn)');
   for(const [lx,ly] of [[-12,-10],[12,-10],[-12,10],[12,10],[0,-11],[0,11]]) addBuilding('lamp', M.x+lx, M.y+ly, '');
-  // ---- the Salt Quarter: working harbor ----
-  addBuilding('house', H.x-4, H.y-4, 'The Netmenders');
-  addBuilding('house', H.x+4, H.y-2, 'The Saltcellar (Tavern)');
+  // ---- Kingsferry Quay: an open, uncluttered arrival - boats, lamps, a
+  // dockside cart and a colonnade, but no houses crowding the first thing you see ----
   addBuilding('boat', D.x-4, D.y+3, ''); addBuilding('boat', D.x+4, D.y-3, '');
+  addBuilding('fruitstand', H.x-3, H.y+2, '');   // a dockside cart working the arriving crowds
   addBuilding('lamp', D.x, D.y-2, ''); addBuilding('lamp', H.x-6, H.y+4, ''); addBuilding('lamp', H.x+6, H.y+4, '');
+  // a short colonnade framing the quay so the arrival still reads as grand
+  for(const [px3,py3] of [[H.x-5,H.y-3],[H.x-1,H.y-4],[H.x+3,H.y-4]])
+    if(inb(px3,py3)&&walkTile(tileAt(px3,py3))&&!solidAt(px3,py3)) G.decor.push({kind:'pillar',x:px3+0.5,y:py3+0.5});
   // ---- the Garrison ----
   addBuilding('house2', BA.x, BA.y-2, 'The Garrison');
   addBuilding('barn', BA.x-5, BA.y+3, 'Armory');

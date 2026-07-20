@@ -87,6 +87,8 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'well',o:b,label: P.wellCd>0? 'Well ('+Math.ceil(P.wellCd)+'s)':'Drink'}; }
     }
+    if(b.kind==='bazaar' && b.shop){ const d=dist(P.x,P.y,b.x,b.y+0.9);
+      if(d<1.9 && d<bd){ bd=d; best={type:'shop',o:b,label:'Shop'}; } }
     if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'){
       const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
       const d=dist(P.x,P.y,doorX,doorY);
@@ -135,6 +137,7 @@ function doInteract(){
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
     return;
   }
+  if(it.type==='shop'){ facePoint(it.o.x,it.o.y); openStallShop(it.o); return; }
   if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
