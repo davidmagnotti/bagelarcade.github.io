@@ -1304,17 +1304,18 @@ function placeObjectsCrown(){
   // if we only blocked the near band you could walk around a tower and tuck in
   // behind the wall (occluded). This slant spans ~Y[PA.y-40 .. PA.y+8] in tile
   // space, so the scan region must be generous to contain it.
-  //   The tile solids are RECEDED to ry<=-8 (their diamond fronts stop at/behind
-  // the wall base) so no diamond tip pokes into the forecourt; the crisp straight
-  // wall you actually bump is the continuous screen-space barrier below, so the
-  // edge reads as a clean line instead of a row of diamond teeth.
-  for(let Y=PA.y-42;Y<=PA.y+8;Y++) for(let X=PA.x-40;X<=PA.x+32;X++){
+  //   The crisp wall you actually bump is the continuous screen-space barrier
+  // below. The tile solids exist only so solidAt-based systems (pathing, spawns)
+  // treat the keep as occupied - so they are RECEDED a whole tile INSIDE the
+  // barrier on every side (|rx|<=600, ry<=-24, i.e. each diamond's corners stay
+  // within the barrier's |rx|<=640 / ry<=10). Any land tile between that inset
+  // and the barrier - including addBuilding's default footprint - is cleared, so
+  // no stray diamond corner pokes past the smooth wall on the front OR the sides.
+  for(let Y=PA.y-44;Y<=PA.y+10;Y++) for(let X=PA.x-42;X<=PA.x+34;X++){
     const rx=((X-Y)-axm)*32, ry=((X+Y)-aym)*16;
-    if(Math.abs(rx)>640 || ry<-895) continue;
-    if(ry<=-8) setSolid(X,Y,1);                              // under the keep & behind the base
-    else if(ry<=26 && walkTile(tileAt(X,Y))) setSolid(X,Y,0); // clear the front strip (incl. addBuilding's
-                                                              // default footprint) so the smooth barrier - not
-                                                              // stray tile teeth - is the wall you bump
+    if(Math.abs(rx)>700 || ry<-900 || ry>30) continue;
+    if(ry<=-24 && ry>=-880 && Math.abs(rx)<=600) setSolid(X,Y,1);   // keep mass, kept a tile inside the barrier
+    else if(walkTile(tileAt(X,Y))) setSolid(X,Y,0);                 // clear the margin so only the barrier bites
   }
   // The straight, sub-tile wall the player collides with (see palaceBarrier in
   // circleBlocked). rx/ry as above; ry<=BASE is the wall's front face.
