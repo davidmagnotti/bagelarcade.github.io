@@ -49,7 +49,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1};
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -469,9 +469,10 @@ function drawDecor(b,s){
   // a floating name over a landmark (dungeon mouths etc.) that fades in as you near it
   if(b.name){ const pd=dist(P.x,P.y,b.x,b.y);
     if(pd<12){ const g=cx; g.save(); g.globalAlpha=Math.max(0,Math.min(1,(12-pd)/3.5));
+      const ly=s.y+(b.labelY||-46);
       g.font='bold 12px Georgia'; g.textAlign='center';
-      g.lineWidth=3.4; g.strokeStyle='rgba(0,0,0,0.8)'; g.strokeText(b.name, s.x, s.y-46);
-      g.fillStyle='#ffe9b0'; g.fillText(b.name, s.x, s.y-46);
+      g.lineWidth=3.4; g.strokeStyle='rgba(0,0,0,0.8)'; g.strokeText(b.name, s.x, ly);
+      g.fillStyle='#ffe9b0'; g.fillText(b.name, s.x, ly);
       g.restore(); } }
   if(b.cache && !b.opened && Math.random()<0.06){
     // a wink of dawn-colored silk between the boards - hard to miss once you know
@@ -636,6 +637,11 @@ function drawDecor(b,s){
     g.fillStyle='#5a5048'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
     g.restore(); return;
   }
+  if(b.kind==='ashwing'){
+    cx.save(); cx.translate(s.x,s.y); cx.scale(1.4,1.4);
+    drawDragon(cx,0,0,{face:b.face||-1, enspelled:false, hurtT:0});
+    cx.restore(); return;
+  }
   if(b.kind==='tunnelmouth'){
     const g=cx; drawShadowAt(g,s.x,s.y,14);
     g.save(); g.translate(s.x,s.y);
@@ -727,10 +733,10 @@ function drawDecor(b,s){
   const S= b.kind==='bazaar' ? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
          : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?130 : 30);
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
   // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a
   // big-but-crisp, well-seated keep. Barik's keep stays its small size at 0.2.
-  const BS=b.kind==='castle'?(b.grand?0.9:0.2) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?2.0 : 1;
+  const BS=b.kind==='castle'?(b.grand?0.9:0.2) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?1.28 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.shop){ // a bobbing gold coin marks a stall you can buy from

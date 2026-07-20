@@ -68,6 +68,7 @@ function pickClickTarget(wx,wy){
   for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});
   for(const b of G.decor){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
+    else if(b.kind==='ashwing') cand.push({type:'inter',x:b.x,y:b.y,r:1.8,range:3.0,go:()=>askAshwingHome()});
     else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
     else if(b.kind==='woodpile') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>readLore('woodpile@isle')});
