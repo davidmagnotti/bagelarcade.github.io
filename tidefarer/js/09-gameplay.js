@@ -675,7 +675,11 @@ function updatePlayer(dt){
   const ml=Math.hypot(mx,my);
   // --- Frostdeep ice-slide: on the dungeon's slick ice you glide in one world
   //     direction until a wall stops you or you glide off the ice onto footing ---
-  const onSlick = G.worldId==='frostdeep' && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
+  // only the Sliding Halls are slick; the Frostgate and Frozen Heart are ice-floored
+  // for the theme but keep your footing (G.slideZone bounds the slippery room).
+  const sz=G.slideZone;
+  const inSlide = sz && P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1;
+  const onSlick = G.worldId==='frostdeep' && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
   if(onSlick){
     if(!P.slideDir && ml>0.25) P.slideDir = Math.abs(mx)>Math.abs(my)? {x:Math.sign(mx),y:0} : {x:0,y:Math.sign(my)};
     if(P.slideDir){
@@ -1100,8 +1104,9 @@ function updateWorld(dt){
   G.parts=G.parts.filter(p=>p.life>0);
   for(const f of G.floats){ f.y+=f.vy*dt; f.life-=dt; }
   G.floats=G.floats.filter(f=>f.life>0);
-  // day cycle
-  G.dayT=(G.dayT+dt/G.dayLen)%1;
+  // day cycle - frozen underground: dungeons keep their own fixed light, and time
+  // does not pass while you are down there.
+  if(!inDungeon()) G.dayT=(G.dayT+dt/G.dayLen)%1;
   // gore decals fade, fog rolls
   for(const d of G.decals) d.life-=dt;
   if(G.decals.length && G.decals[0].life<=0) G.decals=G.decals.filter(d=>d.life>0);
@@ -1125,8 +1130,9 @@ function updateWorld(dt){
       color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.12});
   }
   if(night<0.2) G.fireflies.length=0;
-  // night hunters: after dark the wilds send foes; dawn scatters them to mist
-  if(night>0.55 && !G.interior && !P.dead && !inSafeZone(P.x,P.y)){
+  // night hunters: after dark the wilds send foes; dawn scatters them to mist.
+  // NEVER underground - no wraiths haunt any dungeon.
+  if(night>0.55 && !G.interior && !inDungeon() && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
@@ -1153,6 +1159,9 @@ function updateWorld(dt){
 }
 function isNight(){ return nightAmount()>0.55; }
 function nightAmount(){
+  // underground worlds don't have a sky: they hold a fixed ambient darkness (set
+  // per-dungeon via WORLD_DEF.dark) and never cycle through day and night.
+  if(inDungeon()){ const d=WORLD_DEFS[G.worldId]; return d.dark!=null? d.dark : 0.4; }
   // dayT: 0=dawn .25=noon .5=dusk .75=midnight
   const t=G.dayT;
   if(t<0.08) return lerp(0.8,0,t/0.08);

@@ -50,7 +50,7 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -700,6 +700,22 @@ function drawDecor(b,s){
     cx.save(); cx.translate(s.x,s.y); cx.scale(1.4,1.4);
     drawDragon(cx,0,0,{face:b.face||-1, enspelled:false, hurtT:0});
     cx.restore(); return;
+  }
+  if(b.kind==='icespire'){
+    const g=cx; drawShadowAt(g,s.x,s.y,10); g.save(); g.translate(s.x,s.y);
+    const gl=0.5+0.5*Math.sin(G.time*1.6+b.x);
+    // a cluster of faceted ice crystals, blue-white with a cold inner glow
+    const spire=(dx,h,w,c1,c2)=>{ g.fillStyle=c1;
+      g.beginPath(); g.moveTo(dx-w,2); g.lineTo(dx,2-h); g.lineTo(dx+w,2); g.closePath(); g.fill();
+      g.fillStyle=c2; g.beginPath(); g.moveTo(dx,2-h); g.lineTo(dx+w,2); g.lineTo(dx+w*0.2,2); g.closePath(); g.fill(); };
+    spire(-5,14,4.5,'#bfe6f4','#8fc4dd');
+    spire(6,11,4,'#bfe6f4','#8fc4dd');
+    spire(0,24,5.5,'#d6f2fb','#a6d6ea');                       // the tall central shard
+    g.strokeStyle='rgba(90,150,180,0.7)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(0,2); g.lineTo(0,2-22); g.stroke();
+    g.fillStyle='rgba(200,240,255,'+(0.25+0.25*gl).toFixed(2)+')'; // cold glow
+    g.beginPath(); g.ellipse(0,-6,9,12,0,0,TAU); g.fill();
+    g.restore(); return;
   }
   if(b.kind==='cratersmoke'){
     const g=cx, t=G.time; g.save(); g.translate(s.x,s.y);
