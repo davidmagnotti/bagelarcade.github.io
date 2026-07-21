@@ -115,10 +115,10 @@ function buildDialogContent(npc){
       const q=QUESTS[id];
       setDialog('“'+ (q.kind==='gather'? 'That everything I asked for? Hand it over, then!' : q.kind==='kill'? 'It\'s done? Truly?' : id==='harvest'? 'Four golden bundles - let\'s see them!' : 'You found it?!') +'”'
         + rewardText(q),
-        [{label:'✓ Complete - '+q.title, cls:'gold', fn:()=>{
+        withTravel(npc,[{label:'✓ Complete - '+q.title, cls:'gold', fn:()=>{
             completeQuest(id);
             setDialog('“'+q.doneText+'”',[{label:'Continue',fn:()=>buildDialogContent(npc)}]);
-        }},{label:'Not yet',ghost:true,fn:closeDialog}]);
+        }},{label:'Not yet',ghost:true,fn:closeDialog}]));
       return;
     }
   }
@@ -128,14 +128,14 @@ function buildDialogContent(npc){
       const q=QUESTS[id];
       setDialog('<b style="color:var(--ember)">'+q.title+'</b><br>“'+q.brief+'”'
         + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
-        [{label:'! Accept quest', cls:'gold', fn:()=>{
+        withTravel(npc,[{label:'! Accept quest', cls:'gold', fn:()=>{
             acceptQuest(id);
             setDialog('“Good. I\'ll be here.”'
               + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
               + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
               [{label:'Off I go',fn:closeDialog}]);
           }},
-         {label:'Later', ghost:true, fn:closeDialog}]);
+         {label:'Later', ghost:true, fn:closeDialog}]));
       return;
     }
   }
@@ -152,6 +152,19 @@ function buildDialogContent(npc){
   // 5) idle chatter + shop
   npc.li=(npc.li+1)%npc.idleLines.length;
   setDialog('“'+npc.idleLines[npc.li]+'”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+}
+// Travel affordances that must stay reachable in EVERY dialog state - including a
+// quest offer or turn-in, which otherwise return before shopButtons() runs. Without
+// this, a player who declines Rell's quest is stranded on Windsurf, since Ashwing is
+// the only way off the isle until the strait is calmed. Kept as the single source of
+// truth for the fly-home button (shopButtons and the quest paths both route through it).
+function withTravel(npc,btns){
+  if(npc.id==='rell'){
+    btns.unshift({label:'Signal Ashwing - fly back to Kohana', fn:()=>{
+      flyToWorld('east','You run Rell\'s signal-kite up the mast. Before long a green shape wheels out of the sun - Ashwing, come to carry you home.');
+    }});
+  }
+  return btns;
 }
 function shopButtons(npc,btns){
   if(npc.id==='bram'){
@@ -184,11 +197,6 @@ function shopButtons(npc,btns){
       closeDialog();
       const fd=document.getElementById('fadeOv'); fd.style.opacity=1;
       setTimeout(()=>{ switchWorld('east'); autoSave(); setTimeout(()=>{ fd.style.opacity=0; },200); },700);
-    }});
-  }
-  if(npc.id==='rell'){
-    btns.unshift({label:'Signal Ashwing - fly back to Kohana', fn:()=>{
-      flyToWorld('east','You run Rell\'s signal-kite up the mast. Before long a green shape wheels out of the sun - Ashwing, come to carry you home.');
     }});
   }
   if(npc.id==='corvoE'){
@@ -387,5 +395,5 @@ function shopButtons(npc,btns){
       setDialog('“Seeds are the island\'s, not mine. Plant kindly.” <i>(+3 seeds)</i>', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
-  return btns;
+  return withTravel(npc,btns);
 }
