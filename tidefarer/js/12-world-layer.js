@@ -57,10 +57,10 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
-const FROSTDEEP_ZONES = { // the ice-dungeon beneath the Frozen Isle
-  entry: {x:60, y:74, r:6,  name:'The Rimefissure', lv:[13,15]},
-  ice:   {x:60, y:48, r:16, name:'The Sliding Halls', lv:[13,15]},
-  boss:  {x:60, y:18, r:12, name:'The Frozen Heart', lv:[15,15]}
+const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
+  entry: {x:44, y:64, r:6,  name:'The Frostgate',     lv:[13,15]},
+  ice:   {x:42, y:46, r:12, name:'The Sliding Halls', lv:[13,15]},
+  boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
 const EASTDEEP_ZONES = { // THE EMBERDEEP - the fire-heart dungeon inside Mount Kea
   entry:   {x:65, y:137, r:9,  name:'The Emberthroat',      lv:[6,8]},
@@ -103,17 +103,20 @@ const WORLD_DEFS = {
   crown:{ W:180, H:180, seed:61137, zones:CROWN_ZONES,
     spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
     gen:()=>genCrownAll() },
-  frostdeep:{ W:120, H:88, seed:33377, zones:FROSTDEEP_ZONES,
-    spawn:{x:60.5,y:74.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A DUNGEON OF SLIDING ICE',
+  frostdeep:{ W:88, H:80, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
+    spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF SLIDING ICE',
     gen:()=>genFrostDeepAll() },
-  aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES,
+  aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
     gen:()=>genAerieDeepAll() },
-  eastdeep:{ W:130, H:150, seed:55219, zones:EASTDEEP_ZONES,
+  eastdeep:{ W:130, H:150, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
     spawn:{x:65.5,y:140.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - PUZZLE-LOCKED, AND OLD',
     gen:()=>genEastDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
+// a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
+// fixed ambient darkness. Marked with `dungeon:1` on its WORLD_DEF.
+function inDungeon(id){ const d=WORLD_DEFS[id||G.worldId]; return !!(d && d.dungeon); }
 
 function addCrowsFor(){
   G.crows.length=0;
@@ -1609,26 +1612,28 @@ function genFrostAll(){
 
 /* ---------- THE RIMEFISSURE: the ice-slide dungeon beneath the Frozen Isle ---------- */
 function genFrostDeep(){
-  // the whole map begins as solid frozen rock; we carve the chambers out of it
+  // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  carve(52,68,68,80,T.RUIN);              // entrance hall
-  carve(58,58,62,68,T.RUIN);              // corridor A -> the Sliding Halls
-  carve(45,39,75,57,T.ICE);               // THE SLIDING HALLS - one great sheet of slick ice
-  setTile(45,39,T.RUIN); setSolid(45,39,0);   // the lever landing (a non-ice tile stops your slide here)
-  setTile(60,39,T.RUIN); setSolid(60,39,0);   // the gate approach (slide stops here, below the gate)
-  carve(58,29,62,37,T.RUIN);              // corridor B -> the boss chamber
-  for(let x=58;x<=62;x++){ setTile(x,38,T.RUIN); setSolid(x,38,1); }  // the DEEP GATE - solid until the lever is thrown
-  carve(40,8,80,28,T.RUIN);               // the Frozen Heart - boss chamber
-  carve(48,13,54,21,T.ICE); carve(66,13,72,21,T.ICE);   // decorative ice pools flanking the boss
+  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
+  carve(42,54,46,60,T.ICE);               // corridor A -> the Sliding Halls
+  carve(30,38,54,54,T.ICE);               // THE SLIDING HALLS - one slick sheet (the slide puzzle)
+  G.slideZone={x0:30,y0:38,x1:54,y1:54};  // ONLY this room is slippery
+  setTile(32,39,T.RUIN); setSolid(32,39,0);   // lever landing (non-ice tile stops your slide)
+  setTile(44,39,T.RUIN); setSolid(44,39,0);   // gate approach (slide stops here, below the gate)
+  carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - solid until the lever
+  carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber, ice-floored (not slippery)
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
-  G.decor.push({kind:'dungeonmouth', x:60.5, y:79.5, exit:1, label:'the way up'});  // back to the surface
-  setSolid(60,79,0); setTile(60,79,T.RUIN);
-  for(const [tx,ty] of [[54,70],[66,70],[47,41],[73,41],[46,20],[74,20],[60,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  G.decor.push({kind:'icelever', x:45.5, y:39.5, on:false, label:'a frost-locked lever'});
-  G.decor.push({kind:'chest', x:60.5, y:10.5, deep:1});
+  G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
+  setSolid(44,70,0); setTile(44,70,T.RUIN);
+  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[44,15]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // frozen spires make each chamber read unmistakably as ICE
+  for(const [px,py] of [[38,66],[50,66],[31,44],[53,52],[36,18],[52,18],[44,17]]) if(inb(px,py) && !solidAt(px,py)){ G.decor.push({kind:'icespire', x:px+0.5, y:py+0.5}); setSolid(px,py,1); }
+  G.decor.push({kind:'icelever', x:32.5, y:39.5, on:false, label:'a frost-locked lever'});
+  G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
   G.critters=[];
 }
 function spawnMobsFrostDeep(){
@@ -1657,7 +1662,8 @@ function exitFrostDungeon(){
 function pullIceLever(b){
   if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
   b.on=true; if(Snd.quest) Snd.quest();
-  for(let x=58;x<=62;x++){ setTile(x,38,T.RUIN); setSolid(x,38,0); }   // grind the gate open
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,0); }   // grind the gate open
+  invalidateScenery&&invalidateScenery();
   shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
   banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
   toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north, past the sliding halls - lies open.',5200);
