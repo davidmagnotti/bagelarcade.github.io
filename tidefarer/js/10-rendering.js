@@ -1525,7 +1525,10 @@ function drawMoa(s){
   // legs, a deep shaggy-feathered body, a long S-curved neck and a small beaked
   // head. Not a pig. Runs with a real two-leg gait; breathes and bobs when idle.
   const g=cx, fl=(P.dir&&P.dir.x<0)?-1:1, moving=!!P.moving, t=G.time;
-  const ph=P.anim*8, gait=moving?1:0;
+  // P.anim tracks ground covered and races at the moa's ride speed; a *8 stride
+  // multiplier jumped the leg phase ~4 rad/frame, aliasing the gait into a strobe.
+  // Keep it low (~0.75 rad/frame) so the run stays smooth at speed.
+  const ph=P.anim*1.5, gait=moving?1:0;
   const bob = moving? Math.sin(ph*0.5)*1.7 : Math.sin(t*2)*0.7;   // body rise/fall
   const OUT='rgba(22,15,8,0.85)';
   const body='#6b5334', belly='#9a8054', dark='#48371f', bodyHi='#8a6f48';
@@ -1587,7 +1590,7 @@ function drawMoa(s){
 }
 function drawHorse(s){
   const g=cx; g.save(); g.translate(s.x,s.y);
-  const fl=(P.dir.x<0)?-1:1, tr=Math.sin(P.anim*7);
+  const fl=(P.dir.x<0)?-1:1, tr=Math.sin(P.anim*1.35);   // slow bob - see drawMoa note on P.anim aliasing
   g.scale(1.3,1.3);
   g.fillStyle='rgba(0,0,0,0.28)';
   g.beginPath(); g.ellipse(0,1.5,17,6,0,0,TAU); g.fill();
@@ -1595,7 +1598,7 @@ function drawHorse(s){
   for(const [lx,ph] of [[-9,0],[-4,2.4],[5,1.2],[10,3.6]]){ // legs
     g.strokeStyle=c2; g.lineWidth=3.4; g.lineCap='round';
     g.beginPath(); g.moveTo(lx,-12);
-    g.lineTo(lx+(P.moving?Math.sin(P.anim*9+ph)*3.4:0), 0.5); g.stroke();
+    g.lineTo(lx+(P.moving?Math.sin(P.anim*1.8+ph)*3.4:0), 0.5); g.stroke();
   }
   const bg=g.createLinearGradient(0,-24,0,-8);
   bg.addColorStop(0,'#9a6a3e'); bg.addColorStop(1,c1);
