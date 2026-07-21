@@ -2654,24 +2654,19 @@ function switchWorld(id){
     // once the strait is calm, Coralie can finally reopen the Breakers properly
     if(P.story && P.story.tideCalm && qs('breakers')!=='done' && !P.quests.breakers) P.quests.breakers='avail';
     if(P.story && P.story.tideCalm) updateWindFolkMood();
-    if(!P.prog.windSeen){ P.prog.windSeen=1;
-      setTimeout(()=>toast('<b>Windsurf Isle</b> - awnings snap in the wind, the great wheel turns, and yet the harbor sits empty. Something in the strait has scared every boat off the water. <b>Rell the Harbormaster</b> waits at the docks - though you\'ll need a <b>windsurf</b> to reach what he fears.',8000),1400); }
+    if(!P.prog.windSeen){ P.prog.windSeen=1; }   // arrival narration removed - let the isle speak for itself
   }
   if(id==='aerie'){
     if(qs('roost')!=='done' && !P.quests.roost) P.quests.roost='avail';
-    if(!P.prog.aerieSeen){ P.prog.aerieSeen=1;
-      setTimeout(()=>toast('<b>The Aerie Isle</b> - and even from the landing you hear it: a sky full of screaming. Nothing with wings will let you near the great plateau. <b>Wrenna the Rookmother</b> is in the village.',7000),1400); }
+    if(!P.prog.aerieSeen){ P.prog.aerieSeen=1; }
   }
   if(id==='frost'){
     if(qs('thaw')!=='done' && !P.quests.thaw) P.quests.thaw='avail';
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
-    if(!P.prog.frostSeen){ P.prog.frostSeen=1;
-      setTimeout(()=>toast('<b>The Frozen Isle</b> - the strait is locked to solid ice and the cold bites like a curse, because it is one. <b>Bryn the Kettlewarden</b> keeps a fire in the village.',7000),1400); }
+    if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
   }
-  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
-    setTimeout(()=>toast('<b>The Rimefissure</b> - the ice underfoot in the sliding halls is slick as glass. <b>Step onto it and you glide</b> in one direction until a wall or solid footing stops you. Read the room, then push off.',9000),1400); }
-  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
-    setTimeout(()=>toast('<b>The Emberdeep</b> - Mount Kea is hollow, walled, and locked. Three warded chambers bar the way up to Ashwing: <b>light every ember-font</b>, <b>throw the floodgate lever</b>, then <b>press the four runes in order I-IV</b> (a wrong press wakes a barrow archer). The dragon waits at the very top.',9800),1400); }
+  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1; }   // dungeon instructions removed - figure it out
+  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1; }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.
@@ -2681,8 +2676,7 @@ function switchWorld(id){
     if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
     if(qs('lettuce')!=='done' && !P.quests.lettuce) P.quests.lettuce='avail';
     if(P.story && P.story.kingTold) updateCrownFolkMood();
-    if(!P.prog.crownSeen){ P.prog.crownSeen=1;
-      setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. The palace gate is guarded: none pass without the King\'s leave. But the kitchens always want a runner - ask <b>Odo the Victualler</b> in the Bazaar.',8000),1400); }
+    if(!P.prog.crownSeen){ P.prog.crownSeen=1; }
   }
   Snd.quest();   // arrival chime (island-name intro banner removed by request)
   updateQuestUI(); refreshUI();

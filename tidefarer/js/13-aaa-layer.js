@@ -121,6 +121,11 @@ const Amb={
 const WX={
   rain:0, target:0, timer:45, drops:[], boltT:0,
   update(dt){
+    // no weather underground - dungeons have their own sealed sky
+    if(typeof inDungeon==='function' && inDungeon()){
+      this.rain=0; this.target=0; this.timer=rnd(20,40); this.drops.length=0;
+      G.lightning=0; return;
+    }
     this.timer-=dt;
     if(this.timer<=0){
       if(this.target>0){ this.target=0; this.timer=rnd(70,130); }

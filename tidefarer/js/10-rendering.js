@@ -1189,7 +1189,7 @@ function drawMob(m,s){
   }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
   if(m.kind==='dragon'){
-    cx.save(); cx.translate(s.x,s.y); cx.scale(1.5,1.5); drawDragon(cx,0,0,m); cx.restore();
+    cx.save(); cx.translate(s.x,s.y); cx.scale(2.6,2.6); drawDragon(cx,0,0,m); cx.restore();   // a proper wyrm - ~1.7x bigger
     const nm=m.name||MOBDEF[m.kind].name;
     cx.font='bold 12px Georgia'; cx.textAlign='center';
     cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(nm,s.x+1,s.y-114);

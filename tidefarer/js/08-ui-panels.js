@@ -39,9 +39,10 @@ const HOT = [
 function buildHotbar(){
   const hb=document.getElementById('hotbar'); hb.innerHTML='';
   HOT.forEach(h=>{
+    // a weapon you don't own yet stays hidden entirely (no grayed placeholder) -
+    // the bow/staff slots simply appear the moment you earn them
+    if(h.wpn && !P.unlocked[h.id]) return;
     const s=document.createElement('div'); s.className='slot'; s.id='hot_'+h.id;
-    const locked = h.wpn && !P.unlocked[h.id];
-    if(locked) s.classList.add('locked');
     if(h.wpn && P.weapon=== (h.id==='melee'?'melee':h.id)) s.classList.add('sel');
     const ic=document.createElement('canvas'); ic.width=ic.height=40;
     ic.getContext('2d').drawImage(ICONS[h.icon],0,0); s.appendChild(ic);
@@ -362,8 +363,16 @@ function refreshUI(){
 let _mountBtnKey=null;
 function ownsMount(){ return !!(P.horse || (P.unlocked && P.unlocked.moa)); }
 function updateMountBtn(){
+  // indoors there's nothing to fight - hide the touch attack (sword) & dodge
+  // (dash) buttons so the room reads calm
+  if(isTouch){
+    const hide = !!G.interior;
+    const ab=document.getElementById('attackBtn'), db=document.getElementById('dodgeBtn');
+    if(ab) ab.style.display = hide?'none':'';
+    if(db) db.style.display = hide?'none':'';
+  }
   const btn=document.getElementById('mountBtn'); if(!btn) return;
-  const show = isTouch && ownsMount() && !G.interior && G.state==='play' && !P.dead;
+  const show = isTouch && ownsMount() && !G.interior && !(typeof inDungeon==='function' && inDungeon()) && G.state==='play' && !P.dead;
   const label = P.riding? 'Walk' : 'Ride';
   const key = (show?1:0)+label;
   if(key===_mountBtnKey) return;
@@ -375,7 +384,7 @@ function updateMountBtn(){
 function toggleRide(){
   if(G.state!=='play') return;
   if(!ownsMount()){ return; }
-  if(G.interior){ toast('You can’t ride indoors.',1500); return; }
+  if(G.interior || (typeof inDungeon==='function' && inDungeon())){ toast('No room to ride in here.',1500); return; }
   P.riding = P.riding? 0 : 1;
   const moa = P.unlocked && P.unlocked.moa;
   toast(P.riding

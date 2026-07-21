@@ -518,7 +518,7 @@ function killMob(m,skill){
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
-  if(m.boss) award('kingslayer');
+  if(m.kind==='boss') award('kingslayer');   // only the Hollow King earns Kingslayer
   if(m.kind==='alpha') award('wolfsbane');
   killCredit(m.kind);
   if(m.elite) killCredit('elite');
@@ -537,7 +537,9 @@ function killMob(m,skill){
     give('fang',1);
     toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
   }
-  if(m.boss){
+  if(m.kind==='boss'){
+    // THE Hollow King (Emberwick's main-story boss) - the only fall that seals
+    // the isle's victory screen
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
     banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
@@ -550,6 +552,12 @@ function killMob(m,skill){
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts
     // freeze the world once the victory screen is up so you can read it in peace
     setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; },2400);
+  } else if(m.boss){
+    // any other named regional boss (the Tome-Warden snake, the Leviathan, the
+    // Castellan...) falls under its own name - never the Hollow King's
+    Snd.boss(); G.shake=0.85; G.slowmo=1.1;
+    shockwave(m.x,m.y,'rgba(160,255,200,0.9)',80);
+    banner((m.title||'THE FOE')+' FALLS','A SHADOW LIFTS FROM THIS PLACE');
   } else Snd.hit();
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
@@ -627,7 +635,9 @@ function updatePlayer(dt){
   if(!G.interior && unstickEntity(P)){
     hintOnce('unstuck','Solid ground found its way back under your boots.');
   }
-  if(G.interior && P.riding){ P.riding=0; toast('Chestnut waits outside.',2200); }
+  if((G.interior || (typeof inDungeon==='function' && inDungeon())) && P.riding){
+    P.riding=0; toast((P.unlocked&&P.unlocked.moa)?'Kiko waits outside - no room to ride here.':'Chestnut waits outside.',2200);
+  }
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(P.rollCd<=0) P.dashChain=0;
