@@ -2661,7 +2661,7 @@ function switchWorld(id){
     if(!P.prog.crownSeen){ P.prog.crownSeen=1;
       setTimeout(()=>toast('<b>Aldermere</b> - the royal capital climbs from its harbor to the Tideglass Palace in tiers of white stone. The palace gate is guarded: none pass without the King\'s leave. But the kitchens always want a runner - ask <b>Odo the Victualler</b> in the Bazaar.',8000),1400); }
   }
-  banner(def.title,def.sub); Snd.quest();
+  Snd.quest();   // arrival chime (island-name intro banner removed by request)
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
 }

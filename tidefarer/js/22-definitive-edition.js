@@ -96,6 +96,10 @@ const bloomCv=document.createElement('canvas');
 const bloomCx=bloomCv.getContext('2d');
 function drawRadiance(){
   if(!CFG.bloom || !fxOn('bloom') || G.state!=='play' || !cv.width) return;
+  /* Bloom reads the whole main canvas back (drawImage(cv,...)) then re-composites
+     it with a 'lighter' blend. On a software-raster canvas that per-frame readback
+     is brutal, so the boot probe (js/01b-gpu-probe.js) switches it off outright. */
+  if(typeof SOFTCANVAS!=='undefined' && SOFTCANVAS) return;
   const bw=Math.max(1,(cv.width/6)|0), bh=Math.max(1,(cv.height/6)|0);
   if(bloomCv.width!==bw || bloomCv.height!==bh){ bloomCv.width=bw; bloomCv.height=bh; }
   bloomCx.clearRect(0,0,bw,bh);

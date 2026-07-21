@@ -689,13 +689,26 @@ function shade(hex,amt){
   return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
 }
 /* ---- characters: drawn live for animation ---- */
+/* Every entity draws a soft contact shadow every frame. The old code built a
+   fresh radial gradient + filled an ellipse PER CALL - i.e. dozens of gradient
+   allocations and path fills each frame, one of the worst per-frame costs on a
+   software-raster canvas. Bake the gradient disc ONCE into an offscreen and
+   blit it (a cheap scaled drawImage) thereafter. Visually identical. */
+let _shadowSprite=null;
+function _buildShadowSprite(){
+  const R=64;
+  _shadowSprite=makeCanvas(R*2,R*2,(g)=>{
+    const sg=g.createRadialGradient(R,R,R*0.15,R,R,R);
+    sg.addColorStop(0,'rgba(0,0,0,0.34)'); sg.addColorStop(0.7,'rgba(0,0,0,0.20)'); sg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=sg; g.beginPath(); g.arc(R,R,R,0,TAU); g.fill();
+  });
+  return _shadowSprite;
+}
 function drawShadowAt(g,sx,sy,r){
-  const sg=g.createRadialGradient(sx,sy,r*0.15,sx,sy,r);
-  sg.addColorStop(0,'rgba(0,0,0,0.34)'); sg.addColorStop(0.7,'rgba(0,0,0,0.20)'); sg.addColorStop(1,'rgba(0,0,0,0)');
-  g.fillStyle=sg;
-  g.save(); g.translate(sx,sy); g.scale(1,0.45);
-  g.beginPath(); g.arc(0,0,r*1.25,0,TAU); g.fill();
-  g.restore();
+  const sp=_shadowSprite||_buildShadowSprite();
+  // original ellipse: horizontal radius r*1.25, vertical squashed to 0.45
+  const w=r*1.25*2, h=w*0.45;
+  g.drawImage(sp, sx-w/2, sy-h/2, w, h);
 }
 
 function dirOct(d){
