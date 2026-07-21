@@ -1156,8 +1156,9 @@ function updateWorld(dt){
   }
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
-  // NEVER underground - no wraiths haunt any dungeon.
-  if(night>0.55 && !G.interior && !inDungeon() && !P.dead && !inSafeZone(P.x,P.y)){
+  // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
+  // Aldermere is a walled, patrolled city and stays safe after dark.
+  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;

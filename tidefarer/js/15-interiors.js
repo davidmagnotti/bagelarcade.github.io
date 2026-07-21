@@ -109,7 +109,7 @@ function enterHouse(b){
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     const leave = qs('kitchenrun')==='done' || (P.story&&(P.story.palaceLeave||P.story.kingTold));
     if(!leave){
-      toast('Two guards cross their halberds at the gate. “None pass here without the King’s leave, traveler.” Then one softens: “Try the <b>kitchen door</b> round the west side - the cook always wants a runner. Ask <b>Odo the Victualler</b> in the Bazaar for his crate.”',6200);
+      toast('Two guards cross their halberds at the gate. “<b>None shall pass</b> without the King’s leave.”',4200);
       Snd.step(5); return;
     }
     const I=palaceInterior(0); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;

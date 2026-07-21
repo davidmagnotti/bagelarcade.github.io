@@ -138,7 +138,27 @@ function loadCode(str){
     switchWorld('crown');
     applyWorldFlags(d.flags&&d.flags.crown);
   }
-  P.x=d.x; P.y=d.y;
+  // Dungeons are transient (they regenerate and hold puzzle state) and were never
+  // restored here - so a save made inside one stayed on the isle and applied the
+  // dungeon's coordinates, dropping the hero in open water. Reload to the parent
+  // isle's landing instead; the dungeon can simply be re-entered.
+  const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', aeriedeep:'aerie'};
+  let dungeonReload=false;
+  if(DUNGEON_PARENT[d.world]){
+    const par=DUNGEON_PARENT[d.world];
+    switchWorld(par);
+    applyWorldFlags(d.flags&&d.flags[par]);
+    dungeonReload=true;   // keep the parent's spawn set by switchWorld; ignore dungeon coords
+  }
+  if(!dungeonReload){ P.x=d.x; P.y=d.y; }
+  // Safety net: whatever the world, never wake up in water or inside a wall.
+  if(!inb(P.x|0,P.y|0) || !walkTile(tileAt(P.x|0,P.y|0)) || solidAt(P.x|0,P.y|0)){
+    const dsp=(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
+    const sp=findOpenNear(Math.round(P.x)||Math.round(dsp.x), Math.round(P.y)||Math.round(dsp.y), 14)
+           || findOpenNear(Math.round(dsp.x), Math.round(dsp.y), 20)
+           || [dsp.x, dsp.y];
+    P.x=sp[0]+0.5; P.y=sp[1]+0.5;
+  }
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   updateQuestUI(); buildHotbar(); refreshUI(); refreshSkillsPanel();
   closeAllPanels();
