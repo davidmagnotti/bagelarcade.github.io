@@ -779,17 +779,20 @@ function drawHumanoid(g,sx,sy,o){
   if(!o.robe){
     for(const L of [[-4.1,1],[4.1,-1]]){
       const lx=L[0], sg=L[1];
-      // ride: legs sit still, thighs splayed out to straddle the mount (no gait)
-      const la= o.ride? sg*0.7 : stride*0.55*sg;
+      // ride: seated astride - the thigh splays out over the mount's back, then
+      // the knee bends so the shin & boot drop straight down her flank (without
+      // the bend the straightened legs read as standing on top of her)
+      const la= o.ride? sg*0.92 : stride*0.55*sg;
       const lift= o.ride? 0 : Math.max(0, sg*stride)*2.2;
       g.save();
-      g.translate(lx + (o.ride? sg*1.3:0), -8.5+B*0.4 + (o.ride? 2.4:0)); g.rotate(flip*la*(away?-1:1));
+      g.translate(lx + (o.ride? sg*1.7:0), -8.5+B*0.4 + (o.ride? 3.2:0)); g.rotate(flip*la*(away?-1:1));
       g.fillStyle=pants;
-      g.beginPath(); g.roundRect(-2.4,0,4.8,6.5,2.1); g.fill();
+      g.beginPath(); g.roundRect(-2.4,0,4.8, o.ride?5.0:6.5, 2.1); g.fill();   // shorter thigh when seated
       g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
       // big boot
       const fs=(!o.ride && walking)? Math.max(0,-sg*stride)*0.12 : 0;
-      g.translate(0,6.2-lift*0.3);
+      g.translate(0, (o.ride?4.6:6.2)-lift*0.3);
+      if(o.ride) g.rotate(-flip*la*(away?-1:1)*1.12);   // knee bend: shin hangs down her side
       g.scale(1+fs, 1-fs*0.6);
       const btg=g.createLinearGradient(0,-1.2,0,3.4);
       btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
