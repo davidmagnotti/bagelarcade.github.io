@@ -855,15 +855,12 @@ function updateWorld(dt){
         m.lvl=Math.max(3,Math.min(8,P.level)); // the dark measures you before it strikes
         m.maxhp=90+m.lvl*12; m.hp=m.maxhp;
         burst(nx+0.5,ny,'#8fa8d8',12,2.2);
-        if(!G._nightWarned){ G._nightWarned=true; toast('The dark thickens and takes shape. <b>Night wraiths are hunting.</b>',4200); }
       }
     }
   }
   if(night<0.15){
-    let gone=false;
-    for(const m of G.mobs) if(m.night && !m.dead){ m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',8,1.6); gone=true; }
-    if(gone) toast('Dawn burns the night wraiths back to mist.',3200);
-    G._nightWarned=false;
+    // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request)
+    for(const m of G.mobs) if(m.night && !m.dead){ m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',8,1.6); }
   }
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
