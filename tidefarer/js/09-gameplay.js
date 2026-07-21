@@ -538,13 +538,19 @@ function killMob(m,skill){
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
     banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
     dropHollowFire();   // the seal breaks with him
-    setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; },2400);
+    // his risen court crumbles with him: clear every summoned skeleton and any
+    // bone volley still in the air so nothing can kill you on the victory lap
+    for(const o of G.mobs){ if(!o.dead && o.kind==='skeleton'){ o.dead=true; o.respawnT=-1; burst(o.x,o.y-0.4,'#d8d8c8',10,1.4); } }
+    for(let i=G.projs.length-1;i>=0;i--){ if(G.projs[i].kind==='bone') G.projs.splice(i,1); }
+    G.victory=true;   // invulnerable through the win sequence (see hurtPlayer)
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts
+    // freeze the world once the victory screen is up so you can read it in peace
+    setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; },2400);
   } else Snd.hit();
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
 function hurtPlayer(dmg,src){
-  if(P.hurtT>0 || P.dead || (P.rollT||0)>0) return;
+  if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
@@ -608,7 +614,7 @@ document.getElementById('respawnBtn').onclick=()=>{
     P.x=home.x+0.5; P.y=home.y+2.5; }
   P.hurtT=1.5; refreshUI(); autoSave();
 };
-document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv').style.display='none'; };
+document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv').style.display='none'; G.paused=false; G.victory=false; };
 
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
