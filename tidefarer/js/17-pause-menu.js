@@ -40,17 +40,20 @@ function togglePause(force){
    parent kept the whole pause menu (Sound, Display & comfort, the Effects
    panel) from ever appearing while playing. Move it to <body> so it shows. */
 try{ document.body.appendChild(document.getElementById('pausePanel')); }catch(e){}
+/* #confirmWipe lived inside #titleOv too (hidden during play); move it to <body>
+   so the pause-menu "Start Over" reset can actually show it. */
+try{ document.body.appendChild(document.getElementById('confirmWipe')); }catch(e){}
 document.getElementById('btnPause').onclick=()=>togglePause();
 document.getElementById('resumeBtn').onclick=()=>togglePause(false);
+// "Start Over": the game boots straight into play now, so there's no title to
+// quit to - this button is the reset, guarded by the type-to-confirm wipe modal.
 document.getElementById('quitTitleBtn').onclick=()=>{
-  autoSave(); togglePause(false);
-  G.state='title';
-  const t=document.getElementById('titleOv'); t.style.display='flex';
-  const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
-  if(store.get()){
-    contBtn.style.display='inline-block'; contBtn.classList.add('pulse');
-    startBtn.textContent='New Game'; startBtn.classList.add('ghostly'); startBtn.classList.remove('pulse');
-  }
+  togglePause(false);
+  const cw=document.getElementById('confirmWipe'); if(!cw) return;
+  cw.style.display='block';
+  const inp=document.getElementById('wipeInput'); if(inp) inp.value='';
+  const conf=document.getElementById('wipeConfirm'); if(conf) conf.disabled=true;
+  if(!isTouch && inp){ try{ inp.focus(); }catch(e){} }
 };
 document.getElementById('cfgMus').oninput=function(){ CFG.mus=this.value/100; saveCfg(); };
 document.getElementById('cfgSfx').oninput=function(){ CFG.sfx=this.value/100; saveCfg(); Snd.tone(660,0.07,'sine',0.06); };

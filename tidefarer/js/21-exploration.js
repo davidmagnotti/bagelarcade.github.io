@@ -140,19 +140,23 @@ function boot(){
     ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
     : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Shift</b> dodge · <b>E</b> interact · <b>1-4</b> hotbar · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
-  // Continue is the hero when a save exists; New Game demands typed confirmation
-  const startBtn=document.getElementById('startBtn'), contBtn=document.getElementById('continueBtn');
-  if(store.get()){
-    contBtn.style.display='inline-block';
-    contBtn.classList.add('pulse');
-    startBtn.textContent='New Game';
-    startBtn.classList.add('ghostly');
-  } else {
-    startBtn.classList.add('pulse');
-  }
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
+  enterGame();   // no title menu - drop straight into the saved adventure, or a fresh one
+}
+/* No title screen: on load, continue the saved adventure, or begin a new one
+   (the shipwreck opening). A reset lives in the pause menu ("Start Over"). */
+function enterGame(){
+  const sc = store.get();
+  const t=document.getElementById('titleOv'); if(t) t.style.display='none';
+  if(sc){
+    Snd.init(); Amb.ensure(); Music.nextT=0;
+    G.state='play';
+    if(loadCode(sc)===false){ toast('The old save was unreadable - starting fresh.'); startFresh(); }
+  } else {
+    startFresh();
+  }
 }
 let CINE=null;   // retired opening cinematic - kept null so old "not during CINE" guards still read
 // The game opens on a shipwreck: Captain Brant hauls the amnesiac castaway out
@@ -230,7 +234,10 @@ document.getElementById('wipeConfirm').onclick=()=>{
   if(document.getElementById('wipeInput').value.trim().toLowerCase()!=='start over') return;
   store.clear();
   document.getElementById('confirmWipe').style.display='none';
-  startFresh();
+  // Full reset: reload so boot() rebuilds a pristine world and player from
+  // scratch, then enterGame() begins the new-game intro - no stale in-memory
+  // progress (level, inventory, harvested world) can survive.
+  try{ location.reload(); }catch(e){ startFresh(); }
 };
 document.getElementById('wipeCancel').onclick=()=>{
   document.getElementById('confirmWipe').style.display='none';
