@@ -219,7 +219,20 @@ function useHotspot(h){
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') openStation('The Anvil', craftMenu);
   else if(f.type==='orb'){
-    if(P.mp>=P.maxmp){ toast('The orb hums - your mana is already full.'); return; }
+    // A mage-tower's scrying orb is now a ONE-TIME BOON per tower: it pours its
+    // stored focus into you for a whole free level, instead of the old
+    // just-tops-up-your-mana refill. (The Undermaw cave orb is unaffected.)
+    const key = (I && I.kind==='tower' && I.src) ? ('orb:'+I.src.w+':'+I.src.x+','+I.src.y) : null;
+    if(key && !P.prog[key]){
+      P.prog[key]=1; P.mp=P.maxmp;
+      if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
+      burst(P.x,P.y-0.8,'#c9b0ff',18,2.4); Snd.magic&&Snd.magic(); refreshUI&&refreshUI();
+      addFloat('The orb’s focus floods you',P.x,P.y-1.8,'#c9b0ff',1.3);
+      toast('You lay both hands on the scrying orb. Stored focus - a mage’s years of patient study - pours up your arms. <b style="color:#c9b0ff">You rise a whole level.</b>',5200);
+      autoSave&&autoSave();
+      return;
+    }
+    if(P.mp>=P.maxmp){ toast(key? 'The orb is spent - its gift already yours. It only hums now.' : 'The orb hums - your mana is already full.'); return; }
     P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
     addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
   }

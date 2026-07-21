@@ -166,7 +166,8 @@ function enterHouse(b){
     igloo:{line:'Curved snow-block walls, a fire pit at the heart, and furs enough to sleep through any storm.'}
   };
   const dims = b.kind==='castle'? [17,12] : b.kind==='resort'? [30,20] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
-  const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
+  const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[],
+    src:{x:Math.round(b.x), y:Math.round(b.y), w:G.worldId}};   // stable per-building id (tower orb boon keys off this)
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
   if(String(b.label||'').toLowerCase().includes('(inn)')) I.inn=1;
