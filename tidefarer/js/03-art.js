@@ -344,6 +344,26 @@ function buildSprites(){
     // door
     g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-24,12,Math.PI,0); g.fill(); g.fillRect(w/2-12,h-24,24,14);
   });
+  // A twice-as-tall tower - NOT a stretched one. Same shaft width, stone-course
+  // spacing, window size, roof and door as SPR.tower; the shaft just runs much
+  // higher with extra courses and windows. Used for Orin's tower on Emberwick.
+  SPR.towerTall = makeCanvas(120,390,(g,w,h)=>{
+    g.fillStyle='#8d8296'; g.fillRect(w/2-26,60,52,h-84);
+    g.fillStyle='#7a7086'; g.fillRect(w/2-26,60,16,h-84);
+    g.fillStyle='#a79cb5'; g.fillRect(w/2+8,60,18,h-84);
+    // stones (same 16px courses, just more of them)
+    g.strokeStyle='rgba(0,0,0,0.14)';
+    for(let yy=70; yy<h-30; yy+=16){ g.beginPath(); g.moveTo(w/2-26,yy); g.lineTo(w/2+26,yy); g.stroke(); }
+    // windows marching up the taller shaft (same 10x14, same 44px pitch)
+    g.fillStyle='#ffd76a';
+    for(let wy=92; wy<h-60; wy+=44){ g.fillRect(w/2-5,wy,10,14); }
+    // conical roof (identical to the short tower, sat at the top)
+    g.fillStyle='#4a5d9c'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2+34,64); g.closePath(); g.fill();
+    g.fillStyle='#5a6fb5'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2,64); g.closePath(); g.fill();
+    g.fillStyle='#ffd76a'; g.beginPath(); g.arc(w/2,4,4,0,TAU); g.fill();
+    // door
+    g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-24,12,Math.PI,0); g.fill(); g.fillRect(w/2-12,h-24,24,14);
+  });
   SPR.well = makeCanvas(70,80,(g,w,h)=>{
     g.fillStyle='#7d7d85'; g.beginPath(); g.ellipse(w/2,h-18,22,12,0,0,TAU); g.fill();
     g.fillStyle='#2b4a63'; g.beginPath(); g.ellipse(w/2,h-20,16,8,0,0,TAU); g.fill();

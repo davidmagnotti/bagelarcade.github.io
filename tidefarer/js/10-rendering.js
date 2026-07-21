@@ -146,7 +146,7 @@ function render(){
     if(n.tx<minX-1||n.tx>maxX+1||n.ty<minY-1||n.ty>maxY+1) continue;
     items.push({d:n.x+n.y, kind:'node', o:n});
   }
-  for(const b of G.decor){ const cm=b.grand?28:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
+  for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
     items.push({d:b.x+b.y, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
@@ -929,6 +929,7 @@ function drawDecor(b,s){
     g.restore(); g.restore(); return;
   }
   const S= b.kind==='bazaar' ? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
+         : (b.kind==='tower' && b.tall) ? SPR.towerTall
          : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);

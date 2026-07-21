@@ -236,7 +236,7 @@ function placeObjects(){
   addBuilding('forge', 58,55, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
   addBuilding('house2',44,61, 'Fisher row');
   addBuilding('barn',  62,60, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
-  addBuilding('tower', 56,33, 'Orin\'s tower');
+  addBuilding('tower', 56,33, 'Orin\'s tower').tall=true;   // Orin's tower stands twice as tall on Emberwick
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
   addBuilding('house2', 39,57, 'The Ember Hearth (Inn)');
