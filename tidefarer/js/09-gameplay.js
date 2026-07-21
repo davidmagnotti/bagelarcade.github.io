@@ -559,6 +559,33 @@ function killMob(m,skill){
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',80);
     banner((m.title||'THE FOE')+' FALLS','A SHADOW LIFTS FROM THIS PLACE');
   } else Snd.hit();
+  // After felling a dungeon boss, offer the quick road out - mended and a level
+  // stronger. (Overworld bosses stay put; dungeons have a clear "way up".)
+  if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon()){
+    setTimeout(offerDungeonExit, 2400);
+  }
+}
+function offerDungeonExit(){
+  if(G.state!=='play' || P.dead || (typeof inDungeon==='function' && !inDungeon()) || dlg.open) return;
+  const exit=G.decor.find(b=>(b.kind==='dungeonmouth'||b.kind==='tunnelmouth') && (b.exit||b.up));
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Way Up';
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#141018'; pg.fillRect(0,0,72,72);
+  const rg=pg.createRadialGradient(36,30,4,36,30,34); rg.addColorStop(0,'#e8dcff'); rg.addColorStop(1,'rgba(140,120,200,0)');
+  pg.fillStyle=rg; pg.fillRect(0,0,72,72);
+  setDialog('The warden is down and the wards go dark. A cold updraught tugs at you - the way up stands open. <b>Take the quick road out</b>, mended and a level stronger for what you’ve done?',
+    [{label:'Rise - healed & stronger', cls:'gold', fn:()=>{
+        closeDialog();
+        P.hp=P.maxhp; P.mp=P.maxmp;
+        gainLXP(xpForP(P.level));   // ~one full level
+        if(exit){ P.x=exit.x; P.y=exit.y+0.6; P.click=null; P.moving=false;
+          G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+        burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
+        toast('Whole again, and a level the wiser. The way up is right here.',4200);
+      }},
+     {label:'Stay a while', ghost:true, fn:closeDialog}]);
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
 function hurtPlayer(dmg,src){
@@ -706,7 +733,15 @@ function updatePlayer(dt){
   const inSlide = sz && P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1;
   const onSlick = G.worldId==='frostdeep' && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
   if(onSlick){
-    if(!P.slideDir && ml>0.25) P.slideDir = Math.abs(mx)>Math.abs(my)? {x:Math.sign(mx),y:0} : {x:0,y:Math.sign(my)};
+    if(!P.slideDir && ml>0.25){
+      // push off along the stronger input axis - but never INTO a wall. If that
+      // way is blocked, push off the other axis instead (so you can turn); if
+      // both are walled you're in a corner and simply hold until you aim clear.
+      const ax={x:Math.sign(mx),y:0}, ay={x:0,y:Math.sign(my)};
+      const primary = Math.abs(mx)>Math.abs(my)? ax : ay, other = (primary===ax)? ay : ax;
+      const open=(dir)=> (dir.x||dir.y) && !circleBlocked(P.x+dir.x*0.5, P.y+dir.y*0.5, 0.28);
+      P.slideDir = open(primary)? primary : (open(other)? other : null);
+    }
     if(P.slideDir){
       const ss=7.0*dt; let moved=false;
       const nx=P.x+P.slideDir.x*ss; if(!circleBlocked(nx,P.y,0.28)){ P.x=nx; moved=true; }
