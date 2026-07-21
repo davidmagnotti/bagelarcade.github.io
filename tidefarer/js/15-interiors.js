@@ -170,12 +170,23 @@ function enterHouse(b){
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
   if(String(b.label||'').toLowerCase().includes('(inn)')) I.inn=1;
-  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  const F=(type,x,y,hw,hh,solid,lore)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false,lore});
   if(b.kind==='house'){ F('bed',1.9,2.8,1.0,0.7); F('table',6.4,3.4,0.9,0.6); F('stool',5.2,4.2,0.35,0.3); F('stool',7.4,4.4,0.35,0.3); F('rug',4.5,4.4,0,0,false); F('hearth',2.4,1.35,0.9,0.35); F('shelf',6.4,1.3,1.0,0.3); }
   if(b.kind==='house2'){ F('bed',7.1,2.8,1.0,0.7); F('barrel',1.8,3.0,0.45,0.4); F('barrel',2.6,3.5,0.45,0.4); F('crate',1.9,4.6,0.55,0.45); F('net',4.4,1.3,1.2,0.3); F('shelf',6.2,1.3,1.0,0.3); F('rug',4.6,4.3,0,0,false); }
   if(b.kind==='forge'){ F('anvil',4.5,3.3,0.6,0.4); F('barrel',6.8,3.2,0.45,0.4); F('crate',7.2,4.4,0.55,0.45); F('hearth',2.2,1.35,1.1,0.35); F('tools',6.0,1.3,1.4,0.3); }
   if(b.kind==='barn'){ F('hay',2.0,2.6,0.9,0.7); F('hay',3.4,2.2,0.9,0.7); F('hay',2.4,4.0,0.9,0.7); F('crate',6.8,2.6,0.55,0.45); F('crate',7.3,3.6,0.55,0.45); F('cartwheel',6.5,1.3,0.8,0.25); F('books',4.2,1.4,1.0,0.3); }
-  if(b.kind==='tower'){ F('desk',6.3,3.1,1.0,0.6); F('stool',6.3,4.2,0.35,0.3); F('orb',2.6,3.1,0.5,0.4); F('books',4.6,1.3,1.6,0.3); F('rug',4.5,4.4,0,0,false); }
+  if(b.kind==='tower'){
+    // a mage's study: a whole wall of readable tomes on the magic arts, plus the
+    // desk, a scrying orb, and a rug. Each book opens a different lesson.
+    F('desk',6.6,3.2,1.0,0.6); F('stool',6.6,4.3,0.35,0.3); F('orb',2.4,3.4,0.5,0.4);
+    F('books',1.7,1.3,0.7,0.3,true,'weave@tower');
+    F('shelf',3.1,1.3,0.7,0.3,true,'mana@tower');
+    F('books',4.5,1.3,0.7,0.3,true,'ember@tower');
+    F('shelf',5.9,1.3,0.7,0.3,true,'wards@tower');
+    F('books',7.3,1.3,0.7,0.3,true,'enchant@tower');
+    F('books',2.0,4.6,0.7,0.3,true,'weaver@tower');   // a stray primer left on the reading table
+    F('rug',4.5,4.9,0,0,false);
+  }
   if(b.kind==='resort'){
     // The Breakers is a bespoke open-air resort: a marble lobby with a front
     // desk, ornate flowering vases and potted palms, opening onto a sunlit pool
