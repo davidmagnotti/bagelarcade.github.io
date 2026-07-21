@@ -48,7 +48,7 @@ document.getElementById('resumeBtn').onclick=()=>togglePause(false);
 // "Start Over": the game boots straight into play now, so there's no title to
 // quit to - this button is the reset, guarded by the type-to-confirm wipe modal.
 document.getElementById('quitTitleBtn').onclick=()=>{
-  togglePause(false);
+  // Keep the game paused; show the confirm modal above the pause panel.
   const cw=document.getElementById('confirmWipe'); if(!cw) return;
   cw.style.display='block';
   const inp=document.getElementById('wipeInput'); if(inp) inp.value='';
