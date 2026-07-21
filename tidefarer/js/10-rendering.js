@@ -909,7 +909,12 @@ function drawDecor(b,s){
     g.fillStyle='#dccdb0'; g.fill();
     g.fillStyle='rgba(0,0,0,0.13)'; g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(-5,-th); g.lineTo(-10,0); g.closePath(); g.fill();
     g.strokeStyle='rgba(120,105,78,0.5)'; g.lineWidth=1; for(let yy=-th+12; yy<-6; yy+=15){ const wd=13+(21-13)*(-yy/th); g.beginPath(); g.moveTo(-wd,yy); g.lineTo(wd,yy); g.stroke(); }
-    g.fillStyle='#5c3d22'; g.fillRect(-6,-20,12,20);
+    // a person-height arched door at the mill's foot (was a giant slab you could stand in)
+    g.fillStyle='#4a3120';
+    g.beginPath(); g.moveTo(-3,0); g.lineTo(-3,-6); g.quadraticCurveTo(0,-10.5,3,-6); g.lineTo(3,0); g.closePath(); g.fill();
+    g.strokeStyle='#281a0e'; g.lineWidth=0.8; g.stroke();
+    g.strokeStyle='#2c1c10'; g.lineWidth=0.6; g.beginPath(); g.moveTo(0,-8.5); g.lineTo(0,0); g.stroke();  // door split
+    g.fillStyle='#c9a24e'; g.beginPath(); g.arc(1.7,-3,0.7,0,TAU); g.arc(-1.7,-3,0.7,0,TAU); g.fill();     // handles
     g.fillStyle='#8fc0dd'; g.fillRect(-5,-54,10,10); g.strokeStyle='#5c3d22'; g.lineWidth=1.4; g.strokeRect(-5,-54,10,10);
     g.fillStyle='#7a4a3a'; g.beginPath(); g.moveTo(-16,-th); g.lineTo(0,-th-22); g.lineTo(16,-th); g.closePath(); g.fill();
     const rot=G.time*0.8 + b.x*0.7; g.translate(0,-th-3);

@@ -1039,14 +1039,18 @@ function placeObjectsWind(){
   // The Breakers now draws at a sane size, so its collision footprint is tighter -
   // a solid base under the facade you can't slip behind, front door open to the south.
   for(let dy=-2;dy<=0;dy++) for(let dx=-3;dx<=3;dx++) setSolid(R.x+dx, R.y+dy, 1);
-  addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
-  addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
-  // the windmill is a colossus - give it a broad base you cannot slip right
-  // behind, so its footprint reads as big as it looks
+  const mill=addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
+  const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
+  // the windmill is a colossus - give it a broad solid base you cannot slip
+  // behind, but leave the south-front tiles open as its doorway/approach
   for(let dy=-4;dy<=1;dy++) for(let dx=-3;dx<=3;dx++) setSolid(MI.x+dx, MI.y+dy, 1);
-  // the great waterwheel had NO collision - you could walk clean through it. Give
-  // it a solid footprint under the wheel and its mill-housing so it reads as real.
-  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 1);
+  for(let dx=-1;dx<=1;dx++){ setSolid(MI.x+dx, MI.y+2, 0); setSolid(MI.x+dx, MI.y+3, 0); }  // open the doorway
+  mill.door={x:MI.x+0.5, y:MI.y+2.5};   // enter from the south
+  // the great waterwheel: a solid footprint under the mill-house AND the wheel to
+  // its east (you used to walk clean through it), with the south front left open
+  for(let dy=-2;dy<=1;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 1);
+  for(let dx=-2;dx<=1;dx++){ setSolid(WH.x+dx, WH.y+2, 0); setSolid(WH.x+dx, WH.y+3, 0); }   // open the doorway
+  wheel.door={x:WH.x-0.5, y:WH.y+2.5};  // enter the mill-house from the south
   // ---- the working town: two tidy terraces facing the green, well at centre ----
   addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
   addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');
@@ -2572,6 +2576,7 @@ function snapshotWorld(){
     decals:G.decals,cat:G.cat,critters:G.critters,base:mapBase};
 }
 function switchWorld(id){
+  const prevWorld=G.worldId;
   snapshotWorld();
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];
@@ -2607,6 +2612,18 @@ function switchWorld(id){
         toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
         Snd.quest(); autoSave();
       }, 1400);
+    }
+    // Safety net: nobody should leave the tutorial isle without the three basics.
+    // If you somehow sailed off missing the sword, axe or pickaxe, hand them over.
+    // (Early-sail already gets a full kit above, so skip it in that case.)
+    if(prevWorld==='isle' && !P.earlyKit){
+      P.unlocked=P.unlocked||{}; P.tools=P.tools||{axe:0,pick:0};
+      const got=[];
+      if(!P.unlocked.melee){ P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1); got.push('a sword'); }
+      if(!P.kit || !(P.tools.axe>0)){ P.kit=true; P.tools.axe=Math.max(P.tools.axe||0,1); if(!got.includes('an axe')) got.push('an axe'); }
+      if(!(P.tools.pick>0)){ P.kit=true; P.tools.pick=Math.max(P.tools.pick||0,1); got.push('a pickaxe'); }
+      if(got.length){ if(typeof buildHotbar==='function') buildHotbar(); refreshUI();
+        setTimeout(()=>toast('You check your pack on the crossing - the isle sent you off with '+got.join(', ')+'. Enough to make an honest start on Barik.',6000),1500); }
     }
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';

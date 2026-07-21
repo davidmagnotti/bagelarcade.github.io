@@ -454,13 +454,15 @@ function buildSprites(){
         g.fillStyle='#365f7e'; g.fillRect(wx, wy, 12, 17);
         g.fillStyle='#8fc0dd'; g.fillRect(wx+1, wy+1, 10, 7);
         g.strokeStyle='#b89a72'; g.lineWidth=1.4; g.strokeRect(wx, wy, 12, 17); } }
-    // one clear grand entrance door, centred on the facade
+    // the candy-striped veranda trim runs along the base FIRST, so the door can
+    // then be drawn cleanly on top of it (it used to paint over the doorway)
+    for(let i=0;i<10;i++){ g.fillStyle=i%2?'#efe7d6':'#c85a4a'; g.fillRect(bx-bw/2+i*(bw/10), base-9, bw/10, 9); } // veranda trim
+    // one clear grand entrance door, centred on the facade, over the trim
     g.fillStyle='#3a2c1c'; g.beginPath(); g.moveTo(bx-12,base); g.lineTo(bx-12,base-22); g.quadraticCurveTo(bx,base-32,bx+12,base-22); g.lineTo(bx+12,base); g.closePath(); g.fill();
     g.fillStyle='#7a5a3e'; g.fillRect(bx-10,base-20,9,20); g.fillRect(bx+1,base-20,9,20);           // double doors
     g.strokeStyle='#241a0e'; g.lineWidth=1.4; g.strokeRect(bx-10,base-20,9,20); g.strokeRect(bx+1,base-20,9,20);
     g.fillStyle='#c9a24e'; g.beginPath(); g.arc(bx-2,base-10,1.4,0,TAU); g.arc(bx+2,base-10,1.4,0,TAU); g.fill(); // handles
     g.fillStyle='rgba(255,205,120,0.35)'; g.fillRect(bx-1,base-20,2,20);                              // warm light between
-    for(let i=0;i<10;i++){ g.fillStyle=i%2?'#efe7d6':'#c85a4a'; g.fillRect(bx-bw/2+i*(bw/10), base-9, bw/10, 9); } // veranda awning
     // a little welcome mat / step at the door foot, so the entrance reads clearly
     g.fillStyle='#b23a2a'; g.fillRect(bx-13,base-1,26,4); g.fillStyle='#8a2c20'; g.fillRect(bx-13,base+1,26,2);
     g.fillStyle='#7a4a3a'; g.beginPath(); g.moveTo(bx-bw/2-8, base-bh); g.lineTo(bx, base-bh-28); g.lineTo(bx+bw/2+8, base-bh); g.closePath(); g.fill();

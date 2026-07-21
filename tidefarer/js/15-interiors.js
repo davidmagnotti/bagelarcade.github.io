@@ -222,6 +222,22 @@ function enterHouse(b){
     F('bed',2.1,2.2,1.05,0.7); F('rug',I.w/2,I.h-2.4,0,0,false);
     F('shelf',I.w-2.4,1.35,1.0,0.3); F('crate',I.w-1.9,I.h-1.9,0.55,0.45); F('barrel',2.2,I.h-2.0,0.45,0.4);
   }
+  if(b.kind==='windmill'){
+    // inside the great mill: grain sacks, the grinding shaft, and the miller's
+    // notes on the wall - read them to hear how the mill has kept the city fed
+    I.loreKey='windmill@wind';
+    F('books',I.w/2,1.35,1.0,0.3,true,'windmill@wind');
+    F('crate',2.0,2.6,0.55,0.45); F('crate',2.7,3.4,0.55,0.45); F('barrel',I.w-2.0,2.8,0.45,0.4);
+    F('shelf',I.w/2+2.4,1.3,0.9,0.3); F('stool',I.w-2.4,4.4,0.35,0.3); F('rug',I.w/2,4.4,0,0,false);
+  }
+  if(b.kind==='waterwheel'){
+    // the mill-house at the wheel's hub: cart-wheel gears, a damp stone floor,
+    // and the wright's ledger explaining how the wheel drives the millstones
+    I.loreKey='waterwheel@wind';
+    F('books',I.w/2,1.35,1.0,0.3,true,'waterwheel@wind');
+    F('cartwheel',I.w/2+2.4,1.3,0.8,0.25); F('barrel',2.0,2.8,0.45,0.4); F('barrel',2.7,3.4,0.45,0.4);
+    F('crate',I.w-2.0,4.6,0.55,0.45); F('rug',I.w/2,4.4,0,0,false);
+  }
   if(b.kind==='castle'){
     F('rug',7.5,5.0,0,0,false);
     F('throne',7.5,1.7,1.0,0.6);
