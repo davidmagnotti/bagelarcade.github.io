@@ -2594,6 +2594,12 @@ function switchWorld(id){
   }
   G.worldId=id;
   P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0}; P.fishing=null;
+  if(id==='main' && prevWorld==='east'){
+    // sailing home from the Sunward Isle lands you back at Captain Corvo's cove
+    // (his sloop, far south-east), not Greyharbor's dock clear across the map
+    const sp=findOpenNear(330,244,10) || [330,244];
+    P.x=sp[0]+0.5; P.y=sp[1]+0.5; P.dir={x:-1,y:0};
+  }
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(id==='main') award('globetrotter');
   if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';

@@ -176,6 +176,20 @@ function interiorHotspot(){
   }
   return best;
 }
+// Talking to Aelin's figure inside the Spire (after dark) opens her normal
+// dialogue - lessons by day, and she's here to mind the tower by night.
+function spireAelinSpeak(){
+  const a=G.npcs && G.npcs.find(n=>n.id==='aelin');
+  if(a && typeof buildDialogContent==='function'){
+    dlg.open=true; dlg.npc=a;
+    document.getElementById('dialog').style.display='block';
+    document.getElementById('dname').textContent=a.name;
+    if(typeof drawPortrait==='function') drawPortrait(a);
+    buildDialogContent(a);
+  } else {
+    toast('Aelin looks up from her books by candlelight. “Rest if you need it - the cot’s yours.”',4200);
+  }
+}
 function useHotspot(h){
   const f=h.f, I=G.interior;
   if(f.type==='bed'){
@@ -186,10 +200,15 @@ function useHotspot(h){
       else sleepInBed(true);
     }
     else if(G.interior && G.interior.inn) toast('\u201cBeds are <b>ten gold</b>, friend,\u201d calls the innkeep from the hearth. <b>Talk to them</b> to rest the night.',4200);
+    else if(G.interior && G.interior.spire){                     // Aelin's cot: students rest free
+      toast('You stretch out on the Spire\u2019s spare cot. \u201cSleep, then,\u201d Aelin murmurs. \u201cThe weave keeps better hours than you do.\u201d',4200);
+      sleepInBed(false);
+    }
     else toast(['You smooth the quilt back down. Not your bed.',
       'Tempting - but the whole village would hear of it by lunch.',
       'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
   }
+  else if(f.type==='aelin'){ spireAelinSpeak(); }
   else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }
   else if(f.type==='poolguest'){ resortGuestChat(f); }
   else if(f.type==='suitebed'){ resortSuiteSleep(); }

@@ -144,9 +144,12 @@ function blockedZone(x,y){
   return false;
 }
 function addNode(kind,x,y){
-  const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:3,maxhp:3,dead:false,respawn:0,
+  // trees & rocks start at 5 hp (was 3) so a green woodcutter/miner needs an
+  // extra swing or two; the per-hit power still climbs with skill, so mastery
+  // brings them back down to one or two hits.
+  const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:5,maxhp:5,dead:false,respawn:0,
              variant:rndi(0,2), sway:Math.random()*TAU};
-  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=4; }
+  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=6; }
   G.nodes.push(n);
   if(kind==='tree'||kind==='rock') setSolid(x,y,1);
   return n;

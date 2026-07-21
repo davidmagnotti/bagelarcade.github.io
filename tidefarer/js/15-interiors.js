@@ -186,6 +186,13 @@ function enterHouse(b){
     F('books',7.3,1.3,0.7,0.3,true,'enchant@tower');
     F('books',2.0,4.6,0.7,0.3,true,'weaver@tower');   // a stray primer left on the reading table
     F('rug',4.5,4.9,0,0,false);
+    // Aelin's Spire keeps a students' cot - rest here free - and after dark the
+    // Weaver herself is in, working by candlelight (villagers vanish outdoors at night)
+    if(String(b.label||'').toLowerCase().includes('spire')){
+      I.spire=1;
+      F('bed',7.6,5.3,1.0,0.62);
+      if(typeof isNight==='function' && isNight()) F('aelin',3.3,2.5,0.5,0.5);
+    }
   }
   if(b.kind==='resort'){
     // The Breakers is a bespoke open-air resort: a marble lobby with a front
@@ -647,6 +654,11 @@ function drawFurniture(f,s){
         cx.fillStyle='#ffd76a'; cx.font='bold 18px Georgia'; cx.textAlign='center';
         cx.fillText('!', s.x, s.y-58+Math.sin(G.time*3)*3);
       }
+      break;
+    case 'aelin':
+      drawShadowAt(cx,s.x,s.y,12);
+      drawHumanoid(cx, s.x, s.y, {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long',dir:{x:0,y:1},step:0,size:1.24});
+      cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('Aelin the Weaver',s.x+1,s.y-45); cx.fillStyle='#ffe9a8'; cx.fillText('Aelin the Weaver',s.x,s.y-46);
       break;
     case 'guard':
       { const fl=(Math.floor(f.x*3+f.y*5)%2)?1:-1;
