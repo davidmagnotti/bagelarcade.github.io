@@ -24,7 +24,7 @@ function buildRoom(I, idx){
   const cleared = !!(P.prog && P.prog.undermawClear);
   I.room=idx; I.furn=[]; I.click=null; I.puzzle=null;
   I.plates=null; I.levers=null; I.seq=null; I.prog=0; I.stair=null; I.torches=null;
-  I.clue=null; I.clueCols=null;
+  I.clueCols=null;
   I.w=9; I.h=8; I.exit={x:4.5, y:7.0};
   const F=(o)=>{ I.furn.push(o); return o; };
   if(idx===0){
@@ -33,7 +33,6 @@ function buildRoom(I, idx){
       F({type:'plate', x:p[0], y:p[1], hw:0.5, hh:0.4, solid:false, lit:cleared?1:0}));
     I.stair=F({type:'stairup', x:4.5, y:2.4, hw:0.7, hh:0.4, solid:false});
     I.gateOpen=cleared;
-    I.clue='Wake the three sealed stones.';
   } else if(idx===1){
     I.name="The Warden's Locks"; I.exitTo=0; I.puzzle='levers';
     const cols=['#e0564b','#57c06a','#6a9cff'];
@@ -43,7 +42,6 @@ function buildRoom(I, idx){
     I.clueCols=I.seq.map(i=>cols[i]);
     I.stair=F({type:'stairup', x:4.5, y:2.4, hw:0.7, hh:0.4, solid:false});
     I.gateOpen=cleared;
-    I.clue='Pull the locks in the order the runes keep.';
   } else {
     I.name='The Hoard'; I.exitTo=1;
     F({type:'cavechest', x:4.5, y:3.1, hw:0.7, hh:0.5, solid:true});
@@ -110,8 +108,8 @@ enterCave=function(){
   P.click=null; P.x=I.w/2; P.y=I.h-1.7; P.moving=false; P.fishing=null; P.combo=0;
   const cleared=P.prog && P.prog.undermawClear;
   toast(cleared
-    ? '<b>The Undermaw</b> - the seals lie open. The dark remembers you.'
-    : '<b>The Undermaw</b> - three chambers breathe in the dark, each sealed against the last. Solve a room to open the way on.', 4800);
+    ? '<b>The Undermaw</b> - the dark remembers you.'
+    : '<b>The Undermaw</b> - the dark breathes, slow and cold.', 3000);
   Snd.step(8);
 };
 
@@ -330,13 +328,6 @@ function renderUndermaw(){
     cx.beginPath(); cx.arc(0,0,24,0,TAU); cx.fill(); cx.restore();
     cx.fillStyle='#ffd76a'; cx.font='bold 14px Georgia'; cx.textAlign='center';
     cx.fillText('▼', s.x, s.y+4-Math.abs(Math.sin(G.time*3))*4);
-  }
-
-  // ---- clue text banner (top) ----
-  if(I.clue){
-    cx.font='12px Georgia'; cx.textAlign='center';
-    cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(I.clue, VW/2+1, 40);
-    cx.fillStyle='rgba(230,214,180,0.85)'; cx.fillText(I.clue, VW/2, 39);
   }
 
   // ---- interact affordance (ring + E-label / touch button) ----
