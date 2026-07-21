@@ -1003,7 +1003,7 @@ function switchWorld(id){
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
   if(id==='east') for(const q3 of ['hunt1','surf1']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
-  banner(def.title,def.sub); Snd.quest();
+  Snd.quest();   // arrival chime (island-name intro banner removed by request)
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
 }

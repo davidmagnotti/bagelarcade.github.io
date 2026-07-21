@@ -168,7 +168,7 @@ function startCinematic(){
 function endCine(){
   if(!CINE) return;
   CINE=null;
-  banner('EMBERWICK ISLE','TUTORIAL SHORES - CHAPTER I');
+  // island-arrival intro banner removed by request; the hint toast stays
   setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well - look for the <b style="color:var(--ember)">!</b>',5200),600);
   Snd.quest();
 }
