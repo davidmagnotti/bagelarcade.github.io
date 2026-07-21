@@ -46,8 +46,22 @@ function openStallShop(b){
   };
   rebuild();
 }
-function setDialog(text,btns){
-  document.getElementById('dtext').innerHTML=text;
+// Dialogue is authored as spoken lines wrapped in “curly quotes” with the odd
+// <i>stage direction</i> woven between them. Present it as plain, naturally-
+// flowing speech instead: drop the wrapping quotes and the italic stage-
+// directions. Functional italics are kept - styled notes (<i style=…>) and
+// parenthetical game notes like <i>(+1 Lore Page)</i> - then close the gaps.
+function cleanSpeech(html){
+  if(typeof html!=='string') return html;
+  return html
+    .replace(/<i>(?!\()[\s\S]*?<\/i>/gi,'')   // plain stage-directions only
+    .replace(/[“”]/g,'')             // the “ ” speech quotes (HTML attrs use straight ")
+    .replace(/ {2,}/g,' ')                      // close the gaps the removals leave
+    .replace(/ +([.,!?…])/g,'$1')               // no space before sentence punctuation
+    .trim();
+}
+function setDialog(text,btns,raw){
+  document.getElementById('dtext').innerHTML = raw? text : cleanSpeech(text);
   const bx=document.getElementById('dbtns'); bx.innerHTML='';
   btns.forEach(b=>{
     const el=document.createElement('button');

@@ -57,8 +57,10 @@ function readLore(key){
   pg.strokeStyle='#8a6d30'; pg.strokeRect(14,10,44,52);
   pg.strokeStyle='rgba(90,70,40,0.8)'; pg.lineWidth=1;
   for(let i=0;i<6;i++){ pg.beginPath(); pg.moveTo(19,20+i*7); pg.lineTo(53,20+i*7); pg.stroke(); }
+  // lore pages are environmental reading, not character dialogue - leave their
+  // quotes and italics as authored (raw), don't run the speech cleaner on them
   setDialog(L.text + (first? ' <br><i style="color:#9be07f">(+1 Lore Page copied)</i>':''),
-    [{label:'Close the book',ghost:true,fn:closeDialog}]);
+    [{label:'Close the book',ghost:true,fn:closeDialog}], true);
 }
 function openStation(name,menuFn){
   dlg.open=true;
