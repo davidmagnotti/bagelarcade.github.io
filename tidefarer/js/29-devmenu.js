@@ -165,7 +165,12 @@ let _openSec=-1;   // which section is expanded (accordion: one at a time). -1 =
 function build(){
   if(panelEl()) return;
   const p=document.createElement('div'); p.id='devMenu';
-  p.style.cssText='position:fixed;top:34px;left:8px;z-index:99999;width:206px;max-height:86vh;overflow:auto;'+
+  // Clamp to the VISIBLE viewport (dvh) so an expanded section can always be
+  // scrolled to its end - plain 86vh uses the layout viewport, which on mobile
+  // hides behind the browser toolbar. 86vh stays as a fallback for old browsers.
+  p.style.cssText='position:fixed;top:34px;left:8px;z-index:99999;width:206px;'+
+    'max-height:86vh;max-height:calc(100dvh - 44px);'+
+    'overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;'+
     'display:none;padding:8px 9px 10px;border-radius:10px;background:rgba(14,10,6,.95);'+
     'border:1px solid #4a3826;box-shadow:0 6px 24px rgba(0,0,0,.55);font-family:Verdana,sans-serif;color:#e8dcc4;';
   const head=document.createElement('div');
