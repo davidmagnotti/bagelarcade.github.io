@@ -1035,22 +1035,25 @@ function leviathanHome(){ const D=WIND_ZONES.dock; return {x:D.x+0.5, y:D.y+2+WI
 function placeObjectsWind(){
   const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, MI=Z.mill, WH=Z.wheel, D=Z.dock, B=Z.bluffs;
   // landmarks
-  addBuilding('resort', R.x, R.y, 'The Breakers Resort');
-  // The Breakers now draws at a sane size, so its collision footprint is tighter -
-  // a solid base under the facade you can't slip behind, front door open to the south.
-  for(let dy=-2;dy<=0;dy++) for(let dx=-3;dx<=3;dx++) setSolid(R.x+dx, R.y+dy, 1);
+  // Collision now matches each landmark's VISIBLE base instead of a big square that
+  // read as invisible walls sprawling north of the sprite. For each: wipe the auto
+  // footprint region, lay a solid block under the facade, then punch a doorway in
+  // the south (front) face and seat the door hotspot right in front of it.
+  const resort=addBuilding('resort', R.x, R.y, 'The Breakers Resort');
+  for(let dy=-2;dy<=2;dy++) for(let dx=-4;dx<=4;dx++) setSolid(R.x+dx, R.y+dy, 0);
+  for(let dy=-2;dy<=0;dy++) for(let dx=-4;dx<=4;dx++) setSolid(R.x+dx, R.y+dy, 1);  // solid facade you can't slip behind
+  for(let dx=-1;dx<=1;dx++) setSolid(R.x+dx, R.y, 0);                                // grand doors, front-centre
+  resort.door={x:R.x+0.5, y:R.y+1.4};
   const mill=addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 0);
+  for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // tight round base, no walls up-screen
+  for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y+1, 0);                             // doorway, south face
+  mill.door={x:MI.x+0.5, y:MI.y+1.6};
   const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
-  // the windmill is a colossus - give it a broad solid base you cannot slip
-  // behind, but leave the south-front tiles open as its doorway/approach
-  for(let dy=-4;dy<=1;dy++) for(let dx=-3;dx<=3;dx++) setSolid(MI.x+dx, MI.y+dy, 1);
-  for(let dx=-1;dx<=1;dx++){ setSolid(MI.x+dx, MI.y+2, 0); setSolid(MI.x+dx, MI.y+3, 0); }  // open the doorway
-  mill.door={x:MI.x+0.5, y:MI.y+2.5};   // enter from the south
-  // the great waterwheel: a solid footprint under the mill-house AND the wheel to
-  // its east (you used to walk clean through it), with the south front left open
-  for(let dy=-2;dy<=1;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 1);
-  for(let dx=-2;dx<=1;dx++){ setSolid(WH.x+dx, WH.y+2, 0); setSolid(WH.x+dx, WH.y+3, 0); }   // open the doorway
-  wheel.door={x:WH.x-0.5, y:WH.y+2.5};  // enter the mill-house from the south
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);
+  for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house AND the wheel to its east
+  for(let dx=-2;dx<=0;dx++) setSolid(WH.x+dx, WH.y+1, 0);                             // doorway on the mill-house side
+  wheel.door={x:WH.x-0.5, y:WH.y+1.6};
   // ---- the working town: two tidy terraces facing the green, well at centre ----
   addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
   addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');

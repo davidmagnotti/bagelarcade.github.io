@@ -808,21 +808,28 @@ function drawDecor(b,s){
   }
   if(b.kind==='firegate'){
     const g=cx; g.save(); g.translate(s.x,s.y);
+    // the gate spans x0..x1 - a whole 3-tile corridor that renders as a down-right
+    // diagonal of diamonds. Draw ONE portcullis panel per tile so the entire wall
+    // is plugged; a single centred billboard used to leave the flanking tiles bare.
+    const c0=(b.x0+b.x1)/2, tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
     if(b.open){ // hauled up into the rock - only the lintel and stubs remain
-      g.fillStyle='#3a2820'; g.fillRect(-30,-44,60,7); g.strokeStyle='#160d08'; g.lineWidth=1.4; g.strokeRect(-30,-44,60,7);
-      g.fillStyle='#2a1c14'; for(let i=-2;i<=2;i++){ g.fillRect(i*11-2,-44,4,7); }
+      for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+        g.fillStyle='#3a2820'; g.fillRect(ox-18,oy-44,36,7); g.strokeStyle='#160d08'; g.lineWidth=1.4; g.strokeRect(ox-18,oy-44,36,7);
+        g.fillStyle='#2a1c14'; for(let i=-1;i<=1;i++){ g.fillRect(ox+i*11-2,oy-44,4,7); } }
       g.restore(); return;
     }
-    drawShadowAt(g,s.x,s.y,30);
-    // an iron portcullis with a molten underglow seeping through the bars
-    g.fillStyle='rgba(255,120,40,'+(0.10+0.10*Math.sin(G.time*2.4)).toFixed(3)+')';
-    g.beginPath(); g.ellipse(0,-6,30,16,0,0,TAU); g.fill();
-    g.fillStyle='#33261c'; g.fillRect(-30,-40,60,6);
-    g.strokeStyle='#140c06'; g.lineWidth=1.6;
-    g.fillStyle='#4a382a';
-    for(let i=-2;i<=2;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }
-    g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-27,yy,54,3.5); }
-    g.fillStyle='#5a4436'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); }
+    drawShadowAt(g,s.x,s.y,44);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      // an iron portcullis with a molten underglow seeping through the bars
+      g.fillStyle='rgba(255,120,40,'+(0.10+0.10*Math.sin(G.time*2.4+tx)).toFixed(3)+')';
+      g.beginPath(); g.ellipse(ox,oy-6,20,13,0,0,TAU); g.fill();
+      g.fillStyle='#33261c'; g.fillRect(ox-18,oy-40,36,6);
+      g.strokeStyle='#140c06'; g.lineWidth=1.5;
+      g.fillStyle='#4a382a';
+      for(let i=-1;i<=1;i++){ g.fillRect(ox+i*11-2.5,oy-38,5,38); g.strokeRect(ox+i*11-2.5,oy-38,5,38); }
+      g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(ox-16,oy+yy,32,3.5); }
+      g.fillStyle='#5a4436'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(ox+i*11,oy-38); g.lineTo(ox+i*11-4,oy-32); g.lineTo(ox+i*11+4,oy-32); g.closePath(); g.fill(); }
+    }
     g.restore(); return;
   }
   if(b.kind==='emberlever'){
@@ -909,12 +916,16 @@ function drawDecor(b,s){
     g.fillStyle='#dccdb0'; g.fill();
     g.fillStyle='rgba(0,0,0,0.13)'; g.beginPath(); g.moveTo(-21,0); g.lineTo(-13,-th); g.lineTo(-5,-th); g.lineTo(-10,0); g.closePath(); g.fill();
     g.strokeStyle='rgba(120,105,78,0.5)'; g.lineWidth=1; for(let yy=-th+12; yy<-6; yy+=15){ const wd=13+(21-13)*(-yy/th); g.beginPath(); g.moveTo(-wd,yy); g.lineTo(wd,yy); g.stroke(); }
-    // a person-height arched door at the mill's foot (was a giant slab you could stand in)
+    // a proper full-height arched door at the mill's foot (the old one was a tiny
+    // mouse-hole against this colossus - this reads as a real entrance)
     g.fillStyle='#4a3120';
-    g.beginPath(); g.moveTo(-3,0); g.lineTo(-3,-6); g.quadraticCurveTo(0,-10.5,3,-6); g.lineTo(3,0); g.closePath(); g.fill();
-    g.strokeStyle='#281a0e'; g.lineWidth=0.8; g.stroke();
-    g.strokeStyle='#2c1c10'; g.lineWidth=0.6; g.beginPath(); g.moveTo(0,-8.5); g.lineTo(0,0); g.stroke();  // door split
-    g.fillStyle='#c9a24e'; g.beginPath(); g.arc(1.7,-3,0.7,0,TAU); g.arc(-1.7,-3,0.7,0,TAU); g.fill();     // handles
+    g.beginPath(); g.moveTo(-5,0); g.lineTo(-5,-9); g.quadraticCurveTo(0,-15,5,-9); g.lineTo(5,0); g.closePath(); g.fill();
+    g.strokeStyle='#281a0e'; g.lineWidth=1; g.stroke();
+    g.strokeStyle='#2c1c10'; g.lineWidth=0.7; g.beginPath(); g.moveTo(0,-13); g.lineTo(0,0); g.stroke();  // door split
+    // planked timber grain + a stone lintel arch so it reads as a doorway, not a hole
+    g.strokeStyle='rgba(40,26,14,0.5)'; g.lineWidth=0.5;
+    for(let yy=-3;yy>-9;yy-=3){ g.beginPath(); g.moveTo(-5,yy); g.lineTo(5,yy); g.stroke(); }
+    g.fillStyle='#c9a24e'; g.beginPath(); g.arc(2.5,-4.5,0.9,0,TAU); g.arc(-2.5,-4.5,0.9,0,TAU); g.fill();  // handles
     g.fillStyle='#8fc0dd'; g.fillRect(-5,-54,10,10); g.strokeStyle='#5c3d22'; g.lineWidth=1.4; g.strokeRect(-5,-54,10,10);
     g.fillStyle='#7a4a3a'; g.beginPath(); g.moveTo(-16,-th); g.lineTo(0,-th-22); g.lineTo(16,-th); g.closePath(); g.fill();
     const rot=G.time*0.8 + b.x*0.7; g.translate(0,-th-3);
