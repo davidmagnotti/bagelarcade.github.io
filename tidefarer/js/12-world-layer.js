@@ -2522,15 +2522,15 @@ function departEarly(){
 }
 function attemptSail(){
   if(sailing) return;
-  if(G.worldId==='isle' && qs('setsail')!=='done'){
+  if(G.worldId==='isle'){
     if(qs('king')!=='done'){
-      toast('Captain Brant eyes the tower. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4600);
-    } else {
-      const left=ISLE_IDS.filter(id=>qs(id)!=='done').length;
-      if(left>0) toast('Captain Brant shakes his head. <b>"Not till every task ashore is settled."</b> '+left+' quest'+(left===1?'':'s')+' remain - check the log (📜).',5400);
-      else toast('The hold is packed. <b>Speak with Captain Brant</b> to complete <b>Set Sail</b> first.',4800);
+      toast('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4800);
+      return;
     }
-    return;
+    if(qs('wreck')!=='done'){
+      toast('Captain Brant thumps the cracked hull. <b>"She won\'t swim till she\'s patched - bring me twelve wood and I\'ll mend her."</b> Speak with him here at the dock.',5800);
+      return;
+    }
   }
   // Windsurf is walled off by the killing tide until you calm the strait.
   if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){

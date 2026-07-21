@@ -170,7 +170,7 @@ function endCine(){
   if(!CINE) return;
   CINE=null;
   banner('EMBERWICK ISLE','TUTORIAL SHORES - CHAPTER I');
-  setTimeout(()=> toast('Find <b style="color:var(--ember)">Elder Maren</b> by the village well - look for the <b style="color:var(--ember)">!</b>',5200),600);
+  setTimeout(()=> toast('Emberwick\'s folk each need a hand - seek the <b style="color:var(--ember)">!</b> markers. Start with <b style="color:var(--ember)">Bram the Smith</b> at the forge; he\'ll arm you for what\'s coming.',6000),600);
   Snd.quest();
 }
 function drawCineOverlay(){
@@ -206,10 +206,13 @@ function startFresh(){
   document.getElementById('titleOv').style.display='none';
   G.state='play';
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
-  P.quests.welcome='avail';
+  openingQuests();
   updateQuestUI();
   startCinematic();
 }
+// Each villager offers a single task from the start; Bram's is the way in
+// (tools + a sword), which then opens Maren's charge against the Hollow King.
+function openingQuests(){ ['kit','mushrooms','harvest','fish','cat'].forEach(q=>{ if(!P.quests[q]) P.quests[q]='avail'; }); }
 document.getElementById('continueBtn').onclick=()=>{
   const sc=store.get(); if(!sc) return;
   Snd.init(); Amb.ensure(); Music.nextT=0;
@@ -217,7 +220,7 @@ document.getElementById('continueBtn').onclick=()=>{
   G.state='play';
   if(loadCode(sc)===false){
     toast('The old save was unreadable - starting fresh.');
-    P.quests.welcome='avail'; updateQuestUI();
+    openingQuests(); updateQuestUI();
   }
 };
 document.getElementById('startBtn').onclick=()=>{

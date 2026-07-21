@@ -107,7 +107,7 @@ function completeQuest(id){
   }
   if(id==='cat'){ P.petPip=false; G.cat.following=false; G.cat.homebound=true; }
   setTimeout(autoSave,300);
-  if(id==='king') setTimeout(()=>toast('The strait is calm at last. <b style="color:var(--ember)">Finn\'s boat</b> at the dock can sail for <b>Greyharbor</b>.',6000),2600);
+  if(id==='king') setTimeout(()=>toast('The strait is calm at last. The <b>Tidewalker</b> still needs patching - see <b style="color:var(--ember)">Captain Brant</b> at the dock; a little timber and she sails for <b>Greyharbor</b>.',6800),2600);
   banner('QUEST COMPLETE', q.title);
   Snd.quest(); updateQuestUI(); buildHotbar();
 }

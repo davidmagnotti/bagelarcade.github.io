@@ -302,10 +302,10 @@ function questProgressText(id){
   if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you - bring him to Nia!' : 'Search the Whisperwood';
   return '';
 }
-const ISLE_IDS=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord'];
+const ISLE_IDS=['kit','mushrooms','harvest','fish','cat','king','wreck'];
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
-const UNLOCK_AFTER={ wreck:['welcome'], profit:['slimes'], masterwork:['skeletons'],
-  wolffold:['harvest'], feast:['wolffold'], necklace:['shells'], echoes:['remember'], gravelord:['skeletons'],
+// Brant's ship repair only opens once the Hollow King is felled and the strait calms.
+const UNLOCK_AFTER={ wreck:['king'],
   nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'],
   ribbon2:['ribbon1'], ribbon3:['ribbon2'], tame1:['hunt1'],
   feud1:['roadclear'], sting1:['feud1'], feud2:['feud1'], undermaw1:['torv2'] };

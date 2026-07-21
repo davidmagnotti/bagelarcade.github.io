@@ -946,13 +946,13 @@ function drawDecor(b,s){
     cx.fillStyle='#c98f1e'; cx.font='bold 10px Georgia'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('E',s.x,iy+0.5);
     cx.fillStyle='rgba(255,255,255,0.7)'; cx.beginPath(); cx.arc(s.x-2.4,iy-2.4,1.6,0,TAU); cx.fill();
   }
-  if(b.kind==='boat' && G.worldId==='isle' && qs('fittings')==='done'){
+  if(b.kind==='boat' && G.worldId==='isle' && qs('wreck')==='done'){
     const mx=s.x+2, mb=s.y-10;
     cx.strokeStyle='#4f3a24'; cx.lineWidth=3;
     cx.beginPath(); cx.moveTo(mx,mb); cx.lineTo(mx,mb-52); cx.stroke();
     cx.strokeStyle='#3a2c1c'; cx.lineWidth=2;
     cx.beginPath(); cx.moveTo(mx-16,mb-46); cx.lineTo(mx+16,mb-46); cx.stroke();
-    if(qs('setsail')==='done'){
+    if(qs('wreck')==='done'){
       const bil=Math.sin(G.time*1.6)*2.5;
       cx.fillStyle='rgba(236,230,214,0.96)';
       cx.beginPath();
