@@ -50,7 +50,7 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -744,6 +744,41 @@ function drawDecor(b,s){
     g.fillStyle='rgba(255,220,120,'+(0.5*gl+0.28).toFixed(3)+')';
     g.beginPath(); g.ellipse(0,0,b.big?2.6:1.6,b.big?1.5:1,0,0,TAU); g.fill();
     if(b.big && Math.random()<0.04) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.5,1.4),life:rnd(0.6,1.2),color:'#ff8a44',size:rnd(1,2.2),grav:-0.05});
+    g.restore(); return;
+  }
+  if(b.kind==='ewall'){
+    // a chunky raised block of basalt - the dungeon's real walls
+    const g=cx, H=16, v=b.s||0;
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#2f2823';   // left face (bottom-left, toward camera)
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.fillStyle='#241e19';   // right face (bottom-right)
+    g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
+    g.fillStyle='#48403a';   // top face (raised diamond)
+    g.beginPath(); g.moveTo(0,-16-H); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(0,0,0,0.16)';   // basalt speckle
+    g.beginPath(); g.ellipse(-7+v*3,-H-2,4,2,0,0,TAU); g.fill();
+    g.beginPath(); g.ellipse(8-v*2,-H+3,3,1.6,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(122,106,92,0.5)'; g.lineWidth=1;   // top ridge highlight
+    g.beginPath(); g.moveTo(-32,-H); g.lineTo(0,-16-H); g.lineTo(32,-H); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='emberbutton'){
+    const g=cx; const lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x);
+    g.save(); g.translate(s.x,s.y);
+    drawShadowAt(g,0,2,7);
+    g.fillStyle='#2a231d';   // stubby basalt pedestal
+    g.beginPath(); g.moveTo(-7,-2); g.lineTo(0,2); g.lineTo(7,-2); g.lineTo(7,-12); g.lineTo(0,-16); g.lineTo(-7,-12); g.closePath(); g.fill();
+    g.strokeStyle='#140f0b'; g.lineWidth=1.4; g.stroke();
+    g.fillStyle= lit? '#5a2c14' : '#241d18';   // the rune face on top
+    g.beginPath(); g.moveTo(0,-20); g.lineTo(9,-15); g.lineTo(0,-10); g.lineTo(-9,-15); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#ff9a3c':'#5c4a38'; g.lineWidth= lit?2.2:1.5; g.stroke();
+    if(lit){ g.fillStyle='rgba(255,150,60,'+(0.25+0.25*gl).toFixed(2)+')';
+      g.beginPath(); g.moveTo(0,-18); g.lineTo(6,-15); g.lineTo(0,-12); g.lineTo(-6,-15); g.closePath(); g.fill(); }
+    g.fillStyle= lit? '#ffe0b0':'#8a7160'; g.font='bold 10px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0,-15); g.textBaseline='alphabetic';
+    if(!lit){ g.fillStyle='rgba(255,154,60,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    if(lit && Math.random()<0.05) G.parts.push({x:b.x,y:b.y-0.4,vx:rnd(-0.15,0.15),vy:-rnd(0.4,1),life:rnd(0.5,1),color:'#ffb04a',size:rnd(1,2),grav:-0.05});
     g.restore(); return;
   }
   if(b.kind==='emberplate'){

@@ -62,12 +62,12 @@ const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
   ice:   {x:42, y:46, r:12, name:'The Sliding Halls', lv:[13,15]},
   boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
-const EASTDEEP_ZONES = { // THE EMBERDEEP - the fire-heart dungeon inside Mount Kea
-  entry:   {x:65, y:137, r:9,  name:'The Emberthroat',      lv:[6,8]},
-  font:    {x:65, y:105, r:18, name:'The Ember Font',       lv:[6,8]},   // visit-all plate puzzle
-  causeway:{x:65, y:71,  r:18, name:'The Sunken Causeway',  lv:[7,9]},   // lever / lava-drain puzzle
-  glyph:   {x:65, y:37,  r:16, name:'The Glyphwalk',        lv:[7,9]},   // ordered-plate puzzle
-  rest:    {x:65, y:10,  r:14, name:"Ashwing's Rest",       lv:[9,9]}    // the dragon, at the very end
+const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount Kea
+  entry:   {x:40, y:84, r:8,  name:'The Emberthroat',     lv:[6,8]},
+  font:    {x:40, y:66, r:11, name:'The Ember Font',      lv:[6,8]},   // visit-all plate puzzle
+  causeway:{x:40, y:47, r:11, name:'The Sunken Causeway', lv:[7,9]},   // lever / lava-drain puzzle
+  glyph:   {x:40, y:28, r:11, name:'The Warding Locks',   lv:[7,9]},   // button-order puzzle
+  rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
@@ -109,8 +109,8 @@ const WORLD_DEFS = {
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
     gen:()=>genAerieDeepAll() },
-  eastdeep:{ W:130, H:150, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
-    spawn:{x:65.5,y:140.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - PUZZLE-LOCKED, AND OLD',
+  eastdeep:{ W:80, H:96, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:40.5,y:85.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - WALLED, WARDED, AND OLD',
     gen:()=>genEastDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -806,34 +806,44 @@ function genEastAll(){
   buildMapBase(); // without this the map keeps the previous world's base image
 }
 
-/* ---------- THE EMBERDEEP: the puzzle dungeon inside Mount Kea ----------
-   You no longer just step into Ashwing's lair - you descend the caldera fissure
-   into a basalt dungeon roughly the island's own span, and CLIMB it room by room.
-   Three chambers, three different locks:
+/* ---------- THE EMBERDEEP: a small warded dungeon inside Mount Kea ----------
+   You descend the caldera fissure into a compact basalt dungeon of real walls and
+   linked rooms, and CLIMB it chamber by chamber through narrow doorways:
      1. THE EMBER FONT  - light all three ember-fonts (tread every plate) to raise
         the first gate.
      2. THE SUNKEN CAUSEWAY - throw the old floodgate lever to drain the lava
         channel and raise the second gate.
-     3. THE GLYPHWALK - tread the four fire-glyphs in order I->IV; a wrong step
-        darkens them and you begin again.
+     3. THE WARDING LOCKS - PRESS the four ember-runes in order I->IV. A wrong
+        press wakes a barrow archer and darkens the runes; begin again from I.
    Only past all three does the last gate open onto Ashwing's Rest - the dragon
    conversation is the END of the dungeon, exactly as the fire-heart should be. */
-const EDEEP = { // room bands and the tiles each sealed gate occupies (x 63..67)
-  gate1:{y:88, x0:63, x1:67}, gate2:{y:54, x0:63, x1:67}, gate3:{y:21, x0:63, x1:67}
+const EDEEP = { // the tiles each sealed gate occupies (the 3-wide central corridors)
+  gate1:{y:57, x0:39, x1:41}, gate2:{y:38, x0:39, x1:41}, gate3:{y:19, x0:39, x1:41}
 };
+let EDEEP_WALLS = [];   // basalt tiles that read as visible walls (bordering the floor)
 function genEastDeep(){
   // the whole map begins as solid basalt; we cut the chambers out of it
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(54,128,76,144);   // THE EMBERTHROAT - entry landing (the way up sits here)
-  carve(63,114,67,128);   // corridor A -> the Ember Font
-  carve(44,92,86,114);    // THE EMBER FONT - visit-all plate chamber
-  carve(63,80,67,92);     // corridor B (Gate 1 seals it at y=88)
-  carve(44,60,86,80);     // THE SUNKEN CAUSEWAY - lever chamber
-  carve(63,48,67,60);     // corridor C (Gate 2 seals it at y=54)
-  carve(46,28,84,48);     // THE GLYPHWALK - ordered-plate chamber
-  carve(63,16,67,28);     // corridor D (Gate 3 seals it at y=21)
-  carve(38,2,92,20);      // ASHWING'S REST - the end chamber (room to break the spell)
+  carve(30,78,50,90);   // R0 THE EMBERTHROAT - entry landing (the way up sits here)
+  carve(39,73,41,79);   // doorway A -> the Ember Font
+  carve(28,59,52,74);   // R1 THE EMBER FONT - visit-all plate chamber
+  carve(39,54,41,60);   // doorway B (Gate 1 seals it at y=57)
+  carve(28,40,52,55);   // R2 THE SUNKEN CAUSEWAY - lever chamber
+  carve(39,35,41,41);   // doorway C (Gate 2 seals it at y=38)
+  carve(28,21,52,36);   // R3 THE WARDING LOCKS - button-order chamber
+  carve(39,16,41,22);   // doorway D (Gate 3 seals it at y=19)
+  carve(20,2,60,18);    // R4 ASHWING'S REST - the end chamber (room to break the spell)
+  // record the visible wall faces (basalt bordering the carved floor) BEFORE the
+  // gates go solid, so an opened gate never leaves a phantom wall behind
+  EDEEP_WALLS=[];
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y)) continue;
+    let border=false;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])
+      if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
+    if(border) EDEEP_WALLS.push([x,y]);
+  }
   // the three sealed gates start as solid basalt across their corridors
   for(const G2 of [EDEEP.gate1,EDEEP.gate2,EDEEP.gate3])
     for(let x=G2.x0;x<=G2.x1;x++){ setTile(x,G2.y,T.RUIN); setSolid(x,G2.y,1); }
@@ -846,42 +856,43 @@ function edeepLava(x,y,r){ // a molten pool that both glows and blocks the floor
 function placeObjectsEastDeep(){
   G.decor=G.decor||[];
   const Z=EASTDEEP_ZONES;
+  // the basalt walls that give the rooms their shape (baked static scenery)
+  for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   // the way back up the Emberthroat, in the landing chamber
-  G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:65.5, y:142.5, label:'the way up'});
-  setSolid(65,142,0); setTile(65,142,T.RUIN);
-  // torches down the long dark
-  for(const [tx,ty] of [[57,132],[73,132],[47,96],[83,96],[47,64],[83,64],[49,32],[81,32],[44,6],[86,6],[65,5]])
+  G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:40.5, y:88.5, label:'the way up'});
+  setSolid(40,88,0); setTile(40,88,T.RUIN);
+  // torches bracketed along the chamber walls
+  for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,41],[51,41],[29,22],[51,22],[24,4],[56,4],[40,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // ---- PUZZLE 1 - THE EMBER FONT: tread all three fonts to raise Gate 1 ----
-  edeepLava(65,105,3.2);                                   // a central molten font to route around
-  edeepLava(50,98,1.6); edeepLava(80,98,1.6);
-  for(const [tx,ty] of [[49,110],[65,96],[81,110]])
+  edeepLava(40,68,2.2);                                    // a central molten font to route around
+  edeepLava(31,63,1.2); edeepLava(49,63,1.2);
+  for(const [tx,ty] of [[33,71],[40,61],[47,71]])
     G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'font', set:false});
-  G.decor.push({kind:'firegate', gate:'g1', x:65.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
+  G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
   // ---- PUZZLE 2 - THE SUNKEN CAUSEWAY: throw the floodgate lever ----
-  // a broad lava channel bars the room; the lever is reached around its west end
-  for(let x=48;x<=82;x++){ if(x<58||x>72) edeepLava(x,71,1.1); }   // the channel (a walkable notch at x58..72)
-  edeepLava(60,71,1.0); edeepLava(70,71,1.0);
-  G.decor.push({kind:'emberlever', x:47.5, y:64.5, on:false, gate:'g2', label:'the floodgate lever'});
-  G.decor.push({kind:'firegate', gate:'g2', x:65.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
-  // ---- PUZZLE 3 - THE GLYPHWALK: tread the four glyphs I->IV in order ----
-  edeepLava(65,38,2.4);
-  for(const [tx,ty,ord] of [[50,42,1],[80,42,2],[80,32,3],[50,32,4]])
-    G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'glyph', ord, set:false});
-  G.decor.push({kind:'firegate', gate:'g3', x:65.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
+  // a lava channel bars the room; the lever waits past the notch, to the north-west
+  for(let x=30;x<=50;x++){ if(x<38||x>42) edeepLava(x,48,1.0); }   // the channel (a walkable notch at x38..42)
+  G.decor.push({kind:'emberlever', x:30.5, y:44.5, on:false, gate:'g2', label:'the floodgate lever'});
+  G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
+  // ---- PUZZLE 3 - THE WARDING LOCKS: press the four runes in order I->IV ----
+  // a wrong press wakes a barrow archer and darkens every rune
+  for(const [tx,ty,ord] of [[32,33,1],[48,33,2],[48,24,3],[32,24,4]])
+    G.decor.push({kind:'emberbutton', x:tx+0.5, y:ty+0.5, group:'lock', ord, set:false});
+  G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- ASHWING'S REST: the dragon dozes here; talking to him IS the finale ----
-  edeepLava(48,7,1.8); edeepLava(82,7,1.8);
-  G.decor.push({kind:'dragonrest', x:65.5, y:9.5});
-  G.decor.push({kind:'chest', x:53.5, y:14.5, deep:1, rich:9});
+  edeepLava(24,6,1.6); edeepLava(56,6,1.6);
+  G.decor.push({kind:'dragonrest', x:40.5, y:9.5});
+  G.decor.push({kind:'chest', x:26.5, y:15.5, deep:1, rich:9});
   G.critters=[];
   G._emberPlate=null;   // reset the plate-tread tracker for this world
 }
 function spawnMobsEastDeep(){
-  // bristlebacks have denned in the warm dark of the lower chambers (Chapter III
-  // level range) - a little resistance, but the LOCKS are the real challenge
-  const packs=[ [EASTDEEP_ZONES.font,3], [EASTDEEP_ZONES.causeway,3], [EASTDEEP_ZONES.glyph,2] ];
+  // bristlebacks have denned in the warm dark of the chambers - a little
+  // resistance, but the LOCKS are the real challenge
+  const packs=[ [EASTDEEP_ZONES.font,2], [EASTDEEP_ZONES.causeway,2], [EASTDEEP_ZONES.glyph,1] ];
   for(const [z,n] of packs){
-    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.6;
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.55;
       const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
       if(sp) spawnMob('boar', sp[0], sp[1]); }
   }
@@ -914,7 +925,7 @@ function openFireGate(gate){
   if(msg) banner(msg[0],msg[1]);
   if(gate==='g1') toast('All three fonts flare gold at once and, deep in the wall, a counterweight lets go - the Emberfont Gate grinds up into the rock.',5000);
   else if(gate==='g2') toast('Old iron shrieks and the floodgate hauls open - the lava channel drains hissing into the dark, and the Causeway Gate lifts.',5200);
-  else toast('The four glyphs blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
+  else toast('The four runes blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
 }
 function pullEmberLever(b){
   if(b.on){ toast('The floodgate is already thrown - the lava has drained north.',3200); return; }
@@ -934,18 +945,27 @@ function stepEmberPlate(b){
     else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#ffd8a0',1.1);
     return;
   }
-  if(b.group==='glyph'){ // ordered: I,II,III,IV or it all resets
-    const grp=G.decor.filter(d=>d.kind==='emberplate' && d.group==='glyph');
-    const nextNeeded=grp.filter(d=>d.set).length+1;
-    if(b.ord===nextNeeded){
-      b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#ffb04a',10,1.6);
-      if(grp.every(d=>d.set)) openFireGate('g3');
-    } else {
-      for(const d of grp) d.set=false;
-      Snd.hit&&Snd.hit(); G.shake=0.35; burst(b.x,b.y-0.2,'#5a3020',12,1.8);
-      toast('The glyphs gutter and go black - trodden out of order. Begin again from <b>I</b>.',3600);
-    }
-    return;
+}
+/* THE WARDING LOCKS: press the four ember-runes in order I->IV. A wrong press
+   darkens every rune and wakes a barrow archer out of the ash. */
+function pressEmberButton(b){
+  const grp=G.decor.filter(d=>d.kind==='emberbutton' && d.group===(b.group||'lock'));
+  if(b.set){ toast('That rune already burns. The order runs <b>I - II - III - IV</b>.',2600); return; }
+  const nextNeeded=grp.filter(d=>d.set).length+1;
+  if(b.ord===nextNeeded){
+    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.4,'#ffb04a',12,1.8);
+    addFloat(['','I','II','III','IV','V'][b.ord]||'', b.x,b.y-1.5,'#ffe0b0',1.0);
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    if(grp.every(d=>d.set)){ openFireGate('g3'); }
+  } else {
+    for(const d of grp) d.set=false;             // the whole ward resets
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    Snd.hit&&Snd.hit(); if(Snd.boss) Snd.boss(); G.shake=0.4;
+    burst(b.x,b.y-0.4,'#5a3020',14,2);
+    const sp=findOpenNear(Math.round(b.x), Math.round(b.y)-1, 4) || [Math.round(b.x), Math.round(b.y)];
+    const m=spawnMob('archer', sp[0], sp[1]);
+    if(m){ m.state='chase'; m.respawnT=-1; m.noAggroT=0; shockwave(m.x,m.y,'rgba(120,150,180,0.7)',24); burst(m.x,m.y-0.4,'#c8d8e8',14,1.8); }
+    toast('Wrong rune! The ward flares and a <b>barrow archer</b> claws up out of the ash. The runes go dark - begin again from <b>I</b>.',4200);
   }
 }
 function updateEastDeep(dt){
@@ -2622,7 +2642,7 @@ function switchWorld(id){
   if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
     setTimeout(()=>toast('<b>The Rimefissure</b> - the ice underfoot in the sliding halls is slick as glass. <b>Step onto it and you glide</b> in one direction until a wall or solid footing stops you. Read the room, then push off.',9000),1400); }
   if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
-    setTimeout(()=>toast('<b>The Emberdeep</b> - Mount Kea is hollow, and locked. Three chambers bar the way up to Ashwing: <b>light every ember-font</b>, <b>throw the floodgate lever</b>, then <b>tread the four glyphs in order</b>. The dragon waits at the very top.',9500),1400); }
+    setTimeout(()=>toast('<b>The Emberdeep</b> - Mount Kea is hollow, walled, and locked. Three warded chambers bar the way up to Ashwing: <b>light every ember-font</b>, <b>throw the floodgate lever</b>, then <b>press the four runes in order I-IV</b> (a wrong press wakes a barrow archer). The dragon waits at the very top.',9800),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.
