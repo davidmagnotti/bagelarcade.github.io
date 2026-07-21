@@ -62,7 +62,7 @@ function pickClickTarget(wx,wy){
     go:()=>{ facePoint(n.x,n.y); openDialog(n); }}); }
   for(const n of G.nodes){
     if(n.dead) continue;
-    if(n.kind==='fish') cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:1.9,go:()=>{ facePoint(n.x,n.y); fishAction(n); }});
+    if(n.kind==='fish') cand.push({type:'inter',x:n.x,y:n.y,r:0.95,range:2.4,go:()=>{ facePoint(n.x,n.y); fishAction(n); }});
     else cand.push({type:'gather',x:n.x,y:n.y,r:0.9,range:1.5,n});
   }
   for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});

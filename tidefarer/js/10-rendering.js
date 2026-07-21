@@ -946,10 +946,11 @@ function drawDecor(b,s){
          : (b.kind==='tower' && b.tall) ? SPR.towerTall
          : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:58) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
+  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:92) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
   // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a
-  // big-but-crisp, well-seated keep. Barik's keep stays its small size at 0.2.
-  const BS=b.kind==='castle'?(b.grand?0.9:0.2) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?1.28 : 1;
+  // big-but-crisp, well-seated keep. Barik's keep draws at 0.4 - twice its old
+  // 0.2, scaled uniformly (no stretch) so it reads as a proper keep.
+  const BS=b.kind==='castle'?(b.grand?0.9:0.4) : (b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16 : b.kind==='resort'?1.28 : 1;
   cx.drawImage(S, s.x-S.width*BS/2, s.y-S.height*BS+ (b.kind==='boat'?18:10), S.width*BS, S.height*BS);
   if((b.kind==='house'||b.kind==='house2'||b.kind==='barn') && b.label) drawSign(b,s,BS);
   if(b.shop){ // a bobbing gold coin marks a stall you can buy from

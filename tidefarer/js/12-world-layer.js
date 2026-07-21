@@ -315,9 +315,9 @@ function placeObjectsMain(){
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
-  // Barik Keep - the Queen's seat
+  // Barik Keep - the Duchess's seat
   const CK=ZONES.castle;
-  addBuilding('castle', CK.x,CK.y-3,'Barik Keep - Hall of Queen Maelis');
+  addBuilding('castle', CK.x,CK.y-3,'Barik Keep - Hall of Duchess Maelis');
   addBuilding('house2',CK.x-6,CK.y+2,'Keep barracks');
   addBuilding('house2',CK.x+6,CK.y+2,'Keep granary');
   addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
@@ -420,10 +420,10 @@ function spawnBarikFolk(){
 }
 function spawnRealmFolk(){
   const CK=ZONES.castle, SP=ZONES.spire, V=ZONES.village, VM=ZONES.vael;
-  G.npcs.push(makeNPC('maelis','Queen Maelis of Barik', CK.x+0.5,CK.y+0.8,
+  G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', CK.x+0.5,CK.y+0.8,
     {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
-    ["Barik feeds three duchies and fears one: the Vael March, north-east, where my cousin plays at war.",
-     "A queen rules by ledger and by patience. The sword is for those who run out of both."],0.5));
+    ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
+     "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
   G.npcs.push(makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
     ["Her Majesty receives travelers. Mind your manners and your mud."],0.4));
@@ -458,7 +458,7 @@ function spawnRealmFolk(){
     G.npcs.push(makeNPC('castell','Castellan of the Vael', VM.x-6.5,VM.y+6.5,
       {skin:'#c09070',hair:'#3a3230',shirt:'#5e2a2a',pants:'#3a2020',cloakless:1,armor:1,beard:'#3a3230'},
       ["Turn back, Barik-friend. The March answers to its own crown now.",
-       "The Queen's cousin pays iron for iron. You've been warned once."],0.4));
+       "The Duchess's cousin pays iron for iron. You've been warned once."],0.4));
 }
 function spawnVaelCaptain(x,y){
   const cap=spawnMob('raidcap', x, y);
@@ -2298,7 +2298,7 @@ function buildExtraSprites(){
       g.fillRect(172,wy,12,18); g.strokeRect(172,wy,12,18); }
     // warm lit window
     g.fillStyle='#ffce7a'; g.fillRect(145,93,10,16);
-    // the Queen's banner on the keep
+    // the Duchess's banner on the keep
     g.strokeStyle='#3a2a1a'; g.lineWidth=4;
     g.beginPath(); g.moveTo(150,22); g.lineTo(150,2); g.stroke();
     g.strokeStyle=OUT; g.lineWidth=2;

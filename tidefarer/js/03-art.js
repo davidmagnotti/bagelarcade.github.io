@@ -341,12 +341,14 @@ function buildSprites(){
     g.fillStyle='#4a5d9c'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2+34,64); g.closePath(); g.fill();
     g.fillStyle='#5a6fb5'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2,64); g.closePath(); g.fill();
     g.fillStyle='#ffd76a'; g.beginPath(); g.arc(w/2,4,4,0,TAU); g.fill();
-    // door - a proper person-height arched doorway (not the old stubby hatch)
-    g.fillStyle='#3a2614'; g.beginPath(); g.arc(w/2,h-42,14,Math.PI,0); g.fill(); g.fillRect(w/2-14,h-42,28,34);
-    g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-41,11,Math.PI,0); g.fill(); g.fillRect(w/2-11,h-41,22,32); // inner planks
+    // door - a person-height arched doorway, seated at the shaft base. (It used
+    // to sit ~16px lower, hanging below the stonework, so it read as a door
+    // floating in front of the tower.)
+    g.fillStyle='#3a2614'; g.beginPath(); g.arc(w/2,h-58,14,Math.PI,0); g.fill(); g.fillRect(w/2-14,h-58,28,34);
+    g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-57,11,Math.PI,0); g.fill(); g.fillRect(w/2-11,h-57,22,32); // inner planks
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
-    g.beginPath(); g.moveTo(w/2,h-41); g.lineTo(w/2,h-9); g.stroke();                 // plank seam
-    g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-26,1.7,0,TAU); g.fill();       // handle
+    g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
+    g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
   });
   // A twice-as-tall tower - NOT a stretched one. Same shaft width, stone-course
   // spacing, window size, roof and door as SPR.tower; the shaft just runs much
@@ -365,12 +367,14 @@ function buildSprites(){
     g.fillStyle='#4a5d9c'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2+34,64); g.closePath(); g.fill();
     g.fillStyle='#5a6fb5'; g.beginPath(); g.moveTo(w/2-34,64); g.lineTo(w/2,6); g.lineTo(w/2,64); g.closePath(); g.fill();
     g.fillStyle='#ffd76a'; g.beginPath(); g.arc(w/2,4,4,0,TAU); g.fill();
-    // door - a proper person-height arched doorway (not the old stubby hatch)
-    g.fillStyle='#3a2614'; g.beginPath(); g.arc(w/2,h-42,14,Math.PI,0); g.fill(); g.fillRect(w/2-14,h-42,28,34);
-    g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-41,11,Math.PI,0); g.fill(); g.fillRect(w/2-11,h-41,22,32); // inner planks
+    // door - a person-height arched doorway, seated at the shaft base. (It used
+    // to sit ~16px lower, hanging below the stonework, so it read as a door
+    // floating in front of the tower.)
+    g.fillStyle='#3a2614'; g.beginPath(); g.arc(w/2,h-58,14,Math.PI,0); g.fill(); g.fillRect(w/2-14,h-58,28,34);
+    g.fillStyle='#4a3218'; g.beginPath(); g.arc(w/2,h-57,11,Math.PI,0); g.fill(); g.fillRect(w/2-11,h-57,22,32); // inner planks
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
-    g.beginPath(); g.moveTo(w/2,h-41); g.lineTo(w/2,h-9); g.stroke();                 // plank seam
-    g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-26,1.7,0,TAU); g.fill();       // handle
+    g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
+    g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
   });
   SPR.well = makeCanvas(70,80,(g,w,h)=>{
     g.fillStyle='#7d7d85'; g.beginPath(); g.ellipse(w/2,h-18,22,12,0,0,TAU); g.fill();

@@ -165,7 +165,7 @@ function enterHouse(b){
     resort:{line:'Sea-view windows, cane chairs, and the salt-sweet hush of a grand hotel lobby.'},
     igloo:{line:'Curved snow-block walls, a fire pit at the heart, and furs enough to sleep through any storm.'}
   };
-  const dims = b.kind==='castle'? [15,9] : b.kind==='resort'? [30,20] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
+  const dims = b.kind==='castle'? [17,12] : b.kind==='resort'? [30,20] : (String(b.label||'').toLowerCase().includes('trade hall')? [12,7] : [9,7]);
   const I={kind:b.kind, w:dims[0], h:dims[1], ret:{x:P.x,y:P.y+0.3}, exit:{x:dims[0]/2,y:dims[1]-0.9}, t:0, furn:[]};
   if(String(b.label||'').toLowerCase().includes('trade hall')) I.vault=1;
   if(String(b.label||'').toLowerCase().includes('homestead')) I.home=1;
@@ -239,15 +239,19 @@ function enterHouse(b){
     F('crate',I.w-2.0,4.6,0.55,0.45); F('rug',I.w/2,4.4,0,0,false);
   }
   if(b.kind==='castle'){
-    F('rug',7.5,5.0,0,0,false);
-    F('throne',7.5,1.7,1.0,0.6);
-    F('banner',3.4,1.25,0.9,0.25); F('banner',11.6,1.25,0.9,0.25);
-    F('column',4.6,3.0,0.5,0.45); F('column',10.4,3.0,0.5,0.45);
-    F('column',4.6,6.0,0.5,0.45); F('column',10.4,6.0,0.5,0.45);
-    F('hearth',1.9,1.35,1.1,0.35); F('hearth',13.1,1.35,1.1,0.35);
-    F('books',5.7,1.3,1.3,0.3); F('books',9.3,1.3,1.3,0.3);
-    F('table',7.5,3.6,1.5,0.6);
-    F('stool',5.6,4.4,0.35,0.3); F('stool',9.4,4.4,0.35,0.3);
+    // a grand throne hall: a long carpet runner up a colonnaded nave to the
+    // throne, banners and braziers down the walls, and a clear central aisle
+    F('throne',8.5,1.7,1.0,0.6);
+    F('rug',8.5,4.0,0,0,false); F('rug',8.5,6.4,0,0,false); F('rug',8.5,8.8,0,0,false);
+    F('banner',2.6,1.25,0.9,0.25); F('banner',5.9,1.25,0.9,0.25);
+    F('banner',11.1,1.25,0.9,0.25); F('banner',14.4,1.25,0.9,0.25);
+    F('column',4.5,3.4,0.5,0.45); F('column',12.5,3.4,0.5,0.45);
+    F('column',4.5,6.4,0.5,0.45); F('column',12.5,6.4,0.5,0.45);
+    F('column',4.5,9.4,0.5,0.45); F('column',12.5,9.4,0.5,0.45);
+    F('hearth',1.9,1.35,1.1,0.35); F('hearth',15.1,1.35,1.1,0.35);
+    F('books',6.6,1.3,1.2,0.3); F('books',10.4,1.3,1.2,0.3);
+    F('plant',2.4,4.8,0.6,0.6); F('plant',14.6,4.8,0.6,0.6);
+    F('vase',2.4,8.6,0.5,0.5); F('vase',14.6,8.6,0.5,0.5);
   }
   // per-house variation: no two homes furnished quite alike
   if(b.kind==='house'||b.kind==='house2'){

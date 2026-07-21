@@ -92,14 +92,18 @@ function updateHollowFire(dt){
 
 /* ---- nearest interactable ---- */
 function nearestInteract(){
-  let best=null, bd=1.9;
-  for(const n of G.npcs){ if(n.hidden) continue; const d=dist(P.x,P.y,n.x,n.y); if(d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
+  // bd tracks the nearest candidate; each candidate enforces its own reach.
+  // (It used to start at 1.9, which silently capped every longer reach below -
+  // most visibly fishing, whose 2.3 range never applied, so a fish node just out
+  // of a dock's reach gave no prompt at all.)
+  let best=null, bd=Infinity;
+  for(const n of G.npcs){ if(n.hidden) continue; const d=dist(P.x,P.y,n.x,n.y); if(d<1.9 && d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
   if(G.cat && !G.cat.following){ const d=dist(P.x,P.y,G.cat.x,G.cat.y);
     if(d<1.9 && d<bd){bd=d;best={type:'cat',o:G.cat,label:'Pet'};} }
   for(const n of G.nodes){
     if(n.dead) continue;
     const d=dist(P.x,P.y,n.x,n.y);
-    const rng = n.kind==='fish'?2.3:1.7;
+    const rng = n.kind==='fish'?2.4:1.7;   // fish sit in open water - reach across from the bank
     if(d<rng && d<bd){
       bd=d;
       const lbl={tree:'Chop',rock:'Mine',mushroom:'Pick',shell:'Gather',apple:'Pick',fish: P.fishing? (P.fishing.bit?'Strike!':'…wait…') :'Fish'}[n.kind];
