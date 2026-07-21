@@ -49,6 +49,10 @@ function questReady(id){
 }
 function acceptQuest(id){
   P.quests[id]='active'; P.prog[id]=0;
+  if(id==='kit'){ // Bram hands over the tools on the spot; the sword is the reward for finishing
+    P.kit=true; if(typeof buildHotbar==='function') buildHotbar();
+    addFloat('+ Woodsman\'s Axe & Pick', P.x,P.y-1.4,'#ffe9a8');
+    setTimeout(()=>toast('<b style="color:var(--ember)">Axe &amp; pick in hand!</b> You can <b>chop trees</b> and <b>mine stone</b> now. Bring Bram <b>1 wood</b> and <b>1 stone</b> and he\'ll forge your iron sword.',5600),400); }
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
