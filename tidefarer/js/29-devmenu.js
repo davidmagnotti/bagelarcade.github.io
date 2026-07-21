@@ -37,6 +37,28 @@ function freeCurse(which){
   for(const m of (G.mobs||[])){ if(['leviathan','frostwarden','serpent','dragon','mage'].includes(m.kind) && !m.dead){ m.freed=1; m.dead=true; m.respawnT=-1; } }
   ui(); note('Curse(s) freed: '+which);
 }
+// The inverse of freeCurse: mark a boss NOT defeated again, re-arm its quest,
+// and stand the boss back up (regenerating the isles it lives on).
+function resetCurse(which){
+  P.story=P.story||{}; P.prog=P.prog||{};
+  const arm=q=>{ if(QUESTS&&QUESTS[q]) P.quests[q]='active'; };  // re-offer the fight
+  const worlds=new Set();
+  if(which==='dragon'||which==='all'){
+    P.eastDragonFreed=0; P.eastDragonFought=0; P.metDragon=0; P.mageHuntStarted=0;
+    delete P.prog.vhunt; delete P.quests.vhunt;
+    arm('wyrm'); P.prog.wyrmReplayed=1;   // keep the load-time migration from re-firing
+    worlds.add('east'); worlds.add('eastdeep');
+  }
+  if(which==='tide' ||which==='all'){ P.story.tideCalm=0; arm('tide'); worlds.add('wind'); }
+  if(which==='aerie'||which==='all'){ P.story.aerieFreed=0; arm('roost'); worlds.add('aerie'); worlds.add('aeriedeep'); }
+  if(which==='frost'||which==='all'){ P.story.frostFreed=0; P.story.deepDone=0; arm('thaw'); worlds.add('frost'); worlds.add('frostdeep'); }
+  // drop any lingering freed boss on the current map so a fresh one can stand
+  for(const m of (G.mobs||[])){ if(['leviathan','frostwarden','serpent','dragon','icecolossus','mage'].includes(m.kind)){ m.dead=true; m.freed=0; m.respawnT=-1; } }
+  // drop the cached isles so bosses respawn on re-entry; rebuild the one you're in now
+  for(const id of worlds){ if(typeof WORLDS!=='undefined' && WORLDS[id]) delete WORLDS[id]; regenWorld(id); }
+  if(typeof refreshDungeonLabels==='function') refreshDungeonLabels();  // keep #96's toggle labels in sync
+  ui(); note('Boss(es) reset to not-defeated: '+which);
+}
 function clearMobs(){
   let n=0; for(const m of (G.mobs||[])){ if(!m.dead){ m.dead=true; m.respawnT=-1; n++; } }
   note('Cleared '+n+' foes on this map');
@@ -121,6 +143,13 @@ const SECTIONS=[
       .concat([ ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
                 ['Win ALL dungeons',   ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
   ],
+  // Covers the bosses the Dungeons toggle doesn't: the Leviathan (Windsurf strait),
+  // the Ashwing fight itself, and the Frozen surface Warden - not just the deep colossus.
+  ['Reset bosses (un-defeat)', [
+    ['Reset Dragon',()=>resetCurse('dragon')], ['Reset Leviathan',()=>resetCurse('tide')],
+    ['Reset Aerie',()=>resetCurse('aerie')], ['Reset Frozen',()=>resetCurse('frost')],
+    ['Reset ALL bosses',()=>resetCurse('all')],
+  ]],
   ['Quests', [
     ['Complete active quests',()=>completeActive()],
   ]],
