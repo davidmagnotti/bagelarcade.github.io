@@ -623,7 +623,12 @@ function updatePlayer(dt){
   if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
-    moveEntity(P, P.dir.x*P.speed*2.7*dt, P.dir.y*P.speed*2.7*dt, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding);
+    const _rx=P.x, _ry=P.y, _step=P.speed*2.7*dt;
+    moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding);
+    // rolled straight into a wall (or a corner) with no ground covered: end the roll
+    // now so control returns at once, instead of the legs churning against the wall
+    // for the rest of the animation. Sliding ALONG a wall still clears this threshold.
+    if(Math.hypot(P.x-_rx,P.y-_ry) < _step*0.4){ P.rollT=0; P.rollCd=Math.min(P.rollCd,0.35); }
     P.anim+=P.speed*2.7*dt*3.1; P.moving=true;
     P.stepT=(P.stepT||0)-dt;
     if(P.stepT<=0 && !G.interior){
