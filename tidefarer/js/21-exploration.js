@@ -190,9 +190,11 @@ function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
-  // wake washed-up on the driftwood shore, by the dock and Captain Brant's wreck
-  const sp=(WORLD_DEFS&&WORLD_DEFS.isle&&WORLD_DEFS.isle.spawn)||{x:32.5,y:61.5};
-  P.x=sp.x; P.y=sp.y; P.dir={x:0,y:1};
+  // start beside Bram at the forge - your first stop for tools and a blade
+  const bram=(G.npcs||[]).find(n=>n.id==='bram');
+  if(bram){ P.x=bram.x-3; P.y=bram.y+1; } else { P.x=56.5; P.y=58.5; }
+  P.dir={x:1,y:0};
+  if(typeof unstickEntity==='function') unstickEntity(P);   // never wake wedged in a wall
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   openingQuests();

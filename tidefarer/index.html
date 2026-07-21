@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- Always revalidate the page so a new build's script versions load right away
+     (the ?v= bumps only bust the JS/CSS; without this the browser can keep a
+     stale index.html that still points at old scripts). -->
+<meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=103">
+<link rel="stylesheet" href="styles.css?v=104">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -162,35 +166,35 @@
   </div>
 </div>
 
-<script src="js/01-core.js?v=103"></script>
-<script src="js/01b-gpu-probe.js?v=103"></script>
-<script src="js/02-worldgen.js?v=103"></script>
-<script src="js/03-art.js?v=103"></script>
-<script src="js/04-data.js?v=103"></script>
-<script src="js/05-inventory-skills-quests.js?v=103"></script>
-<script src="js/06-dialog.js?v=103"></script>
-<script src="js/07-input.js?v=103"></script>
-<script src="js/08-ui-panels.js?v=103"></script>
-<script src="js/09-gameplay.js?v=103"></script>
-<script src="js/10-rendering.js?v=103"></script>
-<script src="js/11-main-loop.js?v=103"></script>
-<script src="js/12-world-layer.js?v=103"></script>
-<script src="js/13-aaa-layer.js?v=103"></script>
-<script src="js/14-meta-layer.js?v=103"></script>
-<script src="js/15-interiors.js?v=103"></script>
-<script src="js/16-autosave.js?v=103"></script>
-<script src="js/17-pause-menu.js?v=103"></script>
-<script src="js/18-economy.js?v=103"></script>
-<script src="js/19-purpose.js?v=103"></script>
-<script src="js/20-lore.js?v=103"></script>
-<script src="js/21-exploration.js?v=103"></script>
-<script src="js/22-definitive-edition.js?v=103"></script>
-<script src="js/23-pause-affordance.js?v=103"></script>
-<script src="js/24-perf.js?v=103"></script>
-<script src="js/25-debug.js?v=103"></script>
-<script src="js/26-bench.js?v=103"></script>
-<script src="js/27-perfmode.js?v=103"></script>
-<script src="js/28-fxpanel.js?v=103"></script>
-<script src="js/29-devmenu.js?v=103"></script>
+<script src="js/01-core.js?v=104"></script>
+<script src="js/01b-gpu-probe.js?v=104"></script>
+<script src="js/02-worldgen.js?v=104"></script>
+<script src="js/03-art.js?v=104"></script>
+<script src="js/04-data.js?v=104"></script>
+<script src="js/05-inventory-skills-quests.js?v=104"></script>
+<script src="js/06-dialog.js?v=104"></script>
+<script src="js/07-input.js?v=104"></script>
+<script src="js/08-ui-panels.js?v=104"></script>
+<script src="js/09-gameplay.js?v=104"></script>
+<script src="js/10-rendering.js?v=104"></script>
+<script src="js/11-main-loop.js?v=104"></script>
+<script src="js/12-world-layer.js?v=104"></script>
+<script src="js/13-aaa-layer.js?v=104"></script>
+<script src="js/14-meta-layer.js?v=104"></script>
+<script src="js/15-interiors.js?v=104"></script>
+<script src="js/16-autosave.js?v=104"></script>
+<script src="js/17-pause-menu.js?v=104"></script>
+<script src="js/18-economy.js?v=104"></script>
+<script src="js/19-purpose.js?v=104"></script>
+<script src="js/20-lore.js?v=104"></script>
+<script src="js/21-exploration.js?v=104"></script>
+<script src="js/22-definitive-edition.js?v=104"></script>
+<script src="js/23-pause-affordance.js?v=104"></script>
+<script src="js/24-perf.js?v=104"></script>
+<script src="js/25-debug.js?v=104"></script>
+<script src="js/26-bench.js?v=104"></script>
+<script src="js/27-perfmode.js?v=104"></script>
+<script src="js/28-fxpanel.js?v=104"></script>
+<script src="js/29-devmenu.js?v=104"></script>
 </body>
 </html>
