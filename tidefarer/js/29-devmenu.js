@@ -133,23 +133,21 @@ const SECTIONS=[
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
   ]],
-  ['Curses & bosses defeated', [
+  // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
+  // section instead of two. (The deep-dungeon bosses have their own toggles below.)
+  ['Bosses & curses', [
     ['Free Dragon',()=>freeCurse('dragon')], ['Free Leviathan',()=>freeCurse('tide')],
     ['Free Aerie',()=>freeCurse('aerie')], ['Free Frozen',()=>freeCurse('frost')],
-    ['Free ALL curses',()=>freeCurse('all')], ['Clear foes on this map',()=>clearMobs()],
+    ['Free ALL',()=>freeCurse('all')],
+    ['Reset Dragon',()=>resetCurse('dragon')], ['Reset Leviathan',()=>resetCurse('tide')],
+    ['Reset Aerie',()=>resetCurse('aerie')], ['Reset Frozen',()=>resetCurse('frost')],
+    ['Reset ALL',()=>resetCurse('all')], ['Clear foes here',()=>clearMobs()],
   ]],
   ['Dungeons (tap to toggle won / not)',
     DUNGEONS.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
       .concat([ ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
                 ['Win ALL dungeons',   ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
   ],
-  // Covers the bosses the Dungeons toggle doesn't: the Leviathan (Windsurf strait),
-  // the Ashwing fight itself, and the Frozen surface Warden - not just the deep colossus.
-  ['Reset bosses (un-defeat)', [
-    ['Reset Dragon',()=>resetCurse('dragon')], ['Reset Leviathan',()=>resetCurse('tide')],
-    ['Reset Aerie',()=>resetCurse('aerie')], ['Reset Frozen',()=>resetCurse('frost')],
-    ['Reset ALL bosses',()=>resetCurse('all')],
-  ]],
   ['Quests', [
     ['Complete active quests',()=>completeActive()],
   ]],
@@ -163,37 +161,55 @@ const SECTIONS=[
   ]],
 ];
 
+let _openSec=-1;   // which section is expanded (accordion: one at a time). -1 = all collapsed.
 function build(){
   if(panelEl()) return;
   const p=document.createElement('div'); p.id='devMenu';
-  p.style.cssText='position:fixed;top:38px;left:8px;z-index:99999;width:214px;max-height:82vh;overflow:auto;'+
-    'display:none;padding:9px 10px 12px;border-radius:10px;background:rgba(14,10,6,.94);'+
+  p.style.cssText='position:fixed;top:34px;left:8px;z-index:99999;width:206px;max-height:86vh;overflow:auto;'+
+    'display:none;padding:8px 9px 10px;border-radius:10px;background:rgba(14,10,6,.95);'+
     'border:1px solid #4a3826;box-shadow:0 6px 24px rgba(0,0,0,.55);font-family:Verdana,sans-serif;color:#e8dcc4;';
-  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
-    '<b style="font-size:12px;letter-spacing:.5px;color:#ffb26b;">DEV MENU</b>'+
-    '<span id="devClose" style="cursor:pointer;font-size:14px;color:#c9a24e;padding:0 4px;">✕</span></div>'+
-    '<div style="font-size:9.5px;color:#9a8a70;margin-bottom:7px;">Press <b>`</b> to toggle. Remove for release.</div>';
+  const head=document.createElement('div');
+  head.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;';
+  head.innerHTML='<b style="font-size:12px;letter-spacing:.5px;color:#ffb26b;">DEV MENU</b>'+
+    '<span id="devClose" style="cursor:pointer;font-size:14px;color:#c9a24e;padding:0 4px;">✕</span>';
+  p.appendChild(head);
+  const hint=document.createElement('div');
+  hint.style.cssText='font-size:9px;color:#9a8a70;margin-bottom:5px;';
+  hint.innerHTML='Press <b>`</b> to toggle · tap a heading to open';
+  p.appendChild(hint);
+
+  const boxes=[];
   SECTIONS.forEach((sec,si)=>{
-    html+='<div style="font-size:9.5px;letter-spacing:.5px;color:#c98a4a;text-transform:uppercase;margin:7px 0 3px;">'+sec[0]+'</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:4px;" data-sec="'+si+'"></div>';
-  });
-  p.innerHTML=html;
-  document.body.appendChild(p);
-  SECTIONS.forEach((sec,si)=>{
-    const box=p.querySelector('[data-sec="'+si+'"]');
+    const hdr=document.createElement('div');
+    hdr.style.cssText='font-size:9.5px;letter-spacing:.4px;color:#c98a4a;text-transform:uppercase;'+
+      'margin-top:3px;padding:4px 2px;cursor:pointer;user-select:none;border-top:1px solid #33281a;'+
+      'display:flex;justify-content:space-between;align-items:center;';
+    hdr.innerHTML='<span>'+sec[0]+'</span><span class="dv-car" style="color:#7a6244;">▸</span>';
+    const box=document.createElement('div');
+    box.style.cssText='display:none;flex-wrap:wrap;gap:4px;padding:3px 0 4px;';
+    boxes.push(box);
+    hdr.onclick=(ev)=>{ ev.stopPropagation();
+      const wasOpen = box.style.display!=='none';
+      boxes.forEach((bx,i)=>{ bx.style.display='none';                      // accordion: close others
+        const c=bx.previousSibling && bx.previousSibling.querySelector('.dv-car'); if(c) c.textContent='▸'; });
+      if(!wasOpen){ box.style.display='flex'; hdr.querySelector('.dv-car').textContent='▾'; _openSec=si;
+        try{ refreshDungeonLabels(); }catch(e){} } else { _openSec=-1; }
+    };
     sec[1].forEach(([label,fn,meta])=>{
       const b=document.createElement('button');
       b.textContent=label;
       if(meta && meta.dflag){ b.setAttribute('data-dflag',meta.dflag); b.setAttribute('data-dname',meta.dname);
         try{ b.textContent=dungLabel(meta.dname,meta.dflag); }catch(e){} }
-      b.style.cssText='flex:1 1 auto;min-width:62px;font-size:10.5px;padding:5px 6px;cursor:pointer;'+
-        'background:#2b2013;color:#e8dcc4;border:1px solid #4a3826;border-radius:6px;';
+      b.style.cssText='flex:1 1 auto;min-width:60px;font-size:10px;padding:4px 5px;cursor:pointer;'+
+        'background:#2b2013;color:#e8dcc4;border:1px solid #4a3826;border-radius:5px;';
       b.onmouseover=()=>b.style.background='#3a2c1a'; b.onmouseout=()=>b.style.background='#2b2013';
       b.onclick=(ev)=>{ ev.stopPropagation(); try{ fn(b); }catch(e){ note('err: '+e.message); } };
       box.appendChild(b);
     });
+    p.appendChild(hdr); p.appendChild(box);
   });
-  p.querySelector('#devClose').onclick=()=>toggle(false);
+  head.querySelector('#devClose').onclick=()=>toggle(false);
+  document.body.appendChild(p);
 
   // a tiny always-visible tab to open it on touch devices
   const tab=document.createElement('div'); tab.id='devTab';
