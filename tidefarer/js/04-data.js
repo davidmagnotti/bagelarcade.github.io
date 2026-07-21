@@ -134,7 +134,7 @@ const QUESTS = {
   cat:{ giver:'nia', title:'Where\'s Pip?', kind:'special',
     brief:'My cat Pip chased a moth into the Whisperwood and never came back! He\'s orange and he\'s the BEST cat. Please find him? He likes tall trees…',
     log:'Find Pip the cat in the Whisperwood, west of the village.',
-    midText:'PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything.',
+    doneText:'PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything.',
     rw:{item:{potion:2}, xp:{melee:40}, gold:3} },
   mushrooms:{ giver:'orin', title:'Light in the Dark', kind:'gather', need:{mushroom:3},
     brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will wake the staff that\'s been asleep in my cellar.',
