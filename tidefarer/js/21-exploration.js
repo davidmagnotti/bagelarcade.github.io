@@ -97,7 +97,6 @@ function frame(ts){
   }
   if(G.paused || G.menuPause){ render(); return; }
   G.time+=dt;
-  if(CINE){ updateCine(dt); render(); if(CINE) drawCineOverlay(); return; }
   P.stats.time=(P.stats.time||0)+dt;
   if(!G.interior) stampExplore(dt);
   if(G.interior){
@@ -155,60 +154,50 @@ function boot(){
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
 }
-let CINE=null;
-function startCinematic(){
-  CINE={t:0, dur:5.2,
-    capts:[[0.2,'The strait took the ship, the cargo, and the crew.'],
-           [1.9,'It spat out one soul on the shores of Emberwick Isle.'],
-           [3.6,'CHAPTER I - TUTORIAL SHORES']]};
-  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; // locked on the castaway
-  const skip=()=>endCine();
-  window.addEventListener('pointerdown',skip,{once:true});
-  window.addEventListener('keydown',skip,{once:true});
+let CINE=null;   // retired opening cinematic - kept null so old "not during CINE" guards still read
+// The game opens on a shipwreck: Captain Brant hauls the amnesiac castaway out
+// of the surf. No letterbox cinematic - just first words on a strange shore.
+function startIntro(){
+  const brant = (G.npcs||[]).find(n=>n.id==='brant');
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; // hold on the castaway
+  if(!brant){ afterIntro(); return; }
+  P.click=null;
+  dlg.open=true; dlg.npc=brant;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent=brant.name;
+  drawPortrait(brant);
+  const p4=()=>{
+    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which beats the alternative. Get your legs under you. See <b>Bram the smith</b>, up by the forge - he\'ll put a blade in your hand. This isle has need of one.”',
+      [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+  };
+  const p3=()=>{
+    setDialog('<i>He waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>He nods slowly.</i> “Aye. The strait does that - takes the ship, the crew, and sometimes the memory along with them. Don\'t claw at it. A name washes back, or you earn a new one.”',
+      [{label:'Continue', fn:p4}]);
+  };
+  const p2=()=>{
+    setDialog('“Your ship went down on the strait - I watched the mast go under. Same reef that gutted my own <b>Tidewalker</b>, yonder at the dock.” <i>The old captain squints at you.</i> “You\'re the only soul the sea gave back. Do you know it - your ship? Your name? Where you were bound?”',
+      [{label:'…I- I don\'t remember.', fn:p3}]);
+  };
+  setDialog('<i>You come to face-down in the surf, salt raw in your throat. A weathered hand closes on your collar and hauls you up onto the sand.</i> “Easy - easy. You\'re alive. Thought the reef had kept you for good.” <i>He sets you on your feet and steadies you.</i>',
+    [{label:'…Where am I?', fn:p2}]);
 }
-function endCine(){
-  if(!CINE) return;
-  CINE=null;
-  banner('EMBERWICK ISLE','TUTORIAL SHORES - CHAPTER I');
-  setTimeout(()=> toast('Emberwick\'s folk each need a hand - seek the <b style="color:var(--ember)">!</b> markers. Start with <b style="color:var(--ember)">Bram the Smith</b> at the forge; he\'ll arm you for what\'s coming.',6000),600);
-  Snd.quest();
-}
-function drawCineOverlay(){
-  const bh=Math.min(1, CINE.t/0.45, (CINE.dur-CINE.t)/0.6)*Math.min(76, VH*0.115);
-  cx.setTransform(DPR,0,0,DPR,0,0);
-  cx.fillStyle='#000';
-  cx.fillRect(0,0,VW,bh); cx.fillRect(0,VH-bh,VW,bh);
-  for(const [st,txt] of CINE.capts){
-    const a=Math.min(1,(CINE.t-st)/0.7, (st+2.7-CINE.t)/0.7);
-    if(a>0){
-      cx.fillStyle='rgba(236,226,204,'+a+')';
-      cx.font='italic 20px Georgia'; cx.textAlign='center';
-      cx.shadowColor='rgba(0,0,0,1)'; cx.shadowBlur=10;
-      cx.fillText(txt, VW/2, VH-bh-30);
-      cx.shadowBlur=0;
-    }
-  }
-  const sa=0.55+0.3*Math.sin(G.time*3);
-  cx.fillStyle='rgba(220,210,190,'+sa+')';
-  cx.font='12px Georgia'; cx.textAlign='center'; cx.letterSpacing='2px';
-  cx.fillText('- tap anywhere to skip -', VW/2, bh>24? bh-9 : 20);
-  cx.letterSpacing='0px';
-}
-function updateCine(dt){
-  CINE.t+=dt;
-  G.cam.x=isoX(P.x,P.y)-VW/2; // no drift, no tricks - just the castaway
-  G.cam.y=isoY(P.x,P.y)-VH/2-20;
-  if(CINE.t>=CINE.dur) endCine();
+function afterIntro(){
+  setTimeout(()=> toast('Emberwick\'s folk each need a hand - seek the <b style="color:var(--ember)">!</b> markers. Start with <b style="color:var(--ember)">Bram the Smith</b> at the forge; he\'ll arm you for what\'s coming.',6000),700);
+  if(Snd.quest) Snd.quest();
 }
 function startFresh(){
   for(const k in EXPL) delete EXPL[k];
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
+  // wake washed-up on the driftwood shore, by the dock and Captain Brant's wreck
+  const sp=(WORLD_DEFS&&WORLD_DEFS.isle&&WORLD_DEFS.isle.spawn)||{x:32.5,y:61.5};
+  P.x=sp.x; P.y=sp.y; P.dir={x:0,y:1};
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   openingQuests();
   updateQuestUI();
-  startCinematic();
+  startIntro();
 }
 // Each villager offers a single task from the start; Bram's is the way in
 // (tools + a sword), which then opens Maren's charge against the Hollow King.
