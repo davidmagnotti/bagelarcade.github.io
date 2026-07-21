@@ -190,6 +190,7 @@ function afterIntro(){
   if(Snd.quest) Snd.quest();
 }
 function startFresh(){
+  G.wiping=false;   // saving is fine again for the new game (matters on the no-reload fallback path)
   for(const k in EXPL) delete EXPL[k];
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
@@ -232,6 +233,10 @@ document.getElementById('wipeInput').addEventListener('input',function(){
 document.getElementById('wipeInput').addEventListener('keydown',e=> e.stopPropagation());
 document.getElementById('wipeConfirm').onclick=()=>{
   if(document.getElementById('wipeInput').value.trim().toLowerCase()!=='start over') return;
+  // Block any save from firing during teardown. location.reload() hides the page,
+  // which triggers the visibilitychange auto-save - that would rewrite the save we
+  // just cleared, and enterGame() would load it back (skipping the intro).
+  G.wiping=true;
   store.clear();
   document.getElementById('confirmWipe').style.display='none';
   // Full reset: reload so boot() rebuilds a pristine world and player from
