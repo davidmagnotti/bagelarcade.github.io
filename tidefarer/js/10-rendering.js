@@ -1467,34 +1467,69 @@ function drawMob(m,s){
   }
 }
 function drawMoa(s){
-  drawShadowAt(cx,s.x,s.y,15);
-  const run=Math.sin(P.anim*8);
-  cx.save(); cx.translate(s.x,s.y);
-  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=3.4; cx.lineCap='round';
-  // long runner legs, scissoring
-  cx.strokeStyle='#8a6a3a';
-  cx.beginPath(); cx.moveTo(-4,-14); cx.lineTo(-6+run*4,-6); cx.lineTo(-7+run*5,0); cx.stroke();
-  cx.beginPath(); cx.moveTo(4,-14); cx.lineTo(6-run*4,-6); cx.lineTo(7-run*5,0); cx.stroke();
-  // round feathered body
-  cx.fillStyle='#7a6242';
-  cx.beginPath(); cx.ellipse(0,-19,13,9.5,0,0,TAU); cx.fill();
-  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.8; cx.stroke();
-  cx.fillStyle='#8f7550';
-  cx.beginPath(); cx.ellipse(-3,-21,8,5.5,0,0,TAU); cx.fill();
-  // tail plume
-  cx.fillStyle='#5e4a30';
-  cx.beginPath(); cx.moveTo(-12,-22); cx.quadraticCurveTo(-20,-26,-18,-16); cx.quadraticCurveTo(-14,-14,-11,-16); cx.closePath(); cx.fill(); cx.stroke();
-  // neck + head, leaning into the run
-  const fl3=(P.dir&&P.dir.x<0)?-1:1;
-  cx.strokeStyle='#7a6242'; cx.lineWidth=4.5;
-  cx.beginPath(); cx.moveTo(fl3*8,-22); cx.quadraticCurveTo(fl3*15,-30,fl3*16,-36); cx.stroke();
-  cx.fillStyle='#8f7550';
-  cx.beginPath(); cx.arc(fl3*16,-38,4.2,0,TAU); cx.fill();
-  cx.strokeStyle='rgba(20,14,8,0.9)'; cx.lineWidth=1.6; cx.stroke();
-  cx.fillStyle='#e8b23c';
-  cx.beginPath(); cx.moveTo(fl3*19,-38); cx.lineTo(fl3*25,-36.5); cx.lineTo(fl3*19,-35.5); cx.closePath(); cx.fill(); cx.stroke();
-  cx.fillStyle='#17100a'; cx.beginPath(); cx.arc(fl3*17,-39,1.2,0,TAU); cx.fill();
-  cx.restore(); cx.lineCap='butt';
+  // Kiko is a MOA - a giant flightless ratite, tall as a door: heavy runner's
+  // legs, a deep shaggy-feathered body, a long S-curved neck and a small beaked
+  // head. Not a pig. Runs with a real two-leg gait; breathes and bobs when idle.
+  const g=cx, fl=(P.dir&&P.dir.x<0)?-1:1, moving=!!P.moving, t=G.time;
+  const ph=P.anim*8, gait=moving?1:0;
+  const bob = moving? Math.sin(ph*0.5)*1.7 : Math.sin(t*2)*0.7;   // body rise/fall
+  const OUT='rgba(22,15,8,0.85)';
+  const body='#6b5334', belly='#9a8054', dark='#48371f', bodyHi='#8a6f48';
+  const legc='#79684a', shank='#9a8768', horn='#c59a44', hornSh='#96742f';
+  const CY=-24+bob;                                                  // body centre - high, so it stands TALL
+  drawShadowAt(g,s.x,s.y,18);
+  g.save(); g.translate(s.x,s.y); g.lineCap='round'; g.lineJoin='round';
+  // a long ratite leg: shaggy thigh -> back-bending hock -> scaly shank -> 3 toes,
+  // running all the way to the ground so the bird reads tall as a door.
+  const leg=(hipx, sw, back)=>{
+    const hipY=CY+8;
+    const kneeX=hipx - fl*2 + sw*2.2, kneeY=CY+18;
+    const ankX = hipx + fl*3.5 + sw*3.6, ankY=-2;
+    g.strokeStyle= back? dark:legc; g.lineWidth=7.5;                 // shaggy thigh
+    g.beginPath(); g.moveTo(hipx,hipY); g.lineTo(kneeX,kneeY); g.stroke();
+    g.strokeStyle= back? '#5f5038':shank; g.lineWidth=3.4;            // scaly shank
+    g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(ankX,ankY); g.stroke();
+    g.strokeStyle= back? hornSh:horn; g.lineWidth=2.6;                // three forward toes
+    g.beginPath();
+    g.moveTo(ankX,ankY); g.lineTo(ankX+fl*6,1.6);
+    g.moveTo(ankX,ankY); g.lineTo(ankX+fl*8,0.4);
+    g.moveTo(ankX,ankY); g.lineTo(ankX+fl*3.5,2.4); g.stroke();
+  };
+  const A=Math.sin(ph)*1.1*gait, B=Math.sin(ph+Math.PI)*1.1*gait;
+  leg(-fl*4, B, true);                                                // far leg (behind body)
+  // ---- deep feathered body: rump bulges behind the rider, breast in front ----
+  g.fillStyle=body; g.beginPath(); g.ellipse(-fl*3,CY,15.5,11.5,0,0,TAU); g.fill();
+  g.fillStyle=belly; g.beginPath(); g.ellipse(-fl*3,CY+4,12,7,0,0,TAU); g.fill();             // lit underside
+  g.fillStyle='rgba(28,19,10,0.32)'; g.beginPath(); g.ellipse(-fl*4,CY-5,12,5,0,0,TAU); g.fill(); // shaded back
+  g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.ellipse(-fl*3,CY,15.5,11.5,0,0,TAU); g.stroke();
+  g.strokeStyle='rgba(40,28,14,0.45)'; g.lineWidth=1;                 // shaggy feather ticks
+  for(let i=-3;i<=3;i++){ g.beginPath(); g.moveTo(-fl*3+i*3.3,CY-4); g.lineTo(-fl*3+i*3.3-fl*2.4,CY+4); g.stroke(); }
+  // tail plume at the rump
+  g.fillStyle=dark;
+  g.beginPath(); g.moveTo(-fl*15,CY-3); g.quadraticCurveTo(-fl*27,CY-9,-fl*24,CY+6);
+  g.quadraticCurveTo(-fl*19,CY+8,-fl*13,CY+4); g.closePath(); g.fill();
+  g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+  // ---- long S-curved neck + small beaked head, rising in front, swaying ----
+  const sway=(moving? Math.sin(ph*0.5) : Math.sin(t*1.6))*1.8;
+  const nbX=fl*11, nbY=CY-5, hX=fl*21+sway, hY=CY-22;
+  g.strokeStyle=body; g.lineWidth=6.4;
+  g.beginPath(); g.moveTo(nbX,nbY); g.quadraticCurveTo(fl*15,CY-15, hX,hY); g.stroke();       // neck
+  g.strokeStyle=belly; g.lineWidth=2.4;                                                        // pale throat line
+  g.beginPath(); g.moveTo(nbX+fl*1.5,nbY); g.quadraticCurveTo(fl*16.5,CY-15, hX,hY+1); g.stroke();
+  g.fillStyle=bodyHi; g.save(); g.translate(hX,hY); g.scale(fl,1);                              // small head, set forward
+  g.beginPath(); g.ellipse(0.8,0,4.6,4.0,0,0,TAU); g.fill();
+  g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+  g.fillStyle=horn; g.beginPath(); g.moveTo(3.2,-0.6); g.lineTo(10,0.7); g.lineTo(3.2,2.1); g.closePath(); g.fill(); // short conical beak
+  g.strokeStyle=hornSh; g.lineWidth=0.9; g.stroke();
+  g.beginPath(); g.moveTo(3.4,0.7); g.lineTo(9.4,0.9); g.stroke();                              // beak seam
+  g.fillStyle='#140d07'; g.beginPath(); g.arc(1.4,-0.9,1.3,0,TAU); g.fill();                    // eye
+  g.fillStyle='#fff'; g.beginPath(); g.arc(1.9,-1.4,0.45,0,TAU); g.fill();
+  g.restore();
+  // ---- saddle blanket at the top of the back where the rider sits ----
+  g.fillStyle='#5a3a5e'; g.beginPath(); g.ellipse(-fl*3,CY-8,8,3.2,0,0,TAU); g.fill();
+  g.strokeStyle='#2c1830'; g.lineWidth=1.3; g.stroke();
+  leg(fl*4, A, false);                                                // near leg (over body)
+  g.restore(); g.lineCap='butt'; g.lineJoin='miter';
 }
 function drawHorse(s){
   const g=cx; g.save(); g.translate(s.x,s.y);
@@ -1539,8 +1574,9 @@ function drawHorse(s){
 }
 function drawPlayer(s){
   if(P.riding){
-    if(P.unlocked&&P.unlocked.moa) drawMoa(s); else drawHorse(s);
-    const s2={x:s.x, y:s.y-21};
+    const onMoa=P.unlocked&&P.unlocked.moa;
+    if(onMoa) drawMoa(s); else drawHorse(s);
+    const s2={x:s.x, y:s.y-(onMoa?32:21)};   // you sit high on the tall moa
     drawPlayerFigure(s2);
     return;
   }
