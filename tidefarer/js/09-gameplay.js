@@ -835,7 +835,7 @@ function updateNPCs(dt){
     G.nightToasted=true;
     toast('Lamps flicker on as the villagers head indoors for the night. The <b>inn</b> keeps its door open.',5200);
   }
-  for(const n of G.npcs) n.hidden = night && !n.nightOwl;
+  for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
     if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)

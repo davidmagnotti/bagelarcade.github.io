@@ -1236,9 +1236,12 @@ function genAerie(){
   // the sealed Roost Heart: a ruined stone dungeon at the plateau's crown,
   // ringed by cliff and reachable only through the Underclimb tunnel warp
   carveDisc(Z.sanctum.x, Z.sanctum.y, Z.sanctum.r-1, T.RUIN, false);
+  // the roost above is a hollow, empty ruin now (the warden moved to the catacomb
+  // below), so its old seal-ring is purely decorative - keep the ruin stones but
+  // drop the invisible wall, so the northern plateau roams free
   for(let a=0;a<TAU;a+=0.10){ for(let rr=Z.sanctum.r; rr<=Z.sanctum.r+1; rr++){
     const rx=Math.round(Z.sanctum.x+Math.cos(a)*rr), ry=Math.round(Z.sanctum.y+Math.sin(a)*rr);
-    if(inb(rx,ry)){ setTile(rx,ry,T.RUIN); setSolid(rx,ry,1); } } }
+    if(inb(rx,ry)) setTile(rx,ry,T.RUIN); } }
   // village clearing + dock cove
   carveDisc(Z.village.x,Z.village.y,9,T.GRASS,false);
   carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
@@ -1931,13 +1934,16 @@ function placeObjectsCrown(){
 function crownLettucePlot(){ const GA=CROWN_ZONES.garden; return {x:Math.round(GA.x-12), y:Math.round(GA.y+8)}; }
 function spawnCrownFolk(){
   const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, H=Z.harbor, GA=Z.garden, BA=Z.barracks, D=Z.dock;
-  // ---- King Aldous: grieving sovereign, before the palace gate ----
-  G.npcs.push(makeNPC('aldous','King Aldous', PA.x+0.5, PA.y+5.5,
+  // ---- King Aldous: he holds court INSIDE the Tideglass Palace only, never out
+  // in the plaza. He still lives in G.npcs (the palace throne figure opens his
+  // dialogue), but `throne` keeps him permanently hidden from the open city. ----
+  G.npcs.push((()=>{ const k=makeNPC('aldous','King Aldous', PA.x+0.5, PA.y+5.5,
     {skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',necklace:'#c9a24e'},
     ['A stranger, and from the isles by your salt. Be welcome in Aldermere. We have grandeur enough - it is gladness we run short of.',
      'This whole city was built for a family of three. I am the one left rattling in it.',
      'They tell me to remarry, to name an heir from the cousins. I tell them the sea still owes me an answer first.',
-     'You have the look of someone the tide keeps throwing back. I know that look. I wear it.'],0.15));
+     'You have the look of someone the tide keeps throwing back. I know that look. I wear it.'],0.15);
+    k.throne=1; return k; })());
   // ---- Lord Steward Perrin: runs the kingdom day to day ----
   G.npcs.push(makeNPC('perrin','Lord Steward Perrin', PA.x-4.5, PA.y+6.5,
     {skin:'#c79a6a',hair:'#5a4a38',shirt:'#4a4a5a',pants:'#33303c',robe:'#3a3a4c',trim:'#9a9aa8',hairstyle:'short'},
@@ -1950,6 +1956,14 @@ function spawnCrownFolk(){
     ['The Garrison drills dawn to dark. A soft capital is a short one.',
      'You carry yourself like you\'ve put down worse than street thieves. Good. The realm can always use another arm.',
      'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2));
+  // ---- soldiers posted through the city: a walled, patrolled, SAFE capital ----
+  { const gLook={skin:'#bd8f60',hair:'#3a2f26',shirt:'#42506a',pants:'#2e3340',trim:'#c9a24e',armor:1,hairstyle:'short'};
+    const gLines=['Move along, citizen. The peace holds while we hold it.',
+                  'Aldermere sleeps easy because we do not.',
+                  'Nothing gets past the wall on my watch - not thief, not wraith, not worse.'];
+    [[PA.x-3,PA.y+6],[PA.x+4,PA.y+6],[PL.x-5,PL.y+1],[PL.x+6,PL.y-1],[H.x+2,H.y+2],[M.x-4,M.y+2]].forEach((p,i)=>{
+      G.npcs.push(makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05));
+    }); }
   // ---- the Herald: town crier in the plaza ----
   G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
     {skin:'#8a5a3a',hair:'#2a2018',shirt:'#7a5a2f',pants:'#4a3a24',hairstyle:'bun'},
@@ -2118,8 +2132,8 @@ QUESTS.thaw={ giver:'bryn', title:'The Weeping Warden', kind:'kill', kill:{frost
   doneText:'Water in the strait and tears on the glacier - you gave us back our guardian and our sea in one stroke. Hearthhold will drink your name warm for a generation. Take this, and our thanks.',
   rw:{gold:340, item:{potion:3}, xp:{melee:460, archery:460, magic:460}} };
 QUESTS.audience={ giver:'brea', title:'An Audience with the King', kind:'talk', talkTo:'aldous', xpL:520,
-  brief:'You are the one, aren\'t you - the traveler unmaking the old curses, isle by isle. Word of it reaches the throne faster than any ship. His Majesty King Aldous would look upon the curse-breaker himself. He keeps his court before the palace gate, up the Processional. Go to him. One does not keep a grieving king waiting.',
-  log:'Climb the Processional to the Tideglass Palace and present yourself to King Aldous.',
+  brief:'You are the one, aren\'t you - the traveler unmaking the old curses, isle by isle. Word of it reaches the throne faster than any ship. His Majesty King Aldous would look upon the curse-breaker himself. He holds court within the Tideglass Palace. Gain the hall and present yourself. One does not keep a grieving king waiting.',
+  log:'Enter the Tideglass Palace and present yourself to King Aldous in the throne hall.',
   doneText:'',   // the audience is a scripted scene in the King's own dialogue
   rw:{gold:400, hp:12, item:{elixir:2}, xp:{melee:520, archery:520, magic:520}} };
 QUESTS.kitchenrun={ giver:'odo', title:"The Victualler's Errand", kind:'special', xpL:180,
