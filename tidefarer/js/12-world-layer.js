@@ -886,6 +886,11 @@ function placeObjectsEastDeep(){
   G.decor.push({kind:'chest', x:26.5, y:15.5, deep:1, rich:9});
   G.critters=[];
   G._emberPlate=null;   // reset the plate-tread tracker for this world
+  // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing
+  if(P.story && P.story.emberDone){
+    for(const b of G.decor){ if(b.kind==='firegate'){ b.open=true;
+      for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } } }
+  }
 }
 function spawnMobsEastDeep(){
   // bristlebacks have denned in the warm dark of the chambers - a little
@@ -1415,8 +1420,9 @@ function placeObjectsAerieDeep(){
   for(const [tx,ty,ord] of [[62,58,1],[88,58,2],[88,48,3],[62,48,4]])
     G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'seq', ord:ord, set:false});
   G.decor.push({kind:'catgate', x:75, y:38, open:false, gate:'sep', tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], label:'the Sepulchre Gate'});
-  // the cursed tome, on its lectern at the crypt's far wall behind the warden
-  G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:false, deep:1});
+  // the cursed tome, on its lectern at the crypt's far wall behind the warden.
+  // a already-won run (story-complete, or dev-toggled) shows it already burnt.
+  G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
   setSolid(75,14,1);
   // a warden's hoard, once the deed is done
   G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});

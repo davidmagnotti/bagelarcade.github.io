@@ -41,6 +41,47 @@ function clearMobs(){
   let n=0; for(const m of (G.mobs||[])){ if(!m.dead){ m.dead=true; m.respawnT=-1; n++; } }
   note('Cleared '+n+' foes on this map');
 }
+/* ---- dungeons: toggle each dungeon's WON state either way ---- */
+const DUNGEONS=[
+  ['Rimefissure', 'frostdeep', 'deepDone'],    // frost boss (Rimebound) freed
+  ['Underclimb',  'aeriedeep', 'aerieFreed'],  // aerie tome destroyed (+ surface birds calmed)
+  ['Emberdeep',   'eastdeep',  'emberDone'],   // Kea gates opened through to Ashwing
+];
+function dungWon(flag){ return !!(typeof P!=='undefined' && P && P.story && P.story[flag]); }
+function dungLabel(name,flag){ return name+': '+(dungWon(flag)?'WON ✓':'not won'); }
+function regenWorld(id){   // rebuild the CURRENT world in place so its state matches the flags
+  const def=(typeof WORLD_DEFS!=='undefined') && WORLD_DEFS[id];
+  if(!def || G.worldId!==id) return;
+  G.interior=null; P.slideDir=null; P.click=null;
+  G.projs.length=0; G.parts.length=0; G.floats.length=0;
+  if(G.fogs) G.fogs.length=0; if(G.fireflies) G.fireflies.length=0;
+  G.map=new Uint8Array(MAPW*MAPH); G.solid=new Uint8Array(MAPW*MAPH); G.variant=new Uint8Array(MAPW*MAPH);
+  G.nodes=[]; G.decor=[]; G.plots=[]; G.npcs=[]; G.mobs=[]; G.foam=[]; G.crows=[];
+  G.decals=[]; G.cat=null; G.critters=[]; G.forgePos=null;
+  def.gen();
+  P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0};
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+function setDungeon(id,flag,won){
+  P.story=P.story||{}; P.story[flag]=won?1:0; if(won) P.story.vathMet=1;
+  // keep the Aerie quest + surface birds consistent with the tome's state
+  if(flag==='aerieFreed' && typeof QUESTS!=='undefined' && QUESTS.roost){
+    if(won) P.quests.roost='done'; else if(P.quests.roost==='done') P.quests.roost='active';
+  }
+  // drop cached copies so the dungeon (and any coupled surface) regenerates fresh
+  if(typeof WORLDS!=='undefined'){ if(WORLDS[id]) delete WORLDS[id];
+    if(id==='aeriedeep' && WORLDS['aerie']) delete WORLDS['aerie']; }
+  if(G.worldId===id) regenWorld(id);            // if you're standing in it, rebuild now
+  ui(); refreshDungeonLabels();
+  note((won?'WON: ':'RESET: ')+id+(G.worldId===id?' (rebuilt)':' (on re-entry)'));
+}
+function toggleDungeon(id,flag){ setDungeon(id,flag,!dungWon(flag)); }
+function refreshDungeonLabels(){
+  const p=panelEl(); if(!p) return;
+  p.querySelectorAll('button[data-dflag]').forEach(b=>{
+    b.textContent=dungLabel(b.getAttribute('data-dname'), b.getAttribute('data-dflag')); });
+}
 function completeActive(){
   let n=0; for(const id in P.quests){ if(P.quests[id]==='active' && QUESTS[id]){ try{ completeQuest(id); n++; }catch(e){} } }
   ui(); note('Completed '+n+' active quest(s)');
@@ -75,6 +116,11 @@ const SECTIONS=[
     ['Free Aerie',()=>freeCurse('aerie')], ['Free Frozen',()=>freeCurse('frost')],
     ['Free ALL curses',()=>freeCurse('all')], ['Clear foes on this map',()=>clearMobs()],
   ]],
+  ['Dungeons (tap to toggle won / not)',
+    DUNGEONS.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
+      .concat([ ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
+                ['Win ALL dungeons',   ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
+  ],
   ['Quests', [
     ['Complete active quests',()=>completeActive()],
   ]],
@@ -106,9 +152,11 @@ function build(){
   document.body.appendChild(p);
   SECTIONS.forEach((sec,si)=>{
     const box=p.querySelector('[data-sec="'+si+'"]');
-    sec[1].forEach(([label,fn])=>{
+    sec[1].forEach(([label,fn,meta])=>{
       const b=document.createElement('button');
       b.textContent=label;
+      if(meta && meta.dflag){ b.setAttribute('data-dflag',meta.dflag); b.setAttribute('data-dname',meta.dname);
+        try{ b.textContent=dungLabel(meta.dname,meta.dflag); }catch(e){} }
       b.style.cssText='flex:1 1 auto;min-width:62px;font-size:10.5px;padding:5px 6px;cursor:pointer;'+
         'background:#2b2013;color:#e8dcc4;border:1px solid #4a3826;border-radius:6px;';
       b.onmouseover=()=>b.style.background='#3a2c1a'; b.onmouseout=()=>b.style.background='#2b2013';
@@ -131,6 +179,7 @@ function toggle(force){
   build(); const p=panelEl(); if(!p) return;
   const show = (force===undefined)? (p.style.display==='none') : force;
   p.style.display= show? 'block':'none';
+  if(show) try{ refreshDungeonLabels(); }catch(e){}
 }
 
 window.addEventListener('keydown',(e)=>{
