@@ -268,11 +268,13 @@ function render(){
     }
     cx.globalCompositeOperation='source-over';
   }
-  // dawn/dusk warmth
+  // dawn/dusk warmth (the tutorial isle holds a fixed daylight, so it skips this)
   const t=G.dayT;
   let warm=0;
-  if(t>0.40&&t<0.52) warm=Math.sin((t-0.40)/0.12*Math.PI)*0.16;
-  if(t<0.10) warm=Math.sin((0.10-t)/0.10*Math.PI)*0.10;
+  if(G.worldId!=='isle'){
+    if(t>0.40&&t<0.52) warm=Math.sin((t-0.40)/0.12*Math.PI)*0.16;
+    if(t<0.10) warm=Math.sin((0.10-t)/0.10*Math.PI)*0.10;
+  }
   if(warm>0.01){ cx.fillStyle='rgba(255,140,60,'+warm+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
 
   // ---- weather & screen feedback ----

@@ -233,7 +233,7 @@ function placeObjects(){
   }
   // buildings
   addBuilding('house', 44,54, 'Maren\'s cottage').closedMsg='<b>Maren\'s cottage</b> is dark, but for one candle. “Come back at a decent hour, castaway,” the Elder calls, not unkindly.';
-  addBuilding('forge', 53,56, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
+  addBuilding('forge', 58,55, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
   addBuilding('house2',44,61, 'Fisher row');
   addBuilding('barn',  62,60, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
   addBuilding('tower', 56,33, 'Orin\'s tower');
@@ -242,6 +242,7 @@ function placeObjects(){
   addBuilding('house2', 39,57, 'The Ember Hearth (Inn)');
   addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
+  addBuilding('lamp', 54,56,''); addBuilding('lamp', 56,54,'');   // the lantern trail on out to Bram's forge
   addBuilding('lamp', 30,62,''); addBuilding('lamp', 59,62,'');
   // hidden loot caches for explorers
   for(const spot of [[72,38],[26,44],[57,72]]){

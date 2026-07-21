@@ -285,7 +285,7 @@ function ambientFX(dt){
   // grit: fog banks + ash
   const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<12 && Math.random()<0.5) spawnFog(P.x+rnd(-9,9),P.y+rnd(-9,9),'rgba(96,116,98,');
-  if((G.dayT>0.92||G.dayT<0.08) && Math.random()<0.35) spawnFog(P.x+rnd(-10,10),P.y+rnd(-10,10),'rgba(150,165,185,');
+  if(G.worldId!=='isle' && (G.dayT>0.92||G.dayT<0.08) && Math.random()<0.35) spawnFog(P.x+rnd(-10,10),P.y+rnd(-10,10),'rgba(150,165,185,');
   if(WX.rain>0.4 && Math.random()<0.25) spawnFog(P.x+rnd(-10,10),P.y+rnd(-10,10),'rgba(120,135,155,');
   if(ruinD<10 && Math.random()<0.6){
     G.parts.push({x:P.x+rnd(-8,8),y:P.y+rnd(-8,8),vx:rnd(-0.25,-0.05),vy:rnd(-0.25,-0.05),

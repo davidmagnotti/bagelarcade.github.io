@@ -162,7 +162,7 @@ function spawnNPCs(){
   G.npcs = [
     makeNPC('maren','Elder Maren',47,56,{skin:'#e6c39a',hair:'#cfcfd6',shirt:'#7a5a8f',pants:'#4a3a5a',robe:'#5a4472',trim:'#c9a24e',hairstyle:'bun',necklace:'#9be07f'},
       ['The well water tastes of iron. Always has.','Lanterns out by the dock mean rain, they say.','You walk like someone the island wanted.'],0.6),
-    makeNPC('bram','Bram the Smith',54,58,{skin:'#d9a06a',hair:'#3a2a1c',shirt:'#8f4a3a',pants:'#3a3a40',hairstyle:'bald',beard:'#2c1f14',apron:'#4a3322'},
+    makeNPC('bram','Bram the Smith',59,57,{skin:'#d9a06a',hair:'#3a2a1c',shirt:'#8f4a3a',pants:'#3a3a40',hairstyle:'bald',beard:'#2c1f14',apron:'#4a3322'},
       ['A dull blade is a heavy blade.','Hear that ring? That\'s good iron talking.','Stone from the north road takes an edge best.'],0.4),
     (()=>{ const b=makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e'},
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.'],false);

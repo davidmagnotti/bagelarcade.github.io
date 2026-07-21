@@ -1162,6 +1162,9 @@ function nightAmount(){
   // underground worlds don't have a sky: they hold a fixed ambient darkness (set
   // per-dungeon via WORLD_DEF.dark) and never cycle through day and night.
   if(inDungeon()){ const d=WORLD_DEFS[G.worldId]; return d.dark!=null? d.dark : 0.4; }
+  // Emberwick's tutorial shores stay in daylight - no dark, no wraiths, no
+  // shuttered shops. Night only falls once you sail beyond the isle.
+  if(G.worldId==='isle') return 0;
   // dayT: 0=dawn .25=noon .5=dusk .75=midnight
   const t=G.dayT;
   if(t<0.08) return lerp(0.8,0,t/0.08);
