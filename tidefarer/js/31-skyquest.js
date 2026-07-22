@@ -108,9 +108,12 @@ function ensureSnatcher(){
   if(!P.story.skyG2) return;                  // not far enough in yet (rune-tiles unsolved)
   if(G.mobs.some(m=>m.grabber && !m.dead)) return;   // already prowling
   const s=skyIsle('i3');
-  const sp=findOpenNear(s.x,s.y,3) || [s.x,s.y];
+  // leash is pulled UP (north) and tightened, so it guards the far side of the isle and
+  // leaves a safe strip at the southern approach where you step off the bridge.
+  const gcx=s.x+0.5, gcy=s.y-2.0, gr=s.r-0.5;
+  const sp=findOpenNear(Math.round(gcx),Math.round(gcy),3) || [Math.round(gcx),Math.round(gcy)];
   const g=spawnMob('skygrabber', sp[0], sp[1]);
-  if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=s.x+0.5; g.gcy=s.y+0.5; g.gr=(s.r+1.5); g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
+  if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=gcx; g.gcy=gcy; g.gr=gr; g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
 }
 function spawnMobsSkyDungeon(){
   P.story=P.story||{};
@@ -205,7 +208,8 @@ function updateSkyDungeon(dt){
     if(m.dead || !m.grabber) continue;
     const d=dist(m.x,m.y,m.gcx,m.gcy);
     if(d>m.gr){ m.x=m.gcx+(m.x-m.gcx)/d*m.gr; m.y=m.gcy+(m.y-m.gcy)/d*m.gr; m.tx=null; } // cannot leave its isle
-    if(!P.dead && (P.rollT||0)<=0 && dist(P.x,P.y,m.x,m.y)<1.1 && (G.time-(m._grabT||0))>0.7){
+    // it only grabs at point-blank (and never mid-stun) - so a dash-juke or a sword-stun slips you past
+    if(!P.dead && (P.rollT||0)<=0 && (m.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<0.6 && (G.time-(m._grabT||0))>0.7){
       m._grabT=G.time;
       const st=skyIsle('start');
       if(Snd.boss) Snd.boss(); G.shake=0.6; buzz(24);

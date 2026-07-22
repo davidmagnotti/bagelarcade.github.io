@@ -494,7 +494,18 @@ function drawMobBars(m,s){
 }
 function damageMob(m,dmg,knock,skill){
   if(m.fainted) return; // a felled, freed dragon takes no more harm
-  if(m.invuln){ if(Math.random()<0.5) addFloat('!',m.x,m.y-2.1,'#bfe8ff'); m.hurtT=0.12; return; } // the cloud-snatcher can't be cut - only dodged
+  if(m.invuln){
+    m.hurtT=0.12;
+    // the cloud-snatcher can't be cut - but a solid melee blow rattles it: it's stunned
+    // (frozen, can't grab) for a beat and shoved back, so you can fend it off and slip past.
+    if(m.grabber && skill==='melee'){
+      m.stunT=Math.max(m.stunT||0, 0.9); m.windup=0;
+      if(knock) moveEntity(m, knock.x*0.7, knock.y*0.7);
+      burst(m.x,m.y-0.3,'#bfe8ff',10,2.4); if(Snd.hit) Snd.hit();
+      addFloat('STUNNED', m.x, m.y-2.4, '#bfe8ff', 1.1);
+    } else if(Math.random()<0.5) addFloat('!',m.x,m.y-2.1,'#bfe8ff');
+    return;
+  }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
@@ -1078,7 +1089,7 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
-      if(l>stop && !((m.snareT||0)>0) && !m.rooted){
+      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !(m.grabber && (m.stunT||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
