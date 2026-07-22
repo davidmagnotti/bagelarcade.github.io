@@ -387,11 +387,6 @@ function toggleRide(){
   if(!ownsMount()){ return; }
   if(G.interior || (typeof inDungeon==='function' && inDungeon())){ toast('No room to ride in here.',1500); return; }
   P.riding = P.riding? 0 : 1;
-  const moa = P.unlocked && P.unlocked.moa;
-  toast(P.riding
-    ? (moa? 'Kiko folds low - you swing aboard and grip with your knees. <b>Riding.</b>' : 'Chestnut trots up, ears forward. <b>Mounted.</b>')
-    : (moa? 'You hop down; Kiko struts off to bully a palm. <b>On foot.</b>' : 'Chestnut wanders to the nearest grass. <b>Dismounted.</b>'),
-    1800);
   Snd.pickup && Snd.pickup();
   updateMountBtn();
 }

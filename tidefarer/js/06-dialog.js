@@ -312,7 +312,6 @@ function shopButtons(npc,btns){
   if(npc.id==='huk' && P.unlocked && P.unlocked.moa){
     btns.unshift({label:P.riding? 'Dismount Kiko':'Whistle for Kiko the Moa', fn:()=>{
       P.riding=P.riding?0:1; closeDialog();
-      toast(P.riding? 'Kiko folds her legs, you climb aboard, and the world starts moving <b>fast</b>.':'Kiko struts off to bully a palm for coconuts. <b>Dismounted.</b>',3000);
     }});
   }
   if(npc.id==='hermit' && !P.prog.hermitGift){
