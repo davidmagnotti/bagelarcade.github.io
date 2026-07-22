@@ -1907,8 +1907,8 @@ let mapBase=null;
 // cloud worlds recolour the minimap: PURE WHITE cloud land on a clear soft SKY-BLUE
 // void (a sky, not a sea) - enough contrast that the island shape reads, so a window
 // zoomed into the cloud never looks blank.
-const CLOUDCOL={[T.DEEP]:'#8ec2ec',[T.SHALLOW]:'#b6d9f2',[T.SNOW]:'#ffffff',[T.ICE]:'#d6e8f8',
-  [T.RUIN]:'#dde3ea',[T.PATH]:'#eff5fc'};
+const CLOUDCOL={[T.DEEP]:'#5c9bd6',[T.SHALLOW]:'#93c0e8',[T.SNOW]:'#ffffff',[T.ICE]:'#cfe4f6',
+  [T.RUIN]:'#d6dde6',[T.PATH]:'#eef4fb'};
 function buildMapBase(){
   // buildMapBase runs DURING world gen, before switchWorld sets G.worldId - so detect
   // a cloud world by its SEED (set before gen), which is reliable at this point.
@@ -1922,38 +1922,40 @@ function buildMapBase(){
 }
 let miniT=0;
 function drawMinimap(){
-  const c=document.getElementById('minimap'), g=c.getContext('2d');
-  g.imageSmoothingEnabled=false;
-  g.clearRect(0,0,120,120);
-  // window: 48x48 tiles around player
-  const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
-  g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
-  // a faint grid pinned to world tiles - it scrolls as you move, so orientation and
-  // motion read even on featureless terrain (open cloud, open sea) instead of a blank box
-  g.strokeStyle='rgba(120,120,120,0.20)'; g.lineWidth=1;
-  const gs=8;   // a line every 8 world tiles
-  for(let wx=Math.ceil(sx/gs)*gs; wx<sx+vw; wx+=gs){ const gx=(wx-sx)/vw*120; g.beginPath(); g.moveTo(gx,0); g.lineTo(gx,120); g.stroke(); }
-  for(let wy=Math.ceil(sy/gs)*gs; wy<sy+vw; wy+=gs){ const gy=(wy-sy)/vw*120; g.beginPath(); g.moveTo(0,gy); g.lineTo(120,gy); g.stroke(); }
-  // landmark dots for the world's named zones - fixed points that slide past as you
-  // move, so movement reads even on featureless terrain (open cloud, open sea)
-  P.disc=P.disc||{};
-  for(const k in ZONES){ const z=ZONES[k]; if(!z.name) continue;
-    const zx=(z.x-sx)/vw*120, zy=(z.y-sy)/vw*120;
-    if(zx<-3||zx>123||zy<-3||zy>123) continue;
-    g.fillStyle= P.disc[G.worldId+':'+k] ? 'rgba(255,213,120,0.95)' : 'rgba(235,235,235,0.5)';
-    g.beginPath(); g.arc(zx,zy,2,0,TAU); g.fill();
-    g.strokeStyle='rgba(0,0,0,0.45)'; g.lineWidth=1; g.stroke();
-  }
-  // the player: a bright dot with a dark halo + white ring, so it reads on ANY
-  // terrain - including the all-white Cloudreach where a plain white dot vanished
-  const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
-  g.beginPath(); g.arc(px,py,5,0,TAU); g.fillStyle='rgba(0,0,0,0.5)'; g.fill();
-  g.beginPath(); g.arc(px,py,3.2,0,TAU); g.fillStyle='#ff4d3d'; g.fill();
-  g.lineWidth=1.4; g.strokeStyle='#fff'; g.stroke();
-  const pq=primaryQuest();
-  if(pq){ const tp=questTargetPos(pq);
-    if(tp){ const qx=clamp((tp.x-sx)/vw*120,4,116), qy=clamp((tp.y-sy)/vw*120,4,116);
-      g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(qx,qy,3.4,0,TAU); g.fill(); } }
+  const c=document.getElementById('minimap'); if(!c) return;
+  const g=c.getContext('2d'); if(!g) return;
+  try{
+    g.imageSmoothingEnabled=false;
+    // OPAQUE base fill first, so the minimap is NEVER a blank/transparent box even if
+    // the map image is missing for a frame (a dark parchment matches the HUD frame)
+    g.fillStyle='#16110a'; g.fillRect(0,0,120,120);
+    const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
+    if(mapBase) g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
+    // a grid pinned to world tiles - it scrolls as you move, so orientation and motion
+    // read even on featureless terrain (open cloud, open sea) instead of a blank box
+    g.strokeStyle='rgba(90,90,90,0.28)'; g.lineWidth=1;
+    const gs=8;
+    for(let wx=Math.ceil(sx/gs)*gs; wx<sx+vw; wx+=gs){ const gx=(wx-sx)/vw*120; g.beginPath(); g.moveTo(gx,0); g.lineTo(gx,120); g.stroke(); }
+    for(let wy=Math.ceil(sy/gs)*gs; wy<sy+vw; wy+=gs){ const gy=(wy-sy)/vw*120; g.beginPath(); g.moveTo(0,gy); g.lineTo(120,gy); g.stroke(); }
+    // landmark dots for the world's named zones - fixed points that slide past as you move
+    P.disc=P.disc||{};
+    for(const k in ZONES){ const z=ZONES[k]; if(!z.name) continue;
+      const zx=(z.x-sx)/vw*120, zy=(z.y-sy)/vw*120;
+      if(zx<-3||zx>123||zy<-3||zy>123) continue;
+      g.fillStyle= P.disc[G.worldId+':'+k] ? 'rgba(255,213,120,0.95)' : 'rgba(235,235,235,0.6)';
+      g.beginPath(); g.arc(zx,zy,2.4,0,TAU); g.fill();
+      g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=1; g.stroke();
+    }
+    // the player: a bright red dot with a dark halo + white ring, so it reads on ANY terrain
+    const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
+    g.beginPath(); g.arc(px,py,5.5,0,TAU); g.fillStyle='rgba(0,0,0,0.55)'; g.fill();
+    g.beginPath(); g.arc(px,py,3.4,0,TAU); g.fillStyle='#ff3b30'; g.fill();
+    g.lineWidth=1.5; g.strokeStyle='#fff'; g.stroke();
+    const pq=primaryQuest();
+    if(pq){ const tp=questTargetPos(pq);
+      if(tp){ const qx=clamp((tp.x-sx)/vw*120,4,116), qy=clamp((tp.y-sy)/vw*120,4,116);
+        g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(qx,qy,3.4,0,TAU); g.fill(); } }
+  }catch(e){ /* never let the minimap break the frame */ }
 }
 function drawBigMap(){
   const c=document.getElementById('bigMap'), g=c.getContext('2d');

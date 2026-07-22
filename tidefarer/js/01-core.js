@@ -1,8 +1,13 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '66';
+const BUILD = '67';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
+// A tiny always-visible build tag, so a stale/cached load is obvious at a glance:
+// if this number doesn't match the latest, the device is running old cached code.
+try{ const _bt=document.createElement('div'); _bt.textContent='build '+BUILD;
+  _bt.style.cssText='position:fixed;left:3px;bottom:2px;font:9px/1 monospace;color:rgba(255,255,255,.4);z-index:99999;pointer-events:none;text-shadow:0 1px 2px #000;';
+  (document.body||document.documentElement).appendChild(_bt); }catch(e){}
 /* Storage can throw SecurityError in sandboxed frames / private browsing.
    Probe once; fall back to in-memory so the game always boots. */
 const SafeStore=(()=>{
