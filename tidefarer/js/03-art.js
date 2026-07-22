@@ -791,27 +791,39 @@ function drawHumanoid(g,sx,sy,o){
     }
   };
   if(o.ride && !o.robe){
-    // SEATED ASTRIDE: hips rest on the mount's back, the thigh splays outward
-    // over the saddle, the knee bends, and the shin+boot hang straight DOWN the
-    // mount's flank. The long dangling shin is what sells "sitting" over "standing".
-    for(const side of [-1, 1]){
-      g.save();
-      g.translate(side*3.6, -7.5+B*0.4);
-      // thigh: short, angled out over the saddle
-      g.rotate(side*0.86);
-      g.fillStyle=pants;
-      g.beginPath(); g.roundRect(-2.4,0,4.8,5.4,2.1); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
-      // knee -> straighten so the shin drops vertically down the flank
-      g.translate(0,5.0); g.rotate(-side*0.86);
-      g.fillStyle=pants; // long lower leg (breeches) hanging down the side
-      g.beginPath(); g.roundRect(-2.05,0,4.1,10.5,1.8); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+    // SEATED ASTRIDE, seen from the ¾ iso camera. The rider straddles the mount, so
+    // the two legs are NOT symmetric on screen: the NEAR leg hangs down the flank
+    // facing us (fully lit, low, drawn last) while the FAR leg rides across the
+    // mount's back (lifted and in shadow). Each leg is placed by explicit joints -
+    // hip -> knee (splayed OUT over the saddle) -> boot (dropped down the flank) -
+    // so the two boots stay wide apart. The old code drew both legs identically and
+    // its nested rotate/translate quietly dragged both knees back to centre, fusing
+    // them into a single stubby leg; this depth split reads as a real two-leg seat.
+    const seatLeg=(back)=>{
+      // "back" leg = the one across the far flank: lifted, pushed away from the
+      // camera, and dropped into shade so it reads clearly behind the near leg.
+      const sd = back ? -flip : flip;                 // splay to opposite screen sides
+      const hipX = sd*2.4, hipY = -7.0 + B*0.4 + (back ? -2.6 : 1.0);
+      const kneeX = sd*6.2, kneeY = hipY + 5.4;       // knee splayed OUT over the saddle
+      const bootX = sd*6.6, bootY = kneeY + (back ? 8.8 : 10.8);  // shin drops the flank
+      const pcol = back ? shade(pants,-24) : pants;   // far leg in shadow for depth
+      const bcol = back ? shade(bootD,-18) : bootD;
+      // thigh: hip -> knee
+      g.strokeStyle=OUT; g.lineWidth=6.2; g.lineCap='round';
+      g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
+      g.strokeStyle=pcol; g.lineWidth=4.4;
+      g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
+      // shin: knee -> boot, hanging down the flank
+      g.strokeStyle=OUT; g.lineWidth=5.4;
+      g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
+      g.strokeStyle=pcol; g.lineWidth=3.6;
+      g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
+      g.lineCap='butt';
       // boot at the foot of the hanging leg
-      g.translate(0,10.8);
-      drawBoot(bootD);
-      g.restore();
-    }
+      g.save(); g.translate(bootX,bootY); drawBoot(bcol); g.restore();
+    };
+    seatLeg(true);    // far leg first, behind
+    seatLeg(false);   // near leg over the top
   } else if(!o.robe){
     for(const L of [[-4.1,1],[4.1,-1]]){
       const lx=L[0], sg=L[1];
