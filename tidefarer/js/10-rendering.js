@@ -330,10 +330,10 @@ function render(){
     cx.fillStyle=_vgCache; cx.fillRect(0,0,VW,VH);
   }
 
-  // The minimap is a second on-screen canvas; redrawing it every frame forces
-  // its own compositor layer to update. In low-gfx mode, refresh it ~6x/sec.
-  if(!LOWFX) drawMinimap();
-  else if(((G._mmT=(G._mmT|0)+1) % 10) === 0) drawMinimap();
+  // The minimap is painted onto THIS (the main) canvas, which is cleared and redrawn
+  // every frame - so the minimap must be redrawn every frame too, or it would vanish
+  // for the frames we skipped. It's cheap (a ~48x48 grid of fillRects), so always draw.
+  drawMinimap();
 }
 
 function drawNode(n,s){
@@ -2045,60 +2045,79 @@ function buildMapBase(){
   }catch(e){/* keep the previous image rather than blanking */}
 }
 let miniT=0;
+function rrectPath(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.arcTo(x+w,y,x+w,y+r,r);
+  g.lineTo(x+w,y+h-r); g.arcTo(x+w,y+h,x+w-r,y+h,r);
+  g.lineTo(x+r,y+h); g.arcTo(x,y+h,x,y+h-r,r);
+  g.lineTo(x,y+r); g.arcTo(x,y,x+r,y,r); g.closePath();
+}
 function drawMinimap(){
-  const c=document.getElementById('minimap'); if(!c) return;
-  const g=c.getContext('2d'); if(!g) return;
+  // Draw the minimap ONTO THE MAIN game canvas, not the separate #minimap element.
+  // On iOS Safari a small secondary canvas that we repaint every frame can get stuck
+  // as its own compositor layer and simply stop updating - that was the Cloudreach
+  // "dark box, no dot" bug: drawMinimap ran and painted the #minimap canvas, but iOS
+  // never re-composited that layer, so you saw the dark HUD frame behind it. The main
+  // canvas provably re-composites every frame (the world animates on it), so painting
+  // the minimap there in the top-right corner can never freeze. #miniWrap stays as a
+  // transparent tap-target for opening the full map.
+  const g=cx; if(!g) return;
   try{
+    g.save();
+    g.setTransform(DPR,0,0,DPR,0,0);   // CSS-px coords, and drop any camera-shake translate
     g.imageSmoothingEnabled=false;
-    // OPAQUE base fill first, so the minimap is NEVER a blank/transparent box even if
-    // a frame draws nothing (a dark parchment matches the HUD frame)
-    g.fillStyle='#16110a'; g.fillRect(0,0,120,120);
-    // Draw the visible window DIRECTLY from G.map, cell by cell - do NOT blit from an
-    // offscreen mapBase canvas. iOS Safari caps total canvas memory, and the 9-arg
-    // sub-rectangle drawImage(mapBase, sx,sy,w,h, ...) it used before silently drew
-    // nothing on the Cloudreach (blank dark box, no dot) once that budget was spent -
-    // even though the full-screen map, which blits the WHOLE image, still worked.
-    // Painting ~48x48 fillRects straight onto the visible 120px canvas needs no
-    // offscreen surface at all, so it can never go blank.
+    const S=120;
+    // sit exactly under #miniWrap (right:10 + 2px border + 4px padding = 16px inset; top 16)
+    const ox=Math.max(6, VW-16-S), oy=16;
+    // frame: matches the old HUD look (dark parchment on a walnut border)
+    rrectPath(g, ox-4, oy-4, S+8, S+8, 9);
+    g.fillStyle='rgba(10,8,5,0.82)'; g.fill();
+    g.lineWidth=2; g.strokeStyle='#4a3a26'; g.stroke();
+    // clip the map to a rounded panel so nothing spills onto the world
+    g.save();
+    rrectPath(g, ox, oy, S, S, 6); g.clip();
+    g.fillStyle='#16110a'; g.fillRect(ox,oy,S,S);
+    // paint the visible window straight from G.map, cell by cell (no offscreen canvas)
     const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
     const vwWant=48, vw=Math.min(vwWant, MAPW, MAPH);
     const sx=clamp(P.x-vw/2,0,Math.max(0,MAPW-vw)), sy=clamp(P.y-vw/2,0,Math.max(0,MAPH-vw));
-    const cell=120/vw, x0=Math.floor(sx), y0=Math.floor(sy);
+    const cell=S/vw, x0=Math.floor(sx), y0=Math.floor(sy);
     for(let ty=y0; ty<sy+vw; ty++){
       if(ty<0||ty>=MAPH) continue;
-      const dy=(ty-sy)*cell;
+      const dy=oy+(ty-sy)*cell;
       for(let tx=x0; tx<sx+vw; tx++){
         if(tx<0||tx>=MAPW) continue;
         const t=G.map[ty*MAPW+tx];
         g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t] || '#16110a';
-        g.fillRect((tx-sx)*cell, dy, cell+0.6, cell+0.6);
+        g.fillRect(ox+(tx-sx)*cell, dy, cell+0.6, cell+0.6);
       }
     }
-    // a grid pinned to world tiles - it scrolls as you move, so orientation and motion
-    // read even on featureless terrain (open cloud, open sea) instead of a blank box
+    // a grid pinned to world tiles - scrolls as you move so motion reads on open terrain
     g.strokeStyle='rgba(90,90,90,0.28)'; g.lineWidth=1;
     const gs=8;
-    for(let wx=Math.ceil(sx/gs)*gs; wx<sx+vw; wx+=gs){ const gx=(wx-sx)/vw*120; g.beginPath(); g.moveTo(gx,0); g.lineTo(gx,120); g.stroke(); }
-    for(let wy=Math.ceil(sy/gs)*gs; wy<sy+vw; wy+=gs){ const gy=(wy-sy)/vw*120; g.beginPath(); g.moveTo(0,gy); g.lineTo(120,gy); g.stroke(); }
-    // landmark dots for the world's named zones - fixed points that slide past as you move
+    for(let wx=Math.ceil(sx/gs)*gs; wx<sx+vw; wx+=gs){ const gx=ox+(wx-sx)/vw*S; g.beginPath(); g.moveTo(gx,oy); g.lineTo(gx,oy+S); g.stroke(); }
+    for(let wy=Math.ceil(sy/gs)*gs; wy<sy+vw; wy+=gs){ const gy=oy+(wy-sy)/vw*S; g.beginPath(); g.moveTo(ox,gy); g.lineTo(ox+S,gy); g.stroke(); }
+    // landmark dots for the world's named zones
     P.disc=P.disc||{};
     for(const k in ZONES){ const z=ZONES[k]; if(!z.name) continue;
-      const zx=(z.x-sx)/vw*120, zy=(z.y-sy)/vw*120;
-      if(zx<-3||zx>123||zy<-3||zy>123) continue;
+      const zx=ox+(z.x-sx)/vw*S, zy=oy+(z.y-sy)/vw*S;
+      if(zx<ox-3||zx>ox+S+3||zy<oy-3||zy>oy+S+3) continue;
       g.fillStyle= P.disc[G.worldId+':'+k] ? 'rgba(255,213,120,0.95)' : 'rgba(235,235,235,0.6)';
       g.beginPath(); g.arc(zx,zy,2.4,0,TAU); g.fill();
       g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=1; g.stroke();
     }
-    // the player: a bright red dot with a dark halo + white ring, so it reads on ANY terrain
-    const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
+    // the player: a bright red dot with a dark halo + white ring
+    const px=ox+(P.x-sx)/vw*S, py=oy+(P.y-sy)/vw*S;
     g.beginPath(); g.arc(px,py,5.5,0,TAU); g.fillStyle='rgba(0,0,0,0.55)'; g.fill();
     g.beginPath(); g.arc(px,py,3.4,0,TAU); g.fillStyle='#ff3b30'; g.fill();
     g.lineWidth=1.5; g.strokeStyle='#fff'; g.stroke();
     const pq=primaryQuest();
     if(pq){ const tp=questTargetPos(pq);
-      if(tp){ const qx=clamp((tp.x-sx)/vw*120,4,116), qy=clamp((tp.y-sy)/vw*120,4,116);
+      if(tp){ const qx=clamp(ox+(tp.x-sx)/vw*S,ox+4,ox+S-4), qy=clamp(oy+(tp.y-sy)/vw*S,oy+4,oy+S-4);
         g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(qx,qy,3.4,0,TAU); g.fill(); } }
-  }catch(e){ /* never let the minimap break the frame */ }
+    g.restore();  // undo clip
+    g.restore();  // undo transform/save
+  }catch(e){ /* never let the minimap break the frame */ try{cx.restore();cx.restore();}catch(_){} }
 }
 function drawBigMap(){
   const c=document.getElementById('bigMap'), g=c.getContext('2d');

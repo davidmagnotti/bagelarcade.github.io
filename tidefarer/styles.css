@@ -29,8 +29,12 @@
   #goldRow canvas{filter:drop-shadow(0 1px 2px #000);}
   /* quest tracker */
   #tracker{position:absolute;top:10px;right:10px;width:236px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
-  #miniWrap{background:rgba(10,8,5,.72);border:2px solid var(--walnut2);border-radius:10px;padding:4px;box-shadow:var(--shadow);}
-  #minimap{display:block;border-radius:6px;}
+  /* The minimap is painted onto the MAIN game canvas (see drawMinimap) so iOS Safari
+     can't freeze it as a stuck secondary compositor layer. #miniWrap stays only as a
+     transparent, correctly-sized tap-target that opens the full map; its old dark frame
+     is drawn on-canvas now, so it must be see-through or it would hide the live minimap. */
+  #miniWrap{background:transparent;border:2px solid transparent;border-radius:10px;padding:4px;}
+  #minimap{display:block;border-radius:6px;visibility:hidden;}
   .qcard{background:rgba(20,14,8,.82);border:2px solid var(--walnut2);border-left:4px solid var(--ember);
     border-radius:8px;padding:7px 10px;max-width:236px;box-shadow:var(--shadow);}
   #trackerCards{display:none !important;}
