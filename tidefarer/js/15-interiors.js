@@ -141,7 +141,7 @@ function enterHouse(b){
   if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
   const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
   // the resort (and inns/towers/your home) keeps its doors open around the clock
-  const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || b.kind==='resort' || lblL.includes('your homestead');
+  const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || b.kind==='resort' || b.kind==='windmill' || lblL.includes('your homestead');
   if(nightL>0.5 && !alwaysOpen){
     let minD=1e9; for(const zk of ['village','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
     if((b.kind==='house'||b.kind==='house2') && minD>24 && !b.closedMsg){

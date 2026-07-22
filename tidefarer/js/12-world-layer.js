@@ -1126,10 +1126,11 @@ function placeObjectsWind(){
   for(let dx=-1;dx<=1;dx++) setSolid(R.x+dx, R.y, 0);                                // grand doors, front-centre
   resort.door={x:R.x+0.5, y:R.y+1.4};
   const mill=addBuilding('windmill', MI.x, MI.y, 'Millward Windmill');
-  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 0);
-  for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // tight round base, no walls up-screen
-  for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y+1, 0);                             // doorway, south face
-  mill.door={x:MI.x+0.5, y:MI.y+1.6};
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 0);  // clear the whole plot first
+  for(let dy=-2;dy<=0;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // solid tower mass; front face flush at MI.y so you can't slip up behind the mill
+  setSolid(MI.x-2,MI.y-2,0); setSolid(MI.x+2,MI.y-2,0);                               // round off the two back corners - it's a round tower, not a box
+  for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y, 0);                               // arched doorway, dead-centre on the front face
+  mill.door={x:MI.x+0.5, y:MI.y+1.4};                                                // hotspot one tile out front on open ground, right where you walk up
   // The Undermill dungeon is entered from INSIDE the windmill (its door opens the
   // mill interior, and a cellar stair there drops into the workings) - so there is
   // no exterior hatch out here in the city.
@@ -2057,7 +2058,17 @@ function exitMillDungeon(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P.click=null;
   setTimeout(()=>{ switchWorld('wind');
-    const r=P._millReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    const mi=P._millInterior;
+    if(mi){
+      // you came DOWN the cellar stair from inside the mill - so climbing out drops
+      // you back inside the mill at the foot of that stair, not out on the street
+      G.interior=mi;
+      P.x=mi.w/2; P.y=Math.min(mi.h-1.4, 4.9); P.dir={x:0,y:1}; P.moving=false; P.fishing=null; P.combo=0;
+      P._millInterior=null;
+      if(typeof closeAllPanels==='function') closeAllPanels();
+    } else {
+      const r=P._millReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 // The Undermill is now entered from INSIDE the windmill: its door opens the mill
@@ -2071,7 +2082,8 @@ function enterMillFromInterior(){
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   const MI=WIND_ZONES.mill;
-  P._millReturn={x:MI.x+0.5, y:MI.y+1.8};   // climb back out to the windmill's door
+  P._millReturn={x:MI.x+0.5, y:MI.y+1.8};   // fallback: the windmill's street door, if the interior can't be rebuilt
+  P._millInterior=G.interior;               // stash the mill interior so climbing out puts you back UPSTAIRS at the cellar stair, not out in the street
   G.interior=null; P.click=null;            // leave the mill interior for the dungeon world
   setTimeout(()=>{ switchWorld('milldeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
