@@ -802,22 +802,30 @@ function drawHumanoid(g,sx,sy,o){
     const seatLeg=(back)=>{
       // "back" leg = the one across the far flank: lifted, pushed away from the
       // camera, and dropped into shade so it reads clearly behind the near leg.
+      // The two legs MUST separate by value as well as position - pants, boots and
+      // the mount are all dark, so without a lit near leg the pair blurs into one
+      // shape ("only one leg"). The near leg gets a bright breeches highlight.
       const sd = back ? -flip : flip;                 // splay to opposite screen sides
-      const hipX = sd*2.4, hipY = -7.0 + B*0.4 + (back ? -2.6 : 1.0);
-      const kneeX = sd*6.2, kneeY = hipY + 5.4;       // knee splayed OUT over the saddle
-      const bootX = sd*6.6, bootY = kneeY + (back ? 8.8 : 10.8);  // shin drops the flank
-      const pcol = back ? shade(pants,-24) : pants;   // far leg in shadow for depth
-      const bcol = back ? shade(bootD,-18) : bootD;
+      const hipX = sd*2.8, hipY = -7.0 + B*0.4 + (back ? -3.0 : 1.4);
+      const kneeX = sd*8.0, kneeY = hipY + 5.6;       // knee splayed well OUT over the saddle
+      const bootX = sd*8.8, bootY = kneeY + (back ? 8.6 : 11.4);  // shin drops the flank
+      const pcol = back ? shade(pants,-26) : shade(pants,10);  // far leg shaded, near leg lifted into light
+      const hicol = shade(pants,34);                  // lit leading edge on the near leg
+      const bcol = back ? shade(bootD,-20) : bootD;
       // thigh: hip -> knee
-      g.strokeStyle=OUT; g.lineWidth=6.2; g.lineCap='round';
+      g.strokeStyle=OUT; g.lineWidth=6.6; g.lineCap='round';
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
-      g.strokeStyle=pcol; g.lineWidth=4.4;
+      g.strokeStyle=pcol; g.lineWidth=4.6;
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
       // shin: knee -> boot, hanging down the flank
-      g.strokeStyle=OUT; g.lineWidth=5.4;
+      g.strokeStyle=OUT; g.lineWidth=5.6;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
-      g.strokeStyle=pcol; g.lineWidth=3.6;
+      g.strokeStyle=pcol; g.lineWidth=3.8;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
+      if(!back){ // a bright seam catches the light down the near shin, so it pops forward
+        g.strokeStyle=hicol; g.lineWidth=1.4;
+        g.beginPath(); g.moveTo(kneeX-sd*1.0,kneeY+0.5); g.lineTo(bootX-sd*1.0,bootY-1); g.stroke();
+      }
       g.lineCap='butt';
       // boot at the foot of the hanging leg
       g.save(); g.translate(bootX,bootY); drawBoot(bcol); g.restore();
