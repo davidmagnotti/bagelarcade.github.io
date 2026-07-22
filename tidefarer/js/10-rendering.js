@@ -1904,9 +1904,11 @@ const MAPCOL={[T.DEEP]:'#2b5c8f',[T.SHALLOW]:'#4d8fc0',[T.SAND]:'#e2cf93',[T.GRA
   [T.FOREST]:'#527f3c',[T.RUIN]:'#8f8b83',[T.PATH]:'#b7965f',[T.SOIL]:'#7a5230',[T.PLANK]:'#9c6f42',
   [T.SNOW]:'#e9eef6',[T.ICE]:'#b7d6e8'};
 let mapBase=null;
-// cloud worlds recolour the minimap: white cloud land, pale-sky "void" (no blue sea)
-const CLOUDCOL={[T.DEEP]:'#bcd6ee',[T.SHALLOW]:'#cfe2f2',[T.SNOW]:'#f4f8ff',[T.ICE]:'#dbe9f5',
-  [T.RUIN]:'#c7cdd6',[T.PATH]:'#e6eef7'};
+// cloud worlds recolour the minimap: PURE WHITE cloud land on a clear soft SKY-BLUE
+// void (a sky, not a sea) - enough contrast that the island shape reads, so a window
+// zoomed into the cloud never looks blank.
+const CLOUDCOL={[T.DEEP]:'#8ec2ec',[T.SHALLOW]:'#b6d9f2',[T.SNOW]:'#ffffff',[T.ICE]:'#d6e8f8',
+  [T.RUIN]:'#dde3ea',[T.PATH]:'#eff5fc'};
 function buildMapBase(){
   // buildMapBase runs DURING world gen, before switchWorld sets G.worldId - so detect
   // a cloud world by its SEED (set before gen), which is reliable at this point.
@@ -1926,6 +1928,12 @@ function drawMinimap(){
   // window: 48x48 tiles around player
   const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
   g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
+  // a faint grid pinned to world tiles - it scrolls as you move, so orientation and
+  // motion read even on featureless terrain (open cloud, open sea) instead of a blank box
+  g.strokeStyle='rgba(120,120,120,0.20)'; g.lineWidth=1;
+  const gs=8;   // a line every 8 world tiles
+  for(let wx=Math.ceil(sx/gs)*gs; wx<sx+vw; wx+=gs){ const gx=(wx-sx)/vw*120; g.beginPath(); g.moveTo(gx,0); g.lineTo(gx,120); g.stroke(); }
+  for(let wy=Math.ceil(sy/gs)*gs; wy<sy+vw; wy+=gs){ const gy=(wy-sy)/vw*120; g.beginPath(); g.moveTo(0,gy); g.lineTo(120,gy); g.stroke(); }
   // landmark dots for the world's named zones - fixed points that slide past as you
   // move, so movement reads even on featureless terrain (open cloud, open sea)
   P.disc=P.disc||{};
