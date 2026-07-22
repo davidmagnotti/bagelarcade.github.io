@@ -3151,6 +3151,9 @@ function switchWorld(id){
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;
     G.plots=w.plots; G.npcs=w.npcs; G.mobs=w.mobs; G.foam=w.foam; G.crows=w.crows;
     G.forgePos=w.forgePos; G.decals=w.decals; G.cat=w.cat; G.critters=w.critters||[]; mapBase=w.base;
+    // cloud worlds ALWAYS rebuild their minimap on entry, so a stale cached map image
+    // (e.g. from an older build) can never keep showing grass/water instead of cloud
+    if(def.cloud && typeof buildMapBase==='function'){ buildMapBase(); w.base=mapBase; }
   } else {
     G.map=new Uint8Array(MAPW*MAPH); G.solid=new Uint8Array(MAPW*MAPH); G.variant=new Uint8Array(MAPW*MAPH);
     G.nodes=[]; G.decor=[]; G.plots=[]; G.npcs=[]; G.mobs=[]; G.foam=[]; G.crows=[];
