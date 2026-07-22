@@ -436,9 +436,10 @@ function spawnRealmFolk(){
     {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
     ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
      "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
-  G.npcs.push(makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
+  { const kw=makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
-    ["Her Majesty receives travelers. Mind your manners and your mud."],0.4));
+    ["Her Majesty receives travelers. Mind your manners and your mud."],0.4);
+    kw.nightOwl=true; G.npcs.push(kw); }   // the keep is guarded round the clock
   G.npcs.push(makeNPC('aelin','Aelin the Weaver', SP.x+1.5,SP.y+2.2,
     {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
     ["Magic is grammar for the world's oldest language. I teach conjugation.",
@@ -2133,18 +2134,22 @@ function spawnCrownFolk(){
      'Do not speak of the lost prince within the King\'s hearing unless you mean to ruin his week. The whole court steps around it.',
      'Aldermere runs on ledgers and patience. I supply both.'],0.2));
   // ---- Captain of the Guard ----
-  G.npcs.push(makeNPC('halvard','Captain Halvard', BA.x+0.5, BA.y+2.5,
+  { const halvard=makeNPC('halvard','Captain Halvard', BA.x+0.5, BA.y+2.5,
     {skin:'#b5825a',hair:'#3a2f26',shirt:'#5a2f2f',pants:'#33282a',beard:'#3a2f26',hairstyle:'short'},
     ['The Garrison drills dawn to dark. A soft capital is a short one.',
      'You carry yourself like you\'ve put down worse than street thieves. Good. The realm can always use another arm.',
-     'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2));
-  // ---- soldiers posted through the city: a walled, patrolled, SAFE capital ----
+     'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2);
+    halvard.nightOwl=true; G.npcs.push(halvard); }   // a captain holds his post round the clock
+  // ---- soldiers posted through the city: a walled, patrolled, SAFE capital.
+  // The watch stands its posts DAY AND NIGHT (nightOwl) - troops don't troop indoors at dusk. ----
   { const gLook={skin:'#bd8f60',hair:'#3a2f26',shirt:'#42506a',pants:'#2e3340',trim:'#c9a24e',armor:1,hairstyle:'short'};
     const gLines=['Move along, citizen. The peace holds while we hold it.',
                   'Aldermere sleeps easy because we do not.',
-                  'Nothing gets past the wall on my watch - not thief, not wraith, not worse.'];
+                  'Nothing gets past the wall on my watch - not thief, not wraith, not worse.',
+                  'The night shift is the long one. Keep your lantern lit and your business honest.'];
     [[PA.x-3,PA.y+6],[PA.x+4,PA.y+6],[PL.x-5,PL.y+1],[PL.x+6,PL.y-1],[H.x+2,H.y+2],[M.x-4,M.y+2]].forEach((p,i)=>{
-      G.npcs.push(makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05));
+      const g=makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05);
+      g.nightOwl=true; G.npcs.push(g);
     }); }
   // ---- the Herald: town crier in the plaza ----
   G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
