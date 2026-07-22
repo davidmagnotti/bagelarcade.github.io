@@ -3319,6 +3319,7 @@ function switchWorld(id){
     def.gen();
   }
   G.worldId=id;
+  if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once
   P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0}; P.fishing=null;
   if(id==='main' && prevWorld==='east'){
     // sailing home from the Sunward Isle lands you back at Captain Corvo's cove

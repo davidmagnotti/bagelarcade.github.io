@@ -1,7 +1,18 @@
 /* =====================================================================
    UI PANELS
    ===================================================================== */
+// Up in the clouds there is no ground to chart: the minimap and the full map are
+// sealed on cloud worlds (Cloudreach), by design - it's part of being adrift in the sky.
+function mapSealed(){ return !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud); }
+function syncMapUI(){
+  const sealed=mapSealed();
+  const mw=document.getElementById('miniWrap'); if(mw) mw.style.display=sealed?'none':'';
+  const bm=document.getElementById('btnMap');
+  if(bm){ bm.style.opacity=sealed?'0.4':''; bm.style.filter=sealed?'grayscale(1)':'';
+    bm.style.pointerEvents=sealed?'none':''; bm.title=sealed?'No map reads up here in the clouds':''; }
+}
 function togglePanel(id){
+  if(id==='mapPanel' && mapSealed()){ if(typeof toast==='function') toast('The clouds hide any map - up here you steer by sight alone.',2600); return; }
   const el=document.getElementById(id);
   const open = el.style.display==='block';
   closeAllPanels();
@@ -358,6 +369,7 @@ function refreshUI(){
   const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv[P.quickItem||'potion']||0;
   updateMountBtn();
+  syncMapUI();   // hide the minimap & seal the map button on cloud worlds
 }
 /* Touch mount/dismount button - only shows once you own a mount and are
    out in the world. Cheap-guarded so it can be pinged every frame. */
