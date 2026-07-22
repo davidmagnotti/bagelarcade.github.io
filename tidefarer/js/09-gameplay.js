@@ -480,7 +480,11 @@ function damageMob(m,dmg,knock,skill){
   let crit=false;
   if(Math.random()<0.12){ dmg=Math.round(dmg*1.6); crit=true; }
   const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
-  dmg=Math.max(1,Math.round(dmg*Math.max(0.35,1-0.09*lvdiff))); // high-level foes shrug
+  dmg=Math.max(1,Math.round(dmg*Math.max(0.5,1-0.07*lvdiff))); // high-level foes shrug (softened - the old 0.35/0.09 floor turned late bosses into 25-hit slogs)
+  // big setpiece fights (any 300+ HP boss) yield to a determined blade - a targeted
+  // boss-damage bonus that leaves trash-mob tuning untouched. Keeps marquee fights
+  // decisive (~10-15 hits) instead of attrition sponges.
+  if((m.maxhp||0)>=300) dmg=Math.round(dmg*1.3);
   m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }

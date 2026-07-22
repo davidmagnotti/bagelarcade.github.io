@@ -244,13 +244,16 @@ document.getElementById('phSnap').onclick=function(){
   oc.textAlign='right'; oc.shadowColor='rgba(0,0,0,.85)'; oc.shadowBlur=8;
   try{ oc.letterSpacing='3px'; }catch(e){}
   oc.font=Math.max(12,Math.round(out.height*0.024))+'px Georgia';
-  oc.fillText('EMBERWICK ISLE', out.width-24, out.height-(bh? bh+16 : 20));
+  // Brand the shot with the current region's title (e.g. ALDERMERE) and the game
+  // name, so a Tidefarer screenshot never reads "EMBERWICK ISLE" out on the mainland.
+  var _wt=(typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].title) || 'TIDEFARER';
+  oc.fillText(_wt+' · TIDEFARER', out.width-24, out.height-(bh? bh+16 : 20));
   oc.restore();
   out.toBlob(b=>{
     if(!b) return;
     const a=document.createElement('a');
     a.href=URL.createObjectURL(b);
-    a.download='emberwick-'+new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)+'.png';
+    a.download='tidefarer-'+new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)+'.png';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   },'image/png');

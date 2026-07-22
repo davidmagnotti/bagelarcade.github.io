@@ -43,6 +43,54 @@ try{ document.body.appendChild(document.getElementById('pausePanel')); }catch(e)
 /* #confirmWipe lived inside #titleOv too (hidden during play); move it to <body>
    so the pause-menu "Start Over" reset can actually show it. */
 try{ document.body.appendChild(document.getElementById('confirmWipe')); }catch(e){}
+/* ---------- Save backup ----------------------------------------------------
+   Progress lives in a single localStorage slot that a cleared browser cache
+   wipes without warning. Surface the copy/paste save code (it always existed
+   under the hood) so a player can keep a real backup and restore it anywhere. */
+try{
+  const card=document.getElementById('pauseCard');
+  const btns=document.getElementById('pauseBtns');
+  if(card && btns && !document.getElementById('backupSection')){
+    const head=document.createElement('div');
+    head.className='pHead'; head.textContent='Backup';
+    const wrap=document.createElement('div'); wrap.id='backupSection';
+    wrap.style.cssText='display:flex;flex-direction:column;gap:8px;';
+    wrap.innerHTML=
+      '<div style="font-size:11px;color:var(--parch-dim);line-height:1.6;">Your adventure saves to this browser only. Copy a save code to keep a backup - paste it here (or in another browser) to restore.</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+
+        '<button class="btn" id="copySaveBtn">Copy save code</button>'+
+        '<button class="btn" id="restoreSaveBtn">Restore from code</button>'+
+      '</div>'+
+      '<textarea id="saveCodeBox" spellcheck="false" autocomplete="off" placeholder="Save code appears here / paste one to restore" '+
+        'style="display:none;width:100%;box-sizing:border-box;height:70px;resize:vertical;border-radius:8px;border:1.5px solid #4a3a26;background:#241a10;color:var(--parch);font:inherit;font-size:11px;padding:7px 10px;"></textarea>';
+    card.insertBefore(head,btns); card.insertBefore(wrap,btns);
+    const box=wrap.querySelector('#saveCodeBox');
+    box.addEventListener('keydown',e=>e.stopPropagation());   // don't let hotbar/pause keys eat typing
+    wrap.querySelector('#copySaveBtn').onclick=()=>{
+      let code=''; try{ code=saveCode(); }catch(e){}
+      if(!code){ toast('Could not read the save just now - try again in a moment.'); return; }
+      box.style.display='block'; box.value=code; box.select();
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(code).then(
+          ()=>toast('<b>Save code copied.</b> Paste it somewhere safe.',4200),
+          ()=>toast('Select the text below and copy it by hand.',4200));
+      } else toast('Select the text below and copy it by hand.',4200);
+    };
+    wrap.querySelector('#restoreSaveBtn').onclick=()=>{
+      if(box.style.display==='none' || !box.value.trim()){
+        box.style.display='block'; box.value=''; try{ box.focus(); }catch(e){}
+        toast('Paste your save code below, then press <b>Restore from code</b> again.',5200); return;
+      }
+      const code=box.value.trim();
+      if(typeof loadCode!=='function'){ toast('Restore is unavailable in this build.'); return; }
+      if(loadCode(code)===false){ toast('That save code could not be read. Check you copied all of it.',5200); return; }
+      store.set(code); box.style.display='none';
+      togglePause(false); refreshUI&&refreshUI();
+      banner('SAVE RESTORED','YOUR ADVENTURE CONTINUES');
+      toast('<b>Save restored.</b> Welcome back.',4200);
+    };
+  }
+}catch(e){}
 document.getElementById('btnPause').onclick=()=>togglePause();
 document.getElementById('resumeBtn').onclick=()=>togglePause(false);
 // "Start Over": the game boots straight into play now, so there's no title to

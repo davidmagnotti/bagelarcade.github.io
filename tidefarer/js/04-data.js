@@ -199,27 +199,27 @@ function spawnNPCs(){
 const MOBDEF = {
   slime:{hp:18, dmg:12, speed:1.7, aggro:4.5, xp:16, gold:[1,2], name:'Slime'},
   wolf:{hp:32, dmg:20, speed:3.4, aggro:6, xp:26, gold:[1,3], name:'Wolf'},
-  skeleton:{hp:46, dmg:36, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
+  skeleton:{hp:46, dmg:26, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
   archer:{hp:26, dmg:27, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   gravelord:{hp:150, dmg:42, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
   boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow King'},
-  alpha:{hp:520, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], lvl:8, name:'Greymaw, the Alpha'},
-  scorpion:{hp:360, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
-  raider:{hp:310, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
-  raidcap:{hp:1100, dmg:40, speed:3.15, aggro:12, xp:620, gold:[120,180], lvl:14, name:'Castellan of the Vael'},
+  alpha:{hp:460, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], lvl:8, name:'Greymaw, the Alpha'},
+  scorpion:{hp:300, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
+  raider:{hp:280, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
+  raidcap:{hp:820, dmg:40, speed:3.15, aggro:12, xp:620, gold:[120,180], lvl:14, name:'Castellan of the Vael'},
   brigand:{hp:240, dmg:22, speed:3.15, aggro:9, xp:180, gold:[18,34], lvl:7, name:'Pinewood Brigand'},
   wraith:{hp:130, dmg:15, speed:4.2, aggro:13, xp:110, gold:[10,20], lvl:6, name:'Night Wraith'},
   boar:{hp:160, dmg:16, speed:3.5, aggro:7, xp:130, gold:[6,14], lvl:5, name:'Bristleback Boar'},
-  dragon:{hp:820, dmg:40, speed:3.1, aggro:11, xp:600, gold:[90,140], lvl:9, name:'Ashwing, the Enthralled'},
+  dragon:{hp:680, dmg:40, speed:3.1, aggro:11, xp:600, gold:[90,140], lvl:9, name:'Ashwing, the Enthralled'},
   mage:{hp:200, dmg:26, speed:2.7, aggro:12, xp:260, gold:[30,55], lvl:8, name:'Vath the Emberbinder'},
-  leviathan:{hp:1500, dmg:34, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
+  leviathan:{hp:1000, dmg:34, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
   raptor:{hp:64, dmg:24, speed:4.5, aggro:11, xp:70, gold:[0,0], lvl:12, name:'Screaming Raptor'},
-  serpent:{hp:1300, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},
-  frostwarden:{hp:1700, dmg:36, speed:1.9, aggro:13, xp:800, gold:[0,0], lvl:13, name:'The Weeping Warden'},
+  serpent:{hp:920, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},
+  frostwarden:{hp:1150, dmg:36, speed:1.9, aggro:13, xp:800, gold:[0,0], lvl:13, name:'The Weeping Warden'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'},
   hare:{hp:12, dmg:0, speed:2.6, aggro:0, xp:10, gold:[0,0], lvl:1, name:'Garden Hare'},   // a harmless lettuce thief - bonk it and it bolts
-  polarbear:{hp:680, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
-  icecolossus:{hp:1650, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'}   // Vath-cursed dungeon guardian - freed, not slain
+  polarbear:{hp:560, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
+  icecolossus:{hp:1120, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'}   // Vath-cursed dungeon guardian - freed, not slain
 };
 function inSafeZone(x,y){
   for(const k of ['village','dock','farm']){

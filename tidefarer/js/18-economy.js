@@ -14,6 +14,7 @@ ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
 ACH.mastersmith={t:'Master Smith',d:'Forge the steel sword.'};
 ACH.loremaster={t:'Loremaster',d:'Read every text and stone on both islands.'};
 ACH.ironclad={t:'Ironclad',d:'Wear the steel plate.'};
+ACH.delver={t:'Delver',d:'Claim the heart of the Undermaw.'};   // awarded at the cave chest (20-lore) - was never registered, so the award silently no-op'd
 
 const SELL_PRICES={fish:3, cookedfish:4, wood:1, stone:1, hardwood:4, ore:5, bar:14, pearl:25, crystal:15, mushroom:2, wheat:2, apple:2};
 
