@@ -1056,7 +1056,7 @@ function updateEastDeep(dt){
   if(onPlate) stepEmberPlate(onPlate);
 }
 /* =====================================================================
-   WINDSURF ISLE - an industrious city reachable only by Ashwing's wing
+   WINDSURF ISLE - an industrious city you drop onto from the Cloudreach by parachute
    (the straits are too treacherous for boats until the sea-beast falls)
    ===================================================================== */
 function genWind(){
@@ -1141,13 +1141,9 @@ function placeObjectsWind(){
   const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
   NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
   SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
-  // Ashwing perches on the shore by the pier, exactly where he set you down - he
-  // is your way home, the way you came. (No boat until the strait is calmed.)
-  { const sp=findOpenNear(D.x+6, D.y-3, 7) || [D.x+6, D.y-3];
-    G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82});
-    setSolid(sp[0],sp[1],1); setSolid(sp[0]+1,sp[1],1); setSolid(sp[0],sp[1]-1,1); }
-  // the ferry only appears once you calm the strait and hulls can sail again;
-  // before that, Ashwing is the only way off the isle.
+  // You came DOWN onto Windsurf on the Roc's stormsail - there is no dragon here, and
+  // no keel crosses the cursed strait until you calm it. So until the tide is calmed
+  // you are meant to be stranded: fix the strait and the ferry opens, your way out.
   if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('lamp', D.x+3, D.y+1, '');
@@ -3031,7 +3027,7 @@ function attemptSail(){
   }
   // Windsurf is walled off by the killing tide until you calm the strait.
   if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){
-    toast('The strait past the breakwater churns like a cauldron - no hull could live in it. <b>Ashwing</b> can still fly you home; or <b>calm the water first</b>.',5200);
+    toast('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.',5200);
     return;
   }
   // Stormreach is only reachable by sea, so its berth is always a ferry - prompt for a destination
