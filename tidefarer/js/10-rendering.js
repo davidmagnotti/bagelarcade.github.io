@@ -2051,13 +2051,29 @@ function drawMinimap(){
   try{
     g.imageSmoothingEnabled=false;
     // OPAQUE base fill first, so the minimap is NEVER a blank/transparent box even if
-    // the map image is missing for a frame (a dark parchment matches the HUD frame)
+    // a frame draws nothing (a dark parchment matches the HUD frame)
     g.fillStyle='#16110a'; g.fillRect(0,0,120,120);
-    // SELF-HEAL: if the map image is missing or was built for a different world (a
-    // failed/stale rebuild on entry - the Cloudreach bug), rebuild it for THIS world now
-    if(!mapBase || mapBaseWorld!==G.worldId || mapBase.width!==MAPW){ buildMapBase(); mapBaseWorld=G.worldId; }
-    const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
-    if(mapBase) g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
+    // Draw the visible window DIRECTLY from G.map, cell by cell - do NOT blit from an
+    // offscreen mapBase canvas. iOS Safari caps total canvas memory, and the 9-arg
+    // sub-rectangle drawImage(mapBase, sx,sy,w,h, ...) it used before silently drew
+    // nothing on the Cloudreach (blank dark box, no dot) once that budget was spent -
+    // even though the full-screen map, which blits the WHOLE image, still worked.
+    // Painting ~48x48 fillRects straight onto the visible 120px canvas needs no
+    // offscreen surface at all, so it can never go blank.
+    const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+    const vwWant=48, vw=Math.min(vwWant, MAPW, MAPH);
+    const sx=clamp(P.x-vw/2,0,Math.max(0,MAPW-vw)), sy=clamp(P.y-vw/2,0,Math.max(0,MAPH-vw));
+    const cell=120/vw, x0=Math.floor(sx), y0=Math.floor(sy);
+    for(let ty=y0; ty<sy+vw; ty++){
+      if(ty<0||ty>=MAPH) continue;
+      const dy=(ty-sy)*cell;
+      for(let tx=x0; tx<sx+vw; tx++){
+        if(tx<0||tx>=MAPW) continue;
+        const t=G.map[ty*MAPW+tx];
+        g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t] || '#16110a';
+        g.fillRect((tx-sx)*cell, dy, cell+0.6, cell+0.6);
+      }
+    }
     // a grid pinned to world tiles - it scrolls as you move, so orientation and motion
     // read even on featureless terrain (open cloud, open sea) instead of a blank box
     g.strokeStyle='rgba(90,90,90,0.28)'; g.lineWidth=1;
