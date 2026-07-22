@@ -107,6 +107,14 @@ function buildDialogContent(npc){
     return;
   }
   // === ACT IV scripted scenes ===========================================
+  // Nudge: Orin has read the ward and named the Woodworker, but the player hasn't
+  // taken up the hunt yet - a gentle pointer back to Orin without spoiling anything.
+  if(npc.id==='woody' && P.story && P.story.wardRead && !P.story.vathBound
+     && !P.story.vathCame && qs('enchanter')!=='active'){
+    setDialog('<i>The Woodworker hums that same wandering tune and crowns his woodpile with the five-point star, easy as breathing.</i> “Back again? You keep looking at me like you mislaid something. <b>Sage Orin</b>’s your man for mislaid things - old books, old riddles. He had that same look, last you two spoke.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // The Woodworker, shown the pendant: the ward cracks his binding and draws
   // Vath out for his final stand on the Emberwick green.
   if(npc.id==='woody' && qs('enchanter')==='active' && P.story && !P.story.vathCame){
