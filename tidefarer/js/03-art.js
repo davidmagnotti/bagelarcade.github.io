@@ -760,8 +760,10 @@ function drawHumanoid(g,sx,sy,o){
 
   const B=-bounce/s; // bounce offset in local units
   const stride=walking? sw1 : 0;
-  g.fillStyle='rgba(10,6,3,0.20)'; // tight contact shadow under the boots
-  g.beginPath(); g.ellipse(0,0.6,7.8,2.5,0,0,TAU); g.fill();
+  if(!o.ride){ // a mounted rider has no ground contact - the mount draws its own shadow
+    g.fillStyle='rgba(10,6,3,0.20)'; // tight contact shadow under the boots
+    g.beginPath(); g.ellipse(0,0.6,7.8,2.5,0,0,TAU); g.fill();
+  }
 
   if(o.quiver && !away){
     g.save(); g.translate(-7,-24+B); g.rotate(0.5);
@@ -776,36 +778,55 @@ function drawHumanoid(g,sx,sy,o){
 
   /* ---------------- stubby legs & big boots ---------------- */
   const bootC='#5a3d28', bootD='#3e2a1c';
-  if(!o.robe){
+  const drawBoot=(botD)=>{
+    const btg=g.createLinearGradient(0,-1.2,0,3.4);
+    btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
+    g.fillStyle=btg; g.lineWidth=1.7;
+    g.beginPath(); g.roundRect(-3.6,-1.2,7.2,4.6,2.1); g.fill(); g.stroke();
+    g.fillStyle='rgba(255,245,225,0.25)'; // gloss
+    g.beginPath(); g.ellipse(-1.2,0,1.5,0.75,-0.3,0,TAU); g.fill();
+    if(!away){
+      g.lineWidth=1.3; g.fillStyle=botD; // toe cap
+      g.beginPath(); g.roundRect(flip>0?1.2:-3.4, -0.6, 2.2, 3.4, 1.2); g.fill(); g.stroke();
+    }
+  };
+  if(o.ride && !o.robe){
+    // SEATED ASTRIDE: hips rest on the mount's back, the thigh splays outward
+    // over the saddle, the knee bends, and the shin+boot hang straight DOWN the
+    // mount's flank. The long dangling shin is what sells "sitting" over "standing".
+    for(const side of [-1, 1]){
+      g.save();
+      g.translate(side*3.6, -7.5+B*0.4);
+      // thigh: short, angled out over the saddle
+      g.rotate(side*0.86);
+      g.fillStyle=pants;
+      g.beginPath(); g.roundRect(-2.4,0,4.8,5.4,2.1); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      // knee -> straighten so the shin drops vertically down the flank
+      g.translate(0,5.0); g.rotate(-side*0.86);
+      g.fillStyle=pants; // long lower leg (breeches) hanging down the side
+      g.beginPath(); g.roundRect(-2.05,0,4.1,10.5,1.8); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      // boot at the foot of the hanging leg
+      g.translate(0,10.8);
+      drawBoot(bootD);
+      g.restore();
+    }
+  } else if(!o.robe){
     for(const L of [[-4.1,1],[4.1,-1]]){
       const lx=L[0], sg=L[1];
-      // ride: seated astride - the thigh splays out over the mount's back, then
-      // the knee bends so the shin & boot drop straight down her flank (without
-      // the bend the straightened legs read as standing on top of her)
-      const la= o.ride? sg*0.92 : stride*0.55*sg;
-      const lift= o.ride? 0 : Math.max(0, sg*stride)*2.2;
+      const la= stride*0.55*sg;
+      const lift= Math.max(0, sg*stride)*2.2;
       g.save();
-      g.translate(lx + (o.ride? sg*1.7:0), -8.5+B*0.4 + (o.ride? 3.2:0)); g.rotate(flip*la*(away?-1:1));
+      g.translate(lx, -8.5+B*0.4); g.rotate(flip*la*(away?-1:1));
       g.fillStyle=pants;
-      g.beginPath(); g.roundRect(-2.4,0,4.8, o.ride?5.0:6.5, 2.1); g.fill();   // shorter thigh when seated
+      g.beginPath(); g.roundRect(-2.4,0,4.8, 6.5, 2.1); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
       // big boot
-      const fs=(!o.ride && walking)? Math.max(0,-sg*stride)*0.12 : 0;
-      g.translate(0, (o.ride?4.6:6.2)-lift*0.3);
-      if(o.ride) g.rotate(-flip*la*(away?-1:1)*1.12);   // knee bend: shin hangs down her side
+      const fs=walking? Math.max(0,-sg*stride)*0.12 : 0;
+      g.translate(0, 6.2-lift*0.3);
       g.scale(1+fs, 1-fs*0.6);
-      const btg=g.createLinearGradient(0,-1.2,0,3.4);
-      btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
-      g.fillStyle=btg;
-      g.lineWidth=1.7;
-      g.beginPath(); g.roundRect(-3.6,-1.2,7.2,4.6,2.1); g.fill(); g.stroke();
-      g.fillStyle='rgba(255,245,225,0.25)'; // gloss
-      g.beginPath(); g.ellipse(-1.2,0,1.5,0.75,-0.3,0,TAU); g.fill();
-      g.lineWidth=1.3;
-      if(!away){
-        g.fillStyle=bootD; // toe cap
-        g.beginPath(); g.roundRect(flip>0?1.2:-3.4, -0.6, 2.2, 3.4, 1.2); g.fill(); g.stroke();
-      }
+      drawBoot(bootD);
       g.restore();
     }
   }

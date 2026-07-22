@@ -1855,7 +1855,7 @@ function drawPlayer(s){
   if(P.riding){
     const onMoa=P.unlocked&&P.unlocked.moa;
     if(onMoa) drawMoa(s); else drawHorse(s);
-    const s2={x:s.x, y:s.y-(onMoa?32:21)};   // you sit high on the tall moa
+    const s2={x:s.x, y:s.y-(onMoa?24:18)};   // hips settle onto the mount's back (legs hang down its flanks)
     drawPlayerFigure(s2);
     return;
   }
