@@ -53,7 +53,7 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -829,6 +829,34 @@ function drawDecor(b,s){
       for(let i=-1;i<=1;i++){ g.fillRect(ox+i*11-2.5,oy-38,5,38); g.strokeRect(ox+i*11-2.5,oy-38,5,38); }
       g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(ox-16,oy+yy,32,3.5); }
       g.fillStyle='#5a4436'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(ox+i*11,oy-38); g.lineTo(ox+i*11-4,oy-32); g.lineTo(ox+i*11+4,oy-32); g.closePath(); g.fill(); }
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='staffgate'){
+    if(b.open) return;   // the ward is broken - nothing to draw
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const cxT=Math.floor(b.x), cyT=Math.floor(b.y), t=G.time;
+    // one shimmering ember-fence panel per doorway tile, so the whole gap is warded
+    for(const [tx,ty] of (b.tiles||[[cxT,cyT]])){
+      const dxw=tx-cxT, dyw=ty-cyT, ox=(dxw-dyw)*32, oy=(dxw+dyw)*16;
+      g.save(); g.translate(ox,oy);
+      // a soft heat-haze glow behind the bars
+      g.fillStyle='rgba(255,130,50,'+(0.12+0.07*Math.sin(t*3+tx+ty)).toFixed(3)+')';
+      g.beginPath(); g.ellipse(0,-15,20,24,0,0,TAU); g.fill();
+      // the runic lintel + sill the ward hangs between
+      g.fillStyle='#3a281c'; g.fillRect(-15,-36,30,4); g.fillRect(-15,0,30,4);
+      g.fillStyle='#c9a24e'; g.fillRect(-15,-33,30,1.2); g.fillRect(-15,1,30,1.2);
+      // shimmering vertical ember-bars, swaying like flame
+      for(let i=-2;i<=2;i++){ const bx=i*6.5, sway=Math.sin(t*4+i*1.3+tx)*1.6;
+        g.strokeStyle='rgba(255,120,40,0.6)'; g.lineWidth=2.8; g.lineCap='round';
+        g.beginPath(); g.moveTo(bx+sway,-33); g.lineTo(bx-sway,1); g.stroke();
+        g.strokeStyle='rgba(255,225,150,0.85)'; g.lineWidth=1.1;
+        g.beginPath(); g.moveTo(bx+sway,-33); g.lineTo(bx-sway,1); g.stroke(); }
+      g.lineCap='butt';
+      // glyph anchors top & bottom
+      g.fillStyle='rgba(255,190,100,0.95)'; g.beginPath(); g.arc(0,-34,2.2,0,TAU); g.arc(0,2,2.2,0,TAU); g.fill();
+      g.restore();
+      if(Math.random()<0.14) G.parts.push({x:tx+0.5,y:ty+0.5,vx:rnd(-0.1,0.1),vy:-rnd(0.3,0.9),life:rnd(0.5,1.1),color:'#ffb04a',size:rnd(1,2),grav:-0.05});
     }
     g.restore(); return;
   }

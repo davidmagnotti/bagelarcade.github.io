@@ -102,6 +102,9 @@ function loadCode(str){
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
+  // dash is now a taught ability (mage-tower orb). Grandfather any save past the
+  // opening minutes so no returning player ever loses their footwork.
+  if(!P.unlocked.dash && (P.unlocked.bow||P.unlocked.staff||P.swordTier>0||(d.lv||1)>1||(d.world&&d.world!=='isle'))) P.unlocked.dash=true;
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
   if(typeof d.dyt==='number') G.dayT=d.dyt;

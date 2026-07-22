@@ -228,7 +228,10 @@ function useHotspot(h){
       if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
       burst(P.x,P.y-0.8,'#c9b0ff',18,2.4); Snd.magic&&Snd.magic(); refreshUI&&refreshUI();
       addFloat('The orb’s focus floods you',P.x,P.y-1.8,'#c9b0ff',1.3);
+      // the FIRST mage-tower orb also teaches the dash - the mage's parting gift of speed
+      const learnsDash = !(P.unlocked && P.unlocked.dash);
       toast('You lay both hands on the scrying orb. Stored focus - a mage’s years of patient study - pours up your arms. <b style="color:#c9b0ff">You rise a whole level.</b>',5200);
+      if(learnsDash && typeof unlockDash==='function') setTimeout(()=>unlockDash('The orb’s last lesson settles into your feet. <b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside.'), 1600);
       autoSave&&autoSave();
       return;
     }

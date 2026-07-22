@@ -834,6 +834,12 @@ function genEastDeep(){
   carve(28,21,52,36);   // R3 THE WARDING LOCKS - button-order chamber
   carve(39,16,41,22);   // doorway D (Gate 3 seals it at y=19)
   carve(20,2,60,18);    // R4 ASHWING'S REST - the end chamber (room to break the spell)
+  // R5 THE EMBER KING'S HOARD - an OPTIONAL walled vault off the Warding Locks,
+  // sealed by an arcane ember-fence only the fire staff can break. Carved here (as
+  // floor, before the wall-face pass) so its basalt walls render as real walls and
+  // the fence doorway does NOT get recorded as basalt (it becomes the ember-gate).
+  carve(54,24,61,34);   // the vault chamber, east of R3
+  carve(52,28,54,30);   // the short approach corridor + the fence doorway
   // record the visible wall faces (basalt bordering the carved floor) BEFORE the
   // gates go solid, so an opened gate never leaves a phantom wall behind
   EDEEP_WALLS=[];
@@ -880,6 +886,17 @@ function placeObjectsEastDeep(){
   for(const [tx,ty,ord] of [[32,33,1],[48,33,2],[48,24,3],[32,24,4]])
     G.decor.push({kind:'emberbutton', x:tx+0.5, y:ty+0.5, group:'lock', ord, set:false});
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
+  // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
+  // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
+  const FENCE=[[53,28],[53,29],[53,30]];
+  for(const [x,y] of FENCE) setSolid(x,y,1);
+  const ward={kind:'staffgate', x:53.5, y:29.5, tiles:FENCE, open:false, label:'the Ember Ward'};
+  G.decor.push(ward);
+  G.decor.push({kind:'chest', x:58.5, y:29.5, deep:1, emberking:1});
+  G.decor.push({kind:'lamp', x:55.5, y:25.5}); G.decor.push({kind:'lamp', x:60.5, y:25.5});
+  if(P.story && (P.story.emberWard || P.story.emberDone)){   // already broken - keep it open
+    ward.open=true; for(const [x,y] of FENCE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+  }
   // ---- ASHWING'S REST: the dragon dozes here; talking to him IS the finale ----
   edeepLava(24,6,1.6); edeepLava(56,6,1.6);
   G.decor.push({kind:'dragonrest', x:40.5, y:9.5});
@@ -972,6 +989,24 @@ function pressEmberButton(b){
     if(m){ m.state='chase'; m.respawnT=-1; m.noAggroT=0; shockwave(m.x,m.y,'rgba(120,150,180,0.7)',24); burst(m.x,m.y-0.4,'#c8d8e8',14,1.8); }
     toast('Wrong rune! The ward flares and a <b>barrow archer</b> claws up out of the ash. The runes go dark - begin again from <b>I</b>.',4200);
   }
+}
+/* THE EMBER WARD: an arcane fence across the hoard's doorway. Blades and arrows
+   pass through it uselessly - ONLY a fire staff unmakes it. */
+function dispelStaffGate(b){
+  if(!b || b.open) return;
+  if(!(P.unlocked && P.unlocked.staff)){
+    toast('An <b>arcane ember-ward</b> hums across the way - no blade or arrow so much as marks it. Only a <b style="color:var(--ember)">fire staff</b> could unmake a working like this.',4800);
+    Snd.step&&Snd.step(5); return;
+  }
+  b.open=true;
+  for(const [x,y] of (b.tiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+  P.story=P.story||{}; P.story.emberWard=1;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  Snd.magic&&Snd.magic(); G.shake=0.45;
+  shockwave(b.x,b.y,'rgba(255,150,80,0.9)',44); burst(b.x,b.y-0.4,'#ffb060',20,2.6);
+  banner('THE EMBER WARD BREAKS','THE HOARD LIES OPEN');
+  toast('You level the fire staff and speak the counter-word. The ember-fence gutters, flares white, and blows out like a struck lantern. <b>The way is open.</b>',5200);
+  autoSave&&autoSave();
 }
 function updateEastDeep(dt){
   const gx=Math.floor(P.x), gy=Math.floor(P.y);
@@ -2501,6 +2536,19 @@ function openChest(b){
       setTimeout(()=>toast('Tucked beneath the silk: a <b>coin older than the kingdom</b>, and a scrap in a fine, unhurried hand - <i>\u201cfor the ribbons, and for your silence.\u201d</i> It is signed with one word: <b style="color:#c9a0ff">Vath</b>. A cornered brigand spits as you pass: \u201cPolite fellow. Paid in old coin. Said it was only ribbons - what\'s the harm in a few ribbons?\u201d',9500),1600); }
     return;
   }
+  if(b.emberking){
+    giveGold(rndi(150,230)); give('potion',2); give('crystal',1);
+    if(!(P.unlocked && P.unlocked.dash2)){
+      P.unlocked=P.unlocked||{}; P.unlocked.dash2=true;
+      banner("THE EMBER KING'S GIFT",'DOUBLE DASH - CHAIN A SECOND DODGE');
+      setTimeout(()=>toast('The hoard’s heart is a coil of ember-thread that winds up your legs and settles. <b style="color:#c9b0ff">Double Dash learned!</b> Dash again in the instant after the first - two darts, quick as breath.',6800),400);
+    } else {
+      banner("THE EMBER KING'S HOARD",'GOLD, TONICS, AND EMBER-GLASS');
+    }
+    shockwave(b.x,b.y,'rgba(255,150,80,0.9)',60); burst(b.x,b.y-0.5,'#ffb060',22,2.8); Snd.levelup();
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
     if(Math.random()<0.6) give('potion',1);
@@ -2703,6 +2751,12 @@ function switchWorld(id){
 /* ---------- dodge roll ---------- */
 function tryRoll(){
   if(P.dead || G.state!=='play' || dlg.open || G.interior) return;
+  if(!(P.unlocked && P.unlocked.dash)){
+    // dash is taught by a mage-tower's scrying orb - nudge the player there
+    if(!P._dashNagT || G.time>P._dashNagT){ P._dashNagT=G.time+4;
+      toast('You have no trained footwork yet - a <b>mage tower’s orb</b> teaches the <b>dash</b>.',3600); }
+    return;
+  }
   if((P.rollT||0)>0) return;
   if((P.rollCd||0)>0){
     // double dash (Moss's quickroot): one chained roll inside the cooldown window

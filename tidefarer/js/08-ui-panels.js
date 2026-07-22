@@ -369,7 +369,7 @@ function updateMountBtn(){
     const hide = !!G.interior;
     const ab=document.getElementById('attackBtn'), db=document.getElementById('dodgeBtn');
     if(ab) ab.style.display = hide?'none':'';
-    if(db) db.style.display = hide?'none':'';
+    if(db) db.style.display = (hide || !(P.unlocked && P.unlocked.dash))?'none':'';
   }
   const btn=document.getElementById('mountBtn'); if(!btn) return;
   const show = isTouch && ownsMount() && !G.interior && !(typeof inDungeon==='function' && inDungeon()) && G.state==='play' && !P.dead;

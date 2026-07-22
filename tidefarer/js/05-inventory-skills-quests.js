@@ -79,7 +79,10 @@ function completeQuest(id){
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; buildHotbar(); toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
-  if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.'); }
+  if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
+    // the mage teaches motion as well as fire: earning the staff also trains the dash
+    if(typeof unlockDash==='function') setTimeout(()=>unlockDash('Orin taps your knee. “A mage who cannot move is a candle in a draught.” <b style="color:#c9b0ff">Dash learned!</b> '+(isTouch?'Tap the dodge button':'Press Shift')+' to dart aside.'),1800); }
+  if(rw.dash){ if(typeof unlockDash==='function') unlockDash(); }
   if(rw.surf){ P.unlocked.surf=true;
     toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
   if(rw.moa){ P.unlocked.moa=true; P.riding=1; if(typeof updateMountBtn==='function') updateMountBtn();

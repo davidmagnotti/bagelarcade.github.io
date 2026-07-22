@@ -156,6 +156,8 @@ function nearestInteract(){
     // not only a direct tap, so they can actually be pressed on mobile
     if(b.kind==='emberbutton'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'emberbutton',o:b,label:b.set?'Rune (lit)':'Press rune'}; } }
+    if(b.kind==='staffgate' && !b.open){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'staffgate',o:b,label:(P.unlocked&&P.unlocked.staff)?'Break the ward':'Arcane ward'}; } }
     if(b.kind==='dragonrest'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<3.0 && d<bd){ bd=d; best={type:'dragonrest',o:b,label:'Speak'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -208,6 +210,7 @@ function doInteract(){
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
+  if(it.type==='staffgate'){ facePoint(it.o.x,it.o.y); dispelStaffGate(it.o); return; }
   if(it.type==='dragonrest'){ facePoint(it.o.x,it.o.y); if(typeof dragonLairSpeak==='function') dragonLairSpeak(); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
   if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
@@ -430,6 +433,17 @@ function gainLXP(n){
     P.cheerT=3;
   }
   refreshUI();
+}
+/* Dash (the dodge-roll) is now a TRAINED ability, taught by a mage-tower's scrying
+   orb. This grants it once and announces it. Grandfathered generously on load so
+   no returning player ever loses their footwork. */
+function unlockDash(msg){
+  P.unlocked=P.unlocked||{};
+  if(P.unlocked.dash) return;
+  P.unlocked.dash=true;
+  if(typeof updateMountBtn==='function') updateMountBtn();
+  Snd.quest&&Snd.quest();
+  toast(msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside - a breath of speed and no damage taken mid-dash.', 4600);
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
