@@ -84,7 +84,7 @@ function buildDialogContent(npc){
   // and he tells the tragedy that binds Vath to the throne, then charges you.
   if(npc.id==='aldous' && qs('audience')==='active'){
     const p3=()=>{
-      setDialog('<i>He turns the truth over like a blade he has carried too long.</i> “The curses shattering across my isles - the wyrm, the leviathan, the screaming aerie, the weeping strait - they are all one hand\'s work. His hand. I would know Vath\'s bindings anywhere; he practiced them at this very court. He did not drown thirty years ago. He has been out there all this time, and my son with him, or my son\'s grave.” <i>The King rises.</i> “I can send armies against a border. I cannot send them against a ghost. But you - you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy. Go with the crown behind you.”',
+      setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown thirty years ago. He\'s been out there all this time - and my son with him, or my son\'s grave.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy.”',
         [{label:'I will find him.', cls:'gold', fn:()=>{
             P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
             completeQuest('audience');
@@ -94,15 +94,15 @@ function buildDialogContent(npc){
             // back to Orin on Emberwick to have it read.
             if(!P.quests.pendant){ P.quests.pendant='active'; P.prog.pendant=0; }
             setTimeout(()=>toast('<b style="color:var(--ember)">The pendant is the thread.</b> Sail back to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000),2600);
-            setDialog('<i>The King presses a heavy purse and a folded writ into your hands - his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited thirty years; I can wait a little longer, now that someone is finally looking.”',
+            setDialog('<i>The King presses a heavy purse and a folded writ into your hands, his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited thirty years; I can wait a little longer, now that someone is looking.”',
               [{label:'Continue',fn:()=>buildDialogContent(npc)}]);
         }}]);
     };
     const p2=()=>{
-      setDialog('“Thirty years past, I had a wife I did not deserve and a son not yet a season old. My queen wished to show the boy the isles her own mother came from - Emberwick, out past the eastern shoals. My court enchanter counseled the voyage, chose the ship, sailed with them to see them safe. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers, and grief, and nothing else. No queen. No child. No enchanter. I buried three empty coffins and called Vath a loyal man drowned in my service.”',
+      setDialog('“Thirty years past, I had a wife I did not deserve and a son not yet a season old. My queen wished to show the boy her mother\'s isles - Emberwick, past the eastern shoals. My court enchanter chose the ship and sailed with them to see them safe. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers and grief, nothing else. I buried three empty coffins and called Vath a loyal man drowned in my service.”',
         [{label:'…And now?', fn:p3}]);
     };
-    setDialog('<i>The King studies you a long moment - then his eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself, and the guarded weariness returns.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit, if you like. Let me tell you why the sight of you unsteadies me.”',
+    setDialog('<i>The King\'s eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit. Let me tell you why the sight of you unsteadies me.”',
       [{label:'Listen', fn:p2}]);
     return;
   }
@@ -173,7 +173,7 @@ function buildDialogContent(npc){
   // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
   // warns of the thing fouling the seized works below.
   if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
-    setDialog('<i>Burl wipes flour from his hands and lowers his voice, nodding at the mill behind him.</i> “Tolen sent you for the sail, aye - Nessa\'s finest, locked in the vault since the gear-train seized. Go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped the works. There\'s a <b>thing</b> down in them, fouled in the shaft, and it don\'t like company. Put it down and the train frees - the millstone gate\'ll grind up on its own, and the sail\'s yours. Go armed.”',
+    setDialog('<i>Burl lowers his voice, nodding at the mill behind him.</i> “Tolen sent you for the sail - Nessa\'s finest, locked in the vault since the gear-train seized. Go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped the works. There\'s a <b>thing</b> fouled in the shaft, and it don\'t like company. Put it down and the sail\'s yours. Go armed.”',
       shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
     return;
   }
@@ -328,7 +328,7 @@ function shopButtons(npc,btns){
       for(const vk in SELL_PRICES){ const vc=P.inv[vk]||0;
         if(vc>0){ P.vault[vk]=(P.vault[vk]||0)+vc; take(vk,vc); vn+=vc; } }
       Snd.coin(); autoSave();
-      setDialog(vn>0? '“'+vn+' goods, shelved and sealed under your name. Why goods only? Scavengers take what is loose in a satchel; tonics ride your belt and steel rides your back. The vault guards the only things death can touch.”'
+      setDialog(vn>0? '“'+vn+' goods, shelved and sealed under your name. Scavengers only take what\'s loose in a satchel - tonics ride your belt, steel your back. The vault guards the rest.”'
         : '“Your satchel holds nothing the vault takes - raw goods only: catch, crop, timber, ore and gem.”',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});

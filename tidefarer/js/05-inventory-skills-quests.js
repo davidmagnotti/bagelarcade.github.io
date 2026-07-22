@@ -215,6 +215,24 @@ function toast(html,ms=3200){
   el.innerHTML=html; el.style.display='block';
   clearTimeout(toastT); toastT=setTimeout(()=> el.style.display='none', ms);
 }
+// An important story beat - a boss-defeat or reveal - shown on a card that waits
+// for an explicit press instead of fading on a timer, so it is never missed. The
+// world pauses while it is up so the moment can be read in peace.
+function storyCard(html, opts){
+  opts=opts||{};
+  const ov=document.getElementById('storyOv'); if(!ov) return;
+  document.getElementById('storyText').innerHTML=html;
+  const bt=document.getElementById('storyBtn');
+  bt.textContent=opts.label||'Continue';
+  ov.style.display='flex';
+  G._storyPaused = (G.state==='play' && !G.paused);
+  if(G._storyPaused) G.paused=true;
+  bt.onclick=()=>{
+    ov.style.display='none';
+    if(G._storyPaused){ G.paused=false; G._storyPaused=false; }
+    if(opts.onOk) opts.onOk();
+  };
+}
 function addFloat(text,x,y,color,scale=1){
   G.floats.push({text,x,y,vy:-0.9,life:1.3,color:color||'#fff',scale});
 }
