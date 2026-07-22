@@ -137,10 +137,17 @@ function nearestInteract(){
     }
     if(b.kind==='bazaar' && b.shop){ const d=dist(P.x,P.y,b.x,b.y+0.9);
       if(d<1.9 && d<bd){ bd=d; best={type:'shop',o:b,label:'Shop'}; } }
-    if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'||b.kind==='windmill'||b.kind==='waterwheel'){
+    if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='castle'||b.kind==='hut'||b.kind==='resort'||b.kind==='waterwheel'){
       const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
       const d=dist(P.x,P.y,doorX,doorY);
       if(d<(b.grand?2.6:1.8) && d<bd){ bd=d; best={type:'door',o:b,label:b.grand?'Enter the palace':'Enter'}; }
+    }
+    // the windmill door IS the way down into the Undermill (no separate stair-hatch) -
+    // it stays locked until Tolen sends you for the sail; enterMillDungeon() gates it
+    if(b.kind==='windmill'){
+      const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+0.9);
+      const d=dist(P.x,P.y,doorX,doorY);
+      if(d<1.8 && d<bd){ bd=d; best={type:'milldungeon',o:b,label:'Descend'}; }
     }
     if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type:'lair',o:b,label:'Enter'}; } }

@@ -106,7 +106,7 @@ function completeQuest(id){
   if(id==='board'){ // the board is shaped, but bare - now fetch Nessa's sail from the Undermill
     P.story=P.story||{}; P.story.boardMade=1;
     if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; }
-    setTimeout(()=>toast('<b>Quest:</b> The Sail in the Undermill - the hatch beside the <b>windmill</b> is unchained. Throw the three <b>gear-locks</b> below to raise the millstone gate and bring up <b>Nessa\'s stormsail</b>. Speak to <b>Burl the Millwright</b> if you want the way of it.',7200),2600); }
+    setTimeout(()=>toast('<b>Quest:</b> The Sail in the Undermill - the <b>windmill</b> door is unbarred. Descend through it into the old works below, throw the three <b>gear-locks</b> to raise the millstone gate, and bring up <b>Nessa\'s stormsail</b>. Speak to <b>Burl the Millwright</b> if you want the way of it.',7200),2600); }
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
     if(!P.quests.enchanter) P.quests.enchanter='avail'; }

@@ -1130,11 +1130,9 @@ function placeObjectsWind(){
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // tight round base, no walls up-screen
   for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y+1, 0);                             // doorway, south face
   mill.door={x:MI.x+0.5, y:MI.y+1.6};
-  // THE UNDERMILL: a stone stair-hatch just east of the windmill drops into the old
-  // grinding works, where Nessa's lost stormsail lies sealed behind the gear-locks
-  const mouth=findOpenNear(Math.round(MI.x+4), Math.round(MI.y+1), 4) || [Math.round(MI.x+4), Math.round(MI.y+1)];
-  setSolid(mouth[0], mouth[1], 0);
-  G.decor.push({kind:'dungeonmouth', mill:1, x:mouth[0]+0.5, y:mouth[1]+0.5, label:'the Undermill', name:'THE UNDERMILL'});
+  // THE UNDERMILL: the windmill's own door drops into the old grinding works below,
+  // where Nessa's lost stormsail lies sealed behind the gear-locks. There is no
+  // separate stair-hatch - the mill door itself is the descent (enterMillDungeon).
   const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
   for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house AND the wheel to its east
@@ -2020,13 +2018,13 @@ function placeObjectsMillDeep(){
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
-  // the hatch stays chained until Tolen has shaped the board and sent you for the
+  // the mill door stays barred until Tolen has shaped the board and sent you for the
   // sail (boardMade), or the sail quest is already underway, or you've been here
   // before (haveSail / surf). The sail-quest check guarantees you can never be
   // locked out of a dungeon you've been sent to.
   const maySeek = (P.story && (P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
   if(!maySeek){
-    toast('A chained cellar-hatch beside the windmill, padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut - you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
+    toast('The windmill door is barred - beyond it a stair drops into the old grinding works below. <b>Burl</b> keeps it locked; you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._millReturn={x:P.x, y:P.y+1.3}; P.click=null;
