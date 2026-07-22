@@ -70,16 +70,16 @@ const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon un
   hoard:  {x:44, y:10, r:12, name:'The Hoarfrost Hoard', lv:[16,16]}  // the reward chamber
 };
 const SKY_ZONES = { // THE CLOUDREACH - a rock adrift in the cloud-sea; Ashwing flies you up
-  landing: {x:60, y:98, r:8,  name:'Cloudfall Landing', lv:[15,16]}, // where the dragon sets you down
-  shrine:  {x:60, y:62, r:11, name:'The Windshrine',    lv:[15,16]},
-  eyrie:   {x:60, y:30, r:13, name:"The Roc's Eyrie",   lv:[16,17]}, // the Storm Roc (cloud-level boss)
-  leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[15,16]}  // parachute jump-off point
+  landing: {x:60, y:98, r:8,  name:'Cloudfall Landing', lv:[9,10]},  // where the dragon sets you down
+  shrine:  {x:60, y:62, r:11, name:'The Windshrine',    lv:[9,10]},
+  eyrie:   {x:60, y:30, r:13, name:"The Roc's Eyrie",   lv:[10,11]}, // the Storm Roc (gates Windsurf)
+  leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[9,10]}   // parachute jump-off point -> Windsurf
 };
-const REACH_ZONES = { // STORMREACH - a storm-battered shore reached only by parachute (then by sea)
-  strand: {x:60, y:98, r:8,  name:'Wreckstrand',        lv:[16,17]}, // where you parachute down
-  camp:   {x:58, y:64, r:11, name:'The Castaway Camp',  lv:[16,17]},
-  barrow: {x:62, y:30, r:13, name:"The Brute's Barrow", lv:[17,18]}, // the island monster
-  dock:   {x:98, y:82, r:6,  name:'Stormreach Dock',    lv:[0,0]}    // the ferry berth (after the brute falls)
+const REACH_ZONES = { // STORMREACH - a storm-coast sea stop between Windsurf and the Frozen Isle
+  strand: {x:60, y:98, r:8,  name:'Wreckstrand',        lv:[11,12]}, // the ferry lands here
+  camp:   {x:58, y:64, r:11, name:'The Castaway Camp',  lv:[11,12]},
+  barrow: {x:62, y:30, r:13, name:"The Brute's Barrow", lv:[12,13]}, // the island monster
+  dock:   {x:98, y:82, r:6,  name:'Stormreach Dock',    lv:[0,0]}    // the ferry berth (always open)
 };
 const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount Kea
   entry:   {x:40, y:84, r:8,  name:'The Emberthroat',     lv:[6,8]},
@@ -140,7 +140,7 @@ const WORLD_DEFS = {
     spawn:{x:60.5,y:98.5}, title:'THE CLOUDREACH', sub:'A ROCK ADRIFT IN THE CLOUD-SEA - WHERE THE STORM ROC ROOSTS',
     gen:()=>genSkyAll() },
   reach:{ W:120, H:120, seed:60947, zones:REACH_ZONES,
-    spawn:{x:60.5,y:98.5}, title:'STORMREACH', sub:'A STORM-BATTERED SHORE NO KEEL HAS TOUCHED IN MEMORY',
+    spawn:{x:60.5,y:98.5}, title:'STORMREACH', sub:'A STORM-COAST OF BROKEN KEELS - AND THE BRUTE THAT MADE THEM',
     gen:()=>genReachAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -742,8 +742,8 @@ function dragonLairSpeak(){
     return;
   }
   if(qs('wyrm')==='done'){
-    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up the long throat you climbed.</i> “And when horizons itch at you - there is a city out past the wild water. <b>Windsurf</b>. No keel can cross to it now; the straits have turned cruel. My wings do not care what the sea thinks. Say the word and I will carry you up and out.”',
-      [{label:'Fly me to Windsurf Isle', cls:'gold', fn:()=>{ askDragonFlight(); }},
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds. A rock that floats in the cloud-sea, where the <b>Storm Roc</b> roosts and the whole archipelago lies spread out below like a map. My wings do not fear the height. Say the word and I will carry you up.”',
+      [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }},
        {label:'Rest a while', ghost:true, fn:closeDialog}]);
     return;
   }
@@ -1266,8 +1266,8 @@ function flyToWorld(id, msg){
   setTimeout(()=>{ switchWorld(id); autoSave(); setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },220); },900);
 }
 function askDragonFlight(){
-  P.prog.windKnown=1;
-  flyToWorld('wind','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke, out over water too wild for any keel.');
+  P.prog.windKnown=1; P.story=P.story||{}; P.story.skyKnown=1;
+  flyToWorld('sky','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke - up and up, past the last ragged cloud, to a rock that floats where no rock should.');
 }
 function askAshwingHome(){
   const btns=[ {label:'Fly to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
@@ -1979,11 +1979,11 @@ function spawnSkyFolk(){
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
     ['Few climb Ashwing’s wing this high. Fewer still leave - the Storm Roc suffers no guests in her sky.',
      'There is a shelf on the west edge, past the shrine - The Leap. Step off it and you fall forever… unless you carry a sail. The Roc keeps one, folded in her eyrie.',
-     'Put the Roc down and her stormsail is yours. Then the whole cloud-sea is a road that only goes DOWN - mind where you aim.'],0.4));
+     'Put the Roc down and her stormsail is yours. Then you may leap from the west shelf and ride the cloud DOWN to <b>Windsurf</b>, bright on the water below. Aim well - there is no climbing back up on foot.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
-     'Ashwing will carry you back down to Windsurf whenever the height gets into your knees.'],0.5));
+     'Not ready to face the Roc? Ashwing will carry you back down to the Sunward shore whenever the height gets into your knees.'],0.5));
 }
 function spawnMobsSky(){
   const Z=SKY_ZONES;
@@ -1991,7 +1991,7 @@ function spawnMobsSky(){
     const sp=findOpenNear(Z.eyrie.x, Z.eyrie.y, 6) || [Z.eyrie.x, Z.eyrie.y];
     const roc=spawnMob('raptor', sp[0], sp[1], true);
     if(roc){ roc.boss=true; roc.bigBoss=true; roc.title='THE STORM ROC'; roc.subtitle='TERROR OF THE CLOUD-SEA'; roc.skyboss=1;
-      roc.hp=roc.maxhp=1200; roc.dmg=44; roc.hx=sp[0]; roc.hy=sp[1]; roc.respawnT=-1; }
+      roc.hp=roc.maxhp=720; roc.dmg=30; roc.lvl=10; roc.hx=sp[0]; roc.hy=sp[1]; roc.respawnT=-1; }
   }
   // a scatter of lesser screaming raptors ride the updrafts
   if(!(P.story && P.story.rocDown)) for(let i=0;i<3;i++){ const a=Math.random()*TAU, r2=6+Math.random()*10;
@@ -2022,11 +2022,11 @@ function placeObjectsReach(){
   // the Brute's Barrow: a ring of raised stones round the monster's ground
   for(let i=0;i<6;i++){ const a=i/6*TAU, px=Math.round(Z.barrow.x+Math.cos(a)*5), py=Math.round(Z.barrow.y+Math.sin(a)*5);
     if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:i%2===0, loreKey:'stormreach'}); setSolid(px,py,1); } }
-  // a wrecked hull half-buried on the strand where you come down
+  // a wrecked hull half-buried on the strand (old bones of a ship the reefs took)
   G.decor.push({kind:'crypt', x:Z.strand.x-4+0.5, y:Z.strand.y+2+0.5});
-  // the ferry berth: the boat only appears once the brute is down and the hull is mended
-  if(P.story && P.story.reachOpen){ addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
-    addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, ''); }
+  // the ferry berth: Stormreach is a sea stop, so a hull always rides here
+  addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
+  addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, '');
   // greenery + a couple of chests
   const pr=mulberry32(SEED+19);
   for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
@@ -2037,15 +2037,15 @@ function placeObjectsReach(){
 }
 function spawnReachFolk(){
   const Z=REACH_ZONES;
-  G.npcs.push(makeNPC('mora','Mora, Castaway Elder', Z.camp.x-1.5, Z.camp.y+2.5,
+  G.npcs.push(makeNPC('mora','Mora, Storm-Coast Elder', Z.camp.x-1.5, Z.camp.y+2.5,
     {skin:'#a9784e',hair:'#cfc7b8',shirt:'#4a5a4a',pants:'#3a3a2c',hairstyle:'bun'},
-    ['You DROPPED in? Then you know our trouble in reverse - there’s no getting OFF Stormreach. No hull outlasts the reef-storms.',
-     'A thing dens up at the Barrow, north - big as a boat and twice as mean. It wrecks any raft we build for the timber. Put it down and we could finally mend a hull worth the water.',
-     'Do that, and there’s a berth waiting - we’ll ferry you anywhere the calm seas reach. You’d be the first soul to LEAVE Stormreach in a lifetime.'],0.4));
+    ['Stormreach! Not many keels chance our reef-storms - fewer still on purpose. Welcome, then, to the edge of the map.',
+     'A thing dens up at the Barrow, north - big as a boat and twice as mean. It stove in the last three hulls that put in, and it walks the coast at night. Put it down and we could trade like honest folk again.',
+     'Do the coast that kindness and you will always have a berth here, a hot meal, and the truth about what the storms wash up.'],0.4));
   G.npcs.push(makeNPC('tibb','Tibb the Raftwright', Z.strand.x+2.5, Z.strand.y-1.5,
     {skin:'#8f6a48',hair:'#3a352c',shirt:'#6a5a3a',pants:'#33302a'},
-    ['Every hull I lay, that Barrow-brute stamps to kindling for the fun of it.',
-     'Silence the brute and I’ll have a keel under you inside a week. My word on it.'],0.5));
+    ['Every hull I mend by the water, that Barrow-brute wanders down and stamps to kindling for the joy of it.',
+     'Silence the brute and I’ll keep this berth sound for any ship that dares the reefs. My word on it.'],0.5));
 }
 function spawnMobsReach(){
   const Z=REACH_ZONES;
@@ -2053,7 +2053,7 @@ function spawnMobsReach(){
     const sp=findOpenNear(Z.barrow.x, Z.barrow.y, 6) || [Z.barrow.x, Z.barrow.y];
     const brute=spawnMob('raidcap', sp[0], sp[1]);
     if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1;
-      brute.hp=brute.maxhp=1500; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; }
+      brute.hp=brute.maxhp=1000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; }
   }
   // storm-driven raiders wash up around the barrow
   if(!(P.story && P.story.reachBossDown)) for(let i=0;i<4;i++){ const a=Math.random()*TAU, r2=6+Math.random()*12;
@@ -2067,23 +2067,24 @@ function flyToCloudreach(){
   flyToWorld('sky','Ashwing gathers himself and springs from the Windsurf shore - down becomes a memory as he beats up and up, through the last ragged cloud, to a rock that floats where no rock should.');
 }
 function askSkyDragon(){
-  // Ashwing on the Cloudreach - the ride back DOWN to Windsurf
-  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down to Windsurf whenever the height gets into your knees.</i>',
-    [ {label:'Fly down to Windsurf', cls:'gold', fn:()=>{ closeDialog();
-        flyToWorld('wind','Ashwing tips off the cloud-shelf and pours downward - Windsurf swelling up bright out of the sea to meet you.'); }},
+  // Ashwing on the Cloudreach - the ride back DOWN the way you came, to the Sunward
+  // shore. (Going FORWARD to Windsurf is the parachute's job - and needs the Roc down.)
+  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down the way you came, to the Sunward shore, whenever the height gets into your knees.</i>',
+    [ {label:'Fly back to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
+        flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }},
       {label:'Not just yet', ghost:true, fn:closeDialog} ]);
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
-    toast('The stone shelf juts out over a drop with no bottom - only cloud, all the way down. You would need <b>a sail to fall by</b>. They say the <b>Storm Roc</b> keeps one.',5200);
+    toast('The stone shelf juts out over a drop of pure cloud - no bottom, only the far grey shine of the sea. You would need <b>a sail to fall by</b>. They say the <b>Storm Roc</b> keeps one.',5200);
     Snd.step&&Snd.step(5); return;
   }
   if(G._flying) return; G._flying=1; closeDialog();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-  toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud toward a dark shore far below…',6000);
+  toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
   if(Snd.boss) Snd.boss();
-  setTimeout(()=>{ switchWorld('reach'); autoSave&&autoSave();
-    banner('STORMREACH','YOU COME DOWN OUT OF THE CLOUD');
+  setTimeout(()=>{ switchWorld('wind'); autoSave&&autoSave();
+    banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
     setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },260); }, 1100);
 }
 
@@ -2946,11 +2947,6 @@ function attemptSail(){
     toast('The strait past the breakwater churns like a cauldron - no hull could live in it. <b>Ashwing</b> can still fly you home; or <b>calm the water first</b>.',5200);
     return;
   }
-  // Stormreach: no keel leaves until its brute-lord is down and a hull is mended
-  if(G.worldId==='reach' && !(P.story && P.story.reachOpen)){
-    toast('There is no boat to take. Every hull the castaways lay, the <b>Barrow Brute</b> stamps to driftwood. Put the beast down and Tibb will have a keel under you.',5200);
-    return;
-  }
   // once the seas are calm, any boat is a ferry - pick a destination
   if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
   // default single-hop routing before the archipelago reopens
@@ -2965,10 +2961,9 @@ function sailTo(dest, msg){
 function boatMenu(){
   // once the seas are calm every dock is a ferry hub - sail to any known isle
   const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-             ['Sail to Windsurf Isle','wind'],['Sail to the Aerie Isle','aerie'],
-             ['Sail to the Frozen Isle','frost'],['Sail to Aldermere, the Capital','crown']];
-  // Stormreach only joins the ferry roads once its brute is down
-  if(P.story && P.story.reachOpen) all.push(['Sail to Stormreach','reach']);
+             ['Sail to Windsurf Isle','wind'],['Sail to Stormreach','reach'],
+             ['Sail to the Aerie Isle','aerie'],['Sail to the Frozen Isle','frost'],
+             ['Sail to Aldermere, the Capital','crown']];
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';

@@ -1,7 +1,7 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '57';
+const BUILD = '58';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
 /* Storage can throw SecurityError in sandboxed frames / private browsing.
    Probe once; fall back to in-memory so the game always boots. */

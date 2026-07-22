@@ -593,20 +593,17 @@ function killMob(m,skill){
     setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // The Storm Roc rules the Cloudreach - felling it wins her stormsail (the parachute)
+  // The Storm Roc rules the Cloudreach - felling it wins her stormsail (the parachute
+  // that carries you DOWN to Windsurf)
   if(m.skyboss){
     P.story=P.story||{}; P.story.rocDown=1; P.story.parachute=1;
-    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to whatever waits below.',7500), 1500);
+    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // The Barrow Brute wrecks every hull on Stormreach - down it, and the castaways ferry you out
+  // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
   if(m.reachboss){
-    P.story=P.story||{}; P.story.reachBossDown=1; P.story.reachOpen=1;
-    // make the ferry berth appear now, without a reload
-    if(G.worldId==='reach' && typeof REACH_ZONES!=='undefined' && !G.decor.some(d=>d.kind==='boat')){
-      const D=REACH_ZONES.dock; addBuilding('boat', D.x, D.y+2, ''); if(typeof invalidateScenery==='function') invalidateScenery();
-    }
-    setTimeout(()=>toast('The brute crashes down and Stormreach lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging timber to the water: <b>“A keel under you inside a week - my word!”</b> The berth at the east point is open at last. <b style="color:#c9b0ff">Stormreach joins the ferry roads - you can sail from here now.</b>',7500), 1500);
+    P.story=P.story||{}; P.story.reachBossDown=1;
+    setTimeout(()=>toast('The brute crashes down and does not rise, and the storm-coast lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging fresh timber to the water. Stormreach is yours to walk in peace - and the castaways will name a cove for you.',6500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // After felling a dungeon boss, offer the quick road out - mended and a level
