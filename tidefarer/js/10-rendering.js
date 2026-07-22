@@ -1801,6 +1801,10 @@ function drawMob(m,s){
     cx.fillStyle= m.boss? '#9fe8c0' : '#ffb0a0'; cx.fillText(nm,s.x,s.y+ny);
   }
 }
+// The mount publishes its vertical bob + gait phase here each frame, so the
+// rider drawn on top can ride the bounce instead of floating at a fixed height,
+// and the dangling legs can swing with the stride.
+let MOUNT_BOB=0, MOUNT_PH=0, MOUNT_RUN=false;
 function drawMoa(s){
   // Kiko is a MOA - a giant flightless ratite, tall as a door: heavy runner's
   // legs, a deep shaggy-feathered body, a long S-curved neck and a small beaked
@@ -1811,6 +1815,7 @@ function drawMoa(s){
   // Keep it low (~0.75 rad/frame) so the run stays smooth at speed.
   const ph=P.anim*1.5, gait=moving?1:0;
   const bob = moving? Math.sin(ph*0.5)*1.7 : Math.sin(t*2)*0.7;   // body rise/fall
+  MOUNT_BOB=bob; MOUNT_PH=ph; MOUNT_RUN=moving;                   // let the rider ride the bounce
   const OUT='rgba(22,15,8,0.85)';
   const body='#6b5334', belly='#9a8054', dark='#48371f', bodyHi='#8a6f48';
   const legc='#79684a', shank='#9a8768', horn='#c59a44', hornSh='#96742f';
@@ -1872,6 +1877,8 @@ function drawMoa(s){
 function drawHorse(s){
   const g=cx; g.save(); g.translate(s.x,s.y);
   const fl=(P.dir.x<0)?-1:1, tr=Math.sin(P.anim*1.35);   // slow bob - see drawMoa note on P.anim aliasing
+  MOUNT_PH=P.anim*1.8; MOUNT_RUN=!!P.moving;              // let the rider ride the bounce
+  MOUNT_BOB=P.moving? Math.sin(MOUNT_PH)*1.0 : Math.sin(G.time*2)*0.5;
   g.scale(1.3,1.3);
   g.fillStyle='rgba(0,0,0,0.28)';
   g.beginPath(); g.ellipse(0,1.5,17,6,0,0,TAU); g.fill();
@@ -1920,7 +1927,9 @@ function drawPlayer(s){
   if(P.riding){
     const onMoa=P.unlocked&&P.unlocked.moa;
     if(onMoa) drawMoa(s); else drawHorse(s);
-    const s2={x:s.x, y:s.y-(onMoa?24:18)};   // hips settle onto the mount's back (legs hang down its flanks)
+    // hips settle onto the mount's back and ride its bounce, so the whole rider
+    // (and the legs hanging down its flanks) bobs with the gait instead of floating
+    const s2={x:s.x, y:s.y-(onMoa?24:18)+MOUNT_BOB};
     drawPlayerFigure(s2);
     return;
   }
@@ -1993,6 +2002,7 @@ function drawPlayerFigure(s){
   look.armor=P.armor||0;
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32,
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
+    ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, so the seated legs swing with the stride
     wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){

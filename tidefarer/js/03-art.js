@@ -744,7 +744,10 @@ function drawHumanoid(g,sx,sy,o){
   const flip=scrX<0?-1:1;
   // gait
   const sw1=Math.sin(step), sw2=Math.sin(step*2);
-  const bounce=walking? Math.abs(sw1)*2.2*s : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s;
+  // mounted: the mount's own bob (added to the draw position by the caller) carries
+  // the vertical motion, so the figure itself stays rigid - no separate idle breath
+  // to fight it. On foot: bounce on the stride, or a gentle idle breath.
+  const bounce= o.ride? 0 : (walking? Math.abs(sw1)*2.2*s : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s);
   const lean=walking? sw1*0.03 : 0;
   const hurtF=o.hurt?1:0;
 
@@ -796,14 +799,19 @@ function drawHumanoid(g,sx,sy,o){
     // clearly two, with the near leg a touch lower and lit and the far leg lifted
     // and in shadow for depth. Legs kept short so they don't dangle past the mount.
     // (An earlier pass splayed them wide and bright, which read as a frog-sit.)
+    // Each leg swings from the hip with the mount's stride - the two legs run on
+    // OPPOSITE phase so they jostle alternately, which is what brings the far leg
+    // to life; without it that one reads as frozen.
+    const rp=o.ridePh||0, rideRun=!!o.rideRun;
     const seatLeg=(back)=>{
       const sd = back ? -flip : flip;                 // near/far to opposite screen sides
-      const hipY = -6.5 + B*0.4 + (back ? -2.4 : 1.0);
-      const hipX = sd*2.1;
-      const kneeX = sd*3.4, kneeY = hipY + 4.8;       // knee only slightly out over the saddle
-      const bootX = sd*3.9, bootY = kneeY + (back ? 6.4 : 7.8);  // shin drops nearly straight
-      const pcol = back ? shade(pants,-18) : shade(pants,8);   // far in shadow, near catches light
-      const bcol = back ? shade(bootD,-14) : bootD;
+      const sw = rideRun ? Math.sin(rp + (back? Math.PI : 0)) : 0;   // gait swing, opposite per leg
+      const hipY = -6.5 + B*0.4 + (back ? -1.6 : 1.0);
+      const hipX = sd*2.3;
+      const kneeX = sd*3.8 + flip*sw*0.9, kneeY = hipY + 4.8;        // knee only slightly out over the saddle
+      const bootX = sd*4.4 + flip*sw*2.2, bootY = kneeY + (back ? 7.2 : 8.0) - Math.abs(sw)*0.6;  // shin swings & lifts a hair
+      const pcol = back ? shade(pants,-12) : shade(pants,10);  // far a touch shaded, near catches light
+      const bcol = back ? shade(bootD,-10) : bootD;
       // thigh: hip -> knee
       g.lineCap='round';
       g.strokeStyle=OUT; g.lineWidth=6.0;
