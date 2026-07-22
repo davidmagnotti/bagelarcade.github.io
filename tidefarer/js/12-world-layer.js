@@ -2881,6 +2881,58 @@ QUESTS.homecoming = { giver:'woody', title:'Homecoming', kind:'talk', talkTo:'al
   doneText:'',   // resolved by the palace coda scene
   rw:{gold:300, hp:20, item:{elixir:3}, xp:{melee:300, archery:300, magic:300}} };
 
+/* ---------- Regional boss-hunts ----------------------------------------------
+   The island monsters were once ambient encounters - a banner and a loot chest,
+   but no hand to send you and no name on a board. Each now has a quest-giver in
+   its home hub. Completion keys off the story-flag the boss already sets on
+   death (see 09-gameplay.js), except the Rimebound, whose 'icecolossus' kind is
+   unique and so tracks as a plain kill. --------------------------------------- */
+QUESTS.hoarfrost={ giver:'bryn', title:'Terror of the Rimewood', kind:'special', xpL:440,
+  brief:'You\'ve heard me fret over the white bear out on the Rimewood flats - Hoarfrost, denned in the old ice-cave, and no hunter who went looking has come back to argue. It guards that hole like it hates the whole world. Put the beast down before it comes for Hearthhold - and whatever it hoards below is yours by right.',
+  log:'Slay the Hoarfrost Bear on the Rimewood flats, east of Hearthhold. (Its den opens the Glacier Vault below.)',
+  doneText:'The Hoarfrost, DOWN? Then Hearthhold sleeps sound tonight, first time in a season. Take my thanks and a warm bowl on the house - and mind the stair that beast was guarding.',
+  rw:{gold:120, item:{elixir:1, potion:2}, xp:{melee:280, archery:200}} };
+QUESTS.rimebound={ giver:'sigrid', title:'The Rimebound', kind:'special', xpL:480,
+  brief:'Past the bear\'s den, down in the Glacier Vault, something older stands frozen mid-stride - a colossus of blue ice, wound in the same violet frost that took the Weeping Warden. Vath\'s work, unmistakable. It is no monster; it is a prisoner. Break the binding, free the poor giant, and let it rest at last.',
+  log:'Descend the Glacier Vault and free the Rimebound from Vath\'s enchantment.',
+  doneText:'The violet frost let go? Then it is at peace - and so, a little, am I. Two of Vath\'s cruelties undone on our ice alone. The Hoarfrost Hoard is yours; you paid for it in cold.',
+  rw:{gold:160, item:{elixir:1, potion:2}, xp:{melee:320, magic:280}} };
+QUESTS.stormroc={ giver:'aeron', title:'Terror of the Cloud-Sea', kind:'special', xpL:420,
+  brief:'Feel that wind? That is HER temper. The Storm Roc has ruled this cloud-rock since my grandfather\'s day, and of late she suffers no guest in her sky - takes ships, takes sail, takes the odd fool who climbs too high. Face her on the eyrie. Best her, and her great stormsail is yours - the only kite that will carry you down to Windsurf.',
+  log:'Defeat the Storm Roc on her eyrie atop the Cloudreach, and claim her stormsail.',
+  doneText:'She is DOWN? Then the sky is open again, and you have won the Leap - step off the west shelf and her sail carries you clean down to Windsurf. Ride the wind, Skyward. You have earned the name.',
+  rw:{gold:140, item:{elixir:1}, xp:{archery:300, melee:220}} };
+QUESTS.barrowbrute={ giver:'mora', title:'Wrecker of Stormreach', kind:'special', xpL:440,
+  brief:'Look about you, traveler - we did not choose this wreck-strewn shore. We STAYED, because the Barrow Brute walks the barrow road and no boat we launch outlives the reef while it lives. Put the great brute back in its barrow. Do that, and Stormreach is a port again - and some of us go home.',
+  log:'Hunt down the Barrow Brute on the barrow road above Stormreach.',
+  doneText:'The whole coast felt it fall. You have given a hundred stranded souls their sea back. Tibb is already at the water with fresh timber - and we will name a cove for you, the least a grateful shore can do.',
+  rw:{gold:150, item:{potion:3}, xp:{melee:320, archery:240}} };
+QUESTS.drownedwarden={ giver:'tibb', title:'Keeper of the Catacomb', kind:'special', xpL:420,
+  brief:'There is a stair under the drowned graveyard, and a cold thing that keeps it - the Drowned Warden, patient in the dark below. My grandfather\'s grandfather sealed it and told us never to dig. But the good salvage is all down there, and Stormreach is starving. Go down, put the Warden to rest, and let us bury our dead in peace.',
+  log:'Descend into the Drowned Catacomb beneath Stormreach and put the Drowned Warden to rest.',
+  doneText:'Rest at last - for the Warden, and for the poor souls it kept. You can hear the difference in the dark down there now; it is only water. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
+  rw:{gold:130, item:{elixir:1, potion:2}, xp:{melee:260, magic:220}} };
+
+/* ---------- Aldermere side-work ----------------------------------------------
+   The royal capital was grand but quiet - a dozen townsfolk and only three
+   quests, most of them story-gated. These give its people something to ask of a
+   passing hero, and tie a little more of the lost-queen thread into the city. -- */
+QUESTS.roses={ giver:'isolde', title:"The Drowned Queen's Garden", kind:'gather', need:{shell:6, pearl:1}, xpL:240,
+  brief:'This garden is a memorial. The King planted it for his queen, lost to the sea thirty years gone, and I have tended it alone ever since. The sea took her; let the sea honour her. Six spiral shells for the border, one true pearl for the fountain\'s heart, and she will have the garden she was owed.',
+  log:'Bring Isolde 6 spiral shells and 1 pearl for the Drowned Queen\'s memorial garden.',
+  doneText:'Oh - a REAL pearl. It catches the light just as she used to. There. The King walks here some evenings; he will see it, and know that someone still remembers her. That is worth more than you know.',
+  rw:{gold:60, mp:6, item:{elixir:1}, xp:{fishing:200, farming:120}} };
+QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', need:{cookedfish:6, bread:4}, xpL:200,
+  brief:'A capital eats, traveler, and the strait\'s long closure left our larders thin. The stalls will pay honest coin for honest fare - six grilled fish and four fresh loaves to stock the Bazaar against a lean week. Do that and I\'ll cut you the crown\'s own rate.',
+  log:'Bring Doran the Factor 6 grilled fish and 4 fresh bread for the Bazaar stores.',
+  doneText:'Counted and crated - the stalls will bless your name by morning. Here is the crown\'s rate, and a little over for the legs it cost you.',
+  rw:{gold:90, item:{potion:2}, xp:{fishing:120, farming:120}} };
+QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{bar:4, hardwood:2}, xpL:220,
+  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Four good iron bars and two lengths of hardwood for the hafts, and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
+  log:'Bring Captain Halvard 4 iron bars and 2 hardwood for the Garrison armoury.',
+  doneText:'Good steel, well chosen. The Watch stands the sounder for it - and so does the King who sleeps behind our wall. Take a soldier\'s thanks, and a soldier\'s coin.',
+  rw:{gold:100, item:{elixir:1, potion:2}, xp:{melee:200, mining:120}} };
+
 // Vath's last stand: he descends on the Emberwick green the moment the ward
 // cracks the prince's binding. A proper boss (bar + boss music via bigBoss),
 // but no HP sponge - the rebalanced numbers keep him decisive.
@@ -3405,8 +3457,23 @@ function switchWorld(id){
   }
   if(id==='frost'){
     if(qs('thaw')!=='done' && !P.quests.thaw) P.quests.thaw='avail';
+    // Bryn will name the Hoarfrost Bear from your first day on the ice; Sigrid's
+    // Rimebound hunt only opens once the bear's den (the Glacier Vault) is breached.
+    if(qs('hoarfrost')!=='done' && !P.quests.hoarfrost) P.quests.hoarfrost='avail';
+    if(P.story && P.story.iceBearDown && qs('rimebound')!=='done' && !P.quests.rimebound) P.quests.rimebound='avail';
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
     if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
+  }
+  if(id==='sky'){
+    // Aeron names the Storm Roc the moment you set foot on the Cloudreach - she
+    // gates the Leap down to Windsurf, so the hunt is all but mandatory.
+    if(qs('stormroc')!=='done' && !P.quests.stormroc) P.quests.stormroc='avail';
+  }
+  if(id==='reach'){
+    // the castaways' two tormentors: the Brute on the barrow road (Mora) and the
+    // Warden in the drowned catacomb below (Tibb).
+    if(qs('barrowbrute')!=='done' && !P.quests.barrowbrute) P.quests.barrowbrute='avail';
+    if(qs('drownedwarden')!=='done' && !P.quests.drownedwarden) P.quests.drownedwarden='avail';
   }
   // Dungeons keep their mystery, but a single atmospheric hint on first entry
   // points the way without solving anything - a compass, not a walkthrough.
@@ -3426,6 +3493,10 @@ function switchWorld(id){
     // run of the gate. Available from your first day in the capital.
     if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
     if(qs('lettuce')!=='done' && !P.quests.lettuce) P.quests.lettuce='avail';
+    // capital side-work: the gardener, the factor, and the garrison captain
+    if(qs('roses')!=='done' && !P.quests.roses) P.quests.roses='avail';
+    if(qs('larder')!=='done' && !P.quests.larder) P.quests.larder='avail';
+    if(qs('garrison')!=='done' && !P.quests.garrison) P.quests.garrison='avail';
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1; }
   }

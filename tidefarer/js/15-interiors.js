@@ -229,11 +229,25 @@ function enterHouse(b){
     F('plant',2.0,2.2,0.6,0.6); F('plant',12.2,2.0,0.6,0.6); F('plant',28.4,2.2,0.6,0.6); F('plant',2.0,11.4,0.6,0.6);
     F('vase',13.8,6.4,0.5,0.5); F('vase',13.8,10.0,0.5,0.5);
   }
-  if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3); }
+  if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3);
+    F('shelf',4.6,1.35,1.0,0.3);                            // a woven shelf - read it for the isle's story
+    // each named hut carries its own lore (Kohana on the Sunward Isle, castaways on Stormreach)
+    I.loreKey = G.worldId==='reach' ? 'castaway@reach'
+      : lblL.includes('weaver') ? 'weaver@east'
+      : lblL.includes('hunt')   ? 'hunt@east'
+      : lblL.includes('board')  ? 'board@east'
+      : lblL.includes('drying') ? 'drying@east'
+      : 'longhut@east';
+  }
   if(b.kind==='igloo'){ I.igloo=1;
     F('hearth',I.w/2,I.h/2-0.3,0.9,0.5);                    // the central fire pit
     F('bed',2.1,2.2,1.05,0.7); F('rug',I.w/2,I.h-2.4,0,0,false);
     F('shelf',I.w-2.4,1.35,1.0,0.3); F('crate',I.w-1.9,I.h-1.9,0.55,0.45); F('barrel',2.2,I.h-2.0,0.45,0.4);
+    // each Hearthhold igloo reads differently
+    I.loreKey = (lblL.includes('inn')||lblL.includes('kettle')) ? 'inn@frost'
+      : lblL.includes('icewright') ? 'icewright@frost'
+      : (lblL.includes('ferry')||lblL.includes('lodge')) ? 'ferry@frost'
+      : 'igloo@frost';
   }
   if(b.kind==='windmill'){
     // inside the great mill: grain sacks, the grinding shaft, and the miller's
@@ -302,12 +316,12 @@ function enterHouse(b){
 }
 function enterCave(){
   if(G.interior) return;
-  const I={kind:'cave', w:9, h:7, ret:{x:P.x,y:P.y+0.4}, exit:{x:4.5,y:6.1}, t:0, furn:[], cave:1};
-  const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
+  const I={kind:'cave', w:9, h:7, ret:{x:P.x,y:P.y+0.4}, exit:{x:4.5,y:6.1}, t:0, furn:[], cave:1, loreKey:'undermaw'};
+  const F=(type,x,y,hw,hh,solid,lore)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false,lore});
   F('orb',2.2,2.6,0.5,0.4);
   F('crate',7.0,4.4,0.55,0.45);
   F('cavechest',4.6,2.2,0.7,0.5);
-  F('books',6.6,1.5,1.2,0.3);
+  F('books',6.6,1.5,1.2,0.3,true,'undermaw');
   G.interior=I; P.click=null;
   P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
   toast('<b>The Undermaw</b> - the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);

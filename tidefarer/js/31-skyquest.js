@@ -1,9 +1,9 @@
 /* =====================================================================
    THE RAINBOW ROAD - a bird's plea and a "sky dungeon" strung across the
    cloud-sea. A wind-lost bird on the Cloudreach can no longer glide down to
-   her favourite islands - a corrupted spirit has soured the high wind and
+   her favourite islands - the Storm-Eye, a bound storm-core, has soured the high wind and
    blows her off course. Run her rainbow road, clear six tiny sky-isles of
-   their trials, and put the spirit down; the wind calms and her roost is
+   their trials, and put the Storm-Eye out; the wind calms and her roost is
    hers again. Puzzle 4 wins the STORMLIGHT: your staff-bolts now stun.
    ===================================================================== */
 const SKY_ISLES = [
@@ -13,7 +13,7 @@ const SKY_ISLES = [
   {key:'i3',    x:44, y:92,  r:5, puzzle:3}, // dodge the cloud-snatcher, cross over
   {key:'i4',    x:76, y:72,  r:6, puzzle:4}, // the Storm-Wraith mini-boss
   {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more sky wraiths
-  {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Corrupted Spirit
+  {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
 ];
 function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
 // the gated bridges: each opens once its island's trial is met
@@ -89,7 +89,7 @@ function placeObjectsSkyDungeon(){
     G.decor.push({kind:'skygate', gate:g.gate, x:m.x, y:m.y, tiles, open, label:'a wind-ward'});
     for(const [x,y] of tiles){ setSolid(x,y, open?0:1); }
   }
-  // the spirit's hoard, on the last isle
+  // the Storm-Eye's hoard, on the last isle
   { const s=skyIsle('i6'); G.decor.push({kind:'chest', x:s.x+0.5, y:s.y-3+0.5, sky:1, rich:11}); }
   G.critters=[];
 }
@@ -360,13 +360,13 @@ function skyBirdDialog(){
   }
   const accept=()=>{
     P.story=P.story||{}; P.story.birdQuest=1;
-    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Then follow me - up the rainbow! Six little isles, each with a trial the spirit left behind. Clear them, put the spirit down, and the wind is mine again. Step onto the road when you\'re ready.',
+    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Then follow me - up the rainbow! Six little isles, each with a trial the storm left behind. Clear them, put the Storm-Eye out, and the wind is mine again. Step onto the road when you\'re ready.',
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
         {label:'In a moment', ghost:true, fn:closeDialog} ]);
     if(Snd.quest) Snd.quest();
     if(typeof autoSave==='function') autoSave();
   };
-  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! I used to glide down to my favourite islands every morning - but the high wind has turned cruel and blows me clean off course before I can land. Something up there has soured it. A <b>corrupted spirit</b>, roosting where the wind is born, on a rainbow road only the sky-brave can run. Would you climb it with me and set the wind right?',
+  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! I used to glide down to my favourite islands every morning - but the high wind has turned cruel and blows me clean off course before I can land. Something up there has soured it. The <b>Storm-Eye</b> - a great unblinking storm-core - roosting where the wind is born, on a rainbow road only the sky-brave can run. Would you climb it with me and set the wind right?',
     [ {label:'Lead the way', cls:'gold', fn:accept},
       {label:'Maybe later', ghost:true, fn:closeDialog} ]);
 }
@@ -388,7 +388,7 @@ function exitSkyDungeon(){
     G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },220); }, 300);
 }
-/* after the Corrupted Spirit falls: mend the hero and set them at the landing */
+/* after the Storm-Eye falls: mend the hero and set them at the landing */
 function offerSkyReturn(){
   if(G.state!=='play' || P.dead || G.worldId!=='skydungeon' || dlg.open) return;
   const st=skyIsle('start');
