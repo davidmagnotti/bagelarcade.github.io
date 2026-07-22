@@ -242,8 +242,10 @@ function enterHouse(b){
     I.loreKey='windmill@wind';
     F('books',I.w/2,1.35,1.0,0.3,true,'windmill@wind');
     F('crate',2.0,2.6,0.55,0.45); F('crate',2.7,3.4,0.55,0.45); F('barrel',I.w-2.0,2.8,0.45,0.4);
-    F('shelf',I.w/2+2.4,1.3,0.9,0.3); F('stool',I.w-2.4,4.4,0.35,0.3); F('rug',I.w/2,4.4,0,0,false);
-    F('millcellar',2.5,5.1,0.8,0.5,true);   // the cellar stair down into the workings
+    F('shelf',I.w/2+2.4,1.3,0.9,0.3); F('stool',I.w-2.4,4.4,0.35,0.3);
+    // the grinding-shaft descent sits dead-centre on the mill floor, right where you
+    // walk in - a stone stair down into the workings (the Undermill)
+    F('millcellar',I.w/2,3.3,1.0,0.7,true);
   }
   if(b.kind==='waterwheel'){
     // the mill-house at the wheel's hub: cart-wheel gears, a damp stone floor,
@@ -683,18 +685,21 @@ function drawFurniture(f,s){
       break;
     case 'millcellar':
       // a stone stairwell sunk into the mill floor: a dressed-stone rim around a
-      // dark opening with worn steps descending, a faint warm lamp far below
+      // dark opening with worn steps descending, a warm lamp far below, and a
+      // bobbing arrow so it clearly reads as a way DOWN
       { cx.save(); cx.translate(s.x,s.y);
         const pulse=0.5+0.5*Math.sin(G.time*1.8);
-        cx.fillStyle='rgba(0,0,0,0.22)'; cx.beginPath(); cx.ellipse(0,4,22,10,0,0,TAU); cx.fill();  // shadow
-        cx.fillStyle='#6b5c46';                              // stone rim
-        cx.beginPath(); cx.moveTo(-22,4); cx.lineTo(-17,-11); cx.lineTo(17,-11); cx.lineTo(22,4); cx.closePath(); cx.fill();
-        cx.strokeStyle='#3a3024'; cx.lineWidth=2; cx.stroke();
-        cx.fillStyle='#100b07';                              // the dark throat
-        cx.beginPath(); cx.moveTo(-14,3); cx.lineTo(-11,-8); cx.lineTo(11,-8); cx.lineTo(14,3); cx.closePath(); cx.fill();
-        for(let i=0;i<3;i++){ cx.fillStyle=i%2?'#2a2018':'#342a20'; cx.fillRect(-12+i*2,1-i*3,24-i*4,3); }   // worn steps
-        cx.fillStyle='rgba(255,196,110,'+(0.10+0.12*pulse)+')';   // warm lamp glow from the workings below
-        cx.beginPath(); cx.moveTo(-9,3); cx.quadraticCurveTo(0,-6,9,3); cx.closePath(); cx.fill();
+        cx.fillStyle='rgba(0,0,0,0.28)'; cx.beginPath(); cx.ellipse(0,6,34,15,0,0,TAU); cx.fill();  // shadow
+        cx.fillStyle='#7a6a50';                              // dressed-stone rim (lit top edge)
+        cx.beginPath(); cx.moveTo(-34,6); cx.lineTo(-26,-17); cx.lineTo(26,-17); cx.lineTo(34,6); cx.closePath(); cx.fill();
+        cx.fillStyle='#5e5040'; cx.beginPath(); cx.moveTo(-34,6); cx.lineTo(-26,-17); cx.lineTo(-20,-17); cx.lineTo(-27,6); cx.closePath(); cx.fill();  // shaded rim side
+        cx.strokeStyle='#332a20'; cx.lineWidth=2.4; cx.beginPath(); cx.moveTo(-34,6); cx.lineTo(-26,-17); cx.lineTo(26,-17); cx.lineTo(34,6); cx.closePath(); cx.stroke();
+        cx.fillStyle='#0d0906';                              // the dark throat
+        cx.beginPath(); cx.moveTo(-22,5); cx.lineTo(-17,-12); cx.lineTo(17,-12); cx.lineTo(22,5); cx.closePath(); cx.fill();
+        for(let i=0;i<4;i++){ cx.fillStyle=i%2?'#2a2018':'#372c21'; cx.fillRect(-19+i*3,3-i*4,38-i*6,4); }   // worn steps descending
+        cx.fillStyle='rgba(255,196,110,'+(0.12+0.16*pulse)+')';   // warm lamp glow from the workings below
+        cx.beginPath(); cx.moveTo(-13,4); cx.quadraticCurveTo(0,-8,13,4); cx.closePath(); cx.fill();
+        cx.fillStyle='#ffd76a'; cx.font='bold 15px Georgia'; cx.textAlign='center'; cx.fillText('▼', 0, -24+Math.sin(G.time*3)*2);   // "way down"
         cx.restore(); }
       break;
     case 'palacefountain':
