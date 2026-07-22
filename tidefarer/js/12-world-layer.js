@@ -726,8 +726,8 @@ function spawnEastFolk(){
      'The bristlebacks fatten on fallen coconuts. So do I - no shame in a soft life.'],0.5));
   G.npcs.push(makeNPC('kaia','Kaia the Wavewright', V.x-5.5,V.y+2.6,
     {skin:'#c99a6e',hair:'#2c2a3a',shirt:'#3a6a72',pants:'#2c3a40',hairstyle:'long'},
-    ['The wind is a road, friend. Ride it easy and it carries you far.',
-     'Shaped my first board at nine. The sea shaped me right back - we came out even.'],0.6));
+    ['The wind is a road, friend - but you\'d need a windsurf to ride it, and I\'ve no stormcloth to step a sail. That\'s Windsurf Isle\'s trade, out past the cloud-sea.',
+     'I shaped boards once. Now the reef sits idle - no proper sail this side of Windsurf, and no board worth the name without one. Seek the whittler there, when the wind takes you.'],0.6));
   G.npcs.push(makeNPC('moli','Elder Moli', V.x-0.5,V.y-1.6,
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
     ['Kea grumbles, the palms bow, the reef sings. Sit a while - let the island talk to you.',
@@ -2647,11 +2647,16 @@ QUESTS.tame1={ giver:'huk', title:'The Long-Legged Friend', kind:'gather', need:
   log:'Bring Huk 3 orchard apples to win over Kiko the Moa.',
   doneText:'Ha - she likes you. That is settled, then. Kiko is yours to whistle for - press M, or just ask me, and hold on with your knees.',
   rw:{moa:true} };
+// The windsurf is earned ONLY on Windsurf Isle now (Tolen's board + the Undermill
+// sail dungeon), so it is the sole - and mandatory - source of the board. Kaia the
+// Wavewright on the Sunward Isle no longer grants it: surf1 is no longer offered
+// (dropped from the east quest-arming list) and grants NO surf. The def is kept
+// inert only so an in-flight save that already accepted it doesn't dangle.
 QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wood:8, crystal:1}, xpL:220,
-  brief:'Bring me eight good lengths of timber and one ember crystal to cure the resin, yeah, and I will shape you a board that treats the sea like a shady lane. The Windward Reef is only the first place it carries you.',
-  log:'Bring Kaia 8 wood and 1 ember crystal for a windsurf board.',
-  doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
-  rw:{surf:true, gold:30} };
+  brief:'I\'d shape you a windsurf gladly - but there\'s no stormcloth this side of Windsurf Isle, and a board\'s a plank without a sail. Bring the timber and a crystal and I\'ll ready you a blank; the sail you must find across the cloud-sea.',
+  log:'Bring Kaia 8 wood and 1 ember crystal for a board-blank. (The true windsurf waits on Windsurf Isle.)',
+  doneText:'There - a good blank, cured and waiting. But bare it stays till you find a proper sail on Windsurf Isle. The wind\'s a road, friend - it just runs the long way round.',
+  rw:{gold:30} };   // NO surf - the windsurf is earned only on Windsurf Isle
 QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', need:{wood:6, shell:3}, xpL:240,
   brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails, and I\'ll shape you a board fit for that killing water. The sail\'s another matter - but one thing at a time.',
   log:'Bring Tolen the Whittler 6 wood and 3 spiral shells so he can shape you a windsurf board. (Chop the palms; comb the beach for shells.)',
@@ -3307,7 +3312,7 @@ function switchWorld(id){
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
-  if(id==='east') for(const q3 of ['hunt1','surf1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='east'){
     // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you
     // climb back out with the hunt underway, make sure Vath has surfaced in the
