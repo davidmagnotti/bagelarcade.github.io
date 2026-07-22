@@ -3436,7 +3436,7 @@ function switchWorld(id){
 
 /* ---------- dodge roll ---------- */
 function tryRoll(){
-  if(P.dead || G.state!=='play' || dlg.open || G.interior) return;
+  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
   if(!(P.unlocked && P.unlocked.dash)){
     // dash is taught by a mage-tower's scrying orb - nudge the player there
     if(!P._dashNagT || G.time>P._dashNagT){ P._dashNagT=G.time+4;

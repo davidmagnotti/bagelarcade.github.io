@@ -134,12 +134,14 @@ function spawnMobsSkyDungeon(){
   // P5 - three more sky wraiths
   if(!P.story.skyG5){ const s=skyIsle('i5');
     for(let i=0;i<3;i++){ const a=i/3*TAU, r2=2.0; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 5); } }
-  // P6 - the Corrupted Spirit
+  // P6 - the Storm-Eye: a shielded storm-core that hovers over its isle. It can't be
+  // struck while its shield holds - it spits dodge-only gale-wisps at you, and only drops
+  // its guard for a moment each time it DISCHARGES (a telegraphed shockwave). Strike then.
   if(!done){ const s=skyIsle('i6');
-    const sp=findOpenNear(s.x,s.y,5) || [s.x,s.y];
-    const b=spawnMob('skyspirit', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.2; b.title='THE CORRUPTED SPIRIT';
-      b.hp=b.maxhp=980; b.dmg=30; b.lvl=13; b.hx=b.x; b.hy=b.y; b.respawnT=-1; } }
+    const b=spawnMob('stormeye', s.x, s.y-1);
+    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE';
+      b.hp=b.maxhp=900; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
+      b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; } }
 }
 function genSkyDungeonAll(){
   genSkyDungeon(); bakeSolids(); placeObjectsSkyDungeon(); buildFoam();
@@ -220,6 +222,106 @@ function updateSkyDungeon(dt){
       toast('The <b>cloud-snatcher</b> closes a cold grip on you and hurls you back down the rainbow road to the landing. <i>It cannot leave its isle - time your run and slip past.</i>',5200);
     }
   }
+  updateStormWraith(dt);
+  updateStormEye(dt);
+  collectStormBead();
+}
+
+/* ---------- the Storm-Wraith's snap: a telegraphed lunge you dash out of. If it lands,
+   it STUNS you and immediately smacks you a second time - so read the wind-up and roll. */
+function updateStormWraith(dt){
+  const m=G.mobs.find(x=>x.skyminiboss && !x.dead); if(!m) return;
+  m.spT=(m.spT||3.0)-dt;
+  // a queued follow-up smack after a landed stun
+  if(m.followT>0){ m.followT-=dt;
+    if(m.followT<=0 && !P.dead && dist(P.x,P.y,m.x,m.y)<2.2){
+      hurtPlayer(Math.round(m.dmg*1.1), m);
+      burst(P.x,P.y-0.4,'#c9b0ff',14,2.4); shockwave(m.x,m.y,'rgba(190,170,255,0.7)',24); G.shake=0.4;
+    }
+  }
+  if(m.tele>0){                            // winding up: it hangs, crackling, then lunges
+    m.tele-=dt; m.windup=0;
+    // telegraph: sparks streak along the aim line so you can read the lunge and roll clear
+    const f=1-(m.tele/0.62), px=m.x+(m.lx-m.x)*f, py=m.y+(m.ly-m.y)*f;
+    G.parts.push({x:px,y:py,vx:0,vy:0,life:0.22,color:'rgba(200,170,255,0.85)',size:3.2,grav:0});
+    if(m.tele<=0){ const l=Math.hypot(m.lx-m.x,m.ly-m.y)||1;
+      m.lungeVX=(m.lx-m.x)/l; m.lungeVY=(m.ly-m.y)/l; m.lunge=0.42; if(Snd.boss) Snd.boss(); }
+    return;
+  }
+  if(m.lunge>0){                           // the lunge itself - a fast straight dart
+    m.lunge-=dt;
+    moveEntity(m, m.lungeVX*9*dt, m.lungeVY*9*dt);
+    burst(m.x,m.y-0.3,'rgba(190,170,255,0.6)',2,1.6);
+    if(!P.dead && (P.rollT||0)<=0 && (m.stunT||0)<=0 && (P.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<1.05){
+      m.lunge=0;
+      stunPlayer(1.0);                     // caught: dazed...
+      hurtPlayer(m.dmg, m);
+      m.followT=0.55;                      // ...then a follow-up smack lands while you're reeling
+    }
+    return;
+  }
+  // ready another lunge once it's close enough and off cooldown (never mid-stun)
+  if(m.spT<=0 && (m.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<8 && !P.dead){
+    m.spT=3.4; m.tele=0.62; m.lx=P.x; m.ly=P.y;   // telegraph aims where you stand NOW - keep moving
+    shockwave(m.x,m.y,'rgba(190,170,255,0.5)',18);
+  }
+}
+
+/* pick up the Storm-Wraith's dropped stormlight bead: grants the stun, briefly, and
+   nudges you to try it (replaces the old wall of text). */
+function collectStormBead(){
+  const b=G.decor.find(d=>d.kind==='stormbead'); if(!b) return;
+  if(P.dead || dist(P.x,P.y,b.x,b.y)>0.9) return;
+  G.decor=G.decor.filter(d=>d!==b);
+  P.spells=P.spells||{}; P.spells.stun=1;
+  if(typeof give==='function') give('stormrune',1);
+  if(Snd.magic) Snd.magic(); burst(P.x,P.y-0.5,'#c9b0ff',18,2.4);
+  banner('STORMLIGHT','YOUR BOLTS NOW STUN');
+  toast('Stormlight sinks into your staff. <b style="color:#c9b0ff">Your magic bolts now STUN</b> - try one on the shades ahead.',4200);
+  if(typeof autoSave==='function') autoSave();
+}
+
+/* ---------- THE STORM-EYE (final boss) ----------
+   A shielded storm-core that hovers over the Broken Crown. It cannot be struck while
+   its shield holds; instead it spits GALE-WISPS - little dodge-only fliers you cannot
+   hit, only sidestep. Every few beats it DISCHARGES: a telegraphed wind-up, then a
+   dodgeable shockwave - and for that beat its shield is DOWN. Strike it only then. */
+function spawnGaleWisp(m){
+  // darts straight at where you stand, then flies on past - so you dodge to the side
+  const dx=P.x-m.x, dy=(P.y-0.3)-(m.y-0.6), l=Math.hypot(dx,dy)||1, sp=6.2;
+  G.projs.push({kind:'galewisp', x:m.x, y:m.y-0.6, vx:dx/l*sp, vy:dy/l*sp, life:2.6,
+    dmg:Math.round(m.dmg*0.7), from:'mob', ph:Math.random()*TAU});
+}
+function updateStormEye(dt){
+  const m=G.mobs.find(x=>x.stormeye && !x.dead); if(!m) return;
+  const s=skyIsle('i6');
+  m.float=(m.float||0)+dt;
+  // gentle hover, drifting back over its isle centre
+  const hx=s.x, hy=s.y-1, dxh=hx-m.x, dyh=hy-m.y, lh=Math.hypot(dxh,dyh);
+  if(lh>0.05) moveEntity(m, dxh*Math.min(1,dt*1.5), dyh*Math.min(1,dt*1.5));
+  m.eyeT=(m.eyeT||2.5)-dt;
+  if(m.eyeState==='hover'){
+    m.invuln=1;
+    // spit a wisp every ~1.1s
+    m.wispT=(m.wispT||1.1)-dt;
+    if(m.wispT<=0 && !P.dead && dist(P.x,P.y,m.x,m.y)<22){ m.wispT=1.05; spawnGaleWisp(m);
+      if(Snd.tone) Snd.tone(300,0.06,'sawtooth',0.02,120); }
+    if(m.eyeT<=0){ m.eyeState='charge'; m.eyeT=1.0; shockwave(m.x,m.y,'rgba(120,200,255,0.5)',26); if(Snd.boss) Snd.boss(); }
+  } else if(m.eyeState==='charge'){
+    // telegraphed discharge wind-up: it swells and its eye splits open - shield still up
+    m.invuln=1;
+    if(m.eyeT<=0){
+      m.eyeState='open'; m.eyeT=2.6; m.invuln=0;      // SHIELD DOWN - your window
+      shockwave(m.x,m.y,'rgba(180,230,255,0.9)',64); G.shake=0.6;
+      // the discharge is a dodgeable ring: knock/hurt only if you're close and not rolling
+      if(!P.dead && (P.rollT||0)<=0 && dist(P.x,P.y,m.x,m.y)<3.4){ hurtPlayer(Math.round(m.dmg*1.1), m); }
+      for(let k=0;k<10;k++) burst(m.x+rnd(-1.5,1.5), m.y+rnd(-1,1), 'hsl('+(rnd(180,220)|0)+',90%,72%)', 8, 2.4);
+    }
+  } else { // 'open' - vulnerable, briefly, then re-shield
+    m.invuln=0;
+    if(m.eyeT<=0){ m.eyeState='hover'; m.eyeT=rnd(3.2,4.4); m.invuln=1;
+      burst(m.x,m.y-0.4,'rgba(120,200,255,0.7)',10,2); }
+  }
 }
 
 /* ---------- entering / leaving from the Cloudreach ---------- */
@@ -294,15 +396,15 @@ function offerSkyReturn(){
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent='The Wind Calms';
   skyBirdPortrait();
-  setDialog('The soured wind unwinds from the crown and, isle by isle, the rainbow road runs clear and calm behind you. The bird loops overhead, giddy. <b>Rest at the landing</b>, mended and a level the stronger, then take the safe road home whenever you please?',
-    [ {label:'Rest at the landing - healed & stronger', cls:'gold', fn:()=>{
+  setDialog('The wind calms and the rainbow runs clear. Rest at the landing - healed and a level stronger?',
+    [ {label:'Rest at the landing', cls:'gold', fn:()=>{
         closeDialog();
         P.hp=P.maxhp; P.mp=P.maxmp;
         if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
         P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
         G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
         burst(P.x,P.y-0.5,'#c9b0ff',20,2); if(Snd.magic) Snd.magic();
-        toast('The rainbow road holds calm and bright. The wind-lost bird waits at the landing to fly you back down whenever you\'re ready.',5000);
+        toast('The bird waits at the landing to fly you down whenever you\'re ready.',3800);
       }},
       {label:'Stay a while', ghost:true, fn:closeDialog} ]);
 }

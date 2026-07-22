@@ -375,7 +375,7 @@ function usePlot(pl){
 
 /* ---- combat ---- */
 function tryAttack(useMouse){
-  if(P.atkCd>0 || G.state!=='play' || dlg.open || G.interior) return;
+  if(P.atkCd>0 || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
   if(!P.unlocked[P.weapon==='melee'?'melee':P.weapon]){
     P._noWpnT=P._noWpnT||0;
     if(G.time>P._noWpnT){ P._noWpnT=G.time+2.5;
@@ -644,24 +644,25 @@ function killMob(m,skill){
     setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // THE STORM-WRAITH (Rainbow Road mini-boss) - its stormlight teaches your staff to stun
+  // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
+  // up (see updateSkyDungeon); the gate opens now, but the stun is granted on pickup.
   if(m.skyminiboss){
     P.story=P.story||{}; P.story.skyG4=1;
-    P.spells=P.spells||{}; P.spells.stun=1;
-    give('stormrune',1);
     if(typeof openSkyGate==='function') openSkyGate('g4');
     Snd.magic&&Snd.magic();
-    banner('THE STORM-WRAITH FALLS','ITS STORMLIGHT IS YOURS');
-    setTimeout(()=>toast('The Storm-Wraith bursts, and a bead of white <b>stormlight</b> sinks into your staff. <b style="color:#c9b0ff">Your magic bolts now STUN</b> - struck foes cannot attack for half a second. The wind-ward north thins to colour; the road runs on.',7500), 1400);
+    banner('THE STORM-WRAITH FALLS','A BEAD OF STORMLIGHT DROPS');
+    // drop the bead on its isle home, not wherever a lunge left it (open sky isn't walkable)
+    G.decor.push({kind:'stormbead', x:(m.hx||m.x), y:(m.hy||m.y)});
     if(typeof autoSave==='function') autoSave();
   }
-  // THE CORRUPTED SPIRIT (Rainbow Road final boss) - felling it calms the high wind
+  // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind
   if(m.skyfinalboss){
     P.story=P.story||{}; P.story.skyDungeonDone=1;
     Snd.boss&&Snd.boss();
-    setTimeout(()=>toast('The Corrupted Spirit comes apart into harmless coloured mist, and the high wind lets out a long, easy breath. The rainbow road runs calm all the way back to the landing - and the wind-lost bird can find her islands again.',7000), 1500);
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS');
+    setTimeout(()=>toast('The storm-eye guts itself into harmless mist. The high wind calms and the rainbow road runs quiet.',4200), 1400);
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }, 2600);
+    setTimeout(()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }, 2400);
   }
   // The Drowned Warden keeps the Stormreach catacomb
   if(m.tombboss){
@@ -715,6 +716,14 @@ function offerDungeonExit(){
      {label:'Stay a while', ghost:true, fn:closeDialog}]);
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+function stunPlayer(dur){
+  if(P.dead || G.victory) return;
+  P.stunT=Math.max(P.stunT||0, dur||0.9);
+  P.moving=false; P.click=null;
+  addFloat('STUNNED!', P.x, P.y-2.0, '#bfe8ff', 1.2);
+  burst(P.x,P.y-0.5,'#bfe8ff',12,2.2);
+  G.shake=Math.max(G.shake,0.3); buzz(30);
+}
 function hurtPlayer(dmg,src){
   if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
   buzz(24);
@@ -785,6 +794,14 @@ document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv')
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
+  // STUNNED (dazed): the Storm-Wraith's snap can lock you for a beat - no walking,
+  // dashing, steering or striking. Timers still tick so you recover on schedule.
+  if((P.stunT||0)>0){
+    P.stunT-=dt; P.moving=false; P.click=null;
+    P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
+    P.atkCd=Math.max(0,(P.atkCd||0)-dt);
+    return;
+  }
   // safety net: never leave the player wedged between water and land. A windsurfer
   // (surf unlocked) counts light shallows as valid footing, so the board isn't
   // snapped back to shore the instant it touches the water.
@@ -1063,6 +1080,8 @@ function updateMobs(dt){
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
+    if(m.stormeye){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
+    if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){

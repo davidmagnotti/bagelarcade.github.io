@@ -56,7 +56,7 @@ function buildGroundCache(){
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
-  skygate:1, skytile:1, skybird:1};
+  skygate:1, skytile:1, skybird:1, stormbead:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -949,6 +949,21 @@ function drawDecor(b,s){
     if(Math.random()<0.12) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.15,0.15),vy:-rnd(0.2,0.7),life:rnd(0.5,1.1),color:'rgba(220,235,255,0.6)',size:rnd(1,2),grav:-0.03});
     g.restore(); return;
   }
+  if(b.kind==='stormbead'){
+    // a hovering bead of white stormlight, dropped by the Storm-Wraith - walk over it
+    const g=cx, t=G.time, bob=Math.sin(t*3)*2.4;
+    g.save(); g.translate(s.x, s.y-14+bob);
+    const gl=0.55+0.35*Math.sin(t*5);
+    g.fillStyle='rgba(200,176,255,'+(0.30*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,0,13,0,TAU); g.fill();
+    g.fillStyle='rgba(230,215,255,0.95)'; g.beginPath(); g.arc(0,0,5.5,0,TAU); g.fill();
+    g.fillStyle='#fff'; g.beginPath(); g.arc(-1.4,-1.4,2.2,0,TAU); g.fill();
+    // a couple of crackle-sparks
+    for(let i=0;i<3;i++){ const a=t*4+i*2.1; g.strokeStyle='rgba(200,176,255,'+(0.6*gl).toFixed(2)+')'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(Math.cos(a)*6,Math.sin(a)*6); g.lineTo(Math.cos(a)*11,Math.sin(a)*11); g.stroke(); }
+    g.restore();
+    if(Math.random()<0.3) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.1,0.1),vy:-rnd(0.2,0.5),life:rnd(0.4,0.9),color:'rgba(210,190,255,0.7)',size:rnd(1,2),grav:-0.02});
+    return;
+  }
   if(b.kind==='skybird'){
     // a small bright bird perched on a cloud-post, wings shifting
     const g=cx, t=G.time, flap=Math.sin(t*3)*3, hop=Math.sin(t*1.4)*1.5;
@@ -1382,6 +1397,51 @@ function drawMob(m,s){
     cx.font='bold 12px Georgia'; cx.textAlign='center';
     cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(nm,s.x+1,s.y-114);
     cx.fillStyle= m.enspelled? '#ff9a7a' : '#9fe8c0'; cx.fillText(nm,s.x,s.y-115);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='stormeye'){
+    // a great floating storm-core: a churning dark cloud-ball wound round a single eye.
+    // A pale shield-shimmer means it's guarded (can't be cut); when it DISCHARGES the
+    // shield drops and the eye splits wide - that's the moment to strike.
+    const g=cx, t=G.time, sc=m.bscale||2.4;
+    const cy=s.y-40-Math.sin(m.float*1.6||t*1.6)*4;          // hovers
+    const open = !m.invuln;                                   // shield down => vulnerable
+    const charging = m.eyeState==='charge';
+    drawShadowAt(g,s.x,s.y,26);
+    g.save(); g.translate(s.x,cy); g.scale(sc,sc);
+    // churning storm body (layered dark clouds)
+    for(let i=0;i<7;i++){ const a=t*0.6+i/7*TAU, rr=13+Math.sin(t*1.2+i)*2;
+      g.fillStyle= i%2? 'rgba(30,26,54,0.9)':'rgba(46,40,78,0.9)';
+      g.beginPath(); g.ellipse(Math.cos(a)*7, Math.sin(a)*5, rr, rr*0.7, 0, 0, TAU); g.fill(); }
+    // lightning crackle around it (more violent while charging)
+    const bolts= charging? 6 : 3;
+    g.strokeStyle= open? 'rgba(180,235,255,0.95)' : 'rgba(150,190,255,0.6)'; g.lineWidth=1.2;
+    for(let i=0;i<bolts;i++){ const a=t*3+i/bolts*TAU, r0=15, r1=r0+ (charging?9:5);
+      g.beginPath(); g.moveTo(Math.cos(a)*r0,Math.sin(a)*r0*0.7);
+      g.lineTo(Math.cos(a+0.2)*(r0+3),Math.sin(a+0.2)*(r0+3)*0.7);
+      g.lineTo(Math.cos(a)*r1,Math.sin(a)*r1*0.7); g.stroke(); }
+    // the eye
+    const eyeR= open? 9 : (charging? 7+Math.sin(t*18)*1.5 : 6);
+    g.fillStyle='#0a0a14'; g.beginPath(); g.ellipse(0,0,12,eyeR+2,0,0,TAU); g.fill();
+    const eg=g.createRadialGradient(0,0,1,0,0,eyeR+2);
+    eg.addColorStop(0, open? '#ffffff' : '#8fd0ff');
+    eg.addColorStop(0.5, open? '#7fe0ff' : '#3a6bd0');
+    eg.addColorStop(1,'rgba(20,20,40,0)');
+    g.fillStyle=eg; g.beginPath(); g.ellipse(0,0,11,eyeR,0,0,TAU); g.fill();
+    // pupil (a violet slit; blazes open when vulnerable)
+    g.fillStyle= open? '#ff5cc8' : '#c77bff';
+    g.beginPath(); g.ellipse(0,0, open?3.4:1.6, eyeR*0.9, 0,0,TAU); g.fill();
+    // guarded shield-shimmer
+    if(!open){ const gl=0.18+0.12*Math.sin(t*4);
+      g.strokeStyle='rgba(160,210,255,'+gl.toFixed(2)+')'; g.lineWidth=2;
+      g.beginPath(); g.ellipse(0,0,20,17,0,0,TAU); g.stroke(); }
+    if(m.hurtT>0){ g.fillStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.ellipse(0,0,18,15,0,0,TAU); g.fill(); }
+    g.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.65)'; g.fillText(nm,s.x+1,cy-40*sc*0.5-6);
+    g.fillStyle= open? '#ff9adf' : '#bfe8ff'; g.fillText(nm,s.x,cy-40*sc*0.5-7);
+    if(open){ g.font='bold 10px Georgia'; g.fillStyle='#ffd76a'; g.fillText('VULNERABLE!',s.x,cy-40*sc*0.5+8); }
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='wraith'||m.kind==='skywraith'||m.kind==='skygrabber'||m.kind==='stormwraith'||m.kind==='skyspirit'){
@@ -1851,6 +1911,12 @@ function drawHorse(s){
   g.restore();
 }
 function drawPlayer(s){
+  // dazed: little stars circle overhead while a stun holds you (see stunPlayer)
+  if((P.stunT||0)>0){
+    const g=cx, n=3, base=-46;
+    for(let i=0;i<n;i++){ const a=G.time*6 + i/n*TAU; const sx=s.x+Math.cos(a)*11, sy=s.y+base+Math.sin(a)*4;
+      g.fillStyle='#ffe27a'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('✦', sx, sy); }
+  }
   if(P.riding){
     const onMoa=P.unlocked&&P.unlocked.moa;
     if(onMoa) drawMoa(s); else drawHorse(s);
@@ -1957,6 +2023,24 @@ function drawPlayerFigure(s){
   }
 }
 function drawProj(p,s){
+  if(p.kind==='galewisp'){
+    // a little dodge-only flier the Storm-Eye spits: a comet-wisp with flitting wings
+    const g=cx, t=G.time, a=Math.atan2(p.vy, p.vx), flap=Math.sin(t*22+(p.ph||0))*3;
+    g.save(); g.translate(s.x, s.y-12);
+    // glow + tail
+    g.fillStyle='rgba(150,210,255,0.30)'; g.beginPath(); g.arc(0,0,9,0,TAU); g.fill();
+    g.strokeStyle='rgba(180,225,255,0.5)'; g.lineWidth=3; g.lineCap='round';
+    g.beginPath(); g.moveTo(-Math.cos(a)*12,-Math.sin(a)*12); g.lineTo(0,0); g.stroke();
+    // wings
+    g.fillStyle='rgba(210,235,255,0.85)';
+    g.beginPath(); g.ellipse(-2,-3-Math.abs(flap),5,2.4,-0.6,0,TAU); g.fill();
+    g.beginPath(); g.ellipse(-2, 3+Math.abs(flap),5,2.4, 0.6,0,TAU); g.fill();
+    // body + eye
+    g.fillStyle='#6fb6e8'; g.beginPath(); g.arc(0,0,3.4,0,TAU); g.fill();
+    g.fillStyle='#eaf6ff'; g.beginPath(); g.arc(1,-0.6,1.4,0,TAU); g.fill();
+    g.restore();
+    return;
+  }
   if(p.kind==='arrow'){
     const a=Math.atan2(p.vy*TH/2,p.vx*TW/2);
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(a);
