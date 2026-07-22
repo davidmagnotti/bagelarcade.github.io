@@ -260,6 +260,21 @@ function withTravel(npc,btns){
   }
   return btns;
 }
+// A simple NPC storefront: a sub-menu of Buy buttons for the wares a shop-
+// keeper stocks. Same idea as the bazaar stall, hung off an NPC's dialogue so
+// the signed shops of Greyharbor actually SELL something.
+function vendorShop(npc,line,wares){
+  const rebuild=(msg)=>{
+    const btns=wares.map(w=>({label:'Buy '+ITEMS[w.item].name+' <b style="color:#ffd76a">'+w.price+'g</b>', fn:()=>{
+      if(P.gold>=w.price){ P.gold-=w.price; giveQuiet(w.item,1); if(Snd.coin)Snd.coin(); refreshUI();
+        rebuild('“Sold - one '+ITEMS[w.item].name+', and fairly.”'); }
+      else rebuild('“'+w.price+' gold, friend. No coin, no goods.”');
+    }}));
+    btns.push({label:'Back', ghost:true, fn:()=>buildDialogContent(npc)});
+    setDialog(msg || ('“'+line+'”'), btns);
+  };
+  rebuild();
+}
 function shopButtons(npc,btns){
   if(npc.id==='bram'){
     btns.unshift({label:'Smith & craft…', fn:()=>craftMenu(npc)});
@@ -282,6 +297,20 @@ function shopButtons(npc,btns){
         setDialog('“Sip it slow - or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
       else setDialog('“Coin first, tonic after. Island rules.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
+  }
+  // Greyharbor's signed shops now actually trade - Sela's Provisions, Ivo's
+  // Herbary, and Thimble & Thread (Mira the clothier).
+  if(npc.id==='sela'){
+    btns.unshift({label:'Buy provisions…', fn:()=>vendorShop(npc,'Provisions for the road - fresh bread, grilled fish, an apple, a tonic for the bad days. What\'ll it be?',
+      [{item:'bread',price:5},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'potion',price:8}])});
+  }
+  if(npc.id==='ivo'){
+    btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
+      [{item:'potion',price:8},{item:'elixir',price:24}])});
+  }
+  if(npc.id==='mira'){
+    btns.unshift({label:'Buy cloth…', fn:()=>vendorShop(npc,'Dawn-dyed silk, cut clean and true. A bolt goes further than you\'d think - and the resort\'s always wanting more.',
+      [{item:'silk',price:14}])});
   }
   if(npc.id==='brant' && qs('wreck')==='done'){
     btns.unshift({label:'Set sail for Greyharbor', fn:()=>{ closeDialog(); departEarly(); }});

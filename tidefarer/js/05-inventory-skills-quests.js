@@ -45,6 +45,12 @@ function questReady(id){
     if(id==='echoes') return Object.keys(P.loreRead||{}).length>=7;
     if(id==='profit') return (P.prog.profit||0)>=12;
     if(id==='setsail') return isleQuestsSettled();
+    // regional boss-hunts complete off the flag the boss sets when it falls
+    if(id==='hoarfrost') return !!(P.story&&P.story.iceBearDown);
+    if(id==='rimebound') return !!(P.story&&P.story.deepDone);
+    if(id==='stormroc') return !!(P.story&&P.story.rocDown);
+    if(id==='barrowbrute') return !!(P.story&&P.story.reachBossDown);
+    if(id==='drownedwarden') return !!(P.story&&P.story.tombBossDown);
   }
   return false;
 }

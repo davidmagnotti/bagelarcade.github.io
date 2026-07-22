@@ -9,6 +9,8 @@ ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.
 ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune - sells dearly."};
 ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25};
 ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20};
+ITEMS.stew={name:'Hearth Stew', desc:'Restores 45 HP. A whole meal in a bowl.', use:'heal', heal:45};
+ITEMS.roast={name:'Roast Boar', desc:'Restores 42 HP. Rich, dark, and dripping.', use:'heal', heal:42};
 ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
 ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
 ACH.mastersmith={t:'Master Smith',d:'Forge the steel sword.'};
@@ -16,7 +18,7 @@ ACH.loremaster={t:'Loremaster',d:'Read every text and stone on both islands.'};
 ACH.ironclad={t:'Ironclad',d:'Wear the steel plate.'};
 ACH.delver={t:'Delver',d:'Claim the heart of the Undermaw.'};   // awarded at the cave chest (20-lore) - was never registered, so the award silently no-op'd
 
-const SELL_PRICES={fish:3, cookedfish:4, wood:1, stone:1, hardwood:4, ore:5, bar:14, pearl:25, crystal:15, mushroom:2, wheat:2, apple:2};
+const SELL_PRICES={fish:3, cookedfish:4, wood:1, stone:1, hardwood:4, ore:5, bar:14, pearl:25, crystal:15, mushroom:2, wheat:2, apple:2, stew:7, roast:7};
 
 function costText(need){ return Object.keys(need).map(k=>need[k]+' '+ITEMS[k].name.toLowerCase()).join(' + '); }
 function canPay(need){ for(const k in need) if(!has(k,need[k])) return false; return true; }
@@ -84,7 +86,9 @@ function sellMenu(npc){
 function cookMenu(npc){
   const opts=[
     {label:'Bake bread (3 wheat) - heals 25', need:{wheat:3}, item:'bread', line:'“Fresh from the oven - mind your fingers.”'},
-    {label:'Grill fish (1 fish) - heals 20', need:{fish:1}, item:'cookedfish', line:'“Skin-crisp and steaming. Eat it warm.”'}
+    {label:'Grill fish (1 fish) - heals 20', need:{fish:1}, item:'cookedfish', line:'“Skin-crisp and steaming. Eat it warm.”'},
+    {label:'Simmer hearth stew (1 grilled fish + 1 bluecap + 1 wheat) - heals 45', need:{cookedfish:1, mushroom:1, wheat:1}, item:'stew', line:'“A whole meal in one bowl - that\'ll put the legs back under you.”'},
+    {label:'Roast boar (1 boar meat + 1 wheat) - heals 42', need:{boarmeat:1, wheat:1}, item:'roast', line:'“Slow-turned over the coals till it falls off the bone. Rich work, that.”'}
   ];
   const btns=opts.map(o=>({label:o.label, fn:()=>{
     if(!canPay(o.need)){ setDialog('“You\'ll need '+costText(o.need)+' for that.”',
@@ -98,14 +102,22 @@ function cookMenu(npc){
 
 /* ---------- Orin: crystal brewing ---------- */
 function brewMenu(npc){
-  const need={mushroom:2, crystal:1};
-  setDialog('“Two bluecaps, one ember crystal - and I\'ll draw you <b>two tonics</b> from the boil.”',
-    [{label:'Brew (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
-        if(!canPay(need)){ setDialog('“The recipe is exact: '+costText(need)+'. Nature doesn\'t haggle.”',
+  const tonic={mushroom:2, crystal:1};
+  const great={potion:2, crystal:1, mushroom:1};
+  setDialog('“The cellar\'s warm and the crystals are humming. What shall we draw off the boil?”',
+    [{label:'Brew tonics (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
+        if(!canPay(tonic)){ setDialog('“The recipe is exact: '+costText(tonic)+'. Nature doesn\'t haggle.”',
           [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
-        pay(need); give('potion',2); Snd.magic();
+        pay(tonic); give('potion',2); Snd.magic();
         setDialog('“Careful - it\'s still humming.” <i>(+2 Ember Tonics)</i>',
-          [{label:'Brew again',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+          [{label:'Brew more',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+      }},
+     {label:'Reduce a Greater Tonic (2 tonics + 1 crystal + 1 bluecap → 1 elixir)', fn:()=>{
+        if(!canPay(great)){ setDialog('“Twice the mend takes twice the care: '+costText(great)+'. Boil two tonics down with a crystal and a bluecap and I\'ll draw the stronger draught.”',
+          [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
+        pay(great); give('elixir',1); Snd.magic();
+        setDialog('“There - a <b>Greater Tonic</b>, thick as honey and twice the mend. Don\'t waste it on a scratch.” <i>(+1 Greater Tonic)</i>',
+          [{label:'Brew more',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
       }},
      {label:'Back',ghost:true,fn:()=>buildDialogContent(npc)}]);
 }
