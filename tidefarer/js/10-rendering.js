@@ -1860,8 +1860,13 @@ function drawPlayer(s){
     return;
   }
   if(P.unlocked&&P.unlocked.surf&&!G.interior&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
-    // the board: pale wood with a dark stripe, riding its own bow-wave
+    // a WINDSURF: pale-wood board on its bow-wave, and a tall stormcloth sail
+    // (Nessa's) that billows out to the heading side - drawn IN FRONT of the sailor,
+    // who grips the boom. The sail dwarfs the rider, as a real windsurf rig does.
     const bobS=Math.sin(G.time*5)*1.4;
+    const fl=(P.dir&&P.dir.x<0)?-1:1;
+    const luff=Math.sin(G.time*3.2)*1.4;   // the sail breathes/luffs in the wind
+    // ---- board + bow-wave, under the sailor ----
     cx.save(); cx.translate(s.x,s.y+bobS*0.4);
     cx.fillStyle='rgba(234,246,255,0.5)';
     cx.beginPath(); cx.ellipse(0,3,20,8,0,0,TAU); cx.fill();
@@ -1871,7 +1876,36 @@ function drawPlayer(s){
     cx.strokeStyle='#8a6a3a'; cx.lineWidth=2;
     cx.beginPath(); cx.moveTo(-13,0); cx.lineTo(13,0); cx.stroke();
     cx.restore();
+    // ---- the sailor ----
     drawPlayerFigure({x:s.x, y:s.y-3+bobS*0.4});
+    // ---- the rig, IN FRONT, billowing to the heading side ----
+    cx.save(); cx.translate(s.x,s.y+bobS*0.4);
+    const footX=fl*3, footY=-6;                  // mast foot on the board, front-centre
+    const headX=fl*(11+luff), headY=-98;         // mast head - tall, well above the sailor
+    const clewX=fl*(31+luff*2), clewY=-50;       // clew billowed far out to the heading side
+    // sail body (cream stormcloth fading to a storm-violet leech), with a curved foot
+    const grad=cx.createLinearGradient(footX,footY,clewX,clewY);
+    grad.addColorStop(0,'#f2ecdc'); grad.addColorStop(1,'#d3c8e6');
+    cx.fillStyle=grad; cx.lineJoin='round';
+    cx.beginPath(); cx.moveTo(footX,footY); cx.lineTo(headX,headY);
+    cx.quadraticCurveTo(clewX+fl*7,(headY+clewY)/2,clewX,clewY);
+    cx.quadraticCurveTo((clewX+footX)/2,clewY+12,footX,footY); cx.closePath(); cx.fill();
+    // a storm-violet panel across the upper sail + a batten seam
+    cx.fillStyle='rgba(150,120,210,0.26)';
+    cx.beginPath(); cx.moveTo(headX,headY); cx.lineTo(clewX,clewY); cx.lineTo((headX+footX)/2,(headY+footY)/2); cx.closePath(); cx.fill();
+    cx.strokeStyle='rgba(90,70,140,0.38)'; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(footX,footY-2); cx.lineTo((headX+clewX)/2,(headY+clewY)/2); cx.stroke();
+    // sail outline
+    cx.strokeStyle='rgba(40,30,20,0.5)'; cx.lineWidth=1.6;
+    cx.beginPath(); cx.moveTo(footX,footY); cx.lineTo(headX,headY);
+    cx.quadraticCurveTo(clewX+fl*7,(headY+clewY)/2,clewX,clewY);
+    cx.quadraticCurveTo((clewX+footX)/2,clewY+12,footX,footY); cx.closePath(); cx.stroke();
+    // mast (leading edge) + boom (the curved handle the sailor grips)
+    cx.strokeStyle='#4a3826'; cx.lineWidth=2.4; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(footX,footY); cx.lineTo(headX,headY); cx.stroke();
+    cx.strokeStyle='#6a5238'; cx.lineWidth=1.8;
+    cx.beginPath(); cx.moveTo(footX,-42); cx.quadraticCurveTo((footX+clewX)/2,-52,clewX,clewY); cx.stroke();
+    cx.restore();
     return;
   }
   drawShadowAt(cx,s.x,s.y,14);
