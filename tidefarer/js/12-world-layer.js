@@ -1261,7 +1261,7 @@ function flyToWorld(id, msg){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   if(msg) toast(msg,4200);
   if(Snd.boss) Snd.boss();
-  setTimeout(()=>{ switchWorld(id); autoSave(); setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },220); },900);
+  setTimeout(()=>{ try{ switchWorld(id); autoSave(); } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },220); } },900);
 }
 function askDragonFlight(){
   P.prog.windKnown=1; P.story=P.story||{}; P.story.skyKnown=1;
@@ -2092,9 +2092,9 @@ function useLeapPoint(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
   if(Snd.boss) Snd.boss();
-  setTimeout(()=>{ switchWorld('wind'); autoSave&&autoSave();
-    banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
-    setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },260); }, 1100);
+  setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
+      banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
+    } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },260); } }, 1100);
 }
 
 /* =====================================================================
@@ -2956,6 +2956,8 @@ function attemptSail(){
     toast('The strait past the breakwater churns like a cauldron - no hull could live in it. <b>Ashwing</b> can still fly you home; or <b>calm the water first</b>.',5200);
     return;
   }
+  // Stormreach is only reachable by sea, so its berth is always a ferry - prompt for a destination
+  if(G.worldId==='reach'){ boatMenu(); return; }
   // once the seas are calm, any boat is a ferry - pick a destination
   if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
   // default single-hop routing before the archipelago reopens
@@ -2993,6 +2995,7 @@ function snapshotWorld(){
 }
 function switchWorld(id){
   const prevWorld=G.worldId;
+  G._flying=0;   // arriving anywhere clears the in-flight lock, so a throw mid-flight can never strand the dragon/parachute
   snapshotWorld();
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];

@@ -1903,9 +1903,12 @@ function drawMinimap(){
     g.beginPath(); g.arc(zx,zy,2,0,TAU); g.fill();
     g.strokeStyle='rgba(0,0,0,0.45)'; g.lineWidth=1; g.stroke();
   }
+  // the player: a bright dot with a dark halo + white ring, so it reads on ANY
+  // terrain - including the all-white Cloudreach where a plain white dot vanished
   const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
-  g.fillStyle='#fff'; g.beginPath(); g.arc(px,py,3,0,TAU); g.fill();
-  g.strokeStyle='#2a1608'; g.stroke();
+  g.beginPath(); g.arc(px,py,5,0,TAU); g.fillStyle='rgba(0,0,0,0.5)'; g.fill();
+  g.beginPath(); g.arc(px,py,3.2,0,TAU); g.fillStyle='#ff4d3d'; g.fill();
+  g.lineWidth=1.4; g.strokeStyle='#fff'; g.stroke();
   const pq=primaryQuest();
   if(pq){ const tp=questTargetPos(pq);
     if(tp){ const qx=clamp((tp.x-sx)/vw*120,4,116), qy=clamp((tp.y-sy)/vw*120,4,116);

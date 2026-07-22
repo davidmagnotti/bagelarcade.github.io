@@ -914,11 +914,6 @@ function updatePlayer(dt){
 
 function updateNPCs(dt){
   const night=isNight();
-  if(!night) G.nightToasted=false;
-  else if(!G.nightToasted && !G.interior){
-    G.nightToasted=true;
-    toast('Lamps flicker on as the villagers head indoors for the night. The <b>inn</b> keeps its door open.',5200);
-  }
   for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
@@ -1242,7 +1237,7 @@ function updateWorld(dt){
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
   // Aldermere is a walled, patrolled city and stays safe after dark.
-  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && !P.dead && !inSafeZone(P.x,P.y)){
+  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
