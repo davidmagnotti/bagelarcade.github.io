@@ -142,6 +142,10 @@ function loadCode(str){
   } else if(d.world==='crown'){
     switchWorld('crown');
     applyWorldFlags(d.flags&&d.flags.crown);
+  } else if(d.world==='sky'){       // the Cloudreach (Ashwing is there to fly you back)
+    switchWorld('sky');
+  } else if(d.world==='reach'){     // Stormreach (boss respawn gated by P.story flags)
+    switchWorld('reach');
   }
   // Dungeons are transient (they regenerate and hold puzzle state) and were never
   // restored here - so a save made inside one stayed on the isle and applied the

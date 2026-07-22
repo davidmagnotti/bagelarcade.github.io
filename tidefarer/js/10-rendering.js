@@ -53,7 +53,7 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -830,6 +830,21 @@ function drawDecor(b,s){
       g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(ox-16,oy+yy,32,3.5); }
       g.fillStyle='#5a4436'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(ox+i*11,oy-38); g.lineTo(ox+i*11-4,oy-32); g.lineTo(ox+i*11+4,oy-32); g.closePath(); g.fill(); }
     }
+    g.restore(); return;
+  }
+  if(b.kind==='leappoint'){
+    // a jutting stone launch-shelf over the cloud-drop, with a windsock cairn
+    const g=cx; drawShadowAt(g,s.x,s.y,20); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#6a6270'; g.beginPath(); g.moveTo(-26,2); g.lineTo(0,14); g.lineTo(26,2); g.lineTo(20,-6); g.lineTo(0,2); g.lineTo(-20,-6); g.closePath(); g.fill();
+    g.fillStyle='#4a4450'; g.beginPath(); g.moveTo(-26,2); g.lineTo(0,14); g.lineTo(0,10); g.lineTo(-24,0); g.closePath(); g.fill();
+    // a cairn post with a fluttering wind-streamer
+    g.strokeStyle='#5a4a38'; g.lineWidth=3; g.beginPath(); g.moveTo(-2,0); g.lineTo(-4,-26); g.stroke();
+    const t=G.time, sway=Math.sin(t*3)*4;
+    g.fillStyle='rgba(201,176,255,0.85)'; g.beginPath(); g.moveTo(-4,-26); g.lineTo(-4+14+sway,-22); g.lineTo(-4+13+sway,-18); g.lineTo(-4,-20); g.closePath(); g.fill();
+    // a couple of drifting cloud-wisps at the lip
+    g.fillStyle='rgba(230,235,245,0.5)';
+    g.beginPath(); g.ellipse(14+Math.sin(t*1.3)*3, 8, 12, 4, 0, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(-16+Math.cos(t*1.1)*3, 10, 10, 3.5, 0, 0, TAU); g.fill();
     g.restore(); return;
   }
   if(b.kind==='staffgate'){

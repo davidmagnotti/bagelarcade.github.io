@@ -164,7 +164,9 @@ function nearestInteract(){
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.4 && d<bd){ bd=d; best={type:'boat',o:b,label:'Sail'}; } }
     if(b.kind==='ashwing'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<3.0 && d<bd){ bd=d; best={type:'ashwing',o:b,label:'Fly home'}; } }
+      if(d<3.0 && d<bd){ bd=d; best={type:'ashwing',o:b,label:b.sky?'Fly down':'Fly home'}; } }
+    if(b.kind==='leappoint'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.2 && d<bd){ bd=d; best={type:'leap',o:b,label:(P.story&&P.story.parachute)?'Take the Leap':'The Leap'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
@@ -221,7 +223,8 @@ function doInteract(){
   if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
   if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
-  if(it.type==='ashwing'){ facePoint(it.o.x,it.o.y); askAshwingHome(); return; }
+  if(it.type==='ashwing'){ facePoint(it.o.x,it.o.y); if(it.o.sky) askSkyDragon(); else askAshwingHome(); return; }
+  if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
   if(it.type==='cat'){
@@ -588,6 +591,22 @@ function killMob(m,skill){
   if(m.vaultbear){
     P.story=P.story||{}; P.story.iceBearDown=1;
     setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
+    if(typeof autoSave==='function') autoSave();
+  }
+  // The Storm Roc rules the Cloudreach - felling it wins her stormsail (the parachute)
+  if(m.skyboss){
+    P.story=P.story||{}; P.story.rocDown=1; P.story.parachute=1;
+    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to whatever waits below.',7500), 1500);
+    if(typeof autoSave==='function') autoSave();
+  }
+  // The Barrow Brute wrecks every hull on Stormreach - down it, and the castaways ferry you out
+  if(m.reachboss){
+    P.story=P.story||{}; P.story.reachBossDown=1; P.story.reachOpen=1;
+    // make the ferry berth appear now, without a reload
+    if(G.worldId==='reach' && typeof REACH_ZONES!=='undefined' && !G.decor.some(d=>d.kind==='boat')){
+      const D=REACH_ZONES.dock; addBuilding('boat', D.x, D.y+2, ''); if(typeof invalidateScenery==='function') invalidateScenery();
+    }
+    setTimeout(()=>toast('The brute crashes down and Stormreach lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging timber to the water: <b>“A keel under you inside a week - my word!”</b> The berth at the east point is open at last. <b style="color:#c9b0ff">Stormreach joins the ferry roads - you can sail from here now.</b>',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // After felling a dungeon boss, offer the quick road out - mended and a level
