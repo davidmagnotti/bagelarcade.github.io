@@ -1999,8 +1999,12 @@ function placeObjectsMillDeep(){
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
-  // the hatch stays chained until Tolen has shaped the board and sent you for the sail
-  if(!(P.story && (P.story.boardMade || P.story.haveSail)) && !(P.unlocked && P.unlocked.surf)){
+  // the hatch stays chained until Tolen has shaped the board and sent you for the
+  // sail (boardMade), or the sail quest is already underway, or you've been here
+  // before (haveSail / surf). The sail-quest check guarantees you can never be
+  // locked out of a dungeon you've been sent to.
+  const maySeek = (P.story && (P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
+  if(!maySeek){
     toast('A chained cellar-hatch beside the windmill, padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut - you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
@@ -3327,18 +3331,6 @@ function switchWorld(id){
     }
   }
   if(id==='wind'){
-    // Re-gate old saves: the windsurf used to be handed out early by Kaia on the
-    // Sunward Isle. It is now earned ONLY here (Tolen's board + the Undermill sail)
-    // and is required to face the Leviathan. Anyone who reaches Windsurf already
-    // holding a board, but who never recovered Nessa's sail and hasn't yet calmed
-    // the strait, got it the removed way - re-lock it so the dungeon is done
-    // properly. Once the sail is recovered (haveSail) or the tide is calmed, this
-    // never fires, so no in-progress or finished player loses their board.
-    if(P.unlocked && P.unlocked.surf && !(P.story && P.story.haveSail) && !(P.story && P.story.tideCalm)){
-      P.unlocked.surf=false;
-      if(P.story) P.story.boardMade=0;
-      delete P.quests.tide;   // no Leviathan hunt until the board is truly earned
-    }
     const hasBoard = !!(P.unlocked && P.unlocked.surf);
     // you must earn a windsurf before Rell will send you at the Leviathan - the
     // beast lives on the water, past the reach of any jetty. Tolen shapes boards.

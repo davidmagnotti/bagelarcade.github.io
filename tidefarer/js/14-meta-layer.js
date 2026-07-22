@@ -128,6 +128,15 @@ function loadCode(str){
     P.quests.pendant='active'; P.prog.pendant=P.prog.pendant||0;
     setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">The pendant still burns to be understood.</b> Sail to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000); }catch(e){} }, 2600);
   }
+  // Repair the over-aggressive Windsurf re-gate that briefly shipped: it could
+  // strip surf from a save that had legitimately earned a board. Anyone who
+  // completed Tolen's board quest under the old rules got a windsurf outright
+  // (there was no sail dungeon then), so board-done + no sail quest = a real board
+  // that must not be lost. Restore it. New-flow saves mid-dungeon carry a `sail`
+  // quest, so they are left to finish the Undermill. Idempotent + harmless.
+  if(qs('board')==='done' && !P.quests.sail && !(P.unlocked && P.unlocked.surf)){
+    P.unlocked=P.unlocked||{}; P.unlocked.surf=true;
+  }
   P.disc=d.disc||{}; unpackExpl(d.expl);
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);
