@@ -2069,6 +2069,10 @@ function placeObjectsSky(){
   for(let i=0;i<60;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
     if(tileAt(ax,ay)===T.GRASS && !solidAt(ax,ay) && dist(ax,ay,Z.landing.x,Z.landing.y)>5) addNode('tree',ax,ay); }
   G.decor.push({kind:'chest', x:Z.eyrie.x+0.5, y:Z.eyrie.y-6+0.5, rich:9});
+  // THE WIND-LOST BIRD - her plea opens the Rainbow Road (a "sky dungeon"). She lands
+  // near the Cloudfall Landing, a little apart from Ashwing and the Cloud-Tender.
+  { const sp=findOpenNear(Z.landing.x-4, Z.landing.y-3, 5) || [Z.landing.x-4, Z.landing.y-3];
+    G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-40}); }
   G.critters=[];
 }
 function spawnSkyFolk(){

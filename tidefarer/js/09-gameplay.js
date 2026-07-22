@@ -169,6 +169,10 @@ function nearestInteract(){
       if(d<3.0 && d<bd){ bd=d; best={type:'ashwing',o:b,label:b.sky?'Fly down':'Fly home'}; } }
     if(b.kind==='leappoint'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'leap',o:b,label:(P.story&&P.story.parachute)?'Take the Leap':'The Leap'}; } }
+    if(b.kind==='skybird'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
+    if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.7 && d<bd){ bd=d; best={type:'skytile',o:b,label:b.set?'Rune (lit)':'Tread rune'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
@@ -229,6 +233,8 @@ function doInteract(){
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='ashwing'){ facePoint(it.o.x,it.o.y); if(it.o.sky) askSkyDragon(); else askAshwingHome(); return; }
   if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
+  if(it.type==='skybird'){ facePoint(it.o.x,it.o.y); if(typeof skyBirdSpeak==='function') skyBirdSpeak(); return; }
+  if(it.type==='skytile'){ facePoint(it.o.x,it.o.y); if(typeof pressSkyTile==='function') pressSkyTile(it.o); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
   if(it.type==='cat'){
@@ -436,6 +442,7 @@ function tryAttack(useMouse){
       const eb=P.perks&&P.perks.emberburst, fb=P.perks&&P.perks.frostbolt;
       const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
       if(fb) bolt.snare=2.0;
+      if(P.spells && P.spells.stun) bolt.stun=0.5;   // the Storm-Wraith's stormlight: bolts stun for half a second
       G.projs.push(bolt);
     }
     refreshUI();
@@ -484,6 +491,7 @@ function drawMobBars(m,s){
 }
 function damageMob(m,dmg,knock,skill){
   if(m.fainted) return; // a felled, freed dragon takes no more harm
+  if(m.invuln){ if(Math.random()<0.5) addFloat('!',m.x,m.y-2.1,'#bfe8ff'); m.hurtT=0.12; return; } // the cloud-snatcher can't be cut - only dodged
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
@@ -622,6 +630,25 @@ function killMob(m,skill){
     setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
+  // THE STORM-WRAITH (Rainbow Road mini-boss) - its stormlight teaches your staff to stun
+  if(m.skyminiboss){
+    P.story=P.story||{}; P.story.skyG4=1;
+    P.spells=P.spells||{}; P.spells.stun=1;
+    give('stormrune',1);
+    if(typeof openSkyGate==='function') openSkyGate('g4');
+    Snd.magic&&Snd.magic();
+    banner('THE STORM-WRAITH FALLS','ITS STORMLIGHT IS YOURS');
+    setTimeout(()=>toast('The Storm-Wraith bursts, and a bead of white <b>stormlight</b> sinks into your staff. <b style="color:#c9b0ff">Your magic bolts now STUN</b> - struck foes cannot attack for half a second. The wind-ward north thins to colour; the road runs on.',7500), 1400);
+    if(typeof autoSave==='function') autoSave();
+  }
+  // THE CORRUPTED SPIRIT (Rainbow Road final boss) - felling it calms the high wind
+  if(m.skyfinalboss){
+    P.story=P.story||{}; P.story.skyDungeonDone=1;
+    Snd.boss&&Snd.boss();
+    setTimeout(()=>toast('The Corrupted Spirit comes apart into harmless coloured mist, and the high wind lets out a long, easy breath. The rainbow road runs calm all the way back to the landing - and the wind-lost bird can find her islands again.',7000), 1500);
+    if(typeof autoSave==='function') autoSave();
+    setTimeout(()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }, 2600);
+  }
   // The Drowned Warden keeps the Stormreach catacomb
   if(m.tombboss){
     P.story=P.story||{}; P.story.tombBossDown=1;
@@ -635,7 +662,7 @@ function killMob(m,skill){
   }
   // After felling a dungeon boss, offer the quick road out - mended and a level
   // stronger. (Overworld bosses stay put; dungeons have a clear "way up".)
-  if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon()){
+  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && typeof inDungeon==='function' && inDungeon()){
     setTimeout(offerDungeonExit, 2400);
   }
 }
@@ -998,6 +1025,7 @@ function updateMobs(dt){
     }
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
+    if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
@@ -1042,7 +1070,7 @@ function updateMobs(dt){
         } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
-      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0)){
+      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0)){
         m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
         m.hitCd= m.boss?1.1:1.25;
       }
@@ -1178,9 +1206,12 @@ function updateProjs(dt){
           if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
               if(p.snare && !m2.boss && !m2.bigBoss){ m2.snareT=p.snare; m2.windup=0;
-                burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); } } }
+                burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); }
+              if(p.stun){ m2.stunT=Math.max(m2.stunT||0,p.stun); m2.windup=0;
+                burst(m2.x,m2.y-0.3,'#eae0ff',8,2); } } }
             burst(p.x,p.y-0.3,p.snare?'#6fe0c8':'#ff9a3c',14,3); }
-          else damageMob(m,p.dmg,{x:p.vx/13,y:p.vy/13},p.skill);
+          else { damageMob(m,p.dmg,{x:p.vx/13,y:p.vy/13},p.skill);
+            if(p.stun){ m.stunT=Math.max(m.stunT||0,p.stun); m.windup=0; burst(m.x,m.y-0.3,'#eae0ff',8,2); } }
           p.life=0; break;
         }
       }
@@ -1284,6 +1315,7 @@ function updateWorld(dt){
   }
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
+  if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
 function isNight(){ return nightAmount()>0.55; }

@@ -55,7 +55,8 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
+  skygate:1, skytile:1, skybird:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -905,6 +906,74 @@ function drawDecor(b,s){
     g.beginPath(); g.ellipse(-16+Math.cos(t*1.1)*3, 10, 10, 3.5, 0, 0, TAU); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='rainbow'){
+    // a band of the rainbow road laid over one cloud tile - a soft glowing diamond
+    const g=cx, hue=b.hue||0, sh=0.5+0.5*Math.sin(G.time*1.4+(b.sh||0));
+    g.save(); g.translate(s.x,s.y);
+    g.globalAlpha=0.9;
+    g.fillStyle='hsl('+hue+',85%,'+(60+sh*8)+'%)';
+    g.beginPath(); g.moveTo(0,-TH/2); g.lineTo(TW/2,0); g.lineTo(0,TH/2); g.lineTo(-TW/2,0); g.closePath(); g.fill();
+    // an inner brighter core band
+    g.fillStyle='hsl('+((hue+40)%360)+',95%,'+(74+sh*8)+'%)';
+    g.beginPath(); g.moveTo(0,-TH/2+6); g.lineTo(TW/2-12,0); g.lineTo(0,TH/2-6); g.lineTo(-TW/2+12,0); g.closePath(); g.fill();
+    g.globalAlpha=1;
+    g.restore(); return;
+  }
+  if(b.kind==='skytile'){
+    // a floating rune-plate; lights when trodden in order
+    const g=cx, lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x), hue=((b.ord||1)*60)%360;
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle= lit? 'hsl('+hue+',80%,40%)' : '#2a2f42';
+    g.beginPath(); g.moveTo(0,-11); g.lineTo(15,-2); g.lineTo(0,7); g.lineTo(-15,-2); g.closePath(); g.fill();
+    g.strokeStyle= lit? 'hsl('+hue+',95%,72%)' : '#5a6482'; g.lineWidth= lit?2.4:1.6; g.stroke();
+    if(lit){ g.fillStyle='hsla('+hue+',95%,80%,'+(0.25+0.25*gl).toFixed(2)+')';
+      g.beginPath(); g.moveTo(0,-7); g.lineTo(10,-2); g.lineTo(0,4); g.lineTo(-10,-2); g.closePath(); g.fill(); }
+    g.fillStyle= lit? '#f4f0ff' : '#8a93b0'; g.font='bold 11px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0,-2); g.textBaseline='alphabetic';
+    if(!lit){ g.fillStyle='rgba(190,210,255,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.fillText('!',0,-24); }
+    g.restore(); return;
+  }
+  if(b.kind==='skygate'){
+    if(b.open) return;   // the wind-ward is parted - nothing to draw
+    const g=cx, t=G.time; g.save(); g.translate(s.x,s.y);
+    // a shimmering vertical wind-ward across the rainbow bridge, faint rainbow sheen
+    for(let i=-2;i<=2;i++){ const bx=i*7, sway=Math.sin(t*3+i*1.1)*2.2;
+      const hue=((i+2)/4*300 + t*30)%360;
+      g.strokeStyle='hsla('+hue+',90%,72%,0.55)'; g.lineWidth=3.2; g.lineCap='round';
+      g.beginPath(); g.moveTo(bx+sway,-34); g.lineTo(bx-sway,6); g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.6)'; g.lineWidth=1.1;
+      g.beginPath(); g.moveTo(bx+sway,-34); g.lineTo(bx-sway,6); g.stroke(); }
+    g.lineCap='butt';
+    // a soft glow lock at the centre
+    g.fillStyle='rgba(230,240,255,'+(0.35+0.25*Math.sin(t*2.5)).toFixed(2)+')';
+    g.beginPath(); g.ellipse(0,-14,10,16,0,0,TAU); g.fill();
+    if(Math.random()<0.12) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.15,0.15),vy:-rnd(0.2,0.7),life:rnd(0.5,1.1),color:'rgba(220,235,255,0.6)',size:rnd(1,2),grav:-0.03});
+    g.restore(); return;
+  }
+  if(b.kind==='skybird'){
+    // a small bright bird perched on a cloud-post, wings shifting
+    const g=cx, t=G.time, flap=Math.sin(t*3)*3, hop=Math.sin(t*1.4)*1.5;
+    drawShadowAt(g,s.x,s.y,9); g.save(); g.translate(s.x,s.y-6+hop);
+    // little cloud-perch
+    g.fillStyle='rgba(235,240,250,0.85)'; g.beginPath(); g.ellipse(0,6,12,4,0,0,TAU); g.fill();
+    // body
+    g.fillStyle='#4aa0e0'; g.beginPath(); g.ellipse(0,-6,8,6,0,0,TAU); g.fill();
+    g.fillStyle='#7fd0ff'; g.beginPath(); g.ellipse(-2,-5,5,4,0,0,TAU); g.fill();
+    // head + beak
+    g.fillStyle='#3a86c8'; g.beginPath(); g.arc(-6,-11,4,0,TAU); g.fill();
+    g.fillStyle='#ffcf5a'; g.beginPath(); g.moveTo(-10,-11); g.lineTo(-14,-10); g.lineTo(-10,-9); g.closePath(); g.fill();
+    g.fillStyle='#0a1420'; g.beginPath(); g.arc(-7,-12,1.1,0,TAU); g.fill();
+    // wing (flaps)
+    g.fillStyle='#2f6fae'; g.save(); g.translate(2,-6); g.rotate(-0.2+flap*0.06);
+    g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(12,-6+flap,9,4); g.quadraticCurveTo(5,2,0,1); g.closePath(); g.fill(); g.restore();
+    // tail
+    g.fillStyle='#3a86c8'; g.beginPath(); g.moveTo(6,-5); g.lineTo(13,-3); g.lineTo(6,-1); g.closePath(); g.fill();
+    g.restore();
+    if(b.name){ g.font='bold 10px Georgia'; g.textAlign='center';
+      g.fillStyle='rgba(0,0,0,0.55)'; g.fillText(b.name, s.x+1, s.y+(b.labelY||-40)+1);
+      g.fillStyle='#bfe0ff'; g.fillText(b.name, s.x, s.y+(b.labelY||-40)); }
+    return;
+  }
   if(b.kind==='staffgate'){
     if(b.open) return;   // the ward is broken - nothing to draw
     const g=cx; g.save(); g.translate(s.x,s.y);
@@ -1215,6 +1284,14 @@ function drawMob(m,s){
       cx.quadraticCurveTo(s.x+Math.cos(aa)*10,s.y+Math.sin(aa)*4-7, s.x+Math.cos(aa)*8,s.y+Math.sin(aa)*3-3);
       cx.stroke(); }
   }
+  if((m.stunT||0)>0){
+    // stormlight-stunned: a ring of little stars spins over the head
+    const top=(m.bigBoss?-64:-46)*(m.bscale||1);
+    for(let k=0;k<4;k++){ const aa=k/4*TAU+G.time*5, rr=9;
+      const sx2=s.x+Math.cos(aa)*rr, sy2=s.y+top+Math.sin(aa)*rr*0.4;
+      cx.fillStyle='rgba(234,224,255,'+(0.55+0.35*Math.sin(G.time*8+k)).toFixed(2)+')';
+      cx.beginPath(); cx.arc(sx2,sy2,1.7,0,TAU); cx.fill(); }
+  }
   if(m.kind==='hare'){
     const hop=Math.abs(Math.sin(m.anim*6))* (m.state==='idle'&&m.tx==null?1.5:4);
     drawShadowAt(cx,s.x,s.y,7);
@@ -1308,13 +1385,22 @@ function drawMob(m,s){
     cx.fillStyle= m.enspelled? '#ff9a7a' : '#9fe8c0'; cx.fillText(nm,s.x,s.y-115);
     drawMobBars&&drawMobBars(m,s); return;
   }
-  if(m.kind==='wraith'){
+  if(m.kind==='wraith'||m.kind==='skywraith'||m.kind==='skygrabber'||m.kind==='stormwraith'||m.kind==='skyspirit'){
+    // the same tattered cloud-shade, recoloured for the Rainbow Road's shades
+    const PAL={
+      wraith:     {body:'#1c2233', hem:'rgba(140,170,220,0.35)', hood:'#0e1220', eye:'150,205,255', glow:'120,190,255', wisp:'rgba(140,170,220,0.5)'},
+      skywraith:  {body:'#233150', hem:'rgba(170,210,255,0.42)', hood:'#101a2e', eye:'160,220,255', glow:'150,210,255', wisp:'rgba(170,205,255,0.55)'},
+      skygrabber: {body:'#1e3a34', hem:'rgba(120,235,205,0.5)',  hood:'#0c211d', eye:'150,255,215', glow:'120,255,205', wisp:'rgba(150,240,210,0.55)'},
+      stormwraith:{body:'#2a2444', hem:'rgba(185,165,255,0.5)',  hood:'#160f28', eye:'205,185,255', glow:'180,150,255', wisp:'rgba(190,170,255,0.55)'},
+      skyspirit:  {body:'#341f48', hem:'rgba(215,140,255,0.55)', hood:'#1a0f24', eye:'230,150,255', glow:'210,120,255', wisp:'rgba(220,150,255,0.6)'}
+    }[m.kind];
+    const sc=m.bscale||1;
     const bobW=Math.sin(m.anim*3.2)*2.5;
-    drawShadowAt(cx,s.x,s.y,9);
-    cx.save(); cx.translate(s.x,s.y-14+bobW);
+    drawShadowAt(cx,s.x,s.y,9*sc);
+    cx.save(); cx.translate(s.x,s.y-14*sc+bobW); if(sc!==1) cx.scale(sc,sc);
     cx.globalAlpha=0.82;
     // tattered shade body, wisping to nothing at the hem
-    cx.fillStyle='#1c2233';
+    cx.fillStyle=PAL.body;
     cx.beginPath();
     cx.moveTo(-9,-14);
     cx.quadraticCurveTo(0,-24,9,-14);
@@ -1324,25 +1410,34 @@ function drawMob(m,s){
     cx.quadraticCurveTo(-4,12,-7,8);
     cx.quadraticCurveTo(-11,-2,-9,-14);
     cx.closePath(); cx.fill();
-    cx.strokeStyle='rgba(140,170,220,0.35)'; cx.lineWidth=1.4; cx.stroke();
-    // deep hood - a shallow brow-cap sitting just over the eyes. A taller ellipse
-    // left a dark rounded void below the eyes that read as a gaping mouth.
-    cx.fillStyle='#0e1220';
+    cx.strokeStyle=PAL.hem; cx.lineWidth=1.4; cx.stroke();
+    // deep hood - a shallow brow-cap sitting just over the eyes.
+    cx.fillStyle=PAL.hood;
     cx.beginPath(); cx.ellipse(0,-16.6,7,3.5,0,0,TAU); cx.fill();
-    // ember eyes - narrowed and angled inward into a hostile scowl; round dots
-    // read as a friendly wide-eyed stare, which a wraith should never have.
+    // narrowed, angled ember eyes - a hostile scowl
     const gl=0.7+0.3*Math.sin(m.anim*7), fl=m.face||1;
     for(const [ex,ang,rx] of [[-3,0.55,2.5],[3,-0.55,2.2]]){
       cx.save(); cx.translate(ex*fl,-14.6); cx.rotate(fl*ang);
-      cx.fillStyle='rgba(120,190,255,'+(0.25*gl).toFixed(2)+')';   // outer glow
+      cx.fillStyle='rgba('+PAL.glow+','+(0.25*gl).toFixed(2)+')';   // outer glow
       cx.beginPath(); cx.ellipse(0,0,rx+1.4,1.9,0,0,TAU); cx.fill();
-      cx.fillStyle='rgba(150,205,255,'+gl.toFixed(2)+')';          // bright slit
+      cx.fillStyle='rgba('+PAL.eye+','+gl.toFixed(2)+')';          // bright slit
       cx.beginPath(); cx.ellipse(0,0,rx,0.95,0,0,TAU); cx.fill();
       cx.restore();
     }
+    // the cloud-snatcher keeps long grasping arms out at all times
+    if(m.grabber){
+      const fl3=m.face||1, reach=1+0.35*Math.sin(m.anim*5);
+      cx.strokeStyle='rgba('+PAL.eye+',0.7)'; cx.lineWidth=2.2; cx.lineCap='round';
+      for(const sgn of [1,-1]){
+        cx.beginPath(); cx.moveTo(fl3*4*sgn,-6);
+        cx.quadraticCurveTo(fl3*14*sgn,-2, fl3*(16+3*reach)*sgn, 2+2*sgn);
+        cx.stroke();
+      }
+      cx.lineCap='butt';
+    }
     // reaching claw when mid-strike
     if(m.swing>0){
-      cx.strokeStyle='rgba(140,200,255,0.8)'; cx.lineWidth=2; cx.lineCap='round';
+      cx.strokeStyle='rgba('+PAL.eye+',0.8)'; cx.lineWidth=2; cx.lineCap='round';
       const fl2=m.face||1;
       cx.beginPath();
       cx.moveTo(fl2*8,-8); cx.lineTo(fl2*14,-4);
@@ -1351,7 +1446,7 @@ function drawMob(m,s){
     }
     cx.restore();
     // trailing wisps
-    if(Math.random()<0.25) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.2,0.8), 'rgba(140,170,220,0.5)', 1, 1.0);
+    if(Math.random()<0.25) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.2,0.8), PAL.wisp, 1, 1.0);
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='leviathan'){
