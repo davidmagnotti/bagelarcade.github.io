@@ -791,44 +791,37 @@ function drawHumanoid(g,sx,sy,o){
     }
   };
   if(o.ride && !o.robe){
-    // SEATED ASTRIDE, seen from the ¾ iso camera. The rider straddles the mount, so
-    // the two legs are NOT symmetric on screen: the NEAR leg hangs down the flank
-    // facing us (fully lit, low, drawn last) while the FAR leg rides across the
-    // mount's back (lifted and in shadow). Each leg is placed by explicit joints -
-    // hip -> knee (splayed OUT over the saddle) -> boot (dropped down the flank) -
-    // so the two boots stay wide apart. The old code drew both legs identically and
-    // its nested rotate/translate quietly dragged both knees back to centre, fusing
-    // them into a single stubby leg; this depth split reads as a real two-leg seat.
+    // SEATED ASTRIDE, seen from the ¾ iso camera. The rider straddles the mount:
+    // both legs hang DOWN the flanks (only a slight outward knee), close-ish but
+    // clearly two, with the near leg a touch lower and lit and the far leg lifted
+    // and in shadow for depth. Legs kept short so they don't dangle past the mount.
+    // (An earlier pass splayed them wide and bright, which read as a frog-sit.)
     const seatLeg=(back)=>{
-      // "back" leg = the one across the far flank: lifted, pushed away from the
-      // camera, and dropped into shade so it reads clearly behind the near leg.
-      // The two legs MUST separate by value as well as position - pants, boots and
-      // the mount are all dark, so without a lit near leg the pair blurs into one
-      // shape ("only one leg"). The near leg gets a bright breeches highlight.
-      const sd = back ? -flip : flip;                 // splay to opposite screen sides
-      const hipX = sd*2.8, hipY = -7.0 + B*0.4 + (back ? -3.0 : 1.4);
-      const kneeX = sd*8.0, kneeY = hipY + 5.6;       // knee splayed well OUT over the saddle
-      const bootX = sd*8.8, bootY = kneeY + (back ? 8.6 : 11.4);  // shin drops the flank
-      const pcol = back ? shade(pants,-26) : shade(pants,10);  // far leg shaded, near leg lifted into light
-      const hicol = shade(pants,34);                  // lit leading edge on the near leg
-      const bcol = back ? shade(bootD,-20) : bootD;
+      const sd = back ? -flip : flip;                 // near/far to opposite screen sides
+      const hipY = -6.5 + B*0.4 + (back ? -2.4 : 1.0);
+      const hipX = sd*2.1;
+      const kneeX = sd*3.4, kneeY = hipY + 4.8;       // knee only slightly out over the saddle
+      const bootX = sd*3.9, bootY = kneeY + (back ? 6.4 : 7.8);  // shin drops nearly straight
+      const pcol = back ? shade(pants,-18) : shade(pants,8);   // far in shadow, near catches light
+      const bcol = back ? shade(bootD,-14) : bootD;
       // thigh: hip -> knee
-      g.strokeStyle=OUT; g.lineWidth=6.6; g.lineCap='round';
+      g.lineCap='round';
+      g.strokeStyle=OUT; g.lineWidth=6.0;
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
-      g.strokeStyle=pcol; g.lineWidth=4.6;
+      g.strokeStyle=pcol; g.lineWidth=4.0;
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
       // shin: knee -> boot, hanging down the flank
-      g.strokeStyle=OUT; g.lineWidth=5.6;
+      g.strokeStyle=OUT; g.lineWidth=5.0;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
-      g.strokeStyle=pcol; g.lineWidth=3.8;
+      g.strokeStyle=pcol; g.lineWidth=3.3;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
-      if(!back){ // a bright seam catches the light down the near shin, so it pops forward
-        g.strokeStyle=hicol; g.lineWidth=1.4;
-        g.beginPath(); g.moveTo(kneeX-sd*1.0,kneeY+0.5); g.lineTo(bootX-sd*1.0,bootY-1); g.stroke();
+      if(!back){ // a faint seam down the near shin so it reads in front of the far one
+        g.strokeStyle=shade(pants,22); g.lineWidth=1.0;
+        g.beginPath(); g.moveTo(kneeX-sd*0.8,kneeY+1); g.lineTo(bootX-sd*0.8,bootY-1.5); g.stroke();
       }
       g.lineCap='butt';
       // boot at the foot of the hanging leg
-      g.save(); g.translate(bootX,bootY); drawBoot(bcol); g.restore();
+      g.save(); g.translate(bootX,bootY); g.scale(0.9,0.9); drawBoot(bcol); g.restore();
     };
     seatLeg(true);    // far leg first, behind
     seatLeg(false);   // near leg over the top
