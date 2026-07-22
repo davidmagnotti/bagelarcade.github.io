@@ -62,6 +62,13 @@ const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
   ice:   {x:42, y:46, r:12, name:'The Sliding Halls', lv:[13,15]},
   boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
+const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon under
+  entry:  {x:40, y:84, r:8,  name:'The Icefall Landing', lv:[14,16]}, // the bear's old den
+  slide1: {x:40, y:66, r:11, name:'The First Slide',     lv:[14,16]}, // slide puzzle -> lever
+  glide:  {x:41, y:47, r:12, name:'The Pillar Glide',    lv:[15,17]}, // slide-around-pillars puzzle
+  wards:  {x:40, y:28, r:11, name:'The Three Wards',     lv:[15,17]}, // pull-all-three lever puzzle
+  hoard:  {x:44, y:10, r:12, name:'The Hoarfrost Hoard', lv:[16,16]}  // the reward chamber
+};
 const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount Kea
   entry:   {x:40, y:84, r:8,  name:'The Emberthroat',     lv:[6,8]},
   font:    {x:40, y:66, r:11, name:'The Ember Font',      lv:[6,8]},   // visit-all plate puzzle
@@ -105,13 +112,18 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:80, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
     spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF SLIDING ICE',
+    slide:[{x0:30,y0:38,x1:54,y1:54}],   // the Sliding Halls (single-source, survives cached re-entry)
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
     gen:()=>genAerieDeepAll() },
   eastdeep:{ W:80, H:96, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
     spawn:{x:40.5,y:85.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - WALLED, WARDED, AND OLD',
-    gen:()=>genEastDeepAll() }
+    gen:()=>genEastDeepAll() },
+  frostvault:{ W:80, H:96, seed:41983, zones:FROSTVAULT_ZONES, dungeon:1, dark:0.16,
+    spawn:{x:40.5,y:86.5}, title:'THE GLACIER VAULT', sub:'THE ICE-BEAR’S DEN - SLIDING HALLS AND OLD FROST-WARDS',
+    slide:[{x0:28,y0:58,x1:52,y1:74},{x0:28,y0:40,x1:54,y1:55}],   // R2 + R3 are slick
+    gen:()=>genFrostVaultAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -1610,6 +1622,16 @@ function placeObjectsFrost(){
     addBuilding('lamp', spot[0]-2, spot[1]+1, ''); addBuilding('lamp', spot[0]+2, spot[1]+1, '');
     addBuilding('lamp', jx, jy, '');                  // a lamp marks the turn off the road
     G.decor.push({kind:'pillar', x:jx+0.5, y:jy+0.9, broken:false, loreKey:'rimefissure'}); } // a cairn signpost at the junction
+  // THE HOARFROST BEAR'S DEN: a cave mouth in the Rimewood flats, mid-way between
+  // the village and the glacier. A great ice-bear dens across its mouth - the way
+  // down into the Glacier Vault only opens once the beast is driven off.
+  { const dx=Math.round(RW.x-6), dy=Math.round(RW.y-6);
+    const spot=findOpenNear(dx, dy, 9) || [dx, dy];
+    for(let y=spot[1]-1;y<=spot[1]+1;y++) for(let x=spot[0]-1;x<=spot[0]+1;x++) if(inb(x,y) && !solidAt(x,y)) setTile(x,y,T.SNOW);
+    G.frostVaultMouth={x:spot[0], y:spot[1]};
+    G.decor.push({kind:'dungeonmouth', x:spot[0]+0.5, y:spot[1]+0.5, vault:1, label:'the Hoarfrost Den', name:'THE GLACIER VAULT'});
+    addBuilding('lamp', spot[0]-2, spot[1]+1, ''); addBuilding('lamp', spot[0]+2, spot[1]+1, '');
+    for(const [ix,iy] of [[spot[0]-2,spot[1]-1],[spot[0]+2,spot[1]-1]]) if(inb(ix,iy)&&!solidAt(ix,iy)){ G.decor.push({kind:'icespire',x:ix+0.5,y:iy+0.5}); setSolid(ix,iy,1); } }
   // ice-crags to mine on the glacier margins
   for(let i=0;i<28;i++){ const a=pr()*TAU, rr=6+pr()*(GL.r-4);
     const ax=Math.round(GL.x+Math.cos(a)*rr), ay=Math.round(GL.y+Math.sin(a)*rr*0.92);
@@ -1636,7 +1658,8 @@ function spawnFrostFolk(){
   G.npcs.push(makeNPC('sigrid','Sigrid the Icewright', V.x+4.5, V.y+3.5,
     {skin:'#b58a5e',hair:'#8a7a5e',shirt:'#5a6a5a',pants:'#3a3a2c',hairstyle:'bun'},
     ['Wrap up warm and mind the glacier - the Warden is up there, and it is not itself.',
-     'It was never a monster, friend. It is the kindest thing on this rock. Whatever holds it now is not.'],0.4));
+     'It was never a monster, friend. It is the kindest thing on this rock. Whatever holds it now is not.',
+     'And keep off the Rimewood flats unless you mean to fight - a great white bear has denned in the old ice-cave out there. Hoarfrost, the hunters call it. Whatever it guards down that hole, it guards it jealously.'],0.4));
 }
 function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
@@ -1655,6 +1678,13 @@ function spawnMobsFrost(){
   for(const [zx,zy] of [[Z.glacier.x-7, Z.glacier.y+6],[Z.rimewood.x+3, Z.rimewood.y-4]]){
     const sp=findOpenNear(Math.round(zx), Math.round(zy), 7);
     if(sp && dist(sp[0],sp[1],Z.village.x,Z.village.y)>16){ const b=spawnMob('polarbear', sp[0], sp[1]); if(b){ b.hx=sp[0]; b.hy=sp[1]; } }
+  }
+  // THE HOARFROST BEAR - a named ice-bear denning across the Glacier Vault mouth.
+  // Drive it off to open the way down. (Stays gone once the vault is unsealed.)
+  if(G.frostVaultMouth && !(P.story && P.story.iceBearDown)){
+    const M=G.frostVaultMouth, sp=findOpenNear(M.x, M.y+2, 5) || [M.x, M.y+2];
+    const bear=spawnMob('polarbear', sp[0], sp[1], true);   // elite
+    if(bear){ bear.boss=true; bear.bigBoss=true; bear.title='THE HOARFROST BEAR'; bear.subtitle='TERROR OF THE RIMEWOOD'; bear.vaultbear=1; bear.hx=sp[0]; bear.hy=sp[1]; bear.respawnT=-1; }
   }
 }
 function freeWarden(m){
@@ -1689,7 +1719,7 @@ function genFrostDeep(){
   carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
   carve(42,54,46,60,T.ICE);               // corridor A -> the Sliding Halls
   carve(30,38,54,54,T.ICE);               // THE SLIDING HALLS - one slick sheet (the slide puzzle)
-  G.slideZone={x0:30,y0:38,x1:54,y1:54};  // ONLY this room is slippery
+  G.slideZone={x0:30,y0:38,x1:54,y1:54}; G.slideZones=null;  // ONLY this room is slippery
   setTile(32,39,T.RUIN); setSolid(32,39,0);   // lever landing (non-ice tile stops your slide)
   setTile(44,39,T.RUIN); setSolid(44,39,0);   // gate approach (slide stops here, below the gate)
   carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
@@ -1731,6 +1761,7 @@ function exitFrostDungeon(){
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 function pullIceLever(b){
+  if(b.gateTiles) return pullVaultLever(b);   // Glacier Vault levers open their own gates
   if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
   b.on=true; if(Snd.quest) Snd.quest();
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,0); }   // grind the gate open
@@ -1749,6 +1780,119 @@ function freeColossus(m){
   giveGold(150); give('elixir',2);
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>toast('The great ice-thing shudders and the violet light bleeds out of it - it was a beast once, a whale-of-the-deep that wandered too near the cold and never left. It sinks calm into the melt. <i>Whoever bound it - the quiet <b>robed man</b> the whole strait speaks of, violet at his sleeves - is always one island ahead of you. But the trail is warming.</i>',10000),1400);
+}
+
+/* =====================================================================
+   THE GLACIER VAULT - a 5-room ice-puzzle dungeon sealed behind the
+   Hoarfrost Bear's den on the Frozen Isle. Opened only once the bear is
+   driven off. Two slick sliding rooms, a three-ward lever lock, and a
+   reward hoard - no boss, pure puzzle. Reuses the ice-slide + icelever.
+   ===================================================================== */
+function genFrostVault(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.ICE); setSolid(x,y,0); } };
+  const foot=(x,y)=>{ if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };  // non-ice footing (stops a slide)
+  carve(30,78,50,90);   // R1 THE ICEFALL LANDING - entry (footing, not slick)
+  carve(38,73,42,79);   // corridor A -> R2
+  carve(28,58,52,74);   // R2 THE FIRST SLIDE (slick)
+  carve(38,54,42,60);   // corridor B (Gate 1 seals it at y57)
+  carve(28,40,54,55);   // R3 THE PILLAR GLIDE (slick)
+  carve(38,35,42,41);   // corridor C (Gate 2 seals it at y38)
+  carve(28,21,52,36);   // R4 THE THREE WARDS (footing)
+  carve(38,16,42,22);   // corridor D (Gate 3 seals it at y19)
+  carve(28,2,60,18);    // R5 THE HOARFROST HOARD (footing)
+  // ONLY R2 and R3 are slippery; everything else keeps your footing
+  G.slideZones=[{x0:28,y0:58,x1:52,y1:74},{x0:28,y0:40,x1:54,y1:55}];
+  G.slideZone=null;
+  // footing islands that stop a slide (lever landings + gate approaches)
+  foot(30,72); foot(31,72);           // R2 lever landing (bottom-left)
+  foot(40,59); foot(41,59);           // R2 gate-1 approach
+  foot(30,53); foot(31,53);           // R3 lever landing (bottom-left)
+  foot(40,41); foot(41,41);           // R3 gate-2 approach
+  // the sealed gates start as solid ice across their corridors
+  for(let x=38;x<=42;x++){ setTile(x,57,T.RUIN); setSolid(x,57,1); }  // Gate 1
+  for(let x=38;x<=42;x++){ setTile(x,38,T.RUIN); setSolid(x,38,1); }  // Gate 2
+  for(let x=38;x<=42;x++){ setTile(x,19,T.RUIN); setSolid(x,19,1); }  // Gate 3 (the three wards)
+}
+function placeObjectsFrostVault(){
+  G.decor=G.decor||[];
+  const Z=FROSTVAULT_ZONES;
+  // the way back up (out through the bear's den)
+  G.decor.push({kind:'dungeonmouth', x:40.5, y:88.5, vault:1, exit:1, label:'the way up'});
+  setSolid(40,88,0); setTile(40,88,T.RUIN);
+  // lamps + frozen spires so each chamber reads unmistakably as ICE
+  for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,42],[53,42],[29,22],[51,22],[32,4],[56,4],[44,3]])
+    if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire',x:x+0.5,y:y+0.5}); setSolid(x,y,1); } };
+  // ---- R2: one lever opens Gate 1 ----
+  G.decor.push({kind:'icelever', x:30.5, y:72.5, on:false, gateTiles:[[38,57],[39,57],[40,57],[41,57],[42,57]], label:'a frost-locked lever'});
+  spire(34,62); spire(46,68);   // a couple of pillars to slide around
+  // ---- R3: pillars to weave through on the slide, one lever opens Gate 2 ----
+  G.decor.push({kind:'icelever', x:30.5, y:53.5, on:false, gateTiles:[[38,38],[39,38],[40,38],[41,38],[42,38]], label:'a frost-locked lever'});
+  for(const [px,py] of [[36,46],[44,44],[48,50],[40,52],[34,50]]) spire(px,py);
+  // ---- R4: THREE wards; all must be thrown before Gate 3 opens ----
+  const G3=[[38,19],[39,19],[40,19],[41,19],[42,19]];
+  for(const [lx,ly] of [[31,33],[44,24],[49,32]])
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'vault', gateTiles:G3, label:'a frost-ward lever'});
+  spire(36,28); spire(46,28);
+  // ---- R5: the hoard ----
+  G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
+  G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
+  spire(30,5); spire(58,5); spire(30,15); spire(58,15);
+  G.critters=[];
+  // an already-cleared run keeps every gate open
+  if(P.story && P.story.vaultDone){
+    for(const b of G.decor){ if(b.kind==='icelever' && b.gateTiles){ b.on=true;
+      for(const [x,y] of b.gateTiles){ setTile(x,y,T.ICE); setSolid(x,y,0); } } }
+  }
+}
+function spawnMobsFrostVault(){
+  // a few ice-maddened bears and wolves den in the warm dark of the hoard chambers
+  const packs=[ [FROSTVAULT_ZONES.glide,'wolf',2], [FROSTVAULT_ZONES.wards,'wolf',2], [FROSTVAULT_ZONES.hoard,'polarbear',1] ];
+  for(const [z,kind,n] of packs){
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
+      const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
+      if(sp) spawnMob(kind, sp[0], sp[1]); }
+  }
+}
+function genFrostVaultAll(){
+  genFrostVault(); placeObjectsFrostVault(); spawnMobsFrostVault(); buildMapBase();
+}
+function pullVaultLever(b){
+  if(b.on){ toast('This lever is already thrown - it will not turn back.',2800); return; }
+  b.on=true; Snd.quest&&Snd.quest(); buzz&&buzz(8);
+  shockwave(b.x,b.y,'rgba(180,225,245,0.9)',48); burst(b.x,b.y-0.4,'#bfe8ff',12,1.6);
+  if(b.wardGroup){
+    const grp=G.decor.filter(d=>d.kind==='icelever' && d.wardGroup===b.wardGroup);
+    const done=grp.filter(d=>d.on).length;
+    if(grp.every(d=>d.on)){
+      for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
+      invalidateScenery&&invalidateScenery();
+      P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
+      banner('THE THREE WARDS YIELD','THE HOARD GATE GRINDS OPEN');
+      toast('The last frost-ward turns and, with a groan of ancient ice, the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard lies open.</b>',5200);
+    } else {
+      addFloat(done+' / '+grp.length, b.x, b.y-1.4, '#bfe8ff', 1.1);
+      toast('The ward turns with a deep crack of ice. <b>'+(grp.length-done)+' more</b> still hold the hoard gate shut.',3600);
+    }
+    return;
+  }
+  for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
+  invalidateScenery&&invalidateScenery();
+  banner('THE ICE GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
+  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper lies open.',4600);
+}
+function enterFrostVault(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._vaultReturn={x:P.x, y:P.y+1.3}; P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('frostvault'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitFrostVault(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('frost');
+    const r=P._vaultReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 
 /* =====================================================================

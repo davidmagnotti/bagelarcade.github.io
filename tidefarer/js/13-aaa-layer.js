@@ -257,7 +257,7 @@ function updateBossUI(){
   if(!G.flags[fl]){
     G.flags[fl]=true;
     cinematic(true);
-    banner(boss.title, boss.boss? 'LORD OF THE OLD RUINS' : 'TERROR OF THE WOLFCRAG');
+    banner(boss.title, boss.subtitle || (boss.boss? 'LORD OF THE OLD RUINS' : 'TERROR OF THE WOLFCRAG'));
     G.shake=Math.max(G.shake,0.3);
     setTimeout(()=>cinematic(false),2600);
   }

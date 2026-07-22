@@ -147,7 +147,8 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type: b.ember?'emberdungeon':'dungeon',o:b,label:b.exit?'Climb out':'Descend'}; } }
+      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.ember?'emberdungeon':'dungeon',o:b,
+        label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -207,6 +208,10 @@ function doInteract(){
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
+  if(it.type==='vaultdungeon'){ facePoint(it.o.x,it.o.y);
+    if(it.o.exit){ exitFrostVault(); return; }
+    if(!(P.story&&P.story.iceBearDown)){ toast('The <b>Hoarfrost Bear</b>’s den, rank with old kills - and something vast still breathes in the dark of it. Drive the beast off before you go down.',4600); Snd.step&&Snd.step(5); return; }
+    enterFrostVault(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
@@ -579,6 +584,12 @@ function killMob(m,skill){
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',80);
     banner((m.title||'THE FOE')+' FALLS','A SHADOW LIFTS FROM THIS PLACE');
   } else Snd.hit();
+  // The Hoarfrost Bear guarded the Glacier Vault's den - felling it opens the way down.
+  if(m.vaultbear){
+    P.story=P.story||{}; P.story.iceBearDown=1;
+    setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
+    if(typeof autoSave==='function') autoSave();
+  }
   // After felling a dungeon boss, offer the quick road out - mended and a level
   // stronger. (Overworld bosses stay put; dungeons have a clear "way up".)
   if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon()){
@@ -749,9 +760,11 @@ function updatePlayer(dt){
   //     direction until a wall stops you or you glide off the ice onto footing ---
   // only the Sliding Halls are slick; the Frostgate and Frozen Heart are ice-floored
   // for the theme but keep your footing (G.slideZone bounds the slippery room).
-  const sz=G.slideZone;
-  const inSlide = sz && P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1;
-  const onSlick = G.worldId==='frostdeep' && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
+  // slide zones come from the world def (single-source), so they survive cached
+  // re-entry - a mutable global would go stale after hopping between ice dungeons
+  const zones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].slide) || [];
+  const inSlide = zones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1);
+  const onSlick = zones.length && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
   if(onSlick){
     if(!P.slideDir && ml>0.25){
       // push off along the stronger input axis - but never INTO a wall. If that
