@@ -13,7 +13,7 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=154">
+<link rel="stylesheet" href="styles.css?v=155">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -166,42 +166,49 @@
 <div class="overlay" id="winOv" style="display:none;">
   <div class="ovCard">
     <h1>The <span>Hollow King</span> has fallen!</h1>
-    <p id="winText">The ruins fall silent. Return to Elder Maren for your crown - then find Finn's boat at the dock. The strait is calm now, and Greyharbor waits across the water.</p>
+    <p id="winText">The ruins fall silent. Return to Elder Maren for your crown, then board Finn's boat at the dock. The strait is calm now, and Greyharbor waits across the water.</p>
     <button class="btn" id="winBtn">Keep Exploring</button>
   </div>
 </div>
 
-<script src="js/01-core.js?v=154"></script>
-<script src="js/01b-gpu-probe.js?v=154"></script>
-<script src="js/02-worldgen.js?v=154"></script>
-<script src="js/03-art.js?v=154"></script>
-<script src="js/04-data.js?v=154"></script>
-<script src="js/05-inventory-skills-quests.js?v=154"></script>
-<script src="js/06-dialog.js?v=154"></script>
-<script src="js/07-input.js?v=154"></script>
-<script src="js/08-ui-panels.js?v=154"></script>
-<script src="js/09-gameplay.js?v=154"></script>
-<script src="js/10-rendering.js?v=154"></script>
-<script src="js/11-main-loop.js?v=154"></script>
-<script src="js/12-world-layer.js?v=154"></script>
-<script src="js/13-aaa-layer.js?v=154"></script>
-<script src="js/14-meta-layer.js?v=154"></script>
-<script src="js/15-interiors.js?v=154"></script>
-<script src="js/16-autosave.js?v=154"></script>
-<script src="js/17-pause-menu.js?v=154"></script>
-<script src="js/18-economy.js?v=154"></script>
-<script src="js/19-purpose.js?v=154"></script>
-<script src="js/20-lore.js?v=154"></script>
-<script src="js/21-exploration.js?v=154"></script>
-<script src="js/22-definitive-edition.js?v=154"></script>
-<script src="js/23-pause-affordance.js?v=154"></script>
-<script src="js/24-perf.js?v=154"></script>
-<script src="js/25-debug.js?v=154"></script>
-<script src="js/26-bench.js?v=154"></script>
-<script src="js/27-perfmode.js?v=154"></script>
-<script src="js/28-fxpanel.js?v=154"></script>
-<script src="js/29-devmenu.js?v=154"></script>
-<script src="js/30-perks.js?v=154"></script>
-<script src="js/31-skyquest.js?v=154"></script>
+<div class="overlay" id="storyOv" style="display:none;">
+  <div class="ovCard storyCard">
+    <p id="storyText"></p>
+    <button class="btn gold" id="storyBtn">Continue</button>
+  </div>
+</div>
+
+<script src="js/01-core.js?v=155"></script>
+<script src="js/01b-gpu-probe.js?v=155"></script>
+<script src="js/02-worldgen.js?v=155"></script>
+<script src="js/03-art.js?v=155"></script>
+<script src="js/04-data.js?v=155"></script>
+<script src="js/05-inventory-skills-quests.js?v=155"></script>
+<script src="js/06-dialog.js?v=155"></script>
+<script src="js/07-input.js?v=155"></script>
+<script src="js/08-ui-panels.js?v=155"></script>
+<script src="js/09-gameplay.js?v=155"></script>
+<script src="js/10-rendering.js?v=155"></script>
+<script src="js/11-main-loop.js?v=155"></script>
+<script src="js/12-world-layer.js?v=155"></script>
+<script src="js/13-aaa-layer.js?v=155"></script>
+<script src="js/14-meta-layer.js?v=155"></script>
+<script src="js/15-interiors.js?v=155"></script>
+<script src="js/16-autosave.js?v=155"></script>
+<script src="js/17-pause-menu.js?v=155"></script>
+<script src="js/18-economy.js?v=155"></script>
+<script src="js/19-purpose.js?v=155"></script>
+<script src="js/20-lore.js?v=155"></script>
+<script src="js/21-exploration.js?v=155"></script>
+<script src="js/22-definitive-edition.js?v=155"></script>
+<script src="js/23-pause-affordance.js?v=155"></script>
+<script src="js/24-perf.js?v=155"></script>
+<script src="js/25-debug.js?v=155"></script>
+<script src="js/26-bench.js?v=155"></script>
+<script src="js/27-perfmode.js?v=155"></script>
+<script src="js/28-fxpanel.js?v=155"></script>
+<script src="js/29-devmenu.js?v=155"></script>
+<script src="js/30-perks.js?v=155"></script>
+<script src="js/31-skyquest.js?v=155"></script>
 </body>
 </html>

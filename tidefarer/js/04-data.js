@@ -51,7 +51,7 @@ const QUESTS = {
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, item:{potion:1}, xp:{melee:30}}, unlocks:['kit','fish','harvest','cat','shells','springs'] },
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
-    brief:'New boots on old sand - welcome, castaway. You\'ll get nowhere on this isle bare-handed, so take these now: a woodsman\'s axe and a miner\'s pick, off my own rack. Go put them to work - fell a tree for a length of wood, break a rock for good stone - then bring them back. Prove you can use them and I\'ll forge you a proper iron sword.',
+    brief:'You\'ll get nowhere on this isle bare-handed - take these, a woodsman\'s axe and a miner\'s pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I\'ll forge you a proper iron sword.',
     log:'Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.',
     doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Off you go - Maren\'s by the well, and she\'ll have work worthy of that blade.',
     rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['king'] },

@@ -1273,7 +1273,7 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>toast('The leviathan sinks - not slain, but <b>unbound</b> - and the killing water goes glass-flat. Where it dove, a slick of <b style="color:#c9a0ff">violet light</b> curls and fades. Back on the pier <b>Rell</b> grips your arm, half-laughing: “First calm water in a season - you\'ll never pay for a bed in Windsurf again.” Then, quieter: “There was a <b>robed man</b> here before the beast came. Soft-spoken. Violet thread at his cuffs. Asking after the old deep-magics. You know the sort?”',10000),1400);
+  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?”'),1400);
 }
 function updateWindFolkMood(){
   // once the strait reopens, the town's talk turns from despair to bustle
@@ -1761,7 +1761,7 @@ function freeWarden(m){
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
-  setTimeout(()=>toast('The violet cracks and sloughs away like spring ice, and the Warden bows its great head and <b>weeps</b> - real meltwater, running warm down the glacier toward the strait. On the road down <b>Sigrid</b> catches your hands, too glad to mind the cold: “You gave us back our guardian AND our sea - bless you, bless you. That <b>robed man</b> who walked up the glacier and stopped its tears - soft voice, violet at the cuffs - did you cross him? He is not finished, I think.”',10000),1400);
+  setTimeout(()=>storyCard('The violet sloughs away like spring ice, and the Warden bows its head and <b>weeps</b> - warm meltwater running down the glacier toward the strait. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian and our sea. That <b>robed man</b> who stopped its tears - violet at the cuffs - did you cross him? He is not finished, I think.”'),1400);
 }
 function updateFrostFolkMood(){
   if(!(P.story && P.story.frostFreed)) return;
@@ -1851,7 +1851,7 @@ function freeColossus(m){
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
   giveGold(150); give('elixir',2);
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
-  setTimeout(()=>toast('The great ice-thing shudders and the violet light bleeds out of it - it was a beast once, a whale-of-the-deep that wandered too near the cold and never left. It sinks calm into the melt. <i>Whoever bound it - the quiet <b>robed man</b> the whole strait speaks of, violet at his sleeves - is always one island ahead of you. But the trail is warming.</i>',10000),1400);
+  setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
 }
 
 /* =====================================================================
@@ -2918,8 +2918,8 @@ function bindVath(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.8),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
   banner('VATH IS BOUND','SEALED BY HIS OWN COMPULSION');
   if(typeof updateBossUI==='function') updateBossUI();
-  setTimeout(()=>toast('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM. His own leash closes on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You would have woven a fine binding of your own."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. I will thaw. I will come back - for you, and for all of you."</b> <i>Then quiet, and violet light dying in the grass.</i>',11000),400);
-  setTimeout(()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head - like a man surfacing from deep water. <b style="color:var(--ember)">Speak with him.</b>',7000),9200);
+  setTimeout(()=>storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
+    {onOk:()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head. <b style="color:var(--ember)">Speak with him.</b>',7000)}),1200);
   // credit the kill quest cleanly (death was intercepted). Delayed so the bind
   // banner is read before the QUEST COMPLETE banner lands.
   setTimeout(()=>{ if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); } }, 3000);

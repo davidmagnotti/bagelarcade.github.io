@@ -558,7 +558,7 @@ function vathEscapes(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.7,1.6),color:'#c77bff',size:rnd(2,4),grav:-0.1}); }
   P.story.vathMet=1; P.prog.vhunt=Math.max(P.prog.vhunt||0,1);
   banner('VATH SLIPS AWAY','THE ENCHANTER WAS NOT SURPRISED');
-  toast('<b>Vath does not fall.</b> Beaten to one knee, he only tilts his head and <i>looks</i> at you - at the pendant at your throat - a beat too long. <b style="color:#c9a0ff">“…You shouldn\'t be possible,”</b> he says, almost kindly. Then the violet folds inward and he is <b>gone</b>, the way smoke is gone.',9000);
+  setTimeout(()=>storyCard('<b>Vath does not fall.</b> Beaten to one knee, he tilts his head and <i>looks</i> at you - at the pendant at your throat. <b style="color:#c9a0ff">“…You shouldn\'t be possible,”</b> he says, almost kindly. Then the violet folds inward, and he is <b>gone</b>.'),1200);
   if(typeof killCredit==='function') killCredit('mage'); // "drove him off" - vhunt turns in at Moli
 }
 function dragonFaints(m){
@@ -570,7 +570,7 @@ function dragonFaints(m){
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
   P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
   if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
-  toast('<b style="color:#ffcf8a">The violet light shatters.</b> Ashwing sways, then sinks to the ash - breathing, himself again. “...You could have run me through. You broke the chain instead. My thanks, little flame.” <br>His great eye narrows: “...The binder\'s fire reached for you, too, on the climb - I felt it grope for your mind. It found no hold. That is not luck, little flame. But I do not know what it is.” <br>“He fled into the palm grove. Do not let him bind another.”',10000);
+  setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”'),1200);
   if(qs('wyrm')==='active') completeQuest('wyrm');
   if(typeof startMageHunt==='function') startMageHunt();
   // a breath later he rouses and beats away to rest in his lair
@@ -660,9 +660,9 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.skyDungeonDone=1;
     Snd.boss&&Snd.boss();
     banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS');
-    setTimeout(()=>toast('The storm-eye guts itself into harmless mist. The high wind calms and the rainbow road runs quiet.',4200), 1400);
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }, 2400);
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, and the rainbow road runs quiet.',
+      {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
   }
   // The Drowned Warden keeps the Stormreach catacomb
   if(m.tombboss){

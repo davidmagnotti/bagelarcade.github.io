@@ -251,6 +251,11 @@
   .ovCard h1 span{color:var(--ember);}
   .ovCard p{font-size:14px;line-height:1.6;color:var(--parch-dim);margin:14px 0 22px;}
   .ovCard .btn{font-size:16px;padding:13px 34px;}
+  /* story cards - an important beat that waits for an explicit press */
+  .storyCard{max-width:600px;}
+  .storyCard p{font-size:16px;line-height:1.72;color:var(--parch);margin:6px 0 24px;}
+  .storyCard p b{color:var(--ember);}
+  .storyCard p i{color:var(--parch-dim);font-style:italic;}
   #ovControls{margin-top:20px;font-size:12px;color:var(--parch-dim);line-height:1.8;}
   #ovControls b{color:var(--ember);}
   #fadeOv{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .7s ease;}
