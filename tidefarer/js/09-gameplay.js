@@ -563,9 +563,10 @@ function killMob(m,skill){
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
     banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
     dropHollowFire();   // the seal breaks with him
-    // his risen court crumbles with him: clear every summoned skeleton and any
-    // bone volley still in the air so nothing can kill you on the victory lap
-    for(const o of G.mobs){ if(!o.dead && o.kind==='skeleton'){ o.dead=true; o.respawnT=-1; burst(o.x,o.y-0.4,'#d8d8c8',10,1.4); } }
+    // his risen court crumbles with him FOR GOOD: clear every skeleton on the isle -
+    // alive or merely waiting to respawn - so the northern spit stays quiet, and drop
+    // any bone volley still in the air so nothing can kill you on the victory lap
+    for(const o of G.mobs){ if(o.kind==='skeleton'){ if(!o.dead) burst(o.x,o.y-0.4,'#d8d8c8',10,1.4); o.dead=true; o.respawnT=-1; } }
     for(let i=G.projs.length-1;i>=0;i--){ if(G.projs[i].kind==='bone') G.projs.splice(i,1); }
     G.victory=true;   // invulnerable through the win sequence (see hurtPlayer)
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts

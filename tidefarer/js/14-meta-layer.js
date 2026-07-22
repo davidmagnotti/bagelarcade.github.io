@@ -59,7 +59,9 @@ function saveCode(){
 }
 function applyWorldFlags(f){
   if(!f) return;
-  if(f.bossDead){ const b=G.mobs.find(m=>m.boss); if(b){b.dead=true;b.respawnT=-1;} G.flags.intro_boss=true; }
+  if(f.bossDead){ const b=G.mobs.find(m=>m.boss); if(b){b.dead=true;b.respawnT=-1;} G.flags.intro_boss=true;
+    // the King's bone-guard fell with him - never respawn the northern-spit skeletons on reload
+    for(const o of G.mobs){ if(o.kind==='skeleton'){ o.dead=true; o.respawnT=-1; } } }
   if(f.alphaDead){ const a=G.mobs.find(m=>m.kind==='alpha'); if(a){a.dead=true;a.respawnT=-1;} G.flags.intro_alpha=true; }
   for(const c of (f.chests||[])){
     const ch=G.decor.find(b=>b.kind==='chest'&&Math.round(b.x*2)===c[0]&&Math.round(b.y*2)===c[1]);

@@ -1209,7 +1209,7 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>toast('The leviathan sinks - not slain, but <b>unbound</b> - and the killing water goes glass-flat. Where it dove, a slick of <b style="color:#c9a0ff">violet light</b> curls and fades. On the last swell rides a scrap of vellum in a fine, unhurried hand: <b style="color:#c9a0ff">“You freed my dragon. You freed my wyrm of the deep. Twice now. - V.”</b> He is ahead of you still, and no longer sure of himself.',10000),1400);
+  setTimeout(()=>toast('The leviathan sinks - not slain, but <b>unbound</b> - and the killing water goes glass-flat. Where it dove, a slick of <b style="color:#c9a0ff">violet light</b> curls and fades. Back on the pier <b>Rell</b> grips your arm, half-laughing: “First calm water in a season - you\'ll never pay for a bed in Windsurf again.” Then, quieter: “There was a <b>robed man</b> here before the beast came. Soft-spoken. Violet thread at his cuffs. Asking after the old deep-magics. You know the sort?”',10000),1400);
 }
 function updateWindFolkMood(){
   // once the strait reopens, the town's talk turns from despair to bustle
@@ -1413,7 +1413,7 @@ function destroyTome(b){
   }
   banner('THE TOME BURNS','THE SKY REMEMBERS ITSELF - THE AERIE IS QUIET');
   if(qs('roost')==='active') completeQuest('roost');
-  setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. On the last leaf, before it blackens, a line in that same unhurried hand: <b style="color:#c9a0ff">“Three. You are becoming a nuisance, deckhand.”</b> <i>Deckhand. The word snags on something you cannot reach.</i>',10000),1500);
+  setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. When you climb back into daylight the falconers of Rookhaven crowd round, near weeping as their birds settle to the glove: “Our sky is ours again - <b>thank you</b>. It was a <b>robed man</b> did this to us, they say. Climbed the Underclimb quiet as smoke, violet at his sleeves, and never came down the same. If you cross him, friend - give him nothing.”',10000),1500);
 }
 function genAerieAll(){
   genAerie(); bakeSolids(); placeObjectsAerie(); buildFoam();
@@ -1667,7 +1667,7 @@ function freeWarden(m){
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
-  setTimeout(()=>toast('The violet cracks and sloughs away like spring ice, and the Warden bows its great head and <b>weeps</b> - real meltwater, running warm down the glacier toward the strait. On a shard of frost, already melting: <b style="color:#c9a0ff">“Four. You unmake faster than I can make, deckhand. That is not supposed to be possible. What are you?”</b>',10000),1400);
+  setTimeout(()=>toast('The violet cracks and sloughs away like spring ice, and the Warden bows its great head and <b>weeps</b> - real meltwater, running warm down the glacier toward the strait. On the road down <b>Sigrid</b> catches your hands, too glad to mind the cold: “You gave us back our guardian AND our sea - bless you, bless you. That <b>robed man</b> who walked up the glacier and stopped its tears - soft voice, violet at the cuffs - did you cross him? He is not finished, I think.”',10000),1400);
 }
 function updateFrostFolkMood(){
   if(!(P.story && P.story.frostFreed)) return;
@@ -1748,7 +1748,7 @@ function freeColossus(m){
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
   giveGold(150); give('elixir',2);
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
-  setTimeout(()=>toast('The great ice-thing shudders and the violet light bleeds out of it - it was a beast once, a whale-of-the-deep that wandered too near the cold and never left. On the melting floor, a hand you are coming to know: <b style="color:#c9a0ff">"Five. You unmake my whole winter, deckhand. Come find me, then - I begin to want to see your face."</b>',10000),1400);
+  setTimeout(()=>toast('The great ice-thing shudders and the violet light bleeds out of it - it was a beast once, a whale-of-the-deep that wandered too near the cold and never left. It sinks calm into the melt. <i>Whoever bound it - the quiet <b>robed man</b> the whole strait speaks of, violet at his sleeves - is always one island ahead of you. But the trail is warming.</i>',10000),1400);
 }
 
 /* =====================================================================
@@ -2533,7 +2533,7 @@ function openChest(b){
     // The first fingerprint of the enchanter: someone paid to have these ribbons
     // stolen - and it grounded Corvo's ferry. A pattern the player won't see yet.
     if(!P.story.vathNamed){ P.story.vathNamed=1;
-      setTimeout(()=>toast('Tucked beneath the silk: a <b>coin older than the kingdom</b>, and a scrap in a fine, unhurried hand - <i>\u201cfor the ribbons, and for your silence.\u201d</i> It is signed with one word: <b style="color:#c9a0ff">Vath</b>. A cornered brigand spits as you pass: \u201cPolite fellow. Paid in old coin. Said it was only ribbons - what\'s the harm in a few ribbons?\u201d',9500),1600); }
+      setTimeout(()=>toast('Tucked beneath the silk: a <b>coin older than the kingdom</b>. A cornered brigand spits as you pass: \u201cPaid us in old coin, that one - a <b>robed fellow</b>, soft-spoken, violet thread at his cuffs. Said it was only ribbons. What\'s the harm in a few ribbons?\u201d',9500),1600); }
     return;
   }
   if(b.emberking){
