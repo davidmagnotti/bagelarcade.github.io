@@ -660,9 +660,21 @@ function killMob(m,skill){
     setTimeout(()=>toast('The brute crashes down and does not rise, and the storm-coast lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging fresh timber to the water. Stormreach is yours to walk in peace - and the castaways will name a cove for you.',6500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
+  // THE COG-BOUND (Undermill mini-boss) - felling it frees the seized gear-train,
+  // which grinds the millstone gate up and opens the way to Nessa's sail.
+  if(m.millboss){
+    P.story=P.story||{}; P.story.millDone=1;
+    if(typeof MILL_GATE!=='undefined') for(const [x,y] of MILL_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='mill'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');
+    setTimeout(()=>toast('The Cog-Bound sloughs off the shaft and clatters still. The freed gear-train shudders round for the first time in a season, and the great millstone gate grinds up into the ceiling - <b>Nessa\'s sail</b> lies in the vault beyond.',7000), 1400);
+    if(typeof autoSave==='function') autoSave();
+  }
   // After felling a dungeon boss, offer the quick road out - mended and a level
-  // stronger. (Overworld bosses stay put; dungeons have a clear "way up".)
-  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && typeof inDungeon==='function' && inDungeon()){
+  // stronger. (Overworld bosses stay put; dungeons have a clear "way up". The
+  // Undermill's guardian is excluded: the sail still waits past the gate.)
+  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && !m.millboss && typeof inDungeon==='function' && inDungeon()){
     setTimeout(offerDungeonExit, 2400);
   }
 }

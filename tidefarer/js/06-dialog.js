@@ -171,9 +171,9 @@ function buildDialogContent(npc){
     return;
   }
   // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
-  // explains the gear-locks that seal Nessa's stormsail below.
+  // warns of the thing fouling the seized works below.
   if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
-    setDialog('<i>Burl wipes flour from his hands and nods at the chained hatch by the mill.</i> “Tolen sent you for the sail, aye. She\'s Nessa\'s finest, locked in the vault below since the gear-train seized - and the millstone gate won\'t lift till the works turn again. <b>Three gear-locks</b> are down there in the grinding floor; throw all three and the train catches, the gate grinds up, and the sail\'s yours. Mind your footing in the dark.”',
+    setDialog('<i>Burl wipes flour from his hands and lowers his voice, nodding at the chained hatch.</i> “Tolen sent you for the sail, aye - Nessa\'s finest, locked in the vault since the gear-train seized. But hear me: it weren\'t rust that stopped it. There\'s a <b>thing</b> down in the works, fouled in the shaft, and it don\'t like company. Put it down and the train frees - the millstone gate\'ll grind up on its own, and the sail\'s yours. Go armed.”',
       shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
     return;
   }

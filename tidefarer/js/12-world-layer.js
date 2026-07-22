@@ -1958,13 +1958,13 @@ function exitFrostVault(){
 }
 
 /* =====================================================================
-   THE UNDERMILL - a short gear-lock puzzle dungeon beneath the Windsurf
-   windmill. Tolen shapes the board but has no sail fit for the killing
-   strait; the last stormsail on the isle - Nessa's - lies sealed in the
-   old grinding works below, shut when the gear-train jammed. Throw the
-   three gear-locks to re-engage the works, grind the millstone gate up,
-   and carry the sail back to earn the windsurf. No boss - pure puzzle.
-   Reuses the icelever ward-lock (pullVaultLever) and the RUIN carve.
+   THE UNDERMILL - a short mini-boss dungeon beneath the Windsurf windmill.
+   Tolen shapes the board but has no sail fit for the killing strait; the
+   last stormsail on the isle - Nessa's - lies sealed in the old grinding
+   works below, shut when the gear-train seized. A guardian (THE COG-BOUND)
+   fouls the works; fell it and the freed gear-train grinds the millstone
+   gate up, opening the vault. Carry the sail back to earn the windsurf.
+   Reuses ewall walls, the catgate portcullis, and a scaled skeleton boss.
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 const MILL_GATE = [[17,15],[18,15],[19,15],[20,15],[21,15]];   // the millstone-gate corridor tiles
@@ -1976,7 +1976,7 @@ function genMillDeep(){
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
   carve(11,38,27,48);   // THE MILLSTAIR - entry landing (the way up sits here)
   carve(17,33,21,39);   // corridor A -> the grinding floor
-  carve(9,18,29,34);    // THE GRINDING FLOOR - the three gear-lock chamber
+  carve(9,18,29,34);    // THE GRINDING FLOOR - the guardian's chamber
   carve(17,12,21,19);   // corridor B -> the vault (the millstone gate sits at y=15)
   carve(11,3,27,13);    // THE SAILWRIGHT'S VAULT - the reward chamber
   // record the visible wall faces (stone bordering the carved floor) BEFORE the gate
@@ -1999,26 +1999,31 @@ function placeObjectsMillDeep(){
   G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:46.5, label:'the way up'});  // back to the surface
   setSolid(19,46,0); setTile(19,46,T.RUIN);
   for(const [tx,ty] of [[12,40],[26,40],[11,20],[27,20],[11,32],[27,32],[13,5],[25,5]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE MILLSTONE GATE - an iron portcullis raised by re-engaging the gear-train
+  // THE MILLSTONE GATE - an iron portcullis jammed shut by the seized gear-train.
+  // It grinds up once the guardian fouling the works is put down.
   G.decor.push({kind:'catgate', x:19, y:15, open:false, gate:'mill', tiles:MILL_GATE.slice(), label:'the Millstone Gate'});
-  // THE GRINDING FLOOR: three gear-lock levers, one on each side wall of the chamber
-  // and one at the back - throw all three (any order) to raise the millstone gate.
-  for(const [lx,ly] of [[12,30],[26,30],[19,20]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'mill', gate:'mill', doneFlag:'millDone', label:'a gear-lock lever',
-      tickMsg:'The gear-lock drops into its notch with a heavy iron clunk. <b>{n} more</b> still hold the millstone gate shut.',
-      openBanner:'THE GEAR-TRAIN CATCHES', openSub:'THE MILLSTONE GATE GRINDS UP',
-      openMsg:'The last gear-lock seats home and the whole undercroft shudders awake - cogs bite, the shaft groans round, and the great millstone gate grinds up into the ceiling. The vault beyond lies open.'});
   // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:19.5, y:7.5, sail:1});
-  // an already-solved run keeps the millstone gate open and the locks thrown
+  // an already-cleared run keeps the millstone gate open (the guardian is gone)
   if(P.story && P.story.millDone){
     for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='mill') d.on=true;
-      if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
+    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
   }
   G.critters=[];
 }
-function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); buildMapBase(); }
+// THE COG-BOUND: the miller who was caught in the gear-train when it seized, risen
+// fused to the works and guarding them. Fell it and the freed shaft grinds the
+// millstone gate up. A single mini-boss - the whole reason the dungeon exists.
+function spawnMobsMillDeep(){
+  if(P.story && P.story.millDone) return;   // already felled - the works turn free
+  const Z=MILLDEEP_ZONES.works;
+  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 6) || [Z.x, Z.y];
+  const b=spawnMob('skeleton', sp[0], sp[1]);
+  if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND';
+    b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
+    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; }
+}
+function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); spawnMobsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
   // the hatch stays chained until Tolen has shaped the board and sent you for the
   // sail (boardMade), or the sail quest is already underway, or you've been here
@@ -2692,8 +2697,8 @@ QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', nee
   doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is Nessa\'s, and it\'s locked in the old grinding works BENEATH THE WINDMILL - sealed the season the gear-train jammed. Bring it up and I\'ll step it for you.',
   rw:{gold:20} };
 QUESTS.sail={ giver:'burl', title:'The Sail in the Undermill', kind:'special', xpL:220,
-  brief:'The stair down? Chained shut, and for good reason - the gear-train siezed a season back and the works have been dead ever since, Nessa\'s good stormsail locked in the vault behind the millstone gate. Throw the three gear-locks to catch the train and grind the gate up, and the sail\'s yours. Mind your footing in the dark.',
-  log:'Descend the Undermill beneath the windmill. Throw the three gear-locks to raise the millstone gate, and carry Nessa\'s stormsail back up.',
+  brief:'The stair down? Chained shut, and for good reason - the gear-train siezed a season back and the works went dead, Nessa\'s good stormsail locked in the vault behind the millstone gate. And it wasn\'t rust that stopped it. Something got FOULED in the shaft down there and won\'t lie quiet. Put the thing down, the gear-train frees, the gate grinds up - and the sail\'s yours. Mind yourself in the dark.',
+  log:'Descend the Undermill beneath the windmill. Defeat the guardian fouling the works to raise the millstone gate, and carry Nessa\'s stormsail back up.',
   doneText:'You brought it up! Nessa\'s stormsail, whole and dry. Take it to Tolen - or just set it to your board; she\'ll fly true now. Then it\'s Rell you want, and that thing past the breakwater.',
   rw:{surf:true, gold:40} };
 QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
