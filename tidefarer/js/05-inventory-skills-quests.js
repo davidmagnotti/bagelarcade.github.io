@@ -103,9 +103,10 @@ function completeQuest(id){
   if(id==='ribbon3'){ P.prog.eastSail=1;
     banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
     setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
-  if(id==='board'){ // earning the windsurf opens the Leviathan hunt with Rell
-    if(G.worldId==='wind' && qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
-    setTimeout(()=>toast('<b>Rell the Harbormaster</b> will send you at the Leviathan now - windsurf out past the breakwater onto the light water when you\'re ready.',6500),2600); }
+  if(id==='board'){ // the board is shaped, but bare - now fetch Nessa's sail from the Undermill
+    P.story=P.story||{}; P.story.boardMade=1;
+    if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; }
+    setTimeout(()=>toast('<b>Quest:</b> The Sail in the Undermill - the hatch beside the <b>windmill</b> is unchained. Throw the three <b>gear-locks</b> below to raise the millstone gate and bring up <b>Nessa\'s stormsail</b>. Speak to <b>Burl the Millwright</b> if you want the way of it.',7200),2600); }
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
     if(!P.quests.enchanter) P.quests.enchanter='avail'; }

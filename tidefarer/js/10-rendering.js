@@ -640,6 +640,27 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-10,4); g.quadraticCurveTo(0,-15,10,4); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='dungeonmouth' && b.mill){
+    const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
+    const pulse=0.5+0.5*Math.sin(G.time*1.7);
+    // a stone-rimmed cellar stair with a timber hatch flung open
+    g.fillStyle='#6b5c46'; // dressed-stone rim
+    g.beginPath(); g.moveTo(-24,7); g.lineTo(-20,-9); g.lineTo(20,-9); g.lineTo(24,7); g.closePath(); g.fill();
+    g.strokeStyle='#3a3024'; g.lineWidth=2.2; g.stroke();
+    g.fillStyle='#120d09'; // the dark stair-throat
+    g.beginPath(); g.moveTo(-15,6); g.lineTo(-12,-6); g.lineTo(12,-6); g.lineTo(15,6); g.closePath(); g.fill();
+    g.fillStyle='#2a2018'; // two worn steps catching the surface light
+    g.fillRect(-13,3,26,2.2); g.fillRect(-11,-1,22,2.0);
+    g.fillStyle='rgba(255,196,110,'+(0.10+0.10*pulse)+')'; // a faint warm lamp far below
+    g.beginPath(); g.moveTo(-9,6); g.quadraticCurveTo(0,-4,9,6); g.closePath(); g.fill();
+    // the thrown-open hatch leaf, timber planks banded in iron
+    g.save(); g.translate(-18,-6); g.rotate(-0.5);
+    g.fillStyle='#7a5c38'; g.fillRect(-3,-16,10,20);
+    g.strokeStyle='#4a3722'; g.lineWidth=1.4; g.strokeRect(-3,-16,10,20);
+    g.fillStyle='#3a3026'; g.fillRect(-3,-12,10,1.6); g.fillRect(-3,-1,10,1.6);
+    g.restore();
+    g.restore(); return;
+  }
   if(b.kind==='dungeonmouth' && b.ember){
     const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
     const pulse=0.5+0.5*Math.sin(G.time*2.3);

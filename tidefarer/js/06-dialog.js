@@ -170,11 +170,23 @@ function buildDialogContent(npc){
       [{label:'No grave, my King.', fn:p2}]);
     return;
   }
+  // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
+  // explains the gear-locks that seal Nessa's stormsail below.
+  if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
+    setDialog('<i>Burl wipes flour from his hands and nods at the chained hatch by the mill.</i> “Tolen sent you for the sail, aye. She\'s Nessa\'s finest, locked in the vault below since the gear-train seized - and the millstone gate won\'t lift till the works turn again. <b>Three gear-locks</b> are down there in the grinding floor; throw all three and the train catches, the gate grinds up, and the sail\'s yours. Mind your footing in the dark.”',
+      shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
+    return;
+  }
   // Rell won't send you at the Leviathan until you have a windsurf - the beast
-  // lives out on the water, past the reach of his jetty. He points you to Tolen.
+  // lives out on the water, past the reach of his jetty. He points you onward.
   if(npc.id==='rell' && !(P.unlocked&&P.unlocked.surf) && qs('tide')!=='done'){
-    setDialog('“Face it? On foot?” <i>Rell barks a joke of a laugh.</i> “My jetty only reaches so far, friend, and that thing <b>swims</b>. You\'ll want a <b>windsurf</b> to meet it out on the light water - and <b>Tolen the Whittler</b>, up at Trade Row, is the only hand on this rock who can shape you one. Get yourself a board. Then come back, and I\'ll point you at the beast.”',
-      shopButtons(npc,[{label:'I\'ll go see Tolen', ghost:true, fn:closeDialog}]));
+    if(P.story && P.story.boardMade){
+      setDialog('“So Tolen shaped you a board - good. But she\'s bare, and a bare board\'s a plank.” <i>Rell jerks a thumb toward the mill.</i> “The last stormsail on this rock is locked in the <b>Undermill</b>, below Burl\'s windmill. Bring it up, step it, and THEN come talk to me about that thing past the breakwater.”',
+        shopButtons(npc,[{label:'To the Undermill',ghost:true,fn:closeDialog}]));
+    } else {
+      setDialog('“Face it? On foot?” <i>Rell barks a joke of a laugh.</i> “My jetty only reaches so far, friend, and that thing <b>swims</b>. You\'ll want a <b>windsurf</b> to meet it out on the light water - and <b>Tolen the Whittler</b>, up at Trade Row, is the only hand on this rock who can shape you one. Get yourself a board. Then come back, and I\'ll point you at the beast.”',
+        shopButtons(npc,[{label:'I\'ll go see Tolen', ghost:true, fn:closeDialog}]));
+    }
     return;
   }
   if(npc.id==='castell' && qs('feud2')==='active'){

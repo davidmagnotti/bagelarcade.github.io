@@ -94,6 +94,11 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
   glyph:   {x:40, y:28, r:11, name:'The Warding Locks',   lv:[7,9]},   // button-order puzzle
   rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
+const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
+  entry: {x:40, y:82, r:8,  name:'The Millstair',         lv:[0,0]},
+  works: {x:40, y:54, r:14, name:'The Grinding Floor',    lv:[0,0]}, // the three gear-locks
+  vault: {x:40, y:22, r:11, name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's sealed stormsail
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -148,7 +153,10 @@ const WORLD_DEFS = {
     gen:()=>genReachAll() },
   reachdeep:{ W:80, H:96, seed:48311, zones:REACHDEEP_ZONES, dungeon:1, dark:0.42,
     spawn:{x:40.5,y:86.5}, title:'THE DROWNED CATACOMB', sub:'BENEATH THE STORMREACH GRAVES - BONE, BRINE, AND OLD LOCKS',
-    gen:()=>genReachDeepAll() }
+    gen:()=>genReachDeepAll() },
+  milldeep:{ W:80, H:96, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
+    spawn:{x:40.5,y:88.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
+    gen:()=>genMillDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -1122,6 +1130,11 @@ function placeObjectsWind(){
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // tight round base, no walls up-screen
   for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y+1, 0);                             // doorway, south face
   mill.door={x:MI.x+0.5, y:MI.y+1.6};
+  // THE UNDERMILL: a stone stair-hatch just east of the windmill drops into the old
+  // grinding works, where Nessa's lost stormsail lies sealed behind the gear-locks
+  const mouth=findOpenNear(Math.round(MI.x+4), Math.round(MI.y+1), 4) || [Math.round(MI.x+4), Math.round(MI.y+1)];
+  setSolid(mouth[0], mouth[1], 0);
+  G.decor.push({kind:'dungeonmouth', mill:1, x:mouth[0]+0.5, y:mouth[1]+0.5, label:'the Undermill', name:'THE UNDERMILL'});
   const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
   for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house AND the wheel to its east
@@ -1916,8 +1929,10 @@ function pullVaultLever(b){
       banner(b.openBanner||'THE FROST-LOCKS YIELD', b.openSub||'THE SEALED GATE GRINDS OPEN');
       toast(b.openMsg||'The last frost-lock turns and, with a groan of ancient ice, the gate hauls up into the ceiling. The way deeper lies open.',5200);
     } else {
+      const remain=grp.length-done;
       addFloat(done+' / '+grp.length, b.x, b.y-1.4, '#bfe8ff', 1.1);
-      toast('The lock turns with a deep crack of ice. <b>'+(grp.length-done)+' more</b> still hold the gate shut.',3600);
+      if(b.tickMsg) toast(b.tickMsg.replace('{n}', remain), 3600);
+      else toast('The lock turns with a deep crack of ice. <b>'+remain+' more</b> still hold the gate shut.',3600);
     }
     return;
   }
@@ -1936,6 +1951,67 @@ function exitFrostVault(){
   P.slideDir=null; P.click=null;
   setTimeout(()=>{ switchWorld('frost');
     const r=P._vaultReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+
+/* =====================================================================
+   THE UNDERMILL - a short gear-lock puzzle dungeon beneath the Windsurf
+   windmill. Tolen shapes the board but has no sail fit for the killing
+   strait; the last stormsail on the isle - Nessa's - lies sealed in the
+   old grinding works below, shut when the gear-train jammed. Throw the
+   three gear-locks to re-engage the works, grind the millstone gate up,
+   and carry the sail back to earn the windsurf. No boss - pure puzzle.
+   Reuses the icelever ward-lock (pullVaultLever) and the RUIN carve.
+   ===================================================================== */
+function genMillDeep(){
+  // the whole undercroft begins as solid stone; carve the chambers out of it
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(30,76,50,90);   // THE MILLSTAIR - entry landing (the way up sits here)
+  carve(38,69,42,77);   // corridor A -> the grinding floor
+  carve(28,42,52,70);   // THE GRINDING FLOOR - the three gear-lock puzzle chamber
+  carve(38,34,42,43);   // corridor B -> the vault
+  for(let x=38;x<=42;x++){ setTile(x,36,T.RUIN); setSolid(x,36,1); }  // THE MILLSTONE GATE - solid until all three gear-locks are thrown
+  carve(28,14,52,34);   // THE SAILWRIGHT'S VAULT - the reward chamber
+}
+function placeObjectsMillDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:40.5, y:88.5, label:'the way up'});  // back to the surface
+  setSolid(40,88,0); setTile(40,88,T.RUIN);
+  for(const [tx,ty] of [[32,78],[48,78],[30,44],[50,44],[30,66],[50,66],[30,16],[50,16],[40,15]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE GRINDING FLOOR: three gear-lock levers set among old millstone pillars.
+  // Throw all three (in any order) to re-engage the gear-train and grind the
+  // millstone gate up into the ceiling. Weave the pillar-maze to reach each.
+  const GATE=[[38,36],[39,36],[40,36],[41,36],[42,36]];
+  const pillar=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,1); } };  // a stub millstone pillar (reads as the stone walls)
+  for(const [px,py] of [[34,60],[46,60],[34,50],[46,50],[40,56],[38,64],[42,46]]) pillar(px,py);
+  for(const [lx,ly] of [[30,68],[50,68],[40,44]])
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'mill', gateTiles:GATE, doneFlag:'millDone', label:'a gear-lock lever',
+      tickMsg:'The gear-lock drops into its notch with a heavy iron clunk. <b>{n} more</b> still hold the millstone gate shut.',
+      openBanner:'THE GEAR-TRAIN CATCHES', openSub:'THE MILLSTONE GATE GRINDS UP',
+      openMsg:'The last gear-lock seats home and the whole undercroft shudders awake - cogs bite, the shaft groans round, and the great millstone gate grinds up into the ceiling. The vault beyond lies open.'});
+  // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
+  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:40.5, y:18.5, sail:1});
+  // an already-solved run keeps the millstone gate open and the locks thrown
+  if(P.story && P.story.millDone){ for(const [x,y] of GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='mill') d.on=true; } }
+  G.critters=[];
+}
+function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); buildMapBase(); }
+function enterMillDungeon(){
+  // the hatch stays chained until Tolen has shaped the board and sent you for the sail
+  if(!(P.story && (P.story.boardMade || P.story.haveSail)) && !(P.unlocked && P.unlocked.surf)){
+    toast('A chained cellar-hatch beside the windmill, padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut - you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
+  }
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._millReturn={x:P.x, y:P.y+1.3}; P.click=null;
+  setTimeout(()=>{ switchWorld('milldeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitMillDungeon(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.click=null;
+  setTimeout(()=>{ switchWorld('wind');
+    const r=P._millReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 
@@ -2577,9 +2653,14 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
   doneText:'There she is - Kaia-work, signed in the grain. Step onto the water and the board finds your feet. The reef is yours now, friend, and every shore you can squint at.',
   rw:{surf:true, gold:30} };
 QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', need:{wood:6, shell:3}, xpL:240,
-  brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails - I\'ll get the sail off Nessa myself - and the light water out to the breakwater is yours.',
+  brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails, and I\'ll shape you a board fit for that killing water. The sail\'s another matter - but one thing at a time.',
   log:'Bring Tolen the Whittler 6 wood and 3 spiral shells so he can shape you a windsurf board. (Chop the palms; comb the beach for shells.)',
-  doneText:'There she is - rails inlaid, Nessa\'s sail stepped and true. Set it on the shallows and the board finds your feet. Now you can meet that thing on the water where it lives. Mind the deep, though - the board only rides the LIGHT water near shore. Go see Rell.',
+  doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is Nessa\'s, and it\'s locked in the old grinding works BENEATH THE WINDMILL - sealed the season the gear-train jammed. Bring it up and I\'ll step it for you.',
+  rw:{gold:20} };
+QUESTS.sail={ giver:'burl', title:'The Sail in the Undermill', kind:'special', xpL:220,
+  brief:'The stair down? Chained shut, and for good reason - the gear-train siezed a season back and the works have been dead ever since, Nessa\'s good stormsail locked in the vault behind the millstone gate. Throw the three gear-locks to catch the train and grind the gate up, and the sail\'s yours. Mind your footing in the dark.',
+  log:'Descend the Undermill beneath the windmill. Throw the three gear-locks to raise the millstone gate, and carry Nessa\'s stormsail back up.',
+  doneText:'You brought it up! Nessa\'s stormsail, whole and dry. Take it to Tolen - or just set it to your board; she\'ll fly true now. Then it\'s Rell you want, and that thing past the breakwater.',
   rw:{surf:true, gold:40} };
 QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
   brief:'You feel it in the water, past my breakwater - a wrongness, cold and patient. No hull has crossed since it woke, and Windsurf is starving for want of a sail. It is no natural beast; it moves like something bound. Walk the jetty and face it, friend - end this, and you give this whole city back its sea.',
@@ -3010,6 +3091,27 @@ function beginOpenChest(b){
 function openChest(b){
   if(b.opened){ toast('Empty - already plundered.'); return; }
   b.opened=true; b.kind='chestOpen';
+  if(b.sail){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.haveSail=1;
+    shockwave(b.x,b.y,'rgba(200,225,255,0.9)',52); burst(b.x,b.y-0.5,'#dce8ff',18,2.6); Snd.levelup&&Snd.levelup();
+    if(qs('sail')==='active'){
+      completeQuest('sail');   // grants the windsurf (rw.surf) and marks the objective done
+    } else if(!(P.unlocked && P.unlocked.surf)){
+      P.unlocked=P.unlocked||{}; P.unlocked.surf=true;
+      banner('THE STORMSAIL IS YOURS','THE BOARD IS WHOLE');
+      toast('<b style="color:var(--ember)">Windsurf board earned!</b> Nessa\'s stormsail steps true to your board - walk onto the water and ride it, at nearly double speed.',6500);
+    } else {
+      giveGold(60); give('elixir',1);
+      toast('A fine old stormsail, but you\'ve a board that already flies. Rolled and stowed - it\'ll fetch a good price ashore.',5200);
+      setTimeout(autoSave,300); return;
+    }
+    // the Leviathan hunt opens the moment you can cross the light water
+    if(qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    setTimeout(()=>toast('Carry the sail up and see <b>Rell the Harbormaster</b> - he\'ll send you at the Leviathan now. Windsurf out past the breakwater onto the light water when you\'re ready.',6800),2600);
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.relic){
     bumpStat('chests');
     give('relic',1); giveGold(150);

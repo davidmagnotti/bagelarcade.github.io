@@ -147,7 +147,7 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.ember?'emberdungeon':'dungeon',o:b,
+      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon':'dungeon',o:b,
         label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
@@ -212,6 +212,7 @@ function doInteract(){
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
+  if(it.type==='milldungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitMillDungeon(); else enterMillDungeon(); return; }
   if(it.type==='vaultdungeon'){ facePoint(it.o.x,it.o.y);
     if(it.o.exit){ exitFrostVault(); return; }
     if(!(P.story&&P.story.iceBearDown)){ toast('The <b>Hoarfrost Bear</b>’s den, rank with old kills - and something vast still breathes in the dark of it. Drive the beast off before you go down.',4600); Snd.step&&Snd.step(5); return; }
