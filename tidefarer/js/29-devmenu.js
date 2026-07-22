@@ -127,8 +127,12 @@ setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P
 const SECTIONS=[
   ['Teleport island', [
     ['Emberwick (start)',()=>tp('isle')], ['Barik',()=>tp('main')], ['Sunward',()=>tp('east')],
-    ['Windsurf',()=>tp('wind')], ['Aerie',()=>tp('aerie')], ['Frozen',()=>tp('frost')],
-    ['Aldermere (Capital)',()=>tp('crown')],
+    ['Cloudreach (sky)',()=>tp('sky')], ['Windsurf',()=>tp('wind')], ['Stormreach',()=>tp('reach')],
+    ['Aerie',()=>tp('aerie')], ['Frozen',()=>tp('frost')], ['Aldermere (Capital)',()=>tp('crown')],
+  ]],
+  ['Teleport dungeon', [
+    ['Emberdeep',()=>tp('eastdeep')], ['Underclimb',()=>tp('aeriedeep')],
+    ['Rimefissure (frozen)',()=>tp('frostdeep')], ['Glacier Vault',()=>tp('frostvault')],
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],

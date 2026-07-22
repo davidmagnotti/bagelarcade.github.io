@@ -59,13 +59,13 @@ const FROST_ZONES = {
 };
 const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
   entry: {x:44, y:64, r:6,  name:'The Frostgate',     lv:[13,15]},
-  ice:   {x:42, y:46, r:12, name:'The Sliding Halls', lv:[13,15]},
+  ice:   {x:42, y:46, r:12, name:'The Frost-Lock Warren', lv:[13,15]},
   boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
 const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon under
   entry:  {x:40, y:84, r:8,  name:'The Icefall Landing', lv:[14,16]}, // the bear's old den
-  slide1: {x:40, y:66, r:11, name:'The First Slide',     lv:[14,16]}, // slide puzzle -> lever
-  glide:  {x:41, y:47, r:12, name:'The Pillar Glide',    lv:[15,17]}, // slide-around-pillars puzzle
+  slide1: {x:40, y:66, r:11, name:'The Frostgate Hall',  lv:[14,16]}, // lever -> gate
+  glide:  {x:41, y:47, r:12, name:'The Pillar Hall',     lv:[15,17]}, // weave the pillars to the lever
   wards:  {x:40, y:28, r:11, name:'The Three Wards',     lv:[15,17]}, // pull-all-three lever puzzle
   hoard:  {x:44, y:10, r:12, name:'The Hoarfrost Hoard', lv:[16,16]}  // the reward chamber
 };
@@ -123,8 +123,7 @@ const WORLD_DEFS = {
     spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:80, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
-    spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF SLIDING ICE',
-    slide:[{x0:30,y0:38,x1:54,y1:54}],   // the Sliding Halls (single-source, survives cached re-entry)
+    spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -133,8 +132,7 @@ const WORLD_DEFS = {
     spawn:{x:40.5,y:85.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - WALLED, WARDED, AND OLD',
     gen:()=>genEastDeepAll() },
   frostvault:{ W:80, H:96, seed:41983, zones:FROSTVAULT_ZONES, dungeon:1, dark:0.16,
-    spawn:{x:40.5,y:86.5}, title:'THE GLACIER VAULT', sub:'THE ICE-BEAR’S DEN - SLIDING HALLS AND OLD FROST-WARDS',
-    slide:[{x0:28,y0:58,x1:52,y1:74},{x0:28,y0:40,x1:54,y1:55}],   // R2 + R3 are slick
+    spawn:{x:40.5,y:86.5}, title:'THE GLACIER VAULT', sub:'THE ICE-BEAR’S DEN - FROZEN HALLS AND OLD FROST-WARDS',
     gen:()=>genFrostVaultAll() },
   sky:{ W:120, H:120, seed:70123, zones:SKY_ZONES, cloud:1,
     spawn:{x:60.5,y:98.5}, title:'THE CLOUDREACH', sub:'A ROCK ADRIFT IN THE CLOUD-SEA - WHERE THE STORM ROC ROOSTS',
@@ -1677,7 +1675,7 @@ function spawnFrostFolk(){
     {skin:'#c2a488',hair:'#cfc7b8',shirt:'#4a5a72',pants:'#33384a',beard:'#cfc7b8'},
     ['Two moons of this, and the strait still hard as a smith\'s anvil. No boat in, no fish out. Hearthhold is eating its own boots.',
      'The Warden used to keep our winters kind - it wept meltwater every spring and the strait ran free. Then a robed man walked onto the glacier, and the ice stopped weeping.',
-     'You\'ll want the Rimefissure if you mean to fix this at the root - a crack in the ice that opened the night the cold came, right off the glacier road. We put a cairn and lamps at the turn so none of ours wanders past it. Mind the sliding halls down there; the floor has opinions.'],0.4));
+     'You\'ll want the Rimefissure if you mean to fix this at the root - a crack in the ice that opened the night the cold came, right off the glacier road. We put a cairn and lamps at the turn so none of ours wanders past it. Mind the warren down there; three old frost-locks bar the deep gate, and you must throw them all.'],0.4));
   G.npcs.push(makeNPC('sigrid','Sigrid the Icewright', V.x+4.5, V.y+3.5,
     {skin:'#b58a5e',hair:'#8a7a5e',shirt:'#5a6a5a',pants:'#3a3a2c',hairstyle:'bun'},
     ['Wrap up warm and mind the glacier - the Warden is up there, and it is not itself.',
@@ -1734,30 +1732,38 @@ function genFrostAll(){
   buildMapBase();
 }
 
-/* ---------- THE RIMEFISSURE: the ice-slide dungeon beneath the Frozen Isle ---------- */
+/* ---------- THE RIMEFISSURE: the frozen dungeon beneath the Frozen Isle ---------- */
 function genFrostDeep(){
   // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
   carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
-  carve(42,54,46,60,T.ICE);               // corridor A -> the Sliding Halls
-  carve(30,38,54,54,T.ICE);               // THE SLIDING HALLS - one slick sheet (the slide puzzle)
-  G.slideZone={x0:30,y0:38,x1:54,y1:54}; G.slideZones=null;  // ONLY this room is slippery
-  setTile(32,39,T.RUIN); setSolid(32,39,0);   // lever landing (non-ice tile stops your slide)
-  setTile(44,39,T.RUIN); setSolid(44,39,0);   // gate approach (slide stops here, below the gate)
+  carve(42,54,46,60,T.ICE);               // corridor A -> the Frost-Lock Warren
+  carve(30,38,54,54,T.ICE);               // THE FROST-LOCK WARREN - three frost-locks to find & throw
   carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - solid until the lever
-  carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber, ice-floored (not slippery)
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - solid until all three locks
+  carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
   setSolid(44,70,0); setTile(44,70,T.RUIN);
   for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[44,15]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // frozen spires make each chamber read unmistakably as ICE
-  for(const [px,py] of [[38,66],[50,66],[31,44],[53,52],[36,18],[52,18],[44,17]]) if(inb(px,py) && !solidAt(px,py)){ G.decor.push({kind:'icespire', x:px+0.5, y:py+0.5}); setSolid(px,py,1); }
-  G.decor.push({kind:'icelever', x:32.5, y:39.5, on:false, label:'a frost-locked lever'});
+  // THE FROST-LOCK WARREN: three frost-lock levers hidden among a thicket of frozen
+  // spires - find and throw all three (in any order) to raise the deep gate. No
+  // sliding: you simply weave the pillar-maze to reach each lock.
+  const DEEP=[[42,37],[43,37],[44,37],[45,37],[46,37]];
+  const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
+  // pillar maze through the warren (kept clear of the three lock tiles below)
+  for(const [px,py] of [[38,66],[50,66],[34,42],[40,46],[46,44],[50,48],[36,50],[44,41],[36,18],[52,18],[44,17]]) spire(px,py);
+  for(const [lx,ly] of [[32,52],[52,52],[42,40]])
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'rime', gateTiles:DEEP, label:'a frost-lock lever',
+      openBanner:'THE FROST-LOCKS YIELD', openSub:'THE DEEP GATE GRINDS OPEN',
+      openMsg:'The last frost-lock turns and the deep gate hauls up into the ceiling on a shriek of old iron. The way north - to the Frozen Heart - lies open.'});
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
+  // an already-cleared run keeps the deep gate open
+  if(P.story && P.story.deepDone){ for(const [x,y] of DEEP){ setTile(x,y,T.ICE); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='rime') d.on=true; } }
   G.critters=[];
 }
 function spawnMobsFrostDeep(){
@@ -1791,7 +1797,7 @@ function pullIceLever(b){
   invalidateScenery&&invalidateScenery();
   shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
   banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north, past the sliding halls - lies open.',5200);
+  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north to the Frozen Heart - lies open.',5200);
 }
 function freeColossus(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
@@ -1856,7 +1862,9 @@ function placeObjectsFrostVault(){
   // ---- R4: THREE wards; all must be thrown before Gate 3 opens ----
   const G3=[[38,19],[39,19],[40,19],[41,19],[42,19]];
   for(const [lx,ly] of [[31,33],[44,24],[49,32]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'vault', gateTiles:G3, label:'a frost-ward lever'});
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'vault', gateTiles:G3, label:'a frost-ward lever',
+      doneFlag:'vaultDone', openBanner:'THE THREE WARDS YIELD', openSub:'THE HOARD GATE GRINDS OPEN',
+      openMsg:'The last frost-ward turns and, with a groan of ancient ice, the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard lies open.</b>'});
   spire(36,28); spire(46,28);
   // ---- R5: the hoard ----
   G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
@@ -1891,12 +1899,12 @@ function pullVaultLever(b){
     if(grp.every(d=>d.on)){
       for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
       invalidateScenery&&invalidateScenery();
-      P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
-      banner('THE THREE WARDS YIELD','THE HOARD GATE GRINDS OPEN');
-      toast('The last frost-ward turns and, with a groan of ancient ice, the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard lies open.</b>',5200);
+      if(b.doneFlag){ P.story=P.story||{}; P.story[b.doneFlag]=1; autoSave&&autoSave(); }
+      banner(b.openBanner||'THE FROST-LOCKS YIELD', b.openSub||'THE SEALED GATE GRINDS OPEN');
+      toast(b.openMsg||'The last frost-lock turns and, with a groan of ancient ice, the gate hauls up into the ceiling. The way deeper lies open.',5200);
     } else {
       addFloat(done+' / '+grp.length, b.x, b.y-1.4, '#bfe8ff', 1.1);
-      toast('The ward turns with a deep crack of ice. <b>'+(grp.length-done)+' more</b> still hold the hoard gate shut.',3600);
+      toast('The lock turns with a deep crack of ice. <b>'+(grp.length-done)+' more</b> still hold the gate shut.',3600);
     }
     return;
   }
