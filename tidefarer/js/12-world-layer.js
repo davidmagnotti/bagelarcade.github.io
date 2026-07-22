@@ -1227,9 +1227,27 @@ function spawnMobsWind(){
   const D=WIND_ZONES.dock;
   const yd=findOpenNear(Math.round(D.x+4),Math.round(D.y-3),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
-  // The Bound Leviathan haunts the breakwater until the tide is calmed. It
-  // reappears here on reload if the fight was underway but unfinished.
-  if(qs('tide')==='active' && !(P.story && P.story.tideCalm)) spawnLeviathan();
+  // The Bound Leviathan is NOT placed on load - it only surfaces once you windsurf
+  // out onto the open water past the breakwater (see updateWind). This keeps the
+  // beast out of the harbor until you actually go out to meet it.
+}
+// While the tide hunt is active, surface the Leviathan the moment the hero
+// windsurfs OUT past the jetty onto the open light water - not while still ashore.
+function updateWind(dt){
+  if(G.worldId!=='wind') return;
+  if(!(qs('tide')==='active') || (P.story && P.story.tideCalm)) return;
+  if(!(P.unlocked && P.unlocked.surf)) return;
+  if(G.mobs && G.mobs.some(m=>m.kind==='leviathan' && !m.dead)) return;
+  const D=WIND_ZONES.dock;
+  const onWater = tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW;
+  const pastJetty = P.y > D.y+2+WIND_JETTY-1;   // out beyond the pier's end
+  if(onWater && pastJetty){
+    const lv=spawnLeviathan();
+    if(lv){ G.shake=0.7; Snd.boss&&Snd.boss();
+      banner('THE BOUND LEVIATHAN','IT RISES FROM THE DEEP');
+      setTimeout(()=>toast('The water heaves and something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),300);
+    }
+  }
 }
 function spawnLeviathan(){
   if(G.mobs && G.mobs.some(m=>m.kind==='leviathan' && !m.dead)) return null;

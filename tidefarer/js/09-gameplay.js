@@ -8,14 +8,17 @@ function moveEntity(e,dx,dy,rad,waterOK){
   let ny=e.y+dy;
   if(!circleBlocked(e.x,ny,rad,waterOK)) e.y=ny;
 }
-function unstickEntity(e){
-  // if an entity is embedded in water or a solid, snap it to the nearest open tile
-  if(!circleBlocked(e.x,e.y,0.26)) return false;
+function unstickEntity(e, waterOK){
+  // if an entity is embedded in water or a solid, snap it to the nearest open tile.
+  // waterOK (a windsurfer) treats light shallows as valid footing, so the board is
+  // never yanked back to shore - without it, a surfer on the water reads as "stuck".
+  if(!circleBlocked(e.x,e.y,0.26,waterOK)) return false;
   for(let d=0;d<=8;d++) for(let oy=-d;oy<=d;oy++) for(let ox=-d;ox<=d;ox++){
     if(Math.max(Math.abs(ox),Math.abs(oy))!==d) continue;
     const tx=Math.round(e.x)+ox, ty=Math.round(e.y)+oy;
     if(!inb(tx,ty)) continue;
-    if(walkTile(tileAt(tx,ty)) && !circleBlocked(tx+0.5,ty+0.5,0.3)){
+    const tt=tileAt(tx,ty);
+    if((walkTile(tt) || (waterOK && tt===T.SHALLOW)) && !circleBlocked(tx+0.5,ty+0.5,0.3,waterOK)){
       e.x=tx+0.5; e.y=ty+0.5; return true;
     }
   }
@@ -771,8 +774,10 @@ document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv')
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
-  // safety net: never leave the player wedged between water and land
-  if(!G.interior && unstickEntity(P)){
+  // safety net: never leave the player wedged between water and land. A windsurfer
+  // (surf unlocked) counts light shallows as valid footing, so the board isn't
+  // snapped back to shore the instant it touches the water.
+  if(!G.interior && unstickEntity(P, P.unlocked&&P.unlocked.surf)){
     hintOnce('unstuck','Solid ground found its way back under your boots.');
   }
   if((G.interior || (typeof inDungeon==='function' && inDungeon())) && P.riding){
@@ -870,6 +875,15 @@ function updatePlayer(dt){
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){
     mx/=ml; my/=ml;
+    // a mounted rider can't take the water - stepping toward light water slips you
+    // off Kiko and onto your board, so the windsurf always works even while riding
+    if(P.riding && P.unlocked && P.unlocked.surf){
+      const ax=Math.floor(P.x+mx*0.5), ay=Math.floor(P.y+my*0.5);
+      if(inb(ax,ay) && tileAt(ax,ay)===T.SHALLOW){
+        P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn();
+        toast('Kiko won\'t take the water - you slip off and step onto your <b>windsurf</b>.',2600);
+      }
+    }
     const onWater=tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW;
     const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding;
     const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)
@@ -1328,6 +1342,7 @@ function updateWorld(dt){
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
+  if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
 }
 function isNight(){ return nightAmount()>0.55; }
