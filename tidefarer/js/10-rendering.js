@@ -1924,22 +1924,30 @@ function drawMarkers(){
 const MAPCOL={[T.DEEP]:'#2b5c8f',[T.SHALLOW]:'#4d8fc0',[T.SAND]:'#e2cf93',[T.GRASS]:'#6da34d',
   [T.FOREST]:'#527f3c',[T.RUIN]:'#8f8b83',[T.PATH]:'#b7965f',[T.SOIL]:'#7a5230',[T.PLANK]:'#9c6f42',
   [T.SNOW]:'#e9eef6',[T.ICE]:'#b7d6e8'};
-let mapBase=null;
+let mapBase=null, mapBaseWorld=null;
 // cloud worlds recolour the minimap: PURE WHITE cloud land on a clear soft SKY-BLUE
 // void (a sky, not a sea) - enough contrast that the island shape reads, so a window
 // zoomed into the cloud never looks blank.
 const CLOUDCOL={[T.DEEP]:'#5c9bd6',[T.SHALLOW]:'#93c0e8',[T.SNOW]:'#ffffff',[T.ICE]:'#cfe4f6',
   [T.RUIN]:'#d6dde6',[T.PATH]:'#eef4fb'};
 function buildMapBase(){
-  // buildMapBase runs DURING world gen, before switchWorld sets G.worldId - so detect
-  // a cloud world by its SEED (set before gen), which is reliable at this point.
+  // REUSE one persistent canvas instead of allocating a fresh one per world. iOS Safari
+  // caps total canvas memory; late in the game (many worlds cached) a NEW canvas here
+  // could silently fail, leaving mapBase stale/null - which showed as a dark/stale
+  // minimap on the Cloudreach. One reused, resized canvas can't exhaust that budget.
+  // Cloud worlds are detected by SEED (set before switchWorld assigns G.worldId).
   const CLOUD = Object.keys(WORLD_DEFS).some(k=>WORLD_DEFS[k].cloud && WORLD_DEFS[k].seed===SEED);
-  mapBase=makeCanvas(MAPW,MAPH,(g)=>{
+  try{
+    if(!mapBase) mapBase=document.createElement('canvas');
+    if(mapBase.width!==MAPW) mapBase.width=MAPW;
+    if(mapBase.height!==MAPH) mapBase.height=MAPH;
+    const g=mapBase.getContext('2d'); if(!g) return;
+    g.clearRect(0,0,MAPW,MAPH);
     for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
       const t=G.map[y*MAPW+x];
       g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t]; g.fillRect(x,y,1,1);
     }
-  });
+  }catch(e){/* keep the previous image rather than blanking */}
 }
 let miniT=0;
 function drawMinimap(){
@@ -1950,6 +1958,9 @@ function drawMinimap(){
     // OPAQUE base fill first, so the minimap is NEVER a blank/transparent box even if
     // the map image is missing for a frame (a dark parchment matches the HUD frame)
     g.fillStyle='#16110a'; g.fillRect(0,0,120,120);
+    // SELF-HEAL: if the map image is missing or was built for a different world (a
+    // failed/stale rebuild on entry - the Cloudreach bug), rebuild it for THIS world now
+    if(!mapBase || mapBaseWorld!==G.worldId || mapBase.width!==MAPW){ buildMapBase(); mapBaseWorld=G.worldId; }
     const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
     if(mapBase) g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
     // a grid pinned to world tiles - it scrolls as you move, so orientation and motion
