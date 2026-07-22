@@ -308,6 +308,25 @@ function enterHouse(b){
     else if(lbl.includes('inn')){ I.loreKey='inn@wind'; F('bed',I.w-1.9,4.5,1.0,0.7); }
     else if(b.kind==='resort'){ I.loreKey='resort@wind'; }
   }
+  // Rookhaven (Aerie Isle): a village that keeps the birds' hours
+  if(G.worldId==='aerie'){
+    if(lblL.includes('mews')) I.loreKey='mews@aerie';
+    else if(lblL.includes('inn')||lblL.includes('rest')) I.loreKey='innaerie@aerie';
+    else I.loreKey='roundhouse@aerie';
+  }
+  // Aldermere: the capital's named halls each read their own story instead of a
+  // far village's well-legend (the old house/house2 fallback).
+  if(G.worldId==='crown'){
+    if(lblL.includes('chart')) I.loreKey='charts@crown';
+    else if(lblL.includes('mint')) I.loreKey='mint@crown';
+    else if(lblL.includes('spice')) I.loreKey='spice@crown';
+    else if(lblL.includes('cloth')) I.loreKey='cloth@crown';
+    else if(lblL.includes('inn')) I.loreKey='inn@crown';
+    else if(lblL.includes('garrison')||lblL.includes('armory')) I.loreKey='garrison@crown';
+    else I.loreKey='highrow@crown';
+  }
+  // Greyharbor: Rook's archery range reads a fletcher's book, not a sailor's letters
+  if(G.worldId==='main' && lblL.includes('range')) I.loreKey='range@main';
   G.interior=I;
   P.click=null;
   P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;

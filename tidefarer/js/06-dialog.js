@@ -338,6 +338,14 @@ function shopButtons(npc,btns){
       toast('<b>Sable\'s drill:</b> deal <b>30 damage</b> to the range dummies - a bow if you have one, anything if you don\'t.',5000); Snd.quest();
     }});
   }
+  if(npc.id==='cade'){
+    btns.unshift({label:'Loose a rook to scout the isle (15g)', fn:()=>{
+      if(P.gold<15){ setDialog('“Fifteen gold - a working bird\'s got to eat, same as you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      P.gold-=15; Snd.coin(); refreshUI(); if(typeof scoutReveal==='function') scoutReveal();
+      setDialog('“Off she goes.” <i>A rook folds away over the ridge, and minutes later the whole isle lies clear in your mind\'s eye.</i> “Open your map - you\'ll find no corner of this rock still dark. The zones you\'ll still want to set foot in yourself; a bird won\'t read you a signpost.”',
+        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+    }});
+  }
   if(npc.id==='huk' && P.unlocked && P.unlocked.moa){
     btns.unshift({label:P.riding? 'Dismount Kiko':'Whistle for Kiko the Moa', fn:()=>{
       P.riding=P.riding?0:1; closeDialog();

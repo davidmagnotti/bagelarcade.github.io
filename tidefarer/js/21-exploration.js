@@ -15,6 +15,9 @@ function stampExplore(dt){
       if((x-px)*(x-px)+(y-py)*(y-py)<=r*r) g[y*MAPW+x]=1;
   checkDiscover();
 }
+// A falconer's rook maps the whole current isle: lift the fog everywhere, but
+// leave the named zones to be DISCOVERED on foot (you still earn those banners).
+function scoutReveal(){ explGrid().fill(1); }
 function checkDiscover(){
   P.disc=P.disc||{};
   for(const k in ZONES){
