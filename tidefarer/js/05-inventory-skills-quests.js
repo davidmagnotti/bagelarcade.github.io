@@ -24,6 +24,7 @@ function addXP(skill,amt){
     banner(SKILLS[skill].name.toUpperCase()+' - LEVEL '+sk.lvl, SKILLS[skill].perk);
     P.cheerT=3;
   }
+  if(typeof checkPerkMilestone==='function') checkPerkMilestone(skill);
   refreshSkillsPanel();
 }
 function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }

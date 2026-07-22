@@ -392,12 +392,15 @@ function tryAttack(useMouse){
     P.atkCd=0.42; P.swing=0.3; Snd.hit();
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
+    // Cleaver perk (melee L5): the finisher sweeps a wide, deep arc instead of a lunge
+    const cleave = finisher && P.perks && P.perks.cleaver;
     let hitAny=false;
     for(const m of G.mobs){
       if(m.dead) continue;
       const dx=m.x-P.x, dy=m.y-P.y, d=Math.hypot(dx,dy);
-      const reach = finisher? 2.1 : 1.65; // the finisher lunges
-      if(d<reach && (dx*aim.x+dy*aim.y)/Math.max(d,0.01) > 0.15){
+      const reach = finisher? (cleave?2.7:2.1) : 1.65; // the finisher lunges; cleaver reaches further
+      const arc = cleave? -0.15 : 0.15;                // cleaver widens the arc past 90 degrees
+      if(d<reach && (dx*aim.x+dy*aim.y)/Math.max(d,0.01) > arc){
         damageMob(m, dmgBase, aim, 'melee'); hitAny=true;
       }
     }
@@ -416,15 +419,21 @@ function tryAttack(useMouse){
       }
     } else { P.combo=0; }
   } else if(P.weapon==='bow'){
-    P.atkCd=0.62; P.swing=0.2; Snd.bow();
+    // Quickdraw perk (archery L5): markedly faster nocking
+    P.atkCd=(P.perks&&P.perks.quickdraw)?0.43:0.62; P.swing=0.2; Snd.bow();
     G.projs.push({kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'});
   } else if(P.weapon==='staff'){
     if(P.mp<8){ toast('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
     if(P.spell==='snare' && P.spells && P.spells.snare)
       G.projs.push({kind:'snarebolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:Math.max(4,Math.round(magicDmg()*0.4)),from:'player',skill:'magic',aoe:1.2,snare:2.5});
-    else
-      G.projs.push({kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:1.2});
+    else{
+      // Emberburst perk (magic L5): bigger splash. Frostbolt perk: the bolt slows.
+      const eb=P.perks&&P.perks.emberburst, fb=P.perks&&P.perks.frostbolt;
+      const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
+      if(fb) bolt.snare=2.0;
+      G.projs.push(bolt);
+    }
     refreshUI();
   }
 }
@@ -478,7 +487,11 @@ function damageMob(m,dmg,knock,skill){
       toast('Old bones splinter - <b style="color:#ffd76a">arrows deal heavy bonus damage to skeletons!</b>',5000); }
   }
   let crit=false;
-  if(Math.random()<0.12){ dmg=Math.round(dmg*1.6); crit=true; }
+  // Deadeye perk (archery L5): sharply higher crit chance with the bow
+  const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0);
+  if(Math.random()<critCh){ dmg=Math.round(dmg*1.6); crit=true; }
+  // Executioner perk (melee L5): heavy bonus versus badly-wounded foes
+  if(skill==='melee' && P.perks && P.perks.executioner && m.maxhp && m.hp/m.maxhp < 0.30) dmg=Math.round(dmg*1.5);
   const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
   dmg=Math.max(1,Math.round(dmg*Math.max(0.5,1-0.07*lvdiff))); // high-level foes shrug (softened - the old 0.35/0.09 floor turned late bosses into 25-hit slogs)
   // big setpiece fights (any 300+ HP boss) yield to a determined blade - a targeted

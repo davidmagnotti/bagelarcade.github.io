@@ -3148,8 +3148,16 @@ function switchWorld(id){
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
     if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
   }
-  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1; }   // dungeon instructions removed - figure it out
-  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1; }
+  // Dungeons keep their mystery, but a single atmospheric hint on first entry
+  // points the way without solving anything - a compass, not a walkthrough.
+  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
+    setTimeout(()=>toast('<i>Three frost-locks bar the deep gate.</i> Somewhere in the pillar-warren stand three levers - throw them all, and the way opens.',7000),1400); }
+  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
+    setTimeout(()=>toast('<i>Three sealed firegates lie ahead.</i> The old wards yield in turn: tread every warm plate, drain the lava channel, then wake the runes in their carved order.',7500),1400); }
+  if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1;
+    setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
+  if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
+    setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.
