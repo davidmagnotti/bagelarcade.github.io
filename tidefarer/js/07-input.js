@@ -84,6 +84,7 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='emberlever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullEmberLever(b)});
     else if(b.kind==='emberbutton') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pressEmberButton(b)});
     else if(b.kind==='staffgate' && !b.open) cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>dispelStaffGate(b)});
+    else if(b.kind==='tombmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=> b.up? exitReachDeep() : enterReachDeep()});
     else if(b.kind==='dragonrest') cand.push({type:'inter',x:b.x,y:b.y,r:1.8,range:2.6,go:()=>{ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }});
     else if(b.kind==='crypt') cand.push({type:'inter',x:b.x,y:b.y+1,r:1.4,range:2.1,go:()=>readLore('crypt')});
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});

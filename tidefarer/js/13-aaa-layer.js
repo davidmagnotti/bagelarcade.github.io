@@ -131,13 +131,17 @@ const WX={
       if(this.target>0){ this.target=0; this.timer=rnd(70,130); }
       else { this.target=rnd(0.55,1); this.timer=rnd(20,40); }
     }
-    this.rain += (this.target-this.rain)*Math.min(1,dt*0.4);
+    // Stormreach is locked in a permanent tempest - always raining, always thundering
+    const STORM = (G.worldId==='reach');
+    if(STORM) this.target=1;
+    this.rain += (this.target-this.rain)*Math.min(1,dt*(STORM?0.7:0.4));
     if(this.rain<0.02&&this.target===0) this.rain=0;
     const want=Math.round(this.rain*130);
     while(this.drops.length<want) this.drops.push({x:Math.random()*(VW+120)-60,y:Math.random()*VH,spd:rnd(620,900),len:rnd(9,16)});
     if(this.drops.length>want) this.drops.length=want;
+    const windDrift = (G.worldId==='reach') ? 0.5 : 0.18;   // Stormreach rain drives sideways
     for(const d of this.drops){
-      d.y+=d.spd*dt; d.x+=d.spd*0.18*dt;
+      d.y+=d.spd*dt; d.x+=d.spd*windDrift*dt;
       if(d.y>VH){ d.y=-20-Math.random()*40; d.x=Math.random()*(VW+120)-60;
         if(Math.random()<0.4&&G.state==='play')
           G.parts.push({x:P.x+rnd(-7,7),y:P.y+rnd(-5,5),vx:0,vy:0,life:0.22,color:'rgba(205,228,255,0.55)',size:2});

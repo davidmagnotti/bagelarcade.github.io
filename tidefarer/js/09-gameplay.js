@@ -159,6 +159,8 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'emberbutton',o:b,label:b.set?'Rune (lit)':'Press rune'}; } }
     if(b.kind==='staffgate' && !b.open){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.0 && d<bd){ bd=d; best={type:'staffgate',o:b,label:(P.unlocked&&P.unlocked.staff)?'Break the ward':'Arcane ward'}; } }
+    if(b.kind==='tombmouth'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.3 && d<bd){ bd=d; best={type:'tomb',o:b,label:b.up?'Climb out':'Enter the catacomb'}; } }
     if(b.kind==='dragonrest'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<3.0 && d<bd){ bd=d; best={type:'dragonrest',o:b,label:'Speak'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -218,6 +220,7 @@ function doInteract(){
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
   if(it.type==='staffgate'){ facePoint(it.o.x,it.o.y); dispelStaffGate(it.o); return; }
+  if(it.type==='tomb'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitReachDeep(); else enterReachDeep(); return; }
   if(it.type==='dragonrest'){ facePoint(it.o.x,it.o.y); if(typeof dragonLairSpeak==='function') dragonLairSpeak(); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
   if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
@@ -618,6 +621,11 @@ function killMob(m,skill){
     setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
+  // The Drowned Warden keeps the Stormreach catacomb
+  if(m.tombboss){
+    P.story=P.story||{}; P.story.tombBossDown=1;
+    if(typeof autoSave==='function') autoSave();
+  }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
   if(m.reachboss){
     P.story=P.story||{}; P.story.reachBossDown=1;
@@ -932,11 +940,6 @@ function updatePlayer(dt){
 
 function updateNPCs(dt){
   const night=isNight();
-  if(!night) G.nightToasted=false;
-  else if(!G.nightToasted && !G.interior){
-    G.nightToasted=true;
-    toast('Lamps flicker on as the villagers head indoors for the night. The <b>inn</b> keeps its door open.',5200);
-  }
   for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
@@ -1260,7 +1263,7 @@ function updateWorld(dt){
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
   // Aldermere is a walled, patrolled city and stays safe after dark.
-  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && !P.dead && !inSafeZone(P.x,P.y)){
+  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
