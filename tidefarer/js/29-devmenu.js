@@ -133,6 +133,7 @@ const SECTIONS=[
   ['Teleport dungeon', [
     ['Emberdeep',()=>tp('eastdeep')], ['Underclimb',()=>tp('aeriedeep')],
     ['Rimefissure (frozen)',()=>tp('frostdeep')], ['Glacier Vault',()=>tp('frostvault')],
+    ['Drowned Catacomb',()=>tp('reachdeep')],
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],

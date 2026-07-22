@@ -76,10 +76,16 @@ const SKY_ZONES = { // THE CLOUDREACH - a rock adrift in the cloud-sea; Ashwing 
   leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[9,10]}   // parachute jump-off point -> Windsurf
 };
 const REACH_ZONES = { // STORMREACH - a storm-coast sea stop between Windsurf and the Frozen Isle
-  strand: {x:60, y:98, r:8,  name:'Wreckstrand',        lv:[11,12]}, // the ferry lands here
-  camp:   {x:58, y:64, r:11, name:'The Castaway Camp',  lv:[11,12]},
-  barrow: {x:62, y:30, r:13, name:"The Brute's Barrow", lv:[12,13]}, // the island monster
-  dock:   {x:98, y:82, r:6,  name:'Stormreach Dock',    lv:[0,0]}    // the ferry berth (always open)
+  strand: {x:60, y:98, r:8,  name:'Wreckstrand',         lv:[11,12]}, // the ferry lands here
+  camp:   {x:58, y:64, r:11, name:'The Castaway Camp',   lv:[11,12]},
+  graves: {x:34, y:74, r:8,  name:'The Drowned Graveyard',lv:[12,13]},// tomb-mouth into the catacomb
+  barrow: {x:62, y:30, r:13, name:"The Brute's Barrow",  lv:[12,13]}, // the island monster
+  dock:   {x:98, y:82, r:6,  name:'Stormreach Dock',     lv:[0,0]}    // the ferry berth (always open)
+};
+const REACHDEEP_ZONES = { // THE DROWNED CATACOMB - beneath the Stormreach graveyard
+  entry:  {x:40, y:82, r:7,  name:'The Sunken Stair',  lv:[12,13]},
+  ossuary:{x:40, y:52, r:12, name:'The Ossuary',       lv:[12,14]}, // three bone-locks bar the deep
+  heart:  {x:40, y:18, r:12, name:'The Drowned Vault', lv:[13,14]}  // the warden + the hoard
 };
 const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount Kea
   entry:   {x:40, y:84, r:8,  name:'The Emberthroat',     lv:[6,8]},
@@ -139,7 +145,10 @@ const WORLD_DEFS = {
     gen:()=>genSkyAll() },
   reach:{ W:120, H:120, seed:60947, zones:REACH_ZONES,
     spawn:{x:60.5,y:98.5}, title:'STORMREACH', sub:'A STORM-COAST OF BROKEN KEELS - AND THE BRUTE THAT MADE THEM',
-    gen:()=>genReachAll() }
+    gen:()=>genReachAll() },
+  reachdeep:{ W:80, H:96, seed:48311, zones:REACHDEEP_ZONES, dungeon:1, dark:0.42,
+    spawn:{x:40.5,y:86.5}, title:'THE DROWNED CATACOMB', sub:'BENEATH THE STORMREACH GRAVES - BONE, BRINE, AND OLD LOCKS',
+    gen:()=>genReachDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -2031,8 +2040,19 @@ function placeObjectsReach(){
   // the Brute's Barrow: a ring of raised stones round the monster's ground
   for(let i=0;i<6;i++){ const a=i/6*TAU, px=Math.round(Z.barrow.x+Math.cos(a)*5), py=Math.round(Z.barrow.y+Math.sin(a)*5);
     if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:i%2===0, loreKey:'stormreach'}); setSolid(px,py,1); } }
-  // a wrecked hull half-buried on the strand (old bones of a ship the reefs took)
-  G.decor.push({kind:'crypt', x:Z.strand.x-4+0.5, y:Z.strand.y+2+0.5});
+  // THE DROWNED GRAVEYARD: a field of leaning headstones round a sunken tomb - the
+  // mouth of the catacomb below. (Replaces the old lone crypt on the strand.)
+  { const GV=Z.graves;
+    const gr=mulberry32(SEED+31);
+    for(let i=0;i<16;i++){ const a=gr()*TAU, rr=2+gr()*(GV.r-1);
+      const gx=Math.round(GV.x+Math.cos(a)*rr), gy=Math.round(GV.y+Math.sin(a)*rr*0.85);
+      if(inb(gx,gy) && !solidAt(gx,gy) && dist(gx,gy,GV.x,GV.y)>1.4){ G.decor.push({kind:'grave', x:gx+0.5, y:gy+0.5, s:(gx*5+gy)%3}); setSolid(gx,gy,1); } }
+    G.decor.push({kind:'tombmouth', x:GV.x+0.5, y:GV.y+0.5, name:'THE DROWNED CATACOMB', labelY:-46});
+    addBuilding('lamp', GV.x-3, GV.y+2, ''); addBuilding('lamp', GV.x+3, GV.y+2, '');
+    // a low rusted fence-gate framing the graveyard path
+    G.decor.push({kind:'pillar', x:GV.x-2+0.5, y:GV.y+4+0.5, broken:true, loreKey:'stormreach'});
+    G.decor.push({kind:'pillar', x:GV.x+2+0.5, y:GV.y+4+0.5, broken:true, loreKey:'stormreach'}); }
+  carveLine(Z.camp.x,Z.camp.y, Z.graves.x,Z.graves.y, T.PATH,0);
   // the ferry berth: Stormreach is a sea stop, so a hull always rides here
   addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
   addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, '');
@@ -2070,6 +2090,64 @@ function spawnMobsReach(){
     if(sp) spawnMob('raider', sp[0], sp[1]); }
 }
 function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
+// ---------- THE DROWNED CATACOMB (reachdeep) - a modest bone-lock dungeon ----------
+function genReachDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(30,76,50,90);   // R1 THE SUNKEN STAIR - entry landing
+  carve(38,60,42,78);   // corridor A
+  carve(26,40,54,62,T.RUIN);   // R2 THE OSSUARY - three bone-locks
+  carve(38,34,42,42);   // corridor B (the sealed gate at y37)
+  for(let x=38;x<=42;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }   // BONE GATE - solid until all three locks
+  carve(28,6,52,34);    // R3 THE DROWNED VAULT - warden + hoard
+}
+function placeObjectsReachDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'tombmouth', x:40.5, y:88.5, up:1, label:'the way up'});   // back to the graveyard
+  setSolid(40,88,0); setTile(40,88,T.RUIN);
+  for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
+  // R2: three bone-locks, all must be thrown to raise the Bone Gate (reuses the ward mechanic)
+  const GATE=[[38,37],[39,37],[40,37],[41,37],[42,37]];
+  for(const [lx,ly] of [[29,44],[51,44],[40,58]])
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'tomb', gateTiles:GATE, label:'a bone-lock',
+      openBanner:'THE BONE-LOCKS YIELD', openSub:'THE BONE GATE GRINDS OPEN',
+      openMsg:'The last bone-lock drops with a wet crack and the Bone Gate hauls up, weeping brine. The Drowned Vault lies open to the north.'});
+  for(const [gx,gy] of [[34,48],[46,48],[30,56],[50,56]]) grave(gx,gy);
+  // R3: the warden's hoard
+  G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
+  G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
+  for(const [gx,gy] of [[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
+  G.critters=[];
+  if(P.story && P.story.tombDone){ for(const [x,y] of GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='tomb') d.on=true; } }
+}
+function spawnMobsReachDeep(){
+  const Z=REACHDEEP_ZONES;
+  // the Drowned Warden guards the vault; skeletons haunt the ossuary
+  if(!(P.story && P.story.tombBossDown)){
+    const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
+    const w=spawnMob('gravelord', sp[0], sp[1]);
+    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED WARDEN'; w.subtitle='KEEPER OF THE CATACOMB'; w.tombboss=1;
+      w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; }
+  }
+  for(const z of [Z.ossuary, Z.heart]) for(let i=0;i<2;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
+    const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
+    if(sp) spawnMob('skeleton', sp[0], sp[1]); }
+}
+function genReachDeepAll(){ genReachDeep(); placeObjectsReachDeep(); spawnMobsReachDeep(); buildMapBase(); }
+function enterReachDeep(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._tombReturn={x:P.x, y:P.y+1.3}; P.click=null;
+  setTimeout(()=>{ switchWorld('reachdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitReachDeep(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.click=null;
+  setTimeout(()=>{ switchWorld('reach');
+    const r=P._tombReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
 // ---------- transitions ----------
 function flyToCloudreach(){
   P.story=P.story||{}; P.story.skyKnown=1;

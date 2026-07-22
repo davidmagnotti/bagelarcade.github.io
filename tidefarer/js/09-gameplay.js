@@ -159,6 +159,8 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'emberbutton',o:b,label:b.set?'Rune (lit)':'Press rune'}; } }
     if(b.kind==='staffgate' && !b.open){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.0 && d<bd){ bd=d; best={type:'staffgate',o:b,label:(P.unlocked&&P.unlocked.staff)?'Break the ward':'Arcane ward'}; } }
+    if(b.kind==='tombmouth'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.3 && d<bd){ bd=d; best={type:'tomb',o:b,label:b.up?'Climb out':'Enter the catacomb'}; } }
     if(b.kind==='dragonrest'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<3.0 && d<bd){ bd=d; best={type:'dragonrest',o:b,label:'Speak'}; } }
     if(b.kind==='boat'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -218,6 +220,7 @@ function doInteract(){
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
   if(it.type==='staffgate'){ facePoint(it.o.x,it.o.y); dispelStaffGate(it.o); return; }
+  if(it.type==='tomb'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitReachDeep(); else enterReachDeep(); return; }
   if(it.type==='dragonrest'){ facePoint(it.o.x,it.o.y); if(typeof dragonLairSpeak==='function') dragonLairSpeak(); return; }
   if(it.type==='warp'){ facePoint(it.o.x,it.o.y); warpTo(it.o); return; }
   if(it.type==='aeriedeep'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitAerieDungeon(); else enterAerieDungeon(); return; }
@@ -598,6 +601,11 @@ function killMob(m,skill){
   if(m.skyboss){
     P.story=P.story||{}; P.story.rocDown=1; P.story.parachute=1;
     setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
+    if(typeof autoSave==='function') autoSave();
+  }
+  // The Drowned Warden keeps the Stormreach catacomb
+  if(m.tombboss){
+    P.story=P.story||{}; P.story.tombBossDown=1;
     if(typeof autoSave==='function') autoSave();
   }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe

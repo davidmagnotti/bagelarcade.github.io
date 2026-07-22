@@ -151,7 +151,7 @@ function loadCode(str){
   // restored here - so a save made inside one stayed on the isle and applied the
   // dungeon's coordinates, dropping the hero in open water. Reload to the parent
   // isle's landing instead; the dungeon can simply be re-entered.
-  const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie'};
+  const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie', reachdeep:'reach'};
   let dungeonReload=false;
   if(DUNGEON_PARENT[d.world]){
     const par=DUNGEON_PARENT[d.world];

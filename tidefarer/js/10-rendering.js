@@ -55,7 +55,7 @@ function buildGroundCache(){
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
-  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1};
+  cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -834,6 +834,39 @@ function drawDecor(b,s){
       g.fillStyle='#3a2c20'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(ox-16,oy+yy,32,3.5); }
       g.fillStyle='#5a4436'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(ox+i*11,oy-38); g.lineTo(ox+i*11-4,oy-32); g.lineTo(ox+i*11+4,oy-32); g.closePath(); g.fill(); }
     }
+    g.restore(); return;
+  }
+  if(b.kind==='grave'){
+    // a leaning weathered headstone
+    const g=cx; drawShadowAt(g,s.x,s.y,9); g.save(); g.translate(s.x,s.y);
+    const lean=(b.s-1)*0.12;
+    g.rotate(lean);
+    g.fillStyle='#8b8f92'; g.strokeStyle='#5a5e60'; g.lineWidth=1;
+    if(b.s===0){ // rounded headstone
+      g.beginPath(); g.moveTo(-6,2); g.lineTo(-6,-10); g.quadraticCurveTo(0,-18,6,-10); g.lineTo(6,2); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle='rgba(40,44,46,0.5)'; g.beginPath(); g.moveTo(-3,-6); g.lineTo(3,-6); g.moveTo(-3,-3); g.lineTo(3,-3); g.stroke();
+    } else if(b.s===1){ // cross
+      g.fillRect(-2,-16,4,18); g.fillRect(-7,-11,14,4); g.strokeRect(-2,-16,4,18);
+    } else { // flat slab
+      g.beginPath(); g.moveTo(-6,2); g.lineTo(-5,-9); g.lineTo(5,-9); g.lineTo(6,2); g.closePath(); g.fill(); g.stroke();
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='tombmouth'){
+    // a sunken stone tomb - the mouth of the catacomb (a dark arched doorway)
+    const g=cx; drawShadowAt(g,s.x,s.y,30); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#6b6f72'; g.beginPath(); g.moveTo(-22,4); g.lineTo(-18,-20); g.lineTo(18,-20); g.lineTo(22,4); g.closePath(); g.fill();
+    g.fillStyle='#565a5d'; g.beginPath(); g.moveTo(-18,-20); g.lineTo(0,-30); g.lineTo(18,-20); g.closePath(); g.fill();  // pediment
+    g.strokeStyle='#3c4042'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-18,-20); g.lineTo(0,-30); g.lineTo(18,-20); g.stroke();
+    // the dark doorway
+    const gl=0.3+0.2*Math.sin(G.time*1.6+b.x);
+    g.fillStyle='rgba(80,120,150,'+(0.12+0.08*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-6,12,14,0,0,TAU); g.fill();
+    g.fillStyle='#141a1e'; g.beginPath(); g.moveTo(-8,4); g.lineTo(-8,-10); g.quadraticCurveTo(0,-18,8,-10); g.lineTo(8,4); g.closePath(); g.fill();
+    g.strokeStyle='#2a2e30'; g.lineWidth=1.6; g.stroke();
+    // a carved skull keystone
+    g.fillStyle='#c9cdd0'; g.beginPath(); g.arc(0,-19,2.6,0,TAU); g.fill();
+    g.fillStyle='#3c4042'; g.beginPath(); g.arc(-1,-19.5,0.7,0,TAU); g.arc(1,-19.5,0.7,0,TAU); g.fill();
+    if(Math.random()<0.08) G.parts.push({x:b.x,y:b.y-0.3,vx:rnd(-0.1,0.1),vy:-rnd(0.2,0.6),life:rnd(0.6,1.2),color:'rgba(150,180,200,0.5)',size:rnd(1,2),grav:-0.02});
     g.restore(); return;
   }
   if(b.kind==='leappoint'){
