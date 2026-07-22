@@ -1802,8 +1802,8 @@ function drawMob(m,s){
   }
 }
 // The mount publishes its vertical bob + gait phase here each frame, so the
-// rider drawn on top can ride the bounce instead of floating at a fixed height,
-// and the dangling legs can swing with the stride.
+// rider drawn on top can ride the bounce instead of floating at a fixed height.
+// The dangling legs hang plumb and just bounce with this bob - they don't swing.
 let MOUNT_BOB=0, MOUNT_PH=0, MOUNT_RUN=false;
 function drawMoa(s){
   // Kiko is a MOA - a giant flightless ratite, tall as a door: heavy runner's
@@ -2002,7 +2002,7 @@ function drawPlayerFigure(s){
   look.armor=P.armor||0;
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32,
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
-    ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, so the seated legs swing with the stride
+    ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, published for the mount; seated legs hang plumb
     wtier: tool==='sword'? (P.swordTier||0) : 1});
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){

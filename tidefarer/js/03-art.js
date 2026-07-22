@@ -794,45 +794,45 @@ function drawHumanoid(g,sx,sy,o){
     }
   };
   if(o.ride && !o.robe){
-    // SEATED ASTRIDE, seen from the ¾ iso camera. The rider straddles the mount:
-    // both legs hang DOWN the flanks (only a slight outward knee), close-ish but
-    // clearly two, with the near leg a touch lower and lit and the far leg lifted
-    // and in shadow for depth. Legs kept short so they don't dangle past the mount.
-    // (An earlier pass splayed them wide and bright, which read as a frog-sit.)
-    // Each leg swings from the hip with the mount's stride - the two legs run on
-    // OPPOSITE phase so they jostle alternately, which is what brings the far leg
-    // to life; without it that one reads as frozen.
-    const rp=o.ridePh||0, rideRun=!!o.rideRun;
-    const seatLeg=(back)=>{
-      const sd = back ? -flip : flip;                 // near/far to opposite screen sides
-      const sw = rideRun ? Math.sin(rp + (back? Math.PI : 0)) : 0;   // gait swing, opposite per leg
-      const hipY = -6.5 + B*0.4 + (back ? -1.6 : 1.0);
-      const hipX = sd*2.3;
-      const kneeX = sd*3.8 + flip*sw*0.9, kneeY = hipY + 4.8;        // knee only slightly out over the saddle
-      const bootX = sd*4.4 + flip*sw*2.2, bootY = kneeY + (back ? 7.2 : 8.0) - Math.abs(sw)*0.6;  // shin swings & lifts a hair
-      const pcol = back ? shade(pants,-12) : shade(pants,10);  // far a touch shaded, near catches light
-      const bcol = back ? shade(bootD,-10) : bootD;
+    // SEATED ASTRIDE, seen from the ¾ iso camera. The rider straddles the mount
+    // and the whole figure is already translated by the mount's bob, so the legs
+    // BOUNCE with the gait for free. They must NOT swing left-right, though - a
+    // straddled rider's legs hang plumb down the flanks; paddling them side to
+    // side read as wrong. Side-on you only truly see the NEAR leg in full; the
+    // far leg is on the other side of the barrel and hidden by the body, so all
+    // that shows of it is a touch of the boot sole peeking out beneath the belly.
+    const seatLeg=(sd,lit)=>{                          // one full leg hanging down a flank
+      const hipX = sd*2.3, hipY = -6.5 + (lit ? 1.0 : -1.6);
+      const kneeX = sd*3.8, kneeY = hipY + 4.8;        // knee only slightly out over the saddle
+      const bootX = sd*4.4, bootY = kneeY + (lit ? 8.0 : 7.2);
+      const pcol = lit ? shade(pants,10) : shade(pants,-12);   // far a touch shaded, near catches light
+      const bcol = lit ? bootD : shade(bootD,-10);
       // thigh: hip -> knee
       g.lineCap='round';
       g.strokeStyle=OUT; g.lineWidth=6.0;
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
       g.strokeStyle=pcol; g.lineWidth=4.0;
       g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
-      // shin: knee -> boot, hanging down the flank
+      // shin: knee -> boot, hanging straight down the flank
       g.strokeStyle=OUT; g.lineWidth=5.0;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
       g.strokeStyle=pcol; g.lineWidth=3.3;
       g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(bootX,bootY); g.stroke();
-      if(!back){ // a faint seam down the near shin so it reads in front of the far one
+      if(lit){ // a faint seam down the near shin so it reads in front
         g.strokeStyle=shade(pants,22); g.lineWidth=1.0;
         g.beginPath(); g.moveTo(kneeX-sd*0.8,kneeY+1); g.lineTo(bootX-sd*0.8,bootY-1.5); g.stroke();
       }
       g.lineCap='butt';
-      // boot at the foot of the hanging leg
       g.save(); g.translate(bootX,bootY); g.scale(0.9,0.9); drawBoot(bcol); g.restore();
     };
-    seatLeg(true);    // far leg first, behind
-    seatLeg(false);   // near leg over the top
+    const farSole=(sd)=>{ // just the underside of the hidden far boot, tucked under the barrel
+      g.save(); g.translate(sd*2.2, 5.6); g.scale(0.8,0.5); drawBoot(shade(bootD,-14)); g.restore();
+    };
+    if(away){                       // rear view: you see one leg down each flank
+      seatLeg(-flip,false); seatLeg(flip,true);
+    } else {                        // ¾ / profile: near leg in full, a peek of the far sole
+      farSole(-flip); seatLeg(flip,true);
+    }
   } else if(!o.robe){
     for(const L of [[-4.1,1],[4.1,-1]]){
       const lx=L[0], sg=L[1];
