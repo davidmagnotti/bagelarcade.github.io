@@ -1259,14 +1259,22 @@ function genWindAll(){
   spawnWindFolk(); spawnMobsWind();
   buildMapBase();
 }
-/* Ashwing's wing is the only road to Windsurf until the straits are cleared. */
+/* A short, SELF-EXPIRING lock so a double-tap can't launch two flights, but a flight
+   that never completes (a throw, a stale build) can never permanently wedge the next
+   one. Returns true if the caller may proceed. */
+function flightLockOK(){
+  const now=(typeof performance!=='undefined'&&performance.now)?performance.now():(G.time*1000||0);
+  if(G._flyUntil && now < G._flyUntil) return false;
+  G._flyUntil = now + 1800; G._flying=1; return true;
+}
+/* Ashwing's wing carries you between the isles and up into the cloud-sea. */
 function flyToWorld(id, msg){
-  if(G._flying) return; G._flying=1;
+  if(!flightLockOK()) return;
   closeDialog(); if(G.interior) exitHouse();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   if(msg) toast(msg,4200);
   if(Snd.boss) Snd.boss();
-  setTimeout(()=>{ try{ switchWorld(id); autoSave(); } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },220); } },900);
+  setTimeout(()=>{ try{ switchWorld(id); autoSave(); } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },220); } },900);
 }
 function askDragonFlight(){
   P.prog.windKnown=1; P.story=P.story||{}; P.story.skyKnown=1;
@@ -2162,13 +2170,13 @@ function useLeapPoint(){
     toast('The stone shelf juts out over a drop of pure cloud - no bottom, only the far grey shine of the sea. You would need <b>a sail to fall by</b>. They say the <b>Storm Roc</b> keeps one.',5200);
     Snd.step&&Snd.step(5); return;
   }
-  if(G._flying) return; G._flying=1; closeDialog();
+  if(!flightLockOK()) return; closeDialog();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
   if(Snd.boss) Snd.boss();
   setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
       banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
-    } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; },260); } }, 1100);
+    } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1100);
 }
 
 /* =====================================================================
@@ -3133,7 +3141,7 @@ function snapshotWorld(){
 }
 function switchWorld(id){
   const prevWorld=G.worldId;
-  G._flying=0;   // arriving anywhere clears the in-flight lock, so a throw mid-flight can never strand the dragon/parachute
+  G._flying=0; G._flyUntil=0;   // arriving anywhere clears the in-flight lock, so a throw mid-flight can never strand the dragon/parachute
   snapshotWorld();
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];
