@@ -95,9 +95,9 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
   rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
-  entry: {x:40, y:82, r:8,  name:'The Millstair',         lv:[0,0]},
-  works: {x:40, y:54, r:14, name:'The Grinding Floor',    lv:[0,0]}, // the three gear-locks
-  vault: {x:40, y:22, r:11, name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's sealed stormsail
+  entry: {x:19, y:43, r:6,  name:'The Millstair',         lv:[0,0]},
+  works: {x:19, y:26, r:10, name:'The Grinding Floor',    lv:[0,0]}, // the three gear-locks
+  vault: {x:19, y:8,  r:7,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's sealed stormsail
 };
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
@@ -154,8 +154,8 @@ const WORLD_DEFS = {
   reachdeep:{ W:80, H:96, seed:48311, zones:REACHDEEP_ZONES, dungeon:1, dark:0.42,
     spawn:{x:40.5,y:86.5}, title:'THE DROWNED CATACOMB', sub:'BENEATH THE STORMREACH GRAVES - BONE, BRINE, AND OLD LOCKS',
     gen:()=>genReachDeepAll() },
-  milldeep:{ W:80, H:96, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
-    spawn:{x:40.5,y:88.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
+  milldeep:{ W:40, H:52, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
+    spawn:{x:19.5,y:46.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
     gen:()=>genMillDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -1816,7 +1816,7 @@ function exitFrostDungeon(){
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 function pullIceLever(b){
-  if(b.gateTiles) return pullVaultLever(b);   // Glacier Vault levers open their own gates
+  if(b.gateTiles || b.wardGroup || b.gate) return pullVaultLever(b);   // Glacier Vault + Undermill levers open their own gates
   if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
   b.on=true; if(Snd.quest) Snd.quest();
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,0); }   // grind the gate open
@@ -1924,6 +1924,9 @@ function pullVaultLever(b){
     const done=grp.filter(d=>d.on).length;
     if(grp.every(d=>d.on)){
       for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
+      // a linked portcullis gate (the Undermill's millstone gate) raises into the ceiling
+      if(b.gate){ const cg=G.decor.find(d=>d.kind==='catgate' && d.gate===b.gate);
+        if(cg && !cg.open){ cg.open=true; for(const [gx,gy] of (cg.tiles||[])){ setSolid(gx,gy,0); setTile(gx,gy,T.RUIN); } } }
       invalidateScenery&&invalidateScenery();
       if(b.doneFlag){ P.story=P.story||{}; P.story[b.doneFlag]=1; autoSave&&autoSave(); }
       banner(b.openBanner||'THE FROST-LOCKS YIELD', b.openSub||'THE SEALED GATE GRINDS OPEN');
@@ -1963,38 +1966,56 @@ function exitFrostVault(){
    and carry the sail back to earn the windsurf. No boss - pure puzzle.
    Reuses the icelever ward-lock (pullVaultLever) and the RUIN carve.
    ===================================================================== */
+let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
+const MILL_GATE = [[17,15],[18,15],[19,15],[20,15],[21,15]];   // the millstone-gate corridor tiles
 function genMillDeep(){
-  // the whole undercroft begins as solid stone; carve the chambers out of it
+  // a compact undercroft: three small stone chambers cut out of solid rock. Every
+  // solid tile bordering the carved floor is recorded as a WALL (ewall decor) so the
+  // rooms read clearly - no invisible collision. Kept small on purpose.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(30,76,50,90);   // THE MILLSTAIR - entry landing (the way up sits here)
-  carve(38,69,42,77);   // corridor A -> the grinding floor
-  carve(28,42,52,70);   // THE GRINDING FLOOR - the three gear-lock puzzle chamber
-  carve(38,34,42,43);   // corridor B -> the vault
-  for(let x=38;x<=42;x++){ setTile(x,36,T.RUIN); setSolid(x,36,1); }  // THE MILLSTONE GATE - solid until all three gear-locks are thrown
-  carve(28,14,52,34);   // THE SAILWRIGHT'S VAULT - the reward chamber
+  carve(11,38,27,48);   // THE MILLSTAIR - entry landing (the way up sits here)
+  carve(17,33,21,39);   // corridor A -> the grinding floor
+  carve(9,18,29,34);    // THE GRINDING FLOOR - the three gear-lock chamber
+  carve(17,12,21,19);   // corridor B -> the vault (the millstone gate sits at y=15)
+  carve(11,3,27,13);    // THE SAILWRIGHT'S VAULT - the reward chamber
+  // record the visible wall faces (stone bordering the carved floor) BEFORE the gate
+  // goes solid, so the raised gate never leaves a phantom wall behind
+  MILL_WALLS=[];
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y)) continue;
+    let border=false;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])
+      if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
+    if(border) MILL_WALLS.push([x,y]);
+  }
+  // the millstone gate starts as solid stone across corridor B (rendered by the catgate)
+  for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsMillDeep(){
   G.decor=G.decor||[];
-  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:40.5, y:88.5, label:'the way up'});  // back to the surface
-  setSolid(40,88,0); setTile(40,88,T.RUIN);
-  for(const [tx,ty] of [[32,78],[48,78],[30,44],[50,44],[30,66],[50,66],[30,16],[50,16],[40,15]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE GRINDING FLOOR: three gear-lock levers set among old millstone pillars.
-  // Throw all three (in any order) to re-engage the gear-train and grind the
-  // millstone gate up into the ceiling. Weave the pillar-maze to reach each.
-  const GATE=[[38,36],[39,36],[40,36],[41,36],[42,36]];
-  const pillar=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,1); } };  // a stub millstone pillar (reads as the stone walls)
-  for(const [px,py] of [[34,60],[46,60],[34,50],[46,50],[40,56],[38,64],[42,46]]) pillar(px,py);
-  for(const [lx,ly] of [[30,68],[50,68],[40,44]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'mill', gateTiles:GATE, doneFlag:'millDone', label:'a gear-lock lever',
+  // the stone walls that give the rooms their shape (static baked scenery)
+  for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:46.5, label:'the way up'});  // back to the surface
+  setSolid(19,46,0); setTile(19,46,T.RUIN);
+  for(const [tx,ty] of [[12,40],[26,40],[11,20],[27,20],[11,32],[27,32],[13,5],[25,5]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE MILLSTONE GATE - an iron portcullis raised by re-engaging the gear-train
+  G.decor.push({kind:'catgate', x:19, y:15, open:false, gate:'mill', tiles:MILL_GATE.slice(), label:'the Millstone Gate'});
+  // THE GRINDING FLOOR: three gear-lock levers, one on each side wall of the chamber
+  // and one at the back - throw all three (any order) to raise the millstone gate.
+  for(const [lx,ly] of [[12,30],[26,30],[19,20]])
+    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'mill', gate:'mill', doneFlag:'millDone', label:'a gear-lock lever',
       tickMsg:'The gear-lock drops into its notch with a heavy iron clunk. <b>{n} more</b> still hold the millstone gate shut.',
       openBanner:'THE GEAR-TRAIN CATCHES', openSub:'THE MILLSTONE GATE GRINDS UP',
       openMsg:'The last gear-lock seats home and the whole undercroft shudders awake - cogs bite, the shaft groans round, and the great millstone gate grinds up into the ceiling. The vault beyond lies open.'});
   // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
-  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:40.5, y:18.5, sail:1});
+  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:19.5, y:7.5, sail:1});
   // an already-solved run keeps the millstone gate open and the locks thrown
-  if(P.story && P.story.millDone){ for(const [x,y] of GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='mill') d.on=true; } }
+  if(P.story && P.story.millDone){
+    for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='mill') d.on=true;
+      if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
+  }
   G.critters=[];
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); buildMapBase(); }
