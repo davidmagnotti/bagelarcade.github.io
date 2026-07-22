@@ -1,7 +1,7 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '79';
+const BUILD = '80';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
 // A tiny always-visible build tag, so a stale/cached load is obvious at a glance:
 // if this number doesn't match the latest, the device is running old cached code.

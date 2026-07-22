@@ -1130,11 +1130,9 @@ function placeObjectsWind(){
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=2;dx++) setSolid(MI.x+dx, MI.y+dy, 1);  // tight round base, no walls up-screen
   for(let dx=-1;dx<=1;dx++) setSolid(MI.x+dx, MI.y+1, 0);                             // doorway, south face
   mill.door={x:MI.x+0.5, y:MI.y+1.6};
-  // THE UNDERMILL: a stone stair-hatch just east of the windmill drops into the old
-  // grinding works, where Nessa's lost stormsail lies sealed behind the gear-locks
-  const mouth=findOpenNear(Math.round(MI.x+4), Math.round(MI.y+1), 4) || [Math.round(MI.x+4), Math.round(MI.y+1)];
-  setSolid(mouth[0], mouth[1], 0);
-  G.decor.push({kind:'dungeonmouth', mill:1, x:mouth[0]+0.5, y:mouth[1]+0.5, label:'the Undermill', name:'THE UNDERMILL'});
+  // The Undermill dungeon is entered from INSIDE the windmill (its door opens the
+  // mill interior, and a cellar stair there drops into the workings) - so there is
+  // no exterior hatch out here in the city.
   const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
   for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);
   for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house AND the wheel to its east
@@ -2061,6 +2059,21 @@ function exitMillDungeon(){
   setTimeout(()=>{ switchWorld('wind');
     const r=P._millReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+// The Undermill is now entered from INSIDE the windmill: its door opens the mill
+// interior, and a stone cellar-stair (the 'millcellar' hotspot) drops you into the
+// dungeon. Same gate as the exterior hatch used to have. Climbing back out lands
+// you at the windmill's door in the city.
+function enterMillFromInterior(){
+  const maySeek = (P.story && (P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
+  if(!maySeek){
+    toast('A heavy stone hatch is set in the mill floor - chained and padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut; you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
+  }
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  const MI=WIND_ZONES.mill;
+  P._millReturn={x:MI.x+0.5, y:MI.y+1.8};   // climb back out to the windmill's door
+  G.interior=null; P.click=null;            // leave the mill interior for the dungeon world
+  setTimeout(()=>{ switchWorld('milldeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 
 /* =====================================================================

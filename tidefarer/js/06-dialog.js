@@ -173,7 +173,7 @@ function buildDialogContent(npc){
   // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
   // warns of the thing fouling the seized works below.
   if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
-    setDialog('<i>Burl wipes flour from his hands and lowers his voice, nodding at the chained hatch.</i> “Tolen sent you for the sail, aye - Nessa\'s finest, locked in the vault since the gear-train seized. But hear me: it weren\'t rust that stopped it. There\'s a <b>thing</b> down in the works, fouled in the shaft, and it don\'t like company. Put it down and the train frees - the millstone gate\'ll grind up on its own, and the sail\'s yours. Go armed.”',
+    setDialog('<i>Burl wipes flour from his hands and lowers his voice, nodding at the mill behind him.</i> “Tolen sent you for the sail, aye - Nessa\'s finest, locked in the vault since the gear-train seized. Go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped the works. There\'s a <b>thing</b> down in them, fouled in the shaft, and it don\'t like company. Put it down and the train frees - the millstone gate\'ll grind up on its own, and the sail\'s yours. Go armed.”',
       shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
     return;
   }
