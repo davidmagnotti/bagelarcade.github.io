@@ -928,9 +928,8 @@ function drawDecor(b,s){
     g.strokeStyle= lit? 'hsl('+hue+',95%,72%)' : '#5a6482'; g.lineWidth= lit?2.4:1.6; g.stroke();
     if(lit){ g.fillStyle='hsla('+hue+',95%,80%,'+(0.25+0.25*gl).toFixed(2)+')';
       g.beginPath(); g.moveTo(0,-7); g.lineTo(10,-2); g.lineTo(0,4); g.lineTo(-10,-2); g.closePath(); g.fill(); }
-    g.fillStyle= lit? '#f4f0ff' : '#8a93b0'; g.font='bold 11px Georgia'; g.textAlign='center'; g.textBaseline='middle';
-    g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0,-2); g.textBaseline='alphabetic';
-    if(!lit){ g.fillStyle='rgba(190,210,255,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.fillText('!',0,-24); }
+    // NO number label - the order is a secret you have to guess (a wrong tread fights back)
+    if(!lit){ g.fillStyle='rgba(190,210,255,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('?',0,-23); }
     g.restore(); return;
   }
   if(b.kind==='skygate'){

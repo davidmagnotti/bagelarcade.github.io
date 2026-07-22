@@ -99,17 +99,29 @@ function spawnSkyWraith(x,y,puzzle,elite){
   if(m){ m.puzzle=puzzle; m.respawnT=-1; m.lvl=Math.max(9,Math.min(12,P.level)); m.hx=m.x; m.hy=m.y; }
   return m;
 }
+// The cloud-snatcher only appears once you're deep enough in: the rune-tiles (isle 2)
+// must be solved so the wind-ward bridge to its isle has parted. It's invulnerable and
+// leashed to its isle, so once spawned it simply persists until the whole road is calm.
+function ensureSnatcher(){
+  P.story=P.story||{};
+  if(P.story.skyDungeonDone) return;          // road's calm - the snatcher is gone
+  if(!P.story.skyG2) return;                  // not far enough in yet (rune-tiles unsolved)
+  if(G.mobs.some(m=>m.grabber && !m.dead)) return;   // already prowling
+  const s=skyIsle('i3');
+  const sp=findOpenNear(s.x,s.y,3) || [s.x,s.y];
+  const g=spawnMob('skygrabber', sp[0], sp[1]);
+  if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=s.x+0.5; g.gcy=s.y+0.5; g.gr=(s.r+1.5); g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
+}
 function spawnMobsSkyDungeon(){
   P.story=P.story||{};
   const done=!!P.story.skyDungeonDone;
   // P1 - four sky wraiths bar the perch
   if(!P.story.skyG1){ const s=skyIsle('i1');
     for(let i=0;i<4;i++){ const a=i/4*TAU, r2=2.2; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 1); } }
-  // P3 - the cloud-snatcher patrols its isle (cannot leave it). Gone once the road is calm.
-  if(!done){ const s=skyIsle('i3');
-    const sp=findOpenNear(s.x,s.y,3) || [s.x,s.y];
-    const g=spawnMob('skygrabber', sp[0], sp[1]);
-    if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=s.x+0.5; g.gcy=s.y+0.5; g.gr=(s.r+1.5); g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; } }
+  // P3 - the cloud-snatcher: held back until you're further in (see ensureSnatcher).
+  // It only wakes once the rune-tiles are solved and the bridge to its isle opens, so
+  // it isn't looming over the early islands from the moment you step onto the road.
+  ensureSnatcher();
   // P4 - the Storm-Wraith mini-boss
   if(!P.story.skyG4 && !done){ const s=skyIsle('i4');
     const sp=findOpenNear(s.x,s.y,4) || [s.x,s.y];
@@ -148,11 +160,10 @@ function skyGateMidOf(b){ return {x:b.x, y:b.y}; }
 function pressSkyTile(b){
   const grp=G.decor.filter(d=>d.kind==='skytile' && d.group===(b.group||'sky'));
   if(P.story && P.story.skyG2){ return; }
-  if(b.set){ toast('That rune already shines. The order runs <b>I - II - III - IV - V</b>.',2400); return; }
+  if(b.set){ toast('That rune already shines. Tread the others - but the order is yours to find.',2400); return; }
   const nextNeeded=grp.filter(d=>d.set).length+1;
   if(b.ord===nextNeeded){
     b.set=true; if(Snd.pickup) Snd.pickup(); burst(b.x,b.y-0.3,'hsl('+((b.ord*60)%360)+',90%,68%)',12,1.8);
-    addFloat(['','I','II','III','IV','V'][b.ord]||'', b.x,b.y-1.4,'#eef', 1.05);
     if(grp.every(d=>d.set)){
       P.story=P.story||{}; P.story.skyG2=1; openSkyGate('g2');
       banner('THE RUNE-TILES ANSWER','THE WIND-WARD PARTS');
@@ -167,13 +178,15 @@ function pressSkyTile(b){
     const m=spawnMob('skywraith', sp[0], sp[1]);
     if(m){ m.state='chase'; m.respawnT=-1; m.noAggroT=0; m.lvl=Math.max(9,Math.min(12,P.level)); m.hx=m.x; m.hy=m.y;
       shockwave(m.x,m.y,'rgba(140,180,255,0.7)',22); burst(m.x,m.y-0.4,'#bcd8ff',14,1.8); }
-    toast('Wrong rune! The tile sours and a <b>sky wraith</b> tears free of the cloud. The runes go dark - begin again from <b>I</b>.',4200);
+    toast('Wrong tile! It sours and a <b>sky wraith</b> tears free of the cloud. The runes go dark - the order resets, and you must guess anew.',4200);
   }
 }
 
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
+  ensureSnatcher();   // wakes the cloud-snatcher the instant you solve the rune-tiles further in
+
   // P1 / P5 - open the perch-gate once the wraiths are all felled
   if(!P.story.skyG1 && G.mobs.filter(m=>m.puzzle===1 && !m.dead).length===0){
     P.story.skyG1=1; openSkyGate('g1');
