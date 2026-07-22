@@ -2625,6 +2625,70 @@ QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:
   doneText:"By the tides... you actually did it. The howling stopped last night - now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name.",
   rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
 
+/* =====================================================================
+   ACT IV - "The Enchanter's Tide" resolves. The King's audience sets you
+   after Vath, and after the truth of his lost son. The pendant is a memory-
+   ward; the Woodworker is the enchanted prince; you are the first mate who
+   saved him from the wreck and carried the warning through thirty years of
+   fog. Break Vath to loose the binding, wake the prince, bring him home.
+   ===================================================================== */
+QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'orin', xpL:340,
+  brief:"The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
+  log:'Sail to Emberwick and show the pendant to Sage Orin at his tower.',
+  doneText:"...This is no ornament. It is a memory-ward - a working meant to hold a mind whole against exactly the unmaking Vath deals. Someone wove a warning into it and keyed it to YOU, that you might carry it through the fog when all else was taken. And it is calling - to something bound and sleeping, close by. To someone. The Woodworker. Go to him. Only the breaking of Vath will loose what holds him.",
+  rw:{gold:40, mp:6, xp:{magic:260}} };
+QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'kill', kill:{mage:1}, xpL:620,
+  brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and Vath, feeling his life's work come undone, will come for you both. End him, and the prince is free.",
+  log:'Show the Woodworker the pendant on Emberwick, then defeat Vath the Emberbinder when he comes.',
+  doneText:'',   // resolved by bindVath()
+  rw:{gold:200, item:{elixir:2}, xp:{melee:400, magic:400, archery:400}} };
+QUESTS.homecoming = { giver:'woody', title:'Homecoming', kind:'talk', talkTo:'aldous', xpL:520,
+  brief:"The prince is awake, and remembers - the ship, the storm, the pendant pressed between your hands, and the father who never stopped waiting. Take him home across the water. King Aldous has grieved thirty years; let him grieve no longer.",
+  log:'Bring word to King Aldous in the Tideglass Palace, Aldermere.',
+  doneText:'',   // resolved by the palace coda scene
+  rw:{gold:300, hp:20, item:{elixir:3}, xp:{melee:300, archery:300, magic:300}} };
+
+// Vath's last stand: he descends on the Emberwick green the moment the ward
+// cracks the prince's binding. A proper boss (bar + boss music via bigBoss),
+// but no HP sponge - the rebalanced numbers keep him decisive.
+function spawnFinalVath(){
+  if(G.worldId!=='isle') return null;
+  if(G.mobs.some(m=>m.kind==='mage' && m.finalVath && !m.dead)) return null;
+  const base=[Math.round(ZONES.village.x)+3, Math.round(ZONES.village.y)-7];
+  const sp=findOpenNear(base[0], base[1], 9) || base;
+  const m=spawnMob('mage', sp[0], sp[1]);
+  if(!m) return null;
+  m.finalVath=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER';
+  m.lvl=13; m.maxhp=700; m.hp=700; m.dmg=30; m.speed=2.9; m.aggro=16;
+  m.state='chase'; m.noAggroT=0; m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1;
+  return m;
+}
+// Beaten, Vath is bound by his own compulsion - sealed, not slain, vowing return.
+function bindVath(m){
+  m.bound=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.hp=1;
+  P.story=P.story||{}; P.story.vathBound=1; P.story.act=Math.max(P.story.act||1,4);
+  if(Snd.boss) Snd.boss(); G.shake=1.0; G.slowmo=1.2;
+  shockwave(m.x,m.y,'rgba(199,123,255,0.95)',110);
+  for(let i=0;i<40;i++){ const a=Math.random()*TAU, s=rnd(1,5);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.8),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
+  banner('VATH IS BOUND','SEALED BY HIS OWN COMPULSION');
+  if(typeof updateBossUI==='function') updateBossUI();
+  setTimeout(()=>toast('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM. His own leash closes on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You would have woven a fine binding of your own."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. I will thaw. I will come back - for you, and for all of you."</b> <i>Then quiet, and violet light dying in the grass.</i>',11000),400);
+  setTimeout(()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head - like a man surfacing from deep water. <b style="color:var(--ember)">Speak with him.</b>',7000),9200);
+  // credit the kill quest cleanly (death was intercepted). Delayed so the bind
+  // banner is read before the QUEST COMPLETE banner lands.
+  setTimeout(()=>{ if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); } }, 3000);
+  if(typeof autoSave==='function') autoSave();
+}
+// reload safety: if the last hunt is underway on Emberwick and Vath isn't bound
+// yet, make sure he's back on the green when you return.
+function ensureFinalVath(){
+  if(G.worldId!=='isle') return;
+  if(qs('enchanter')==='active' && P.story && P.story.vathCame && !P.story.vathBound){
+    if(!G.mobs.some(m=>m.kind==='mage' && m.finalVath && !m.dead)) spawnFinalVath();
+  }
+}
+
 function buildExtraSprites(){
   // Kohana huts: bamboo walls under a deep straw cone
   SPR.hut=makeCanvas(96,86,(g)=>{
@@ -3018,6 +3082,9 @@ function switchWorld(id){
   }
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(id==='main') award('globetrotter');
+  // Act IV: coming back to Emberwick with the last hunt underway - make sure Vath
+  // is on the green if you'd already drawn him out and left mid-fight.
+  if(id==='isle' && typeof ensureFinalVath==='function') ensureFinalVath();
   if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';
   if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
   if(id==='main'){

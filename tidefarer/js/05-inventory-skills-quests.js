@@ -105,6 +105,9 @@ function completeQuest(id){
   if(id==='board'){ // earning the windsurf opens the Leviathan hunt with Rell
     if(G.worldId==='wind' && qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
     setTimeout(()=>toast('<b>Rell the Harbormaster</b> will send you at the Leviathan now - windsurf out past the breakwater onto the light water when you\'re ready.',6500),2600); }
+  if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
+    P.story=P.story||{}; P.story.wardRead=1;
+    if(!P.quests.enchanter) P.quests.enchanter='avail'; }
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
   if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock - Greyharbor awaits'),1300);
@@ -177,6 +180,11 @@ function questTargetPos(id){
     if(id==='hunt1') return ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null;
     if(id==='vhunt'){ const mg=G.mobs.find(m=>m.kind==='mage'&&!m.dead); // track Vath as he flees
       return mg? {x:mg.x,y:mg.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : null); }
+    if(id==='enchanter'){ // Act IV: to the Woodworker on Emberwick, then to Vath when he comes
+      const vm=G.mobs && G.mobs.find(m=>m.kind==='mage' && m.finalVath && !m.dead);
+      if(vm) return {x:vm.x,y:vm.y};
+      const w=G.npcs && G.npcs.find(n=>n.id==='woody'); if(w) return {x:w.x,y:w.y};
+      return ZONES.village? {x:ZONES.village.x,y:ZONES.village.y} : null; }
     if(id==='tide') return (typeof leviathanHome==='function') ? leviathanHome() : (ZONES.dock? {x:ZONES.dock.x,y:ZONES.dock.y} : null);
     if(id==='roost'){ // guide to the tome if you're inside the sealed roost, else to the tunnel mouth
       const tome=G.decor && G.decor.find(b=>b.kind==='tome' && !b.destroyed);
@@ -193,7 +201,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
