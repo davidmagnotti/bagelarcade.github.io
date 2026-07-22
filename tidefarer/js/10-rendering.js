@@ -31,8 +31,10 @@ function buildGroundCache(){
   const c=document.createElement('canvas'); c.width=W; c.height=H;
   const g=c.getContext('2d');
   g.setTransform(GC_S,0,0,GC_S,0,0);
+  const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     const t=G.map[y*MAPW+x], sx=isoX(x,y)+OX, sy=isoY(x,y)+OY;
+    if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - stays transparent so the backdrop shows
     const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
     if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2);
     if(t!==T.SHALLOW && t!==T.DEEP){
@@ -76,8 +78,9 @@ function buildSceneryCache(){
 
 function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
-  // sky/ocean backdrop
-  cx.fillStyle='#16283e'; cx.fillRect(0,0,VW,VH);
+  // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
+  const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
   if(G.shake>0 && CFG.shake){ cx.translate(rnd(-1,1)*G.shake*10, rnd(-1,1)*G.shake*10); }
 
   // visible tile range
@@ -101,6 +104,7 @@ function render(){
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
+      if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - let the backdrop show
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
       const sx=s.x - 0, sy=s.y;
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
@@ -1867,10 +1871,17 @@ const MAPCOL={[T.DEEP]:'#2b5c8f',[T.SHALLOW]:'#4d8fc0',[T.SAND]:'#e2cf93',[T.GRA
   [T.FOREST]:'#527f3c',[T.RUIN]:'#8f8b83',[T.PATH]:'#b7965f',[T.SOIL]:'#7a5230',[T.PLANK]:'#9c6f42',
   [T.SNOW]:'#e9eef6',[T.ICE]:'#b7d6e8'};
 let mapBase=null;
+// cloud worlds recolour the minimap: white cloud land, pale-sky "void" (no blue sea)
+const CLOUDCOL={[T.DEEP]:'#bcd6ee',[T.SHALLOW]:'#cfe2f2',[T.SNOW]:'#f4f8ff',[T.ICE]:'#dbe9f5',
+  [T.RUIN]:'#c7cdd6',[T.PATH]:'#e6eef7'};
 function buildMapBase(){
+  // buildMapBase runs DURING world gen, before switchWorld sets G.worldId - so detect
+  // a cloud world by its SEED (set before gen), which is reliable at this point.
+  const CLOUD = Object.keys(WORLD_DEFS).some(k=>WORLD_DEFS[k].cloud && WORLD_DEFS[k].seed===SEED);
   mapBase=makeCanvas(MAPW,MAPH,(g)=>{
     for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
-      g.fillStyle=MAPCOL[G.map[y*MAPW+x]]; g.fillRect(x,y,1,1);
+      const t=G.map[y*MAPW+x];
+      g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t]; g.fillRect(x,y,1,1);
     }
   });
 }
@@ -1882,6 +1893,16 @@ function drawMinimap(){
   // window: 48x48 tiles around player
   const vw=48, sx=clamp(P.x-vw/2,0,MAPW-vw), sy=clamp(P.y-vw/2,0,MAPH-vw);
   g.drawImage(mapBase, sx,sy,vw,vw, 0,0,120,120);
+  // landmark dots for the world's named zones - fixed points that slide past as you
+  // move, so movement reads even on featureless terrain (open cloud, open sea)
+  P.disc=P.disc||{};
+  for(const k in ZONES){ const z=ZONES[k]; if(!z.name) continue;
+    const zx=(z.x-sx)/vw*120, zy=(z.y-sy)/vw*120;
+    if(zx<-3||zx>123||zy<-3||zy>123) continue;
+    g.fillStyle= P.disc[G.worldId+':'+k] ? 'rgba(255,213,120,0.95)' : 'rgba(235,235,235,0.5)';
+    g.beginPath(); g.arc(zx,zy,2,0,TAU); g.fill();
+    g.strokeStyle='rgba(0,0,0,0.45)'; g.lineWidth=1; g.stroke();
+  }
   const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
   g.fillStyle='#fff'; g.beginPath(); g.arc(px,py,3,0,TAU); g.fill();
   g.strokeStyle='#2a1608'; g.stroke();

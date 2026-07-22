@@ -1950,15 +1950,16 @@ function genRadialIsle(cx0, cy0, r0){
 // ---------- THE CLOUDREACH ----------
 function genSky(){
   genRadialIsle(60,60,46);
+  // The Cloudreach is CLOUD, not earth: the "land" is white foamy cloud (SNOW), and
+  // the ring beyond it is open sky (the water tiles are kept only for the island's
+  // shape, its foamy rim, and its solid edge - the renderer draws them as sky, not
+  // sea, whenever the world def is flagged cloud:1).
+  for(let i=0;i<MAPW*MAPH;i++){ const t=G.map[i]; if(t===T.GRASS||t===T.SAND) G.map[i]=T.SNOW; }
   const Z=SKY_ZONES;
-  carveDisc(Z.landing.x,Z.landing.y,Z.landing.r,T.GRASS,false);
-  carveDisc(Z.shrine.x,Z.shrine.y,Z.shrine.r,T.GRASS,false);
-  carveDisc(Z.eyrie.x,Z.eyrie.y,Z.eyrie.r,T.GRASS,false);
-  carveDisc(Z.leap.x,Z.leap.y,Z.leap.r,T.GRASS,false);
-  carveDisc(Z.landing.x,Z.landing.y,3,T.PATH,false);
-  carveLine(Z.landing.x,Z.landing.y, Z.shrine.x,Z.shrine.y, T.PATH,0);
-  carveLine(Z.shrine.x,Z.shrine.y, Z.eyrie.x,Z.eyrie.y, T.PATH,0);
-  carveLine(Z.shrine.x,Z.shrine.y, Z.leap.x,Z.leap.y, T.PATH,0);
+  carveDisc(Z.landing.x,Z.landing.y,Z.landing.r,T.SNOW,false);
+  carveDisc(Z.shrine.x,Z.shrine.y,Z.shrine.r,T.SNOW,false);
+  carveDisc(Z.eyrie.x,Z.eyrie.y,Z.eyrie.r,T.SNOW,false);
+  carveDisc(Z.leap.x,Z.leap.y,Z.leap.r,T.SNOW,false);
 }
 function placeObjectsSky(){
   const Z=SKY_ZONES;
