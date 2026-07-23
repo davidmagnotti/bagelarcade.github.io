@@ -106,6 +106,16 @@ function buildDialogContent(npc){
       [{label:'Listen', fn:p2}]);
     return;
   }
+  // First meeting with the Woodworker: two amnesiacs who each feel they have seen
+  // the other before and cannot place it. Plants the recognition beat from hour one -
+  // no spoilers, and it pays off far later (he is the lost prince). Fires once.
+  if(npc.id==='woody' && !(P.prog&&P.prog.woodyMet) && !(P.story&&(P.story.wardRead||P.story.vathCame||P.story.vathBound))){
+    P.prog=P.prog||{}; P.prog.woodyMet=1;
+    setDialog('<i>The woodworker looks up from his logs - and for one breath you both go still, the way you do at a half-remembered face. He searches yours; you search his. Nothing surfaces.</i> “...Huh. Thought you were someone.” <i>He tilts his head, then lets it go with an easy smile and turns back to his stacking, humming that wandering tune.</i>',
+      [{label:'…Have we met?', fn:()=>setDialog('<i>He considers it seriously, then shrugs it off.</i> “Couldn\'t say. I don\'t keep my yesterdays - and they don\'t seem to keep me. But you\'re welcome by the woodpile any time. I carve little boats, mostly. For someone. They\'ll turn up.”',[{label:'Farewell', ghost:true, fn:closeDialog}])},
+       {label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // === ACT IV scripted scenes ===========================================
   // Nudge: Orin has read the ward and named the Woodworker, but the player hasn't
   // taken up the hunt yet - a gentle pointer back to Orin without spoiling anything.

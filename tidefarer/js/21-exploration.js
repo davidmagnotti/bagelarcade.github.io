@@ -213,9 +213,13 @@ function startIntro(){
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent=greeter.name;
   drawPortrait(greeter);
-  const p4=()=>{
-    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your legs under you. See <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
+  const p5=()=>{
+    setDialog('“And then see <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
       [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+  };
+  const p4=()=>{
+    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. And you\'re not the first it gave back empty-handed.” <i>She nods up the path, where a man stacks logs and hums to himself.</i> “Our <b>woodworker</b> washed in the very same way, long before you - no name, no memory, happy as a clam among his woodpile. Go say a word to him. Two lost souls sometimes ring truer side by side than either does alone.”',
+      [{label:'And then?', fn:p5}]);
   };
   const p3=()=>{
     setDialog('<i>She waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>The old woman nods slowly.</i> “The strait does that - takes the ship, the crew, and sometimes the memory along with them. Don\'t claw at it. A name washes back, child, or you earn a new one.”',
