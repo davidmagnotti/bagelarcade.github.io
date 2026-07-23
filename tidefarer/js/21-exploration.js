@@ -157,6 +157,7 @@ function boot(){
   weatherAll();
   G.worldId='isle';
   genIsleAll();
+  if(typeof placeBankerByInn==='function') placeBankerByInn();   // Emberwick's banker, by the Ember Hearth inn
   for(let i=0;i<6;i++) G.clouds.push({x:Math.random()*MAPW, y:Math.random()*MAPH,
     vx:rnd(0.25,0.5), vy:rnd(-0.12,0.12), r:rnd(48,90)});
   pressable(document.getElementById('dodgeBtn'), ()=>{ tryRoll(); });

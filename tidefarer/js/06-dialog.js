@@ -369,7 +369,7 @@ function shopButtons(npc,btns){
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
-  if(npc.id==='bree'){
+  if(npc.id==='bree' || npc.banker){
     btns.unshift({label:'Store goods in the vault', fn:()=>{
       let vn=0; P.vault=P.vault||{};
       for(const vk in SELL_PRICES){ const vc=P.inv[vk]||0;

@@ -3395,6 +3395,26 @@ function barikArrivalGreeting(){
   setDialog('<i>The ferryman makes fast to the Greyharbor pilings and claps the salt from his hands.</i> “Barik, then - and mind yourself. This is no Emberwick. Off these sheltered shores the dark brings things down off the crag, and folk with any sense are behind a bolted door by dusk.” <i>He nods up at the shuttered town.</i> “And night is already on us. Find the <b>inn</b> - the <b>Gull &amp; Anchor</b>, up past the well - and take a bed. Whatever is prowling out there will keep till morning.”',
     [{label:'I\'ll find a bed', cls:'gold', fn:closeDialog}]);
 }
+// A banker stands next to every town's inn (except Cloudreach, which has none) so
+// gold and raw goods can be vaulted anywhere. Bree already keeps Barik's ledger;
+// elsewhere we auto-place a Coinkeeper beside the building labelled "(Inn)".
+function placeBankerByInn(){
+  if(G.worldId==='sky' || (typeof inDungeon==='function' && inDungeon())) return;
+  if((G.npcs||[]).some(n=>n.banker || n.id==='bree')) return;   // world already has a banker
+  const inn=(G.decor||[]).find(b=>/\(inn\)/i.test(String(b.label||'')));
+  if(!inn || typeof findOpenNear!=='function') return;
+  let sp=null;
+  for(const off of [[2,2],[-2,2],[2,-1],[-2,-1],[3,1],[-3,1],[0,3]]){
+    const c=findOpenNear(Math.round(inn.x)+off[0], Math.round(inn.y)+off[1], 3);
+    if(c){ sp=c; break; }
+  }
+  if(!sp) return;
+  const b=makeNPC('banker_'+G.worldId,'Coinkeeper', sp[0], sp[1],
+    {skin:'#caa27b',hair:'#4a3a2c',shirt:'#3a3a5a',pants:'#332c3c',apron:'#8a7a5a',hairstyle:'bun'},
+    ['The vault holds what the grave cannot take - deposit while you breathe.',
+     'Coin in your purse tempts the dark. Coin in my vault is only coin.'],0.4);
+  b.banker=1; b.nightOwl=1; G.npcs.push(b);
+}
 function ensureGravelord(announce){
   if(G.worldId!=='isle' || qs('gravelord')!=='active') return;
   if(G.mobs.some(m=>m.kind==='gravelord' && !m.dead)) return;
@@ -3614,6 +3634,7 @@ function switchWorld(id){
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1; }
   }
+  if(typeof placeBankerByInn==='function') placeBankerByInn();   // a banker by the inn, on every town that has one
   Snd.quest();   // arrival chime (island-name intro banner removed by request)
   updateQuestUI(); refreshUI();
   setTimeout(autoSave,400);
