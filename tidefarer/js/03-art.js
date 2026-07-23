@@ -1047,12 +1047,11 @@ function drawHumanoid(g,sx,sy,o){
       g.fillStyle='#7fd4ff'; g.beginPath(); g.arc(7,-7,2.2,0,TAU); g.fill();
     } else {
       const wt=o.wtier==null?1:o.wtier;
-      g.fillStyle= wt===2? '#dfe5ee' : wt===1? '#cfd4dc' : '#9a9floor'.slice(0,7)||'#9a9689';
-      g.fillStyle= wt===2? '#dfe5ee' : wt===1? '#cfd4dc' : '#9a9689';
+      g.fillStyle= wt>=3? '#cdebff' : wt===2? '#dfe5ee' : wt===1? '#cfd4dc' : '#9a9689';  // wt3: icy Rimefang blade
       g.save(); g.rotate(Math.PI*0.25);
-      g.beginPath(); g.roundRect(-1.4,-12,2.8, wt===2?15:13, 1.2); g.fill();
+      g.beginPath(); g.roundRect(-1.4,-12,2.8, wt>=3?16: wt===2?15:13, 1.2); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1; g.stroke();
-      g.fillStyle= wt===2? '#e0b45a' : '#6e5738';
+      g.fillStyle= wt>=3? '#7fb8dc' : wt===2? '#e0b45a' : '#6e5738';
       g.fillRect(-3.2,1.5,6.4,1.8);
       g.restore();
     }
@@ -1420,19 +1419,22 @@ function drawHumanoid(g,sx,sy,o){
     g.rotate((isSword? 0.0 : -0.5) + swv*(isSword? -0.6 : 0.2));
     if(o.weapon==='sword'){
       const wt=o.wtier==null?1:o.wtier;
-      const bl= wt===2? 19 : wt===1? 16 : 13;
-      g.fillStyle= wt===2? '#e8edf4' : wt===1? '#cfd4dc' : '#9a9689';
+      const bl= wt>=3? 21 : wt===2? 19 : wt===1? 16 : 13;   // Rimefang is the longest blade
+      g.fillStyle= wt>=3? '#cdebff' : wt===2? '#e8edf4' : wt===1? '#cfd4dc' : '#9a9689';
       g.beginPath();
       g.moveTo(-1.6,-3); g.lineTo(-1.6,-3-bl+3); g.lineTo(0,-3-bl); g.lineTo(1.6,-3-bl+3); g.lineTo(1.6,-3);
       g.closePath(); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.1; g.stroke();
-      if(wt===2){ g.strokeStyle='rgba(255,154,60,0.75)'; g.lineWidth=1;
+      if(wt===2){ g.strokeStyle='rgba(255,154,60,0.75)'; g.lineWidth=1;              // steel: warm fuller
         g.beginPath(); g.moveTo(0,-4.5); g.lineTo(0,-3-bl+4); g.stroke(); }
-      g.fillStyle= wt===2? '#e0b45a' : '#6e5738';
+      else if(wt>=3){ g.strokeStyle='rgba(150,225,255,0.85)'; g.lineWidth=1;         // Rimefang: frost fuller
+        g.beginPath(); g.moveTo(0,-4.5); g.lineTo(0,-3-bl+4); g.stroke(); }
+      g.fillStyle= wt>=3? '#7fb8dc' : wt===2? '#e0b45a' : '#6e5738';
       g.fillRect(-3.6,-3.4,7.2,1.9);
-      g.fillStyle= wt===2? '#e0b45a' : '#4a3a26';
+      g.fillStyle= wt>=3? '#aee0ff' : wt===2? '#e0b45a' : '#4a3a26';
       g.beginPath(); g.arc(0,1.6,1.5,0,TAU); g.fill();
       if(wt===2){ g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(0,1.6,0.8,0,TAU); g.fill(); }
+      else if(wt>=3){ g.fillStyle='#eaffff'; g.beginPath(); g.arc(0,1.6,0.8,0,TAU); g.fill(); }
     } else if(o.weapon==='bow'){
       g.strokeStyle='#7a5a34'; g.lineWidth=2.4;
       g.beginPath(); g.arc(0,-1,9,Math.PI*0.62,Math.PI*1.38); g.stroke();

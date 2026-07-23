@@ -678,7 +678,17 @@ function killMob(m,skill){
   // The Hoarfrost Bear guarded the Glacier Vault's den - felling it opens the way down.
   if(m.vaultbear){
     P.story=P.story||{}; P.story.iceBearDown=1;
+    // The beast hoarded a blade among its kills - it DROPS a new sword, wielded at
+    // once. This is granted purely by the kill, independent of Bryn's quest turn-in
+    // (which completes off the iceBearDown flag), so the sword isn't gated on it.
+    const newBlade = (P.swordTier||0) < 3;
+    P.unlocked=P.unlocked||{}; P.unlocked.melee=true;
+    P.swordTier=Math.max(P.swordTier||0, 3);
+    if(typeof buildHotbar==='function') buildHotbar();
     setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
+    if(newBlade) setTimeout(()=>{ if(typeof banner==='function') banner('THE RIMEFANG SWORD','A NEW BLADE - KEENER THAN STEEL');
+      toast('Half-buried among the bear\'s old kills lies a <b style="color:#bfe8ff">frost-forged sword</b>, its rimed edge still unbroken. The <b style="color:#bfe8ff">Rimefang</b> is yours - already in your hand, and it bites deeper than any steel from the forge.',7000);
+      if(Snd.levelup) Snd.levelup(); }, 3400);
     if(typeof autoSave==='function') autoSave();
   }
   // The Storm Roc - the Cloudreach's apex terror. She is an OPTIONAL trophy hunt

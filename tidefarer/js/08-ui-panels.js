@@ -122,7 +122,7 @@ function equipArmor(t){
   refreshInvPanel();
 }
 function weaponMeta(id){
-  if(id==='melee') return {name:['Rusty Sword','Iron Sword','Steel Sword'][P.swordTier||0], icon:'sword', dmg:meleeDmg()};
+  if(id==='melee') return {name:(['Rusty Sword','Iron Sword','Steel Sword','Rimefang Sword'][P.swordTier||0]||'Rimefang Sword'), icon:'sword', dmg:meleeDmg()};
   if(id==='bow')   return {name:"Hunter's Bow", icon:'bow', dmg:bowDmg()};
   if(id==='staff') return {name:'Emberwood Staff', icon:'staff', dmg:magicDmg()};
   return {name:'Fists', icon:'sword', dmg:2};
