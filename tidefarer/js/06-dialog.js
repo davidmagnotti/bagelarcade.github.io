@@ -373,6 +373,20 @@ function shopButtons(npc,btns){
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
+  // The forest hermit cards fine cord from the orb-weavers' silk - an alternative to
+  // raiding the brigand camp for Mira's stolen bolt. Help him (he can't climb for
+  // bluecaps) and the silk is yours, to carry to Mira for Wren's ribbon. Once.
+  if(npc.id==='hermit' && !P.prog.hermitSilk && qs('ribbon2')!=='done'
+     && (qs('ribbon1')==='done' || qs('ribbon2')==='avail' || qs('ribbon2')==='active')){
+    btns.unshift({label:'“I need silk for a ribbon…”', fn:()=>{
+      if(!has('mushroom',3)){
+        setDialog('“Silk? The orb-weavers up in my pines spin a thread finer than any loom - I\'ll card you a bolt. But my knees are done climbing for bluecaps. Bring me <b>3 bluecaps</b> and the silk is yours.”',
+          shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      take('mushroom',3); P.prog.hermitSilk=1; give('silk',1); Snd.quest(); refreshUI(); autoSave();
+      setDialog('“There - a bolt of spider-silk, stronger than Mira\'s own and twice as soft. Carry it to her; she\'ll weave your ribbon and never think to ask where it came from.” <i>(+1 silk - take it to Mira for Wren\'s ribbon.)</i>',
+        shopButtons(npc,[{label:'My thanks',ghost:true,fn:closeDialog}]));
+    }});
+  }
   if(npc.id==='bree' || npc.banker){
     btns.unshift({label:'Store goods in the vault', fn:()=>{
       let vn=0; P.vault=P.vault||{};
