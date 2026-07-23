@@ -1309,7 +1309,8 @@ function flyToWorld(id, msg){
 }
 function askDragonFlight(){
   P.prog.windKnown=1; P.story=P.story||{}; P.story.skyKnown=1;
-  flyToWorld('sky','Ashwing lowers a wing. You climb his warm shoulder and he beats up through the caldera smoke - up and up, past the last ragged cloud, to a rock that floats where no rock should.');
+  // no flight-narration toast - the fade and the Cloudreach itself carry the moment
+  flyToWorld('sky');
 }
 function askAshwingHome(){
   const btns=[ {label:'Fly to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
@@ -2311,7 +2312,8 @@ function exitReachDeep(){
 // ---------- transitions ----------
 function flyToCloudreach(){
   P.story=P.story||{}; P.story.skyKnown=1;
-  flyToWorld('sky','Ashwing gathers himself and springs from the Windsurf shore - down becomes a memory as he beats up and up, through the last ragged cloud, to a rock that floats where no rock should.');
+  // no flight-narration toast - the fade and the Cloudreach itself carry the moment
+  flyToWorld('sky');
 }
 function askSkyDragon(){
   // Ashwing on the Cloudreach - the ride back DOWN the way you came, to the Sunward
