@@ -1512,11 +1512,11 @@ function genAerieAll(){
    the Underclimb, cross the Ossuary (a latch-plate puzzle), light the Gallery
    of Sigils in the right order, then face the Tome-Warden serpent in its crypt.
    Put the warden down, and the cursed tome behind it can finally be destroyed. */
+let AERIE_WALLS = [];   // catacomb stone bordering the carved floor - drawn as visible ewall blocks
 function genAerieDeep(){
   // the whole map begins as solid catacomb rock; we cut the chambers out of it
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  const wall=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,1); } };
   carve(66,108,84,124);   // the Underclimb Landing (entry hall)
   carve(73,96,77,110);    // corridor A -> the Ossuary
   carve(58,76,92,96);     // THE OSSUARY - plate puzzle chamber
@@ -1524,13 +1524,26 @@ function genAerieDeep(){
   carve(58,42,92,64);     // THE GALLERY OF SIGILS - ordered-plate chamber
   carve(73,32,77,44);     // corridor C (the Sepulchre Gate sits at y=38)
   carve(52,10,98,32);     // THE WARDEN'S CRYPT - boss chamber
-  // the two sealed gates begin as solid stone across their corridors
+  // record the visible wall faces (stone bordering the carved floor) BEFORE the gates
+  // go solid, so a raised gate never leaves a phantom wall block behind
+  AERIE_WALLS=[];
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y)) continue;
+    let border=false;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])
+      if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
+    if(border) AERIE_WALLS.push([x,y]);
+  }
+  // the two sealed gates begin as solid stone across their corridors (drawn by the catgate)
   for(let x=73;x<=77;x++){ setTile(x,70,T.RUIN); setSolid(x,70,1); }  // BONE GATE
   for(let x=73;x<=77;x++){ setTile(x,38,T.RUIN); setSolid(x,38,1); }  // SEPULCHRE GATE
   // decorative bone-pits flanking the crypt (non-blocking floor detail via tiles)
 }
 function placeObjectsAerieDeep(){
   G.decor=G.decor||[];
+  // the catacomb walls that give the chambers their shape (static baked scenery) - so
+  // the solid stone reads as real walls, never invisible collision
+  for(const [x,y] of AERIE_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   // the way back up the Underclimb, in the landing hall
   G.decor.push({kind:'tunnelmouth', x:75.5, y:122.5, deep:1, up:1, label:'the way up'});
   setSolid(75,122,0); setTile(75,122,T.RUIN);
