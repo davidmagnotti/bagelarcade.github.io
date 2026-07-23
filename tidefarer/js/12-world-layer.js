@@ -188,6 +188,10 @@ function genIsleAll(){
   G.decor.push({kind:'woodpile', x:56.3, y:50.6, crest:true});
   setSolid(56,50,1);
   addCrowsFor();
+  // raise the ward-gate across the ruined causeway. It stands sealed until Elder
+  // Maren gives her charge; updateHollowSeal() lifts it at once on a save where the
+  // king quest is already underway, once quest state has been restored.
+  if(typeof sealHollowKing==='function') sealHollowKing();
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
   buildMapBase();
 }

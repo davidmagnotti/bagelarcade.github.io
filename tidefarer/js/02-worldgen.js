@@ -23,6 +23,16 @@ let HOLLOW_GATE = [];              // walkable tiles across the ruin mouth (the 
 const HOLLOW_GATEY = 21;           // the gate row - grass approach lies just south
 let HOLLOW_MINX = 99, HOLLOW_MAXX = -99;
 
+/* The ward-gate seals the approach a little further in, where the sea pinches
+   the ruined causeway to a narrow neck (open water on either flank, so there is
+   no way around). A wall of old ruin-stone stands here with a warded gate at its
+   heart, holding the Hollow King's spit shut until Elder Maren speaks it open at
+   the start of her quest. Computed in shapeHollowKingApproach(); raised and
+   lifted by the seal mechanic in 09-gameplay. */
+let WARD_GATE = [];                // walkable tiles across the sealed causeway
+const WARD_GATEY = 19;             // the causeway-neck row (water on both flanks)
+let WARD_MINX = 99, WARD_MAXX = -99;
+
 function carveLine(x0,y0,x1,y1,tile,width){
   const steps = Math.ceil(dist(x0,y0,x1,y1))*2;
   for(let i=0;i<=steps;i++){
@@ -133,6 +143,17 @@ function shapeHollowKingApproach(){
       if(x<HOLLOW_MINX) HOLLOW_MINX=x;
       if(x>HOLLOW_MAXX) HOLLOW_MAXX=x;
     }
+  }
+  // --- record the ward-gate: the contiguous walkable neck at WARD_GATEY that
+  //     carries the causeway north. The sea walls its flanks, so this run is the
+  //     whole way in - seal it and the King's spit is truly shut. ---
+  WARD_GATE = []; WARD_MINX = 99; WARD_MAXX = -99;
+  if(inb(R.x,WARD_GATEY) && walkTile(tileAt(R.x,WARD_GATEY))){
+    let x0=R.x, x1=R.x;
+    while(walkTile(tileAt(x0-1,WARD_GATEY))) x0--;
+    while(walkTile(tileAt(x1+1,WARD_GATEY))) x1++;
+    for(let x=x0;x<=x1;x++){ WARD_GATE.push([x,WARD_GATEY]); }
+    WARD_MINX=x0; WARD_MAXX=x1;
   }
   if(typeof HOLLOW_FIRE!=='undefined'){ HOLLOW_FIRE.active=false; HOLLOW_FIRE.t=0; }
 }

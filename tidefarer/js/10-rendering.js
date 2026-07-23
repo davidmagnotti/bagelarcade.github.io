@@ -54,7 +54,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1,
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1};
 let scnDecorN=-1;
@@ -158,7 +158,7 @@ function render(){
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
     items.push({d:b.x+b.y, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
-  for(const m of G.mobs){ if(!m.dead) items.push({d:m.x+m.y, kind:'mob', o:m}); }
+  for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
   if(G.cat) items.push({d:G.cat.x+G.cat.y, kind:'cat', o:G.cat});
   if(G.critters) for(const c of G.critters) items.push({d:c.x+c.y, kind:'critter', o:c});
   if(!P.dead) items.push({d:P.x+P.y, kind:'player', o:P});
@@ -591,6 +591,49 @@ function drawDecor(b,s){
       vx:rnd(-0.2,0.2),vy:-rnd(1,2),life:rnd(0.4,0.9),
       color:Math.random()<0.5?'#ff8a44':'#ffd76a',size:rnd(1.5,3),grav:-0.2});
     return;
+  }
+  if(b.kind==='wardgate'){
+    // a rampart of old ruin-stone across the causeway neck. Segments are a full
+    // tile wide so they overlap into one continuous wall; the centre tile carries
+    // a warded, barred gatehouse whose rune glows the same green as the King's fire.
+    const g=cx, H=b.mid?34:26; g.save(); g.translate(s.x,s.y);
+    if(typeof drawShadowAt==='function') drawShadowAt(g,0,4,30);
+    // the raised iso block (mossy grey stone)
+    g.fillStyle='#2b322b';   // left face, toward camera
+    g.beginPath(); g.moveTo(-32,2); g.lineTo(0,18); g.lineTo(0,18-H); g.lineTo(-32,2-H); g.closePath(); g.fill();
+    g.fillStyle='#232922';   // right face
+    g.beginPath(); g.moveTo(32,2); g.lineTo(0,18); g.lineTo(0,18-H); g.lineTo(32,2-H); g.closePath(); g.fill();
+    g.fillStyle='#4a5443'; // top face (raised diamond)
+    g.beginPath(); g.moveTo(0,2-16-H); g.lineTo(32,2-H); g.lineTo(0,18-H); g.lineTo(-32,2-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(120,140,90,0.35)';   // moss speckle on the crown
+    g.beginPath(); g.ellipse(-8+(b.gx%3)*3,2-H-2,5,2.4,0,0,TAU); g.fill();
+    g.beginPath(); g.ellipse(9-(b.gy%2)*2,2-H+3,3.5,1.8,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(150,168,120,0.45)'; g.lineWidth=1;   // crown ridge highlight
+    g.beginPath(); g.moveTo(-32,2-H); g.lineTo(0,2-16-H); g.lineTo(32,2-H); g.stroke();
+    // weathered courses down the near face
+    g.strokeStyle='rgba(0,0,0,0.22)'; g.lineWidth=1;
+    for(let yy=2-H+9; yy<2; yy+=9){ g.beginPath(); g.moveTo(-30,yy); g.lineTo(0,yy+15); g.stroke(); }
+    if(b.mid){
+      // a dark arched gateway sunk into the wall, barred with black iron
+      g.fillStyle='#10130f';
+      g.beginPath(); g.moveTo(-13,16); g.lineTo(-13,-8-H*0.4); g.quadraticCurveTo(0,-20-H*0.4,13,-8-H*0.4); g.lineTo(13,16); g.closePath(); g.fill();
+      g.strokeStyle='#3f4838'; g.lineWidth=2; g.stroke();
+      g.strokeStyle='#1c1f18'; g.lineWidth=3; g.lineCap='round';   // the portcullis bars
+      for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*5.5,15); g.lineTo(i*5.5,-9-H*0.4); g.stroke(); }
+      g.strokeStyle='#2a2f24'; g.lineWidth=2.4;
+      for(const yy of [8,-2,-12]){ g.beginPath(); g.moveTo(-12,yy); g.lineTo(12,yy); g.stroke(); }
+      // the ward-rune set in the lintel, breathing a cold green light
+      const gl=0.45+0.4*Math.sin(G.time*1.8+(b.ph||0));
+      g.fillStyle='rgba(120,220,160,'+(0.16*gl).toFixed(3)+')';   // halo
+      g.beginPath(); g.ellipse(0,-16-H*0.4,15,15,0,0,TAU); g.fill();
+      g.save(); g.translate(0,-16-H*0.4); g.rotate(Math.PI/4);
+      g.strokeStyle='rgba(150,236,180,'+(0.55+0.35*gl).toFixed(2)+')'; g.lineWidth=2.2;
+      g.strokeRect(-5,-5,10,10); g.beginPath(); g.moveTo(-5,0); g.lineTo(5,0); g.moveTo(0,-5); g.lineTo(0,5); g.stroke();
+      g.restore();
+      if(fxOn('particles') && Math.random()<0.14) G.parts.push({x:b.x, y:b.y-1.2, vx:rnd(-0.12,0.12), vy:-rnd(0.3,0.8),
+        life:rnd(0.6,1.2), color:'rgba(150,230,180,0.7)', size:rnd(1.2,2.4), grav:-0.05});
+    }
+    g.restore(); return;
   }
   if(b.kind==='warnsign'){
     const g=cx; g.save(); g.translate(s.x,s.y);

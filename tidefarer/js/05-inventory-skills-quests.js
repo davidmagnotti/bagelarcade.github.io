@@ -63,6 +63,9 @@ function acceptQuest(id){
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
+  if(id==='king'){ // Maren speaks the ward open - the causeway to the King is unsealed
+    if(typeof openHollowGate==='function') openHollowGate(true);
+    setTimeout(()=>toast('Elder Maren traces the old word in the air and the ward-gate on the causeway grinds open. <b>The Old Ruins lie open to the north.</b> The Hollow King waits at the isle\'s cold tip.',6800),1400); }
   if(id==='tide'){ // the beast only surfaces once you windsurf OUT past the breakwater
     setTimeout(()=>toast('Rell points past his jetty. <b>Windsurf out onto the light water</b> when you\'re ready - ride out past the breakwater and the thing in the deep will find you soon enough. The board rides the shallows, not the deep.',6500),700); }
   if(id==='thaw' && typeof spawnFrostWarden==='function'){ // the warden waits on the glacier

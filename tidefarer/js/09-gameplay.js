@@ -75,6 +75,7 @@ function dropHollowFire(){
 }
 function updateHollowFire(dt){
   if(G.worldId!=='isle') return;                  // arena only exists on Emberwick
+  if(G.hollowSealed) return;                       // the ward still holds - no arena yet
   const boss = G.mobs.find(m=>m.boss);
   if(!boss || boss.dead){ dropHollowFire(); return; }  // King down (or gone) - lift the seal
   if(!HOLLOW_FIRE.active){
@@ -91,6 +92,46 @@ function updateHollowFire(dt){
         life:rnd(0.5,1.1), color:Math.random()<0.5?'#ff9a3c':'#ffd76a', size:rnd(1.5,3), grav:-0.15});
     }
   }
+}
+
+/* ---- the ward that seals the Hollow King away until the quest begins --------
+   Before Elder Maren speaks her charge, the ruined causeway stands walled: the
+   ward-gate tiles are solid, a rampart of old ruin-stone renders across the neck,
+   and the King with his bone-guard are hidden behind it (skipped by AI, targeting
+   and rendering while sealed). Accepting the king quest - or reloading a save with
+   it already underway - opens the gate for good. The seal is raised at world-gen
+   and reconciled every frame by updateHollowSeal, so it settles correctly no
+   matter when quest state is restored on load. */
+function kingQuestBegun(){ return qs('king')==='active' || qs('king')==='done'; }
+function sealHollowKing(){
+  if(G.worldId!=='isle' || typeof WARD_GATE==='undefined' || !WARD_GATE.length){ G.hollowSealed=false; return; }
+  G.hollowSealed=true;
+  for(const [x,y] of WARD_GATE){
+    setSolid(x,y,1);
+    if(!G.decor.some(d=>d.kind==='wardgate' && d.gx===x && d.gy===y))
+      G.decor.push({kind:'wardgate', x:x+0.5, y:y+0.5, gx:x, gy:y, mid:(x===Math.round(ZONES.ruins.x)), ph:Math.random()*TAU});
+  }
+  for(const m of G.mobs) if(m.hollowGuard) m.sealed=true;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+function openHollowGate(announce){
+  if(!G.hollowSealed && !G.decor.some(b=>b.kind==='wardgate')) return;
+  G.hollowSealed=false;
+  if(typeof WARD_GATE!=='undefined' && WARD_GATE) for(const [x,y] of WARD_GATE) setSolid(x,y,0);
+  G.decor = G.decor.filter(b=>b.kind!=='wardgate');
+  for(const m of G.mobs) if(m.hollowGuard) m.sealed=false;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(announce){
+    if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW KING STIRS');
+    const mx=(typeof WARD_MINX!=='undefined')?(WARD_MINX+WARD_MAXX)/2+0.5:46;
+    if(typeof shockwave==='function') shockwave(mx, WARD_GATEY+0.5, 'rgba(155,224,160,0.85)', 55);
+    G.shake=Math.max(G.shake||0,0.55);
+    if(typeof Snd!=='undefined' && Snd.quest) Snd.quest();
+  }
+}
+function updateHollowSeal(){
+  if(G.worldId!=='isle') return;
+  if(G.hollowSealed && kingQuestBegun()) openHollowGate(false);
 }
 
 /* ---- nearest interactable ---- */
@@ -395,7 +436,7 @@ function tryAttack(useMouse){
     aim={x:w.x-P.x, y:w.y-P.y};
   } else {
     let bm=null, bd=7;
-    for(const m of G.mobs){ if(m.dead) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bm=m;} }
+    for(const m of G.mobs){ if(m.dead||m.sealed) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bm=m;} }
     aim = bm? {x:bm.x-P.x,y:bm.y-P.y} : {...P.dir};
   }
   const l=Math.hypot(aim.x,aim.y)||1; aim.x/=l; aim.y/=l;
@@ -409,7 +450,7 @@ function tryAttack(useMouse){
     const cleave = finisher && P.perks && P.perks.cleaver;
     let hitAny=false;
     for(const m of G.mobs){
-      if(m.dead) continue;
+      if(m.dead||m.sealed) continue;
       const dx=m.x-P.x, dy=m.y-P.y, d=Math.hypot(dx,dy);
       const reach = finisher? (cleave?2.7:2.1) : 1.65; // the finisher lunges; cleaver reaches further
       const arc = cleave? -0.15 : 0.15;                // cleaver widens the arc past 90 degrees
@@ -1018,6 +1059,8 @@ function updatePlayer(dt){
   }
   if(G.worldId==='isle' && P.y>=HOLLOW_GATEY && P.y<HOLLOW_GATEY+8 && P.x>HOLLOW_MINX-2 && P.x<HOLLOW_MAXX+2)
     hintOnce('kingwarn','Skull-boards hammered into the grass warn you back. Beyond them the ground turns to broken stone - and something older than the isle waits at its tip.');
+  if(G.worldId==='isle' && G.hollowSealed && P.y>=WARD_GATEY && P.y<WARD_GATEY+4 && P.x>WARD_MINX-2 && P.x<WARD_MAXX+2)
+    hintOnce('wardgate','A wall of old ruin-stone bars the causeway, the sea on either hand, a warded gate shut fast at its heart. The word to open it is not yours - but <b>Elder Maren</b> in the village may know it.');
   if(ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
   if(ZONES.forest && dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
 }
@@ -1070,8 +1113,10 @@ function updateNPCs(dt){
 }
 
 function updateMobs(dt){
+  updateHollowSeal();
   updateHollowFire(dt);
   for(const m of G.mobs){
+    if(m.sealed) continue;                 // walled behind the ward-gate - inert until it opens
     if(m.dead){
       if(m.respawnT>0){ m.respawnT-=dt;
         if(m.respawnT<=0 && dist(P.x,P.y,m.hx,m.hy)>10){ m.dead=false; m.hp=m.maxhp; m.x=m.hx; m.y=m.hy; m.state='idle'; }
@@ -1259,9 +1304,9 @@ function updateProjs(dt){
     if(G.solid[ty*MAPW+tx]===1 && tileAt(tx,ty)>=T.SAND){ p.life=0; burst(p.x,p.y-0.3,'#c9b990',4,1.5); continue; }
     if(p.from==='player'){
       for(const m of G.mobs){
-        if(m.dead) continue;
+        if(m.dead||m.sealed) continue;
         if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
-          if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
+          if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && !m2.sealed && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
               if(p.snare && !m2.boss && !m2.bigBoss){ m2.snareT=p.snare; m2.windup=0;
                 burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); }

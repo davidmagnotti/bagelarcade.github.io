@@ -148,7 +148,7 @@ const QUESTS = {
     doneText:'Quieter already. This ember charm rides your strikes - every blow burns a little brighter now.',
     rw:{item:{charm:1}, gold:20, xp:{melee:80, archery:80, magic:80}}, unlocks:['king'] },
   king:{ giver:'maren', title:'The Hollow King', kind:'kill', kill:{boss:1},
-    brief:'Then it\'s true - the Hollow King stirs beneath the crypt. Long ago he traded his heart for a crown, and the island has carried his silence since. End it, traveler. Take your tonics, your steel, your fire. Emberwick believes in you.',
+    brief:'Then it\'s true - the Hollow King stirs beneath the crypt. Long ago he traded his heart for a crown, and the island has carried his silence since. You\'ll have seen the ward-wall out on the ruined causeway - the sea on either side, a warded gate at its heart. My folk raised it a lifetime ago to seal him in, and I am the last who still knows the word. Say you\'ll face him and I\'ll speak the gate open - for you, and you alone. Take your tonics, your steel, your fire. Emberwick believes in you.',
     log:'Defeat the Hollow King at the crypt in the Old Ruins.',
     doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, and the strait beyond it lies calm at last. Captain Brant can ready the ship now.',
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
@@ -253,8 +253,10 @@ function spawnMobs(){
   for(const [x,y] of slimeSpots) spawnMob('slime',x,y);
   const wolfSpots=[[30,39],[35,36],[28,34],[37,42]];
   for(const [x,y] of wolfSpots){ const s=findOpenNear(x,y,3); if(s) spawnMob('wolf',s[0],s[1]); }
-  // bone-guard the ground between the fire-gate and the King, at the northern spit
+  // bone-guard the ground between the fire-gate and the King, at the northern spit.
+  // They and the King wear .hollowGuard so the ward-seal can hide them all together
+  // while the causeway stands sealed (see sealHollowKing in 09-gameplay).
   const skelSpots=[[43,18],[49,18],[45,14],[48,15],[46,12]];
-  for(const [x,y] of skelSpots) spawnMob('skeleton',x,y);
-  spawnMob('boss',46,10);
+  for(const [x,y] of skelSpots){ const s=spawnMob('skeleton',x,y); if(s) s.hollowGuard=true; }
+  const boss=spawnMob('boss',46,10); if(boss) boss.hollowGuard=true;
 }
