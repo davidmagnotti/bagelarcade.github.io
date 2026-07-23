@@ -1268,21 +1268,7 @@ function drawNPC(n,s){
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(n.name, s.x+1, s.y-52*(n.look.size||1)+1);
   cx.fillStyle='#ffe9a8'; cx.fillText(n.name, s.x, s.y-52*(n.look.size||1));
-  // ambient speech bubble
-  if(n.bubbleT>0 && n.bubble){
-    let txt=n.bubble; if(txt.length>42) txt=txt.slice(0,40)+'…';
-    cx.font='9px Verdana';
-    const w=Math.min(cx.measureText(txt).width+14, 200);
-    const by=s.y-66*(n.look.size||1);
-    cx.globalAlpha=Math.min(1,n.bubbleT*2);
-    cx.fillStyle='rgba(20,14,8,0.88)';
-    cx.strokeStyle='rgba(201,162,78,0.5)'; cx.lineWidth=1;
-    cx.beginPath(); cx.roundRect(s.x-w/2,by-15,w,17,6); cx.fill(); cx.stroke();
-    cx.beginPath(); cx.moveTo(s.x-3,by+2); cx.lineTo(s.x+3,by+2); cx.lineTo(s.x,by+6); cx.closePath(); cx.fill();
-    cx.fillStyle='#e8dcbd'; cx.textAlign='center';
-    cx.fillText(txt, s.x, by-3);
-    cx.globalAlpha=1;
-  }
+  // (ambient overhead speech bubbles removed - NPC lines show only in the dialog panel)
   // quest marks
   let mark=null;
   for(const id in QUESTS){

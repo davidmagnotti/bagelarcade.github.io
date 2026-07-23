@@ -1097,17 +1097,11 @@ function updateNPCs(dt){
   const night=isNight();
   for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
   for(const n of G.npcs){
-    n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
+    // NPCs no longer bark idle chatter in floating bubbles over their heads -
+    // their lines are heard only when you actually talk to them (see buildDialogContent).
     if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)
       n.humT=(n.humT===undefined? rnd(1,4):n.humT)-dt;
       if(n.humT<=0){ n.humT=rnd(2.6,5.2); addFloat('♪', n.x, n.y-1.9, 'rgba(206,196,232,0.92)', 0.9); }
-    }
-    n.chatT=(n.chatT===undefined? rnd(4,10) : n.chatT)-dt;
-    if(n.chatT<=0){ n.chatT=rnd(10,20);
-      if(!n.noBark && dist(n.x,n.y,P.x,P.y)<6.5 && !dlg.open && G.state==='play'){
-        n.bubble=n.idleLines[(n.li=((n.li||0)+1))%n.idleLines.length];
-        n.bubbleT=3.6;
-      }
     }
     n.wt-=dt;
     if(n.wander>0 && n.wt<=0 && !dlg.open){
