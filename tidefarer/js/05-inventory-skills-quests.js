@@ -89,8 +89,9 @@ function completeQuest(id){
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; buildHotbar(); toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
-    // the mage teaches motion as well as fire: earning the staff also trains the dash
-    if(typeof unlockDash==='function') setTimeout(()=>unlockDash('Orin taps your knee. “A mage who cannot move is a candle in a draught.” <b style="color:#c9b0ff">Dash learned!</b> '+(isTouch?'Tap the dodge button':'Press Shift')+' to dart aside.'),1800); }
+    // the dash is NOT taught here: earning the staff opens Orin's tower, and the
+    // scrying orb inside is what teaches the dash (see enterHouse + the orb boon).
+  }
   if(rw.dash){ if(typeof unlockDash==='function') unlockDash(); }
   if(rw.surf){ P.unlocked.surf=true;
     toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
@@ -111,10 +112,11 @@ function completeQuest(id){
   if(id==='ribbon3'){ P.prog.eastSail=1;
     banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
     setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
-  if(id==='board'){ // the board is shaped, but bare - now fetch Nessa's sail from the Undermill
+  if(id==='board'){ // the board is shaped, but bare - fetch Nessa's sail from the Undermill next.
+    // Tolen's own doneText already sends you beneath the windmill, so no extra popup toast:
+    // just set the next quest active and let the quest log carry it.
     P.story=P.story||{}; P.story.boardMade=1;
-    if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; }
-    setTimeout(()=>toast('<b>Quest:</b> The Sail in the Undermill - step <b>inside the windmill</b> and take the <b>cellar stair down</b> into the old works. Something\'s fouled the grinding-shaft below; <b>put the guardian down</b> to raise the millstone gate and bring up <b>Nessa\'s stormsail</b>. Speak to <b>Burl the Millwright</b> if you want the way of it.',7200),2600); }
+    if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; } }
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
     if(!P.quests.enchanter) P.quests.enchanter='avail'; }

@@ -479,6 +479,7 @@ function tryAttack(useMouse){
   } else if(P.weapon==='staff'){
     if(P.mp<8){ toast('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
+    if(TRAIN && TRAIN.who==='aelin') TRAIN.casts=(TRAIN.casts||0)+1;   // Aelin's drill counts staff casts
     if(P.spell==='snare' && P.spells && P.spells.snare)
       G.projs.push({kind:'snarebolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:Math.max(4,Math.round(magicDmg()*0.4)),from:'player',skill:'magic',aoe:1.2,snare:2.5});
     else{
@@ -729,8 +730,7 @@ function killMob(m,skill){
     if(typeof MILL_GATE!=='undefined') for(const [x,y] of MILL_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='mill'); if(cg) cg.open=true;
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');
-    setTimeout(()=>toast('The Cog-Bound sloughs off the shaft and clatters still. The freed gear-train shudders round for the first time in a season, and the great millstone gate grinds up into the ceiling - <b>Nessa\'s sail</b> lies in the vault beyond.',7000), 1400);
+    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');   // the banner says it; no follow-up popup
     if(typeof autoSave==='function') autoSave();
   }
   // After felling a dungeon boss, offer the quick road out - mended and a level
@@ -1011,6 +1011,20 @@ function updatePlayer(dt){
     if(P.rollT<=0) TRAIN._r=0;
     TRAIN.combo=Math.max(TRAIN.combo,P.combo||0);
     if(dist(P.x,P.y,TRAIN.x,TRAIN.y)>14){ TRAIN=null; toast('Drill abandoned. The dummies gossip about you.',3200); }
+    else if(TRAIN.who==='aelin'){
+      // The Spire lesson is pure spellwork - no footwork gates (no dodge-roll to
+      // learn here). Land 5 staff casts on the practice dummy and the weave lifts
+      // you a whole magic level. Gated to once per day back in aelinStudy.
+      if((TRAIN.casts||0)>=5){
+        TRAIN=null; for(const m of dums){ m.hp=m.maxhp; }
+        P.prog=P.prog||{}; P.prog.spireDay=(P.prog.dayN||1);          // today's lesson is spent
+        P.prog.spireTrainedEver=1;                                    // the Spire door now knows you
+        const mg=P.skills.magic; addXP('magic', Math.max(160, xpForLevel(mg.lvl)-mg.xp));  // guarantee a level
+        gainLXP(80);
+        toast('<b>Aelin smiles.</b> “Five true casts - the weave knows your hand now. Come back tomorrow and we’ll go higher.” <i>(Magic level up!)</i>',5600);
+        Snd.levelup();
+      }
+    }
     else if(TRAIN.stage===0 && dmgDone>=30){ TRAIN.stage=1; Snd.quest();
       toast('<b>Good.</b> Now chain it: land a <b>COMBO x2</b> without pausing between strikes.',4400); }
     else if(TRAIN.stage===1 && TRAIN.combo>=2){ TRAIN.stage=2; Snd.quest();
@@ -1376,6 +1390,12 @@ function updateWorld(dt){
   // day cycle - frozen underground: dungeons keep their own fixed light, and time
   // does not pass while you are down there.
   if(!inDungeon()) G.dayT=(G.dayT+dt/G.dayLen)%1;
+  // a persisted day counter: any time the clock rolls back to a new dawn - the
+  // natural midnight wrap OR a sleep that jumps to morning - a fresh day begins.
+  // (Once-per-day things, like training at the Spire, key off this.)
+  if(G._lastDayT===undefined) G._lastDayT=G.dayT;
+  if(G.dayT < G._lastDayT-0.0001){ P.prog=P.prog||{}; P.prog.dayN=(P.prog.dayN||1)+1; }
+  G._lastDayT=G.dayT;
   // gore decals fade, fog rolls
   for(const d of G.decals) d.life-=dt;
   if(G.decals.length && G.decals[0].life<=0) G.decals=G.decals.filter(d=>d.life>0);

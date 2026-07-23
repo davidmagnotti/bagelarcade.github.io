@@ -162,33 +162,53 @@ function enterGame(){
   }
 }
 let CINE=null;   // retired opening cinematic - kept null so old "not during CINE" guards still read
-// The game opens on a shipwreck: Captain Brant hauls the amnesiac castaway out
-// of the surf. No letterbox cinematic - just first words on a strange shore.
+// The game opens on a shipwreck: Elder Maren, the island's old wise-woman, finds
+// the amnesiac castaway washed up on the shore and draws them out of the surf.
+// No letterbox cinematic - just first words on a strange shore. (The castaway
+// wakes beside Bram's forge, so the greeter is seated right there at your side;
+// Captain Brant stays with his wrecked ship at the dock for the crossing later.)
 function startIntro(){
-  const brant = (G.npcs||[]).find(n=>n.id==='brant');
+  const greeter = (G.npcs||[]).find(n=>n.id==='maren');
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; // hold on the castaway
-  if(!brant){ afterIntro(); return; }
+  if(!greeter){ afterIntro(); return; }
+  // seat the elder on an open tile RIGHT beside you and turn her to face you, so
+  // the one who speaks is actually there. Remember her village spot to restore it.
+  if(greeter._home===undefined) greeter._home={x:greeter.x, y:greeter.y, wander:greeter.wander};
+  if(typeof findOpenNear==='function'){
+    const px=Math.round(P.x), py=Math.round(P.y);
+    let sp=null;
+    for(const off of [[1,1],[0,1],[1,0],[-1,1],[1,-1],[-1,0],[0,-1],[-1,-1]]){
+      const c=findOpenNear(px+off[0], py+off[1], 2);
+      if(c && !(c[0]===px && c[1]===py)){ sp=c; break; }
+    }
+    if(sp){ greeter.x=sp[0]+0.5; greeter.y=sp[1]+0.5; }
+  }
+  greeter.wander=0;
+  greeter.face={x:(P.x>=greeter.x?1:-1), y:(P.y>=greeter.y?1:-1)};
   P.click=null;
-  dlg.open=true; dlg.npc=brant;
+  dlg.open=true; dlg.npc=greeter;
   document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent=brant.name;
-  drawPortrait(brant);
+  document.getElementById('dname').textContent=greeter.name;
+  drawPortrait(greeter);
   const p4=()=>{
-    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which beats the alternative. Get your legs under you. See <b>Bram the smith</b>, up by the forge - he\'ll put a blade in your hand. This isle has need of one.”',
+    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your legs under you. See <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
       [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
   };
   const p3=()=>{
-    setDialog('<i>He waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>He nods slowly.</i> “Aye. The strait does that - takes the ship, the crew, and sometimes the memory along with them. Don\'t claw at it. A name washes back, or you earn a new one.”',
+    setDialog('<i>She waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>The old woman nods slowly.</i> “The strait does that - takes the ship, the crew, and sometimes the memory along with them. Don\'t claw at it. A name washes back, child, or you earn a new one.”',
       [{label:'Continue', fn:p4}]);
   };
   const p2=()=>{
-    setDialog('“Your ship went down on the strait - I watched the mast go under. Same reef that gutted my own <b>Tidewalker</b>, yonder at the dock.” <i>The old captain squints at you.</i> “You\'re the only soul the sea gave back. Do you know it - your ship? Your name? Where you were bound?”',
+    setDialog('“Your ship went down on the strait in the night - I saw its lanterns swallowed from the headland. That reef has fed on hulls longer than I\'ve been grey.” <i>The old woman studies your face.</i> “You\'re the only soul the sea gave back. Do you know it - your ship? Your name? Where you were bound?”',
       [{label:'…I- I don\'t remember.', fn:p3}]);
   };
-  setDialog('<i>You come to face-down in the surf, salt raw in your throat. A weathered hand closes on your collar and hauls you up onto the sand.</i> “Easy - easy. You\'re alive. Thought the reef had kept you for good.” <i>He sets you on your feet and steadies you.</i>',
+  setDialog('<i>You come to face-down in the surf, salt raw in your throat. A pair of old, steady hands takes you under the arms and draws you up onto the sand.</i> “Easy now - easy. You\'re alive. I felt the tide turn in the night and knew it had given something back.” <i>She sets you on your feet and steadies you.</i>',
     [{label:'…Where am I?', fn:p2}]);
 }
 function afterIntro(){
+  // the elder rises and heads back to her place in the village
+  const greeter=(G.npcs||[]).find(n=>n.id==='maren');
+  if(greeter && greeter._home){ greeter.x=greeter._home.x; greeter.y=greeter._home.y; greeter.hx=greeter._home.x; greeter.hy=greeter._home.y; greeter.wander=greeter._home.wander; greeter.face={x:0,y:1}; delete greeter._home; }
   setTimeout(()=> toast('Emberwick\'s folk each need a hand - seek the <b style="color:var(--ember)">!</b> markers. Start with <b style="color:var(--ember)">Bram the Smith</b> at the forge; he\'ll arm you for what\'s coming.',6000),700);
   if(Snd.quest) Snd.quest();
 }
