@@ -104,7 +104,10 @@
   #dodgeBtn{background:
     radial-gradient(circle at 50% 46%, rgba(70,110,170,.8) 0%, rgba(45,72,115,.9) 42%, transparent 46%),
     radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);}
+    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);
+    transition:opacity .14s ease, filter .14s ease;}
+  /* dash on cooldown: dimmed & desaturated, lights back up the instant it's ready */
+  #dodgeBtn.cooldown{opacity:.4;filter:grayscale(.9) brightness(.8);}
   #mountBtn{font-size:15px;background:
     radial-gradient(circle at 50% 46%, rgba(206,158,60,.85) 0%, rgba(150,108,40,.9) 42%, transparent 46%),
     radial-gradient(circle at 30% 22%, rgba(255,255,255,.14), transparent 45%),

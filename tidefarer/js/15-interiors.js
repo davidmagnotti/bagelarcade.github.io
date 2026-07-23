@@ -137,7 +137,7 @@ function enterHouse(b){
   // blue-cap quest). Only then does he open it - and the scrying orb inside is
   // what teaches the dash, so the tower is the deliberate next step after the staff.
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('orin') && qs('mushrooms')!=='done'){
-    toast('The tower door won’t give - a faint ward hums under your palm. <b>Orin:</b> “Not yet, friend. Bring me my bluecaps first; then the door - and what waits past it - is yours.”',4600);
+    toast('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>',4200);
     Snd.step(5); return;
   }
   // Aelin's Spire is a school, not a lobby: the door only knows students. Train

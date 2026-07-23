@@ -382,7 +382,13 @@ function updateMountBtn(){
     const hide = !!G.interior;
     const ab=document.getElementById('attackBtn'), db=document.getElementById('dodgeBtn');
     if(ab) ab.style.display = hide?'none':'';
-    if(db) db.style.display = (hide || !(P.unlocked && P.unlocked.dash))?'none':'';
+    if(db){
+      db.style.display = (hide || !(P.unlocked && P.unlocked.dash))?'none':'';
+      // gray the dash button while it's on cooldown; light it back up the moment it's ready
+      // (double-dash keeps it lit for the one chained roll inside the cooldown window)
+      const ready = (P.rollT||0)<=0 && ((P.rollCd||0)<=0 || (P.unlocked && P.unlocked.dash2 && !P.dashChain));
+      db.classList.toggle('cooldown', !ready);
+    }
   }
   const btn=document.getElementById('mountBtn'); if(!btn) return;
   const show = isTouch && ownsMount() && !G.interior && !(typeof inDungeon==='function' && inDungeon()) && G.state==='play' && !P.dead;

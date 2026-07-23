@@ -264,7 +264,7 @@ function useHotspot(h){
       // popup box restating it would just be redundant with what's already on screen
       // the FIRST mage-tower orb also teaches the dash - the mage's parting gift of speed
       const learnsDash = !(P.unlocked && P.unlocked.dash);
-      if(learnsDash && typeof unlockDash==='function') setTimeout(()=>unlockDash('The orb’s last lesson settles into your feet. <b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside.'), 1600);
+      if(learnsDash && typeof unlockDash==='function') setTimeout(()=>unlockDash('The orb’s last lesson settles into your feet. <b style="color:#c9b0ff">Dash learned!</b> <b>Step outside to try it</b> - '+((typeof isTouch!=='undefined'&&isTouch)?'tap the dodge button':'press Shift')+' to dart aside.'), 1600);
       autoSave&&autoSave();
       return;
     }
