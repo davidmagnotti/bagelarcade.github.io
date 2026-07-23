@@ -1135,10 +1135,10 @@ function placeObjectsWind(){
   // mill interior, and a cellar stair there drops into the workings) - so there is
   // no exterior hatch out here in the city.
   const wheel=addBuilding('waterwheel', WH.x, WH.y, 'The Old Waterwheel');
-  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);
-  for(let dy=-1;dy<=1;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house AND the wheel to its east
-  for(let dx=-2;dx<=0;dx++) setSolid(WH.x+dx, WH.y+1, 0);                             // doorway on the mill-house side
-  wheel.door={x:WH.x-0.5, y:WH.y+1.6};
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=4;dx++) setSolid(WH.x+dx, WH.y+dy, 0);  // clear the whole plot first
+  for(let dy=-2;dy<=0;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house + the wheel to its east; front face flush at WH.y so nothing slips behind
+  for(let dx=-2;dx<=0;dx++) setSolid(WH.x+dx, WH.y, 0);                               // doorway on the mill-house front face, where the arch is drawn - open ground right in front
+  wheel.door={x:WH.x-0.5, y:WH.y+1.4};                                               // hotspot one tile out front on clear ground, right where you walk up
   // ---- the working town: two tidy terraces facing the green, well at centre ----
   addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
   addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');
