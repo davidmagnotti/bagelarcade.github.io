@@ -155,6 +155,18 @@ function buildDialogContent(npc){
   if(npc.id==='aldous' && P.story && P.story.princeWoke && !P.story.finale){
     const done=()=>{
       P.story.finale=1;
+      // The prince has come home to Aldermere - the Woodworker is no longer on
+      // Emberwick. Clear him from the live world and the cached isle alike, so he
+      // never lingers at the woodpile once his father has him back.
+      const clearWoody=(arr)=>{ if(!arr) return; const wi=arr.findIndex(n=>n.id==='woody'); if(wi>=0) arr.splice(wi,1); };
+      if(typeof WORLDS!=='undefined' && WORLDS['isle']) clearWoody(WORLDS['isle'].npcs);
+      if(G.worldId==='isle') clearWoody(G.npcs);
+      // The reunion happens while you're standing in the great hall - drop the prince
+      // in beside the throne now, so he's there to speak with the moment the scene ends
+      // (rather than only on the next visit).
+      if(G.interior && G.interior.palace && G.interior.level===0 && !G.interior.furn.some(f=>f.type==='prince')){
+        G.interior.furn.push({type:'prince',x:18.2,y:2.3,hw:0.6,hh:0.55,solid:true});
+      }
       if(qs('homecoming')==='active') completeQuest('homecoming');
       if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(255,215,106,0.9)',60);

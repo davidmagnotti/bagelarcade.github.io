@@ -192,6 +192,9 @@ function spawnNPCs(){
        'That tune in my head? No idea the name. My hands seem to, though - I stack the logs to it.'],0.25);
       w.hums=true; return w; })()
   ];
+  // Once the prince has gone home (the Act IV finale), the Woodworker is no longer
+  // on Emberwick - so keep him out of the world when it regenerates on load.
+  if(P.story && P.story.finale){ const wi=G.npcs.findIndex(n=>n.id==='woody'); if(wi>=0) G.npcs.splice(wi,1); }
   // Pip the cat
   G.cat = {x:34.5, y:31.5, face:1, anim:0, wt:2, found:false, home:{x:34.5,y:31.5}};
 }

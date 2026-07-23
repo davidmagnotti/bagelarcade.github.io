@@ -24,6 +24,9 @@ function palaceInterior(level){
     // GROUND: throne dais + long colonnaded halls + the open central courtyard
     F('rug',16,3.4,0,0,false);
     F('throne',16,2.0,1.0,0.6); F('king',16,1.5,0.6,0.55);
+    // Act IV coda: the prince stands at his father's right hand in the great hall,
+    // home at last. Only here once you've brought the King word that his son lives.
+    if(P.story && P.story.finale) F('prince',18.2,2.3,0.6,0.55);
     F('guard',12.5,2.6,0.4,0.4); F('guard',19.5,2.6,0.4,0.4);
     F('banner',8.5,1.3,0.9,0.25); F('banner',23.5,1.3,0.9,0.25);
     F('hearth',2.4,1.35,1.1,0.35); F('hearth',29.6,1.35,1.1,0.35);
@@ -69,11 +72,29 @@ function palaceKingSpeak(){
   pg.restore();
   const told = P.story && P.story.kingTold;
   const line = (P.story && P.story.finale)
-    ? 'My son takes the sea air on the ramparts - thirty years he missed of it. Sit with us a while, first mate. This hall rings again, and it rings your name.'
+    ? 'My son stands in the light again, here at my right hand, where thirty years of empty air used to sit. Speak with him, first mate - it was your name he asked after first. This hall rings again, and it rings for you both.'
     : told
     ? 'The hall is quieter than it looks, traveler. Thirty years I have paced this floor waiting for word of my son. Bring me an ending - any ending - and these old stones will ring again.'
     : 'Welcome to the Tideglass, traveler. Walk the courtyard, take the air on the ramparts. A palace this size is mostly for echoes now, but the doors are open to a curse-breaker.';
   setDialog('“'+line+'”', [{label:'Your Majesty', ghost:true, fn:closeDialog}]);
+}
+// The prince, home in the great hall after the finale - the Woodworker woken and
+// restored, standing beside his father. Talking to him rotates through his lines.
+function palacePrinceSpeak(){
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Prince';
+  const pg=document.getElementById('dportrait').getContext('2d'); pg.fillStyle='#20160c'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+  drawHumanoid(pg,0,0,{skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3a4a6f',pants:'#2c3852',trim:'#c9a24e',hairstyle:'short',dir:{x:0,y:1},step:0});
+  pg.restore();
+  const lines=[
+    'Thirty years I stacked split logs to a tune I could not name. Turns out it was this hall\'s own anthem. Strange, to stand at last in the room the song was written for.',
+    'My father has scarcely let me from his sight since you brought the word. I do not mind it. I lost thirty years of him - he may crowd me a while yet.',
+    'You carried the warning the whole way through the fog and never once set it down. Ask this house for anything, first mate. It remembers who brought its prince home.',
+    'I still catch my hand reaching for an axe that isn\'t there - the fingers are slower to forget than the mind. But the fog is gone, and that is your doing.'];
+  P._princeLine=((P._princeLine||0)+1)%lines.length;
+  setDialog('“'+lines[P._princeLine]+'”', [{label:'Well met, my prince', ghost:true, fn:closeDialog}]);
 }
 // The palace kitchen: where the victualler's crate is delivered. A warm working
 // room with a great hearth, a prep table, and Nan the cook.
@@ -699,6 +720,11 @@ function drawFurniture(f,s){
       drawShadowAt(cx,s.x,s.y,13);
       drawHumanoid(cx, s.x, s.y-2, {skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',dir:{x:0,y:1},step:0,size:1.3});
       cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('King Aldous',s.x+1,s.y-49); cx.fillStyle='#ffe9a8'; cx.fillText('King Aldous',s.x,s.y-50);
+      break;
+    case 'prince':
+      drawShadowAt(cx,s.x,s.y,12);
+      drawHumanoid(cx, s.x, s.y, {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3a4a6f',pants:'#2c3852',trim:'#c9a24e',hairstyle:'short',dir:{x:-1,y:1},step:0,size:1.26});
+      cx.font='10px Verdana'; cx.textAlign='center'; cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText('The Prince',s.x+1,s.y-45); cx.fillStyle='#ffe9a8'; cx.fillText('The Prince',s.x,s.y-46);
       break;
     case 'cook':
       drawShadowAt(cx,s.x,s.y,12);
