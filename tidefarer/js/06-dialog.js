@@ -402,9 +402,9 @@ function shopButtons(npc,btns){
     const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
     const aelinStudy=()=>{
       if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      // one lesson per day - the weave needs a night to settle before the next
-      if(P.prog && P.prog.spireDay===(P.prog.dayN||1)){
-        setDialog('“You\'ve trained today already - and the weave settles only overnight. Rest, and come back at dawn for the next lesson.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      // one lesson, ever - a single true lesson is all the Spire gives
+      if(P.prog && P.prog.spireTrainedEver){
+        setDialog('“You\'ve had my lesson, and the weave keeps it - there\'s nothing more I can drill into you here. Go and practice what you know. And if you haven\'t yet - step inside; the orb has a gift for a student who\'s earned it.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       const f=aelinFee();
       if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
@@ -413,26 +413,9 @@ function shopButtons(npc,btns){
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
       toast('<b>Aelin\'s lesson:</b> attune your staff (<b>press 3</b>) and cast <b>5 bolts</b> at the practice dummy. No footwork - just clean casting.',5600); Snd.quest();
     };
-    const trainedToday = P.prog && P.prog.spireDay===(P.prog.dayN||1);
-    btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : trainedToday? 'Train at the Spire (rest first)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
-    if(P.skills.magic.lvl>=5){
-      P.spells=P.spells||{};
-      if(!P.spells.snare){
-        btns.unshift({label:'Learn Snare (100g)', fn:()=>{
-          if(P.gold<100){ setDialog('“A hundred gold. Binding-work is the hardest weave there is.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-          P.gold-=100; P.spells.snare=1; Snd.quest(); refreshUI(); autoSave();
-          setDialog('“Snare: the weave made rope. Your staff can now <b>root a foe in place</b>. Come back any time to attune between <b>Bolt</b> and <b>Snare</b>.”',
-            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
-        }});
-      } else {
-        const nextSpell=(P.spell||'bolt')==='bolt'? 'Snare':'Bolt';
-        btns.unshift({label:'Attune staff: '+nextSpell, fn:()=>{
-          P.spell=nextSpell.toLowerCase(); Snd.magic(); autoSave();
-          setDialog('“Attuned. Your staff now casts <b>'+nextSpell+'</b>.”',
-            shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
-        }});
-      }
-    }
+    const trained = P.prog && P.prog.spireTrainedEver;
+    btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    // (Snare removed - the staff casts only Bolt now.)
   }
   if(npc.id==='rook'){
     btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{

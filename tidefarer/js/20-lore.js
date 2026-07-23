@@ -195,7 +195,7 @@ function interiorHotspot(){
   const I=G.interior; if(!I) return null;
   let best=null, bestD=1e9;
   for(const f of I.furn){
-    let lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
+    let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
       books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
@@ -227,8 +227,7 @@ function useHotspot(h){
     // beds belong to somebody - only your own (furnished) bed grants free sleep
     if(G.interior && G.interior.home){
       if(!P.home) toast('The <b>FOR SALE</b> sign creaks outside. <b>Hedda</b> at the farmsteads holds the deed.',4200);
-      else if(!(P.homeUp&&P.homeUp.furnish)) toast('Your roof - but a bare frame and a straw tick. Have <b>Hedda furnish it proper</b> and the bed is yours.',4600);
-      else sleepInBed(true);
+      else sleepInBed(true);   // once the deed is yours, so is the bed - no furnishing required
     }
     else if(G.interior && G.interior.inn) toast('\u201cBeds are <b>ten gold</b>, friend,\u201d calls the innkeep from the hearth. <b>Talk to them</b> to rest the night.',4200);
     else if(G.interior && G.interior.spire){                     // Aelin's cot: students rest free
