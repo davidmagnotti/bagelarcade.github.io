@@ -685,8 +685,7 @@ function killMob(m,skill){
     if(typeof MILL_GATE!=='undefined') for(const [x,y] of MILL_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='mill'); if(cg) cg.open=true;
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');
-    setTimeout(()=>toast('The Cog-Bound sloughs off the shaft and clatters still. The freed gear-train shudders round for the first time in a season, and the great millstone gate grinds up into the ceiling - <b>Nessa\'s sail</b> lies in the vault beyond.',7000), 1400);
+    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');   // the banner says it; no follow-up popup
     if(typeof autoSave==='function') autoSave();
   }
   // After felling a dungeon boss, offer the quick road out - mended and a level
