@@ -31,7 +31,6 @@ function checkPerkMilestone(skill){
   if((P.skills[skill].lvl||1) >= p.lvl && !perkChosenFor(skill) && !P.perkAvail[skill]){
     P.perkAvail[skill]=true;
     if(typeof banner==='function') banner(p.label.toUpperCase()+' MASTERY','CHOOSE A PERK - OPEN SKILLS');
-    if(typeof toast==='function') toast('<b style="color:var(--ember)">A '+p.label+' perk awaits.</b> Open the <b>Skills</b> panel to choose your path.',6000);
   }
 }
 // commit a choice

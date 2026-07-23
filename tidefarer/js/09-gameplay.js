@@ -1031,7 +1031,7 @@ function updatePlayer(dt){
         P.prog.spireTrainedEver=1;                                    // the Spire door now knows you
         const mg=P.skills.magic; addXP('magic', Math.max(160, xpForLevel(mg.lvl)-mg.xp));  // guarantee a level
         gainLXP(80);
-        toast('<b>Aelin smiles.</b> “Five true casts - the weave knows your hand now. Come back tomorrow and we’ll go higher.” <i>(Magic level up!)</i>',5600);
+        toast('<b>Aelin smiles.</b> “Five true casts - the weave knows your hand now. Come back tomorrow and we’ll go higher.”',5600);
         Snd.levelup();
       }
     }

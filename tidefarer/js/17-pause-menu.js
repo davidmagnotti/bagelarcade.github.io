@@ -87,7 +87,6 @@ try{
       store.set(code); box.style.display='none';
       togglePause(false); refreshUI&&refreshUI();
       banner('SAVE RESTORED','YOUR ADVENTURE CONTINUES');
-      toast('<b>Save restored.</b> Welcome back.',4200);
     };
   }
 }catch(e){}

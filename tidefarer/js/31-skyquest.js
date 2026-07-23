@@ -172,7 +172,6 @@ function pressSkyTile(b){
     if(grp.every(d=>d.set)){
       P.story=P.story||{}; P.story.skyG2=1; openSkyGate('g2');
       banner('THE RUNE-TILES ANSWER','THE WIND-WARD PARTS');
-      toast('The five runes flare as one and the wind-ward on the next bridge unravels into colour. <b>The road runs on.</b>',4600);
       if(typeof autoSave==='function') autoSave();
     }
   } else {
@@ -196,7 +195,6 @@ function updateSkyDungeon(dt){
   if(!P.story.skyG1 && G.mobs.filter(m=>m.puzzle===1 && !m.dead).length===0){
     P.story.skyG1=1; openSkyGate('g1');
     banner('THE PERCH IS CLEARED','THE WIND-WARD PARTS');
-    toast('The last sky wraith unravels into mist. The wind-ward on the bridge north thins to nothing - <b>the rainbow road runs on.</b>',4600);
     if(typeof autoSave==='function') autoSave();
   }
   if(!P.story.skyG5 && P.story.skyG4 && G.mobs.filter(m=>m.puzzle===5 && !m.dead).length===0){

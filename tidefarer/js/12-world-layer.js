@@ -1972,7 +1972,9 @@ function pullVaultLever(b){
       invalidateScenery&&invalidateScenery();
       if(b.doneFlag){ P.story=P.story||{}; P.story[b.doneFlag]=1; autoSave&&autoSave(); }
       banner(b.openBanner||'THE FROST-LOCKS YIELD', b.openSub||'THE SEALED GATE GRINDS OPEN');
-      toast(b.openMsg||'The last frost-lock turns and, with a groan of ancient ice, the gate hauls up into the ceiling. The way deeper lies open.',5200);
+      // only pop a toast for gates that carry a CUSTOM message (some name the room beyond);
+      // the generic "the way lies open" line just restated the banner, so it's dropped
+      if(b.openMsg) toast(b.openMsg,5200);
     } else {
       const remain=grp.length-done;
       addFloat(done+' / '+grp.length, b.x, b.y-1.4, '#bfe8ff', 1.1);
@@ -1984,7 +1986,6 @@ function pullVaultLever(b){
   for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
   invalidateScenery&&invalidateScenery();
   banner('THE ICE GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper lies open.',4600);
 }
 function enterFrostVault(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
