@@ -2019,6 +2019,10 @@ function exitFrostVault(){
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 const MILL_GATE = [[17,15],[18,15],[19,15],[20,15],[21,15]];   // the millstone-gate corridor tiles
+// THE SLUICE GATE - an iron drop-gate across the entry stair (corridor A), barring the
+// guardian's chamber. Its winch-crank is locked in the miller's arms-chest, so you must
+// open that chest (and take the bow inside) before the way up to the Cog-Bound opens.
+const MILL_ANTE_GATE = [[17,36],[18,36],[19,36],[20,36],[21,36]];
 function genMillDeep(){
   // a compact undercroft: three small stone chambers cut out of solid rock. Every
   // solid tile bordering the carved floor is recorded as a WALL (ewall decor) so the
@@ -2042,6 +2046,8 @@ function genMillDeep(){
   }
   // the millstone gate starts as solid stone across corridor B (rendered by the catgate)
   for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  // the sluice gate starts solid across the entry stair (corridor A), rendered by its catgate
+  for(const [x,y] of MILL_ANTE_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsMillDeep(){
   G.decor=G.decor||[];
@@ -2053,12 +2059,23 @@ function placeObjectsMillDeep(){
   // THE MILLSTONE GATE - an iron portcullis jammed shut by the seized gear-train.
   // It grinds up once the guardian fouling the works is put down.
   G.decor.push({kind:'catgate', x:19, y:15, open:false, gate:'mill', tiles:MILL_GATE.slice(), label:'the Millstone Gate'});
+  // THE SLUICE GATE - a second iron portcullis across the entry stair, barring the
+  // guardian's chamber until you work the crank stowed in the miller's arms-chest.
+  G.decor.push({kind:'catgate', x:19, y:36, open:false, gate:'millante', tiles:MILL_ANTE_GATE.slice(), label:'the Sluice Gate'});
+  // THE MILLER'S ARMS-CHEST: his old hunting bow, and the winch-crank that lifts the
+  // sluice. Open it to arm yourself with a ranged weapon AND raise the gate to the boss.
+  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:14.5, y:42.5, bow:1});
   // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:19.5, y:7.5, sail:1});
   // an already-cleared run keeps the millstone gate open (the guardian is gone)
   if(P.story && P.story.millDone){
     for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
     for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
+  }
+  // once the arms-chest is opened (or the guardian's down), the sluice stays raised
+  if(P.story && (P.story.millBowTaken || P.story.millDone)){
+    for(const [x,y] of MILL_ANTE_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='millante') d.open=true; }
   }
   G.critters=[];
 }
@@ -3286,6 +3303,29 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
+  if(b.bow){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.millBowTaken=1;
+    // the crank inside frees the sluice gate - it grinds up into the guardian's chamber
+    if(typeof MILL_ANTE_GATE!=='undefined') for(const [x,y] of MILL_ANTE_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='millante'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
+    if(!(P.unlocked && P.unlocked.bow)){
+      P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
+      if(typeof buildHotbar==='function') buildHotbar();
+      Snd.levelup&&Snd.levelup();
+      banner("THE MILLER'S BOW",'A RANGED ARM - AND THE SLUICE GRINDS UP');
+      setTimeout(()=>toast('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and the crank stowed with them frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber. <b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot - loose arrows from range at the thing in the works.',7400),400);
+    } else {
+      giveGold(30); give('potion',1);
+      Snd.quest&&Snd.quest();
+      banner('THE ARMS-CHEST OPENS','THE SLUICE GRINDS UP');
+      setTimeout(()=>toast('You’ve a bow of your own already, so the spare goes to the pack with a few coins and a tonic - and the crank stowed with it frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber.',6200),400);
+    }
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.relic){
     bumpStat('chests');
     give('relic',1); giveGold(150);
@@ -3536,6 +3576,8 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
+  if(id==='milldeep' && !P.prog.millSeen){ P.prog.millSeen=1;
+    if(!(P.story && P.story.millBowTaken)) setTimeout(()=>toast('<i>An iron sluice gate bars the stair up into the works.</i> The miller’s arms-chest here holds the crank that lifts it - <b>open the chest</b> to raise the gate, and arm yourself for what grinds in the dark above.',7200),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.
