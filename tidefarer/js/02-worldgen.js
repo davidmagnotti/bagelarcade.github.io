@@ -165,12 +165,13 @@ function blockedZone(x,y){
   return false;
 }
 function addNode(kind,x,y){
-  // trees & rocks start at 5 hp (was 3) so a green woodcutter/miner needs an
-  // extra swing or two; the per-hit power still climbs with skill, so mastery
-  // brings them back down to one or two hits.
-  const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:5,maxhp:5,dead:false,respawn:0,
+  // trees & rocks start at 9 hp so a green woodcutter/miner has to work for a log
+  // or a stone - roughly nine swings at level 1, which felt far too quick before.
+  // The per-hit power still climbs steeply with skill and better tools, so a
+  // master fells the same tree in a hit or two.
+  const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:9,maxhp:9,dead:false,respawn:0,
              variant:rndi(0,2), sway:Math.random()*TAU};
-  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=6; }
+  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=12; }
   G.nodes.push(n);
   if(kind==='tree'||kind==='rock') setSolid(x,y,1);
   return n;
@@ -249,7 +250,9 @@ function placeObjects(){
   // with a pair framing the fire-gate at the ruin's mouth
   const pillars=[[43,9],[49,9],[41,13],[51,13],[43,17],[49,17],[39,20],[53,20]];
   for(const [x,y] of pillars){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:r()<0.5}); setSolid(x,y,1); }
-  G.decor.push({kind:'crypt',x:46.5,y:8.5}); // visual arch behind the King, at the isle's tip
+  // a ruined stone arch framing the King's ground - scenery only (noRead), so no
+  // "Read" prompt competes for your attention mid-boss-fight
+  G.decor.push({kind:'crypt',x:46.5,y:8.5,noRead:true});
   // warning-boards hammered into the grass before the cursed ground
   for(const [wx,wy] of [[43,27],[49,28],[46,24]]){
     const sp=findOpenNear(wx,wy,2);

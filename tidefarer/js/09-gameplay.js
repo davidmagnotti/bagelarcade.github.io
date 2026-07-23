@@ -159,7 +159,7 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')),o:b,label:'Read'}; }
     }
-    if(b.kind==='crypt'){
+    if(b.kind==='crypt' && !b.noRead){
       const d=dist(P.x,P.y,b.x,b.y+1);
       if(d<2.2 && d<bd){ bd=d; best={type:'lore',key:'crypt',o:b,label:'Read'}; }
     }
