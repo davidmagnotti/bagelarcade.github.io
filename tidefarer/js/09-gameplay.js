@@ -1087,8 +1087,8 @@ function updatePlayer(dt){
   }
   if(G.worldId==='isle' && P.y>=HOLLOW_GATEY && P.y<HOLLOW_GATEY+8 && P.x>HOLLOW_MINX-2 && P.x<HOLLOW_MAXX+2)
     hintOnce('kingwarn','Skull-boards hammered into the grass warn you back. Beyond them the ground turns to broken stone - and something older than the isle waits at its tip.');
-  if(G.worldId==='isle' && G.hollowSealed && P.y>=WARD_GATEY && P.y<WARD_GATEY+4 && P.x>WARD_MINX-2 && P.x<WARD_MAXX+2)
-    hintOnce('wardgate','A wall of old ruin-stone bars the causeway, the sea on either hand, a warded gate shut fast at its heart. The word to open it is not yours - but <b>Elder Maren</b> in the village may know it.');
+  // (No hint at the warded causeway wall - the player is left to find who can open
+  // it on their own. The wall itself renders as an obvious barrier.)
   if(ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');
   if(ZONES.forest && dist(P.x,P.y,ZONES.forest.x,ZONES.forest.y)<8) hintOnce('forest','The Whisperwood. Wolves prowl; bluecaps glow in the shade.');
 }
