@@ -1767,6 +1767,10 @@ function iconCanvas(kind,sz=40){
     g.translate(w/2,h/2); const s=w/40;
     g.scale(s,s);
     switch(kind){
+      case 'goo': g.fillStyle='#7fca6a'; g.beginPath(); g.ellipse(0,2,10,8,0,0,TAU); g.fill();
+        g.fillStyle='#9ade86'; g.beginPath(); g.ellipse(-3,-1,4,3,0,0,TAU); g.fill();
+        g.strokeStyle='#4f8f3e'; g.lineWidth=1.6; g.beginPath(); g.ellipse(0,2,10,8,0,0,TAU); g.stroke();
+        g.fillStyle='#3e6b30'; g.beginPath(); g.arc(-3,3,1.2,0,TAU); g.arc(3,4,1,0,TAU); g.fill(); break;
       case 'silk': g.fillStyle='#ffb0c8'; g.beginPath(); g.roundRect(-12,-8,24,16,4); g.fill();
         g.fillStyle='#ff8fb0'; g.fillRect(-12,-2,24,4);
         g.strokeStyle='#a85878'; g.lineWidth=1.5; g.beginPath(); g.roundRect(-12,-8,24,16,4); g.stroke();
@@ -1861,7 +1865,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat','goo'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }

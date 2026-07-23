@@ -651,6 +651,7 @@ function killMob(m,skill){
   // drops
   const g=rndi(d.gold[0],d.gold[1])*(m.elite?3:1);
   if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
+  if(m.kind==='slime' && Math.random()<0.7){ give('goo',1); addFloat('+1 slime goo',m.x,m.y-1.6,'#7fca6a',1.0); }
   if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
     shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46);
     toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }

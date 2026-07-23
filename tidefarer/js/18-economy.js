@@ -104,8 +104,16 @@ function cookMenu(npc){
 function brewMenu(npc){
   const tonic={mushroom:2, crystal:1};
   const great={potion:2, crystal:1, mushroom:1};
+  const gooTonic={goo:3};
   setDialog('“The cellar\'s warm and the crystals are humming. What shall we draw off the boil?”',
-    [{label:'Brew tonics (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
+    [{label:'Render slime goo (3 goo → 1 tonic)', fn:()=>{
+        if(!canPay(gooTonic)){ setDialog('“Slime goo, of all things - but render <b>three globs</b> and the muck thickens into honest medicine. '+costText(gooTonic)+'.”',
+          [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
+        pay(gooTonic); give('potion',1); Snd.magic();
+        setDialog('“Would you look at that - the muck mends. <i>(+1 Ember Tonic)</i>”',
+          [{label:'Brew more',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+      }},
+     {label:'Brew tonics (2 bluecap + 1 crystal → 2 tonics)', fn:()=>{
         if(!canPay(tonic)){ setDialog('“The recipe is exact: '+costText(tonic)+'. Nature doesn\'t haggle.”',
           [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
         pay(tonic); give('potion',2); Snd.magic();
