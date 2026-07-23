@@ -1511,9 +1511,23 @@ function drawWolf(g,sx,sy,m){
 }
 function drawSkeleton(g,sx,sy,m){
   const s = m.boss?1.7:1, step=Math.sin(m.anim*8)*2.2*s;
+  // THE COG-BOUND: a miller risen fused into the mill's gear-train - an industrial
+  // revenant, deliberately NOT the Hollow King's crowned-and-caped royal skeleton.
+  const cog = !!m.millboss;
   g.save(); g.translate(sx,sy);
   if(m.hurtT>0) g.globalAlpha=0.6;
-  if(m.boss){ g.fillStyle='rgba(120,220,160,0.16)'; g.beginPath(); g.ellipse(0,-24*s,26*s,32*s,0,0,TAU); g.fill(); }
+  if(m.boss){ g.fillStyle= cog?'rgba(214,150,70,0.15)':'rgba(120,220,160,0.16)'; g.beginPath(); g.ellipse(0,-24*s,26*s,32*s,0,0,TAU); g.fill(); }
+  // the great iron gear the miller is bound into, grinding slowly behind his bones
+  if(cog){
+    g.save(); g.translate(0,-17*s); g.rotate(G.time*0.6);
+    const R=12*s;
+    g.fillStyle='#6b5a44';
+    for(let i=0;i<10;i++){ g.save(); g.rotate(i/10*TAU); g.fillRect(-2.3*s,-R-3.2*s,4.6*s,5*s); g.restore(); }
+    g.beginPath(); g.arc(0,0,R,0,TAU); g.fill();
+    g.fillStyle='#4a3f30'; g.beginPath(); g.arc(0,0,R*0.62,0,TAU); g.fill();
+    g.fillStyle='#241f18'; g.beginPath(); g.arc(0,0,R*0.24,0,TAU); g.fill();
+    g.restore();
+  }
   g.fillStyle='#dfe0d8';
   g.fillRect(-5*s,-13*s+Math.max(0,step),3.4*s,11*s-Math.max(0,step));
   g.fillRect(2*s,-13*s+Math.max(0,-step),3.4*s,11*s-Math.max(0,-step));
@@ -1521,23 +1535,41 @@ function drawSkeleton(g,sx,sy,m){
   g.fillStyle='#eceee6'; g.beginPath(); g.roundRect(-7*s,-28*s,14*s,16*s,4*s); g.fill();
   g.strokeStyle='#b9bab1'; g.lineWidth=1.5*s;
   for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(-6*s,-24*s+i*4*s); g.lineTo(6*s,-24*s+i*4*s); g.stroke(); }
-  if(m.boss){ // tattered cape
+  if(m.boss && !cog){ // Hollow King: a tattered royal cape
     g.fillStyle='#3a4a3f'; g.beginPath(); g.moveTo(-8*s,-30*s); g.lineTo(8*s,-30*s);
     g.lineTo(10*s,-6*s); g.lineTo(4*s,-12*s); g.lineTo(0,-5*s); g.lineTo(-5*s,-12*s); g.lineTo(-10*s,-7*s); g.closePath(); g.fill();
+  }
+  if(cog){ // iron straps lashing the old bones to the works
+    g.strokeStyle='#5a4c38'; g.lineWidth=2.4*s; g.lineCap='round';
+    g.beginPath(); g.moveTo(-7.5*s,-23*s); g.lineTo(7.5*s,-21*s); g.stroke();
+    g.beginPath(); g.moveTo(-7.5*s,-15*s); g.lineTo(7.5*s,-17*s); g.stroke();
   }
   // skull
   g.fillStyle='#f2f3ec'; g.beginPath(); g.arc(0,-36*s,7.6*s,0,TAU); g.fill();
   g.fillRect(-4*s,-33*s,8*s,5*s);
   g.fillStyle='#1c2418';
   g.beginPath(); g.arc(-2.8*s,-36*s,1.9*s,0,TAU); g.arc(2.8*s,-36*s,1.9*s,0,TAU); g.fill();
-  if(m.boss){ g.fillStyle='#78dca0'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill();
-    g.fillStyle='#ffd76a'; g.fillRect(-6*s,-45*s,12*s,3.4*s);
-    g.beginPath(); g.moveTo(-6*s,-45*s); g.lineTo(-3.5*s,-50*s); g.lineTo(-1*s,-45*s); g.lineTo(1*s,-50*s); g.lineTo(3*s,-45*s); g.lineTo(5*s,-50*s); g.lineTo(6*s,-45*s); g.closePath(); g.fill(); }
-  // rusty sword
+  if(m.boss){
+    if(cog){ // furnace-amber eyes and a riveted iron brow-band - no crown
+      g.fillStyle='#ffb347'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill();
+      g.fillStyle='#5a4c38'; g.fillRect(-6.4*s,-43.4*s,12.8*s,2.8*s);
+      g.fillStyle='#8a7658'; for(const bx of [-4.4,0,4.4]){ g.beginPath(); g.arc(bx*s,-42*s,0.9*s,0,TAU); g.fill(); }
+    } else { // Hollow King: ghostlight eyes and a jagged gold crown
+      g.fillStyle='#78dca0'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill();
+      g.fillStyle='#ffd76a'; g.fillRect(-6*s,-45*s,12*s,3.4*s);
+      g.beginPath(); g.moveTo(-6*s,-45*s); g.lineTo(-3.5*s,-50*s); g.lineTo(-1*s,-45*s); g.lineTo(1*s,-50*s); g.lineTo(3*s,-45*s); g.lineTo(5*s,-50*s); g.lineTo(6*s,-45*s); g.closePath(); g.fill(); }
+  }
+  // weapon: the Cog-Bound swings a broken iron gear-tooth; lesser bones, a rusty sword
   const flip=m.face<0?-1:1;
   g.save(); g.translate(9*s*flip,-20*s); g.scale(flip,1); g.rotate(-0.5+(m.swing||0)*2);
-  g.fillStyle= m.boss?'#8fd4ae':'#a8a094'; g.fillRect(-1.4*s,-16*s,2.8*s,15*s);
-  g.fillStyle='#6b5b43'; g.fillRect(-3.5*s,-2*s,7*s,2.6*s);
+  if(cog){
+    g.fillStyle='#7a6b52'; g.fillRect(-1.9*s,-16*s,3.8*s,15*s);
+    g.fillStyle='#5a4c38'; g.fillRect(-3.4*s,-16.5*s,6.8*s,3.4*s);   // the snapped-off tooth head
+    g.fillStyle='#463b2c'; g.fillRect(-3.5*s,-2*s,7*s,2.6*s);
+  } else {
+    g.fillStyle= m.boss?'#8fd4ae':'#a8a094'; g.fillRect(-1.4*s,-16*s,2.8*s,15*s);
+    g.fillStyle='#6b5b43'; g.fillRect(-3.5*s,-2*s,7*s,2.6*s);
+  }
   g.restore();
   g.restore();
 }
