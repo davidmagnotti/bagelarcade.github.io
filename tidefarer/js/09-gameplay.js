@@ -680,11 +680,13 @@ function killMob(m,skill){
     setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // The Storm Roc rules the Cloudreach - felling it wins her stormsail (the parachute
-  // that carries you DOWN to Windsurf)
+  // The Storm Roc - the Cloudreach's apex terror. She is an OPTIONAL trophy hunt
+  // now: felling her wins glory and a fat purse, but the road DOWN comes from
+  // calming the sky on the Rainbow Road, not from her eyrie.
   if(m.skyboss){
-    P.story=P.story||{}; P.story.rocDown=1; P.story.parachute=1;
-    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
+    P.story=P.story||{}; P.story.rocDown=1;   // trophy taken; also settles the Roc bounty
+    if(typeof giveGold==='function') giveGold(120);
+    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and <b style="color:#ffd76a">120 gold</b> of scattered sky-plunder with it. <i>The way down still runs along the wind: seek the Wind-Lost Bird\'s <b>rainbow road</b> to calm it.</i>',7000), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
@@ -698,13 +700,15 @@ function killMob(m,skill){
     G.decor.push({kind:'stormbead', x:(m.hx||m.x), y:(m.hy||m.y)});
     if(typeof autoSave==='function') autoSave();
   }
-  // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind
+  // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind, and the
+  // calmed sky is what bears you DOWN off the Cloudreach: it grants the stormsail and
+  // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
   if(m.skyfinalboss){
-    P.story=P.story||{}; P.story.skyDungeonDone=1;
+    P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.parachute=1;
     Snd.boss&&Snd.boss();
-    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS');
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - THE SKY WILL BEAR YOU NOW');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, and the rainbow road runs quiet.',
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the little bird loops back and lays a great kite of stitched stormcloth at your feet: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
       {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
   }
   // The Drowned Warden keeps the Stormreach catacomb

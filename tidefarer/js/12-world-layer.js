@@ -72,8 +72,8 @@ const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon un
 const SKY_ZONES = { // THE CLOUDREACH - a rock adrift in the cloud-sea; Ashwing flies you up
   landing: {x:60, y:98, r:8,  name:'Cloudfall Landing', lv:[9,10]},  // where the dragon sets you down
   shrine:  {x:60, y:62, r:11, name:'The Windshrine',    lv:[9,10]},
-  eyrie:   {x:60, y:30, r:13, name:"The Roc's Eyrie",   lv:[10,11]}, // the Storm Roc (gates Windsurf)
-  leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[9,10]}   // parachute jump-off point -> Windsurf
+  eyrie:   {x:60, y:30, r:13, name:"The Roc's Eyrie",   lv:[10,11]}, // the Storm Roc (optional trophy hunt)
+  leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[9,10]}   // stormsail jump-off -> Windsurf (won on the Rainbow Road)
 };
 const REACH_ZONES = { // STORMREACH - a storm-coast sea stop between Windsurf and the Frozen Isle
   strand: {x:60, y:98, r:8,  name:'Wreckstrand',         lv:[11,12]}, // the ferry lands here
@@ -1157,8 +1157,8 @@ function placeObjectsWind(){
   const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
   NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
   SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
-  // You came DOWN onto Windsurf on the Roc's stormsail - there is no dragon here, and
-  // no keel crosses the cursed strait until you calm it. So until the tide is calmed
+  // You came DOWN onto Windsurf on the stormsail won atop the Cloudreach - there is no
+  // dragon here, and no keel crosses the cursed strait until you calm it. So until the tide is calmed
   // you are meant to be stranded: fix the strait and the ferry opens, your way out.
   if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
   addBuilding('lamp', D.x, D.y-1, '');
@@ -2097,12 +2097,14 @@ function enterMillFromInterior(){
 
 /* =====================================================================
    THE CLOUDREACH (sky) + STORMREACH (reach) - a two-island arc:
-   Ashwing flies you UP into the cloud-sea to the Cloudreach. Fell the
-   Storm Roc that rules it and you win a great kite-sail - a PARACHUTE -
-   and may leap from the Cloudreach DOWN through the cloud onto Stormreach,
-   a storm-battered shore. No keel has reached it in memory, so you are
-   stranded there until you put down its brute-lord; do that and the
-   castaways mend a hull, and Stormreach joins the ferry roads.
+   Ashwing flies you UP into the cloud-sea to the Cloudreach. Run the
+   Wind-Lost Bird's RAINBOW ROAD (the sky-dungeon) and put out the Storm-Eye
+   to calm the high wind - that wins you a stormsail and opens THE LEAP, the
+   way DOWN through the cloud onto Windsurf, then Stormreach far below. (The
+   Storm Roc that rules the eyrie is an optional trophy hunt, not the road
+   down.) No keel has reached Stormreach in memory, so you are stranded there
+   until you put down its brute-lord; do that and the castaways mend a hull,
+   and Stormreach joins the ferry roads.
    ===================================================================== */
 function genRadialIsle(cx0, cy0, r0){
   const rng=mulberry32(SEED);
@@ -2140,8 +2142,8 @@ function placeObjectsSky(){
   for(let i=0;i<7;i++){ const a=i/7*TAU, px=Math.round(Z.shrine.x+Math.cos(a)*4), py=Math.round(Z.shrine.y+Math.sin(a)*4);
     if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:i%3===0, loreKey:'cloudreach'}); setSolid(px,py,1); } }
   G.decor.push({kind:'lamp', x:Z.landing.x-3+0.5, y:Z.landing.y+0.5}); G.decor.push({kind:'lamp', x:Z.landing.x+3+0.5, y:Z.landing.y+0.5});
-  // THE LEAP: a jutting stone shelf over the cloud-drop. Usable once the Roc is down
-  // (and you've the parachute) - it carries you to Stormreach far below.
+  // THE LEAP: a jutting stone shelf over the cloud-drop. Usable once the Rainbow Road
+  // is run and the sky is calmed (that grants the stormsail) - it carries you to Windsurf far below.
   G.decor.push({kind:'leappoint', x:Z.leap.x+0.5, y:Z.leap.y+0.5, name:'THE LEAP', labelY:-40});
   G.decor.push({kind:'lamp', x:Z.leap.x-2+0.5, y:Z.leap.y+0.5}); G.decor.push({kind:'lamp', x:Z.leap.x+2+0.5, y:Z.leap.y+0.5});
   // wind-blown grass & a couple of chests for the climb
@@ -2159,13 +2161,14 @@ function spawnSkyFolk(){
   const Z=SKY_ZONES;
   G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.shrine.x-1.5, Z.shrine.y+2.5,
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
-    ['Few climb Ashwing’s wing this high. Fewer still leave - the Storm Roc suffers no guests in her sky.',
-     'There is a shelf on the west edge, past the shrine - The Leap. Step off it and you fall forever… unless you carry a sail. The Roc keeps one, folded in her eyrie.',
-     'Put the Roc down and her stormsail is yours. Then you may leap from the west shelf and ride the cloud DOWN to <b>Windsurf</b>, bright on the water below. Aim well - there is no climbing back up on foot.'],0.4));
+    ['Few climb Ashwing’s wing this high. Fewer still leave - the wind up here is soured, and a soured sky suffers no guests.',
+     'There is a shelf on the west edge, past the shrine - The Leap. Step off it and you fall forever… unless the wind itself will bear you. It will not, the way it blows now.',
+     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Calm the wind and it will carry you DOWN from The Leap to <b>Windsurf</b>, bright on the water below - there is no other road off this rock.',
+     'The Storm Roc still rules the eyrie, aye - a terror, but not your way home. Test your blade on her for the glory of it, if you must; the road down runs along the rainbow, not through her nest.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
-     'Not ready to face the Roc? Ashwing will carry you back down to the Sunward shore whenever the height gets into your knees.'],0.5));
+     'The way onward is the bird’s <b>rainbow road</b>, not the Roc’s eyrie - calm the wind and it bears you down. Or if the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
 }
 function spawnMobsSky(){
   const Z=SKY_ZONES;
@@ -2319,7 +2322,7 @@ function flyToCloudreach(){
 }
 function askSkyDragon(){
   // Ashwing on the Cloudreach - the ride back DOWN the way you came, to the Sunward
-  // shore. (Going FORWARD to Windsurf is the parachute's job - and needs the Roc down.)
+  // shore. (Going FORWARD to Windsurf is the stormsail's job - and needs the Rainbow Road run.)
   setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down the way you came, to the Sunward shore, whenever the height gets into your knees.</i>',
     [ {label:'Fly back to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
         flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }},
@@ -2327,12 +2330,12 @@ function askSkyDragon(){
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
-    toast('The stone shelf juts out over a drop of pure cloud - no bottom, only the far grey shine of the sea. You would need <b>a sail to fall by</b>. They say the <b>Storm Roc</b> keeps one.',5200);
+    toast('The stone shelf juts out over a drop of pure cloud - no bottom, only the far grey shine of the sea. You would need the <b>wind itself to bear you</b>, and it blows too wild yet. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will carry you down.',6200);
     Snd.step&&Snd.step(5); return;
   }
   if(!flightLockOK()) return; closeDialog();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-  toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
+  toast('You shake out your <b>stormsail</b>, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
   if(Snd.boss) Snd.boss();
   setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
       banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
@@ -2917,9 +2920,9 @@ QUESTS.rimebound={ giver:'sigrid', title:'The Rimebound', kind:'special', xpL:48
   doneText:'The violet frost let go? Then it is at peace - and so, a little, am I. Two of Vath\'s cruelties undone on our ice alone. The Hoarfrost Hoard is yours; you paid for it in cold.',
   rw:{gold:160, item:{elixir:1, potion:2}, xp:{melee:320, magic:280}} };
 QUESTS.stormroc={ giver:'aeron', title:'Terror of the Cloud-Sea', kind:'special', xpL:420,
-  brief:'Feel that wind? That is HER temper. The Storm Roc has ruled this cloud-rock since my grandfather\'s day, and of late she suffers no guest in her sky - takes ships, takes sail, takes the odd fool who climbs too high. Face her on the eyrie. Best her, and her great stormsail is yours - the only kite that will carry you down to Windsurf.',
-  log:'Defeat the Storm Roc on her eyrie atop the Cloudreach, and claim her stormsail.',
-  doneText:'She is DOWN? Then the sky is open again, and you have won the Leap - step off the west shelf and her sail carries you clean down to Windsurf. Ride the wind, Skyward. You have earned the name.',
+  brief:'Feel that wind? That is HER temper. The Storm Roc has ruled this cloud-rock since my grandfather\'s day, and of late she suffers no guest in her sky - takes ships, takes sail, takes the odd fool who climbs too high. She is no one\'s road home, mind - the way DOWN runs along the bird\'s rainbow. But if your blade itches for a true terror, face her on the eyrie. Best her, and the Cloudreach will sing your name.',
+  log:'Optional: defeat the Storm Roc on her eyrie atop the Cloudreach.',
+  doneText:'She is DOWN? By every wind - the Roc herself, felled! The cloud-folk will tell that tale for three generations. You have earned the name Skyward, and a hero\'s share of her hoard besides.',
   rw:{gold:140, item:{elixir:1}, xp:{archery:300, melee:220}} };
 QUESTS.barrowbrute={ giver:'mora', title:'Wrecker of Stormreach', kind:'special', xpL:440,
   brief:'Look about you, traveler - we did not choose this wreck-strewn shore. We STAYED, because the Barrow Brute walks the barrow road and no boat we launch outlives the reef while it lives. Put the great brute back in its barrow. Do that, and Stormreach is a port again - and some of us go home.',
@@ -3485,9 +3488,12 @@ function switchWorld(id){
     if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
   }
   if(id==='sky'){
-    // Aeron names the Storm Roc the moment you set foot on the Cloudreach - she
-    // gates the Leap down to Windsurf, so the hunt is all but mandatory.
+    // The Rainbow Road is the way DOWN off the Cloudreach: run it, calm the sky, and
+    // the wind bears you to Windsurf. The Storm Roc is an optional trophy hunt Aeron
+    // offers on the side. Point first-timers at the bird so the road isn't missed.
     if(qs('stormroc')!=='done' && !P.quests.stormroc) P.quests.stormroc='avail';
+    if(!(P.story && (P.story.birdQuest || P.story.skyDungeonDone || P.story.parachute)))
+      setTimeout(()=>toast('A stormtossed <b>Wind-Lost Bird</b> frets by the landing. The high wind is soured, and it is the only road down from here - hear her out and run her <b>rainbow road</b> to calm the sky. <i>(The Storm Roc in the eyrie is an optional hunt, not your way home.)</i>',7600),1200);
   }
   if(id==='reach'){
     // the castaways' two tormentors: the Brute on the barrow road (Mora) and the

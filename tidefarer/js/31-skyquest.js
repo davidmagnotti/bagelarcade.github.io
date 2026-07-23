@@ -360,13 +360,13 @@ function skyBirdDialog(){
   }
   const accept=()=>{
     P.story=P.story||{}; P.story.birdQuest=1;
-    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Then follow me - up the rainbow! Six little isles, each with a trial the storm left behind. Clear them, put the Storm-Eye out, and the wind is mine again. Step onto the road when you\'re ready.',
+    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Then follow me - up the rainbow! Six little isles, each with a trial the storm left behind. Clear them, put the Storm-Eye out, and the wind runs sweet again - sweet enough to carry us BOTH: me to my islands, and you down off this rock to the city on the water. Step onto the road when you\'re ready.',
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
         {label:'In a moment', ghost:true, fn:closeDialog} ]);
     if(Snd.quest) Snd.quest();
     if(typeof autoSave==='function') autoSave();
   };
-  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! I used to glide down to my favourite islands every morning - but the high wind has turned cruel and blows me clean off course before I can land. Something up there has soured it. The <b>Storm-Eye</b> - a great unblinking storm-core - roosting where the wind is born, on a rainbow road only the sky-brave can run. Would you climb it with me and set the wind right?',
+  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! I used to glide down to my favourite islands every morning - but the high wind has turned cruel and blows me clean off course before I can land. Something up there has soured it. The <b>Storm-Eye</b> - a great unblinking storm-core - roosting where the wind is born, on a rainbow road only the sky-brave can run. Set it right and the calmed sky will bear your weight too: it is the only road DOWN from the Cloudreach. Would you climb it with me?',
     [ {label:'Lead the way', cls:'gold', fn:accept},
       {label:'Maybe later', ghost:true, fn:closeDialog} ]);
 }
