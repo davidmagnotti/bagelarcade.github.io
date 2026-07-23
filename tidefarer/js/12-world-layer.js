@@ -3380,6 +3380,21 @@ function openChest(b){
   setTimeout(autoSave,300);
 }
 
+// The ferryman's warning on your first night on Barik: night is dangerous off
+// Emberwick's sheltered shores - get behind a door, find the inn, take a bed.
+function barikArrivalGreeting(){
+  if(G.state!=='play' || (typeof dlg!=='undefined' && dlg.open)) return;
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Ferryman';
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#141a24'; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+  if(typeof drawHumanoid==='function') drawHumanoid(pg,0,0,{skin:'#c98d5f',hair:'#6a5a44',beard:'#5a4a38',shirt:'#2e4a5e',pants:'#3a3229',hat:'straw',dir:{x:0,y:1},step:0});
+  pg.restore();
+  setDialog('<i>The ferryman makes fast to the Greyharbor pilings and claps the salt from his hands.</i> “Barik, then - and mind yourself. This is no Emberwick. Off these sheltered shores the dark brings things down off the crag, and folk with any sense are behind a bolted door by dusk.” <i>He nods up at the shuttered town.</i> “And night is already on us. Find the <b>inn</b> - the <b>Gull &amp; Anchor</b>, up past the well - and take a bed. Whatever is prowling out there will keep till morning.”',
+    [{label:'I\'ll find a bed', cls:'gold', fn:closeDialog}]);
+}
 function ensureGravelord(announce){
   if(G.worldId!=='isle' || qs('gravelord')!=='active') return;
   if(G.mobs.some(m=>m.kind==='gravelord' && !m.dead)) return;
@@ -3513,6 +3528,13 @@ function switchWorld(id){
       if(!(P.tools.pick>0)){ P.kit=true; P.tools.pick=Math.max(P.tools.pick||0,1); got.push('a pickaxe'); }
       if(got.length){ if(typeof buildHotbar==='function') buildHotbar(); refreshUI();
         setTimeout(()=>toast('You check your pack on the crossing - the isle sent you off with '+got.join(', ')+'. Enough to make an honest start on Barik.',6000),1500); }
+    }
+    // First landing on the wild shores: night here (Emberwick's endless day is behind
+    // you), and the ferryman warns you to get behind a door - go find an inn.
+    if(prevWorld==='isle' && !(P.prog&&P.prog.barikArrived)){
+      P.prog=P.prog||{}; P.prog.barikArrived=1;
+      G.dayT=0.70;   // arrive at night
+      setTimeout(()=>{ if(typeof barikArrivalGreeting==='function') barikArrivalGreeting(); }, 1000);
     }
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail'; }   // Warden Kell's work is available; no toast - the player finds him
