@@ -807,6 +807,16 @@ function awakenDragon(){
   if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.ach='dragonsworn'; dr.state='chase'; dr.noAggroT=0;
     dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
   P.metDragon=1;
+  // seal the chamber: the Dragon Gate flares shut behind you - no way out (and no
+  // boar in) until the wyrm is down. Only the Emberdeep has the firegate to close.
+  if(G.worldId==='eastdeep'){
+    const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');
+    if(g3){ g3.open=false; for(let x=g3.x0;x<=g3.x1;x++) setSolid(x,g3.gy,1);
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      if(typeof shockwave==='function') shockwave(40.5,g3.gy+0.5,'rgba(255,140,60,0.92)',50);
+      G.shake=Math.max(G.shake||0,0.5); Snd.boss&&Snd.boss(); }
+    G.dragonSealed=1;
+  }
   banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
   if(Snd.boss) Snd.boss(); G.shake=0.9;
 }
@@ -1063,7 +1073,6 @@ function dispelStaffGate(b){
   Snd.magic&&Snd.magic(); G.shake=0.45;
   shockwave(b.x,b.y,'rgba(255,150,80,0.9)',44); burst(b.x,b.y-0.4,'#ffb060',20,2.6);
   banner('THE EMBER WARD BREAKS','THE HOARD LIES OPEN');
-  toast('You level the fire staff and speak the counter-word. The ember-fence gutters, flares white, and blows out like a struck lantern. <b>The way is open.</b>',5200);
   autoSave&&autoSave();
 }
 function updateEastDeep(dt){
@@ -3697,8 +3706,7 @@ function switchWorld(id){
   // points the way without solving anything - a compass, not a walkthrough.
   if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
     setTimeout(()=>toast('<i>Three frost-locks bar the deep gate.</i> Somewhere in the pillar-warren stand three levers - throw them all, and the way opens.',7000),1400); }
-  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
-    setTimeout(()=>toast('<i>Three sealed firegates lie ahead.</i> The old wards yield in turn: tread every warm plate, drain the lava channel, then wake the runes in their carved order.',7500),1400); }
+  // (no arrival hint for the Emberdeep - the player reads the locks for themselves)
   if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1;
     setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;

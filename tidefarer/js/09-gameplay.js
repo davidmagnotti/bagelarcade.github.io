@@ -618,6 +618,13 @@ function vathEscapes(m){
 function dragonFaints(m){
   // beaten down, the binding shatters - Ashwing swoons and comes to himself
   m.fainted=1; m.enspelled=false; m.state='idle'; m.tx=null;
+  // the chamber unseals: the Dragon Gate opens again now the wyrm is down
+  if(G.dragonSealed){
+    const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');
+    if(g3){ g3.open=true; for(let x=g3.x0;x<=g3.x1;x++){ setSolid(x,g3.gy,0); setTile(x,g3.gy,T.RUIN); }
+      if(typeof invalidateScenery==='function') invalidateScenery(); }
+    G.dragonSealed=0;
+  }
   bossReward(m);
   m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
   Snd.boss(); G.shake=0.9; G.slowmo=1.15;
@@ -850,6 +857,15 @@ document.getElementById('respawnBtn').onclick=()=>{
     m.hp=m.maxhp; m.state='idle'; m.hurtT=0; m.noAggroT=2.5;
     m.summoned=[false,false];               // bosses may summon their guard anew
     if(typeof m.hx==='number'){ m.x=m.hx; m.y=m.hy; }   // sent back to its post
+  }
+  // if you died sealed in Ashwing's chamber, reset the encounter: unseal the Dragon
+  // Gate and clear the wyrm so re-entering re-triggers (and re-seals) the fight cleanly
+  if(G.dragonSealed){
+    const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');
+    if(g3){ g3.open=true; for(let x=g3.x0;x<=g3.x1;x++){ setSolid(x,g3.gy,0); setTile(x,g3.gy,T.RUIN); }
+      if(typeof invalidateScenery==='function') invalidateScenery(); }
+    for(const m of G.mobs){ if(m.kind==='dragon' && !m.fainted){ m.dead=true; m.respawnT=-1; } }
+    G.dragonMob=null; G.dragonSealed=0;
   }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
@@ -1177,6 +1193,9 @@ function updateMobs(dt){
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
+    // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
+    // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
+    if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
     if(m.stormeye){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
     if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
