@@ -851,6 +851,9 @@ document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv')
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
+  // hold the hero still during a scripted camera pan (the ward-gate reveal), so
+  // control returns exactly where it left off and no dash/move fires unseen
+  if(G.camCine){ P.moving=false; P.click=null; return; }
   // STUNNED (dazed): the Storm-Wraith's snap can lock you for a beat - no walking,
   // dashing, steering or striking. Timers still tick so you recover on schedule.
   if((P.stunT||0)>0){

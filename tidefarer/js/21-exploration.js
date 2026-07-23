@@ -116,12 +116,35 @@ function frame(ts){
   updateWorld(dt);
   WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt); updateGulls(dt);
   G.flash=Math.max(0,G.flash-raw*1.6);
-  // camera with movement look-ahead
-  const lead = P.moving? 26 : 0;
-  const tx=isoX(P.x,P.y)-VW/2 + (P.dir.x-P.dir.y)*lead*0.8;
-  const ty=isoY(P.x,P.y)-VH/2-20 + (P.dir.x+P.dir.y)*lead*0.4;
-  G.cam.x=lerp(G.cam.x,tx,Math.min(1,raw*6));
-  G.cam.y=lerp(G.cam.y,ty,Math.min(1,raw*6));
+  // once the accept-dialog is dismissed, launch the deferred ward-gate reveal pan
+  if(G.wardPan && !dlg.open && !G.camCine && G.worldId==='isle' && typeof WARD_GATEY!=='undefined'){
+    const gx=((typeof WARD_MINX!=='undefined')?(WARD_MINX+WARD_MAXX)/2:Math.round(ZONES.ruins.x))+0.5;
+    G.camCine={ wx:gx, wy:WARD_GATEY+0.5, t:0, outDur:0.95, holdDur:1.4, backDur:0.95, fired:false };
+    if(typeof cinematic==='function') cinematic(true);   // letterbox for the beat
+    G.wardPan=0;
+  }
+  if(G.camCine){
+    // a scripted reveal pan: sweep up to the gate, hold, and sweep back to the hero.
+    // The normal player-follow is suspended for its duration.
+    const c=G.camCine; c.t+=raw;
+    if(!c.fired && c.t>=c.outDur){ c.fired=true;   // punctuate the reveal as the camera arrives
+      if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW KING STIRS');
+      if(typeof shockwave==='function') shockwave(c.wx,c.wy,'rgba(155,224,160,0.85)',60);
+      G.shake=Math.max(G.shake||0,0.5); if(Snd.quest) Snd.quest();
+    }
+    const onGate = c.t < c.outDur + c.holdDur;
+    const fx = onGate? c.wx : P.x, fy = onGate? c.wy : P.y;
+    G.cam.x=lerp(G.cam.x, isoX(fx,fy)-VW/2,    Math.min(1,raw*3));
+    G.cam.y=lerp(G.cam.y, isoY(fx,fy)-VH/2-20, Math.min(1,raw*3));
+    if(c.t>=c.outDur+c.holdDur+c.backDur){ G.camCine=null; if(typeof cinematic==='function') cinematic(false); }
+  } else {
+    // camera with movement look-ahead
+    const lead = P.moving? 26 : 0;
+    const tx=isoX(P.x,P.y)-VW/2 + (P.dir.x-P.dir.y)*lead*0.8;
+    const ty=isoY(P.x,P.y)-VH/2-20 + (P.dir.x+P.dir.y)*lead*0.4;
+    G.cam.x=lerp(G.cam.x,tx,Math.min(1,raw*6));
+    G.cam.y=lerp(G.cam.y,ty,Math.min(1,raw*6));
+  }
   render();
   uiTick+=dt;
   if(uiTick>0.25){ uiTick=0; refreshUI(); }
