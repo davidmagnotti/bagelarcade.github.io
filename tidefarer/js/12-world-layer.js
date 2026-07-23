@@ -1174,9 +1174,13 @@ function placeObjectsWind(){
       const n=addNode('tree',ax,ay); if(t===T.SAND||dist(ax,ay,B.x,B.y)<B.r) n.palm=1;
     }
   }
-  // shells & a few beach flowers
-  for(let i=0;i<22;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
-    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay); }
+  // spiral shells along the strand: keep trying until a dozen have landed on real
+  // sand, spaced out - the old "22 random tries" almost always found bare grass and
+  // left just one or two on the whole isle.
+  let shells=0;
+  for(let tries=0; tries<8000 && shells<12; tries++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
+    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay) && !G.nodes.some(n=>n.kind==='shell'&&dist(n.tx,n.ty,ax,ay)<5)){
+      addNode('shell',ax,ay); shells++; } }
   // friendly town critters: hens & cats about the plaza, crabs on the sand, gulls handled globally
   G.critters=[];
   const critter=(kind,x,y,range,col)=>{ if(!inb(x,y)||solidAt(x,y)) return;
