@@ -345,6 +345,17 @@ function render(){
   else if(((G._mmT=(G._mmT|0)+1) % 10) === 0) drawMinimap();
 }
 
+// resource nodes show the same style of health bar as enemies while they're
+// being harvested - a dark backing with a colored fill that drains as the tree
+// or rock loses hp. Only drawn once a node has taken a hit (hp<maxhp).
+function drawNodeHp(n,s){
+  const w=24;
+  const top = n.kind==='rock' ? -50 : n.palm ? -112 : (n.big ? -114 : -102);
+  const frac=clamp(n.hp/n.maxhp,0,1);
+  cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(s.x-w/2, s.y+top, w, 4);
+  cx.fillStyle = n.kind==='rock' ? '#b9c2cf' : '#6fbf73';
+  cx.fillRect(s.x-w/2, s.y+top, w*frac, 4);
+}
 function drawNode(n,s){
   if(n.kind==='tree' && n.palm){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
@@ -378,6 +389,7 @@ function drawNode(n,s){
       cx.strokeStyle='rgba(40,25,12,0.7)'; cx.lineWidth=1; cx.stroke();
     }
     cx.restore();
+    if(n.hp<n.maxhp) drawNodeHp(n,s);
   } else if(n.kind==='rock'){
     if(n.dead){ cx.drawImage(SPR.rockLow, s.x-35, s.y-44); return; }
     drawShadowAt(cx,s.x,s.y,15);
@@ -394,6 +406,7 @@ function drawNode(n,s){
         cx.stroke();
       }
     }
+    if(n.hp<n.maxhp) drawNodeHp(n,s);
   } else if(n.kind==='apple'){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
     const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.8+n.sway)*1.2;
@@ -2092,9 +2105,10 @@ function drawPlayerFigure(s){
   const expr = P.hurtT>0? 'hurt'
     : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
-  const look={hero:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
+  const look={hero:true, expr, skin:'#d8a97a',hair:'#7a4526',hairstyle:'long',shirt:'#3f6e56',pants:'#3c3833',
     pauldrons:P.swordTier>0, trim:P.swordTier>0?'#8a6d30':null,
     crest:!!(P.story && P.story.necklace),  // the crest necklace, worn from wake-up
+    mask: !!(P.story && P.story.masked),     // the Emberwick mask - worn until the woodworker draws it off
     hat: has('crown',1)?'crown':null};
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more

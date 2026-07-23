@@ -227,7 +227,7 @@ function startIntro(){
       [{label:'Continue', fn:p4}]);
   };
   const p2=()=>{
-    setDialog('“Your ship went down on the strait in the night - I saw its lanterns swallowed from the headland. That reef has fed on hulls longer than I\'ve been grey.” <i>The old woman studies your face.</i> “You\'re the only soul the sea gave back. Do you know it - your ship? Your name? Where you were bound?”',
+    setDialog('“Your ship went down on the strait in the night - I saw its lanterns swallowed from the headland. That reef has fed on hulls longer than I\'ve been grey.” <i>The old woman studies the pale mask that hides your face, and thinks better of asking.</i> “You came ashore wearing that - and your hand went to it before your eyes even opened, like it were part of you. Keep it, if it steadies you. You\'re the only soul the sea gave back. Do you know it - your ship? Your name? Where you were bound?”',
       [{label:'…I- I don\'t remember.', fn:p3}]);
   };
   setDialog('<i>You come to face-down in the surf, salt raw in your throat. A pair of old, steady hands takes you under the arms and draws you up onto the sand.</i> “Easy now - easy. You\'re alive. I felt the tide turn in the night and knew it had given something back.” <i>She sets you on your feet and steadies you.</i>',
@@ -242,6 +242,9 @@ function afterIntro(){
 }
 function startFresh(){
   G.wiping=false;   // saving is fine again for the new game (matters on the no-reload fallback path)
+  // she washes ashore already masked - the mask rides with her the whole journey,
+  // and only comes off when her brother finally coaxes it free (Act I's close).
+  P.story=P.story||{}; P.story.masked=1;
   for(const k in EXPL) delete EXPL[k];
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';

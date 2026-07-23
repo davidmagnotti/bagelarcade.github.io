@@ -3012,26 +3012,28 @@ QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:
   rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
 
 /* =====================================================================
-   ACT IV - "The Enchanter's Tide" resolves. The King's audience sets you
-   after Vath, and after the truth of his lost son. The pendant is a memory-
-   ward; the Woodworker is the enchanted prince; you are the first mate who
-   saved him from the wreck and carried the warning through thirty years of
-   fog. Break Vath to loose the binding, wake the prince, bring him home.
+   ACT I FINALE - "The Enchanter's Tide" turns. The King's audience sets you
+   after Vath, and after the truth of his lost children. The pendant is a
+   memory-ward; the Woodworker is the enchanted prince, the scholarly brother;
+   and YOU - the masked stranger - are the warrior princess, the sister the sea
+   took first. Show the ward, take off the mask, remember, and bring the prince
+   to the capital - where Vath comes not to fight but to seize the throne's
+   magic, and the King spends himself to buy your escape.
    ===================================================================== */
 QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'orin', xpL:340,
   brief:"The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
   log:'Sail to Emberwick and show the pendant to Sage Orin at his tower.',
   doneText:"...This is no ornament. It is a memory-ward - a working meant to hold a mind whole against exactly the unmaking Vath deals. Someone wove a warning into it and keyed it to YOU, that you might carry it through the fog when all else was taken. And it is calling - to something bound and sleeping, close by. To someone. The Woodworker. Go to him. Only the breaking of Vath will loose what holds him.",
   rw:{gold:40, mp:6, xp:{magic:260}} };
-QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'kill', kill:{mage:1}, xpL:620,
-  brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and Vath, feeling his life's work come undone, will come for you both. End him, and the prince is free.",
-  log:'Show the Woodworker the pendant on Emberwick, then defeat Vath the Emberbinder when he comes.',
-  doneText:'',   // resolved by bindVath()
+QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
+  brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and if he can only get you to take off that mask, the fog that took you both may lift at last.",
+  log:'Show the Woodworker the pendant on Emberwick, and let him see the face behind the mask.',
+  doneText:'',   // resolved by the unmasking scene (buildDialogContent, woody)
   rw:{gold:200, item:{elixir:2}, xp:{melee:400, magic:400, archery:400}} };
 QUESTS.homecoming = { giver:'woody', title:'Homecoming', kind:'talk', talkTo:'aldous', xpL:520,
-  brief:"The prince is awake, and remembers - the ship, the storm, the pendant pressed between your hands, and the father who never stopped waiting. Take him home across the water. King Aldous has grieved thirty years; let him grieve no longer.",
-  log:'Bring word to King Aldous in the Tideglass Palace, Aldermere.',
-  doneText:'',   // resolved by the palace coda scene
+  brief:"Your brother the prince walks free at last - and Vath means the throne now, and the Tideglass magic in your father's blood. Take ship for Aldermere and bring both of you before King Aldous, before the enchanter reaches him first.",
+  log:'Bring the prince before King Aldous in the Tideglass Palace, Aldermere - before Vath does.',
+  doneText:'',   // resolved by the capital confrontation scene
   rw:{gold:300, hp:20, item:{elixir:3}, xp:{melee:300, archery:300, magic:300}} };
 
 /* ---------- Regional boss-hunts ----------------------------------------------

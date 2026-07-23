@@ -52,10 +52,10 @@ function useStairs(dir){
   if(fade){ fade.style.opacity=1; setTimeout(()=>{ fade.style.opacity=0; },140); }
 }
 function palaceKingSpeak(){
-  // the throne hosts the scripted scenes: the audience (Act III) and the Act IV
-  // coda (the homecoming). Route those through buildDialogContent so the King's
-  // NPC dialogue handlers run.
-  if(qs('audience')==='active' || (P.story && P.story.princeWoke && !P.story.finale)){
+  // the throne hosts the scripted scenes: the audience (Act III) and the Act I
+  // capital finale (the confrontation with Vath, and its aftermath). Route those
+  // through buildDialogContent so the King's NPC dialogue handlers run.
+  if(qs('audience')==='active' || (P.story && P.story.unmasked)){
     const king=G.npcs && G.npcs.find(n=>n.id==='aldous');
     if(king && typeof buildDialogContent==='function'){ dlg.open=true; dlg.npc=king;
       document.getElementById('dialog').style.display='block'; document.getElementById('dname').textContent=king.name;
@@ -68,8 +68,8 @@ function palaceKingSpeak(){
   drawHumanoid(pg,0,0,{skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',dir:{x:0,y:1},step:0});
   pg.restore();
   const told = P.story && P.story.kingTold;
-  const line = (P.story && P.story.finale)
-    ? 'My son takes the sea air on the ramparts - thirty years he missed of it. Sit with us a while, first mate. This hall rings again, and it rings your name.'
+  const line = (P.story && P.story.act1End)
+    ? 'Don\'t fuss over me, child. Vath took the Tideglass light; he did not take the throne\'s meaning, nor my children. Take the prince and sail east, past the charts, and come back when you can finish it. I will be here.'
     : told
     ? 'The hall is quieter than it looks, traveler. Thirty years I have paced this floor waiting for word of my son. Bring me an ending - any ending - and these old stones will ring again.'
     : 'Welcome to the Tideglass, traveler. Walk the courtyard, take the air on the ramparts. A palace this size is mostly for echoes now, but the doors are open to a curse-breaker.';

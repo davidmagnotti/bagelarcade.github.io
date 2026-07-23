@@ -1261,6 +1261,56 @@ function drawHumanoid(g,sx,sy,o){
       g.beginPath(); g.moveTo(-1.7,5.6); g.quadraticCurveTo(0,6.5, 1.7,5.6); g.stroke();
       g.lineCap='butt';
     }
+    // the Emberwick mask - a smooth pale half-face worn over the eyes and brow.
+    // It hides who she is, and is drawn last so it sits over every feature. Cleared
+    // (o.mask falsy) only when the story finally has her take it off.
+    if(o.mask){
+      const mk = (typeof o.mask==='string') ? o.mask : '#e9e2cf';
+      if(profile){
+        g.fillStyle=mk;
+        g.beginPath();
+        g.moveTo(flip*0.4,-8.6);
+        g.quadraticCurveTo(flip*9.6,-8.2, flip*10.4,-1.6);
+        g.quadraticCurveTo(flip*9.8,2.6, flip*6.8,3.2);
+        g.quadraticCurveTo(flip*3,3.4, flip*0.4,2.9);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        g.fillStyle='rgba(18,12,8,0.9)';
+        g.beginPath(); g.ellipse(flip*5.1,-1.9,2.2,1.2,0,0,TAU); g.fill();
+      } else {
+        // front plate: covers brow, eyes and nose-bridge, leaving the mouth free
+        g.fillStyle=mk;
+        g.beginPath();
+        g.moveTo(0,-9.5);
+        g.quadraticCurveTo(-8.5,-8.7, -8.1,-1.6);
+        g.quadraticCurveTo(-7.1,2.7, 0,3.0);
+        g.quadraticCurveTo(7.1,2.7, 8.1,-1.6);
+        g.quadraticCurveTo(8.5,-8.7, 0,-9.5);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+        // faint center ridge and top sheen
+        g.strokeStyle='rgba(0,0,0,0.12)'; g.lineWidth=0.8;
+        g.beginPath(); g.moveTo(0,-8); g.lineTo(0,2.2); g.stroke();
+        g.fillStyle='rgba(255,255,255,0.28)';
+        g.beginPath(); g.ellipse(-3,-5.4,2.4,3.6,0.3,0,TAU); g.fill();
+        // two dark almond eye-slits
+        g.fillStyle='rgba(18,12,8,0.92)';
+        for(const e of [-1,1]){
+          g.beginPath();
+          g.moveTo(e*1.7,-1.6);
+          g.quadraticCurveTo(e*3.9,-3.0, e*6.0,-1.6);
+          g.quadraticCurveTo(e*3.9,-0.1, e*1.7,-1.6);
+          g.closePath(); g.fill();
+        }
+        // a warrior's sigil painted across the brow
+        g.strokeStyle='rgba(150,42,52,0.85)'; g.lineWidth=1;
+        g.beginPath(); g.moveTo(-2.3,-6.1); g.lineTo(0,-7.5); g.lineTo(2.3,-6.1); g.stroke();
+        // ties running back at the temples
+        g.strokeStyle='rgba(0,0,0,0.22)'; g.lineWidth=1.1;
+        g.beginPath(); g.moveTo(-8,-2.4); g.lineTo(-10.4,-3.1);
+        g.moveTo(8,-2.4); g.lineTo(10.4,-3.1); g.stroke();
+      }
+    }
     g.restore(); // face drop
   }
 

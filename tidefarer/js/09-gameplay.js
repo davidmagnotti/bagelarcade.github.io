@@ -642,6 +642,20 @@ function dragonFaints(m){
         color:Math.random()<0.5?'#ffd24a':'#8fd0a0',size:rnd(2,5),grav:-0.2}); }
   } }, 4500);
 }
+// Which overworld isle a dungeon belongs to - felling a dungeon boss pacifies
+// the isle above it too, so its nights fall quiet like any other cleared isle.
+const OVERWORLD_PARENT = { frostvault:'frost', frostdeep:'frost', aeriedeep:'aerie',
+  eastdeep:'east', reachdeep:'reach', milldeep:'main', undermaw:'main', skydungeon:'sky' };
+// Record that this isle's boss has fallen. Once cleared, the wilds stop sending
+// night-wraiths here after dark, and any still abroad quietly disperse. This is
+// deliberately unannounced - the night simply stops being dangerous.
+function markBossCleared(){
+  P.story=P.story||{}; P.story.bossCleared=P.story.bossCleared||{};
+  const w=G.worldId; P.story.bossCleared[w]=1;
+  const p=OVERWORLD_PARENT[w]; if(p) P.story.bossCleared[p]=1;
+  // scatter any night-wraiths already prowling this world, without a word about it
+  for(const o of G.mobs) if(o.night && !o.dead){ o.dead=true; o.respawnT=1e9; burst(o.x,o.y-0.5,'#c8d8e8',8,1.6); }
+}
 function killMob(m,skill){
   buzz(13);
   gainLXP((m.lvl||1)*6+4);
@@ -654,6 +668,12 @@ function killMob(m,skill){
   // named bosses (the Hollow King & Greymaw by kind, every other boss by its
   // ach tag) grant their achievement AND a one-time +max-mana on defeat
   bossReward(m);
+  // felling any isle boss - the marquee bosses, the regional named foes, or the
+  // beasts denning in the isle's dungeons - marks the isle cleared and stills its nights
+  if(m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
+     ||m.skyminiboss||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast){
+    markBossCleared();
+  }
   killCredit(m.kind);
   if(m.elite) killCredit('elite');
   // drops
@@ -1473,7 +1493,8 @@ function updateWorld(dt){
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
   // Aldermere is a walled, patrolled city and stays safe after dark.
-  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !P.dead && !inSafeZone(P.x,P.y)){
+  const isleCleared = P.story && P.story.bossCleared && P.story.bossCleared[G.worldId];
+  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;

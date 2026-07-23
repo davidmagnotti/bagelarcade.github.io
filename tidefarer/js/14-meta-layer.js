@@ -151,11 +151,27 @@ function loadCode(str){
   P.projects=d.projects||{}; P.contract=d.contract||0; P.loreRead=d.lore||{};
   P.stats=d.stats||{}; P.ach=d.ach||{};
   P.story=d.story||{act:1,necklace:true}; if(P.story.necklace===undefined) P.story.necklace=true;
-  // Act IV catch-up: a save made before the finale existed can have the King's
-  // audience done (kingTold) yet no way into Act IV, since the pendant trail only
-  // launches on the audience-completion click. Re-open it so returning players can
-  // finish the story. Guarded to never fire mid- or post-finale.
-  if(P.story.kingTold && !P.story.vathBound && !P.story.princeWoke
+  // Backfill the isle-cleared record from older saves: anyone who already felled a
+  // region's boss should find its nights already quiet on return.
+  P.story.bossCleared=P.story.bossCleared||{};
+  if(P.story.reachBossDown) P.story.bossCleared.reach=1;
+  if(P.story.tombBossDown) P.story.bossCleared.reach=1;
+  if(P.story.iceBearDown) P.story.bossCleared.frost=1;
+  if(P.story.frostFreed) P.story.bossCleared.frost=1;
+  if(P.story.rocDown||P.story.skyDungeonDone) P.story.bossCleared.sky=1;
+  if(P.story.aerieFreed) P.story.bossCleared.aerie=1;
+  if(P.story.deepDone||P.story.tideCalm) P.story.bossCleared.east=1;
+  if(P.story.undermawDown||P.story.millDone) P.story.bossCleared.main=1;
+  // The Emberwick mask rides the whole journey. Restore it for saves made before it
+  // existed - unless the player has already reached the unmasking (or the old finale).
+  if(P.story.masked===undefined){
+    P.story.masked = (P.story.unmasked||P.story.remembered||P.story.princeWoke||P.story.finale||P.story.act1End) ? 0 : 1;
+  }
+  // Act catch-up: a save made before the finale existed can have the King's audience
+  // done (kingTold) yet no way onward, since the pendant trail only launches on the
+  // audience-completion click. Re-open it so returning players can finish. Guarded to
+  // never fire once the unmasking / capital finale is underway or done.
+  if(P.story.kingTold && !P.story.vathBound && !P.story.princeWoke && !P.story.unmasked && !P.story.act1End
      && !P.quests.pendant && !P.quests.enchanter && !P.quests.homecoming){
     P.quests.pendant='active'; P.prog.pendant=P.prog.pendant||0;
     setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">The pendant still burns to be understood.</b> Sail to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000); }catch(e){} }, 2600);

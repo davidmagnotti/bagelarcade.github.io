@@ -84,7 +84,7 @@ function buildDialogContent(npc){
   // and he tells the tragedy that binds Vath to the throne, then charges you.
   if(npc.id==='aldous' && qs('audience')==='active'){
     const p3=()=>{
-      setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown thirty years ago. He\'s been out there all this time - and my son with him, or my son\'s grave.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy.”',
+      setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown thirty years ago. He\'s been out there all this time - and my children with him, or their graves.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy and girl.”',
         [{label:'I will find him.', cls:'gold', fn:()=>{
             P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
             completeQuest('audience');
@@ -99,7 +99,7 @@ function buildDialogContent(npc){
         }}]);
     };
     const p2=()=>{
-      setDialog('“Thirty years past, I had a wife I did not deserve and a son not yet a season old. My queen wished to show the boy her mother\'s isles - Emberwick, past the eastern shoals. My court enchanter chose the ship and sailed with them to see them safe. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers and grief, nothing else. I buried three empty coffins and called Vath a loyal man drowned in my service.”',
+      setDialog('“Thirty years past, I had a wife I did not deserve, a fierce slip of a daughter who would sooner duel the guard than curtsy, and a son not yet a season old. My queen wished to show the children her mother\'s isles - Emberwick, past the eastern shoals. My court enchanter chose the ship and sailed with them to see them safe. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers and grief, nothing else. I buried three empty coffins - my queen, my girl, my boy - and called Vath a loyal man drowned in my service.”',
         [{label:'…And now?', fn:p3}]);
     };
     setDialog('<i>The King\'s eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit. Let me tell you why the sight of you unsteadies me.”',
@@ -119,65 +119,107 @@ function buildDialogContent(npc){
   // === ACT IV scripted scenes ===========================================
   // Nudge: Orin has read the ward and named the Woodworker, but the player hasn't
   // taken up the hunt yet - a gentle pointer back to Orin without spoiling anything.
-  if(npc.id==='woody' && P.story && P.story.wardRead && !P.story.vathBound
-     && !P.story.vathCame && qs('enchanter')!=='active'){
+  if(npc.id==='woody' && P.story && P.story.wardRead && !P.story.unmasked
+     && qs('enchanter')!=='active'){
     setDialog('<i>The Woodworker hums that same wandering tune and crowns his woodpile with the five-point star, easy as breathing.</i> “Back again? You keep looking at me like you mislaid something. <b>Sage Orin</b>’s your man for mislaid things - old books, old riddles. He had that same look, last you two spoke.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // The Woodworker, shown the pendant: the ward cracks his binding and draws
-  // Vath out for his final stand on the Emberwick green.
-  if(npc.id==='woody' && qs('enchanter')==='active' && P.story && !P.story.vathCame){
-    const go=()=>{
-      P.story.vathCame=1; closeDialog();
-      if(typeof spawnFinalVath==='function') spawnFinalVath();
-      banner('THE ENCHANTER COMES','VATH THE EMBERBINDER');
-      setTimeout(()=>toast('<b>Vath strides out of the treeline</b>, violet at his cuffs, and does not raise his voice. <b style="color:#c9a0ff">"So the ward held. Thirty years\' work, undone by a first mate\'s stubbornness. Come, then - I will bind you both properly this time."</b>',9000),300);
-    };
-    setDialog('<i>You hold the pendant up between you. The Woodworker\'s humming falters. His eyes track the five-point star - and for one breath the vague, happy fog behind them tears, and something old and frightened looks out.</i> “That... I know that. I stack it. Every day, and I never once asked why my hands know a shape my head has never seen -” <i>His hands are shaking.</i>',
-      [{label:'Steady him', cls:'gold', fn:go}]);
-    return;
-  }
-  // The Woodworker wakes: the prince returns, remembers you, and your own memory
-  // floods back. The emotional climax of the game.
-  if(npc.id==='woody' && P.story && P.story.vathBound && !P.story.princeWoke){
-    const p4=()=>{
-      P.story.princeWoke=1; P.story.remembered=1;
+  // The pendant, shown to the Woodworker: the ward cracks his binding. He begs the
+  // masked stranger to show her face - and when she does, the fog tears for them
+  // both. Brother and sister, the scholar and the warrior, remember at once. This
+  // is the emotional climax of Act I, and it takes the mask off for good.
+  if(npc.id==='woody' && qs('enchanter')==='active' && P.story && !P.story.unmasked){
+    const p5=()=>{
+      P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
+      P.story.act=Math.max(P.story.act||1,4);
+      if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
-      banner("THE ENCHANTER'S TIDE",'ACT IV - THE PRINCE RETURNS');
-      setDialog('<i>He closes your hand around the pendant - his pendant - and for the first time since the surf spat you ashore, you remember your own name, and the deck beneath your boots, and the weight of the boy you dragged from the black water.</i> “First mate.” <i>The prince grips your shoulder.</i> “You carried the warning thirty years, through a fog thick as tar, and never once set it down. Take me home. Let my father see we both came back.”',
-        [{label:'Home, then', cls:'gold', fn:()=>{ closeDialog();
-          setTimeout(()=>toast('The prince is awake, and the strait is his father\'s again. <b style="color:var(--ember)">Sail to Aldermere and bring word to King Aldous.</b>',7500),600); }}]);
+      closeDialog();
+      banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
+      if(Snd.levelup) Snd.levelup();
+      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, your little brother screaming, the enchanter\'s violet on the water - and your own name at last, that the sea had kept from you.</i> “You always ran AT the storm,” <i>your brother says, half a laugh and half a sob.</i> “The warrior. And I read the books and named the stars. Some pair we make.” <i>He shoulders his axe like it were a sword.</i> “No more woodpile. Take me to Father - and I\'m not letting you walk into Vath alone this time.”',
+        {label:'To Aldermere', onOk:()=>{
+          setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
+        }}),1100);
+    };
+    const p4=()=>{
+      setDialog('<i>You lift your hands to the mask you have worn since the surf first spat you ashore - the one thing the sea let you keep - and for the first time since Emberwick, you take it off.</i>',
+        [{label:'Let him see', cls:'gold', fn:p5}]);
     };
     const p3=()=>{
-      setDialog('“There was a storm that was not a storm - Vath\'s hand on the water. My mother went under.” <i>He falters.</i> “And you had me by the collar with the boat gone from under us both. You pressed this into my hands - no. I pressed it into YOURS. \'Warn my father. And remember.\' Then the fog took me whole, and it took you kinder, because you were too busy being brave to let it in all the way.”',
-        [{label:'...I remember now', fn:p4}]);
+      setDialog('<i>He searches the pale mask as though he could read the face behind it.</i> “Whoever gave you cause to hide it - you don\'t need it. Not from me.” <i>His voice cracks on the next words without his knowing why.</i> “...Please. Take it off. I have to see.”',
+        [{label:'…', fn:p4}]);
     };
     const p2=()=>{
-      setDialog('<i>The Woodworker straightens, and the set of his shoulders is suddenly nothing like a woodcutter\'s.</i> “It comes back the way the tide does - all at once, and cold. The anthem I hum. The little boats I carve for a father I could never name. Thirty years of split logs and a happiness that was really only forgetting.”',
+      setDialog('“I stack that star every day, and I never once asked why my hands know a shape my head has never seen.” <i>He presses two fingers to the pendant, then to his own chest.</i> “There was a boat. A woman singing. And a girl - older than me, always braver - with her arm across me like a bar of iron.” <i>He looks up, stricken.</i> “That was YOU. Under there. I know it the way I know my own tune.”',
         [{label:'Go on', fn:p3}]);
     };
-    setDialog('<i>The violet is gone from him. He looks at you with clear eyes for the first time.</i> “You. I know you. Not from the village - from before all of this. From the water.”',
-      [{label:'Listen', fn:p2}]);
+    setDialog('<i>You hold the pendant up between you. The Woodworker\'s humming falters. His eyes track the five-point star - and for one breath the vague, happy fog behind them tears, and something old and frightened looks out.</i> “That... I know that.” <i>His hands are shaking.</i>',
+      [{label:'Steady him', cls:'gold', fn:p2}]);
     return;
   }
-  // The palace coda: father and son reunited; the first mate honored; THE END.
-  if(npc.id==='aldous' && P.story && P.story.princeWoke && !P.story.finale){
-    const done=()=>{
-      P.story.finale=1;
+  // After the unmasking, before you reach the capital: the prince is impatient to sail.
+  if(npc.id==='woody' && P.story && P.story.unmasked && !P.story.act1End){
+    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s blood - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, sister.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
+  // Act II teaser, once Act I has closed on the capital.
+  if(npc.id==='woody' && P.story && P.story.act1End){
+    setDialog('<i>Your brother stands at the tideline, looking east past every isle you know.</i> “Father bought us this - don\'t waste it grieving. Vath has the Tideglass magic now, and we don\'t have the strength to take it back. Not yet.” <i>He almost smiles.</i> “So we go and get strong. There are isles out past the charts, and allies we haven\'t made. When we come back for him, we come back ready. <b style="color:var(--ember)">(Act II - coming soon.)</b>”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
+  // The capital, at the last: the King knows both his children at a glance - and
+  // Vath comes through the doors for the one prize worth an ocean, the Tideglass
+  // magic in the royal blood. Rather than fall, Vath TAKES it; the King spends
+  // himself to buy his children's escape. This is the close of Act I.
+  if(npc.id==='aldous' && P.story && P.story.unmasked && !P.story.act1End){
+    const endAct=()=>{
+      P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1;
       if(qs('homecoming')==='active') completeQuest('homecoming');
       if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
-      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(255,215,106,0.9)',60);
-      setDialog('<i>The old King holds his son at arm\'s length, then crushes him close, and the whole cold hall of the Tideglass Palace seems to warm a degree.</i> “Thirty years.” <i>He turns to you - the first mate - and a crown does not know how to bow, but the man beneath it tries.</i> “You brought both my children home. What Aldermere has, you have. The strait is calm, the isles are free, and Vath sleeps in a stone of his own making.” <i>A pause, quieter:</i> “He said he would return. Let him. He will find us waiting - and no longer afraid.”',
-        [{label:'Rest, at last', cls:'gold', fn:()=>{ closeDialog();
-          setTimeout(()=>banner('TIDEFARER','~ THANK YOU FOR PLAYING ~'),900); }}]);
+      banner('END OF ACT I','THE ENCHANTER\'S TIDE');
+      if(Snd.boss) Snd.boss();
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.9)',90);
+      G.shake=1.2; G.slowmo=1.2;
+      setTimeout(()=>{ if(typeof autoSave==='function') autoSave();
+        toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
+      }, 1400);
+    };
+    const sc4=()=>{
+      storyCard('<b style="color:#c9a0ff; font-size:1.35em">END OF ACT I</b><br><br><i>The great doors slam on a hall drowning in violet. The last you see of your father, he is on one knee before his own throne, hollow and grey - and still, impossibly, smiling to see you both alive. Vath does not follow. He has what he came for. He can afford to let you run.</i>',
+        {label:'Sail on', onOk:endAct});
+    };
+    const sc3=()=>{
+      storyCard('<i>“GO!” The King hurls the whole of the Tideglass light against Vath - and for three heartbeats the enchanter is held snarling in a cage of gold. Your brother fights your grip.</i> “No - NO, I only just found him, I won\'t leave him again -” <i>But your father\'s magic sweeps you both toward the doors like a tide going out, and his eyes over the prince\'s shoulder are only for you:</i> “Keep him. Keep each other. GO.”',
+        {label:'Run', onOk:sc4});
+    };
+    const sc2=()=>{
+      storyCard('<i>Vath does not hurry.</i> <b style="color:#c9a0ff">“Thirty years I unpicked your curses, old man, so you\'d spend your strength chasing ghosts while I came for the only thing on these waters worth having.”</b> <i>He lifts a hand toward the throne - toward the light that runs in the King\'s blood.</i> <b style="color:#c9a0ff">“The Tideglass magic. Hold still.”</b>',
+        {label:'…', onOk:sc3});
     };
     const p2=()=>{
-      setDialog('<i>The great doors stand open. The Woodworker - the prince - waits in the light, older than the boy the King buried in an empty coffin, and unmistakably his.</i> The King rises so fast the throne rocks back. “...Is this a cruelty? A binding? Some dream you\'ve carried in on the tide?” <i>He cannot finish.</i>',
-        [{label:'It\'s real. He\'s home.', cls:'gold', fn:done}]);
+      closeDialog();
+      banner('THE ENCHANTER COMES','VATH AT THE TIDEGLASS THRONE');
+      if(Snd.magic) Snd.magic();
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.85)',70);
+      setTimeout(sc2, 900);
     };
-    setDialog('<i>King Aldous reads your face before you speak a word, and grips the arms of the Tideglass Throne until his knuckles whiten.</i> “You found him. You found Vath - and you found my boy. Tell me true, traveler, before this old heart decides for itself: which grave do I open?”',
-      [{label:'No grave, my King.', fn:p2}]);
+    const k2=()=>{
+      setDialog('<i>Before he can cross to you, the tall doors at the hall\'s end blow inward on a wind that smells of storm and violet. The King\'s face turns to iron.</i> “...Vath. Thirty years, and he waits until my whole line stands in one room.” <i>He puts himself between you and the doors.</i> “Behind me. Both of you. Now.”',
+        [{label:'Father-', fn:p2}]);
+    };
+    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. My daughter, the one the sea took first. And you-” <i>his voice fails on the prince.</i> “...my boy. Both of you. Alive.”',
+      [{label:'We came home, Father.', cls:'gold', fn:k2}]);
+    return;
+  }
+  // Act I aftermath: the King is diminished but tended; a somber coda that points at Act II.
+  if(npc.id==='aldous' && P.story && P.story.act1End){
+    setDialog('<i>They have not moved the King far from his throne. He is awake, grey and quiet, the Tideglass light gone out of him - but his hand finds yours with the old strength.</i> “Don\'t look at me like a grave, daughter. He took the magic; he did not take the man.” <i>His eyes go east.</i> “Go where he can\'t reach yet. Come back when you can end this. I kept the two of you for thirty years of empty coffins - I can keep a while longer.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
   // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
