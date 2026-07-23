@@ -62,6 +62,7 @@ function acceptQuest(id){
     setTimeout(()=>toast('<b style="color:var(--ember)">Axe &amp; pick in hand!</b> You can <b>chop trees</b> and <b>mine stone</b> now. Bring Bram <b>1 wood</b> and <b>1 stone</b> and he\'ll forge your iron sword.',5600),400); }
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
+  if(id==='dukeletter1'){ giveQuiet('loveletter',1); addFloat("+ The Duchess's Letter", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
   if(id==='king'){ // Maren speaks the ward open - the causeway to the King is unsealed
     if(typeof openHollowGate==='function') openHollowGate(true);
@@ -110,6 +111,8 @@ function completeQuest(id){
   if(id==='ribbon2'){ P.quests.ribbon3='active';
     toast('<b>Quest updated:</b> A Ribbon for Wren - bring the Sunset Ribbon to Captain Corvo at the east cove.',5600); }
   if(id==='ribbon3'){ P.prog.eastSail=1;
+    // with the Sunward Isle now reachable, the Duchess can trust her letter to you
+    if(!P.quests.dukeletter1 && !P.quests.dukeletter2 && !(P.story&&P.story.dukeWed)) P.quests.dukeletter1='avail';
     banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
     setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
   if(id==='board'){ // the board is shaped, but bare - fetch Nessa's sail from the Undermill next.
@@ -120,6 +123,10 @@ function completeQuest(id){
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
     if(!P.quests.enchanter) P.quests.enchanter='avail'; }
+  if(id==='dukeletter1'){ // Teo has read her letter - his reply goes back to Barik
+    take('loveletter',1); give('returnletter',1);
+    P.quests.dukeletter2='active'; P.prog.dukeletter2=0;
+    setTimeout(()=>toast('<b>Quest updated:</b> The Duchess\'s Letter - carry Teo\'s reply home to <b>Duchess Maelis</b> at Barik Keep.',5600),1400); }
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
   if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock - Greyharbor awaits'),1300);
@@ -213,7 +220,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','dukeletter1','dukeletter2','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

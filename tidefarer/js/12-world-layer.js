@@ -509,6 +509,58 @@ function spawnRealmFolk(){
       {skin:'#c09070',hair:'#3a3230',shirt:'#5e2a2a',pants:'#3a2020',cloakless:1,armor:1,beard:'#3a3230'},
       ["Turn back, Barik-friend. The March answers to its own crown now.",
        "The Duchess's cousin pays iron for iron. You've been warned once."],0.4));
+  // Once wed, the Duchess's letter-keeper stands at her side before the keep, and
+  // her own idle talk turns from ledgers to the man she waited six years to meet.
+  if(P.story && P.story.dukeWed){
+    spawnDukeAtKeep();
+    const m=G.npcs.find(n=>n.id==='maelis');
+    if(m) m.idleLines=[
+      'Barik can run itself for an afternoon. Let it - I have a husband to walk the walls with.',
+      'They said a duchess weds for a treaty. I wed for a stack of letters and a man who smells of orchids. Let them talk.',
+      'You put his words in my hand when I could not say them myself. A duchess does not forget a debt - nor a kindness.'];
+  }
+}
+// Teo, wed to the Duchess, now keeps Barik Keep at her side as Duke-Consort. Placed
+// both at world-gen (when dukeWed is already set) and live at the wedding itself.
+function spawnDukeAtKeep(){
+  if(!G.npcs || typeof ZONES==='undefined' || !ZONES.castle) return;
+  if(G.npcs.some(n=>n.id==='teoduke')) return;
+  const CK=ZONES.castle;
+  G.npcs.push(makeNPC('teoduke','Teo, Duke-Consort of Barik', CK.x+1.9,CK.y+0.8,
+    {skin:'#b58a5e',hair:'#241a14',shirt:'#c98a3a',pants:'#5a3a2c',robe:'#7a3a2c',trim:'#e8c860',necklace:'#8fd4e0',hairstyle:'long'},
+    ['Forty-one letters she sent me, tied in ribbon, and never her hand in mine - until a traveller carried the forty-second. I owe you the best years I have left.',
+     'Barik is greener than Kohana, and colder. But she is here. So it is home.',
+     'I still keep a white orchid on the sill. Some habits a man does not give up, even when the waiting is over.'],0.4));
+}
+// The wedding beat: a short cutscene before Barik Keep - orchid petals, a banner,
+// and the new Duke stood at the Duchess's side.
+function dukeWedding(){
+  const CK=(typeof ZONES!=='undefined' && ZONES.castle) || {x:P.x,y:P.y};
+  spawnDukeAtKeep();
+  if(typeof Snd!=='undefined' && Snd.quest) Snd.quest();
+  if(typeof shockwave==='function') shockwave(CK.x,CK.y,'rgba(255,215,106,0.85)',70);
+  // rain orchid petals across the forecourt for a couple of seconds
+  let bursts=0;
+  const rain=()=>{
+    if(bursts++>14 || !G.parts) return;
+    for(let i=0;i<10;i++){
+      const col=['#ffd1e6','#fff2f8','#ffe9a8','#ffc0d8'][i&3];
+      G.parts.push({x:CK.x+rnd(-6,6), y:CK.y+rnd(-4,2)-2, vx:rnd(-0.3,0.3), vy:rnd(0.3,0.9),
+        life:rnd(1.4,2.8), color:col, size:rnd(2,3.6), grav:0.02});
+    }
+    setTimeout(rain,140);
+  };
+  rain();
+  setTimeout(()=>{ if(typeof banner==='function') banner('A BARIK WEDDING','THE DUCHESS & HER LETTER-KEEPER'); },1300);
+  setTimeout(()=>toast('<i>Before the gates of Barik Keep, with no herald and no treaty, Duchess Maelis takes the hand of her letter-keeper and weds him under a fall of orchid petals.</i> The keep-folk cheer; the wardens pretend not to weep.',7000),1600);
+  setTimeout(()=>toast('<b style="color:var(--ember)">Teo is now Duke-Consort of Barik</b> - you will find the two of them before the keep from this day on.',6500),4400);
+}
+// The Duchess's letter-keeper has sailed for Barik - clear him from the Sunward
+// Isle, both the live world and the cached copy, so he never lingers there.
+function clearTeoFromSunward(){
+  const rm=(arr)=>{ if(!arr) return; const i=arr.findIndex(n=>n.id==='teo'); if(i>=0) arr.splice(i,1); };
+  if(typeof WORLDS!=='undefined' && WORLDS['east']) rm(WORLDS['east'].npcs);
+  if(G.worldId==='east') rm(G.npcs);
 }
 function spawnVaelCaptain(x,y){
   const cap=spawnMob('raidcap', x, y);
@@ -742,6 +794,16 @@ function spawnEastFolk(){
       ['Eh, down off Kea in one piece? Come in, come in - the mat is soft and the hearth is warm.',
        'Ten gold, a woven mat, and the reef to hum you under. Sleep as long as the tide pleases.'],0.7);
     inn.nightOwl=true; G.npcs.push(inn); }
+  // Teo of the Flower Terraces - Duchess Maelis of Barik's penpal of six years,
+  // who has never once met her. You'll know him by the white bloom behind his ear
+  // and the sea-glass beads at his throat. Once the two of them wed and he sails to
+  // Barik as Duke-Consort, he is gone from the isle (story-flag gated for reloads).
+  if(!(P.story && P.story.dukeWed))
+    G.npcs.push(makeNPC('teo','Teo of the Flower Terraces', V.x+2.5,V.y+6.2,
+      {skin:'#b58a5e',hair:'#241a14',shirt:'#d86a8a',pants:'#3a5a3c',necklace:'#8fd4e0',hairstyle:'long'},
+      ['Every post-boat, I watch the landing. One day the right letter comes in on it - a man can wait. The orchids taught me that.',
+       'I keep the terraces up the hill: orchids, mostly, and one stubborn white bloom I wear for luck.',
+       'There is a woman across the water who writes the finest letters in the four baronies. Six years now. I have kept every one, tied in ribbon.'],0.5));
   // Vath - a visiting Emberbinder who covets the dragon's fire and will lie to
   // get it. Once the wyrm is freed he's fled to the grove, no longer in the village
   // (quest-state gated so it survives reloads).
@@ -2834,6 +2896,21 @@ QUESTS.sting1={ giver:'maelis', title:'Sunscour Cull', kind:'kill', kill:{scorpi
   log:'Slay 5 Sunscour Scorpions in the desert valley.',
   doneText:'Five stingers for the trophy wall. The caravans will run the valley road again - carefully.',
   rw:{gold:260, item:{potion:2}, xp:{melee:340, archery:340, magic:340}} };
+// The Duchess's Letter - a two-stage courier romance. Stage 1: carry her sealed
+// confession to Teo, her penpal on the Sunward Isle (a talk-quest, completed by
+// finding the man who matches her description). Completing it hands you his reply
+// and opens stage 2: bring that reply home, where the wedding coda plays out and
+// pays 4000 gold (the turn-in is scripted on Maelis - see buildDialogContent).
+QUESTS.dukeletter1={ giver:'maelis', title:"The Duchess's Letter", kind:'talk', talkTo:'teo', xpL:300, stageOf:'dukeletter', stage:1,
+  brief:'You did not hear this from a duchess. There is... a man. Across the eastern water, on the Sunward Isle - a keeper of flower terraces I have written to for six years and never once met. I have set down words I could never say aloud, and I will not trust them to a common courier. Carry my letter for me. You will know him at once: a white bloom behind his ear, beads of sea-glass at his throat, tending the orchid terraces above Kohana. Put it in his hand, and no other\'s.',
+  log:'(1/2) Carry the Duchess\'s sealed letter to her penpal on the Sunward Isle - the orchid-keeper with a white bloom behind his ear, above Kohana Village.',
+  doneText:'A letter - sealed with HER crest. Oh. Oh, she actually... Six years of ink across that water and never her hand in mine, and now she writes THIS. Here - I have already written back, quicker than my heart can settle, and pressed a white orchid inside so she has my answer before she reads a word. Take it to her. Run, if you have any kindness in you. Tell her yes. Tell her I am packing my whole life into one sea-chest.',
+  rw:{ xp:{melee:60} } };
+QUESTS.dukeletter2={ giver:'maelis', title:"The Duchess's Letter", kind:'gather', need:{returnletter:1}, xpL:520, stageOf:'dukeletter', stage:2,
+  brief:'You have his answer? Give it here - no. Wait. Let me just... hold it a moment, before I know.',
+  log:'(2/2) Carry Teo\'s sealed reply home to Duchess Maelis at Barik Keep.',
+  doneText:'',   // resolved by the wedding coda scene on Maelis
+  rw:{gold:4000} };
 QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone:'undermaw', xpL:150,
   brief:'East of the Mirefen the ground splits - the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
   log:'Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)',
@@ -2894,6 +2971,8 @@ ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
 ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
 ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
 ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.'};
+ITEMS.loveletter = {name:"The Duchess's Letter", desc:'A letter sealed in Barik-crimson wax, bearing the crest of the Duchess. For a keeper of flower terraces on the Sunward Isle - and for no other hand.'};
+ITEMS.returnletter = {name:"Teo's Reply", desc:'An answer six years in the coming, sealed over a pressed white orchid. Bound for Duchess Maelis at Barik Keep.'};
 QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
   brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
   log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
@@ -3468,6 +3547,9 @@ function switchWorld(id){
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
     setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
+  // Backup: once the Sunward Isle is reachable, the Duchess has a letter for you.
+  if(id==='main' && P.prog.eastSail && !P.quests.dukeletter1 && !P.quests.dukeletter2 && !(P.story&&P.story.dukeWed))
+    P.quests.dukeletter1='avail';
   if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='east'){
     // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you

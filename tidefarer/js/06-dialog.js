@@ -201,6 +201,25 @@ function buildDialogContent(npc){
     }
     return;
   }
+  // The Duchess's Letter, stage 2: hand Maelis the reply she waited six years for,
+  // and the wedding coda plays out before Barik Keep (4000 gold, and Teo joins her
+  // at the keep thereafter). Scripted so the turn-in carries the cutscene.
+  if(npc.id==='maelis' && qs('dukeletter2')==='active' && has('returnletter',1)){
+    const wed=()=>{
+      closeDialog();
+      P.story=P.story||{}; P.story.dukeWed=1;
+      completeQuest('dukeletter2');   // takes the reply, pays 4000 gold, marks done
+      if(typeof clearTeoFromSunward==='function') clearTeoFromSunward();
+      if(typeof dukeWedding==='function') dukeWedding();
+    };
+    const p2=()=>{
+      setDialog('<i>She reads it twice, then presses the pressed orchid to her lips as though no one in the world were watching.</i> “He says yes. He says he is already aboard the post-boat.” <i>The Duchess of Barik - who rules by ledger and by patience - laughs like a girl.</i> “Then there is nothing to wait for. Stand with me, curse-breaker. I want the one who carried these words to see how the story ends.”',
+        [{label:'It would be my honor', cls:'gold', fn:wed}]);
+    };
+    setDialog('<i>Duchess Maelis breaks the seal with a thumb that is not quite steady. The ledger-straight line of her mouth softens as she reads, then breaks into something years younger.</i> “...He answered. After all this time, he actually - ”',
+      [{label:'Read on', fn:p2}]);
+    return;
+  }
   if(npc.id==='castell' && qs('feud2')==='active'){
     setDialog('“So the Duchess sends her hound at last.” <i>The Castellan sets his helm and draws a long, notched blade.</i> “You should have stayed your side of the road, Barik-friend. Come - the March will bury one of us.”',
       [{label:'Draw steel', cls:'gold', fn:()=>{ closeDialog(); challengeCastellan(npc); }},

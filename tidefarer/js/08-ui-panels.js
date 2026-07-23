@@ -267,7 +267,7 @@ function refreshQuestLog(){
   const box=document.getElementById('qlog'); box.innerHTML='';
   const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
   const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','dukeletter1','dukeletter2','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue;
@@ -283,7 +283,8 @@ function refreshQuestLog(){
     any=true;
     const el=document.createElement('div');
     el.className='qlogItem'+(st==='done'?' done':'')+(QLOG_OPEN[id]?' open':'');
-    el.innerHTML='<div class="qt">'+q.title+(q.stageOf?' <span style="color:var(--parch-dim);font-weight:normal;">('+q.stage+'/3)</span>':'')+(st==='done'?' ✓':'')+'</div>'+
+    const chainMax=q.stageOf? Math.max(...order.filter(x=>QUESTS[x]&&QUESTS[x].stageOf===q.stageOf).map(x=>QUESTS[x].stage)) : 0;
+    el.innerHTML='<div class="qt">'+q.title+(q.stageOf?' <span style="color:var(--parch-dim);font-weight:normal;">('+q.stage+'/'+chainMax+')</span>':'')+(st==='done'?' ✓':'')+'</div>'+
       '<div class="qd">'+q.log+'</div>'+
       (st==='active'? '<div class="qp'+(questReady(id)?' ready':'')+'">'+questProgressText(id)+'</div>':'')+
       '<div class="qdet"><i>\u201c'+q.brief+'\u201d</i><br><span style="color:var(--parch-dim);">- '+npcName(q.giver)+
