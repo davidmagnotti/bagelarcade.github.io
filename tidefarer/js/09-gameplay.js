@@ -1094,7 +1094,7 @@ function updateNPCs(dt){
     }
     n.chatT=(n.chatT===undefined? rnd(4,10) : n.chatT)-dt;
     if(n.chatT<=0){ n.chatT=rnd(10,20);
-      if(dist(n.x,n.y,P.x,P.y)<6.5 && !dlg.open && G.state==='play'){
+      if(!n.noBark && dist(n.x,n.y,P.x,P.y)<6.5 && !dlg.open && G.state==='play'){
         n.bubble=n.idleLines[(n.li=((n.li||0)+1))%n.idleLines.length];
         n.bubbleT=3.6;
       }

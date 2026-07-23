@@ -2614,7 +2614,8 @@ function spawnCrownFolk(){
                   'The night shift is the long one. Keep your lantern lit and your business honest.'];
     [[PA.x-3,PA.y+6],[PA.x+4,PA.y+6],[PL.x-5,PL.y+1],[PL.x+6,PL.y-1],[H.x+2,H.y+2],[M.x-4,M.y+2]].forEach((p,i)=>{
       const g=makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05);
-      g.nightOwl=true; G.npcs.push(g);
+      g.nightOwl=true; g.noBark=1;   // the watch stands silent - no floating idle chatter over their heads (still speaks if you talk to them)
+      G.npcs.push(g);
     }); }
   // ---- the Herald: town crier in the plaza ----
   G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
