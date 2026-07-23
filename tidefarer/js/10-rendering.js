@@ -1810,6 +1810,9 @@ function drawMoa(s){
   // legs, a deep shaggy-feathered body, a long S-curved neck and a small beaked
   // head. Not a pig. Runs with a real two-leg gait; breathes and bobs when idle.
   const g=cx, fl=(P.dir&&P.dir.x<0)?-1:1, moving=!!P.moving, t=G.time;
+  // heading up-screen (away from the camera) -> draw Kiko from BEHIND, not side-on
+  const dx0=P.dir?P.dir.x:0.7, dy0=P.dir?P.dir.y:0.7;
+  const away=(dx0+dy0)*0.5 < -0.15;
   // P.anim tracks ground covered and races at the moa's ride speed; a *8 stride
   // multiplier jumped the leg phase ~4 rad/frame, aliasing the gait into a strobe.
   // Keep it low (~0.75 rad/frame) so the run stays smooth at speed.
@@ -1822,6 +1825,59 @@ function drawMoa(s){
   const CY=-24+bob;                                                  // body centre - high, so it stands TALL
   drawShadowAt(g,s.x,s.y,18);
   g.save(); g.translate(s.x,s.y); g.lineCap='round'; g.lineJoin='round';
+
+  if(away){
+    // ---- REAR VIEW: Kiko running away, seen from behind. Symmetric striding
+    // legs, a rounded feathered rump, and the long neck rising up-screen to a
+    // small back-of-head - that rising neck is the cue that reads as "going away"
+    // instead of a side profile. A slight turn toward the heading (hd=fl) keeps
+    // it a lively 3/4-rear rather than a flat back. ----
+    const A=Math.sin(ph)*1.1*gait, B=Math.sin(ph+Math.PI)*1.1*gait, hd=fl;
+    const rleg=(side, sw, shad)=>{                 // a ratite leg seen from behind
+      const hipX=side*4.6, hipY=CY+7;
+      const kneeX=side*6.0+sw*1.3, kneeY=CY+17;
+      const ankX=side*6.6+sw*2.8, ankY=-2;
+      g.strokeStyle= shad?dark:legc; g.lineWidth=7.0;               // shaggy thigh
+      g.beginPath(); g.moveTo(hipX,hipY); g.lineTo(kneeX,kneeY); g.stroke();
+      g.strokeStyle= shad?'#5f5038':shank; g.lineWidth=3.2;         // scaly shank
+      g.beginPath(); g.moveTo(kneeX,kneeY); g.lineTo(ankX,ankY); g.stroke();
+      g.strokeStyle= shad?hornSh:horn; g.lineWidth=2.4;             // toes splay from the ankle
+      g.beginPath();
+      g.moveTo(ankX,ankY); g.lineTo(ankX+side*4,1.4);
+      g.moveTo(ankX,ankY); g.lineTo(ankX+side*1.4,2.4);
+      g.moveTo(ankX,ankY); g.lineTo(ankX-side*1.6,1.6); g.stroke();
+    };
+    rleg(-1, B, true);                                              // far leg (behind body)
+    // neck rising up-screen to a small head; drawn first so the rump overlaps its base
+    const sway=(moving? Math.sin(ph*0.5):Math.sin(t*1.6))*1.2;
+    const hX=hd*3.5+sway, hY=CY-26;
+    g.strokeStyle=body; g.lineWidth=6.0;
+    g.beginPath(); g.moveTo(hd*1.2,CY-7); g.quadraticCurveTo(hd*2.4,CY-18, hX,hY); g.stroke();
+    g.fillStyle=bodyHi; g.beginPath(); g.ellipse(hX,hY,4.4,4.0,0,0,TAU); g.fill();  // back of head
+    g.strokeStyle=OUT; g.lineWidth=1.4; g.stroke();
+    g.fillStyle=horn; g.beginPath();                               // beak tip peeking past on the heading side
+    g.moveTo(hX+hd*3,hY-0.4); g.lineTo(hX+hd*5.2,hY+0.7); g.lineTo(hX+hd*3,hY+1.7); g.closePath(); g.fill();
+    // ---- rounded rump seen from behind ----
+    const bg=g.createLinearGradient(0,CY-12,0,CY+11);
+    bg.addColorStop(0,bodyHi); bg.addColorStop(0.6,body); bg.addColorStop(1,belly);
+    g.fillStyle=bg; g.beginPath(); g.ellipse(0,CY,12,12,0,0,TAU); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.ellipse(0,CY,12,12,0,0,TAU); g.stroke();
+    g.strokeStyle='rgba(28,19,10,0.30)'; g.lineWidth=3;            // spine shadow down the back
+    g.beginPath(); g.moveTo(0,CY-9); g.lineTo(0,CY+6); g.stroke();
+    g.strokeStyle='rgba(40,28,14,0.42)'; g.lineWidth=1;            // shaggy feather ticks, fanning out
+    for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*3.4,CY-1); g.lineTo(i*3.4+(i<0?-1.7:1.7),CY+6); g.stroke(); }
+    // tail tuft at the top of the rump
+    g.fillStyle=dark;
+    g.beginPath(); g.moveTo(-3,CY-7); g.quadraticCurveTo(hd*1,CY-15, hd*4,CY-12);
+    g.quadraticCurveTo(hd*2,CY-6, 3,CY-6); g.closePath(); g.fill();
+    g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    // saddle blanket on the back
+    g.fillStyle='#5a3a5e'; g.beginPath(); g.ellipse(0,CY-5,7,3,0,0,TAU); g.fill();
+    g.strokeStyle='#2c1830'; g.lineWidth=1.3; g.stroke();
+    rleg(1, A, false);                                             // near leg (over the body)
+    g.restore(); g.lineCap='butt'; g.lineJoin='miter';
+    return;
+  }
   // a long ratite leg: shaggy thigh -> back-bending hock -> scaly shank -> 3 toes,
   // running all the way to the ground so the bird reads tall as a door.
   const leg=(hipx, sw, back)=>{
