@@ -319,8 +319,12 @@ function shopButtons(npc,btns){
       [{item:'potion',price:8},{item:'elixir',price:24}])});
   }
   if(npc.id==='mira'){
-    btns.unshift({label:'Buy cloth…', fn:()=>vendorShop(npc,'Dawn-dyed silk, cut clean and true. A bolt goes further than you\'d think - and the resort\'s always wanting more.',
-      [{item:'silk',price:14}])});
+    // her silk was stolen on the north road - she has none to sell until it's recovered
+    // (the ribbon quest, stage 2). Before that, no cloth for sale.
+    if(qs('ribbon2')==='done'){
+      btns.unshift({label:'Buy cloth…', fn:()=>vendorShop(npc,'Dawn-dyed silk, cut clean and true - back on the loom now the north road\'s seen to. A bolt goes further than you\'d think, and the resort\'s always wanting more.',
+        [{item:'silk',price:14}])});
+    }
   }
   if(npc.id==='brant' && qs('wreck')==='done'){
     btns.unshift({label:'Set sail for Greyharbor', fn:()=>{ closeDialog(); departEarly(); }});
@@ -464,13 +468,9 @@ function shopButtons(npc,btns){
       opts.push({label:'Farewell',ghost:true,fn:closeDialog});
       setDialog(opts.length>1? '“What\'ll it be? A house is never finished - that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
     }});
-    if(!P.horse) btns.unshift({label:'Buy a horse - Chestnut (150g)', fn:()=>{
-      if(P.gold<150){ setDialog('“Hundred fifty for Chestnut. He eats like a duke but runs like a rumor.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      P.gold-=150; P.horse=1; P.riding=1; Snd.quest(); refreshUI(); autoSave();
-      setDialog('“He\'s yours. Whistle any time -” <i>Chestnut is already nosing your pockets.</i> <b>(Toggle riding via Hedda or the pause menu.)</b>',
-        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
-    }});
-    else btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
+    // Chestnut is no longer for sale - he's Orin's gift for the bluecap quest.
+    // Once you own him, Hedda can still whistle him up / stable him for you.
+    if(P.horse) btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
       P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
     }});
   }

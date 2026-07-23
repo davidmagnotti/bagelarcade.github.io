@@ -99,6 +99,8 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
   if(rw.moa){ P.unlocked.moa=true; P.riding=1; if(typeof updateMountBtn==='function') updateMountBtn();
     toast('<b style="color:var(--ember)">Kiko the Moa is yours!</b> '+(isTouch?'Tap <b>Ride</b> (right side)':'Press <b>M</b>')+' to mount and dismount - the fastest legs on any shore.',6500); }
+  if(rw.horse){ P.horse=1; if(typeof updateMountBtn==='function') updateMountBtn();
+    toast('<b style="color:var(--ember)">Chestnut is yours!</b> '+(isTouch?'Tap <b>Ride</b> (right side)':'Press <b>M</b>')+' to mount and dismount - or whistle him up any time from the pause menu.',6500); }
   if(rw.dash2){ P.unlocked.dash2=true;
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.room){ P.resortRoom=1;
