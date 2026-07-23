@@ -196,12 +196,12 @@ function interiorHotspot(){
   let best=null, bestD=1e9;
   for(const f of I.furn){
     let lbl={bed:(I.home&&P.home&&P.homeUp&&P.homeUp.furnish)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', prince:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
     if(!lbl) continue;
     // the wyrm & the wide reception desk need a hotspot that reaches past them
-    const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : (f.type==='king'||f.type==='stairs'||f.type==='cook'||f.type==='millcellar')? 1.8 : 1.55;
+    const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : (f.type==='king'||f.type==='prince'||f.type==='stairs'||f.type==='cook'||f.type==='millcellar')? 1.8 : 1.55;
     const d=dist(P.x,P.y,f.x,f.y);
     if(d<reach && d<bestD){ bestD=d; best={f,label:lbl}; }
   }
@@ -244,6 +244,7 @@ function useHotspot(h){
   else if(f.type==='poolguest'){ resortGuestChat(f); }
   else if(f.type==='suitebed'){ resortSuiteSleep(); }
   else if(f.type==='king'){ palaceKingSpeak(); }
+  else if(f.type==='prince'){ princeSpeak(); }
   else if(f.type==='cook'){ cookSpeak(); }
   else if(f.type==='stairs'){ useStairs(f.dir); }
   else if(f.type==='millcellar'){ if(typeof enterMillFromInterior==='function') enterMillFromInterior(); }

@@ -666,6 +666,10 @@ function killMob(m,skill){
     for(let i=G.projs.length-1;i>=0;i--){ if(G.projs[i].kind==='bone') G.projs.splice(i,1); }
     G.victory=true;   // invulnerable through the win sequence (see hurtPlayer)
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts
+    // persist the kill the instant it lands, like every other boss - without this the
+    // King's death (and the bossDead flag) only saved at the Maren turn-in, so a refresh
+    // at the victory screen resurrected him and let the fight be repeated.
+    if(typeof autoSave==='function') autoSave();
     // freeze the world once the victory screen is up so you can read it in peace
     setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; },2400);
   } else if(m.boss){
@@ -1086,6 +1090,9 @@ function updatePlayer(dt){
 function updateNPCs(dt){
   const night=isNight();
   for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
+  // once the Woodworker wakes as the prince he sails home with you - his Emberwick
+  // post stands empty thereafter (he is now the figure in the Tideglass Palace).
+  if(P.story && P.story.princeWoke) for(const n of G.npcs) if(n.id==='woody') n.hidden=true;
   for(const n of G.npcs){
     n.bubbleT=Math.max(0,(n.bubbleT||0)-dt);
     if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)
