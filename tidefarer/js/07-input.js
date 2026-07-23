@@ -75,11 +75,12 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='woodpile') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>readLore('woodpile@isle')});
     else if(b.kind==='tunnelmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:1.9,go:()=> b.deep? (b.up? exitAerieDungeon() : enterAerieDungeon()) : warpTo(b)});
     else if(b.kind==='tome' && !b.destroyed) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.9,go:()=>destroyTome(b)});
-    else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterCave()});
+    else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterUndermaw()});
     else if(b.kind==='lairmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>enterLair()});
     else if(b.kind==='dungeonmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>{
       if(b.vault){ if(b.exit){ exitFrostVault(); } else if(!(P.story&&P.story.iceBearDown)){ toast('The <b>Hoarfrost Bear</b>’s den, rank with old kills - drive the beast off before you go down.',4600); Snd.step&&Snd.step(5); } else { enterFrostVault(); } return; }
       if(b.mill){ b.exit? exitMillDungeon() : enterMillDungeon(); return; }
+      if(b.undermaw){ b.exit? exitUndermaw() : enterUndermaw(); return; }
       if(b.ember){ b.exit? exitEmberDungeon() : enterEmberDungeon(); } else { b.exit? exitFrostDungeon() : enterFrostDungeon(); } }});
     else if(b.kind==='icelever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullIceLever(b)});
     else if(b.kind==='emberlever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullEmberLever(b)});

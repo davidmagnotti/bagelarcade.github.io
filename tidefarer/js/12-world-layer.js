@@ -99,6 +99,11 @@ const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Winds
   works: {x:19, y:26, r:10, name:'The Grinding Floor',    lv:[0,0]}, // the three gear-locks
   vault: {x:19, y:8,  r:7,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's sealed stormsail
 };
+const UNDERMAW_ZONES = { // THE UNDERMAW - a brief beast-den under the Barik hills
+  maw:  {x:20, y:34, r:6,  name:'The Maw',        lv:[11,13]},   // the entry
+  den:  {x:20, y:19, r:11, name:'The Beast-Den',  lv:[11,13]},   // the one fight
+  hoard:{x:20, y:5,  r:6,  name:'The Deep Hoard',  lv:[0,0]}     // the reward alcove past the door
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -156,7 +161,10 @@ const WORLD_DEFS = {
     gen:()=>genReachDeepAll() },
   milldeep:{ W:40, H:52, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
     spawn:{x:19.5,y:46.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
-    gen:()=>genMillDeepAll() }
+    gen:()=>genMillDeepAll() },
+  undermaw:{ W:40, H:44, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:20.5,y:37.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
+    gen:()=>genUndermawAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -2140,6 +2148,74 @@ function enterMillFromInterior(){
 }
 
 /* =====================================================================
+   THE UNDERMAW - a brief one-room beast-den under the Barik hills. Enter
+   the maw, fell the beast that dens here, and the door at the back grinds
+   open onto a hoard chest holding the Deepiron Ward (a defence boost).
+   Reuses ewall walls, the catgate portcullis, and a scaled boss mob.
+   ===================================================================== */
+let UNDERMAW_WALLS = [];
+const UNDERMAW_GATE = [[18,9],[19,9],[20,9],[21,9],[22,9]];   // the Hoard Door, sealed until the beast falls
+function genUndermaw(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(15,30,25,38);   // THE MAW - entry landing (the way up sits here)
+  carve(18,25,22,31);   // throat -> the den
+  carve(9,12,31,26);    // THE BEAST-DEN - the one fight chamber
+  carve(18,6,22,13);    // corridor -> the hoard (the Hoard Door sits at y=9)
+  carve(13,2,27,8);     // THE DEEP HOARD - the reward alcove
+  UNDERMAW_WALLS=[];
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y)) continue;
+    let border=false;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])
+      if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
+    if(border) UNDERMAW_WALLS.push([x,y]);
+  }
+  for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+}
+function placeObjectsUndermaw(){
+  G.decor=G.decor||[];
+  for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:20.5, y:37.5, label:'the way up'});
+  setSolid(20,37,0); setTile(20,37,T.RUIN);
+  for(const [tx,ty] of [[11,14],[29,14],[11,24],[29,24],[15,4],[25,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE HOARD DOOR - a stone portcullis the beast dens behind; it grinds up when the beast falls
+  G.decor.push({kind:'catgate', x:20, y:9, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
+  // the reward: the Deepiron Ward, sealed in the hoard past the door
+  if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:20.5, y:4.5, undermawArmor:1});
+  // an already-cleared run keeps the door open (the beast is gone)
+  if(P.story && P.story.undermawDown){
+    for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='undermaw') d.open=true; }
+  }
+  G.critters=[];
+}
+function spawnMobsUndermaw(){
+  if(P.story && P.story.undermawDown) return;   // already felled - the den is quiet
+  const Z=UNDERMAW_ZONES.den;
+  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 7) || [Z.x, Z.y];
+  const b=spawnMob('scorpion', sp[0], sp[1]);
+  if(b){ b.boss=true; b.bigBoss=true; b.undermawBeast=1; b.bscale=1.7; b.title='THE MAW-STALKER'; b.subtitle='TERROR OF THE UNDERMAW';
+    b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
+    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; }
+}
+function genUndermawAll(){ genUndermaw(); placeObjectsUndermaw(); spawnMobsUndermaw(); buildMapBase(); }
+function enterUndermaw(){
+  if(G.interior) return;
+  if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._undermawReturn={x:P.x, y:P.y+1.3}; P.click=null;
+  setTimeout(()=>{ switchWorld('undermaw'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitUndermaw(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.click=null;
+  setTimeout(()=>{ switchWorld('main');
+    const r=P._undermawReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+
+/* =====================================================================
    THE CLOUDREACH (sky) + STORMREACH (reach) - a two-island arc:
    Ashwing flies you UP into the cloud-sea to the Cloudreach. Run the
    Wind-Lost Bird's RAINBOW ROAD (the sky-dungeon) and put out the Storm-Eye
@@ -3326,6 +3402,16 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
+  if(b.undermawArmor){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.undermawArmor=1;
+    give('wardplate',1);
+    banner('THE DEEPIRON WARD','+15% DEFENCE WHILE CARRIED');
+    shockwave(b.x,b.y,'rgba(150,200,230,0.9)',56); burst(b.x,b.y-0.5,'#9ab0c8',18,2.6); Snd.levelup&&Snd.levelup();
+    setTimeout(()=>toast('A slab of black deep-iron, cold and old, worked into a ward-plate. The <b style="color:#9ab0c8">Deepiron Ward</b> turns aside <b>15% of every blow</b> while you carry it - atop any armour you wear.',6800),400);
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.relic){
     bumpStat('chests');
     give('relic',1); giveGold(150);
@@ -3619,6 +3705,8 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
   if(id==='milldeep' && !P.prog.millSeen){ P.prog.millSeen=1;
     if(!(P.story && P.story.millBowTaken)) setTimeout(()=>toast('<i>An iron sluice gate bars the stair up into the works.</i> The miller’s arms-chest here holds the crank that lifts it - <b>open the chest</b> to raise the gate, and arm yourself for what grinds in the dark above.',7200),1400); }
+  if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
+    if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.

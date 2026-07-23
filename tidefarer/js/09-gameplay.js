@@ -191,7 +191,7 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon':'dungeon',o:b,
+      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon':'dungeon',o:b,
         label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
@@ -257,7 +257,8 @@ function doInteract(){
   if(it.type==='shop'){ facePoint(it.o.x,it.o.y); openStallShop(it.o); return; }
   if(it.type==='door'){ facePoint(it.o.x,it.o.y); enterHouse(it.o); return; }
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
-  if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterCave(); return; }
+  if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterUndermaw(); return; }
+  if(it.type==='undermawdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitUndermaw(); else enterUndermaw(); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
   if(it.type==='milldungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitMillDungeon(); else enterMillDungeon(); return; }
@@ -755,10 +756,18 @@ function killMob(m,skill){
     banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');   // the banner says it; no follow-up popup
     if(typeof autoSave==='function') autoSave();
   }
+  if(m.undermawBeast){
+    P.story=P.story||{}; P.story.undermawDown=1;
+    if(typeof UNDERMAW_GATE!=='undefined') for(const [x,y] of UNDERMAW_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='undermaw'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
+    if(typeof autoSave==='function') autoSave();
+  }
   // After felling a dungeon boss, offer the quick road out - mended and a level
   // stronger. (Overworld bosses stay put; dungeons have a clear "way up". The
-  // Undermill's guardian is excluded: the sail still waits past the gate.)
-  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && !m.millboss && typeof inDungeon==='function' && inDungeon()){
+  // Undermill and Undermaw guardians are excluded: a reward still waits past the gate.)
+  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && !m.millboss && !m.undermawBeast && typeof inDungeon==='function' && inDungeon()){
     setTimeout(offerDungeonExit, 2400);
   }
 }
@@ -797,7 +806,9 @@ function hurtPlayer(dmg,src){
   if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
-  dmg=Math.max(1, Math.round(dmg*(1-[0,0.15,0.30][P.armor||0])));
+  let _red=[0,0.15,0.30][P.armor||0];
+  if(typeof has==='function' && has('wardplate',1)) _red=Math.min(0.65, _red+0.15);   // the Deepiron Ward stacks atop worn armour
+  dmg=Math.max(1, Math.round(dmg*(1-_red)));
   if(has('wardstone',1)) dmg=Math.max(1, dmg-2);   // the Warden's Wardstone turns aside a sliver of every blow
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
