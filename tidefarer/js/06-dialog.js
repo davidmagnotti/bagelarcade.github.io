@@ -392,15 +392,19 @@ function shopButtons(npc,btns){
     const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
     const aelinStudy=()=>{
       if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
+      // one lesson per day - the weave needs a night to settle before the next
+      if(P.prog && P.prog.spireDay===(P.prog.dayN||1)){
+        setDialog('“You\'ve trained today already - and the weave settles only overnight. Rest, and come back at dawn for the next lesson.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       const f=aelinFee();
       if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
       P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
-      TRAIN={who:'aelin', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+      TRAIN={who:'aelin', stage:0, rolls:0, combo:0, casts:0, _r:0, x:P.x, y:P.y,
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-      toast('<b>Aelin\'s lesson:</b> deal <b>30 damage</b> to the range dummies. Staff, sword, anything that moves the air.',5000); Snd.quest();
+      toast('<b>Aelin\'s lesson:</b> attune your staff (<b>press 3</b>) and cast <b>5 bolts</b> at the practice dummy. No footwork - just clean casting.',5600); Snd.quest();
     };
-    btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    const trainedToday = P.prog && P.prog.spireDay===(P.prog.dayN||1);
+    btns.unshift({label:P.skills.magic.lvl>=7? 'Train at the Spire (mastered)' : trainedToday? 'Train at the Spire (rest first)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
     if(P.skills.magic.lvl>=5){
       P.spells=P.spells||{};
       if(!P.spells.snare){
