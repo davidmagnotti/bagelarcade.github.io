@@ -140,6 +140,13 @@ function enterHouse(b){
     toast('The tower door won’t give - a faint ward hums under your palm. <b>Orin:</b> “Not yet, friend. Bring me my bluecaps first; then the door - and what waits past it - is yours.”',4600);
     Snd.step(5); return;
   }
+  // Aelin's Spire is a school, not a lobby: the door only knows students. Train
+  // with her on the range at least once and it opens (the scrying orb within - the
+  // "Attune" - then gives its one-time boon, as every tower orb does).
+  if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire') && !(P.prog && P.prog.spireTrainedEver)){
+    toast('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”',4600);
+    Snd.step(5); return;
+  }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
   // the Mint...). b.locked keeps the old Vael war-tent default.
   if(b.lockMsg){ toast(b.lockMsg,3800); Snd.step(5); return; }
