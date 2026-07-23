@@ -235,15 +235,17 @@ function placeObjects(){
       addNode('shell',x,y); shells++;
     }
   }
-  // fishing spots: shallow tiles adjacent to land
-  const fishSpots=[[28,60],[27,64],[30,65],[24,61]];
+  // fishing spots: shallow tiles adjacent to land. A generous cluster right off the
+  // dock and south shore so the first spots are easy to find, then more scattered
+  // around the whole isle (denser than before - they were too sparse to stumble on).
+  const fishSpots=[[28,60],[27,64],[30,65],[24,61],[26,62],[29,63],[25,63],[32,63],[23,59],[31,66],[26,59],[33,64],[22,62]];
   for(const [x,y] of fishSpots){ if(tileAt(x,y)<=T.SHALLOW){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; } }
   let placed=0; const fr=mulberry32(SEED+21);
-  for(let tries=0; tries<4000 && placed<7; tries++){
+  for(let tries=0; tries<6000 && placed<14; tries++){
     const x=rndiR(fr,3,MAPW-4), y=rndiR(fr,3,MAPH-4);
     if(tileAt(x,y)===T.SHALLOW){
       let land=false; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) if(walkTile(tileAt(x+dx,y+dy))) land=true;
-      if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<7)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
+      if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<5)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
     }
   }
   // ruin pillars & crypt platform - clustered around the King's northern spit,

@@ -46,8 +46,8 @@ for(const k in SKILLS) P.skills[k]={lvl:1,xp:0};
 /* ---------- quests ---------- */
 const QUESTS = {
   welcome:{ giver:'maren', title:'Welcome Ashore', kind:'talk', talkTo:'bram',
-    brief:'New boots on old sand - welcome, traveler. Our smith Bram has been muttering about needing help. Follow the lanterns east of the well and introduce yourself.',
-    log:'Speak with Bram at the forge, east of the village well.',
+    brief:'New boots on old sand - welcome, traveler. Two of us could use a hand: our smith <b>Bram</b> at the forge east of the well, and <b>Willa</b> at the farm just past him. Start with Bram - he\'ll set you right - then go see what Willa needs.',
+    log:'Speak with Bram at the forge, east of the well - and meet Willa at the farm just past him.',
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, item:{potion:1}, xp:{melee:30}}, unlocks:['kit','fish','harvest','cat','shells','springs'] },
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
@@ -250,7 +250,9 @@ function spawnMob(kind,x,y,elite){
 }
 function spawnMobs(){
   const slimeSpots=[[66,47],[70,50],[68,52],[72,47],[67,44],[71,53]];
-  for(const [x,y] of slimeSpots) spawnMob('slime',x,y);
+  // Emberwick slimes are hardier than the base mob - double health, so the meadow
+  // fight is a real warm-up (other isles' slimes keep the standard stat block)
+  for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
   const wolfSpots=[[30,39],[35,36],[28,34],[37,42]];
   for(const [x,y] of wolfSpots){ const s=findOpenNear(x,y,3); if(s) spawnMob('wolf',s[0],s[1]); }
   // bone-guard the ground between the fire-gate and the King, at the northern spit.

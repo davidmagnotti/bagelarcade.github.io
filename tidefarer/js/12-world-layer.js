@@ -3515,8 +3515,7 @@ function switchWorld(id){
         setTimeout(()=>toast('You check your pack on the crossing - the isle sent you off with '+got.join(', ')+'. Enough to make an honest start on Barik.',6000),1500); }
     }
   }
-  if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail';
-    setTimeout(()=>toast('A hooded figure watches from the Warden\'s post. <b style="color:var(--ember)">Warden Kell</b> has work.',5200),1500); }
+  if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail'; }   // Warden Kell's work is available; no toast - the player finds him
   if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='east'){
     // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you

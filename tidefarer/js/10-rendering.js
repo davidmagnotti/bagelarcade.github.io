@@ -415,16 +415,21 @@ function drawNode(n,s){
     cx.drawImage(SPR.mushroom, s.x-20, s.y-38);
   } else if(n.kind==='fish'){
     const ph=G.time*1.4+n.bob;
-    cx.strokeStyle='rgba(255,255,255,0.5)'; cx.lineWidth=1.5;
+    // brighter, larger cyan ripples so a fishing spot reads clearly from a distance
+    cx.strokeStyle='rgba(150,225,255,0.8)'; cx.lineWidth=2;
     for(let i=0;i<3;i++){
       const rp=((ph+i*0.7)%2)/2;
-      cx.globalAlpha=(1-rp)*0.7;
-      cx.beginPath(); cx.ellipse(s.x,s.y,6+rp*16,(6+rp*16)*0.45,0,0,TAU); cx.stroke();
+      cx.globalAlpha=(1-rp)*0.9;
+      cx.beginPath(); cx.ellipse(s.x,s.y,6+rp*18,(6+rp*18)*0.45,0,0,TAU); cx.stroke();
     }
     cx.globalAlpha=1;
-    // fish shadow flick
-    if(Math.sin(ph*2)>0.7){ cx.fillStyle='rgba(20,40,60,0.5)';
-      cx.beginPath(); cx.ellipse(s.x+Math.cos(ph)*6,s.y+2,6,2.4,Math.cos(ph),0,TAU); cx.fill(); }
+    // an always-visible bobbing fish breaking the surface, so the spot never vanishes
+    // between ripple pulses (the old version only flickered a shadow now and then)
+    const by=Math.sin(ph*1.2)*1.4;
+    cx.fillStyle='rgba(96,158,205,0.9)';
+    cx.beginPath(); cx.ellipse(s.x, s.y-2+by, 4.6, 2.4, Math.sin(ph)*0.18, 0, TAU); cx.fill();   // body
+    cx.beginPath(); cx.moveTo(s.x-4.4,s.y-2+by); cx.lineTo(s.x-8,s.y-4+by); cx.lineTo(s.x-8,s.y+by); cx.closePath(); cx.fill();  // tail
+    cx.fillStyle='rgba(255,255,255,0.95)'; cx.beginPath(); cx.arc(s.x+2.6,s.y-2.8+by,0.9,0,TAU); cx.fill();  // eye glint
   }
 }
 const SIGNS={};
