@@ -146,6 +146,15 @@ function render(){
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
   }
+  // training-arena ring: the chalk circle you're sealed inside during a drill
+  if(typeof TRAIN!=='undefined' && TRAIN){
+    const R=6.2, seg=44;
+    cx.strokeStyle='rgba(255,206,122,0.6)'; cx.lineWidth=2.5; cx.setLineDash([7,7]);
+    cx.beginPath();
+    for(let i=0;i<=seg;i++){ const a=i/seg*TAU, s=worldToScreen(TRAIN.x+Math.cos(a)*R, TRAIN.y+Math.sin(a)*R);
+      if(i===0) cx.moveTo(s.x,s.y); else cx.lineTo(s.x,s.y); }
+    cx.stroke(); cx.setLineDash([]);
+  }
 
   // ---- object/entity pass (depth sorted) ----
   const items=[];

@@ -439,9 +439,11 @@ function shopButtons(npc,btns){
       if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
       P.x=npc.x-2.5; P.y=npc.y-2.7; unstickEntity(P);
-      TRAIN={who:'rook', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
+      // face every yard dummy the same way so "get behind it" is a clear, learnable spot
+      for(const m of G.mobs) if(m.kind==='dummy') m.face={x:0,y:1};
+      TRAIN={who:'rook', stage:0, combo:0, backstabs:0, x:P.x, y:P.y,
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-      toast('<b>Rook\'s drill:</b> deal <b>30 damage</b> to the practice dummies in the yard. Strike!',4600); Snd.quest();
+      toast('<b>Rook\'s drill.</b> <i>He scuffs a chalk ring around the yard.</i> “Stay inside the ring till I say. First - <b>deal 30 damage</b> to the dummies. Strike!”',5200); Snd.quest();
     }});
     btns.unshift({label:'\u201cArchery lessons?\u201d', fn:()=>{
       setDialog('\u201cBows? My cousin teaches archery across the eastern water. Proper range, proper wind. When the strait opens, sail out and tell her I still owe her twenty gold.\u201d',

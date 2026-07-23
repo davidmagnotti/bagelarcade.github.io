@@ -566,8 +566,19 @@ function damageMob(m,dmg,knock,skill){
   // boss-damage bonus that leaves trash-mob tuning untouched. Keeps marquee fights
   // decisive (~10-15 hits) instead of attrition sponges.
   if((m.maxhp||0)>=300) dmg=Math.round(dmg*1.3);
+  // Backstab: a melee blow from behind bites half again as deep. Marquee bosses
+  // (bigBoss) wheel to face you and are immune. Taught in Rook's yard drill.
+  let backstab=false;
+  if(skill==='melee' && m.face && !m.bigBoss){
+    const bx=P.x-m.x, by=P.y-m.y, bl=Math.hypot(bx,by)||1;
+    if((m.face.x*bx+m.face.y*by)/bl < -0.3){
+      dmg=Math.round(dmg*1.5); backstab=true;
+      if(TRAIN && TRAIN.who==='rook') TRAIN.backstabs=(TRAIN.backstabs||0)+1;
+    }
+  }
   m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
+  if(backstab) addFloat('BACKSTAB!', m.x, m.y-2.4, '#ff9a5a', 1.2);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
   if(skill==='melee') G.hitStop=Math.max(G.hitStop, crit?0.09:0.045);
   burst(m.x,m.y-0.5, m.kind==='slime'?'#7fca6a': m.kind==='wolf'?'#8a8d96':'#eceee6', 6, 2);
@@ -1020,11 +1031,11 @@ function updatePlayer(dt){
   if(TRAIN){
     const dums=G.mobs.filter(m=>m.kind==='dummy');
     const dmgDone=dums.reduce((a,m)=>a+(m.maxhp-m.hp),0)-TRAIN.dmg0;
-    if(P.rollT>0 && !TRAIN._r){ TRAIN._r=1; TRAIN.rolls++; }
-    if(P.rollT<=0) TRAIN._r=0;
     TRAIN.combo=Math.max(TRAIN.combo,P.combo||0);
-    if(dist(P.x,P.y,TRAIN.x,TRAIN.y)>14){ TRAIN=null; toast('Drill abandoned. The dummies gossip about you.',3200); }
-    else if(TRAIN.who==='aelin'){
+    // ARENA: keep the trainee inside the ring - clamp them back rather than abandon
+    { const R=6.2, ax=P.x-TRAIN.x, ay=P.y-TRAIN.y, ad=Math.hypot(ax,ay);
+      if(ad>R){ P.x=TRAIN.x+ax/ad*R; P.y=TRAIN.y+ay/ad*R; P.click=null; } }
+    if(TRAIN.who==='aelin'){
       // The Spire lesson is pure spellwork - no footwork gates (no dodge-roll to
       // learn here). Land 5 staff casts on the practice dummy and the weave lifts
       // you a whole magic level. Gated to once per day back in aelinStudy.
@@ -1040,9 +1051,10 @@ function updatePlayer(dt){
     }
     else if(TRAIN.stage===0 && dmgDone>=30){ TRAIN.stage=1; Snd.quest();
       toast('<b>Good.</b> Now chain it: land a <b>COMBO x2</b> without pausing between strikes.',4400); }
-    else if(TRAIN.stage===1 && TRAIN.combo>=2){ TRAIN.stage=2; Snd.quest();
-      toast('<b>Sharp.</b> Footwork now: <b>dodge-roll 3 times</b>'+(isTouch?' (the roll button)':' (Shift)')+'.',4400); }
-    else if(TRAIN.stage===2 && TRAIN.rolls>=3){
+    else if(TRAIN.stage===1 && TRAIN.combo>=2){ TRAIN.stage=2;
+      if(TRAIN.who==='rook'){ Snd.quest();
+        toast('<b>Sharp.</b> Now <b>footwork</b>: circle <b>BEHIND</b> a dummy and strike - a blow from behind bites <b>half again as deep</b>.',5200); } }
+    else if(TRAIN.stage===2 && (TRAIN.who!=='rook' || (TRAIN.backstabs||0)>=1)){
       const who=TRAIN.who; TRAIN=null;
       for(const m of dums){ m.hp=m.maxhp; }
       if(who==='sable'){ addXP('archery',160); gainLXP(120);
@@ -1098,7 +1110,8 @@ function updatePlayer(dt){
 
 function updateNPCs(dt){
   const night=isNight();
-  for(const n of G.npcs) n.hidden = n.throne ? true : (night && !n.nightOwl);   // throne-bound NPCs (the King) never appear in the open city
+  // during a training drill the yard clears - only the trainer is present (n.id===TRAIN.who)
+  for(const n of G.npcs) n.hidden = n.throne ? true : ((TRAIN && n.id!==TRAIN.who) || (night && !n.nightOwl));   // throne-bound NPCs (the King) never appear in the open city
   for(const n of G.npcs){
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
