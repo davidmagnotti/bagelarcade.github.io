@@ -1265,7 +1265,7 @@ function freeLeviathan(m){
   for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,life:rnd(0.8,1.7),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); }
   P.story.tideCalm=1; P.story.vathMet=1;
-  if(m.ach) award(m.ach);
+  bossReward(m);
   // the strait is safe: the ferry can finally moor at the pier (it was hidden while
   // no hull could live in the water). Add it now so it's there without a reload.
   if(G.worldId==='wind' && !G.decor.some(d=>d.kind==='boat')){
@@ -1759,7 +1759,7 @@ function freeWarden(m){
   for(let i=0;i<32;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.8),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.05}); }
   P.story.frostFreed=1; P.story.vathMet=1;
-  if(m.ach) award(m.ach);
+  bossReward(m);
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
@@ -1851,7 +1851,7 @@ function freeColossus(m){
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y-0.5,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.9),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,5),grav:0.05}); }
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
-  if(m.ach) award(m.ach);
+  bossReward(m);
   giveGold(150); give('elixir',2);
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
@@ -2967,7 +2967,7 @@ function spawnFinalVath(){
 function bindVath(m){
   m.bound=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.hp=1;
   P.story=P.story||{}; P.story.vathBound=1; P.story.act=Math.max(P.story.act||1,4);
-  if(m.ach) award(m.ach);
+  bossReward(m);
   if(Snd.boss) Snd.boss(); G.shake=1.0; G.slowmo=1.2;
   shockwave(m.x,m.y,'rgba(199,123,255,0.95)',110);
   for(let i=0;i<40;i++){ const a=Math.random()*TAU, s=rnd(1,5);

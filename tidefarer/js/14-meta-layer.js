@@ -37,6 +37,20 @@ function award(id){
   banner('ACHIEVEMENT', ACH[id].t+' - '+ACH[id].d);
   Snd.quest();
 }
+// Felling (or freeing) a named boss deepens your mana well for good: a one-time
+// +max-mana grant, deduped on the boss's achievement so respawns never re-give.
+const BOSS_MP=5;
+function bossReward(m){
+  P.ach=P.ach||{};
+  const key = m.ach || (m.kind==='boss' ? 'kingslayer' : m.kind==='alpha' ? 'wolfsbane' : null);
+  if(!key || !ACH[key]) return;
+  if(!P.ach[key]){                                   // first fall only
+    P.maxmp += BOSS_MP; P.mp = P.maxmp;
+    if(typeof refreshUI==='function') refreshUI();
+    if(typeof addFloat==='function') addFloat('+'+BOSS_MP+' max mana', P.x, P.y-2.1, '#7fd4ff', 1.2);
+  }
+  award(key);
+}
 function bumpStat(k,n){ P.stats[k]=(P.stats[k]||0)+(n||1); checkStats(); }
 function checkStats(){
   const s=P.stats;
@@ -64,7 +78,7 @@ function saveCode(){
   flags[G.worldId]=worldFlagsFrom(G.mobs,G.decor);
   for(const id in WORLDS){ if(id!==G.worldId) flags[id]=worldFlagsFrom(WORLDS[id].mobs,WORLDS[id].decor); }
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
-    gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),
+    gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),maxmp:P.maxmp,
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
     unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,rr:P.resortRoom?1:0,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
@@ -101,7 +115,10 @@ function loadCode(str){
   iso.gen();
   // restore hero first (switchWorld reads quest state)
   P.gold=Math.round(+d.gold)||0; // saves from the string-gold era heal on load
-  P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp); P.mp=d.mp||30;
+  P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp);
+  // maxmp must be restored too, or every permanent mana boost (quest rewards AND
+  // boss defeats) silently resets to the starting well on reload
+  P.maxmp=d.maxmp||30; P.mp=Math.min(d.mp||30,P.maxmp);
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
   P.quests=d.quests||{}; P.prog=d.prog||{};
   // One-time migration: anyone who felled the wyrm under the PRE-rework version
