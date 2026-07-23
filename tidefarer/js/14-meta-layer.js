@@ -14,7 +14,22 @@ const ACH={
   globetrotter:{t:'Across the Strait',d:'Reach the mainland.'},
   kingslayer:{t:'Kingslayer',d:'Fell the Hollow King.'},
   wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'},
-  wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'}
+  wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'},
+  // ---- the other named bosses of the archipelago (awarded on their defeat) ----
+  gravebane:{t:'Gravebane',d:'Unmake Gravelord Varek in the Old Ruins.'},
+  vaelbreaker:{t:'Vael-Breaker',d:'Fell the Castellan of the Vael.'},
+  tidebreaker:{t:'Tidebreaker',d:'Break the curse on the Bound Leviathan.'},
+  tomewarden:{t:"Warden's Bane",d:'Slay the serpent guarding the cursed tome.'},
+  dragonsworn:{t:'Dragonsworn',d:"Shatter Ashwing's binding atop Mount Kea."},
+  thawwarden:{t:'Thawbringer',d:'Free the Weeping Warden from the ice.'},
+  rimebreaker:{t:'Rimebreaker',d:'Free the Rimebound in the Glacier Vault.'},
+  bearslayer:{t:'Bear-Slayer',d:'Slay the Hoarfrost Bear on the Rimewood.'},
+  cogbreaker:{t:'Cog-Breaker',d:"Free the Undermill's seized gear-train."},
+  rocslayer:{t:'Roc-Slayer',d:'Down the Storm Roc atop the Cloudreach.'},
+  brutebane:{t:'Brute-Bane',d:'Put the Barrow Brute back in its barrow.'},
+  deepwarden:{t:'Deep-Warden',d:'Put the Drowned Warden to rest.'},
+  stormbreaker:{t:'Storm-Breaker',d:'Close the Storm-Eye and calm the high wind.'},
+  enchantersbane:{t:"The Enchanter's Bane",d:'Bind Vath the Emberbinder for good.'}
 };
 function award(id){
   if(!ACH[id] || P.ach[id]) return;

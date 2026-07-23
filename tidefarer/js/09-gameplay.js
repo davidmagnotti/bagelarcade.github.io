@@ -564,6 +564,7 @@ function vathEscapes(m){
 function dragonFaints(m){
   // beaten down, the binding shatters - Ashwing swoons and comes to himself
   m.fainted=1; m.enspelled=false; m.state='idle'; m.tx=null;
+  if(m.ach) award(m.ach);
   m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
   Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
@@ -591,6 +592,7 @@ function killMob(m,skill){
   bumpStat('kills');
   if(m.kind==='boss') award('kingslayer');   // only the Hollow King earns Kingslayer
   if(m.kind==='alpha') award('wolfsbane');
+  if(m.ach) award(m.ach);   // named regional bosses each carry their own achievement tag
   killCredit(m.kind);
   if(m.elite) killCredit('elite');
   // drops

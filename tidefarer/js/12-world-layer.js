@@ -508,7 +508,7 @@ function spawnRealmFolk(){
 }
 function spawnVaelCaptain(x,y){
   const cap=spawnMob('raidcap', x, y);
-  if(cap){ cap.boss=true; cap.bigBoss=true; cap.title='CASTELLAN OF THE VAEL';
+  if(cap){ cap.boss=true; cap.bigBoss=true; cap.title='CASTELLAN OF THE VAEL'; cap.ach='vaelbreaker';
     cap.hx=x; cap.hy=y; cap.respawnT=-1; }
   return cap;
 }
@@ -792,7 +792,7 @@ function awakenDragon(){
   const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
         || findOpenNear(Math.round(C.x), Math.round(C.y+ (G.worldId==='eastdeep'?4:7)), 8) || [C.x, C.y+4];
   const dr=spawnMob('dragon', sp[0], sp[1]);
-  if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.state='chase'; dr.noAggroT=0;
+  if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.ach='dragonsworn'; dr.state='chase'; dr.noAggroT=0;
     dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
   P.metDragon=1;
   banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
@@ -1252,7 +1252,7 @@ function spawnLeviathan(){
   if(G.mobs && G.mobs.some(m=>m.kind==='leviathan' && !m.dead)) return null;
   const h=leviathanHome();
   const lv=spawnMob('leviathan', h.x-0.5, h.y-0.5);
-  if(lv){ lv.boss=true; lv.bigBoss=true; lv.rooted=1; lv.title='THE BOUND LEVIATHAN';
+  if(lv){ lv.boss=true; lv.bigBoss=true; lv.rooted=1; lv.title='THE BOUND LEVIATHAN'; lv.ach='tidebreaker';
     lv.hx=h.x; lv.hy=h.y; lv.x=h.x; lv.y=h.y; lv.state='chase'; lv.noAggroT=0; lv.respawnT=-1; }
   return lv;
 }
@@ -1265,6 +1265,7 @@ function freeLeviathan(m){
   for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,life:rnd(0.8,1.7),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); }
   P.story.tideCalm=1; P.story.vathMet=1;
+  if(m.ach) award(m.ach);
   // the strait is safe: the ferry can finally moor at the pier (it was hidden while
   // no hull could live in the water). Add it now so it's there without a reload.
   if(G.worldId==='wind' && !G.decor.some(d=>d.kind==='boat')){
@@ -1460,7 +1461,7 @@ function spawnSerpent(){
   if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)) return null;
   const S=AERIE_ZONES.sanctum, sp=findOpenNear(Math.round(S.x), Math.round(S.y+2), 3) || [S.x, S.y+2];
   const sn=spawnMob('serpent', sp[0], sp[1]);
-  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
   return sn;
 }
 function destroyTome(b){
@@ -1555,7 +1556,7 @@ function spawnMobsAerieDeep(){
   if(!(P.story && P.story.aerieFreed)){
     const sp=findOpenNear(Z.crypt.x, Z.crypt.y, 6) || [Z.crypt.x, Z.crypt.y];
     const sn=spawnMob('serpent', sp[0], sp[1]);
-    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
   }
 }
 function genAerieDeepAll(){
@@ -1729,7 +1730,7 @@ function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
   const GL=FROST_ZONES.glacier, sp=findOpenNear(Math.round(GL.x), Math.round(GL.y), 5) || [GL.x, GL.y];
   const w=spawnMob('frostwarden', sp[0], sp[1]);
-  if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; }
+  if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.ach='thawwarden'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; }
   return w;
 }
 function spawnMobsFrost(){
@@ -1748,7 +1749,7 @@ function spawnMobsFrost(){
   if(G.frostVaultMouth && !(P.story && P.story.iceBearDown)){
     const M=G.frostVaultMouth, sp=findOpenNear(M.x, M.y+2, 5) || [M.x, M.y+2];
     const bear=spawnMob('polarbear', sp[0], sp[1], true);   // elite
-    if(bear){ bear.boss=true; bear.bigBoss=true; bear.title='THE HOARFROST BEAR'; bear.subtitle='TERROR OF THE RIMEWOOD'; bear.vaultbear=1; bear.hx=sp[0]; bear.hy=sp[1]; bear.respawnT=-1; }
+    if(bear){ bear.boss=true; bear.bigBoss=true; bear.title='THE HOARFROST BEAR'; bear.subtitle='TERROR OF THE RIMEWOOD'; bear.vaultbear=1; bear.ach='bearslayer'; bear.hx=sp[0]; bear.hy=sp[1]; bear.respawnT=-1; }
   }
 }
 function freeWarden(m){
@@ -1758,6 +1759,7 @@ function freeWarden(m){
   for(let i=0;i<32;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.8),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.05}); }
   P.story.frostFreed=1; P.story.vathMet=1;
+  if(m.ach) award(m.ach);
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
@@ -1814,7 +1816,7 @@ function spawnMobsFrostDeep(){
   if(!(P.story && P.story.deepDone)){
     const sp=findOpenNear(Z.boss.x, Z.boss.y, 6) || [Z.boss.x, Z.boss.y];
     const b=spawnMob('icecolossus', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; }
+    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; }
   }
 }
 function genFrostDeepAll(){
@@ -1849,6 +1851,7 @@ function freeColossus(m){
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
     G.parts.push({x:m.x,y:m.y-0.5,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.9),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,5),grav:0.05}); }
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
+  if(m.ach) award(m.ach);
   giveGold(150); give('elixir',2);
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
@@ -2036,7 +2039,7 @@ function spawnMobsMillDeep(){
   const Z=MILLDEEP_ZONES.works;
   const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 6) || [Z.x, Z.y];
   const b=spawnMob('skeleton', sp[0], sp[1]);
-  if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND';
+  if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
     b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; }
 }
@@ -2165,7 +2168,7 @@ function spawnMobsSky(){
   if(!(P.story && P.story.rocDown)){
     const sp=findOpenNear(Z.eyrie.x, Z.eyrie.y, 6) || [Z.eyrie.x, Z.eyrie.y];
     const roc=spawnMob('raptor', sp[0], sp[1], true);
-    if(roc){ roc.boss=true; roc.bigBoss=true; roc.title='THE STORM ROC'; roc.subtitle='TERROR OF THE CLOUD-SEA'; roc.skyboss=1;
+    if(roc){ roc.boss=true; roc.bigBoss=true; roc.title='THE STORM ROC'; roc.subtitle='TERROR OF THE CLOUD-SEA'; roc.skyboss=1; roc.ach='rocslayer';
       roc.hp=roc.maxhp=720; roc.dmg=30; roc.lvl=10; roc.hx=sp[0]; roc.hy=sp[1]; roc.respawnT=-1; }
   }
   // a scatter of lesser screaming raptors ride the updrafts
@@ -2238,7 +2241,7 @@ function spawnMobsReach(){
   if(!(P.story && P.story.reachBossDown)){
     const sp=findOpenNear(Z.barrow.x, Z.barrow.y, 6) || [Z.barrow.x, Z.barrow.y];
     const brute=spawnMob('raidcap', sp[0], sp[1]);
-    if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1;
+    if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1; brute.ach='brutebane';
       brute.hp=brute.maxhp=1000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; }
   }
   // storm-driven raiders wash up around the barrow
@@ -2285,7 +2288,7 @@ function spawnMobsReachDeep(){
   if(!(P.story && P.story.tombBossDown)){
     const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
     const w=spawnMob('gravelord', sp[0], sp[1]);
-    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED WARDEN'; w.subtitle='KEEPER OF THE CATACOMB'; w.tombboss=1;
+    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED WARDEN'; w.subtitle='KEEPER OF THE CATACOMB'; w.tombboss=1; w.ach='deepwarden';
       w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; }
   }
   for(const z of [Z.ossuary, Z.heart]) for(let i=0;i<2;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
@@ -2955,7 +2958,7 @@ function spawnFinalVath(){
   const sp=findOpenNear(base[0], base[1], 9) || base;
   const m=spawnMob('mage', sp[0], sp[1]);
   if(!m) return null;
-  m.finalVath=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER';
+  m.finalVath=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER'; m.ach='enchantersbane';
   m.lvl=13; m.maxhp=700; m.hp=700; m.dmg=30; m.speed=2.9; m.aggro=16;
   m.state='chase'; m.noAggroT=0; m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1;
   return m;
@@ -2964,6 +2967,7 @@ function spawnFinalVath(){
 function bindVath(m){
   m.bound=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.hp=1;
   P.story=P.story||{}; P.story.vathBound=1; P.story.act=Math.max(P.story.act||1,4);
+  if(m.ach) award(m.ach);
   if(Snd.boss) Snd.boss(); G.shake=1.0; G.slowmo=1.2;
   shockwave(m.x,m.y,'rgba(199,123,255,0.95)',110);
   for(let i=0;i<40;i++){ const a=Math.random()*TAU, s=rnd(1,5);
@@ -3308,7 +3312,7 @@ function ensureGravelord(announce){
   if(G.worldId!=='isle' || qs('gravelord')!=='active') return;
   if(G.mobs.some(m=>m.kind==='gravelord' && !m.dead)) return;
   const m=spawnMob('gravelord', Math.round(ZONES.ruins.x), Math.round(ZONES.ruins.y));
-  m.elite=true;
+  m.elite=true; m.ach='gravebane';
   if(announce) toast('A grave chill rises from the <b>Old Ruins</b> to the north...',5000);
 }
 /* ---------- sailing ---------- */

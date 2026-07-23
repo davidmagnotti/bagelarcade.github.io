@@ -139,7 +139,7 @@ function spawnMobsSkyDungeon(){
   // its guard for a moment each time it DISCHARGES (a telegraphed shockwave). Strike then.
   if(!done){ const s=skyIsle('i6');
     const b=spawnMob('stormeye', s.x, s.y-1);
-    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE';
+    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE'; b.ach='stormbreaker';
       b.hp=b.maxhp=900; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
       b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; } }
 }
