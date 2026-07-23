@@ -3266,10 +3266,6 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,170,200,0.85)',44);
     burst(b.x,b.y-0.5,'#ffb0c8',14,2.2);
     Snd.quest();
-    // The first fingerprint of the enchanter: someone paid to have these ribbons
-    // stolen - and it grounded Corvo's ferry. A pattern the player won't see yet.
-    if(!P.story.vathNamed){ P.story.vathNamed=1;
-      setTimeout(()=>toast('Tucked beneath the silk: a <b>coin older than the kingdom</b>. A cornered brigand spits as you pass: \u201cPaid us in old coin, that one - a <b>robed fellow</b>, soft-spoken, violet thread at his cuffs. Said it was only ribbons. What\'s the harm in a few ribbons?\u201d',9500),1600); }
     return;
   }
   if(b.emberking){
