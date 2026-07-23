@@ -1229,6 +1229,14 @@ function spawnWindFolk(){
     {skin:'#8f6a48',hair:'#2a241e',shirt:'#5a4472',pants:'#332c3c',hairstyle:'bun'},
     ['I stitch the finest sails on any shore - and every one of them hangs idle in my loft.',
      'The day a boat can cross again, I\'ll have this town in canvas by nightfall.'],0.5));
+  // Innkeep of the Windsurf Inn - keeps the fire lit though no guest has rung the
+  // bell in a season. Rooms are TEN GOLD (dialog handles 'Rest the night'), and
+  // she keeps night hours (nightOwl) so a storm-late traveller can always rouse her.
+  { const inn=makeNPC('wenna','Wenna the Innkeep', T2.x-4.5, T2.y+6.3,
+      {skin:'#caa27b',hair:'#4a3a2c',shirt:'#4a6a7a',pants:'#3a3a44',apron:'#d8cbb2',hairstyle:'bun'},
+      ['Beds made, fire lit, and not a soul to fill them since the strait turned. Habit\'s a stubborn thing.',
+       'Ten gold buys a bed and a hot breakfast - same as it\'s been thirty years. I\'ll not gouge a castaway.'],0.6);
+    inn.nightOwl=true; G.npcs.push(inn); }
 }
 function spawnMobsWind(){
   const D=WIND_ZONES.dock;

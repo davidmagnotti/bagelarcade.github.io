@@ -157,7 +157,9 @@ function enterHouse(b){
   // the resort (and inns/towers/your home) keeps its doors open around the clock
   const alwaysOpen = lblL.includes('(inn)') || b.kind==='tower' || b.kind==='resort' || b.kind==='windmill' || lblL.includes('your homestead');
   if(nightL>0.5 && !alwaysOpen){
-    let minD=1e9; for(const zk of ['village','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
+    // settlement zones vary by world (Windsurf's town green is keyed 'town', not
+    // 'village') - measure to all of them so a town house never reads as "remote"
+    let minD=1e9; for(const zk of ['village','town','dock','farm','castle','spire']){ const zz=ZONES[zk]; if(zz) minD=Math.min(minD,dist(b.x,b.y,zz.x,zz.y)); }
     if((b.kind==='house'||b.kind==='house2') && minD>24 && !b.closedMsg){
       // remote hospitality: far from any town, folk take a knocker in
       give('bread',1);

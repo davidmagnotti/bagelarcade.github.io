@@ -479,7 +479,7 @@ function shopButtons(npc,btns){
       P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
     }});
   }
-  if(npc.id==='perrin' || npc.id==='saffi' || npc.id==='lani'){
+  if(npc.id==='perrin' || npc.id==='saffi' || npc.id==='lani' || npc.id==='wenna'){
     btns.unshift({label:'Rest the night (10g)', fn:()=>{
       if(P.gold<10){
         setDialog('“Ten gold for the bed, friend. The hearth\'s warmth is free to look at.”',
