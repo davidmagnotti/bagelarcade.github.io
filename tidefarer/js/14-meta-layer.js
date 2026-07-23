@@ -158,7 +158,6 @@ function loadCode(str){
   if(P.story.kingTold && !P.story.vathBound && !P.story.princeWoke
      && !P.quests.pendant && !P.quests.enchanter && !P.quests.homecoming){
     P.quests.pendant='active'; P.prog.pendant=P.prog.pendant||0;
-    setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">The pendant still burns to be understood.</b> Sail to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000); }catch(e){} }, 2600);
   }
   // Repair the over-aggressive Windsurf re-gate that briefly shipped: it could
   // strip surf from a save that had legitimately earned a board. Anyone who

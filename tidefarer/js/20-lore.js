@@ -114,8 +114,6 @@ function sleepInBed(own){
     G.fireflies.length=0;
     if(own && G.interior) P.bind={w:G.worldId, x:G.interior.ret.x, y:G.interior.ret.y};
     refreshUI(); setTimeout(autoSave,300);
-    toast(own? 'You sleep in <b>your own bed</b> - free, deep, and yours. Dawn finds you <b>fully mended</b>.'
-             : 'You wake at <b>dawn</b>, whole and rested.',3600);
     setTimeout(()=>{ fade.style.opacity=0; },120);
   },750);
 }
@@ -124,12 +122,12 @@ function rummage(f){
   f.rummaged=true;
   const roll=Math.random();
   if(f.type==='barrel'){ if(roll<0.45){ give('fish',1); toast('A salted <b>fish</b> at the bottom of the barrel!'); }
-    else toast('Brine and old rope. Nothing useful.'); }
+     }
   else if(f.type==='hay'){ if(roll<0.45){ give(roll<0.2?'wheat':'seed',2); toast('You comb <b>seeds and grain</b> from the hay.'); }
-    else toast('Just hay. Itchy, honest hay.'); }
+     }
   else if(f.type==='crate'){ if(roll<0.4){ giveGold(rndi(2,6)); }
     else if(roll<0.7){ give('wood',1); toast('Spare <b>timber</b> in the crate.'); }
-    else toast('Packing straw and disappointment.'); }
+     }
   Snd.step(8);
 }
 function resortDesk(){
@@ -167,7 +165,6 @@ function resortSuiteSleep(){
     G.dayT=0.02; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0;
     if(I&&I.ret) P.bind={w:G.worldId, x:I.ret.x, y:I.ret.y};
     refreshUI(); setTimeout(autoSave,300);
-    toast('You sink into <b>your suite\'s</b> canopy bed, the sea breathing beyond the shutters. Dawn finds you <b>fully mended</b> - and the Breakers will keep you if you fall.',4200);
     setTimeout(()=>{ fade.style.opacity=0; },120);
   },750);
 }
@@ -217,8 +214,6 @@ function spireAelinSpeak(){
     document.getElementById('dname').textContent=a.name;
     if(typeof drawPortrait==='function') drawPortrait(a);
     buildDialogContent(a);
-  } else {
-    toast('Aelin looks up from her books by candlelight. “Rest if you need it - the cot’s yours.”',4200);
   }
 }
 function useHotspot(h){
@@ -232,7 +227,6 @@ function useHotspot(h){
     }
     else if(G.interior && G.interior.inn) toast('\u201cBeds are <b>ten gold</b>, friend,\u201d calls the innkeep from the hearth. <b>Talk to them</b> to rest the night.',4200);
     else if(G.interior && G.interior.spire){                     // Aelin's cot: students rest free
-      toast('You stretch out on the Spire\u2019s spare cot. \u201cSleep, then,\u201d Aelin murmurs. \u201cThe weave keeps better hours than you do.\u201d',4200);
       sleepInBed(false);
     }
     else toast(['You smooth the quilt back down. Not your bed.',

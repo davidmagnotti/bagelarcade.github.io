@@ -93,7 +93,6 @@ function buildDialogContent(npc){
             // launch the finale trail: the pendant is the thread. Send the player
             // back to Orin on Emberwick to have it read.
             if(!P.quests.pendant){ P.quests.pendant='active'; P.prog.pendant=0; }
-            setTimeout(()=>toast('<b style="color:var(--ember)">The pendant is the thread.</b> Sail back to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000),2600);
             setDialog('<i>The King presses a heavy purse and a folded writ into your hands, his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited thirty years; I can wait a little longer, now that someone is looking.”',
               [{label:'Continue',fn:()=>buildDialogContent(npc)}]);
         }}]);
@@ -122,7 +121,6 @@ function buildDialogContent(npc){
       P.story.vathCame=1; closeDialog();
       if(typeof spawnFinalVath==='function') spawnFinalVath();
       banner('THE ENCHANTER COMES','VATH THE EMBERBINDER');
-      setTimeout(()=>toast('<b>Vath strides out of the treeline</b>, violet at his cuffs, and does not raise his voice. <b style="color:#c9a0ff">"So the ward held. Thirty years\' work, undone by a first mate\'s stubbornness. Come, then - I will bind you both properly this time."</b>',9000),300);
     };
     setDialog('<i>You hold the pendant up between you. The Woodworker\'s humming falters. His eyes track the five-point star - and for one breath the vague, happy fog behind them tears, and something old and frightened looks out.</i> “That... I know that. I stack it. Every day, and I never once asked why my hands know a shape my head has never seen -” <i>His hands are shaking.</i>',
       [{label:'Steady him', cls:'gold', fn:go}]);
@@ -136,8 +134,7 @@ function buildDialogContent(npc){
       if(!P.quests.homecoming) P.quests.homecoming='active';
       banner("THE ENCHANTER'S TIDE",'ACT IV - THE PRINCE RETURNS');
       setDialog('<i>He closes your hand around the pendant - his pendant - and for the first time since the surf spat you ashore, you remember your own name, and the deck beneath your boots, and the weight of the boy you dragged from the black water.</i> “First mate.” <i>The prince grips your shoulder.</i> “You carried the warning thirty years, through a fog thick as tar, and never once set it down. Take me home. Let my father see we both came back.”',
-        [{label:'Home, then', cls:'gold', fn:()=>{ closeDialog();
-          setTimeout(()=>toast('The prince is awake, and the strait is his father\'s again. <b style="color:var(--ember)">Sail to Aldermere and bring word to King Aldous.</b>',7500),600); }}]);
+        [{label:'Home, then', cls:'gold', fn:()=>{ closeDialog(); }}]);
     };
     const p3=()=>{
       setDialog('“There was a storm that was not a storm - Vath\'s hand on the water. My mother went under.” <i>He falters.</i> “And you had me by the collar with the boat gone from under us both. You pressed this into my hands - no. I pressed it into YOURS. \'Warn my father. And remember.\' Then the fog took me whole, and it took you kinder, because you were too busy being brave to let it in all the way.”',

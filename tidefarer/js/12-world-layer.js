@@ -991,9 +991,6 @@ function openFireGate(gate){
               g2:['THE CAUSEWAY GATE GRINDS UP','THE LAVA SINKS AWAY'],
               g3:['THE DRAGON GATE OPENS','SOMETHING VAST STIRS BEYOND'] }[gate];
   if(msg) banner(msg[0],msg[1]);
-  if(gate==='g1') toast('All three fonts flare gold at once and, deep in the wall, a counterweight lets go - the Emberfont Gate grinds up into the rock.',5000);
-  else if(gate==='g2') toast('Old iron shrieks and the floodgate hauls open - the lava channel drains hissing into the dark, and the Causeway Gate lifts.',5200);
-  else toast('The four runes blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
 }
 function pullEmberLever(b){
   if(b.on){ toast('The floodgate is already thrown - the lava has drained north.',3200); return; }
@@ -1051,7 +1048,6 @@ function dispelStaffGate(b){
   Snd.magic&&Snd.magic(); G.shake=0.45;
   shockwave(b.x,b.y,'rgba(255,150,80,0.9)',44); burst(b.x,b.y-0.4,'#ffb060',20,2.6);
   banner('THE EMBER WARD BREAKS','THE HOARD LIES OPEN');
-  toast('You level the fire staff and speak the counter-word. The ember-fence gutters, flares white, and blows out like a struck lantern. <b>The way is open.</b>',5200);
   autoSave&&autoSave();
 }
 function updateEastDeep(dt){
@@ -1248,7 +1244,6 @@ function updateWind(dt){
     const lv=spawnLeviathan();
     if(lv){ G.shake=0.7; Snd.boss&&Snd.boss();
       banner('THE BOUND LEVIATHAN','IT RISES FROM THE DEEP');
-      setTimeout(()=>toast('The water heaves and something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),300);
     }
   }
 }
@@ -1307,7 +1302,6 @@ function flyToWorld(id, msg){
   if(!flightLockOK()) return;
   closeDialog(); if(G.interior) exitHouse();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-  if(msg) toast(msg,4200);
   if(Snd.boss) Snd.boss();
   setTimeout(()=>{ try{ switchWorld(id); autoSave(); } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },220); } },900);
 }
@@ -1495,7 +1489,6 @@ function destroyTome(b){
   }
   banner('THE TOME BURNS','THE SKY REMEMBERS ITSELF - THE AERIE IS QUIET');
   if(qs('roost')==='active') completeQuest('roost');
-  setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. When you climb back into daylight the falconers of Rookhaven crowd round, near weeping as their birds settle to the glove: “Our sky is ours again - <b>thank you</b>. It was a <b>robed man</b> did this to us, they say. Climbed the Underclimb quiet as smoke, violet at his sleeves, and never came down the same. If you cross him, friend - give him nothing.”',10000),1500);
 }
 function genAerieAll(){
   genAerie(); bakeSolids(); placeObjectsAerie(); buildFoam();
@@ -1573,7 +1566,6 @@ function enterAerieDungeon(){
   setTimeout(()=>{ switchWorld('aeriedeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200);
     if(!(P.story && P.story.aerieFreed)){
       banner('THE UNDERCLIMB','A CATACOMB, NOT A ROOST - BEAT IT TO REACH THE TOME');
-      setTimeout(()=>toast('The tunnel does not climb - it <b>descends</b>, into cold bone-and-stone dark. The cursed tome lies at the very bottom, past two sealed gates and the thing that wardens it. <b>Clear the catacomb first;</b> the tome cannot be touched until its warden falls.',7000),1200);
     } }, 300);
 }
 function exitAerieDungeon(){
@@ -1590,8 +1582,8 @@ function openCatGate(gate){
   for(const [tx,ty] of b.tiles){ setSolid(tx,ty,0); setTile(tx,ty,T.RUIN); }
   shockwave(b.x,b.y,'rgba(199,123,255,0.85)',55); G.shake=0.5;
   invalidateScenery();
-  if(gate==='bone'){ banner('THE BONE GATE GRINDS UP','THE WAY NORTH IS OPEN'); toast('Old counterweights of stacked skulls shudder and the Bone Gate grinds up into the ceiling. The Gallery lies beyond.',5000); }
-  else { banner('THE SEPULCHRE GATE OPENS','THE WARDEN AWAITS BELOW'); toast('The sigils flare once, all four alight, and the Sepulchre Gate swings inward on the dark. Something vast uncoils in the crypt ahead.',5200); }
+  if(gate==='bone'){ banner('THE BONE GATE GRINDS UP','THE WAY NORTH IS OPEN'); }
+  else { banner('THE SEPULCHRE GATE OPENS','THE WARDEN AWAITS BELOW'); }
 }
 function updateAerieDeep(dt){
   const gx=Math.floor(P.x), gy=Math.floor(P.y);
@@ -1847,7 +1839,6 @@ function pullIceLever(b){
   invalidateScenery&&invalidateScenery();
   shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
   banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north to the Frozen Heart - lies open.',5200);
 }
 function freeColossus(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
@@ -1955,7 +1946,6 @@ function pullVaultLever(b){
       invalidateScenery&&invalidateScenery();
       if(b.doneFlag){ P.story=P.story||{}; P.story[b.doneFlag]=1; autoSave&&autoSave(); }
       banner(b.openBanner||'THE FROST-LOCKS YIELD', b.openSub||'THE SEALED GATE GRINDS OPEN');
-      toast(b.openMsg||'The last frost-lock turns and, with a groan of ancient ice, the gate hauls up into the ceiling. The way deeper lies open.',5200);
     } else {
       const remain=grp.length-done;
       addFloat(done+' / '+grp.length, b.x, b.y-1.4, '#bfe8ff', 1.1);
@@ -1967,7 +1957,6 @@ function pullVaultLever(b){
   for(const [x,y] of (b.gateTiles||[])){ setTile(x,y,T.ICE); setSolid(x,y,0); }
   invalidateScenery&&invalidateScenery();
   banner('THE ICE GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper lies open.',4600);
 }
 function enterFrostVault(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
@@ -2334,7 +2323,6 @@ function useLeapPoint(){
   }
   if(!flightLockOK()) return; closeDialog();
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-  toast('You shake out the Roc’s stormsail, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
   if(Snd.boss) Snd.boss();
   setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
       banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
@@ -3315,14 +3303,12 @@ function ensureGravelord(announce){
   if(G.mobs.some(m=>m.kind==='gravelord' && !m.dead)) return;
   const m=spawnMob('gravelord', Math.round(ZONES.ruins.x), Math.round(ZONES.ruins.y));
   m.elite=true; m.ach='gravebane';
-  if(announce) toast('A grave chill rises from the <b>Old Ruins</b> to the north...',5000);
 }
 /* ---------- sailing ---------- */
 let sailing=false;
 function departEarly(){
   if(sailing) return;
   sailing=true;
-  toast('“Cast off! Barik, then - and luck to the bold.”',3000);
   const fade=document.getElementById('fadeOv');
   fade.style.opacity=1; Snd.splash();
   setTimeout(()=>{ switchWorld('main'); fade.style.opacity=0; sailing=false; }, 900);
@@ -3354,7 +3340,6 @@ function attemptSail(){
 function sailTo(dest, msg){
   if(sailing) return; sailing=true;
   const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1; Snd.splash();
-  if(msg) toast(msg,3000);
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
@@ -3495,14 +3480,10 @@ function switchWorld(id){
   }
   // Dungeons keep their mystery, but a single atmospheric hint on first entry
   // points the way without solving anything - a compass, not a walkthrough.
-  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
-    setTimeout(()=>toast('<i>Three frost-locks bar the deep gate.</i> Somewhere in the pillar-warren stand three levers - throw them all, and the way opens.',7000),1400); }
-  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1;
-    setTimeout(()=>toast('<i>Three sealed firegates lie ahead.</i> The old wards yield in turn: tread every warm plate, drain the lava channel, then wake the runes in their carved order.',7500),1400); }
-  if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1;
-    setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
-  if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
-    setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
+  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1; }
+  if(id==='eastdeep' && !P.prog.emberSeen){ P.prog.emberSeen=1; }
+  if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1; }
+  if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1; }
   if(id==='crown'){
     // the King grants an audience once you've broken at least one of Vath's
     // curses on the isles (vathMet) - the herald offers it in the plaza.

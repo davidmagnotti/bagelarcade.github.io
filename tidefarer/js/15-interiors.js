@@ -357,7 +357,6 @@ function enterCave(){
   F('books',6.6,1.5,1.2,0.3,true,'undermaw');
   G.interior=I; P.click=null;
   P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>The Undermaw</b> - the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
   Snd.step(8);
 }
 function enterLair(){
@@ -374,9 +373,6 @@ function enterLair(){
   F('rockcol',1.9,6.2,0.7,0.8,true); F('rockcol',13.1,6.2,0.7,0.8,true);
   G.interior=I; P.click=null;
   P.x=7.5; P.y=9.6; P.moving=false; P.fishing=null; P.combo=0;
-  toast(dragonOut ? '<b>Ashwing’s Lair</b> - empty, and shaking. He rages on the caldera above.'
-    : qs('wyrm')==='done' ? '<b>Ashwing’s Lair</b> - warm and still. The old dragon dozes, safe now.'
-    : '<b>Ashwing’s Lair</b> - heat shimmers off the stone. Something vast turns to regard you.',4600);
   Snd.step(8);
 }
 function exitHouse(){

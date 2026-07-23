@@ -63,11 +63,10 @@ function acceptQuest(id){
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
-  if(id==='tide'){ // the beast only surfaces once you windsurf OUT past the breakwater
-    setTimeout(()=>toast('Rell points past his jetty. <b>Windsurf out onto the light water</b> when you\'re ready - ride out past the breakwater and the thing in the deep will find you soon enough. The board rides the shallows, not the deep.',6500),700); }
+  // (tide: the beast only surfaces once you windsurf OUT past the breakwater - the
+  //  quest brief/log already says so, so no narration popup on accept)
   if(id==='thaw' && typeof spawnFrostWarden==='function'){ // the warden waits on the glacier
-    spawnFrostWarden();
-    setTimeout(()=>toast('Up on the Weeping Glacier, something huge and pale grinds to its feet, wrapped in <b style="color:#c9a0ff">violet frost</b>. Climb the ice road when you are ready.',6000),700); }
+    spawnFrostWarden(); }
   Snd.quest(); toast('<b style="color:var(--ember)">Quest accepted:</b> '+QUESTS[id].title);
   updateQuestUI();
 }
@@ -107,8 +106,7 @@ function completeQuest(id){
   if(id==='ribbon2'){ P.quests.ribbon3='active';
     toast('<b>Quest updated:</b> A Ribbon for Wren - bring the Sunset Ribbon to Captain Corvo at the east cove.',5600); }
   if(id==='ribbon3'){ P.prog.eastSail=1;
-    banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
-    setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
+    banner('NEW HORIZONS','THE EAST STRAIT IS OPEN'); }
   if(id==='board'){ // the board is shaped, but bare - fetch Nessa's sail from the Undermill next.
     // Tolen's own doneText already sends you beneath the windmill, so no extra popup toast:
     // just set the next quest active and let the quest log carry it.
@@ -126,7 +124,6 @@ function completeQuest(id){
   }
   if(id==='cat'){ P.petPip=false; G.cat.following=false; G.cat.homebound=true; }
   setTimeout(autoSave,300);
-  if(id==='king') setTimeout(()=>toast('The strait is calm at last. The <b>Tidewalker</b> still needs patching - see <b style="color:var(--ember)">Captain Brant</b> at the dock; a little timber and she sails for <b>Greyharbor</b>.',6800),2600);
   banner('QUEST COMPLETE', q.title);
   Snd.quest(); updateQuestUI(); buildHotbar();
 }
@@ -249,5 +246,7 @@ function burst(x,y,color,n=10,spd=2.4){
     G.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v*0.6-0.8,life:rnd(0.4,0.8),
       color, size:rnd(2,4), grav:2.4}); }
 }
-function hintOnce(key,msg){ if(G.hintShown[key]) return; G.hintShown[key]=true; toast(msg,4200); }
+// Ambient zone/tutorial hints removed - they read as trash temporary popups. The
+// flag is still latched so any future re-enable stays once-only; nothing pops now.
+function hintOnce(key,msg){ if(G.hintShown[key]) return; G.hintShown[key]=true; }
 

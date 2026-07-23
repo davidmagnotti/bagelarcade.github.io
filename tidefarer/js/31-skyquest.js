@@ -172,7 +172,6 @@ function pressSkyTile(b){
     if(grp.every(d=>d.set)){
       P.story=P.story||{}; P.story.skyG2=1; openSkyGate('g2');
       banner('THE RUNE-TILES ANSWER','THE WIND-WARD PARTS');
-      toast('The five runes flare as one and the wind-ward on the next bridge unravels into colour. <b>The road runs on.</b>',4600);
       if(typeof autoSave==='function') autoSave();
     }
   } else {
@@ -196,13 +195,11 @@ function updateSkyDungeon(dt){
   if(!P.story.skyG1 && G.mobs.filter(m=>m.puzzle===1 && !m.dead).length===0){
     P.story.skyG1=1; openSkyGate('g1');
     banner('THE PERCH IS CLEARED','THE WIND-WARD PARTS');
-    toast('The last sky wraith unravels into mist. The wind-ward on the bridge north thins to nothing - <b>the rainbow road runs on.</b>',4600);
     if(typeof autoSave==='function') autoSave();
   }
   if(!P.story.skyG5 && P.story.skyG4 && G.mobs.filter(m=>m.puzzle===5 && !m.dead).length===0){
     P.story.skyG5=1; openSkyGate('g5');
     banner('THE SECOND PERCH IS CLEARED','THE LAST WIND-WARD PARTS');
-    toast('Three more shades gone to mist, and the final wind-ward parts. Only the <b>Broken Crown</b> lies ahead now.',4600);
     if(typeof autoSave==='function') autoSave();
   }
   // P3 - the cloud-snatcher: leashed to its isle, and a touch throws you back to the landing
@@ -219,7 +216,6 @@ function updateSkyDungeon(dt){
       P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
       G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
       shockwave(P.x,P.y,'rgba(160,200,255,0.8)',40);
-      toast('The <b>cloud-snatcher</b> closes a cold grip on you and hurls you back down the rainbow road to the landing. <i>It cannot leave its isle - time your run and slip past.</i>',5200);
     }
   }
   updateStormWraith(dt);
@@ -375,7 +371,6 @@ function enterSkyDungeon(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   if(Snd.boss) Snd.boss();
   P._skyReturn={x:P.x, y:P.y}; P.click=null; P.moving=false;
-  toast('The bird springs onto a rising ribbon of colour and you run out after her - onto a <b>rainbow road</b> laid across the open cloud, six tiny isles glinting away into the blue above.',5200);
   setTimeout(()=>{ try{ switchWorld('skydungeon'); if(typeof autoSave==='function') autoSave();
       banner('THE RAINBOW ROAD','SIX ISLES, AND A SOURED WIND');
     } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },240); } }, 1000);
@@ -404,7 +399,6 @@ function offerSkyReturn(){
         P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
         G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
         burst(P.x,P.y-0.5,'#c9b0ff',20,2); if(Snd.magic) Snd.magic();
-        toast('The bird waits at the landing to fly you down whenever you\'re ready.',3800);
       }},
       {label:'Stay a while', ghost:true, fn:closeDialog} ]);
 }

@@ -510,8 +510,7 @@ function damageMob(m,dmg,knock,skill){
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
-    if(!P._boneHint){ P._boneHint=1;
-      toast('Old bones splinter - <b style="color:#ffd76a">arrows deal heavy bonus damage to skeletons!</b>',5000); }
+    if(!P._boneHint){ P._boneHint=1; }
   }
   let crit=false;
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
@@ -600,8 +599,7 @@ function killMob(m,skill){
   const g=rndi(d.gold[0],d.gold[1])*(m.elite?3:1);
   if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
   if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
-    shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46);
-    toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }
+    shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
   if(m.kind==='alpha'){
@@ -637,14 +635,12 @@ function killMob(m,skill){
   // The Hoarfrost Bear guarded the Glacier Vault's den - felling it opens the way down.
   if(m.vaultbear){
     P.story=P.story||{}; P.story.iceBearDown=1;
-    setTimeout(()=>toast('The great bear slumps across the snow and lies still. Behind it, black against the ice, gapes the <b>den mouth</b> - past the old kills, a stair of glare-ice leads <b>down</b> into the glacier. The way to the <b>Glacier Vault</b> is open.',6000), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // The Storm Roc rules the Cloudreach - felling it wins her stormsail (the parachute
   // that carries you DOWN to Windsurf)
   if(m.skyboss){
     P.story=P.story||{}; P.story.rocDown=1; P.story.parachute=1;
-    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise. In her eyrie, pinned under a talon-scored spar, is her <b>stormsail</b> - a great kite of stitched stormcloth. <b style="color:#c9b0ff">The Leap is yours to take now:</b> step off the west shelf and the sail will carry you down through the cloud to <b>Windsurf</b>, far below.',7500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
@@ -675,7 +671,6 @@ function killMob(m,skill){
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
   if(m.reachboss){
     P.story=P.story||{}; P.story.reachBossDown=1;
-    setTimeout(()=>toast('The brute crashes down and does not rise, and the storm-coast lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging fresh timber to the water. Stormreach is yours to walk in peace - and the castaways will name a cove for you.',6500), 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // THE COG-BOUND (Undermill mini-boss) - felling it frees the seized gear-train,
@@ -713,7 +708,6 @@ function offerDungeonExit(){
         if(exit){ P.x=exit.x; P.y=exit.y+0.6; P.click=null; P.moving=false;
           G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
         burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-        toast('Whole again, and a level the wiser. The way up is right here.',4200);
       }},
      {label:'Stay a while', ghost:true, fn:closeDialog}]);
 }
@@ -1103,7 +1097,7 @@ function updateMobs(dt){
     if(m.state==='idle'){
       m.noAggroT=Math.max(0,(m.noAggroT||0)-dt);
       if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){ m.state='chase';
-        if(m.kind==='boss'){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); }
+        if(m.kind==='boss'){ Snd.boss(); }
         else if(m.bigBoss && Snd.boss) Snd.boss(); }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
@@ -1256,7 +1250,6 @@ function updateMobs(dt){
   }
 }
 function bossSummon(m){
-  toast('<b style="color:#78dca0">“Rise, my court!”</b>');
   for(let i=0;i<2;i++){ const s=spawnMob('skeleton', m.x+rnd(-2,2), m.y+rnd(1,2.5));
     s.state='chase'; s.respawnT=-1; burst(s.x,s.y-0.4,'#78dca0',12); }
   Snd.magic();

@@ -209,7 +209,6 @@ function afterIntro(){
   // the elder rises and heads back to her place in the village
   const greeter=(G.npcs||[]).find(n=>n.id==='maren');
   if(greeter && greeter._home){ greeter.x=greeter._home.x; greeter.y=greeter._home.y; greeter.hx=greeter._home.x; greeter.hy=greeter._home.y; greeter.wander=greeter._home.wander; greeter.face={x:0,y:1}; delete greeter._home; }
-  setTimeout(()=> toast('Emberwick\'s folk each need a hand - seek the <b style="color:var(--ember)">!</b> markers. Start with <b style="color:var(--ember)">Bram the Smith</b> at the forge; he\'ll arm you for what\'s coming.',6000),700);
   if(Snd.quest) Snd.quest();
 }
 function startFresh(){
