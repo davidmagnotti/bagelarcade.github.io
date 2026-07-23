@@ -133,6 +133,13 @@ function enterHouse(b){
     banner('THE PALACE KITCHEN','TRADESMAN’S ENTRANCE'); Snd.quest&&Snd.quest();
     closeAllPanels&&closeAllPanels(); return;
   }
+  // Orin's tower stays warded shut until you've earned the fire staff (the
+  // blue-cap quest). Only then does he open it - and the scrying orb inside is
+  // what teaches the dash, so the tower is the deliberate next step after the staff.
+  if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('orin') && qs('mushrooms')!=='done'){
+    toast('The tower door won’t give - a faint ward hums under your palm. <b>Orin:</b> “Not yet, friend. Bring me my bluecaps first; then the door - and what waits past it - is yours.”',4600);
+    Snd.step(5); return;
+  }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
   // the Mint...). b.locked keeps the old Vael war-tent default.
   if(b.lockMsg){ toast(b.lockMsg,3800); Snd.step(5); return; }

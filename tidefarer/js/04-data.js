@@ -140,7 +140,7 @@ const QUESTS = {
   mushrooms:{ giver:'orin', title:'Light in the Dark', kind:'gather', need:{mushroom:3},
     brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will wake the staff that\'s been asleep in my cellar.',
     log:'Gather 3 bluecaps from the Whisperwood for Orin.',
-    doneText:'Bluecaps, crushed… essence, bound… there. This staff will throw fire that answers to you. Press 3. Mind the eyebrows.',
+    doneText:'Bluecaps, crushed… essence, bound… there. This staff will throw fire that answers to you. Press 3. Mind the eyebrows. And here - the ward on my tower is lifted for you now. Go inside and lay both hands on the scrying orb; fire is only half of what a mage owes their feet. It has one more lesson to give you.',
     rw:{staff:true, xp:{magic:150}} },
   skeletons:{ giver:'orin', title:'Restless Bones', kind:'kill', kill:{skeleton:3},
     brief:'The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
