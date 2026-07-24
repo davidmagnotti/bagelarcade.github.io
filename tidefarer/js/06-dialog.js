@@ -117,11 +117,14 @@ function buildDialogContent(npc){
     return;
   }
   // === ACT IV scripted scenes ===========================================
-  // Nudge: Orin has read the ward and named the Woodworker, but the player hasn't
-  // taken up the hunt yet - a gentle pointer back to Orin without spoiling anything.
-  if(npc.id==='woody' && P.story && P.story.wardRead && !P.story.unmasked
-     && qs('enchanter')!=='active'){
-    setDialog('<i>The Woodworker hums that same wandering tune and crowns his woodpile with the five-point star, easy as breathing.</i> “Back again? You keep looking at me like you mislaid something. <b>Sage Orin</b>’s your man for mislaid things - old books, old riddles. He had that same look, last you two spoke.”',
+  // Nudge: any time the player is on the pendant trail - the King has sent them to
+  // read the ward (pendant active), or Orin has read it (wardRead) - but they have
+  // not yet taken up the hunt, the Woodworker gently points them back to Orin. This
+  // covers the whole window after the royal audience so the trail can never dead-end
+  // here: the "get the Woodworker back" quest opens at Orin, not at the woodpile.
+  if(npc.id==='woody' && P.story && !P.story.unmasked && qs('enchanter')!=='active'
+     && (P.story.wardRead || qs('pendant')==='active' || qs('pendant')==='done')){
+    setDialog('<i>The Woodworker hums that same wandering tune and crowns his woodpile with the five-point star, easy as breathing.</i> “Back again? You keep looking at me like you mislaid something. <b>Sage Orin</b>’s your man for mislaid things - old books, old riddles. Show HIM whatever it is at your throat; he had that same look, last you two spoke.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
