@@ -172,13 +172,14 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // The capital, at the last: the King knows both his children at a glance - and
-  // Vath comes through the doors for the one prize worth an ocean, the Tideglass
-  // magic in the royal blood. Rather than fall, Vath TAKES it; the King spends
-  // himself to buy his children's escape. This is the close of Act I.
+  // The capital, at the last: the King knows both his children at a glance - then
+  // Vath storms the hall. But this is a trap. The King rises to fight and buys his
+  // children's escape - only to burn out the very Tideglass strength Vath came to
+  // steal. Vath takes the magic, then rewrites the guards' memory to frame the prince
+  // and princess as usurpers. This is the close of Act I.
   if(npc.id==='aldous' && P.story && P.story.unmasked && !P.story.act1End){
     const endAct=()=>{
-      P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1;
+      P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1; P.story.framed=1;
       if(qs('homecoming')==='active') completeQuest('homecoming');
       if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
       banner('END OF ACT I','THE ENCHANTER\'S TIDE');
@@ -192,28 +193,71 @@ function buildDialogContent(npc){
         else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
       }, 1600);
     };
-    const sc4=()=>{
-      storyCard('<b style="color:#c9a0ff; font-size:1.35em">END OF ACT I</b><br><br><i>The great doors slam on a hall drowning in violet. The last you see of your father, he is on one knee before his own throne, hollow and grey - and still, impossibly, smiling to see you both alive. Vath does not follow. He has what he came for. He can afford to let you run.</i>',
+    // --- the frame: Vath rewrites the guard's memory, then Act I ends ---
+    const sc10=()=>{
+      storyCard('<i>The captain\'s glazed eyes drift from the fallen King to the shattered east doors, and the lie pours into the hollow where his memory was and sets like stone.</i> “The prince… and the princess… did this.” <i>He kneels to his stricken lord, jaw hardening.</i> “We\'ll put every hull on the water after them, my lord. On my life.” <i>Vath smiles, and does not correct him.</i>',
         {label:'Sail on', onOk:endAct});
     };
+    const sc9=()=>{
+      storyCard('<b style="color:#c9a0ff">“What happened,”</b> <i>Vath says gently, stepping into the space where their memory used to be,</i> <b style="color:#c9a0ff">“is that the old King\'s own son and daughter came home to seize his throne - and struck him down with sorcery when he refused them. They fled east across the water as I arrived. I was only just in time.”</b> <i>He lets his voice fall.</i> <b style="color:#c9a0ff">“Would that I had been sooner.”</b>',
+        {label:'…', onOk:sc10});
+    };
+    const sc8=()=>{
+      storyCard('<i>Vath only turns his head. He lifts two fingers, and a soft violet pulse rolls out across the hall like a held breath let go. The guards\' swords drift down; their eyes go glassy and far.</i> “…what…” <i>the captain murmurs, blinking at the blade in his own hand.</i> “…what… happened…?”',
+        {label:'…', onOk:sc9});
+    };
+    const sc7=()=>{
+      storyCard('<i>Boots thunder in the corridors. The King\'s guard floods the hall, blades bared, and their captain levels a sword at the stranger standing over their fallen lord.</i> “STAND DOWN! In the King\'s name - on the ground, hands from your sides! You are under arrest for-”',
+        {label:'…', onOk:sc8});
+    };
+    // Vath overpowers the spent King and takes the Tideglass magic
+    const tTaken=()=>{
+      banner('THE TIDEGLASS TAKEN','VATH ASCENDANT');
+      if(Snd.boss) Snd.boss();
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.9)',84);
+      setTimeout(sc7, 950);
+    };
+    const sc6=()=>{
+      storyCard('<i>The King\'s golden fire gutters - thinning, starving, thirty years of hoarded strength poured out in one reckless breath with nothing left to feed it. Vath closes his hand, and the violet folds over Aldous like a tide coming in.</i> <b style="color:#c9a0ff">“The Tideglass magic in a king\'s blood was the only prize on these waters worth an ocean. And you have just tired yourself out enough for me to TAKE it.”</b> <i>Aldous drops to one knee, hollow and grey, the light gone out of him.</i>',
+        {label:'…', onOk:tTaken});
+    };
+    const sc5=()=>{
+      storyCard('<i>And Vath begins to laugh.</i> <b style="color:#c9a0ff">“Take them? Old man - I never wanted the children.”</b> <i>He straightens, unhurried, as though the golden fire were only weather.</i> <b style="color:#c9a0ff">“They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath - and they were the only lever left that could move you. And look at you. You spent it all.”</b>',
+        {label:'…', onOk:sc6});
+    };
+    const sc4=()=>{
+      storyCard('<i>You burst through the east doors into the rain, your brother stumbling at your side - and behind you the golden light does not fail. On the dais the old King bares his teeth in something almost like triumph.</i> “...Gone. They\'re gone, Vath. Whatever else you take from me today - you did not take them. You never will.”',
+        {label:'…', onOk:sc5});
+    };
     const sc3=()=>{
-      storyCard('<i>“GO!” The King hurls the whole of the Tideglass light against Vath - and for three heartbeats the enchanter is held snarling in a cage of gold. Your brother fights your grip.</i> “No - NO, I only just found him, I won\'t leave him again -” <i>But your father\'s magic sweeps you both toward the doors like a tide going out, and his eyes over the prince\'s shoulder are only for you:</i> “Keep him. Keep each other. GO.”',
+      storyCard('<i>Your brother does not move. He stands rooted, staring at the father he only just remembered, at the gold fire eating the old man alive to buy these few seconds. So you decide for the both of you.</i> <b style="color:var(--ember)">“We need to go - NOW!”</b> <i>You lock your fist in his collar and haul him bodily toward the east doors, and at last his legs remember how to run.</i>',
         {label:'Run', onOk:sc4});
     };
     const sc2=()=>{
-      storyCard('<i>Vath does not hurry.</i> <b style="color:#c9a0ff">“Thirty years I unpicked your curses, old man, so you\'d spend your strength chasing ghosts while I came for the only thing on these waters worth having.”</b> <i>He lifts a hand toward the throne - toward the light that runs in the King\'s blood.</i> <b style="color:#c9a0ff">“The Tideglass magic. Hold still.”</b>',
+      storyCard('<i>Gold light roars up the old King\'s arms and slams into Vath, driving the enchanter back a step - then two. For one blazing moment the Tideglass fire holds the whole hall at bay, and Aldous does not look away from his foe as he roars it:</i> “RUN! Both of you - out the east doors, to the water - GO, and do not look back!”',
         {label:'…', onOk:sc3});
+    };
+    // the King throws himself between Vath and his children
+    const tRise=()=>{
+      banner('THE KING RISES','“NOT AGAIN, VATH”');
+      if(Snd.magic) Snd.magic();
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,205,120,0.9)',76);
+      setTimeout(sc2, 900);
+    };
+    const sc1=()=>{
+      storyCard('<i>Vath\'s hand comes down and the violet light leaps for the two of you like a striking snake. But the old King is already moving - faster than a man his years has any right to be.</i> <b>“You WON\'T take them from me - not again, Vath!”</b> <i>King Aldous throws himself between the light and his children, and the Tideglass fire answers in his blood: gold, roaring, against the violet.</i>',
+        {label:'…', onOk:tRise});
     };
     const p2=()=>{
       closeDialog();
       banner('THE ENCHANTER COMES','VATH AT THE TIDEGLASS THRONE');
       if(Snd.magic) Snd.magic();
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.85)',70);
-      setTimeout(sc2, 900);
+      setTimeout(sc1, 900);
     };
     const k2=()=>{
-      setDialog('<i>Before he can cross to you, the tall doors at the hall\'s end blow inward on a wind that smells of storm and violet. The King\'s face turns to iron.</i> “...Vath. Thirty years, and he waits until my whole line stands in one room.” <i>He puts himself between you and the doors.</i> “Behind me. Both of you. Now.”',
-        [{label:'Father-', fn:p2}]);
+      setDialog('<i>Before the King can cross to you, the tall doors at the hall\'s end blow inward on a wind that stinks of storm and violet. Vath strides in through the wreck of them, one hand already rising.</i> <b style="color:#c9a0ff">“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”</b>',
+        [{label:'Father-!', fn:p2}]);
     };
     setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. My daughter, the one the sea took first. And you-” <i>his voice fails on the prince.</i> “...my boy. Both of you. Alive.”',
       [{label:'We came home, Father.', cls:'gold', fn:k2}]);
