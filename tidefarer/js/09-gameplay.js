@@ -517,7 +517,10 @@ function unlockDash(msg){
   P.unlocked.dash=true;
   if(typeof updateMountBtn==='function') updateMountBtn();
   Snd.quest&&Snd.quest();
-  toast(msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside - a breath of speed and no damage taken mid-dash.', 4600);
+  const dashMsg = msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside - a breath of speed and no damage taken mid-dash.';
+  // a click-to-dismiss popup (not a passing toast) so the lesson can't be missed
+  if(typeof storyCard==='function') storyCard(dashMsg, {label:'OK'});
+  else toast(dashMsg, 4600);
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
