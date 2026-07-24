@@ -488,7 +488,7 @@ function tryAttack(useMouse){
       const eb=P.perks&&P.perks.emberburst, fb=P.perks&&P.perks.frostbolt;
       const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
       if(fb) bolt.snare=2.0;
-      if(P.spells && P.spells.stun) bolt.stun=0.5;   // the Storm-Wraith's stormlight: bolts stun for half a second
+      if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
       G.projs.push(bolt);
     }
     refreshUI();
@@ -635,15 +635,22 @@ function dragonFaints(m){
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
   P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
   if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
-  setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”'),1200);
-  if(qs('wyrm')==='active') completeQuest('wyrm');
-  if(typeof startMageHunt==='function') startMageHunt();
-  // a breath later he rouses and beats away to rest in his lair
-  setTimeout(()=>{ if(m && !m.dead){ m.dead=true; m.respawnT=-1;
+  // Ashwing lingers right where he fell, freed and grateful - he does not fly off on
+  // his own; he stays at your side and offers the lift up to the Cloudreach at once.
+  const disperseDragon=()=>{ if(m && !m.dead){ m.dead=true; m.respawnT=-1;
     for(let i=0;i<24;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
       G.parts.push({x:m.x,y:m.y-0.6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.4,life:rnd(0.9,1.8),
-        color:Math.random()<0.5?'#ffd24a':'#8fd0a0',size:rnd(2,5),grav:-0.2}); }
-  } }, 4500);
+        color:Math.random()<0.5?'#ffd24a':'#8fd0a0',size:rnd(2,5),grav:-0.2}); } } };
+  const offerLift=()=>{
+    P.story=P.story||{}; P.story.skyKnown=1;
+    setDialog('<i>Ashwing settles beside you, warm as a banked forge, and rumbles up toward the weather beyond the smoke-hole.</i> “There is a place above the clouds, little flame - a rock adrift in the cloud-sea, the whole archipelago spread below like a map. Climb onto my shoulder and I will bear you up.”',
+      [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); disperseDragon(); if(typeof askDragonFlight==='function') askDragonFlight(); }},
+       {label:'Not just yet', ghost:true, fn:()=>{ closeDialog(); disperseDragon(); }}]);
+  };
+  setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
+    {onOk:offerLift}),1200);
+  if(qs('wyrm')==='active') completeQuest('wyrm');
+  if(typeof startMageHunt==='function') startMageHunt();
 }
 // Which overworld isle a dungeon belongs to - felling a dungeon boss pacifies
 // the isle above it too, so its nights fall quiet like any other cleared isle.
@@ -740,7 +747,8 @@ function killMob(m,skill){
   if(m.skyboss){
     P.story=P.story||{}; P.story.rocDown=1;   // trophy taken; also settles the Roc bounty
     if(typeof giveGold==='function') giveGold(120);
-    setTimeout(()=>toast('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and <b style="color:#ffd76a">120 gold</b> of scattered sky-plunder with it. <i>The way down still runs along the wind: seek the Wind-Lost Bird\'s <b>rainbow road</b> to calm it.</i>',7000), 1500);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and <b style="color:#ffd76a">120 gold</b> of scattered sky-plunder with it. <i>The way down still runs along the wind: seek the Wind-Lost Bird\'s <b>rainbow road</b> to calm it.</i>', {label:'OK'});
+      else toast('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and 120 gold with it.',7000); }, 1500);
     if(typeof autoSave==='function') autoSave();
   }
   // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
@@ -1031,7 +1039,7 @@ function updatePlayer(dt){
       const ax=Math.floor(P.x+mx*0.5), ay=Math.floor(P.y+my*0.5);
       if(inb(ax,ay) && tileAt(ax,ay)===T.SHALLOW){
         P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn();
-        toast('Kiko won\'t take the water - you slip off and step onto your <b>windsurf</b>.',2600);
+        // silently slip off the mount onto the board - no toast, by request
       }
     }
     const onWater=tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW;
@@ -1247,7 +1255,8 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
-      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !(m.grabber && (m.stunT||0)>0)){
+      // stormlight-stunned foes freeze where they stand - no advance and (below) no attack
+      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires

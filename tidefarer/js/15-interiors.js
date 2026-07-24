@@ -225,7 +225,8 @@ function enterHouse(b){
     I.resort=1; I.follow=1;
     I.partY=13; I.gate={x0:12.6,x1:16.4};            // the courtyard entrance archway
     I.pool={x0:17.5,y0:3,x1:27.5,y1:9.5};            // a trimmer pool, leaving broad deck to walk
-    I.suite={x0:22.4,y0:13.2,x1:29,y1:19.6};         // the private suite alcove, right of the lobby
+    I.suite={x0:22.4,y0:13.2,x1:29,y1:19.6};         // the private suite - a real walled bedroom off the lobby
+    I.suiteWall={x:22.0, y0:13.0, y1:20.0, door0:16.4, door1:18.0};  // its dividing wall + a doorway you walk through
     // ---- LOBBY (indoor, y >= 13). Furniture hugs the walls so the whole
     // centre stays an open floor to stroll and greet guests. ----
     F('frontdesk',4.6,15.0,2.2,0.9);
@@ -396,6 +397,9 @@ function interiorBlocked(x,y,r){
   if(I.pool){ const p=I.pool; if(x+r>p.x0 && x-r<p.x1 && y+r>p.y0 && y-r<p.y1) return true; } // walk around the water, not through it
   if(I.partY!=null && y+r>I.partY-0.4 && y-r<I.partY+0.4){ // the lobby/courtyard partition, save for the arch
     const g=I.gate; if(!(g && x-r>g.x0 && x+r<g.x1)) return true; }
+  if(I.suiteWall){ const w=I.suiteWall;                   // the private suite's wall, save for its doorway
+    if(x+r>w.x-0.4 && x-r<w.x+0.4 && y+r>w.y0 && y-r<w.y1){
+      if(!(y-r>w.door0 && y+r<w.door1)) return true; } }
   return false;
 }
 function updateInterior(dt){
@@ -501,6 +505,22 @@ function drawResortScene(w2s,I){
   cx.quadraticCurveTo((L.x+R.x)/2-TW/2, Math.min(L.y,R.y)-TH/2-TALL-26, R.x-TW/2,R.y-TH/2-TALL+6); cx.stroke();
   cx.lineCap='butt';
   cx.fillStyle='#c9a24e'; cx.beginPath(); cx.arc((L.x+R.x)/2-TW/2, Math.min(L.y,R.y)-TH/2-TALL-18, 3.5,0,TAU); cx.fill(); // keystone stud
+  // --- the private suite's dividing wall: a walled bedroom off the lobby, with a
+  // doorway you walk through. Drawn a shade warmer than the lobby marble. ---
+  const sw=I.suiteWall;
+  if(sw){
+    for(let y=Math.floor(sw.y0); y<Math.ceil(sw.y1); y++){
+      if(y+0.5>sw.door0 && y+0.5<sw.door1) continue;   // leave the doorway open
+      wallQuad(w2s(sw.x,y), w2s(sw.x,y+1), TALL, y%2?'#c9bd9c':'#bcaf8a', '#ddd2b9');
+    }
+    // door frame posts flanking the opening, and a curved lintel over it
+    const A=w2s(sw.x,sw.door0), B=w2s(sw.x,sw.door1);
+    cx.fillStyle='#ddd2b9'; cx.fillRect(A.x-TW/2-3,A.y-TH/2-TALL,6,TALL); cx.fillRect(B.x-TW/2-3,B.y-TH/2-TALL,6,TALL);
+    cx.strokeStyle='#ddd2b9'; cx.lineWidth=7; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(A.x-TW/2,A.y-TH/2-TALL+5);
+    cx.quadraticCurveTo((A.x+B.x)/2-TW/2, Math.min(A.y,B.y)-TH/2-TALL-16, B.x-TW/2,B.y-TH/2-TALL+5); cx.stroke();
+    cx.lineCap='butt';
+  }
   // --- the pool: coping ring + rippling water ---
   const p=I.pool; if(!p) return;
   for(let y=Math.floor(p.y0)-1; y<=Math.ceil(p.y1)+1; y++) for(let x=Math.floor(p.x0)-1; x<=Math.ceil(p.x1)+1; x++){

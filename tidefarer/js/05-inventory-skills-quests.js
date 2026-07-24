@@ -89,7 +89,9 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon - tap the sword slot to wield it.'); }
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
-  if(rw.bow){ P.unlocked.bow=true; buildHotbar(); toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
+  if(rw.bow){ P.unlocked.bow=true; buildHotbar();
+    if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range.', {label:'OK'});
+    else toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
     // the dash is NOT taught here: earning the staff opens Orin's tower, and the
     // scrying orb inside is what teaches the dash (see enterHouse + the orb boon).

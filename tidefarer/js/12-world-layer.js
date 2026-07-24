@@ -2484,12 +2484,24 @@ function flyToCloudreach(){
   flyToWorld('sky');
 }
 function askSkyDragon(){
-  // Ashwing on the Cloudreach - the ride back DOWN the way you came, to the Sunward
-  // shore. (Going FORWARD to Windsurf is the stormsail's job - and needs the Rainbow Road run.)
-  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down the way you came, to the Sunward shore, whenever the height gets into your knees.</i>',
-    [ {label:'Fly back to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
-        flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }},
-      {label:'Not just yet', ghost:true, fn:closeDialog} ]);
+  // Ashwing on the Cloudreach carries you back DOWN off the rock. Once the Rainbow
+  // Road is run (the stormsail is yours) he can also bear you forward to Windsurf,
+  // so "Fly down" always has somewhere to go.
+  const runRoad = !!(P.story && (P.story.parachute || P.story.skyDungeonDone));
+  const btns=[];
+  if(runRoad) btns.push({label:'Fly down to Windsurf', cls:'gold', fn:()=>{ closeDialog();
+    if(!flightLockOK()) return;
+    const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
+    toast('Ashwing tips off the cloud-shelf and pours down through the cold cloud - an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6000);
+    if(Snd.boss) Snd.boss();
+    setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
+        banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
+      } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1000);
+  }});
+  btns.push({label:'Fly back to the Sunward Isle', cls: runRoad?undefined:'gold', fn:()=>{ closeDialog();
+    flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
+  btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
@@ -3451,7 +3463,8 @@ function openChest(b){
       if(typeof buildHotbar==='function') buildHotbar();
       Snd.levelup&&Snd.levelup();
       banner("THE MILLER'S BOW",'A RANGED ARM - AND THE SLUICE GRINDS UP');
-      setTimeout(()=>toast('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and the crank stowed with them frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber. <b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot - loose arrows from range at the thing in the works.',7400),400);
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and the crank stowed with them frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber.<br><br><b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' - loose arrows from range at the thing in the works.', {label:'OK'});
+        else toast('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts. <b style="color:var(--ember)">Bow unlocked!</b>',7400); },400);
     } else {
       giveGold(30); give('potion',1);
       Snd.quest&&Snd.quest();
@@ -3654,6 +3667,11 @@ function switchWorld(id){
   G.worldId=id;
   if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once
   P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0}; P.fishing=null;
+  // Arriving on an isle should not pop a DISCOVERED banner for the spot you land on -
+  // quietly mark the landing zone found so only zones you actively explore announce.
+  P.disc=P.disc||{};
+  for(const zk in ZONES){ const z=ZONES[zk];
+    if(z && z.name && dist(def.spawn.x,def.spawn.y,z.x,z.y) < (z.r||6)+2) P.disc[id+':'+zk]=1; }
   if(id==='main' && prevWorld==='east'){
     // sailing home from the Sunward Isle lands you back at Captain Corvo's cove
     // (his sloop, far south-east), not Greyharbor's dock clear across the map

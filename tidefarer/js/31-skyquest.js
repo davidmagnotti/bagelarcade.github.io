@@ -273,10 +273,16 @@ function collectStormBead(){
   G.decor=G.decor.filter(d=>d!==b);
   P.spells=P.spells||{}; P.spells.stun=1;
   if(typeof give==='function') give('stormrune',1);
-  if(Snd.magic) Snd.magic(); burst(P.x,P.y-0.5,'#c9b0ff',18,2.4);
-  banner('STORMLIGHT','YOUR BOLTS NOW STUN');
-  toast('Stormlight sinks into your staff. <b style="color:#c9b0ff">Your magic bolts now STUN</b> - try one on the shades ahead.',4200);
+  // Getting the stormlight IS the end of the Rainbow Road: the soured wind lets go,
+  // the bird brings the stormsail, and The Leap opens. There is no Storm-Eye beyond
+  // this point - clear anything left further up the road so nothing lingers behind you.
+  P.story=P.story||{}; P.story.skyG4=1; P.story.skyG5=1; P.story.skyDungeonDone=1; P.story.parachute=1;
+  for(const m of G.mobs){ if(!m.dead && (m.puzzle===5 || m.skyfinalboss || m.stormeye || m.grabber)){ m.dead=true; m.respawnT=1e9; } }
+  if(Snd.magic) Snd.magic(); burst(P.x,P.y-0.5,'#c9b0ff',22,2.6);
+  banner('STORMLIGHT','THE WIND CALMS - THE ROAD IS RUN');
   if(typeof autoSave==='function') autoSave();
+  storyCard('<b style="color:#c9b0ff">Stormlight sinks into your staff - your magic bolts now STUN, freezing a foe where it stands.</b><br><br><i>And as the light settles, the soured wind lets go all at once. The rainbow runs quiet and sweet, and the little bird loops back to lay a great kite of stitched stormcloth at your feet - a <b>stormsail</b>, woven of the calmed sky.</i><br><br>The road is run. Rest at the landing, then take <b style="color:#c9b0ff">THE LEAP</b> from the Cloudreach to ride the calmed wind down to <b>Windsurf</b>.',
+    {label:'OK', onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }});
 }
 
 /* ---------- THE STORM-EYE (final boss) ----------
