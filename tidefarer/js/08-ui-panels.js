@@ -105,7 +105,7 @@ function useItem(item){
   if(!has(item,1)) { toast(item==='potion'? 'No tonics left - Elder Maren sells them for 8 gold.' : 'No '+(ITEMS[item]?ITEMS[item].name.toLowerCase():item)+' left - tap the \u21c4 badge to swap the quick slot.'); return; }
   const def=ITEMS[item];
   if(def.use==='heal'){
-    if(P.hp>=P.maxhp){ toast('You\'re already at full health.'); return; }
+    if(P.hp>=P.maxhp){ toastErr('You\'re already at full health.'); return; }
     take(item,1); P.hp=Math.min(P.maxhp,P.hp+def.heal);
     addFloat('+'+def.heal+' HP',P.x,P.y-1.4,'#7fe07f'); burst(P.x,P.y-0.6,'#e05648',8); Snd.pickup();
     buildHotbar(); refreshInvPanel();
@@ -246,7 +246,7 @@ function refreshInvPanel(){
   }
 }
 function unequipArmor(){
-  if((P.armor||0)===0){ toast('Just your traveling clothes - nothing to take off.'); return; }
+  if((P.armor||0)===0){ toastErr('Just your traveling clothes - nothing to take off.'); return; }
   P.armor=0; Snd.pickup(); toast('Armor packed away. The wind gets a vote again.');
   refreshInvPanel(); refreshUI();
 }
@@ -403,7 +403,7 @@ function updateMountBtn(){
 function toggleRide(){
   if(G.state!=='play') return;
   if(!ownsMount()){ return; }
-  if(G.interior || (typeof inDungeon==='function' && inDungeon())){ toast('No room to ride in here.',1500); return; }
+  if(G.interior || (typeof inDungeon==='function' && inDungeon())){ toastErr('No room to ride in here.',1500); return; }
   P.riding = P.riding? 0 : 1;
   Snd.pickup && Snd.pickup();
   updateMountBtn();

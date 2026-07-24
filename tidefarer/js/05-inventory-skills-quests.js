@@ -227,11 +227,16 @@ function primaryQuest(){
 
 /* ---------------- toasts & floating text ---------------- */
 let toastT=null;
-function toast(html,ms=3200){
+// Toasts are silenced by request: toast() is now a no-op, so the ~180 flavor,
+// reward and guidance pop-ups never appear. Only genuine "you can't do that right
+// now" blockers are still surfaced, via toastErr() (see its call sites).
+function _renderToast(html,ms=3200){
   const el=document.getElementById('toast');
   el.innerHTML=html; el.style.display='block';
   clearTimeout(toastT); toastT=setTimeout(()=> el.style.display='none', ms);
 }
+function toast(html,ms){ /* intentionally silent */ }
+function toastErr(html,ms=3200){ _renderToast(html,ms); }
 // An important story beat - a boss-defeat or reveal - shown on a card that waits
 // for an explicit press instead of fading on a timer, so it is never missed. The
 // world pauses while it is up so the moment can be read in peace.

@@ -308,7 +308,7 @@ function hitNode(n){
   if((n.kind==='tree' || n.kind==='rock') && !P.kit){
     P._toolT=P._toolT||0;
     if(G.time>P._toolT){ P._toolT=G.time+2.5;
-      toast(n.kind==='tree'
+      toastErr(n.kind==='tree'
         ? 'Bark tears at bare palms - you need an <b>axe</b>. <b>Bram</b> at the forge keeps spares.'
         : 'Stone laughs at fists - you need a <b>pick</b>. <b>Bram</b> at the forge keeps spares.',4200);
     }
@@ -478,7 +478,7 @@ function tryAttack(useMouse){
     P.atkCd=(P.perks&&P.perks.quickdraw)?0.43:0.62; P.swing=0.2; Snd.bow();
     G.projs.push({kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'});
   } else if(P.weapon==='staff'){
-    if(P.mp<8){ toast('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
+    if(P.mp<8){ toastErr('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
     if(TRAIN && TRAIN.who==='aelin') TRAIN.casts=(TRAIN.casts||0)+1;   // Aelin's drill counts staff casts
     if(P.spell==='snare' && P.spells && P.spells.snare)

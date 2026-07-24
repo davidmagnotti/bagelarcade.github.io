@@ -267,7 +267,7 @@ function useHotspot(h){
       autoSave&&autoSave();
       return;
     }
-    if(P.mp>=P.maxmp){ toast(key? 'The orb is spent - its gift already yours. It only hums now.' : 'The orb hums - your mana is already full.'); return; }
+    if(P.mp>=P.maxmp){ toastErr(key? 'The orb is spent - its gift already yours. It only hums now.' : 'The orb hums - your mana is already full.'); return; }
     P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
     addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
   }

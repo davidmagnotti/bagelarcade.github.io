@@ -60,9 +60,9 @@ function tryFastTravel(tx,ty){
     if(d2<Math.max(z.r||6,5)+2 && d2<bd){ bd=d2; best=z; }
   }
   if(!best) return false;
-  if(dist(P.x,P.y,best.x,best.y)<6){ toast('You are already at <b>'+best.name+'</b>.'); return false; }
+  if(dist(P.x,P.y,best.x,best.y)<6){ toastErr('You are already at <b>'+best.name+'</b>.'); return false; }
   if(G.mobs.some(m=>!m.dead && m.state==='chase' && dist(P.x,P.y,m.x,m.y)<9)){
-    toast('<b style="color:#e06a5a">Enemies nearby</b> - you cannot travel now.'); return false;
+    toastErr('<b style="color:#e06a5a">Enemies nearby</b> - you cannot travel now.'); return false;
   }
   const s=findOpenNear(Math.round(best.x),Math.round(best.y),6);
   if(!s){ toast('No safe footing there.'); return false; }

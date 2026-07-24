@@ -3812,7 +3812,7 @@ function tryRoll(){
   if(!(P.unlocked && P.unlocked.dash)){
     // dash is taught by a mage-tower's scrying orb - nudge the player there
     if(!P._dashNagT || G.time>P._dashNagT){ P._dashNagT=G.time+4;
-      toast('You have no trained footwork yet - a <b>mage tower’s orb</b> teaches the <b>dash</b>.',3600); }
+      toastErr('You have no trained footwork yet - a <b>mage tower’s orb</b> teaches the <b>dash</b>.',3600); }
     return;
   }
   if((P.rollT||0)>0) return;
