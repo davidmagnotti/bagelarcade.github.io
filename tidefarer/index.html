@@ -13,7 +13,7 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=173">
+<link rel="stylesheet" href="styles.css?v=174">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -178,47 +178,53 @@
   </div>
 </div>
 
-<div class="overlay" id="creditsOv" style="display:none;">
-  <div class="creditsRoll" id="creditsRoll"></div>
-  <div class="creditsSkip" id="creditsSkip">click to skip</div>
-  <div class="creditsEnd" id="creditsEnd">
+<!-- Act I epilogue: the "six months later" sailing cutscene that closes Act I -->
+<div class="overlay" id="epiOv" style="display:none;">
+  <canvas id="epiCv"></canvas>
+  <div class="epiTitle" id="epiTitle"><h1 id="epiTitleT">SIX MONTHS LATER</h1></div>
+  <div class="epiSub" id="epiSub">
+    <p class="who" id="epiWho"></p>
+    <p class="line" id="epiLine"></p>
+    <span class="tap" id="epiTap">click to continue &rsaquo;</span>
+  </div>
+  <div class="epiEnd" id="epiEnd">
     <h1>END OF <span>ACT I</span></h1>
     <p>Act II &mdash; coming soon. Thank you for playing.</p>
-    <button class="btn gold" id="creditsBtn">Return to the isles</button>
+    <button class="btn gold" id="epiBtn">Return to the isles</button>
   </div>
 </div>
 
-<script src="js/01-core.js?v=173"></script>
-<script src="js/01b-gpu-probe.js?v=173"></script>
-<script src="js/02-worldgen.js?v=173"></script>
-<script src="js/03-art.js?v=173"></script>
-<script src="js/04-data.js?v=173"></script>
-<script src="js/05-inventory-skills-quests.js?v=173"></script>
-<script src="js/06-dialog.js?v=173"></script>
-<script src="js/07-input.js?v=173"></script>
-<script src="js/08-ui-panels.js?v=173"></script>
-<script src="js/09-gameplay.js?v=173"></script>
-<script src="js/10-rendering.js?v=173"></script>
-<script src="js/11-main-loop.js?v=173"></script>
-<script src="js/12-world-layer.js?v=173"></script>
-<script src="js/13-aaa-layer.js?v=173"></script>
-<script src="js/14-meta-layer.js?v=173"></script>
-<script src="js/15-interiors.js?v=173"></script>
-<script src="js/16-autosave.js?v=173"></script>
-<script src="js/17-pause-menu.js?v=173"></script>
-<script src="js/18-economy.js?v=173"></script>
-<script src="js/19-purpose.js?v=173"></script>
-<script src="js/20-lore.js?v=173"></script>
-<script src="js/21-exploration.js?v=173"></script>
-<script src="js/22-definitive-edition.js?v=173"></script>
-<script src="js/23-pause-affordance.js?v=173"></script>
-<script src="js/24-perf.js?v=173"></script>
-<script src="js/25-debug.js?v=173"></script>
-<script src="js/26-bench.js?v=173"></script>
-<script src="js/27-perfmode.js?v=173"></script>
-<script src="js/28-fxpanel.js?v=173"></script>
-<script src="js/29-devmenu.js?v=173"></script>
-<script src="js/30-perks.js?v=173"></script>
-<script src="js/31-skyquest.js?v=173"></script>
+<script src="js/01-core.js?v=174"></script>
+<script src="js/01b-gpu-probe.js?v=174"></script>
+<script src="js/02-worldgen.js?v=174"></script>
+<script src="js/03-art.js?v=174"></script>
+<script src="js/04-data.js?v=174"></script>
+<script src="js/05-inventory-skills-quests.js?v=174"></script>
+<script src="js/06-dialog.js?v=174"></script>
+<script src="js/07-input.js?v=174"></script>
+<script src="js/08-ui-panels.js?v=174"></script>
+<script src="js/09-gameplay.js?v=174"></script>
+<script src="js/10-rendering.js?v=174"></script>
+<script src="js/11-main-loop.js?v=174"></script>
+<script src="js/12-world-layer.js?v=174"></script>
+<script src="js/13-aaa-layer.js?v=174"></script>
+<script src="js/14-meta-layer.js?v=174"></script>
+<script src="js/15-interiors.js?v=174"></script>
+<script src="js/16-autosave.js?v=174"></script>
+<script src="js/17-pause-menu.js?v=174"></script>
+<script src="js/18-economy.js?v=174"></script>
+<script src="js/19-purpose.js?v=174"></script>
+<script src="js/20-lore.js?v=174"></script>
+<script src="js/21-exploration.js?v=174"></script>
+<script src="js/22-definitive-edition.js?v=174"></script>
+<script src="js/23-pause-affordance.js?v=174"></script>
+<script src="js/24-perf.js?v=174"></script>
+<script src="js/25-debug.js?v=174"></script>
+<script src="js/26-bench.js?v=174"></script>
+<script src="js/27-perfmode.js?v=174"></script>
+<script src="js/28-fxpanel.js?v=174"></script>
+<script src="js/29-devmenu.js?v=174"></script>
+<script src="js/30-perks.js?v=174"></script>
+<script src="js/31-skyquest.js?v=174"></script>
 </body>
 </html>

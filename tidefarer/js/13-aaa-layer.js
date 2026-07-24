@@ -11,45 +11,231 @@ function banner(title,sub){
 }
 function cinematic(on){ document.body.classList.toggle('cine',on); }
 function shockwave(x,y,color,r){ G.parts.push({x,y,vx:0,vy:0,life:0.35,max:0.35,size:r,color,ring:true}); }
-/* ---------- end-of-act credits: a slow roll up the black, settling on END OF ACT I ---------- */
-const CREDITS_ROLL = ''
-  + '<h1>TIDEFARER</h1>'
-  + '<p class="sub">a Bagel Arcade adventure</p>'
-  + '<h2>ACT I &mdash; THE ENCHANTER\'S TIDE</h2>'
-  + '<p class="r">A masked stranger washed ashore on Emberwick<br>with no name and a face not her own &mdash;<br>and unmade the enchanter\'s work, isle by isle.</p>'
-  + '<h2>THE ISLES SHE FREED</h2>'
-  + '<p class="r">Emberwick &middot; Barik &middot; The Sunward Isle<br>The Cloudreach &middot; Windsurf &middot; Stormreach<br>The Aerie &middot; The Frozen Isle &middot; Aldermere</p>'
-  + '<h2>THE SOULS SHE MET</h2>'
-  + '<p class="r">Elder Maren &middot; Bram the Smith &middot; Willa<br>Her brother, the lost prince<br>Ashwing the Wyrm &middot; Rell &middot; Coralie<br>Goldwarden Bree &middot; Sage Orin &middot; Aelin<br>King Aldous of the Tideglass Throne<br>&mdash; who spent himself to buy their escape</p>'
-  + '<h2>THE ENCHANTER</h2>'
-  + '<p class="r">Vath, the Emberbinder,<br>holds the Tideglass magic now.<br>The strait behind them is his.</p>'
-  + '<p class="r" style="margin-top:64px">But a daughter and a son of Aldermere live,<br>and somewhere past the charted isles<br>is the strength to come back for him.</p>'
-  + '<p class="r" style="margin-top:48px">The tide will turn again.</p>';
-function rollCredits(){
-  const ov=document.getElementById('creditsOv');
-  const roll=document.getElementById('creditsRoll');
-  const end=document.getElementById('creditsEnd');
-  if(!ov||!roll||!end) return;
-  const skip=document.getElementById('creditsSkip');
-  roll.innerHTML=CREDITS_ROLL;
-  end.classList.remove('show'); roll.style.visibility='visible';
-  if(skip) skip.classList.remove('gone');
+/* ---------- Act I epilogue: "six months later", the two siblings sail into Stormreach ----------
+   Replaces the old credit roll. A self-contained animated scene (its own rAF loop, since the
+   world is paused) of the prince and princess crossing open water into a gathering tempest,
+   with a click-to-advance dialogue between brother and sister, closing on landfall at Stormreach. */
+const EPI = {
+  // Each beat: who is speaking ('' = narration), the line, and the target sea-state the visuals
+  // ease toward while it is on screen. storm 0..1 = rain/lightning; near 0..1 = island approach.
+  beats: [
+    { who:'', html:'<i>Six months of open water. The charted isles are long gone behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.02 },
+    { who:'The Prince', html:'“There.” <i>He steadies the chart against the wind and points past the bow.</i> “The stars finally agree with the old maps. That smudge on the horizon isn\'t cloud, sister &mdash; it\'s land.”', storm:0.1, near:0.12 },
+    { who:'The Princess', html:'“It\'s been cloud for a week, little brother. Every wave looks like an island when you want one badly enough.”', storm:0.14, near:0.2 },
+    { who:'The Prince', html:'“Not this one. Listen &mdash; no gulls. No gulls means no safe harbour, means sailors gave it a name and a wide berth.” <i>He taps the chart\'s far edge.</i> “The charts call it <b>Stormreach</b>. A tempest that never breaks, sitting over a single rock.”', storm:0.3, near:0.32 },
+    { who:'The Princess', html:'“A tempest that never breaks.” <i>She half-smiles into the wind.</i> “The kind of place a man hides a thing he doesn\'t want found. Or a person.”', storm:0.45, near:0.44 },
+    { who:'The Prince', html:'“You think Vath\'s reach runs this far out?”', storm:0.55, near:0.55 },
+    { who:'The Princess', html:'“I think six months ago Father told us to go where he couldn\'t reach us yet. This is as far as the sea goes. If the strength to come back for him is anywhere, it\'s here &mdash; past the last name on the map.”', storm:0.68, near:0.66 },
+    { who:'', html:'<i>The wind turns cold and certain. The first grey line of rain walks across the water toward them, and the little boat lifts its bow to meet it.</i>', storm:0.85, near:0.78 },
+    { who:'The Prince', html:'<i>He hauls on the sheet as the sail cracks taut.</i> “Then we\'d best not drown on the doorstep! Trim her &mdash; she wants to run before this wind, not fight it!”', storm:0.95, near:0.9 },
+    { who:'The Princess', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Now you sound like a sailor! Hold her steady, brother. Whatever\'s waiting on that rock &mdash; we make landfall together.”', storm:1, near:1 },
+    { who:'', html:'<i>The keel grinds onto black shingle beneath a sky that has forgotten the sun. High above the rain, a single light is burning. Side by side, they step ashore &mdash; into Act II.</i>', storm:1, near:1, land:1 },
+  ],
+  raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
+};
+function rollCredits(){ sailEpilogue(); }   // old call-site name kept as an alias
+function sailEpilogue(){
+  const ov=document.getElementById('epiOv');
+  const cv=document.getElementById('epiCv');
+  const end=document.getElementById('epiEnd');
+  const title=document.getElementById('epiTitle');
+  const sub=document.getElementById('epiSub');
+  if(!ov||!cv||!end){ // graceful fallback: the old teaser toast
+    if(typeof toastErr==='function') toastErr('<b style="color:#c9a0ff">Vath holds the Tideglass magic now.</b> Six months on, you and your brother make landfall at storm-locked Stormreach. <b style="color:var(--ember)">Act II - coming soon.</b>',9000);
+    return;
+  }
+  EPI.cv=cv; EPI.cx=cv.getContext('2d');
+  EPI.t=0; EPI.prev=0; EPI.idx=0; EPI.storm=0.05; EPI.near=0.02; EPI.land=0; EPI.flash=0; EPI.flashT=6;
+  EPI.drops.length=0; EPI.ended=false; EPI.running=true;
+  end.classList.remove('show'); sub.classList.remove('show'); title.classList.remove('show');
   ov.style.display='flex';
   G.paused=true; G._credits=1;
-  // (re)start the roll animation from the bottom
-  roll.classList.remove('rolling'); void roll.offsetWidth; roll.classList.add('rolling');
-  const finish=()=>{ if(end.classList.contains('show')) return; roll.style.visibility='hidden'; if(skip) skip.classList.add('gone'); end.classList.add('show'); };
-  roll.addEventListener('animationend', finish, {once:true});
-  setTimeout(finish, 46000);   // safety, in case animationend is missed
-  // click anywhere during the roll to skip ahead to END OF ACT I
-  ov.onclick=()=>{ if(!end.classList.contains('show')) finish(); };
-  const btn=document.getElementById('creditsBtn');
-  if(btn) btn.onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation();
-    ov.style.display='none'; G._credits=0;
-    if(G.state==='play') G.paused=false;
-    if(typeof cinematic==='function') cinematic(false);
-    if(typeof autoSave==='function') autoSave();
+  if(typeof cinematic==='function') cinematic(true);
+  _epiResize();
+  window.addEventListener('resize', _epiResize);
+  // title card first, then fade it out and start the dialogue
+  setTimeout(()=>title.classList.add('show'), 200);
+  setTimeout(()=>{ title.classList.remove('show'); }, 3400);
+  setTimeout(()=>_epiShow(0), 3900);
+  // advance the dialogue on click anywhere over the scene (once the first line is up)
+  EPI.started=false;
+  ov.onclick=(e)=>{ if(EPI.ended || !EPI.started) return;
+    if(e && e.target && e.target.id==='epiBtn') return;   // the return button handles itself
+    _epiNext();
   };
+  const btn=document.getElementById('epiBtn');
+  if(btn) btn.onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); _epiClose(); };
+  cancelAnimationFrame(EPI.raf);
+  EPI.raf=requestAnimationFrame(_epiLoop);
+}
+function _epiResize(){
+  const cv=EPI.cv; if(!cv) return;
+  const r=cv.getBoundingClientRect();
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  EPI.cx.setTransform(dpr,0,0,dpr,0,0);
+  EPI.W=r.width; EPI.H=r.height;
+}
+function _epiShow(i){
+  const b=EPI.beats[i]; if(!b) return;
+  EPI.idx=i; EPI.started=true;
+  document.getElementById('epiWho').textContent=b.who||'';
+  document.getElementById('epiLine').innerHTML=b.html;
+  const tap=document.getElementById('epiTap');
+  if(tap) tap.textContent=(i>=EPI.beats.length-1)?'':'click to continue ›';
+  const sub=document.getElementById('epiSub');
+  sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
+}
+function _epiNext(){
+  if(EPI.idx>=EPI.beats.length-1){ _epiFinish(); return; }
+  const sub=document.getElementById('epiSub');
+  sub.classList.remove('show');
+  setTimeout(()=>_epiShow(EPI.idx+1), 340);
+}
+function _epiFinish(){
+  EPI.ended=true;
+  const sub=document.getElementById('epiSub');
+  const end=document.getElementById('epiEnd');
+  sub.classList.remove('show');
+  setTimeout(()=>{ if(end) end.classList.add('show'); }, 700);
+}
+function _epiClose(){
+  EPI.running=false; cancelAnimationFrame(EPI.raf);
+  window.removeEventListener('resize', _epiResize);
+  const ov=document.getElementById('epiOv');
+  if(ov) ov.style.display='none';
+  G._credits=0;
+  if(G.state==='play') G.paused=false;
+  if(typeof cinematic==='function') cinematic(false);
+  if(typeof autoSave==='function') autoSave();
+}
+function _epiLoop(ts){
+  if(!EPI.running) return;
+  if(!EPI.prev) EPI.prev=ts;
+  let dt=(ts-EPI.prev)/1000; EPI.prev=ts;
+  if(dt>0.05) dt=0.05;
+  EPI.t+=dt;
+  // ease the sea-state toward the current beat's targets so the storm builds as they talk
+  const b=EPI.beats[EPI.idx]||EPI.beats[0];
+  EPI.storm += (b.storm-EPI.storm)*Math.min(1,dt*0.7);
+  EPI.near  += (b.near -EPI.near )*Math.min(1,dt*0.5);
+  EPI.land  += ((b.land?1:0)-EPI.land)*Math.min(1,dt*0.6);
+  // lightning, more frequent as the storm builds
+  EPI.flash=Math.max(0,EPI.flash-dt*3.2);
+  EPI.flashT-=dt*(0.3+EPI.storm*1.6);
+  if(EPI.flashT<=0 && EPI.storm>0.45){ EPI.flashT=2.2+Math.random()*4; EPI.flash=1; }
+  _epiDraw();
+  EPI.raf=requestAnimationFrame(_epiLoop);
+}
+function _epiDraw(){
+  const cx=EPI.cx, W=EPI.W, H=EPI.H, t=EPI.t; if(!cx||!W) return;
+  const storm=EPI.storm, near=EPI.near;
+  const horizon=H*0.52;
+  // --- sky: dusk that darkens into tempest as storm rises ---
+  const sky=cx.createLinearGradient(0,0,0,horizon);
+  const calm=[[36,44,74],[92,86,120],[196,150,120]];   // deep blue -> mauve -> warm haze
+  const wild=[[8,10,20],[26,26,44],[52,52,74]];         // near-black storm
+  const mix=(a,b,k)=>Math.round(a+(b-a)*k);
+  sky.addColorStop(0,   `rgb(${mix(calm[0][0],wild[0][0],storm)},${mix(calm[0][1],wild[0][1],storm)},${mix(calm[0][2],wild[0][2],storm)})`);
+  sky.addColorStop(0.6, `rgb(${mix(calm[1][0],wild[1][0],storm)},${mix(calm[1][1],wild[1][1],storm)},${mix(calm[1][2],wild[1][2],storm)})`);
+  sky.addColorStop(1,   `rgb(${mix(calm[2][0],wild[2][0],storm)},${mix(calm[2][1],wild[2][1],storm)},${mix(calm[2][2],wild[2][2],storm)})`);
+  cx.fillStyle=sky; cx.fillRect(0,0,W,horizon+2);
+  // lightning wash over the sky
+  if(EPI.flash>0.01){ cx.fillStyle=`rgba(210,220,255,${0.5*EPI.flash})`; cx.fillRect(0,0,W,horizon+2); }
+  // --- Stormreach: a dark island that grows on the horizon as `near` rises, with a beacon ---
+  if(near>0.05){
+    const iw=W*(0.16+near*0.7), ih=H*(0.06+near*0.34);
+    const ix=W*0.5, iy=horizon;
+    cx.save();
+    cx.fillStyle=`rgba(14,16,26,${Math.min(1,0.5+near*0.5)})`;
+    cx.beginPath(); cx.moveTo(ix-iw*0.5,iy);
+    // a jagged storm-rock silhouette with a central spire
+    cx.lineTo(ix-iw*0.30,iy-ih*0.55);
+    cx.lineTo(ix-iw*0.12,iy-ih*0.42);
+    cx.lineTo(ix,          iy-ih*1.0);   // the spire (lighthouse rock)
+    cx.lineTo(ix+iw*0.14,iy-ih*0.40);
+    cx.lineTo(ix+iw*0.32,iy-ih*0.58);
+    cx.lineTo(ix+iw*0.5, iy);
+    cx.closePath(); cx.fill();
+    // beacon light at the spire tip
+    const bx=ix, by=iy-ih*1.0;
+    const pulse=0.6+0.4*Math.sin(t*3);
+    const bg=cx.createRadialGradient(bx,by,0,bx,by,26*near+8);
+    bg.addColorStop(0,`rgba(255,214,140,${(0.7+0.3*pulse)*Math.min(1,near*1.4)})`);
+    bg.addColorStop(1,'rgba(255,214,140,0)');
+    cx.fillStyle=bg; cx.beginPath(); cx.arc(bx,by,26*near+8,0,TAU); cx.fill();
+    cx.restore();
+  }
+  // --- sea ---
+  cx.fillStyle=`rgb(${mix(30,10,storm)},${mix(58,26,storm)},${mix(86,44,storm)})`;
+  cx.fillRect(0,horizon,W,H-horizon);
+  // rolling wave lines, choppier as the storm builds
+  const amp=2+storm*7;
+  for(let r=0;r<10;r++){
+    const yy=horizon+ (H-horizon)*(r/10)+ (r*r)*0.4;
+    if(yy>H) break;
+    cx.strokeStyle=`rgba(${mix(120,60,storm)},${mix(160,90,storm)},${mix(200,130,storm)},${0.18+r*0.015})`;
+    cx.lineWidth=1+r*0.25;
+    cx.beginPath();
+    for(let x=0;x<=W;x+=14){
+      const y=yy+Math.sin(x*0.03 + t*(1.2+r*0.15) + r)*amp*(0.4+r*0.09);
+      x===0?cx.moveTo(x,y):cx.lineTo(x,y);
+    }
+    cx.stroke();
+  }
+  // --- the boat, riding the foreground swell ---
+  const bxp=W*0.5, bob=Math.sin(t*1.4)*(3+storm*7), tilt=Math.sin(t*1.4+0.6)*(0.02+storm*0.06);
+  const byp=H*0.72+bob;
+  cx.save(); cx.translate(bxp,byp); cx.rotate(tilt);
+  const S=Math.max(0.7,Math.min(1.4,W/560));
+  cx.scale(S,S);
+  // hull
+  cx.fillStyle='#5a3a22'; cx.strokeStyle='#2c1a10'; cx.lineWidth=2;
+  cx.beginPath();
+  cx.moveTo(-52,0); cx.quadraticCurveTo(-58,16,-34,20);
+  cx.lineTo(34,20); cx.quadraticCurveTo(58,16,52,0);
+  cx.closePath(); cx.fill(); cx.stroke();
+  cx.fillStyle='#3f2716'; cx.fillRect(-46,0,92,5);
+  // mast + sail, bellied by the wind (leans harder in the storm)
+  cx.strokeStyle='#2c1a10'; cx.lineWidth=3;
+  cx.beginPath(); cx.moveTo(0,0); cx.lineTo(0,-62); cx.stroke();
+  const belly=8+storm*16;
+  cx.fillStyle='#e7ddc8';
+  cx.beginPath(); cx.moveTo(2,-60); cx.quadraticCurveTo(2+belly,-34,2,-6);
+  cx.lineTo(2,-6); cx.quadraticCurveTo(2+belly*0.5,-32,2,-60); cx.closePath();
+  cx.fill();
+  cx.beginPath(); cx.moveTo(-2,-58); cx.quadraticCurveTo(-2-belly*0.7,-32,-2,-8);
+  cx.lineTo(-2,-8); cx.quadraticCurveTo(-2-belly*0.35,-32,-2,-58); cx.closePath();
+  cx.fillStyle='#d8ccb2'; cx.fill();
+  // two figures: the prince at the tiller (stern), the princess at the bow
+  // prince
+  cx.fillStyle='#3b5a7a';
+  cx.beginPath(); cx.arc(-24,-6,4.2,0,TAU); cx.fill();            // head
+  cx.fillRect(-28,-4,8,14);                                       // body
+  // princess (warrior, at the bow, hand raised toward the isle)
+  cx.fillStyle='#7a2f2f';
+  cx.beginPath(); cx.arc(26,-8,4.2,0,TAU); cx.fill();
+  cx.fillRect(22,-6,8,15);
+  cx.strokeStyle='#7a2f2f'; cx.lineWidth=2.4;
+  cx.beginPath(); cx.moveTo(30,-4); cx.lineTo(37,-12); cx.stroke(); // reaching arm
+  cx.restore();
+  // --- rain, thickening with the storm ---
+  const want=Math.round(storm*W*0.5);
+  while(EPI.drops.length<want) EPI.drops.push({x:Math.random()*W,y:Math.random()*H,s:400+Math.random()*400,l:8+Math.random()*10});
+  if(EPI.drops.length>want) EPI.drops.length=want;
+  if(EPI.drops.length){
+    cx.strokeStyle=`rgba(200,220,250,${0.28*storm})`; cx.lineWidth=1; cx.beginPath();
+    for(const d of EPI.drops){ d.y+=d.s*0.016; d.x+=d.s*0.006; if(d.y>H){ d.y=-10; d.x=Math.random()*W; }
+      cx.moveTo(d.x,d.y); cx.lineTo(d.x-d.l*0.18,d.y-d.l); }
+    cx.stroke();
+  }
+  // landfall: darken and settle as they step ashore
+  if(EPI.land>0.01){ cx.fillStyle=`rgba(4,6,12,${0.55*EPI.land})`; cx.fillRect(0,0,W,H); }
+  // vignette
+  const vg=cx.createRadialGradient(W*0.5,H*0.5,H*0.2,W*0.5,H*0.5,H*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.55)');
+  cx.fillStyle=vg; cx.fillRect(0,0,W,H);
 }
 
 /* ---------- adaptive music (procedural, three moods) ---------- */
