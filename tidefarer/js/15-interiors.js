@@ -54,8 +54,10 @@ function useStairs(dir){
 function palaceKingSpeak(){
   // the throne hosts the scripted scenes: the audience (Act III) and the Act I
   // capital finale (the confrontation with Vath, and its aftermath). Route those
-  // through buildDialogContent so the King's NPC dialogue handlers run.
-  if(qs('audience')==='active' || (P.story && P.story.unmasked)){
+  // through buildDialogContent so the King's NPC dialogue handlers run. The
+  // audience now opens simply on speaking to the King (before he's charged you),
+  // so route whenever he has not yet told you the tale, or after the reveal.
+  if(!(P.story && P.story.kingTold) || (P.story && (P.story.unmasked || P.story.act1End))){
     const king=G.npcs && G.npcs.find(n=>n.id==='aldous');
     if(king && typeof buildDialogContent==='function'){ dlg.open=true; dlg.npc=king;
       document.getElementById('dialog').style.display='block'; document.getElementById('dname').textContent=king.name;

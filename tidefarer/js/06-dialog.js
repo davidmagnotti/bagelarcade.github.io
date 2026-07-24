@@ -82,7 +82,9 @@ function buildDialogContent(npc){
   // The Royal Audience - a scripted scene that opens Act III. The King receives
   // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
   // and he tells the tragedy that binds Vath to the throne, then charges you.
-  if(npc.id==='aldous' && qs('audience')==='active'){
+  // Starts simply on talking to the King, any time before he has charged you
+  // (kingTold) and before the later reveal - no herald/audience-quest step needed.
+  if(npc.id==='aldous' && !(P.story&&(P.story.kingTold||P.story.unmasked||P.story.act1End))){
     const p3=()=>{
       setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown thirty years ago. He\'s been out there all this time - and my children with him, or their graves.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy and girl.”',
         [{label:'I will find him.', cls:'gold', fn:()=>{
