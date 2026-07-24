@@ -2869,8 +2869,8 @@ QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushro
 QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{slime:6},
   brief:'Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.',
   log:'Destroy 6 slimes around the Mirefen and Farmsteads.',
-  doneText:'Rows are clean, seed\'s safe, and I owe you a harvest\'s gratitude. Coin will have to stand in for it.',
-  rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}} };
+  doneText:'Rows are clean, seed\'s safe, and I owe you more than coin. See that chestnut cob by the paddock? Old plough-horse, sound legs, and bored to tears since we went over to oxen. He\'s yours - Chestnut answers a whistle, and I\'ll stable him here whenever you\'ve no need of him. Go on, a farmhand like you has ground to cover.',
+  rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}, horse:true} };
 QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{stone:10},
   brief:'Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
   log:'Mine 10 stone around the Old Barik Mines for Torv.',

@@ -622,8 +622,8 @@ function shopButtons(npc,btns){
       opts.push({label:'Farewell',ghost:true,fn:closeDialog});
       setDialog(opts.length>1? '“What\'ll it be? A house is never finished - that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
     }});
-    // Chestnut is no longer for sale - he's Orin's gift for the bluecap quest.
-    // Once you own him, Hedda can still whistle him up / stable him for you.
+    // Chestnut is no longer for sale - he's Hedda's gift for clearing the fields
+    // ('Mire in the Fields'). Once you own him, Hedda whistles him up / stables him.
     if(P.horse) btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
       P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
     }});
