@@ -185,9 +185,10 @@ function buildDialogContent(npc){
       if(Snd.boss) Snd.boss();
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.9)',90);
       G.shake=1.2; G.slowmo=1.2;
-      // the camera settles to the credits, which close on END OF ACT I
+      // the camera settles to the "six months later" epilogue: the two siblings sailing
+      // into storm-locked Stormreach, closing on END OF ACT I
       setTimeout(()=>{ if(typeof autoSave==='function') autoSave();
-        if(typeof rollCredits==='function') rollCredits();
+        if(typeof sailEpilogue==='function') sailEpilogue();
         else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
       }, 1600);
     };

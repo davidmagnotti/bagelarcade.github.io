@@ -138,6 +138,7 @@ const SECTIONS=[
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
+    ['Play Act I epilogue',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)
