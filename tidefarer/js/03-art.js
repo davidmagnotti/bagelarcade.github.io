@@ -934,6 +934,15 @@ function drawHumanoid(g,sx,sy,o){
       g.moveTo(1.6,-21.2+B); g.lineTo(-1.6,-18.8+B);
       g.stroke();
     }
+    if(o.fem && !away){ // soft contour + a nipped waist for a feminine shape
+      g.strokeStyle='rgba(0,0,0,0.10)'; g.lineWidth=1;
+      g.beginPath();
+      g.moveTo(-5.2,-15.4+B); g.quadraticCurveTo(-2.4,-13.4, 0,-14.2+B);
+      g.quadraticCurveTo(2.4,-13.4, 5.2,-15.4+B); g.stroke();
+      g.fillStyle=shade(shirt,-9); // waist shading, drawing the eye inward above the hips
+      g.beginPath(); g.ellipse(-6.6,-11.4,1.5,2.4,0.2,0,TAU); g.fill();
+      g.beginPath(); g.ellipse(6.6,-11.4,1.5,2.4,-0.2,0,TAU); g.fill();
+    }
     if(away){ // back seam
       g.strokeStyle=shade(shirt,-22); g.lineWidth=1.1;
       g.beginPath(); g.moveTo(0,-24+B); g.lineTo(0,-9); g.stroke();
@@ -1143,6 +1152,11 @@ function drawHumanoid(g,sx,sy,o){
         g.fillStyle='rgba(255,255,255,0.92)';
         g.beginPath(); g.arc(flip*4.35,-3.1+fy,0.6,0,TAU); g.fill();
       }
+      if(o.fem){ // lashes on the profile eye
+        g.strokeStyle='#17100a'; g.lineWidth=1.1; g.lineCap='round';
+        g.beginPath(); g.moveTo(flip*7.4,-3.0); g.lineTo(flip*9.1,-4.0);
+        g.moveTo(flip*7.5,-1.9); g.lineTo(flip*9.2,-2.4); g.stroke(); g.lineCap='butt';
+      }
       g.strokeStyle='#2e2418'; g.lineWidth=1.6; // brow
       g.beginPath(); g.moveTo(flip*1.8,-7.6); g.quadraticCurveTo(flip*5,-8.8,flip*8,-7.2); g.stroke();
       g.strokeStyle='rgba(90,58,40,0.75)'; g.lineWidth=1.05; g.lineCap='round'; // quiet mouth
@@ -1186,6 +1200,15 @@ function drawHumanoid(g,sx,sy,o){
           g.fillStyle='rgba(255,255,255,0.35)';
           g.beginPath(); g.arc(ex2+0.55,eyeY+0.8,0.28,0,TAU); g.fill();
         }
+      }
+      if(o.fem){ // a flick of lashes at the outer corners of each eye
+        g.strokeStyle='#17100a'; g.lineWidth=1.1; g.lineCap='round';
+        for(const e of [-1,1]){ const ecx=e*eSp+fx*0.9;
+          g.beginPath();
+          g.moveTo(ecx+e*1.9,eyeY-1.5); g.lineTo(ecx+e*3.5,eyeY-2.7);
+          g.moveTo(ecx+e*2.0,eyeY-0.4); g.lineTo(ecx+e*3.6,eyeY-1.1);
+          g.stroke(); }
+        g.lineCap='butt';
       }
       // filled tapered brows, tilted by mood
       g.fillStyle='#2e2418';
@@ -1387,6 +1410,28 @@ function drawHumanoid(g,sx,sy,o){
       g.fillStyle=hc;
       g.beginPath(); g.arc(away?0:-8.5, away?-11.5:-10.5, 3.4, 0, TAU); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+    }
+    if(o.fem){
+      // long flowing locks past the shoulders - a clearly feminine silhouette
+      // that reads even with the mask on
+      for(const e of [-1,1]){
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(e*HR*0.84,-4);
+        g.quadraticCurveTo(e*HR*1.36,5, e*HR*1.14,15);
+        g.quadraticCurveTo(e*HR*1.02,22, e*HR*0.74,23.5);
+        g.quadraticCurveTo(e*HR*0.5,21.5, e*HR*0.58,12);
+        g.quadraticCurveTo(e*HR*0.74,4, e*HR*0.6,-4);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        // a strand of inner shadow for depth
+        g.fillStyle=shade(hc,-11);
+        g.beginPath();
+        g.moveTo(e*HR*0.62,0);
+        g.quadraticCurveTo(e*HR*0.66,11, e*HR*0.72,19);
+        g.quadraticCurveTo(e*HR*0.56,13, e*HR*0.54,4);
+        g.closePath(); g.fill();
+      }
     }
   }
   if(o.hairstyle==='bald' && !o.hat && !helm2 && !away){
