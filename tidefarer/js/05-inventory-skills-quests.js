@@ -217,7 +217,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

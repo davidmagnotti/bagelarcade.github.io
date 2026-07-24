@@ -475,12 +475,36 @@ function spawnBarikFolk(){
     ["These shafts fed three generations before the wilds took the road.",
      "Stone's still down there. Just needs hands brave enough."],0.9));
 }
+// Once Maelis and Elias are wed, the Duke stands at her side in the keep. Spawns
+// him beside her if he isn't already there - called on world-gen and the moment
+// the wedding scene resolves, so he appears without needing a reload.
+function wedDuke(){
+  if(!(P.story && P.story.duchessWed)) return;
+  if(G.worldId!=='main') return;
+  if(G.npcs && G.npcs.some(n=>n.id==='dukeElias')) return;
+  const mae = G.npcs && G.npcs.find(n=>n.id==='maelis');
+  const bx = mae? Math.round(mae.x-1.6) : Math.round(ZONES.castle.x-1);
+  const by = mae? Math.round(mae.y) : Math.round(ZONES.castle.y+1);
+  const sp = (typeof findOpenNear==='function' && findOpenNear(bx,by,3)) || [bx,by];
+  const duke = makeNPC('dukeElias','Duke Elias of Barik', sp[0], sp[1],
+    {skin:'#caa27b',hair:'#3a2f26',shirt:'#3a4a6e',pants:'#2c3346',robe:'#33406a',trim:'#e8c860',hat:'crown',hairstyle:'short'},
+    ['Three years of letters, and it turns out she is even better in person. I have you to thank for the crossing.',
+     'A tide-scholar, a duke - I still answer to "Elias," if you please. Old habits.',
+     'Maelis rules; I read the tides and keep her tea warm. We are both exactly where we wished to be.'],0.3);
+  if(mae) duke.face={x:1,y:0};
+  G.npcs.push(duke);
+}
 function spawnRealmFolk(){
   const CK=ZONES.castle, SP=ZONES.spire, V=ZONES.village, VM=ZONES.vael;
+  const wed = !!(P.story && P.story.duchessWed);
   G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', CK.x+0.5,CK.y+0.8,
     {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
-    ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
-     "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
+    wed
+    ? ["My Duke charts the tides from the west solar now. Strange, to rule beside someone at last.",
+       "You carried the letter that carried my heart. Barik does not forget a debt like that - nor do I."]
+    : ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
+       "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
+  wedDuke();
   { const kw=makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
     ["Her Majesty receives travelers. Mind your manners and your mud."],0.4);
@@ -744,6 +768,15 @@ function spawnEastFolk(){
     {skin:'#b58a5e',hair:'#d8d2c4',shirt:'#7a4a5e',pants:'#3a2c33'},
     ['Kea grumbles, the palms bow, the reef sings. Sit a while - let the island talk to you.',
      'Old Ashwing has warmed these waters since my mother\'s mother. Pay that robed woman no mind.'],0.7));
+  // Lord Elias - a tide-scholar who has courted the Duchess of Barik by letter for
+  // three years and never once crossed the strait to meet her. He leaves the isle
+  // once the two are wed (he becomes Barik's Duke), so he only stands here before.
+  if(!(P.story && P.story.duchessWed))
+    G.npcs.push(makeNPC('elias','Lord Elias', V.x+2.5,V.y-3.4,
+      {skin:'#caa27b',hair:'#3a2f26',shirt:'#3a4a6e',pants:'#2c3346',robe:'#33406a',trim:'#c9a24e',hairstyle:'short'},
+      ['I chart the tides for a living, and cannot chart the one crossing I actually want to make.',
+       'There is a lady in Barik I have written to for three years. Her letters smell of ink and iron. I would cross an ocean for the next one - if my nerve ever caught up to my heart.',
+       'If you are ever bound for Barik... no. Never mind. Some letters a man must send himself. Or wishes he would.'],0.4));
   // Lani keeps the Kohana longhut - rest here to mend and set your waking-place
   { const inn=makeNPC('lani','Lani of the Longhut', V.x-4, V.y-1.1,
       {skin:'#b58a5e',hair:'#241a14',shirt:'#3f7a5e',pants:'#3a3026',apron:'#c9b48a',hairstyle:'bun'},
@@ -2945,6 +2978,21 @@ QUESTS.sting1={ giver:'maelis', title:'Sunscour Cull', kind:'kill', kill:{scorpi
   log:'Slay 5 Sunscour Scorpions in the desert valley.',
   doneText:'Five stingers for the trophy wall. The caravans will run the valley road again - carefully.',
   rw:{gold:260, item:{potion:2}, xp:{melee:340, archery:340, magic:340}} };
+/* ---------- The Duchess's love: a letter carried to the Sunward Isle, a reply
+   carried home, and a wedding that leaves Barik with a Duke. Two 'special'
+   quests driven entirely by scripted scenes at Elias and Maelis (see 06-dialog),
+   so neither the generic talk-completion nor a quest board can short-circuit
+   the marriage. duchesslove opens on your first landing on the Sunward Isle. --- */
+QUESTS.duchesslove={ giver:'maelis', title:'A Letter for Sunward', kind:'special', xpL:260,
+  brief:'May I trust you with something that is not a war? There is a man on the Sunward Isle - Lord Elias, a scholar of tides. We have written to one another for three years and met in person not once, the strait being what it was. Now that you have opened the water, carry him this.<br><i>(She presses a wax-sealed letter into your hands, and does not quite meet your eye.)</i> Put it in his hand, and no other.',
+  log:'Carry the Duchess’s sealed letter to Lord Elias on the Sunward Isle.',
+  doneText:'',   // resolved by the scripted delivery scene at Elias
+  rw:{xp:{magic:120}} };
+QUESTS.duchessreply={ giver:'elias', title:'The Reply', kind:'special', xpL:320,
+  brief:'',      // never offered from a board - handed to you in the delivery scene
+  log:'Bring Lord Elias’s reply back to Duchess Maelis in Barik Keep.',
+  doneText:'',   // resolved by the marriage scene at Maelis (grants the 1000g)
+  rw:{gold:1000, xp:{magic:200}} };
 QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone:'undermaw', xpL:150,
   brief:'East of the Mirefen the ground splits - the Undermaw, we call it. Miners\' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.',
   log:'Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)',
@@ -3655,6 +3703,8 @@ function switchWorld(id){
     }
   }
   if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail'; }   // Warden Kell's work is available; no toast - the player finds him
+  // the Duchess's letter-errand waits at the keep; carry it on your first trip east
+  if(id==='main' && !P.quests.duchesslove && !(P.story&&P.story.duchessWed)) P.quests.duchesslove='avail';
   if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='east'){
     // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you

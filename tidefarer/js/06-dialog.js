@@ -222,6 +222,57 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
+  // === The Duchess's love quest ==========================================
+  // Deliver Maelis's sealed letter to Lord Elias on the Sunward Isle. He reads it,
+  // his nerve finally catches up to his heart, and he writes back a proposal.
+  if(npc.id==='elias' && qs('duchesslove')==='active' && !P.story.loveReplied){
+    const send=()=>{
+      P.story=P.story||{}; P.story.loveReplied=1;
+      if(qs('duchesslove')==='active') completeQuest('duchesslove');
+      P.quests.duchessreply='active'; P.prog.duchessreply=0;
+      closeDialog();
+      if(Snd.quest) Snd.quest();
+      setTimeout(()=>toast('<i>Lord Elias folds the reply twice, presses his ring into the wax, and holds it out in both hands.</i> <b style="color:var(--ember)">Carry his answer back to Duchess Maelis in Barik.</b>',8000),300);
+    };
+    const p2=()=>{
+      setDialog('<i>He reads it twice. Then a third time, more slowly, as though the words might change. When he looks up, his eyes are wet and his voice is steady for the first time.</i> “Three years I told myself the strait was the thing keeping us apart. It was never the strait.” <i>He takes up pen and a clean sheet.</i> “Give me a moment. I am going to write the sentence I have been too much a coward to write - and then, if she will have me, I am crossing that water for good.”',
+        [{label:'Take your time', cls:'gold', fn:send}]);
+    };
+    setDialog('<i>You hold out the wax-sealed letter. Lord Elias goes very still, then takes it as if it might break.</i> “This seal - iron and ink, pressed by a hand I would know anywhere and have never held.” <i>His thumb hovers over the wax.</i> “She sent it with a person, not a courier. She sent it with YOU. …Forgive me. Let me read.”',
+      [{label:'Give him the letter', cls:'gold', fn:p2}]);
+    return;
+  }
+  // Elias, after writing back, waiting on word from Barik.
+  if(npc.id==='elias' && P.story && P.story.loveReplied && !P.story.duchessWed){
+    setDialog('<i>Lord Elias paces the tideline, watching the Barik heading.</i> “Is she - has she read it yet? No, don\'t tell me, I\'ll only unravel. Just - put it in her hand. Please. I have waited three years; I can wait the length of your crossing.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
+  // The reply, carried home to Maelis: she reads it, and Barik holds a wedding.
+  // The cutscene closes with the Duchess's gift of 1000 gold and a new Duke.
+  if(npc.id==='maelis' && qs('duchessreply')==='active' && !P.story.duchessWed){
+    const finishWed=()=>{
+      P.story=P.story||{}; P.story.duchessWed=1;
+      if(qs('duchessreply')==='active') completeQuest('duchessreply');   // grants 1000 gold
+      // Elias leaves the Sunward Isle for good; the Duke takes his place at her side
+      if(G.npcs){ const ei=G.npcs.findIndex(n=>n.id==='elias'); if(ei>=0) G.npcs.splice(ei,1); }
+      if(typeof wedDuke==='function') wedDuke();
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(255,215,106,0.9)',64);
+      setTimeout(()=>toast('<b style="color:#ffd76a">The Duchess presses 1000 gold into your hands.</b> “A steward\'s fee, and a friend\'s thanks. You will always have a room in this keep.”',8000),400);
+    };
+    const sc3=()=>{
+      storyCard('<b style="color:#ffd76a; font-size:1.2em">A BARIK WEDDING</b><br><br><i>They marry beneath the keep\'s old banners, the strait calm at the windows. The tide-scholar who charted every crossing but the one that mattered stands across from the Duchess who rules by ledger and patience - and for once neither of them has a word ready. The bell of Barik rings until dusk.</i>',
+        {label:'To the happy couple', onOk:finishWed});
+    };
+    const sc2=()=>{
+      storyCard('<i>Within the month, a sail out of the Sunward Isle rounds the Barik light. Lord Elias steps onto the dock with one trunk of clothes and three of books, and Duchess Maelis - who has faced down a cousin\'s whole March without blinking - suddenly cannot decide what to do with her hands.</i>',
+        {label:'Continue', onOk:sc3});
+    };
+    banner('THE DUCHESS SAYS YES','A LETTER ANSWERED AT LAST');
+    setDialog('<i>Maelis breaks the wax, reads, and sets the letter flat on the ledger she rules her realm by. For a long moment the Duchess of Barik simply breathes.</i> “Three years of careful sentences, and the fool finally writes a plain one.” <i>She almost laughs; it comes out unsteady.</i> “He\'s coming. He\'s actually coming. …Then Barik had better make ready for a wedding.”',
+      [{label:'You should tell him yes', cls:'gold', fn:sc2}]);
+    return;
+  }
   // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
   // warns of the thing fouling the seized works below.
   if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
