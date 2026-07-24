@@ -278,13 +278,6 @@
   .epiSub .tap{display:inline-block;margin-top:16px;font-size:11px;letter-spacing:2px;
     color:var(--parch-dim);opacity:.6;animation:epiPulse 1.8s ease-in-out infinite;}
   @keyframes epiPulse{0%,100%{opacity:.25;}50%{opacity:.7;}}
-  .epiEnd{position:relative;text-align:center;opacity:0;transition:opacity 1.6s ease;
-    pointer-events:none;padding:0 24px;z-index:2;}
-  .epiEnd.show{opacity:1;pointer-events:auto;}
-  .epiEnd h1{font-family:Georgia,serif;font-size:clamp(34px,7vw,58px);color:var(--parch);letter-spacing:3px;margin:0;
-    text-shadow:0 0 28px rgba(255,154,60,.4),0 4px 12px #000;}
-  .epiEnd h1 span{color:var(--ember);}
-  .epiEnd p{color:var(--parch-dim);margin:16px 0 24px;}
   #ovControls{margin-top:20px;font-size:12px;color:var(--parch-dim);line-height:1.8;}
   #ovControls b{color:var(--ember);}
   #fadeOv{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .7s ease;}

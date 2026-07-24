@@ -29,7 +29,7 @@ const EPI = {
     { who:'', html:'<i>The wind turns cold and certain. The first grey line of rain walks across the water toward them, and the little boat lifts its bow to meet it.</i>', storm:0.85, near:0.78 },
     { who:'The Prince', html:'<i>He hauls on the sheet as the sail cracks taut.</i> “Then we\'d best not drown on the doorstep! Trim her &mdash; she wants to run before this wind, not fight it!”', storm:0.95, near:0.9 },
     { who:'The Princess', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Now you sound like a sailor! Hold her steady, brother. Whatever\'s waiting on that rock &mdash; we make landfall together.”', storm:1, near:1 },
-    { who:'', html:'<i>The keel grinds onto black shingle beneath a sky that has forgotten the sun. High above the rain, a single light is burning. Side by side, they step ashore &mdash; into Act II.</i>', storm:1, near:1, land:1 },
+    { who:'', html:'<i>The keel comes up out of the dark and grinds onto black shingle. High above the rain, a single light is burning. You have reached the last name on the map.</i>', storm:1, near:1, land:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
 };
@@ -37,17 +37,17 @@ function rollCredits(){ sailEpilogue(); }   // old call-site name kept as an ali
 function sailEpilogue(){
   const ov=document.getElementById('epiOv');
   const cv=document.getElementById('epiCv');
-  const end=document.getElementById('epiEnd');
   const title=document.getElementById('epiTitle');
   const sub=document.getElementById('epiSub');
-  if(!ov||!cv||!end){ // graceful fallback: the old teaser toast
-    if(typeof toastErr==='function') toastErr('<b style="color:#c9a0ff">Vath holds the Tideglass magic now.</b> Six months on, you and your brother make landfall at storm-locked Stormreach. <b style="color:var(--ember)">Act II - coming soon.</b>',9000);
+  if(!ov||!cv){ // graceful fallback: land them on Stormreach without the cinematic
+    if(typeof _epiLandfall==='function') _epiLandfall();
+    else if(typeof toastErr==='function') toastErr('<b style="color:#c9a0ff">Six months on, you and your brother make landfall on storm-locked Stormreach.</b>',9000);
     return;
   }
   EPI.cv=cv; EPI.cx=cv.getContext('2d');
   EPI.t=0; EPI.prev=0; EPI.idx=0; EPI.storm=0.05; EPI.near=0.02; EPI.land=0; EPI.flash=0; EPI.flashT=6;
   EPI.drops.length=0; EPI.ended=false; EPI.running=true;
-  end.classList.remove('show'); sub.classList.remove('show'); title.classList.remove('show');
+  sub.classList.remove('show'); title.classList.remove('show');
   ov.style.display='flex';
   G.paused=true; G._credits=1;
   if(typeof cinematic==='function') cinematic(true);
@@ -59,12 +59,7 @@ function sailEpilogue(){
   setTimeout(()=>_epiShow(0), 3900);
   // advance the dialogue on click anywhere over the scene (once the first line is up)
   EPI.started=false;
-  ov.onclick=(e)=>{ if(EPI.ended || !EPI.started) return;
-    if(e && e.target && e.target.id==='epiBtn') return;   // the return button handles itself
-    _epiNext();
-  };
-  const btn=document.getElementById('epiBtn');
-  if(btn) btn.onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); _epiClose(); };
+  ov.onclick=()=>{ if(EPI.ended || !EPI.started) return; _epiNext(); };
   cancelAnimationFrame(EPI.raf);
   EPI.raf=requestAnimationFrame(_epiLoop);
 }
@@ -83,7 +78,7 @@ function _epiShow(i){
   document.getElementById('epiWho').textContent=b.who||'';
   document.getElementById('epiLine').innerHTML=b.html;
   const tap=document.getElementById('epiTap');
-  if(tap) tap.textContent=(i>=EPI.beats.length-1)?'':'click to continue ›';
+  if(tap) tap.textContent=(i>=EPI.beats.length-1)?'step ashore ›':'click to continue ›';
   const sub=document.getElementById('epiSub');
   sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
 }
@@ -96,19 +91,59 @@ function _epiNext(){
 function _epiFinish(){
   EPI.ended=true;
   const sub=document.getElementById('epiSub');
-  const end=document.getElementById('epiEnd');
-  sub.classList.remove('show');
-  setTimeout(()=>{ if(end) end.classList.add('show'); }, 700);
+  if(sub) sub.classList.remove('show');
+  // let the scene settle to black (beat 10 eases land->1), then make landfall for real
+  setTimeout(_epiLandfall, 1200);
 }
-function _epiClose(){
+// Hand off from the cutscene straight into the Stormreach world: Act II opens with the
+// two siblings ashore together, the prince holding the boat while the princess explores.
+function _epiLandfall(){
   EPI.running=false; cancelAnimationFrame(EPI.raf);
   window.removeEventListener('resize', _epiResize);
-  const ov=document.getElementById('epiOv');
-  if(ov) ov.style.display='none';
-  G._credits=0;
-  if(G.state==='play') G.paused=false;
+  P.story=P.story||{};
+  P.story.act=Math.max(P.story.act||1,2);
+  P.story.act2=1; P.story.reachArrived=1;   // Act II: Stormreach and the far isles open up
+  if(G.interior){ G.interior=null; }
+  P.dead=false;
+  const deadOv=document.getElementById('deadOv'); if(deadOv) deadOv.style.display='none';
+  G.state='play';
+  if(typeof switchWorld==='function') switchWorld('reach');
+  if(typeof placeReachHomecoming==='function') placeReachHomecoming();
+  // drop the cutscene overlay and let the storm-coast show through
+  const ov=document.getElementById('epiOv'); if(ov){ ov.style.display='none'; ov.onclick=null; }
+  G._credits=0; G.paused=false;
   if(typeof cinematic==='function') cinematic(false);
-  if(typeof autoSave==='function') autoSave();
+  if(typeof ui==='function') ui(); else if(typeof refreshUI==='function') refreshUI();
+  if(typeof banner==='function') banner('STORMREACH','ACT II — THE STORM-COAST');
+  // the prince stays with the boat; the princess takes the isle
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard(
+    '<i>The keel bites black shingle and holds. You step down into a rain that has never once stopped, and the little sloop settles behind you.</i> '
+    + '“This is where I earn my keep,” <i>your brother says, already lashing the bow-line to a spar of old wreck.</i> '
+    + '“One of us guards the way home &mdash; and it isn\'t going to be the one who reads maps for a living. I\'ll hold the strand, and the boat.” '
+    + '<i>He grips your arm the way he did when you were children, except now his hand is steady.</i> '
+    + '“Go on into the isle, sister. Find out what Stormreach is hiding. I\'ll be right here when you need the sea again.”',
+    {label:'Take the isle', onOk:()=>{ if(typeof autoSave==='function') autoSave(); }}); }, 600);
+}
+// The prince and the beached sloop, stationed on Wreckstrand where the cutscene lands.
+function placeReachHomecoming(){
+  if(G.worldId!=='reach') return;
+  const Z=(typeof REACH_ZONES!=='undefined' && REACH_ZONES.strand) ? REACH_ZONES.strand : {x:60,y:98};
+  // the sloop they crossed on, hauled up on the shingle beside the landing
+  if(!G.decor.some(d=>d.arrivalBoat)){
+    const bt=addBuilding('boat', Math.round(Z.x-2), Math.round(Z.y+2), '');
+    if(bt) bt.arrivalBoat=1;
+  }
+  // the prince holds the strand while the princess explores - findable at any hour
+  if(!G.npcs.some(n=>n.id==='brother')){
+    const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x+2), Math.round(Z.y+1), 5)) || [Z.x+2, Z.y+1];
+    const b=makeNPC('brother','Your Brother, the Prince', sp[0], sp[1],
+      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+      ["Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
+       "I'll keep a fire lit here on the strand. Find what this place is hiding, sister - nothing I'd have to write a ballad about.",
+       "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."],0.1);
+    b.nightOwl=true;
+    G.npcs.push(b);
+  }
 }
 function _epiLoop(ts){
   if(!EPI.running) return;
