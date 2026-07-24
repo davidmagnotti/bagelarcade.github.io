@@ -1207,6 +1207,20 @@ function placeObjectsWind(){
   const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
   NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
   SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
+  // ---- Windward Bluffs: a breezy clifftop quarter above the city, where the
+  // wind-trades Windsurf is named for are actually plied - kites, gliders, and a
+  // signal-lantern that guides late hulls in over the reef. Off the market road. ----
+  addBuilding('house2', B.x-6, B.y-4, 'The Kite-Maker\'s Loft');
+  addBuilding('house',  B.x+5, B.y-3, 'Cliffside Cottage');
+  addBuilding('house2', B.x-2, B.y+5, 'The Gliderwright\'s Shed');
+  addBuilding('well',   B.x-1, B.y+1, 'Bluff cistern');
+  addBuilding('stall',  B.x+6, B.y+2, 'Overlook curios');   // spyglasses & wind-charms for the view
+  addBuilding('lamp',   B.x-4, B.y+3, ''); addBuilding('lamp', B.x+3, B.y+3, '');
+  addBuilding('lamp',   B.x, B.y-6, '');   // the signal-lantern crowning the bluff
+  // ---- Waterwheel Row: give the old mill-house a neighbour so the lane reads as a
+  // working corner of the city, not a lone wheel on the green ----
+  addBuilding('house',  WH.x-6, WH.y+2, 'The Miller\'s Rest');
+  addBuilding('lamp',   WH.x-3, WH.y+2, '');
   // You came DOWN onto Windsurf on the stormsail won atop the Cloudreach - there is no
   // dragon here, and no keel crosses the cursed strait until you calm it. So until the tide is calmed
   // you are meant to be stranded: fix the strait and the ferry opens, your way out.
@@ -1247,9 +1261,13 @@ function placeObjectsWind(){
   for(let i=0;i<7;i++){ const a=pr()*TAU, rr=2+pr()*5;
     const cx2=Math.round(D.x+Math.cos(a)*rr), cy2=Math.round(D.y+Math.sin(a)*rr);
     if(inb(cx2,cy2)&&tileAt(cx2,cy2)===T.SAND) critter('crab', cx2, cy2, 3, CRAB[i%CRAB.length]); }
+  // a cat and a small wheel of gulls-turned-hens up on the breezy bluffs
+  critter('cat', Math.round(B.x+2), Math.round(B.y+1), 3, '#8a7a5e');
+  for(let i=0;i<4;i++){ const a=pr()*TAU, rr=3+pr()*5;
+    critter('fowl', Math.round(B.x+Math.cos(a)*rr), Math.round(B.y+Math.sin(a)*rr), 3, FOWL[i%FOWL.length]); }
 }
 function spawnWindFolk(){
-  const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, D=Z.dock, MI=Z.mill, WH=Z.wheel;
+  const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, D=Z.dock, MI=Z.mill, WH=Z.wheel, B=Z.bluffs;
   // Rell - harbormaster at the docks: explains the treacherous waters (the PR-B hook)
   G.npcs.push(makeNPC('rell','Rell the Harbormaster', D.x+1.5, D.y+0.5,
     {skin:'#a9784e',hair:'#2a2622',shirt:'#33566e',pants:'#2c3540',beard:'#2a2622'},
@@ -1287,6 +1305,32 @@ function spawnWindFolk(){
       ['Beds made, fire lit, and not a soul to fill them since the strait turned. Habit\'s a stubborn thing.',
        'Ten gold buys a bed and a hot breakfast - same as it\'s been thirty years. I\'ll not gouge a castaway.'],0.6);
     inn.nightOwl=true; G.npcs.push(inn); }
+  // ---- Windward Bluffs folk: the clifftop wind-trades ----
+  // Fenn - the kite-maker, whose whole craft is the wind the city is named for
+  G.npcs.push(makeNPC('fenn','Fenn the Kite-Maker', B.x-5.5, B.y-1.5,
+    {skin:'#b6895f',hair:'#3a2c20',shirt:'#c85a3a',pants:'#3a3a44'},
+    ['Paper, rib, and a length of string, and the whole sky is yours. Only trade worth learning on a bluff.',
+     'The wind up here never sleeps. Some nights I let a kite fly till dawn just to hear it sing on the line.'],0.4));
+  // Lira - the gliderwright, cousin-craft to the stormsail that carried you here
+  G.npcs.push(makeNPC('lira','Lira the Gliderwright', B.x-1.5, B.y+3.5,
+    {skin:'#caa27b',hair:'#4a3524',shirt:'#5a7a6a',pants:'#3a3a44',hairstyle:'long'},
+    ['A stormsail rider! I build the smaller cousins - canvas wings to hop the bluffs. Nothing that\'d cross the cloud-sea, mind.',
+     'The trick to a glider is trusting the up-draught off the cliff. Lean out over nothing and the wind holds you like a hand.'],0.4));
+  // Marlo - the lookout who keeps the signal-lantern lit for hulls over the reef
+  G.npcs.push(makeNPC('marlo','Marlo the Lookout', B.x+4.5, B.y-0.5,
+    {skin:'#a9784e',hair:'#6a5a44',shirt:'#33566e',pants:'#2c3540',beard:'#4a3f30'},
+    ['I keep the lantern lit for hulls coming in over the reef. None have this season - but a dark bluff sinks ships.',
+     'Best view on the whole isle, up here. On a clear dusk you can see the cloud-sea itself, piled gold on the horizon.'],0.3));
+  // Poppy - a child forever chasing kites across the clifftop green
+  G.npcs.push(makeNPC('poppy','Poppy', B.x+1.5, B.y+2.5,
+    {skin:'#e2b184',hair:'#3a2c1c',shirt:'#c96f8a',pants:'#4a5a72',size:0.72,hairstyle:'long'},
+    ['Mine flew HIGHER than the windmill! Fenn saw it, ask him!',
+     'When the boats come back, Da says there\'ll be a kite festival. I\'m going to win it.'],1.0));
+  // Cob - the miller's lad who minds the old water-wheel down on the row
+  G.npcs.push(makeNPC('cob','Cob the Miller\'s Lad', WH.x-5.5, WH.y+3.5,
+    {skin:'#b0855f',hair:'#5a4a34',shirt:'#7a6a4a',pants:'#4a3f30'},
+    ['The old wheel\'s turned since my grandda\'s day. I just keep grease on the axle and birds out of the hopper.',
+     'Burl minds the big windmill; I mind the water-wheel. Between the two, Windsurf never wants for flour.'],0.4));
 }
 function spawnMobsWind(){
   const D=WIND_ZONES.dock;
@@ -1351,6 +1395,8 @@ function updateWindFolkMood(){
   set('coralie',['We have GUESTS! Three rooms let by noon. The Breakers is alive again - come, the salt baths are hot.','Bless you, traveller. The awnings are down and the sea view is open for trade.']);
   set('pia',['Sold clean out of sugar-melon by midday - sailors buy like it\'s a festival!','Trade Row hums again. Take a spice-plum, on the house, for what you did.']);
   set('nessa',['Every loom in my loft is running - the fleet wants canvas and they want it yesterday!','Told you: the day a boat could cross, I\'d have this town in sail by nightfall. And so I have.']);
+  set('marlo',['A hull on the horizon at last - I\'ve trimmed the lantern and lit it bright. Guiding them in, that\'s the job.','Ships to watch for again! The bluff isn\'t just a view now - it\'s a beacon with a purpose.']);
+  set('fenn',['Newcomers on the green means kites to sell - I\'ve not stitched this fast in a season!','Sky\'s full of colour again. A festival kite for the visitors? On the house - go on, take it.']);
 }
 function genWindAll(){
   genWind(); bakeSolids(); placeObjectsWind(); buildFoam();
