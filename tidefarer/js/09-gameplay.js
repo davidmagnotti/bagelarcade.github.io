@@ -1219,6 +1219,10 @@ function updateMobs(dt){
       }
       continue;
     }
+    // While a dialogue is open the world keeps ticking (only story cards pause it),
+    // so hold every foe in place - no advancing, no attacking - until it closes. Any
+    // wind-up mid-swing is cancelled so nothing lands the instant the dialogue ends.
+    if(dlg.open){ m.windup=0; m.swing=0; continue; }
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
