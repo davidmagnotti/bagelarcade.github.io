@@ -69,6 +69,10 @@ function pickClickTarget(wx,wy){
   for(const b of G.decor){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
     else if(b.kind==='ashwing') cand.push({type:'inter',x:b.x,y:b.y,r:1.8,range:3.0,go:()=> b.sky? askSkyDragon() : askAshwingHome()});
+    // the wind-lost bird: tapping her must open her dialogue (the "Fly down" ride back
+    // off the Rainbow Road, or her rainbow-road plea on the Cloudreach). Without this she
+    // was reachable only by the E / touch button, so a click on her did nothing.
+    else if(b.kind==='skybird') cand.push({type:'inter',x:b.x,y:b.y,r:1.4,range:2.6,go:()=>{ if(typeof skyBirdSpeak==='function') skyBirdSpeak(); }});
     else if(b.kind==='leappoint') cand.push({type:'inter',x:b.x,y:b.y,r:1.4,range:2.2,go:()=>useLeapPoint()});
     else if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.8,go:()=>beginOpenChest(b)});
     else if(b.kind==='pillar') cand.push({type:'inter',x:b.x,y:b.y,r:0.9,range:1.55,go:()=>readLore(b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')))});
