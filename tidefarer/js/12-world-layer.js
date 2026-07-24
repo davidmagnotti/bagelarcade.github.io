@@ -796,12 +796,17 @@ function spawnEastFolk(){
    INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
    you're driven out to the caldera to break the spell in a fight. */
 function dragonLairSpeak(){
-  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's enthralled, right here in the chamber
+  // Only "still to be faced" while the fight is LIVE. A beaten dragon lingers a beat
+  // as a fainted (m.fainted), freed mob before disperseDragon() finally marks it dead -
+  // keying off !m.dead alone made that window read as "still enthralled", so talking
+  // showed "Face him" and blocked the flight offer below (a soft-lock: he sits there
+  // green, and you can no longer transport up). Gate on !m.fainted instead.
+  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead && !m.fainted)){ // he's enthralled, right here in the chamber
     lairDialog('Ashwing’s Rest','The violet has him. Ashwing rears over the fire-shelf, wings cracking the basalt - no more words to give. There is nowhere left to go but through him. <b>Break the spell.</b>',
       [{label:'Face him', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); }}]);
     return;
   }
-  if(qs('wyrm')==='done'){
+  if(qs('wyrm')==='done' || P.eastDragonFreed){
     lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds. A rock that floats in the cloud-sea, where the <b>Storm Roc</b> roosts and the whole archipelago lies spread out below like a map. My wings do not fear the height. Say the word and I will carry you up.”',
       [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }},
        {label:'Rest a while', ghost:true, fn:closeDialog}]);
