@@ -934,14 +934,12 @@ function drawHumanoid(g,sx,sy,o){
       g.moveTo(1.6,-21.2+B); g.lineTo(-1.6,-18.8+B);
       g.stroke();
     }
-    if(o.fem && !away){ // soft contour + a nipped waist for a feminine shape
-      g.strokeStyle='rgba(0,0,0,0.10)'; g.lineWidth=1;
+    if(o.fem && !away){ // a soft chest contour only - no waist-nip, so the body
+      // reads straighter and less triangular than the old hourglass
+      g.strokeStyle='rgba(0,0,0,0.09)'; g.lineWidth=1;
       g.beginPath();
-      g.moveTo(-5.2,-15.4+B); g.quadraticCurveTo(-2.4,-13.4, 0,-14.2+B);
-      g.quadraticCurveTo(2.4,-13.4, 5.2,-15.4+B); g.stroke();
-      g.fillStyle=shade(shirt,-9); // waist shading, drawing the eye inward above the hips
-      g.beginPath(); g.ellipse(-6.6,-11.4,1.5,2.4,0.2,0,TAU); g.fill();
-      g.beginPath(); g.ellipse(6.6,-11.4,1.5,2.4,-0.2,0,TAU); g.fill();
+      g.moveTo(-5.0,-15.2+B); g.quadraticCurveTo(-2.4,-13.6, 0,-14.2+B);
+      g.quadraticCurveTo(2.4,-13.6, 5.0,-15.2+B); g.stroke();
     }
     if(away){ // back seam
       g.strokeStyle=shade(shirt,-22); g.lineWidth=1.1;
@@ -1353,6 +1351,21 @@ function drawHumanoid(g,sx,sy,o){
       g.closePath(); g.fill();
     }
     else if(!away){
+      if(o.fem){
+        // long side hair, drawn UNDER the crown dome (below) so its top is hidden
+        // by the dome - one smooth curtain each side, no seam and no floating flap
+        for(const e of [-1,1]){
+          g.fillStyle=hc;
+          g.beginPath();
+          g.moveTo(e*HR*0.18,-13);
+          g.quadraticCurveTo(e*HR*1.05,-9, e*HR*1.06,2);
+          g.quadraticCurveTo(e*HR*1.02,13, e*HR*0.62,20.5);
+          g.quadraticCurveTo(e*HR*0.42,14.5, e*HR*0.54,2.5);
+          g.quadraticCurveTo(e*HR*0.42,-7, e*HR*0.18,-13);
+          g.closePath(); g.fill();
+          g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        }
+      }
       const hgr=g.createLinearGradient(0,-13,0,-2);
       hgr.addColorStop(0,shade(hc,12)); hgr.addColorStop(1,shade(hc,-4));
       g.fillStyle=hgr;
@@ -1370,6 +1383,16 @@ function drawHumanoid(g,sx,sy,o){
       g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
       g.closePath(); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+      if(o.fem){ // a smooth rounded crown cap over the dome's pointed hairline, so the
+        // top of the head reads as one clean sweep of hair instead of a notch
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(-HR*0.72,-6.2);
+        g.quadraticCurveTo(-HR*0.54,-16.8, 0,-17.2);
+        g.quadraticCurveTo(HR*0.54,-16.8, HR*0.72,-6.2);
+        g.quadraticCurveTo(0,-9.6, -HR*0.72,-6.2);
+        g.closePath(); g.fill();
+      }
       g.fillStyle='rgba(255,250,235,0.20)'; // dome gloss
       g.beginPath(); g.ellipse(-3.8,-10.4,3.8,1.7,-0.3,0,TAU); g.fill();
       g.fillStyle=shade(hc,-9);
@@ -1398,10 +1421,8 @@ function drawHumanoid(g,sx,sy,o){
       g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
     }
     if(o.fem){
-      // Soft long hair. It grows out of the crown (its top overlaps the dome, so
-      // there's no seam or floating flap) and falls in one smooth curtain down each
-      // side of the face, tapering past the shoulder. In profile it's a single fall
-      // down the back.
+      // The front curtains are drawn above, under the crown dome. Here we only add
+      // the side/back fall for the profile and rear views.
       if(profile){
         g.fillStyle=hc;
         g.beginPath();
@@ -1411,25 +1432,16 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(-flip*HR*0.20,15, -flip*HR*0.14,-2);
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-      } else {
-        for(const e of [-1,1]){
-          g.fillStyle=hc;
-          g.beginPath();
-          g.moveTo(e*HR*0.28,-12.2);                          // high at the crown, under the dome
-          g.quadraticCurveTo(e*HR*1.02,-9.5, e*HR*1.05,1.5);  // sweep out to frame the temple
-          g.quadraticCurveTo(e*HR*1.03,12.5, e*HR*0.66,20);   // fall down past the shoulder
-          g.quadraticCurveTo(e*HR*0.46,15, e*HR*0.55,4);      // inner edge back up along the cheek
-          g.quadraticCurveTo(e*HR*0.46,-6, e*HR*0.28,-12.2);  // ...into the crown
-          g.closePath(); g.fill();
-          g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-          // a soft lit strand for depth (no hard line)
-          g.fillStyle=shade(hc,9);
-          g.beginPath();
-          g.moveTo(e*HR*0.82,-2);
-          g.quadraticCurveTo(e*HR*0.9,8, e*HR*0.66,17);
-          g.quadraticCurveTo(e*HR*0.6,9, e*HR*0.64,1);
-          g.closePath(); g.fill();
-        }
+      } else if(away){
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(-HR*0.72,-8);
+        g.quadraticCurveTo(-HR*0.96,7, -HR*0.7,20.5);
+        g.quadraticCurveTo(0,24, HR*0.7,20.5);
+        g.quadraticCurveTo(HR*0.96,7, HR*0.72,-8);
+        g.quadraticCurveTo(0,-4, -HR*0.72,-8);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
       }
     }
   }
