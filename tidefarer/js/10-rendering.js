@@ -2344,6 +2344,11 @@ function drawMinimap(){
   }catch(e){ /* never let the minimap break the frame */ }
 }
 function drawBigMap(){
+  // the panel heading follows the world you are actually on (was hard-coded to
+  // Emberwick). Title-case the world's banner title so "ALDERMERE" reads "Aldermere".
+  const mt=document.getElementById('mapTitle');
+  if(mt){ const d=(typeof WORLD_DEFS!=='undefined') && WORLD_DEFS[G.worldId];
+    mt.textContent = d ? d.title.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase()) : 'Map'; }
   const c=document.getElementById('bigMap'), g=c.getContext('2d');
   g.imageSmoothingEnabled=false;
   g.drawImage(mapBase,0,0,384,384);
