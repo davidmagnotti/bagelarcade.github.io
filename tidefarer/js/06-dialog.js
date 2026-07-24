@@ -185,9 +185,11 @@ function buildDialogContent(npc){
       if(Snd.boss) Snd.boss();
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(160,110,240,0.9)',90);
       G.shake=1.2; G.slowmo=1.2;
+      // the camera settles to the credits, which close on END OF ACT I
       setTimeout(()=>{ if(typeof autoSave==='function') autoSave();
-        toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
-      }, 1400);
+        if(typeof rollCredits==='function') rollCredits();
+        else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
+      }, 1600);
     };
     const sc4=()=>{
       storyCard('<b style="color:#c9a0ff; font-size:1.35em">END OF ACT I</b><br><br><i>The great doors slam on a hall drowning in violet. The last you see of your father, he is on one knee before his own throne, hollow and grey - and still, impossibly, smiling to see you both alive. Vath does not follow. He has what he came for. He can afford to let you run.</i>',

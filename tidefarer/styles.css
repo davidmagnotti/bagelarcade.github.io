@@ -259,6 +259,26 @@
   .storyCard p{font-size:16px;line-height:1.72;color:var(--parch);margin:6px 0 24px;}
   .storyCard p b{color:var(--ember);}
   .storyCard p i{color:var(--parch-dim);font-style:italic;}
+  /* end-of-act credits: a slow roll up the black, settling on END OF ACT I */
+  #creditsOv{background:#08060a;overflow:hidden;}
+  .creditsRoll{position:absolute;left:0;right:0;top:0;text-align:center;padding:0 24px;
+    font-family:Georgia,serif;color:var(--parch);will-change:transform;}
+  .creditsRoll h1{font-size:clamp(30px,6vw,52px);letter-spacing:3px;margin:0 0 4px;
+    text-shadow:0 0 24px rgba(255,154,60,.35),0 4px 10px #000;}
+  .creditsRoll .sub{font-size:14px;letter-spacing:2px;color:var(--parch-dim);margin:0;}
+  .creditsRoll h2{font-size:clamp(15px,3vw,22px);letter-spacing:5px;color:var(--ember);margin:70px 0 16px;}
+  .creditsRoll .r{font-size:14px;letter-spacing:1.5px;color:var(--parch-dim);line-height:2.0;margin:0;}
+  .creditsRoll.rolling{animation:creditRoll 44s linear forwards;}
+  @keyframes creditRoll{from{transform:translateY(100vh);}to{transform:translateY(-100%);}}
+  .creditsSkip{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:var(--parch-dim);
+    font-size:12px;letter-spacing:2px;opacity:.5;pointer-events:none;}
+  .creditsSkip.gone{display:none;}
+  .creditsEnd{position:relative;text-align:center;opacity:0;transition:opacity 1.6s ease;pointer-events:none;padding:0 24px;}
+  .creditsEnd.show{opacity:1;pointer-events:auto;}
+  .creditsEnd h1{font-family:Georgia,serif;font-size:clamp(34px,7vw,58px);color:var(--parch);letter-spacing:3px;margin:0;
+    text-shadow:0 0 28px rgba(255,154,60,.4),0 4px 12px #000;}
+  .creditsEnd h1 span{color:var(--ember);}
+  .creditsEnd p{color:var(--parch-dim);margin:16px 0 24px;}
   #ovControls{margin-top:20px;font-size:12px;color:var(--parch-dim);line-height:1.8;}
   #ovControls b{color:var(--ember);}
   #fadeOv{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .7s ease;}

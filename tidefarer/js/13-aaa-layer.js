@@ -11,6 +11,46 @@ function banner(title,sub){
 }
 function cinematic(on){ document.body.classList.toggle('cine',on); }
 function shockwave(x,y,color,r){ G.parts.push({x,y,vx:0,vy:0,life:0.35,max:0.35,size:r,color,ring:true}); }
+/* ---------- end-of-act credits: a slow roll up the black, settling on END OF ACT I ---------- */
+const CREDITS_ROLL = ''
+  + '<h1>TIDEFARER</h1>'
+  + '<p class="sub">a Bagel Arcade adventure</p>'
+  + '<h2>ACT I &mdash; THE ENCHANTER\'S TIDE</h2>'
+  + '<p class="r">A masked stranger washed ashore on Emberwick<br>with no name and a face not her own &mdash;<br>and unmade the enchanter\'s work, isle by isle.</p>'
+  + '<h2>THE ISLES SHE FREED</h2>'
+  + '<p class="r">Emberwick &middot; Barik &middot; The Sunward Isle<br>The Cloudreach &middot; Windsurf &middot; Stormreach<br>The Aerie &middot; The Frozen Isle &middot; Aldermere</p>'
+  + '<h2>THE SOULS SHE MET</h2>'
+  + '<p class="r">Elder Maren &middot; Bram the Smith &middot; Willa<br>Her brother, the lost prince<br>Ashwing the Wyrm &middot; Rell &middot; Coralie<br>Goldwarden Bree &middot; Sage Orin &middot; Aelin<br>King Aldous of the Tideglass Throne<br>&mdash; who spent himself to buy their escape</p>'
+  + '<h2>THE ENCHANTER</h2>'
+  + '<p class="r">Vath, the Emberbinder,<br>holds the Tideglass magic now.<br>The strait behind them is his.</p>'
+  + '<p class="r" style="margin-top:64px">But a daughter and a son of Aldermere live,<br>and somewhere past the charted isles<br>is the strength to come back for him.</p>'
+  + '<p class="r" style="margin-top:48px">The tide will turn again.</p>';
+function rollCredits(){
+  const ov=document.getElementById('creditsOv');
+  const roll=document.getElementById('creditsRoll');
+  const end=document.getElementById('creditsEnd');
+  if(!ov||!roll||!end) return;
+  const skip=document.getElementById('creditsSkip');
+  roll.innerHTML=CREDITS_ROLL;
+  end.classList.remove('show'); roll.style.visibility='visible';
+  if(skip) skip.classList.remove('gone');
+  ov.style.display='flex';
+  G.paused=true; G._credits=1;
+  // (re)start the roll animation from the bottom
+  roll.classList.remove('rolling'); void roll.offsetWidth; roll.classList.add('rolling');
+  const finish=()=>{ if(end.classList.contains('show')) return; roll.style.visibility='hidden'; if(skip) skip.classList.add('gone'); end.classList.add('show'); };
+  roll.addEventListener('animationend', finish, {once:true});
+  setTimeout(finish, 46000);   // safety, in case animationend is missed
+  // click anywhere during the roll to skip ahead to END OF ACT I
+  ov.onclick=()=>{ if(!end.classList.contains('show')) finish(); };
+  const btn=document.getElementById('creditsBtn');
+  if(btn) btn.onclick=(e)=>{ if(e&&e.stopPropagation) e.stopPropagation();
+    ov.style.display='none'; G._credits=0;
+    if(G.state==='play') G.paused=false;
+    if(typeof cinematic==='function') cinematic(false);
+    if(typeof autoSave==='function') autoSave();
+  };
+}
 
 /* ---------- adaptive music (procedural, three moods) ---------- */
 const Music={
