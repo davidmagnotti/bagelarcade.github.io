@@ -2105,7 +2105,7 @@ function drawPlayerFigure(s){
   const expr = P.hurtT>0? 'hurt'
     : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
-  const look={hero:true, fem:true, expr, skin:'#d8a97a',hair:'#7a4526',hairstyle:'long',shirt:'#3f6e56',pants:'#3c3833',
+  const look={hero:true, fem:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     pauldrons:P.swordTier>0, trim:P.swordTier>0?'#8a6d30':null,
     crest:!!(P.story && P.story.necklace),  // the crest necklace, worn from wake-up
     mask: !!(P.story && P.story.masked),     // the Emberwick mask - worn until the woodworker draws it off

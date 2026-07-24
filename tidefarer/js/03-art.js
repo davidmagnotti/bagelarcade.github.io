@@ -1152,11 +1152,6 @@ function drawHumanoid(g,sx,sy,o){
         g.fillStyle='rgba(255,255,255,0.92)';
         g.beginPath(); g.arc(flip*4.35,-3.1+fy,0.6,0,TAU); g.fill();
       }
-      if(o.fem){ // lashes on the profile eye
-        g.strokeStyle='#17100a'; g.lineWidth=1.1; g.lineCap='round';
-        g.beginPath(); g.moveTo(flip*7.4,-3.0); g.lineTo(flip*9.1,-4.0);
-        g.moveTo(flip*7.5,-1.9); g.lineTo(flip*9.2,-2.4); g.stroke(); g.lineCap='butt';
-      }
       g.strokeStyle='#2e2418'; g.lineWidth=1.6; // brow
       g.beginPath(); g.moveTo(flip*1.8,-7.6); g.quadraticCurveTo(flip*5,-8.8,flip*8,-7.2); g.stroke();
       g.strokeStyle='rgba(90,58,40,0.75)'; g.lineWidth=1.05; g.lineCap='round'; // quiet mouth
@@ -1200,15 +1195,6 @@ function drawHumanoid(g,sx,sy,o){
           g.fillStyle='rgba(255,255,255,0.35)';
           g.beginPath(); g.arc(ex2+0.55,eyeY+0.8,0.28,0,TAU); g.fill();
         }
-      }
-      if(o.fem){ // a flick of lashes at the outer corners of each eye
-        g.strokeStyle='#17100a'; g.lineWidth=1.1; g.lineCap='round';
-        for(const e of [-1,1]){ const ecx=e*eSp+fx*0.9;
-          g.beginPath();
-          g.moveTo(ecx+e*1.9,eyeY-1.5); g.lineTo(ecx+e*3.5,eyeY-2.7);
-          g.moveTo(ecx+e*2.0,eyeY-0.4); g.lineTo(ecx+e*3.6,eyeY-1.1);
-          g.stroke(); }
-        g.lineCap='butt';
       }
       // filled tapered brows, tilted by mood
       g.fillStyle='#2e2418';
@@ -1412,25 +1398,38 @@ function drawHumanoid(g,sx,sy,o){
       g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
     }
     if(o.fem){
-      // long flowing locks past the shoulders - a clearly feminine silhouette
-      // that reads even with the mask on
-      for(const e of [-1,1]){
+      // Soft long hair. It grows out of the crown (its top overlaps the dome, so
+      // there's no seam or floating flap) and falls in one smooth curtain down each
+      // side of the face, tapering past the shoulder. In profile it's a single fall
+      // down the back.
+      if(profile){
         g.fillStyle=hc;
         g.beginPath();
-        g.moveTo(e*HR*0.84,-4);
-        g.quadraticCurveTo(e*HR*1.36,5, e*HR*1.14,15);
-        g.quadraticCurveTo(e*HR*1.02,22, e*HR*0.74,23.5);
-        g.quadraticCurveTo(e*HR*0.5,21.5, e*HR*0.58,12);
-        g.quadraticCurveTo(e*HR*0.74,4, e*HR*0.6,-4);
+        g.moveTo(-flip*HR*0.10,-12.5);
+        g.quadraticCurveTo(-flip*HR*0.98,-8, -flip*HR*0.92,6);
+        g.quadraticCurveTo(-flip*HR*0.86,18, -flip*HR*0.44,21);
+        g.quadraticCurveTo(-flip*HR*0.20,15, -flip*HR*0.14,-2);
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-        // a strand of inner shadow for depth
-        g.fillStyle=shade(hc,-11);
-        g.beginPath();
-        g.moveTo(e*HR*0.62,0);
-        g.quadraticCurveTo(e*HR*0.66,11, e*HR*0.72,19);
-        g.quadraticCurveTo(e*HR*0.56,13, e*HR*0.54,4);
-        g.closePath(); g.fill();
+      } else {
+        for(const e of [-1,1]){
+          g.fillStyle=hc;
+          g.beginPath();
+          g.moveTo(e*HR*0.28,-12.2);                          // high at the crown, under the dome
+          g.quadraticCurveTo(e*HR*1.02,-9.5, e*HR*1.05,1.5);  // sweep out to frame the temple
+          g.quadraticCurveTo(e*HR*1.03,12.5, e*HR*0.66,20);   // fall down past the shoulder
+          g.quadraticCurveTo(e*HR*0.46,15, e*HR*0.55,4);      // inner edge back up along the cheek
+          g.quadraticCurveTo(e*HR*0.46,-6, e*HR*0.28,-12.2);  // ...into the crown
+          g.closePath(); g.fill();
+          g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+          // a soft lit strand for depth (no hard line)
+          g.fillStyle=shade(hc,9);
+          g.beginPath();
+          g.moveTo(e*HR*0.82,-2);
+          g.quadraticCurveTo(e*HR*0.9,8, e*HR*0.66,17);
+          g.quadraticCurveTo(e*HR*0.6,9, e*HR*0.64,1);
+          g.closePath(); g.fill();
+        }
       }
     }
   }
