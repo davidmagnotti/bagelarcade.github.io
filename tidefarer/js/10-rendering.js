@@ -2165,7 +2165,10 @@ function drawProj(p,s){
     return;
   }
   if(p.kind==='arrow'){
-    const a=Math.atan2(p.vy*TH/2,p.vx*TW/2);
+    // rotate to the arrow's actual on-SCREEN travel: a world velocity (vx,vy) maps to
+    // screen ((vx-vy)*TW/2, (vx+vy)*TH/2) under the iso transform, so the angle must mix
+    // both axes - not just atan2(vy,vx), which left the arrow pointing the wrong way.
+    const a=Math.atan2((p.vx+p.vy)*TH/2,(p.vx-p.vy)*TW/2);
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(a);
     cx.strokeStyle='#c9a06a'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-9,0); cx.lineTo(7,0); cx.stroke();
     cx.fillStyle='#dfe0d8'; cx.beginPath(); cx.moveTo(10,0); cx.lineTo(5,-3); cx.lineTo(5,3); cx.closePath(); cx.fill();
