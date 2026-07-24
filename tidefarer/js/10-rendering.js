@@ -2282,6 +2282,7 @@ function buildMapBase(){
       const t=G.map[y*MAPW+x];
       g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t]; g.fillRect(x,y,1,1);
     }
+    mapBaseWorld=G.worldId;   // record which world this shared canvas now holds
   }catch(e){/* keep the previous image rather than blanking */}
 }
 let miniT=0;
@@ -2346,7 +2347,13 @@ function drawMinimap(){
 function drawBigMap(){
   const c=document.getElementById('bigMap'), g=c.getContext('2d');
   g.imageSmoothingEnabled=false;
-  g.drawImage(mapBase,0,0,384,384);
+  // mapBase is ONE shared canvas aliased across every world and only redrawn on fresh
+  // generation, so returning to a cached world (e.g. Emberwick after a gray, RUIN-heavy
+  // dungeon) leaves it holding the previous world's terrain - the seen tiles then read
+  // as a stale/gray image. Rebuild it here whenever it doesn't match the world we're
+  // drawing, so the map always shows the isle you are actually standing on.
+  if(!mapBase || mapBaseWorld!==G.worldId) buildMapBase();
+  if(mapBase) g.drawImage(mapBase,0,0,384,384);
   const eg=EXPL[G.worldId];
   if(eg){
     g.fillStyle='rgba(22,17,11,0.94)';
