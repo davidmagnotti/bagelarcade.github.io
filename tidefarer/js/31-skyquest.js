@@ -130,7 +130,7 @@ function spawnMobsSkyDungeon(){
     const sp=findOpenNear(s.x,s.y,4) || [s.x,s.y];
     const b=spawnMob('stormwraith', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.skyminiboss=1; b.bscale=1.7; b.title='THE STORM-WRAITH';
-      b.hp=b.maxhp=560; b.dmg=26; b.lvl=11; b.hx=b.x; b.hy=b.y; b.respawnT=-1; } }
+      b.hp=b.maxhp=300; b.dmg=26; b.lvl=11; b.hx=b.x; b.hy=b.y; b.respawnT=-1; } }
   // P5 - three more sky wraiths
   if(!P.story.skyG5){ const s=skyIsle('i5');
     for(let i=0;i<3;i++){ const a=i/3*TAU, r2=2.0; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 5); } }
@@ -140,7 +140,7 @@ function spawnMobsSkyDungeon(){
   if(!done){ const s=skyIsle('i6');
     const b=spawnMob('stormeye', s.x, s.y-1);
     if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE'; b.ach='stormbreaker';
-      b.hp=b.maxhp=900; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
+      b.hp=b.maxhp=440; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
       b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; } }
 }
 function genSkyDungeonAll(){
@@ -273,16 +273,17 @@ function collectStormBead(){
   G.decor=G.decor.filter(d=>d!==b);
   P.spells=P.spells||{}; P.spells.stun=1;
   if(typeof give==='function') give('stormrune',1);
-  // Getting the stormlight IS the end of the Rainbow Road: the soured wind lets go,
-  // the bird brings the stormsail, and The Leap opens. There is no Storm-Eye beyond
-  // this point - clear anything left further up the road so nothing lingers behind you.
-  P.story=P.story||{}; P.story.skyG4=1; P.story.skyG5=1; P.story.skyDungeonDone=1; P.story.parachute=1;
-  for(const m of G.mobs){ if(!m.dead && (m.puzzle===5 || m.skyfinalboss || m.stormeye || m.grabber)){ m.dead=true; m.respawnT=1e9; } }
+  // Stormlight is a MID-road prize, not the finish: it arms your bolts with the stun and
+  // opens the wind-ward on to the last isles. The road ends only when the STORM-EYE
+  // itself falls on the Broken Crown (see killMob's skyfinalboss branch) - that is what
+  // calms the wind, wins the stormsail, and opens The Leap.
+  P.story=P.story||{}; P.story.skyG4=1;
+  if(typeof openSkyGate==='function') openSkyGate('g4');
   if(Snd.magic) Snd.magic(); burst(P.x,P.y-0.5,'#c9b0ff',22,2.6);
-  banner('STORMLIGHT','THE WIND CALMS - THE ROAD IS RUN');
+  banner('STORMLIGHT','YOUR BOLTS NOW STUN - PRESS ON TO THE STORM-EYE');
   if(typeof autoSave==='function') autoSave();
-  storyCard('<b style="color:#c9b0ff">Stormlight sinks into your staff - your magic bolts now STUN, freezing a foe where it stands.</b><br><br><i>And as the light settles, the soured wind lets go all at once. The rainbow runs quiet and sweet, and the little bird loops back to lay a great kite of stitched stormcloth at your feet - a <b>stormsail</b>, woven of the calmed sky.</i><br><br>The road is run. Rest at the landing, then take <b style="color:#c9b0ff">THE LEAP</b> from the Cloudreach to ride the calmed wind down to <b>Windsurf</b>.',
-    {label:'OK', onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }});
+  storyCard('<b style="color:#c9b0ff">Stormlight sinks into your staff - your magic bolts now STUN, freezing a foe where it stands.</b><br><br><i>But the wind still howls off the crown above, and the little bird wheels north toward it - toward the great unblinking eye of the storm.</i><br><br>Cross the last wind-wards, clear the Second Perch, and put out <b style="color:#c9b0ff">THE STORM-EYE</b> on the Broken Crown. That is what calms the sky and opens <b>The Leap</b> home.',
+    {label:'OK'});
 }
 
 /* ---------- THE STORM-EYE (final boss) ----------

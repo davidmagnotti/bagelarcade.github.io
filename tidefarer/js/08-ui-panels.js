@@ -110,6 +110,12 @@ function useItem(item){
     addFloat('+'+def.heal+' HP',P.x,P.y-1.4,'#7fe07f'); burst(P.x,P.y-0.6,'#e05648',8); Snd.pickup();
     buildHotbar(); refreshInvPanel();
   }
+  else if(def.use==='mana'){
+    if(P.mp>=P.maxmp){ toastErr('Your mana is already full.'); return; }
+    take(item,1); P.mp=Math.min(P.maxmp,P.mp+def.mana);
+    addFloat('+'+def.mana+' MP',P.x,P.y-1.4,'#7fb0ff'); burst(P.x,P.y-0.6,'#3f7fe0',8); Snd.pickup();
+    buildHotbar(); refreshInvPanel(); refreshUI();
+  }
 }
 function equipArmor(t){
   if(t>(P.armorOwn||0)){
@@ -236,7 +242,7 @@ function refreshInvPanel(){
       '<div style="font-weight:bold;">'+it.name+' \u00d7'+P.inv[k]+'</div>'+
       '<div style="font-size:12px;color:var(--parch-dim);margin:3px 0 8px;">'+it.desc+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-    if(canUse)  act+='<button class="btn gold" id="invUseBtn" style="padding:8px 14px;" onclick="useItem(INV_SEL);refreshInvPanel();">'+(it.use==='heal'?'Eat / Drink (+'+it.heal+' HP)':'Use')+'</button>';
+    if(canUse)  act+='<button class="btn gold" id="invUseBtn" style="padding:8px 14px;" onclick="useItem(INV_SEL);refreshInvPanel();">'+(it.use==='heal'?'Eat / Drink (+'+it.heal+' HP)':it.use==='mana'?'Drink (+'+it.mana+' MP)':'Use')+'</button>';
     if(canQuick) act+='<button class="btn" id="invQuickBtn" style="padding:8px 14px;" onclick="P.quickItem=INV_SEL;buildHotbar();refreshUI();refreshInvPanel();toast(\'Quick slot: <b>\'+ITEMS[INV_SEL].name+\'</b>\');">\u21c4 Set Quick Slot</button>';
     act+='<button class="btn ghost" style="padding:8px 12px;" onclick="INV_SEL=null;refreshInvPanel();">Close</button>';
     act+='</div></div>';

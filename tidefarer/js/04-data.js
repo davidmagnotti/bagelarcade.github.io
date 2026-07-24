@@ -9,6 +9,7 @@ const ITEMS = {
   seed:{name:'Wheat Seeds', desc:'Plant in tilled soil at the farm.'},
   mushroom:{name:'Bluecap', desc:'A glowing mushroom from the Whisperwood.'},
   potion:{name:'Ember Tonic', desc:'Restores 30 HP.', use:'heal', heal:30},
+  manapot:{name:'Azure Draught', desc:'Restores 20 mana.', use:'mana', mana:20},
   goo:{name:'Slime Goo', desc:'A quivering green glob. Render three down at a brewing cellar and they thicken into a tonic.'},
   wardplate:{name:'Deepiron Ward', desc:'A cold slab of deep-iron. Turns aside 15% of every blow while carried, atop any armour you wear.'},
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
