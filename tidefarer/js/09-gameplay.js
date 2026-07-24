@@ -1159,8 +1159,6 @@ function updatePlayer(dt){
       G.parts.push({x:ZONES.springs.x+rnd(-1.5,1.5),y:ZONES.springs.y+rnd(-1.5,1.5),
         vx:rnd(-0.1,0),vy:rnd(-0.12,-0.04),life:rnd(1.5,2.5),color:'rgba(225,235,240,0.28)',size:6,grav:-0.15});
   }
-  if(G.worldId==='isle' && P.y>=HOLLOW_GATEY && P.y<HOLLOW_GATEY+8 && P.x>HOLLOW_MINX-2 && P.x<HOLLOW_MAXX+2)
-    hintOnce('kingwarn','Skull-boards hammered into the grass warn you back. Beyond them the ground turns to broken stone - and something older than the isle waits at its tip.');
   // (No hint at the warded causeway wall - the player is left to find who can open
   // it on their own. The wall itself renders as an obvious barrier.)
   if(ZONES.ruins && dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y)<11) hintOnce('ruins','The Old Ruins - the air is cold here. Bones walk.');

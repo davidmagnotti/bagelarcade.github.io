@@ -258,5 +258,7 @@ function burst(x,y,color,n=10,spd=2.4){
     G.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v*0.6-0.8,life:rnd(0.4,0.8),
       color, size:rnd(2,4), grav:2.4}); }
 }
-function hintOnce(key,msg){ if(G.hintShown[key]) return; G.hintShown[key]=true; toast(msg,4200); }
+// Ambient exploration hints are silenced by request - walking around should not
+// spam toasts. Kept as a no-op so every call site stays harmless.
+function hintOnce(key,msg){ G.hintShown[key]=true; }
 
