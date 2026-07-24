@@ -1340,7 +1340,8 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?”'),1400);
+  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
+    {onOk:()=>{ setTimeout(()=>toast('<b style="color:var(--ember)">Sail to Aldermere, the capital</b>, and seek an audience with King Aldous - the ferry runs there now the strait is calm.',7000),700); }}),1400);
 }
 function updateWindFolkMood(){
   // once the strait reopens, the town's talk turns from despair to bustle
@@ -3621,11 +3622,13 @@ function sailTo(dest, msg){
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
-  // once the seas are calm every dock is a ferry hub - sail to any known isle
+  // once the seas are calm every dock is a ferry hub. In Act I the ferry runs only
+  // the settled routes and the capital; Stormreach, the Aerie and the Frozen Isle
+  // are ACT II - the ferrymen won't chance those waters until then (P.story.act2).
   const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-             ['Sail to Windsurf Isle','wind'],['Sail to Stormreach','reach'],
-             ['Sail to the Aerie Isle','aerie'],['Sail to the Frozen Isle','frost'],
-             ['Sail to Aldermere, the Capital','crown']];
+             ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
+  if(P.story && P.story.act2) all.push(['Sail to Stormreach','reach'],
+    ['Sail to the Aerie Isle','aerie'],['Sail to the Frozen Isle','frost']);
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';
@@ -3635,7 +3638,10 @@ function boatMenu(){
   pg.fillStyle='#8f6a3e'; pg.beginPath(); pg.moveTo(12,44); pg.quadraticCurveTo(36,60,60,44); pg.lineTo(52,38); pg.quadraticCurveTo(36,48,20,38); pg.closePath(); pg.fill();
   pg.strokeStyle='#4f3a24'; pg.lineWidth=3; pg.beginPath(); pg.moveTo(36,38); pg.lineTo(36,14); pg.stroke();
   pg.fillStyle='#e8e0d0'; pg.beginPath(); pg.moveTo(36,16); pg.quadraticCurveTo(50,22,36,34); pg.closePath(); pg.fill();
-  setDialog('“Calm seas at last, friend - the whole archipelago\'s open again. Where to?”',
+  const line = (P.story && P.story.act2)
+    ? '“Calm seas at last, friend - the whole archipelago\'s open again. Where to?”'
+    : '“Calm seas on the settled routes now, friend, and a clear run to the capital. The far reaches - Stormreach, the Aerie, the Frozen strait - no ferryman will chance those yet. Where to?”';
+  setDialog(line,
     dests.map(([lbl,dst])=>({label:lbl, fn:()=>{ closeDialog(); sailTo(dst); }}))
       .concat([{label:'Stay ashore',ghost:true,fn:closeDialog}]));
 }
