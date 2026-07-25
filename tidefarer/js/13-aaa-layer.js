@@ -325,7 +325,7 @@ const THR = {
       vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
     { who:'King Aldous',
       html:'“…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
-      vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:0.82, guards:0 },
+      vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:1, guards:0 },
     { who:'Vath',
       html:'“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”',
       vath:1, gold:0.68, violet:0.6, clash:0.18, flee:1, guards:0 },
@@ -592,14 +592,15 @@ function _thrDraw(){
   const kingDir=_cb.kingFace==='kids'?_thrFace(THR.king,kMid):_thrFace(THR.king,THR.vath);
   const kingAway=(kingDir.x+kingDir.y)*0.5 < -0.15;   // matches drawHumanoid's own `away`
   { const look=down>0.5?LOOK_KSPENT:LOOK_KING;
-    items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,kingDir,THR.stepK,
-      {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:11*Z*down,
-       scale:1-0.17*down, hurt:down>0.15&&down<0.85})}); }
+    const ds=down*down*(3-2*down);        // smooth collapse
+    items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,kingDir,THR.stepK*(1-ds),
+      {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:5*Z*down,
+       scale:1-0.12*down, hurt:down>0.15&&down<0.6, tip: ds*1.5})}); }   // topples over, lies dead on the floor
   if(THR.vAdv>0.03){   // Vath is absent for the homecoming, then strides in
     const dir=THR.idx>=11?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
       {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
-  const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
+  const sibA=THR.flee>0.68?Math.max(0,1-(THR.flee-0.68)*4.8):1;  // clear the doors and be GONE by ~0.9
   if(sibA>0.02){
     const hdir=THR.flee>0.2?_thrFace(THR.hero,HEROF):_thrFace(THR.hero,THRONE);
     // rooted -> still staring back at his father; once seized -> turned to follow the
@@ -667,8 +668,10 @@ function _thrActor(SC,Z,pos,look,dir,step,opt){
     cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle=g;
     cx.beginPath(); cx.arc(ax,ay,r,0,TAU); cx.fill(); cx.restore();
   }
-  if(typeof drawShadowAt==='function') drawShadowAt(cx,s.x,s.y,14*Z);
+  drawShadowAt && drawShadowAt(cx, s.x, s.y, (14+ (opt.tip? 12*Math.sin(opt.tip):0))*Z);  // shadow spreads as he falls
   cx.save();  // contain the canvas filter drawHumanoid sets on entry
+  // opt.tip (radians) topples the figure over its feet - a body falling and lying on the floor
+  if(opt.tip) { cx.translate(s.x, gy); cx.rotate(opt.tip); cx.translate(-s.x, -gy); }
   try{ if(typeof drawHumanoid==='function')
     drawHumanoid(cx,s.x,gy,Object.assign({},look,{size,dir,step:step||0,hurt:!!opt.hurt,weapon:opt.weapon})); }catch(err){}
   cx.restore();
