@@ -127,16 +127,11 @@ const EPI = {
   // Each beat: who is speaking ('' = narration), the line, and the target sea-state the visuals
   // ease toward while it is on screen. storm 0..1 = rain/lightning; near 0..1 = island approach.
   beats: [
-    { who:'', html:'<i>Six months of open water. The charted isles are long gone behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.02 },
-    { who:'The Prince', html:'“There.” <i>He steadies the chart against the wind and points past the bow.</i> “The stars finally agree with the old maps. That smudge on the horizon isn\'t cloud, sister &mdash; it\'s land.”', storm:0.1, near:0.12 },
-    { who:'The Princess', html:'“It\'s been cloud for a week, little brother. Every wave looks like an island when you want one badly enough.”', storm:0.14, near:0.2 },
-    { who:'The Prince', html:'“Not this one. Listen &mdash; no gulls. No gulls means no safe harbour, means sailors gave it a name and a wide berth.” <i>He taps the chart\'s far edge.</i> “The charts call it <b>Stormreach</b>. A tempest that never breaks, sitting over a single rock.”', storm:0.3, near:0.32 },
-    { who:'The Princess', html:'“A tempest that never breaks.” <i>She half-smiles into the wind.</i> “The kind of place a man hides a thing he doesn\'t want found. Or a person.”', storm:0.45, near:0.44 },
-    { who:'The Prince', html:'“You think Vath\'s reach runs this far out?”', storm:0.55, near:0.55 },
-    { who:'The Princess', html:'“I think six months ago Father told us to go where he couldn\'t reach us yet. This is as far as the sea goes. If the strength to come back for him is anywhere, it\'s here &mdash; past the last name on the map.”', storm:0.68, near:0.66 },
-    { who:'', html:'<i>The wind turns cold and certain. The first grey line of rain walks across the water toward them, and the little boat lifts its bow to meet it.</i>', storm:0.85, near:0.78 },
-    { who:'The Prince', html:'<i>He hauls on the sheet as the sail cracks taut.</i> “Then we\'d best not drown on the doorstep! Trim her &mdash; she wants to run before this wind, not fight it!”', storm:0.95, near:0.9 },
-    { who:'The Princess', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Now you sound like a sailor! Hold her steady, brother. Whatever\'s waiting on that rock &mdash; we make landfall together.”', storm:1, near:1 },
+    { who:'', html:'<i>Six months of open water. The charted isles are long gone behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.05 },
+    { who:'The Prince', html:'“There &mdash; past the bow.” <i>He steadies the chart against the wind.</i> “That smudge on the horizon isn\'t cloud, sister. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.2, near:0.24 },
+    { who:'The Princess', html:'“Land.” <i>She squints into the wind.</i> “No gulls, though. A tempest that never breaks, sitting over one lone rock. The charts give it a single name, right at the edge &mdash; <b>Stormreach</b>.”', storm:0.42, near:0.46 },
+    { who:'The Prince', html:'<i>He looks from the chart to the dark smudge and back.</i> “This far out? Vath\'s reach shouldn\'t run anywhere near here. We\'ve sailed clean off the edge of everything he holds.”', storm:0.62, near:0.64 },
+    { who:'The Princess', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Good. Then it\'s ours, little brother. Hold her steady &mdash; whatever\'s waiting on that rock, we make landfall together.”', storm:0.86, near:0.84 },
     { who:'', html:'<i>The keel comes up out of the dark and grinds onto black shingle. High above the rain, a single light is burning. You have reached the last name on the map.</i>', storm:1, near:1, land:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
