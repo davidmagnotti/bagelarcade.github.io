@@ -57,7 +57,8 @@ function buildGroundCache(){
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1};
+  coggate:1, millgear:1, millwheel:1, sluicelever:1,
+  icebrazier:1, icewall:1, thinice:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1185,6 +1186,65 @@ function drawDecor(b,s){
     }
     return;
   }
+  if(b.kind==='icebrazier'){
+    // a stone fire-bowl on a plinth. Lit: warm flame + glow. Frozen: crusted in blue ice.
+    const g=cx, t=G.time; drawShadowAt(g,s.x,s.y,8); g.save(); g.translate(s.x,s.y);
+    // plinth + bowl
+    g.fillStyle='#3a352e'; g.beginPath(); g.moveTo(-6,-2); g.lineTo(0,1); g.lineTo(6,-2); g.lineTo(5,-14); g.lineTo(-5,-14); g.closePath(); g.fill();
+    g.fillStyle='#4a443c'; g.beginPath(); g.ellipse(0,-14,8,3.2,0,0,TAU); g.fill();
+    g.strokeStyle='#221e19'; g.lineWidth=1.2; g.stroke();
+    if(b.lit){
+      const fl=0.8+0.2*Math.sin(t*20)+0.1*Math.sin(t*6.3);
+      const gg=g.createRadialGradient(0,-20,1,0,-18,26); gg.addColorStop(0,'rgba(255,240,180,0.5)'); gg.addColorStop(1,'rgba(255,120,40,0)');
+      g.fillStyle=gg; g.beginPath(); g.ellipse(0,-18,20,20,0,0,TAU); g.fill();
+      const h=(13+3*Math.sin(t*9))*fl;
+      g.fillStyle='#ff8a2c'; g.beginPath(); g.moveTo(-5,-14); g.quadraticCurveTo(-3,-14-h*0.6,0,-14-h); g.quadraticCurveTo(3,-14-h*0.6,5,-14); g.closePath(); g.fill();
+      g.fillStyle='#ffd45a'; g.beginPath(); g.moveTo(-2.6,-14); g.quadraticCurveTo(-1.4,-14-h*0.5,0,-14-h*0.72); g.quadraticCurveTo(1.4,-14-h*0.5,2.6,-14); g.closePath(); g.fill();
+      if(Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.2,0.2),y:b.y-1.4,vx:rnd(-0.15,0.15),vy:-rnd(0.5,1.2),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ffd07a':'#ff9a3c',size:rnd(1,2),grav:-0.05});
+    } else if(b.frozen){
+      // ice crust over the bowl, with a thaw-shimmer as it melts
+      const p=Math.max(0,Math.min(1,(b._thaw||0)/(b.need||1)));
+      g.fillStyle='#bfe6f4'; g.beginPath(); g.moveTo(-7,-13); g.lineTo(-3,-13-8*(1-p)); g.lineTo(2,-13-11*(1-p)); g.lineTo(6,-13-6*(1-p)); g.lineTo(7,-13); g.closePath(); g.fill();
+      g.strokeStyle='rgba(120,175,205,0.8)'; g.lineWidth=1; g.stroke();
+      if(p>0){ g.fillStyle='rgba(255,170,70,'+(0.15+0.3*p).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-14,6*p,3*p,0,0,TAU); g.fill(); }
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='icewall'){
+    // a wall of living ice across a corridor; drawn one jagged pane per tile (the tiles
+    // share a row, so they step down-right in iso). Thaws down as _thaw fills; the seal
+    // is taller and bluer. Per-tile offset from s follows the firegate/coggate pattern.
+    const g=cx, prog=Math.max(0,Math.min(1,(b._thaw||0)/(b.need||1)));
+    const c0=b.tiles.reduce((a,t)=>a+t[0],0)/b.tiles.length;   // centre x of the row
+    const H=b.seal?46:36, h=H*(1-prog*0.8);                    // melts down as it thaws
+    if(prog<0.99) drawShadowAt(g,s.x,s.y,20);
+    for(const [tx,ty] of b.tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      if(prog>0){ g.fillStyle='rgba(150,200,225,'+(0.2*prog).toFixed(2)+')'; g.beginPath(); g.ellipse(0,2,15,6,0,0,TAU); g.fill(); }
+      const g1=g.createLinearGradient(0,-h,0,4);
+      g1.addColorStop(0, b.seal?'#dff2fb':'#cfe9f6'); g1.addColorStop(1, b.seal?'#8fc0dd':'#a6cfe2');
+      g.fillStyle=g1;
+      g.beginPath(); g.moveTo(-15,2); g.lineTo(-11,-h*0.8); g.lineTo(-4,-h); g.lineTo(3,-h*0.85); g.lineTo(11,-h*0.7); g.lineTo(15,2); g.closePath(); g.fill();
+      g.strokeStyle='rgba(110,165,195,0.7)'; g.lineWidth=1.2; g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.35)'; g.lineWidth=1;   // internal facets
+      g.beginPath(); g.moveTo(-4,-h); g.lineTo(-1,2); g.moveTo(6,-h*0.75); g.lineTo(2,2); g.stroke();
+      if(prog>0){ g.fillStyle='rgba(255,160,70,'+(0.10+0.22*prog).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-h*0.4,10,h*0.5,0,0,TAU); g.fill(); }   // torch-bite glow
+      g.restore();
+    }
+    return;
+  }
+  if(b.kind==='thinice'){
+    // a pane of thin ice set into the floor; stress-cracks spread as you linger on it
+    const g=cx, c=Math.max(0,Math.min(1,(b._crack||0)/1.6));
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(200,232,244,0.5)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(15,0); g.lineTo(0,9); g.lineTo(-15,0); g.closePath(); g.fill();
+    g.strokeStyle='rgba(120,170,200,0.65)'; g.lineWidth=1; g.stroke();
+    // crack lines - faint by default, vivid as it's about to break
+    g.strokeStyle='rgba(90,120,150,'+(0.35+0.5*c).toFixed(2)+')'; g.lineWidth=0.8+c;
+    g.beginPath(); g.moveTo(-9,-2); g.lineTo(-2,2); g.lineTo(4,-3); g.lineTo(11,1);
+    g.moveTo(0,-7); g.lineTo(-3,1); g.lineTo(2,7); g.stroke();
+    g.restore(); return;
+  }
   if(b.kind==='dragonrest'){
     // the old dragon dozing on his fire-shelf; hidden while his enthralled self rages
     const out = G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead);
@@ -2284,6 +2344,25 @@ function drawPlayer(s){
   }
   drawShadowAt(cx,s.x,s.y,14);
   drawPlayerFigure(s);
+  drawCarriedFlame(s);
+}
+// THE GUTTERING FLAME (Rimefissure): a torch you carry to thaw the ice. It burns down
+// in the cold - relight at a brazier before it gutters. Shown as a held torch + a life pip.
+function drawCarriedFlame(s){
+  if(G.worldId!=='frostdeep' || (G._flameT||0)<=0) return;
+  const g=cx, t=G.time, life=Math.max(0,Math.min(1,(G._flameT||0)/(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8)));
+  const fx=s.x+11, fy=s.y-26;
+  // the torch haft
+  g.strokeStyle='#5a4838'; g.lineWidth=2.4; g.lineCap='round'; g.beginPath(); g.moveTo(fx-3,fy+9); g.lineTo(fx,fy); g.stroke();
+  // the flame - bright and tall when full, guttering low when near dead
+  const flick=0.82+0.18*Math.sin(t*22)+0.1*Math.sin(t*7.3), h=(5+11*life)*flick;
+  const grad=g.createRadialGradient(fx,fy-h*0.3,1,fx,fy-h*0.3,h*1.7);
+  grad.addColorStop(0,'rgba(255,244,190,0.95)'); grad.addColorStop(0.5,'rgba(255,150,50,'+(0.55*life+0.25).toFixed(2)+')'); grad.addColorStop(1,'rgba(255,80,20,0)');
+  g.fillStyle=grad; g.beginPath(); g.ellipse(fx,fy-h*0.3,h*0.85,h*1.4,0,0,TAU); g.fill();
+  // life pip above the head
+  g.fillStyle='rgba(0,0,0,0.5)'; g.fillRect(s.x-11,s.y-52,22,4);
+  g.fillStyle= life>0.33? '#ffb04a' : '#ff5a3a'; g.fillRect(s.x-10,s.y-51, 20*life, 2);
+  if(Math.random()<0.4) G.parts.push({x:P.x+0.25,y:P.y-1.1,vx:rnd(-0.2,0.2),vy:-rnd(0.6,1.4),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ffd07a':'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
 }
 function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
