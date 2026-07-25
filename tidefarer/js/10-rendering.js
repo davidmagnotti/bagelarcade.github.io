@@ -58,7 +58,8 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1,
   coggate:1, millgear:1, millwheel:1, sluicelever:1,
-  icebrazier:1, icewall:1, thinice:1};
+  icebrazier:1, icewall:1, thinice:1,
+  beamgate:1, bonepan:1, windzone:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1244,6 +1245,44 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-9,-2); g.lineTo(-2,2); g.lineTo(4,-3); g.lineTo(11,1);
     g.moveTo(0,-7); g.lineTo(-3,1); g.lineTo(2,7); g.stroke();
     g.restore(); return;
+  }
+  if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite
+  if(b.kind==='bonepan'){
+    // a low bone counterweight-plate; sinks and glows violet when weighted
+    const g=cx, pr=b.pressed?1:0; g.save(); g.translate(s.x,s.y); drawShadowAt(g,0,2,8);
+    g.fillStyle= pr? '#3a2c4a':'#2a2622';
+    g.beginPath(); g.moveTo(0,-9+pr*2); g.lineTo(14,-2+pr*2); g.lineTo(0,5+pr*2); g.lineTo(-14,-2+pr*2); g.closePath(); g.fill();
+    g.strokeStyle= pr? '#c77bff':'#6a5c4c'; g.lineWidth= pr?2.2:1.5; g.stroke();
+    g.fillStyle= pr? 'rgba(199,123,255,0.35)':'rgba(20,16,14,0.4)';
+    g.beginPath(); g.moveTo(0,-5+pr*2); g.lineTo(9,-1+pr*2); g.lineTo(0,3+pr*2); g.lineTo(-9,-1+pr*2); g.closePath(); g.fill();
+    if(!pr){ g.fillStyle='rgba(199,123,255,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 11px Georgia'; g.textAlign='center'; g.fillText('✦',0,-1); }
+    g.restore(); return;
+  }
+  if(b.kind==='beamgate'){
+    // a bone portcullis hauled up by a counterweight beam. openAmt: 0=dropped, 1=up.
+    // Drawn one pale-bone pane per corridor tile (an iso down-right diagonal).
+    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=40;
+    const tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
+    if(amt<0.98) drawShadowAt(g,s.x,s.y,30);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      g.fillStyle='#2c2622'; g.fillRect(-18,-42,36,6); g.strokeStyle='#120f0c'; g.lineWidth=1.4; g.strokeRect(-18,-42,36,6);   // lintel
+      const drop=H*(1-amt);
+      if(drop>0.5){ g.save(); g.beginPath(); g.rect(-18,-36,36,drop); g.clip();
+        g.fillStyle='#cabfa6';                                             // pale bone bars
+        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.2,-36,4.4,H); g.strokeStyle='#7a6f58'; g.lineWidth=1; g.strokeRect(i*11-2.2,-36,4.4,H); }
+        g.fillStyle='#b3a888'; for(let yy=-30;yy<=-6;yy+=12){ g.fillRect(-16,yy,32,3); }   // rib cross-bars
+        g.fillStyle='#ddd3bd'; for(let i=-1;i<=1;i++){ g.beginPath(); g.arc(i*11,-36+drop-3,3,0,TAU); g.fill(); }   // skull knobs at the feet
+        g.restore();
+      }
+      g.restore();
+    }
+    // the counterweight beam over the centre, tipping as the gate rises
+    g.save(); g.translate(s.x, s.y-47); g.rotate((amt-0.5)*0.5);
+    g.strokeStyle='#6a5c48'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); g.moveTo(-20,0); g.lineTo(20,0); g.stroke();
+    g.fillStyle='#4a4038'; g.beginPath(); g.arc(-20,0,4,0,TAU); g.fill(); g.beginPath(); g.arc(20,0,4.5,0,TAU); g.fill();
+    g.restore();
+    return;
   }
   if(b.kind==='dragonrest'){
     // the old dragon dozing on his fire-shelf; hidden while his enthralled self rages

@@ -1620,15 +1620,23 @@ function placeObjectsAerieDeep(){
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
   for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
     G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
-  // PUZZLE 1 - THE OSSUARY: three bone-plates; stand on all three to raise the Bone Gate
-  for(const [tx,ty] of [[63,90],[75,80],[87,90]])
-    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'oss', set:false});
-  G.decor.push({kind:'catgate', x:75, y:70, open:false, gate:'bone', tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], label:'the Bone Gate'});
-  // PUZZLE 2 - THE GALLERY OF SIGILS: four numbered plates; tread them I,II,III,IV in
-  // order to open the Sepulchre Gate. Step out of order and the sigils darken and reset.
-  for(const [tx,ty,ord] of [[62,58,1],[88,58,2],[88,48,3],[62,48,4]])
-    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'seq', ord:ord, set:false});
-  G.decor.push({kind:'catgate', x:75, y:38, open:false, gate:'sep', tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], label:'the Sepulchre Gate'});
+  // ---- THE CURSED GALE ----
+  // Vath's wind howls up through the catacomb, gusting on a cycle. It shoves you off your
+  // line, so time your run to the lulls (or duck behind a pillar). Weight a bone-
+  // counterweight pan to haul a gate up; it holds a moment then falls, so cross before it
+  // drops. Two chambers, escalating - no plates, no order to memorise.
+  // CHAMBER 1 - THE OSSUARY: a westerly gust across the hall; the pan raises the Bone Gate
+  G.decor.push({kind:'windzone', x:75, y:85, x0:58, y0:74, x1:92, y1:96, dir:{x:-1,y:0}, mult:1.0});
+  G.decor.push({kind:'bonepan', x:75.5, y:82.5, gate:'bone', pressed:false, label:'a counterweight pan'});
+  G.decor.push({kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, _grace:0, done:false, label:'the Bone Gate'});
+  // shelter pillars (solid) - their lee stays calm; duck behind one when the gust rises
+  for(const [px,py] of [[84,82],[66,88],[86,90],[66,80]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
+  // CHAMBER 2 - THE GALLERY: a stronger gust, and the pan sits off-line, so you must fight
+  // the wind on a diagonal run to the Sepulchre Gate
+  G.decor.push({kind:'windzone', x:75, y:53, x0:58, y0:40, x1:92, y1:64, dir:{x:-1,y:0}, mult:1.28});
+  G.decor.push({kind:'bonepan', x:70.5, y:50.5, gate:'sep', pressed:false, label:'a counterweight pan'});
+  G.decor.push({kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, _grace:0, done:false, label:'the Sepulchre Gate'});
+  for(const [px,py] of [[84,48],[66,58],[86,58],[66,48]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
@@ -1636,7 +1644,11 @@ function placeObjectsAerieDeep(){
   // a warden's hoard, once the deed is done
   G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
   G.critters=[];
-  G._plateOn=null;   // reset the plate-tread tracker for this world
+  G._galeT=0;   // reset the wind cycle for this descent
+  // a cleared run leaves both beam-gates locked open
+  if(P.story && P.story.aerieFreed){
+    for(const g of G.decor){ if(g.kind==='beamgate'){ g.done=true; g.open=true; g.openAmt=1; for(const [x,y] of g.tiles){ setSolid(x,y,0); setTile(x,y,T.RUIN); } } }
+  }
 }
 function spawnMobsAerieDeep(){
   const Z=AERIEDEEP_ZONES;
@@ -1665,47 +1677,68 @@ function exitAerieDungeon(){
     const r=P._aerieReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
-function openCatGate(gate){
-  const b=G.decor.find(d=>d.kind==='catgate' && d.gate===gate);
-  if(!b || b.open) return;
-  b.open=true; if(Snd.quest) Snd.quest();
-  for(const [tx,ty] of b.tiles){ setSolid(tx,ty,0); setTile(tx,ty,T.RUIN); }
-  shockwave(b.x,b.y,'rgba(199,123,255,0.85)',55); G.shake=0.5;
-  invalidateScenery();
-  if(gate==='bone'){ banner('THE BONE GATE GRINDS UP','THE WAY NORTH IS OPEN'); toast('Old counterweights of stacked skulls shudder and the Bone Gate grinds up into the ceiling. The Gallery lies beyond.',5000); }
-  else { banner('THE SEPULCHRE GATE OPENS','THE WARDEN AWAITS BELOW'); toast('The sigils flare once, all four alight, and the Sepulchre Gate swings inward on the dark. Something vast uncoils in the crypt ahead.',5200); }
+// THE CURSED GALE: the wind gusts on a cycle - calm, then a hard blow, then calm again.
+const GALE_PERIOD=7.0, GALE_PUSH=3.2, GALE_GRACE=3.6;
+function galeStrength(){   // 0 in the lulls, ramping to 1 at the height of the gust
+  const ph=((G._galeT||0)%GALE_PERIOD)/GALE_PERIOD;
+  if(ph<0.42) return 0;
+  if(ph<0.52) return (ph-0.42)/0.10;
+  if(ph<0.82) return 1;
+  if(ph<0.92) return (0.92-ph)/0.10;
+  return 0;
 }
 function updateAerieDeep(dt){
-  const gx=Math.floor(P.x), gy=Math.floor(P.y);
-  let onPlate=null;
-  for(const b of G.decor){ if(b.kind==='boneplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
-  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
-  if(id===G._plateOn) return;   // still on the same plate (or still on none) - nothing new
-  G._plateOn=id;
-  if(onPlate) stepPlate(onPlate);
-}
-function stepPlate(b){
-  if(b.set) return;   // treading an already-lit plate does nothing
-  if(b.group==='oss'){
-    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
-    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='oss');
-    if(grp.every(d=>d.set)) openCatGate('bone');
-    else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#e0c0ff',1.1);
-    return;
-  }
-  if(b.group==='seq'){
-    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='seq');
-    const nextNeeded=grp.filter(d=>d.set).length+1;
-    if(b.ord===nextNeeded){
-      b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
-      if(grp.every(d=>d.set)) openCatGate('sep');
-    } else {
-      // wrong order - the whole sequence darkens and resets
-      for(const d of grp) d.set=false;
-      Snd.hit&&Snd.hit(); G.shake=0.35; burst(b.x,b.y-0.2,'#5a4466',12,1.8);
-      toast('The sigils darken and go cold - trodden out of order. Begin again from <b>I</b>.',3600);
+  G._galeT=(G._galeT||0)+dt;
+  const gust=galeStrength();
+  // ---- the wind shoves you through any gust-zone you stand in, unless a wall or pillar
+  //      just upwind shelters you ----
+  if(gust>0 && !dlg.open && (P.rollT||0)<=0){
+    for(const z of G.decor){ if(z.kind!=='windzone') continue;
+      if(P.x>=z.x0 && P.x<=z.x1 && P.y>=z.y0 && P.y<=z.y1){
+        const d=z.dir, sheltered=solidAt(Math.floor(P.x-d.x), Math.floor(P.y-d.y));
+        if(!sheltered){ const f=GALE_PUSH*(z.mult||1)*gust*dt; moveEntity(P, d.x*f, d.y*f, 0.28); }
+      }
     }
-    return;
+  }
+  // ---- the bone-counterweight beam-gates: weight the pan to haul the gate up; it holds
+  //      GALE_GRACE seconds after you leave the pan, then falls ----
+  for(const g of G.decor){ if(g.kind!=='beamgate') continue;
+    if(!g.done){
+      const pan=G.decor.find(p=>p.kind==='bonepan' && p.gate===g.gate);
+      const pressed = pan && Math.floor(P.x)===Math.floor(pan.x) && Math.floor(P.y)===Math.floor(pan.y);
+      if(pan) pan.pressed=pressed;
+      if(pressed) g._grace=GALE_GRACE; else g._grace=Math.max(0,(g._grace||0)-dt);
+      const target=(g._grace>0)?1:0, rate=(target>g.openAmt)?3.5:1.3;
+      g.openAmt=Math.max(0,Math.min(1, g.openAmt + Math.sign(target-g.openAmt)*rate*dt));
+      // slip through to the north side and the beam locks open for good
+      if(g.openAmt>0.5 && P.y<g.y-0.2 && Math.abs(P.x-g.x)<3){
+        g.done=true; if(pan) pan.pressed=false; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
+        if(g.gate==='bone'){ banner('THE BONE GATE LOCKS OPEN','THE GALLERY LIES BEYOND'); }
+        else { banner('THE SEPULCHRE GATE LOCKS OPEN','THE WARDEN AWAITS BELOW'); toast('The counterweight crashes home and the Sepulchre Gate stands open. Something vast uncoils in the crypt ahead.',5000); }
+      }
+    } else g.openAmt=1;
+    const openNow=g.openAmt>0.55;
+    if(openNow!==g.open){
+      g.open=openNow;
+      for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1);
+      if(!openNow){
+        Snd.hit&&Snd.hit();
+        const px=Math.floor(P.x), py=Math.floor(P.y);
+        if(g.tiles.some(t=>t[0]===px && t[1]===py)){   // caught under the falling gate - shove south, clear
+          let yy=py+1; while(yy<py+5 && (!inb(px,yy)||solidAt(px,yy))) yy++;
+          if(inb(px,yy)&&!solidAt(px,yy)) P.y=yy+0.4;
+          P.click=null; G.shake=Math.max(G.shake||0,0.4); burst(P.x,P.y-0.4,'#c8b0d8',10,2.0);
+          if(!G._beamHint){ G._beamHint=1; toast('The counterweight runs out and the gate drops - you scramble back. <b>Weight the pan, then run</b> before it falls.',4600); }
+        }
+      }
+    }
+  }
+  // ---- streaming wind, for readability, blown along each zone while it gusts ----
+  if(gust>0.12){
+    for(const z of G.decor){ if(z.kind!=='windzone') continue;
+      if(Math.random()<gust*0.7){ const wx=z.x0+Math.random()*(z.x1-z.x0), wy=z.y0+Math.random()*(z.y1-z.y0);
+        G.parts.push({x:wx,y:wy,vx:z.dir.x*(2.4+2.6*gust),vy:z.dir.y*(2.4+2.6*gust),life:rnd(0.3,0.7),color:'rgba(205,214,230,0.5)',size:rnd(1,2.3),grav:0}); }
+    }
   }
 }
 /* =====================================================================
@@ -4012,8 +4045,9 @@ function switchWorld(id){
     setTimeout(()=>banner('THE RIMEFISSURE','WALLS OF ICE BAR THE WAY - CARRY FIRE TO THAW THEM'),1200);
     setTimeout(()=>toast('<i>Vath\'s cold has sealed the warren in living ice.</i> Light a torch at the <b>Emberheart</b> and carry it north to <b>thaw</b> a way through - but the cold saps the flame, so <b>relight at the braziers</b> along the way (each frozen over until you thaw it) to reach and melt the great seal on the deep gate. And <b>don\'t linger on thin ice</b>.',8500),1800); }
   // (no arrival hint for the Emberdeep - the player reads the locks for themselves)
-  if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1;
-    setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
+  if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
+    setTimeout(()=>banner('THE UNDERCLIMB','A CURSED GALE HOWLS THROUGH THE BONES'),1200);
+    setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your feet, so cross in the <b>lulls</b> or duck behind a pillar. To raise each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up, holds a moment, then falls - so weight the pan, then <b>run through before it drops</b>.',8500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
