@@ -56,7 +56,8 @@ function buildGroundCache(){
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
-  skygate:1, skytile:1, skybird:1, stormbead:1};
+  skygate:1, skytile:1, skybird:1, stormbead:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1095,6 +1096,94 @@ function drawDecor(b,s){
     g.fillStyle= b.on? '#ff9a3c':'#ffcf6a'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
     if(!b.on){ g.fillStyle='rgba(255,180,80,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
     g.restore(); return;
+  }
+  if(b.kind==='millgear'){
+    // a spinning iron cog of the gear-train - turns only while the works are powered
+    const g=cx, R=b.r||6, N=Math.max(7,Math.round(R)+2);
+    const rot=(G._millPower? (G._millT||0):0)*(b.spin||1);
+    g.save(); g.translate(s.x,s.y-R*0.5); g.rotate(rot);
+    // teeth
+    g.fillStyle='#4a423a';
+    for(let i=0;i<N;i++){ const a=i/N*TAU, cx2=Math.cos(a)*R, cy2=Math.sin(a)*R*0.55;
+      g.save(); g.translate(cx2,cy2); g.rotate(a); g.fillRect(-R*0.16,-R*0.16,R*0.34,R*0.34); g.restore(); }
+    // rim + hub (squashed for the iso tilt)
+    g.fillStyle='#5a5048'; g.beginPath(); g.ellipse(0,0,R,R*0.6,0,0,TAU); g.fill();
+    g.strokeStyle='#2a241e'; g.lineWidth=1.6; g.stroke();
+    g.fillStyle='#3a332c'; g.beginPath(); g.ellipse(0,0,R*0.62,R*0.37,0,0,TAU); g.fill();
+    // spokes
+    g.strokeStyle='#6a5f54'; g.lineWidth=Math.max(1.4,R*0.14);
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*R*0.6,Math.sin(a)*R*0.36); g.stroke(); }
+    g.fillStyle='#7a6f62'; g.beginPath(); g.ellipse(0,0,R*0.2,R*0.13,0,0,TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='millwheel'){
+    // the great mill-wheel standing in its race - dark and still until the water runs,
+    // then it turns steadily with a churn of spray at its foot
+    const g=cx, R=b.r||11, powered=!!G._millPower;
+    const rot=(powered? (G._millT||0):0)*0.7;
+    drawShadowAt(g,s.x,s.y,R*0.9);
+    g.save(); g.translate(s.x,s.y-R);
+    // a stone axle-block behind the wheel
+    g.fillStyle='#2c2620'; g.fillRect(-R*0.28,-R*0.2,R*0.56,R+8);
+    // the flooded race glinting at the wheel's foot
+    if(powered){ g.fillStyle='rgba(120,180,220,0.4)'; g.beginPath(); g.ellipse(0,R*0.92,R*1.1,R*0.4,0,0,TAU); g.fill(); }
+    g.save(); g.rotate(rot);
+    // outer + inner timber rims (an upright wheel - barely squashed)
+    g.strokeStyle='#6a5540'; g.lineWidth=R*0.15; g.beginPath(); g.ellipse(0,0,R,R*0.95,0,0,TAU); g.stroke();
+    g.strokeStyle='#7d6449'; g.lineWidth=R*0.08; g.beginPath(); g.ellipse(0,0,R*0.66,R*0.62,0,0,TAU); g.stroke();
+    // spokes + paddle-boards around the rim
+    const N=8; for(let i=0;i<N;i++){ const a=i/N*TAU, ox=Math.cos(a), oy=Math.sin(a)*0.95;
+      g.strokeStyle='#5a4835'; g.lineWidth=R*0.09; g.beginPath(); g.moveTo(0,0); g.lineTo(ox*R,oy*R); g.stroke();
+      g.save(); g.translate(ox*R*0.86,oy*R*0.86); g.rotate(a); g.fillStyle=(i%2)?'#8a7052':'#755d43'; g.fillRect(-R*0.07,-R*0.2,R*0.14,R*0.4);
+      g.strokeStyle='#4a3a2a'; g.lineWidth=1; g.strokeRect(-R*0.07,-R*0.2,R*0.14,R*0.4); g.restore(); }
+    // hub
+    g.fillStyle='#3a2f24'; g.beginPath(); g.ellipse(0,0,R*0.2,R*0.19,0,0,TAU); g.fill();
+    g.fillStyle='#8a7052'; g.beginPath(); g.ellipse(0,0,R*0.09,R*0.085,0,0,TAU); g.fill();
+    g.restore(); g.restore();
+    // a lazy churn of spray at the wheel's foot while it turns
+    if(powered && Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.6,0.6),y:b.y+0.5,vx:rnd(-0.6,0.6),vy:-rnd(0.5,1.4),life:rnd(0.4,1.1),color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1.4,3),grav:0.08});
+    return;
+  }
+  if(b.kind==='sluicelever'){
+    // an iron sluice wheel on a post - turn it (with the crank) to open the headrace
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a332c'; g.fillRect(-2.4,-16,4.8,16);                 // the post
+    g.strokeStyle='#1c1814'; g.lineWidth=1.2; g.strokeRect(-2.4,-16,4.8,16);
+    g.save(); g.translate(0,-17); g.rotate(b.on? 1.1 : 0);              // the hand-wheel, turned when thrown
+    g.strokeStyle= b.on? '#7fc4e8':'#8a7f70'; g.lineWidth=2.6;
+    g.beginPath(); g.arc(0,0,7,0,TAU); g.stroke();
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*7,Math.sin(a)*7); g.stroke(); }
+    for(let i=0;i<4;i++){ const a=i/4*TAU+0.3; g.fillStyle=b.on?'#9ed6f0':'#a89a88'; g.beginPath(); g.arc(Math.cos(a)*7,Math.sin(a)*7,1.8,0,TAU); g.fill(); }   // spoke handles
+    g.restore();
+    if(!b.on){ g.fillStyle='rgba(150,205,235,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-32); }
+    g.restore(); return;
+  }
+  if(b.kind==='coggate'){
+    // a gear-driven portcullis that rises and falls with the works. openAmt: 0=dropped,
+    // 1=hauled up into the lintel. Drawn one panel per corridor tile (a down-right iso
+    // diagonal), mirroring the firegate so the whole span is plugged.
+    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=38;
+    const tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
+    if(amt<0.98) drawShadowAt(g,s.x,s.y,30);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      // top lintel + gear housing (always shown)
+      g.fillStyle='#33261c'; g.fillRect(-18,-40,36,6);
+      g.strokeStyle='#140c06'; g.lineWidth=1.5; g.strokeRect(-18,-40,36,6);
+      // the sliding bar-panel: full height H, hauled up by amt (clipped at the lintel)
+      const drop=H*(1-amt);                    // how far the bars hang below the lintel
+      if(drop>0.5){
+        g.save();
+        g.beginPath(); g.rect(-18,-34,36,drop); g.clip();
+        g.fillStyle='#4a423a';
+        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.5,-34,5,H); g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(i*11-2.5,-34,5,H); }
+        g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-16,yy,32,3.4); }
+        g.fillStyle='#5a5048'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(i*11,-34+drop); g.lineTo(i*11-4,-34+drop-6); g.lineTo(i*11+4,-34+drop-6); g.closePath(); g.fill(); }   // spiked feet
+        g.restore();
+      }
+      g.restore();
+    }
+    return;
   }
   if(b.kind==='dragonrest'){
     // the old dragon dozing on his fire-shelf; hidden while his enthralled self rages
