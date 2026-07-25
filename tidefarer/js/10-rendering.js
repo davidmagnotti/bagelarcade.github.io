@@ -59,7 +59,8 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   skygate:1, skytile:1, skybird:1, stormbead:1,
   coggate:1, millgear:1, millwheel:1, sluicelever:1,
   icebrazier:1, icewall:1, thinice:1,
-  beamgate:1, bonepan:1, windzone:1};
+  beamgate:1, bonepan:1, windzone:1,
+  lavaseg:1, lavasluice:1, firewheel:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1244,6 +1245,45 @@ function drawDecor(b,s){
     g.strokeStyle='rgba(90,120,150,'+(0.35+0.5*c).toFixed(2)+')'; g.lineWidth=0.8+c;
     g.beginPath(); g.moveTo(-9,-2); g.lineTo(-2,2); g.lineTo(4,-3); g.lineTo(11,1);
     g.moveTo(0,-7); g.lineTo(-3,1); g.lineTo(2,7); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='lavaseg'){
+    // one cell of a lava channel: molten (hot, blocking) or cooled crust (dark, walkable)
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(b.hot){
+      const gl=0.5+0.4*Math.sin(G.time*2.4+b.x*1.3+b.y);
+      g.fillStyle='rgba(120,40,20,0.75)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(255,110,30,'+(0.45+0.3*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-6); g.lineTo(11,-1); g.lineTo(0,4); g.lineTo(-11,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(255,214,120,'+(0.35+0.4*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,6,3,0,0,TAU); g.fill();
+      if(Math.random()<0.02) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
+    } else {
+      g.fillStyle='rgba(26,18,16,0.55)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.strokeStyle='rgba(180,80,40,0.22)'; g.lineWidth=1; g.beginPath(); g.moveTo(-8,-2); g.lineTo(0,1); g.lineTo(7,-3); g.stroke();
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='lavasluice'){
+    // a diverter stone with a paddle that swings to the flowing side, glowing when open
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a2a20'; g.beginPath(); g.ellipse(0,-1,7,3.2,0,0,TAU); g.fill();
+    const ang=b.on? 0.9 : -0.9;
+    g.strokeStyle= b.on?'#ff9a3c':'#c9a890'; g.lineWidth=3.4; g.lineCap='round';
+    g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*12,-2-Math.cos(ang)*11); g.stroke();
+    g.fillStyle= b.on?'#ffd45a':'#8a6a50'; g.beginPath(); g.arc(Math.sin(ang)*12,-2-Math.cos(ang)*11,3.2,0,TAU); g.fill();
+    if(b.on){ g.fillStyle='rgba(255,150,60,0.22)'; g.beginPath(); g.ellipse(0,-3,10,6,0,0,TAU); g.fill(); }
+    else { g.fillStyle='rgba(255,154,60,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-26); }
+    g.restore(); return;
+  }
+  if(b.kind==='firewheel'){
+    // a fire-wheel in its trough; turns and glows molten once the flow reaches it
+    const g=cx, R=6, spin=b.charged; drawShadowAt(g,s.x,s.y,7);
+    g.save(); g.translate(s.x,s.y-6);
+    if(spin){ g.fillStyle='rgba(255,140,50,0.28)'; g.beginPath(); g.ellipse(0,0,R+6,R+4,0,0,TAU); g.fill(); }
+    g.rotate(spin? G.time*2.2 : 0);
+    g.strokeStyle= spin?'#c26a2a':'#4a3d32'; g.lineWidth=2.4; g.beginPath(); g.ellipse(0,0,R,R*0.9,0,0,TAU); g.stroke();
+    g.strokeStyle= spin?'#ffb04a':'#5a4d40'; g.lineWidth=1.8;
+    for(let i=0;i<6;i++){ const a=i/6*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*R,Math.sin(a)*R*0.9); g.stroke(); }
+    g.fillStyle= spin?'#ffd45a':'#3a332c'; g.beginPath(); g.arc(0,0,2,0,TAU); g.fill();
     g.restore(); return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite

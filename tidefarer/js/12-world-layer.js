@@ -977,21 +977,39 @@ function placeObjectsEastDeep(){
   // torches bracketed along the chamber walls
   for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,41],[51,41],[29,22],[51,22],[24,4],[56,4],[40,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- PUZZLE 1 - THE EMBER FONT: tread all three fonts to raise Gate 1 ----
-  edeepLava(40,68,2.2);                                    // a central molten font to route around
-  edeepLava(31,63,1.2); edeepLava(49,63,1.2);
-  for(const [tx,ty] of [[33,71],[40,61],[47,71]])
-    G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'font', set:false});
+  // ============ THE MOLTEN WORKS: route the lava across three chambers ============
+  // Throw the sluice-stones to divert the molten flow. Diverting COOLS the channel that
+  // bars your way (walk it once it goes dark) AND floods a trough that spins a fire-wheel;
+  // a gate grinds up once its wheel(s) turn. No plates, no rune-order - just the flow.
+  // CHAMBER 1 - THE EMBER FONT: one sluice. Divert the barring channel into the east
+  // trough - it cools your crossing AND spins the wheel that lifts Gate 1.
+  edeepSeg('c1cross', rowTiles(28,52,66), true);                     // the channel barring the crossing (hot)
+  edeepSeg('c1trough', [[49,64],[49,63],[49,62],[50,62]], false);    // the east trough -> the wheel
+  G.decor.push({kind:'firewheel', x:49.5, y:61.5, feed:'c1trough', gate:'g1', charged:false});
+  G.decor.push({kind:'lavasluice', x:33.5, y:69.5, id:'s1', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
-  // ---- PUZZLE 2 - THE SUNKEN CAUSEWAY: throw the floodgate lever ----
-  // a lava channel bars the room; the lever waits past the notch, to the north-west
-  for(let x=30;x<=50;x++){ if(x<38||x>42) edeepLava(x,48,1.0); }   // the channel (a walkable notch at x38..42)
-  G.decor.push({kind:'emberlever', x:30.5, y:44.5, on:false, gate:'g2', label:'the floodgate lever'});
+  // CHAMBER 2 - THE SUNKEN CAUSEWAY: two sluices. The channel stays molten unless BOTH
+  // flows are diverted to their troughs - and only then do both wheels spin to lift Gate 2.
+  edeepSeg('c2cross', rowTiles(28,52,47), true);
+  edeepSeg('c2tW', [[30,46],[30,45],[30,44],[31,44]], false);
+  edeepSeg('c2tE', [[50,46],[50,45],[50,44],[49,44]], false);
+  G.decor.push({kind:'firewheel', x:30.5, y:43.5, feed:'c2tW', gate:'g2', charged:false});
+  G.decor.push({kind:'firewheel', x:49.5, y:43.5, feed:'c2tE', gate:'g2', charged:false});
+  G.decor.push({kind:'lavasluice', x:34.5, y:52.5, id:'s2a', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:46.5, y:52.5, id:'s2b', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
-  // ---- PUZZLE 3 - THE WARDING LOCKS: press the four runes in order I->IV ----
-  // a wrong press wakes a barrow archer and darkens every rune
-  for(const [tx,ty,ord] of [[32,33,1],[48,33,2],[48,24,3],[32,24,4]])
-    G.decor.push({kind:'emberbutton', x:tx+0.5, y:ty+0.5, group:'lock', ord, set:false});
+  // CHAMBER 3 - THE MOLTEN LOCKS: three wheels, one flow. Throwing a sluice diverts the
+  // flow OFF the others, so route it to each wheel in turn - each stays lit once fed.
+  // Charge all three and the Dragon Gate opens. (Order does not matter; there is no reset.)
+  edeepSeg('c3a', [[29,28],[29,27],[30,26],[31,26]], false);
+  edeepSeg('c3b', [[45,25],[46,25],[46,24],[47,24]], false);
+  edeepSeg('c3c', [[51,28],[51,27],[50,26],[49,26]], false);
+  G.decor.push({kind:'firewheel', x:30.5, y:25.5, feed:'c3a', gate:'g3', charged:false});
+  G.decor.push({kind:'firewheel', x:46.5, y:23.5, feed:'c3b', gate:'g3', charged:false});
+  G.decor.push({kind:'firewheel', x:50.5, y:25.5, feed:'c3c', gate:'g3', charged:false});
+  G.decor.push({kind:'lavasluice', x:32.5, y:33.5, id:'s3a', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:40.5, y:33.5, id:'s3b', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:48.5, y:33.5, id:'s3c', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
@@ -1009,12 +1027,51 @@ function placeObjectsEastDeep(){
   G.decor.push({kind:'dragonrest', x:40.5, y:9.5});
   G.decor.push({kind:'chest', x:26.5, y:15.5, deep:1, rich:9});
   G.critters=[];
-  G._emberPlate=null;   // reset the plate-tread tracker for this world
-  // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing
+  emberRecompute();   // set the initial molten state (all sluices off - the channels bar the way)
+  // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing: gates
+  // up, every channel cooled, the wheels turning free
   if(P.story && P.story.emberDone){
-    for(const b of G.decor){ if(b.kind==='firegate'){ b.open=true;
-      for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } } }
+    for(const b of G.decor){
+      if(b.kind==='firegate'){ b.open=true; for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } }
+      if(b.kind==='lavaseg'){ b.hot=false; setSolid(Math.floor(b.x),Math.floor(b.y),0); }
+      if(b.kind==='firewheel'){ b.charged=true; }
+    }
   }
+}
+// a lava channel/trough laid down one glowing tile per cell, grouped under a seg id so a
+// sluice can flip the whole run molten (solid, barring the way) or cool (dark, walkable)
+function edeepSeg(id, tiles, hot){
+  for(const [x,y] of tiles){ if(!inb(x,y)) continue; G.decor.push({kind:'lavaseg', x:x+0.5, y:y+0.5, seg:id, hot:!!hot}); setSolid(x,y, hot?1:0); }
+}
+function rowTiles(x0,x1,y){ const t=[]; for(let x=x0;x<=x1;x++) t.push([x,y]); return t; }
+// recompute the molten network from the sluice states: which channels run hot, which
+// wheels turn (latching once fed), and which gates that opens
+function emberRecompute(){
+  const S=id=>G.decor.find(d=>d.kind==='lavasluice' && d.id===id);
+  const segTiles=id=>G.decor.filter(d=>d.kind==='lavaseg' && d.seg===id);
+  const setSeg=(id,hot)=>{ for(const d of segTiles(id)){ if(d.hot===hot) continue; d.hot=hot;
+    const tx=Math.floor(d.x), ty=Math.floor(d.y); setSolid(tx,ty, hot?1:0);
+    if(hot && Math.floor(P.x)===tx && Math.floor(P.y)===ty){   // molten runs in under you - hop clear south
+      let yy=ty+1; while(yy<ty+5 && (!inb(tx,yy)||solidAt(tx,yy))) yy++; if(inb(tx,yy)&&!solidAt(tx,yy)) P.y=yy+0.4; P.click=null; }
+  } };
+  const s1=S('s1'), s2a=S('s2a'), s2b=S('s2b');
+  if(s1){ setSeg('c1cross', !s1.on); setSeg('c1trough', s1.on); }
+  if(s2a&&s2b){ setSeg('c2tW', s2a.on); setSeg('c2tE', s2b.on); setSeg('c2cross', !(s2a.on&&s2b.on)); }
+  setSeg('c3a', !!(S('s3a')&&S('s3a').on)); setSeg('c3b', !!(S('s3b')&&S('s3b').on)); setSeg('c3c', !!(S('s3c')&&S('s3c').on));
+  // wheels latch-charge the moment their trough runs molten; a gate opens once all its
+  // wheels have charged
+  for(const w of G.decor){ if(w.kind==='firewheel' && !w.charged && segTiles(w.feed).some(d=>d.hot)) w.charged=true; }
+  const gwheels=g=>G.decor.filter(d=>d.kind==='firewheel' && d.gate===g);
+  for(const g of ['g1','g2','g3']){ const ws=gwheels(g); if(ws.length && ws.every(d=>d.charged)) openFireGate(g); }
+  invalidateScenery&&invalidateScenery();
+}
+// throw a sluice-stone. In the Molten Locks (chamber 3) the single flow diverts off the
+// others, so lighting one darkens its neighbours (but a wheel, once fed, stays charged).
+function toggleLavaSluice(b){
+  b.on=!b.on;
+  if(b.on && b.id && b.id[1]==='3'){ for(const d of G.decor){ if(d.kind==='lavasluice' && d!==b && d.id && d.id[1]==='3') d.on=false; } }
+  Snd.quest&&Snd.quest(); buzz&&buzz(6); shockwave(b.x,b.y,'rgba(255,150,60,0.7)',30); burst(b.x,b.y-0.4,'#ffb04a',10,1.8);
+  emberRecompute();
 }
 function spawnMobsEastDeep(){
   // bristlebacks have denned in the warm dark of the chambers - a little
@@ -1048,13 +1105,13 @@ function openFireGate(gate){
   for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); }
   shockwave(b.x0+2.5, b.gy+0.5, 'rgba(255,150,60,0.9)', 55); G.shake=0.5;
   invalidateScenery();
-  const msg={ g1:['THE EMBERFONT GATE RISES','THE FONTS BURN AS ONE'],
-              g2:['THE CAUSEWAY GATE GRINDS UP','THE LAVA SINKS AWAY'],
-              g3:['THE DRAGON GATE OPENS','SOMETHING VAST STIRS BEYOND'] }[gate];
+  const msg={ g1:['THE EMBERFONT GATE RISES','THE WHEEL CATCHES AND TURNS'],
+              g2:['THE CAUSEWAY GATE GRINDS UP','BOTH WHEELS TURN AS ONE'],
+              g3:['THE DRAGON GATE OPENS','THE THREE WHEELS BLAZE'] }[gate];
   if(msg) banner(msg[0],msg[1]);
-  if(gate==='g1') toast('All three fonts flare gold at once and, deep in the wall, a counterweight lets go - the Emberfont Gate grinds up into the rock.',5000);
-  else if(gate==='g2') toast('Old iron shrieks and the floodgate hauls open - the lava channel drains hissing into the dark, and the Causeway Gate lifts.',5200);
-  else toast('The four runes blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
+  if(gate==='g1') toast('The diverted flow floods the trough and the fire-wheel groans into motion - deep in the wall a counterweight lets go and the Emberfont Gate grinds up.',5000);
+  else if(gate==='g2') toast('With both channels routed to their troughs, the twin wheels turn as one - old iron shrieks and the Causeway Gate hauls up into the rock.',5200);
+  else toast('The last wheel blazes into life and all three turn together - the seal breaks and the Dragon Gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
 }
 function pullEmberLever(b){
   if(b.on){ toast('The floodgate is already thrown - the lava has drained north.',3200); return; }
@@ -1115,13 +1172,9 @@ function dispelStaffGate(b){
   autoSave&&autoSave();
 }
 function updateEastDeep(dt){
-  const gx=Math.floor(P.x), gy=Math.floor(P.y);
-  let onPlate=null;
-  for(const b of G.decor){ if(b.kind==='emberplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
-  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
-  if(id===G._emberPlate) return;   // still on the same plate (or none) - nothing new
-  G._emberPlate=id;
-  if(onPlate) stepEmberPlate(onPlate);
+  // molten sparks thrown off the turning fire-wheels, for life
+  for(const w of G.decor){ if(w.kind==='firewheel' && w.charged && Math.random()<dt*3)
+    G.parts.push({x:w.x+rnd(-0.3,0.3),y:w.y-0.4,vx:rnd(-0.3,0.3),vy:-rnd(0.4,1.0),life:rnd(0.4,0.9),color:'#ffb04a',size:rnd(1,2),grav:-0.04}); }
 }
 /* =====================================================================
    WINDSURF ISLE - an industrious city you drop onto from the Cloudreach by parachute
@@ -4044,7 +4097,9 @@ function switchWorld(id){
   if(id==='frostdeep' && !P.prog.deepSeen && !(P.story && P.story.deepDone)){ P.prog.deepSeen=1;
     setTimeout(()=>banner('THE RIMEFISSURE','WALLS OF ICE BAR THE WAY - CARRY FIRE TO THAW THEM'),1200);
     setTimeout(()=>toast('<i>Vath\'s cold has sealed the warren in living ice.</i> Light a torch at the <b>Emberheart</b> and carry it north to <b>thaw</b> a way through - but the cold saps the flame, so <b>relight at the braziers</b> along the way (each frozen over until you thaw it) to reach and melt the great seal on the deep gate. And <b>don\'t linger on thin ice</b>.',8500),1800); }
-  // (no arrival hint for the Emberdeep - the player reads the locks for themselves)
+  if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
+    setTimeout(()=>banner('THE EMBERDEEP','ROUTE THE MOLTEN FLOW TO OPEN THE WAY'),1200);
+    setTimeout(()=>toast('<i>Rivers of lava bar the fire-heart.</i> Throw the <b>sluice-stones</b> to divert the flow: it <b>cools the channel</b> in your way (walk it once it darkens) and <b>floods a trough</b> that spins a fire-wheel - and a gate grinds up once its wheels turn.',8500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','A CURSED GALE HOWLS THROUGH THE BONES'),1200);
     setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your feet, so cross in the <b>lulls</b> or duck behind a pillar. To raise each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up, holds a moment, then falls - so weight the pan, then <b>run through before it drops</b>.',8500),1800); }
