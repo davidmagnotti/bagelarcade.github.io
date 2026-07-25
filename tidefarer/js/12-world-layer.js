@@ -2719,69 +2719,76 @@ function placeObjectsReachDeep(){
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
-  // ---- THE TIDE ----
-  // A tide-wheel floods or drains the catacomb. DRAIN (low) to reach the sump and throw
-  // the tide-valve; RAISE (high) to float the pontoon across the moat AND let the tide-
-  // float haul the Bone Gate up. Softlock-safe: the only wheel sits SOUTH of the moat, so
-  // you can always cross back to it on the raised pontoon, and can never drain from the far side.
-  const water=(x,y,floodAt)=>{ if(inb(x,y)) G.decor.push({kind:'tidewater', x:x+0.5, y:y+0.5, floodAt, flooded:false}); };
-  // THE MOAT: a brine channel across y52, always flooded save the central pontoon slot
-  for(let x=26;x<=54;x++){ if(x<38||x>42) water(x,52,0); }               // floodAt 0 => always a water gap
-  for(let x=38;x<=42;x++) G.decor.push({kind:'floatbridge', x:x+0.5, y:52.5});  // the pontoon - up (walkable) only at high tide
-  // THE SUMP: a low SW pocket, drained (walkable) at low tide, flooded at high; the valve waits at its floor
-  for(const [x,y] of [[28,57],[29,57],[28,58],[29,58],[28,56],[30,57]]) water(x,y,1);
-  G.decor.push({kind:'tidevalve', x:28.5, y:57.5, thrown:false, label:'the tide-valve'});
-  // THE TIDE-WHEEL, south of the moat (always reachable)
-  G.decor.push({kind:'tidewheel', x:44.5, y:58.5, label:'the tide-wheel'});
-  for(const [gx,gy] of [[34,48],[46,48],[50,44],[30,44]]) grave(gx,gy);
+  // ---- THE SURGE ----
+  // The brine rises and falls in waves on its OWN (no wheels, no valves). Cross the ossuary
+  // by hopping the raised bone-daises: dash across the open floor only while the surge is
+  // LOW, and shelter on a dais when it rises - caught in the open, the surge sweeps you back
+  // to the stair. Reach the DRAIN-PLATE on the far bank and the surge falls still and the
+  // Bone Gate rises. Pure read-the-wave timing.
+  const HALL={x0:26, x1:54, y0:46, y1:54};   // the flooding stretch spans the full width (no edge to sneak up)
+  G._surgeHall=HALL;
+  G._surgeDais=[];
+  for(const [x,y] of [[39,52],[40,52],[41,52],[39,48],[40,48],[41,48]]){ if(inb(x,y)){ G.decor.push({kind:'dais', x:x+0.5, y:y+0.5}); G._surgeDais.push([x,y]); } }
+  // dressing graves (placed before the water so their tiles are skipped)
+  for(const [gx,gy] of [[30,58],[50,58],[30,44],[50,44],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
+  // the brine that fills the hall - one cell per floor tile; its level animates with the surge
+  for(let y=HALL.y0;y<=HALL.y1;y++) for(let x=HALL.x0;x<=HALL.x1;x++){
+    if(!inb(x,y) || solidAt(x,y)) continue;
+    if(G._surgeDais.some(d=>d[0]===x && d[1]===y)) continue;
+    G.decor.push({kind:'surgewater', x:x+0.5, y:y+0.5});
+  }
+  // THE DRAIN-PLATE on the far bank: reach it and the surge stills, the Bone Gate rises
+  G.decor.push({kind:'drainplate', x:40.5, y:44.5, label:'the drain-plate'});
   // R3: the warden's hoard
   G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
   G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
-  for(const [gx,gy] of [[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
   G.critters=[];
-  // ---- init the tide (starts drained) ----
-  G._tide=0; G._tideAnim=0; G._tideValve=false; G._tombGateOpen=false;
-  reTide();
-  // a cleared run (the warden is down) leaves the vault open: valve thrown, brine high, gate up
-  if(P.story && P.story.tombBossDown){ G._tideValve=true; G._tide=1; G._tideAnim=1; reTide(); }
+  G._surgeT=0; G._surgeLvl=0; G._surgeStopped=false; G._surgeHint=0;
+  // a cleared run (the warden is down) leaves the surge stilled and the gate open
+  if(P.story && P.story.tombBossDown){ G._surgeStopped=true;
+    for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); } }
 }
-// float the player off a tile that just went under, to the nearest dry footing (south first)
-function shoveToDry(tx,ty){
-  for(let r=1;r<=5;r++) for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){
-    const nx=tx+dx*r, ny=ty+dy*r; if(inb(nx,ny) && !solidAt(nx,ny)){ P.x=nx+0.5; P.y=ny+0.5; P.click=null; burst(P.x,P.y-0.3,'#bfe0f4',10,2); return; } }
+// the surge cycle: ~2.6s drained (safe to dash), ~2.4s flooded (shelter on a dais)
+function surgeLevel(t){
+  const P2=5.0, ph=((t%P2)/P2+1)%1;
+  if(ph<0.44) return 0;
+  if(ph<0.52) return (ph-0.44)/0.08;
+  if(ph<0.92) return 1;
+  return 1-(ph-0.92)/0.08;
 }
-// recompute what the current tide floods/drains, floats the pontoon, and (valve + high) the gate
-function reTide(){
-  const t=G._tide||0;
-  for(const d of G.decor){
-    if(d.kind==='tidewater'){ const f=(t>=d.floodAt); if(f!==d.flooded){ d.flooded=f; const tx=Math.floor(d.x),ty=Math.floor(d.y);
-      setSolid(tx,ty, f?1:0); if(f && Math.floor(P.x)===tx && Math.floor(P.y)===ty) shoveToDry(tx,ty); } }
-    else if(d.kind==='floatbridge'){ const up=(t===1), tx=Math.floor(d.x),ty=Math.floor(d.y); setSolid(tx,ty, up?0:1);
-      if(!up && Math.floor(P.x)===tx && Math.floor(P.y)===ty) shoveToDry(tx,ty); }
-  }
-  if(G._tideValve && t===1 && !G._tombGateOpen){ G._tombGateOpen=true;
-    for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
-    Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,190,235,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
-    banner('THE BONE GATE RISES','THE TIDE-FLOAT HAULS IT UP');
-    toast('Brine surges into the gate-well and the great float lifts, hauling the Bone Gate up on streaming chains. <b>The Drowned Vault lies open.</b>',5200); }
+function surgeThrowback(){
+  const st=REACHDEEP_ZONES.entry;
+  if(Snd.boss) Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(20);
+  burst(P.x,P.y-0.4,'#bfe0f4',18,2.6); shockwave(P.x,P.y,'rgba(120,190,235,0.8)',44);
+  P.x=st.x+0.5; P.y=st.y+3.5; P.click=null; P.moving=false; P.slideDir=null;
+  if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+  if(!G._surgeHint){ G._surgeHint=1; toast('The surge sweeps you back to the stair. <b>Cross only while the brine is low</b> - hop dais to dais, and wait on a dais when it rises.',5200); }
+}
+function stopSurge(){
+  if(G._surgeStopped) return;
+  G._surgeStopped=true; G._surgeLvl=0;
+  for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
   invalidateScenery&&invalidateScenery();
-}
-function toggleTide(){
-  G._tide = G._tide? 0:1;
-  Snd.quest&&Snd.quest(); buzz&&buzz(8); G.shake=Math.max(G.shake||0,0.35);
-  reTide();
-  if(G._tide) banner('THE TIDE RISES','BRINE FLOODS THE CATACOMB');
-  else banner('THE TIDE FALLS','THE BRINE DRAINS AWAY');
-}
-function throwTideValve(b){
-  if(b.thrown){ toast('The tide-valve is already open.',2600); return; }
-  if((G._tide||0)!==0){ toast('The tide-valve lies deep under the brine. <b>Drain the tide</b> at the wheel to reach it.',4000); Snd.step&&Snd.step(5); return; }
-  b.thrown=true; G._tideValve=true;
-  Snd.quest&&Snd.quest(); burst(b.x,b.y-0.3,'#bfe0f4',14,2.2); shockwave(b.x,b.y,'rgba(120,190,235,0.7)',36);
-  toast('The tide-valve grinds open, weeping brine. Now <b>raise the tide</b> at the wheel - the gate-float will haul the Bone Gate up.',4600);
+  Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,190,235,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
+  banner('THE DRAIN OPENS','THE SURGE FALLS AND THE BONE GATE RISES');
+  toast('You slam the drain-plate home and the brine roars away down the dark - the surge falls still, and the Bone Gate grinds up. The Drowned Vault lies open.',5200);
+  autoSave&&autoSave();
 }
 function updateReachDeep(dt){
-  G._tideAnim = (G._tideAnim||0) + ((G._tide||0)-(G._tideAnim||0))*Math.min(1,dt*3);   // smooth the visible brine level
+  if(G._surgeStopped) return;
+  G._surgeT=(G._surgeT||0)+dt;
+  G._surgeLvl=surgeLevel(G._surgeT);
+  const dp=G.decor.find(d=>d.kind==='drainplate');
+  if(dp && Math.floor(P.x)===Math.floor(dp.x) && Math.floor(P.y)===Math.floor(dp.y)){ stopSurge(); return; }
+  // caught in the open by the risen brine -> swept back to the stair (once; the throwback
+  // lands you outside the hall, so it never repeats in place)
+  if(G._surgeLvl>0.55 && !P.dead && (P.rollT||0)<=0){
+    const H=G._surgeHall;
+    if(H && P.y>=H.y0-0.4 && P.y<=H.y1+0.6 && P.x>=H.x0 && P.x<=H.x1){
+      const onDais=(G._surgeDais||[]).some(d=>d[0]===Math.floor(P.x) && d[1]===Math.floor(P.y));
+      if(!onDais) surgeThrowback();
+    }
+  }
 }
 function spawnMobsReachDeep(){
   const Z=REACHDEEP_ZONES;
@@ -4149,8 +4156,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE EMBERDEEP','ROUTE THE MOLTEN FLOW TO OPEN THE WAY'),1200);
     setTimeout(()=>toast('<i>Rivers of lava bar the fire-heart.</i> Throw the <b>sluice-stones</b> to divert the flow: it <b>cools the channel</b> in your way (walk it once it darkens) and <b>floods a trough</b> that spins a fire-wheel - and a gate grinds up once its wheels turn.',8500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
-    setTimeout(()=>banner('THE DROWNED CATACOMB','WORK THE TIDE - DRAIN TO DELVE, RAISE TO CROSS'),1200);
-    setTimeout(()=>toast('<i>A brine moat bars the way.</i> At the <b>tide-wheel</b>: <b>drain</b> the tide to walk the sump and throw the <b>tide-valve</b>, then <b>raise</b> it - the brine floats the pontoon across the moat and hauls the Bone Gate up. The wheel sits on the near bank, so you can always cross back to it.',9000),1800); }
+    setTimeout(()=>banner('THE DROWNED CATACOMB','READ THE SURGE - CROSS ON THE LOW WAVE'),1200);
+    setTimeout(()=>toast('<i>The brine rises and falls in waves.</i> Cross the hall by hopping the raised <b>bone-daises</b> - dash across the open floor only while the surge is <b>low</b>, and wait on a dais when it rises. Get caught in the open and it sweeps you back. Reach the <b>drain-plate</b> on the far side to still the surge and raise the gate.',9000),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','A CURSED GALE HOWLS THROUGH THE BONES'),1200);
     setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your line, so cross in the <b>lulls</b> or duck behind a pillar. To open each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up and <b>locks there</b> - then make your way across the wind to it.',8500),1800); }
