@@ -301,9 +301,18 @@ function render(){
       const fl=0.9+0.1*Math.sin(G.time*7+li*2.1);
       const r=(b.kind==='lamp'?74:56)*fl;
       const gg=cx.createRadialGradient(s.x,s.y-40,4,s.x,s.y-40,r);
-      gg.addColorStop(0,'rgba(255,180,80,'+(0.26*night)+')');
-      gg.addColorStop(1,'rgba(255,180,80,0)');
+      gg.addColorStop(0,'rgba(255,184,86,'+(0.26*night)+')');
+      gg.addColorStop(0.5,'rgba(255,150,66,'+(0.12*night)+')');
+      gg.addColorStop(1,'rgba(255,150,60,0)');
       cx.fillStyle=gg; cx.beginPath(); cx.arc(s.x,s.y-40,r,0,TAU); cx.fill();
+      // warm pool spilling onto the floor beneath the flame (flattened to the
+      // ground plane) so lamplight reads as cast illumination, not just a halo
+      const pr=r*0.7;
+      const pg=cx.createRadialGradient(s.x,s.y-6,3,s.x,s.y-6,pr);
+      pg.addColorStop(0,'rgba(255,166,74,'+(0.22*night*fl)+')');
+      pg.addColorStop(1,'rgba(255,150,60,0)');
+      cx.save(); cx.translate(s.x,s.y-6); cx.scale(1,0.5); cx.translate(-s.x,-(s.y-6));
+      cx.fillStyle=pg; cx.beginPath(); cx.arc(s.x,s.y-6,pr,0,TAU); cx.fill(); cx.restore();
     }
     cx.globalCompositeOperation='source-over';
   }
@@ -2442,6 +2451,24 @@ function drawPlayer(s){
     const g=cx, n=3, base=-46;
     for(let i=0;i<n;i++){ const a=G.time*6 + i/n*TAU; const sx=s.x+Math.cos(a)*11, sy=s.y+base+Math.sin(a)*4;
       g.fillStyle='#ffe27a'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('✦', sx, sy); }
+  }
+  // ---- water reflection + wake ----
+  // When wading, surfing or sailing over water, cast a wobbling, flipped mirror of
+  // the figure and open a V-wake behind the stride. Water only, top tier only.
+  if(!LOWFX && !G.interior && !P.dead && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
+    cx.save();
+    cx.globalAlpha=0.20;
+    const wob=Math.sin(G.time*3)*1.3;
+    cx.translate(s.x+wob, s.y+7); cx.scale(1,-0.7); cx.translate(-(s.x+wob), -(s.y+7));
+    drawPlayerFigure({x:s.x+wob, y:s.y+7});
+    cx.restore();
+    if(P.moving && tileAt(P.x|0,P.y|0)===T.SHALLOW){
+      const b=(P.dir.x-P.dir.y), d=(P.dir.x+P.dir.y)*0.5;   // screen-space heading
+      cx.save(); cx.globalAlpha=0.5; cx.strokeStyle='rgba(210,236,255,0.65)'; cx.lineWidth=1.6;
+      for(const sgn of [-1,1]){ cx.beginPath(); cx.moveTo(s.x,s.y+2);
+        cx.lineTo(s.x-b*11+sgn*9, s.y-d*11+4+sgn*2.2); cx.stroke(); }
+      cx.restore();
+    }
   }
   if(P.riding){
     const onMoa=P.unlocked&&P.unlocked.moa;
