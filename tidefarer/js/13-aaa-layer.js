@@ -334,6 +334,7 @@ const THR = {
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
   vAdv:0, kAdv:0, flee:0, pflee:0, gold:0.12, violet:0, clash:0, guards:0, kingDown:0, dark:0,
+  kHand:0, vHand:0,   // casting gesture: how far the King's / Vath's hands are raised (0..1)
   fx:1.3, fy:0.9, zoom:1.18, stepH:0, stepP:0, stepK:0, stepV:0,
   hero:null, prince:null, king:null, vath:null, _ph:null, _pp:null, _pk:null, _pv:null,
   flash:0, flashT:5, pulseR:0, take:0, strike:0, sparks:[],
@@ -384,6 +385,7 @@ function throneCutscene(){
   THR.cv=cv; THR.cx=cv.getContext('2d');
   THR.t=0; THR.prev=0; THR.idx=0;
   THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.pflee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
+  THR.kHand=0; THR.vHand=0;
   THR.fx=THR_STAGE[0].foc[0]; THR.fy=THR_STAGE[0].foc[1]; THR.zoom=THR_STAGE[0].zoom;
   THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
   THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
@@ -473,6 +475,15 @@ function _thrLoop(ts){
   THR.guards  = e(THR.guards,  b.guards||0,   2.0);
   THR.kingDown= e(THR.kingDown,st.kingDown||0,1.6);
   THR.dark    = e(THR.dark,    b.dark?1:0,    0.8);
+  // hands lift for the casting gesture BEFORE the beams: Vath's hand is already up as he
+  // enters (0), fully raised on the declaration (1), then thrusts down to loose the strike
+  // (2+) and closes to a grasp as he takes the Tideglass (7). The King raises both hands in
+  // front the moment he speaks (1) and holds them up while he channels, until he is broken.
+  const _i=THR.idx;
+  const kHandT = (_i>=1 && (st.kingDown||0)<0.5) ? 1 : 0;
+  const vHandT = _i<=0 ? 0.6 : _i===1 ? 1 : _i===7 ? 0.7 : _i>=8 ? 0 : 0.32;
+  THR.kHand = e(THR.kHand, kHandT, 3.2);
+  THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
   THR.zoom=e(THR.zoom,st.zoom||1.15,1.4);
   THR.take=Math.max(0,THR.take-dt*0.5);
@@ -493,8 +504,11 @@ function _thrLoop(ts){
   const GRAB=0.2;
   THR.pflee = THR.flee<=GRAB ? 0 : (THR.flee-GRAB)/(1-GRAB);
   { const g=Math.min(1,Math.max(0,(THR.flee-GRAB)/0.16)), grab=g*g*(3-2*g);
-    const trail=lp(HERO0,HEROF,Math.max(0,THR.flee-0.13));   // just behind her, on her lane
-    THR.prince={ x:PRIN0.x+(trail.x-PRIN0.x)*grab, y:PRIN0.y+(trail.y-PRIN0.y)*grab }; }
+    // towed a short step BEHIND her and off to one side, so the gripping arm bridges a
+    // clear gap between them (not hidden single-file behind the big sprites).
+    const hk=3.7+THR.flee*5.7;                 // the princess's depth down the nave
+    const tgt=_beside(hk-0.5, 0.32);           // a clear step behind and to his side
+    THR.prince={ x:PRIN0.x+(tgt.x-PRIN0.x)*grab, y:PRIN0.y+(tgt.y-PRIN0.y)*grab }; }
   THR.king  = lp(KING0,KINGF,THR.kAdv);
   THR.vath  = lp(VATH0,VATHF,THR.vAdv);
   // gait: advance a walk-cycle while an actor is actually moving, decay to idle otherwise
@@ -571,6 +585,12 @@ function _thrDraw(){
   }
   items.sort((a,b)=>a.d-b.d);
   for(const it of items) it.fn();
+  // hands raised in front (drawn over the figures): the casting gesture that precedes and
+  // then looses the beams. Vath's one hand, the King's two, palms glowing as the magic gathers.
+  if(THR.vHand>0.02) _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true);
+  if(THR.kHand>0.02) _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false);
+  // the princess's arm, outstretched to grip the prince's collar as she hauls him out
+  if(THR.pflee>0.001) _thrGrab(SC,Z,sibA);
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
   // the clash of the two magics, drawn between the King and Vath
@@ -609,6 +629,59 @@ function _thrActor(SC,Z,pos,look,dir,step,opt){
   try{ if(typeof drawHumanoid==='function')
     drawHumanoid(cx,s.x,gy,Object.assign({},look,{size,dir,step:step||0,hurt:!!opt.hurt,weapon:opt.weapon})); }catch(err){}
   cx.restore();
+  cx.restore();
+}
+// Raised hands in front of a figure - the casting gesture. `amt` 0..1 lifts the forearms;
+// the palms glow in the figure's magic colour as the power gathers, so the beams read as
+// loosed FROM the hands. `single` draws one arm (Vath), else two (the King), framing his chest.
+function _thrHands(SC,Z,pos,amt,skin,sleeve,col,single){
+  const cx=THR.cx, s=SC(pos.x,pos.y);
+  const shY=s.y-25*Z;                          // where the arms leave the body
+  const hY =s.y-28*Z-12*Z*amt;                 // the raised hands, higher as the gesture peaks
+  const sp=7*Z;
+  const arms = single ? [ {hx:s.x+7*Z, ox:s.x+3.5*Z} ]
+                      : [ {hx:s.x-sp, ox:s.x-3.5*Z}, {hx:s.x+sp, ox:s.x+3.5*Z} ];
+  for(const a of arms){
+    // the raised forearm (sleeve), body -> hand
+    cx.save(); cx.lineCap='round'; cx.strokeStyle=sleeve; cx.lineWidth=4.6*Z;
+    cx.beginPath(); cx.moveTo(a.ox,shY); cx.lineTo(a.hx,hY); cx.stroke();
+    cx.strokeStyle='rgba(24,16,10,0.5)'; cx.lineWidth=1; cx.stroke(); cx.restore();
+    // the palm glow (magic gathering)
+    cx.save(); cx.globalCompositeOperation='lighter';
+    const r=13*Z*Math.max(0.4,amt);
+    const g=cx.createRadialGradient(a.hx,hY,1,a.hx,hY,r);
+    g.addColorStop(0,`rgba(${col},${0.75*amt})`); g.addColorStop(1,`rgba(${col},0)`);
+    cx.fillStyle=g; cx.beginPath(); cx.arc(a.hx,hY,r,0,TAU); cx.fill(); cx.restore();
+    // the mitt
+    cx.fillStyle=skin; cx.beginPath(); cx.arc(a.hx,hY,3.3*Z,0,TAU); cx.fill();
+    cx.strokeStyle='rgba(24,16,10,0.85)'; cx.lineWidth=1.3*Z; cx.stroke();
+  }
+}
+// The princess's grip on the prince: an outstretched arm from her shoulder to his collar,
+// with her mitt clamped on him, appearing as she seizes him (the same `GRAB` ramp) and held
+// while she hauls him out. This is the literal grab the escape beat describes.
+function _thrGrab(SC,Z,alpha){
+  const cx=THR.cx;
+  const g=Math.min(1,Math.max(0,(THR.flee-0.2)/0.16));  // matches the seize in _thrLoop
+  if(g<0.05 || alpha<=0.02) return;
+  const h=SC(THR.hero.x,THR.hero.y), p=SC(THR.prince.x,THR.prince.y);
+  const sx=h.x, sy=h.y-30*Z;                    // her shoulder
+  const gx=p.x, gy=p.y-30*Z;                    // his wrist
+  const ex=sx+(gx-sx)*0.5, ey=sy+(gy-sy)*0.5;   // elbow
+  cx.save(); cx.globalAlpha=Math.min(1,alpha)*g; cx.lineCap='round'; cx.lineJoin='round';
+  // upper arm (her green sleeve), shoulder -> elbow
+  cx.strokeStyle=LOOK_HERO.shirt; cx.lineWidth=5.6*Z;
+  cx.beginPath(); cx.moveTo(sx,sy); cx.lineTo(ex,ey); cx.stroke();
+  cx.strokeStyle='rgba(24,16,10,0.55)'; cx.lineWidth=1.1*Z;
+  cx.beginPath(); cx.moveTo(sx,sy); cx.lineTo(ex,ey); cx.stroke();
+  // forearm (bare skin), elbow -> hand: contrasts against both siblings so it reads
+  cx.strokeStyle=LOOK_HERO.skin; cx.lineWidth=4.6*Z;
+  cx.beginPath(); cx.moveTo(ex,ey); cx.lineTo(gx,gy); cx.stroke();
+  cx.strokeStyle='rgba(24,16,10,0.55)'; cx.lineWidth=1.1*Z;
+  cx.beginPath(); cx.moveTo(ex,ey); cx.lineTo(gx,gy); cx.stroke();
+  // her fist, clamped on him
+  cx.fillStyle=LOOK_HERO.skin; cx.beginPath(); cx.arc(gx,gy,4*Z,0,TAU); cx.fill();
+  cx.strokeStyle='rgba(24,16,10,0.9)'; cx.lineWidth=1.4*Z; cx.stroke();
   cx.restore();
 }
 // the tiled iso floor of the nave: cool stone, a royal carpet up the centre, a raised dais
