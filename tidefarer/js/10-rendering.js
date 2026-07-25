@@ -61,7 +61,8 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
-  tidewater:1, floatbridge:1, tidewheel:1, tidevalve:1};
+  tidewater:1, floatbridge:1, tidewheel:1, tidevalve:1,
+  skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1338,6 +1339,37 @@ function drawDecor(b,s){
     g.strokeStyle= b.thrown?'#5a7a68':(reachable?'#5a8aa8':'#3a444c'); g.lineWidth=1.6;
     for(let i=0;i<4;i++){ const a=i/4*TAU+(b.thrown?0.5:0); g.beginPath(); g.moveTo(0,-3); g.lineTo(Math.cos(a)*5,-3+Math.sin(a)*5); g.stroke(); }
     if(reachable){ g.fillStyle='rgba(127,196,232,'+(0.4+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
+    g.restore(); return;
+  }
+  if(b.kind==='skyemitter'){
+    // the prism-ward emitter crystal, plus the traced rainbow beam (screen-projected dots)
+    const g=cx; g.save(); g.translate(s.x,s.y-4);
+    g.fillStyle='#eaf2ff'; g.beginPath(); g.moveTo(0,-8); g.lineTo(6,0); g.lineTo(0,8); g.lineTo(-6,0); g.closePath(); g.fill();
+    g.strokeStyle='#8aa0c0'; g.lineWidth=1.4; g.stroke();
+    g.restore();
+    const path=(typeof G!=='undefined'&&G._skyBeamPath)||[];
+    if(path.length && typeof worldToScreen==='function'){ const g2=cx;
+      for(let i=0;i<path.length;i++){ const ss=worldToScreen(path[i][0],path[i][1]); const hue=(i*24+G.time*140)%360;
+        g2.fillStyle='hsla('+(hue|0)+',95%,70%,0.9)'; g2.beginPath(); g2.arc(ss.x, ss.y-8, 3.2, 0, TAU); g2.fill(); } }
+    return;
+  }
+  if(b.kind==='skyprism'){
+    // a rotatable prism; the coloured bar shows its mirror orientation ('/' or '\')
+    const g=cx; drawShadowAt(g,s.x,s.y,6); g.save(); g.translate(s.x,s.y-4);
+    g.fillStyle='rgba(222,236,255,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(7,0); g.lineTo(0,9); g.lineTo(-7,0); g.closePath(); g.fill();
+    g.strokeStyle='#7f9ec0'; g.lineWidth=1.4; g.stroke();
+    g.strokeStyle='hsl('+((G.time*60)%360|0)+',90%,72%)'; g.lineWidth=2.6; g.lineCap='round';
+    if(b.mirror==='/'){ g.beginPath(); g.moveTo(-4,4); g.lineTo(4,-4); g.stroke(); }
+    else { g.beginPath(); g.moveTo(-4,-4); g.lineTo(4,4); g.stroke(); }
+    g.restore(); return;
+  }
+  if(b.kind==='skyward'){
+    // the ward-crystal target: dark until the beam lands, then blazing white-gold
+    const g=cx, lit=b.lit; drawShadowAt(g,s.x,s.y,6); g.save(); g.translate(s.x,s.y-6);
+    if(lit){ const gl=0.5+0.4*Math.sin(G.time*4); g.fillStyle='rgba(255,255,255,'+(0.3+0.2*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,0,13,0,TAU); g.fill(); }
+    g.fillStyle= lit? '#fff6c0':'#3a4a5a'; g.beginPath(); g.moveTo(0,-11); g.lineTo(7,0); g.lineTo(0,11); g.lineTo(-7,0); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#ffe27a':'#6a7a8a'; g.lineWidth=1.8; g.stroke();
+    if(!lit){ g.fillStyle='rgba(150,180,210,'+(0.3+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
     g.restore(); return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite

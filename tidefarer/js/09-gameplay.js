@@ -227,6 +227,8 @@ function nearestInteract(){
       if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
     if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.7 && d<bd){ bd=d; best={type:'skytile',o:b,label:b.set?'Rune (lit)':'Tread rune'}; } }
+    if(b.kind==='skyprism' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'skyprism',o:b,label:'Rotate prism'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
@@ -299,6 +301,7 @@ function doInteract(){
   if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
   if(it.type==='skybird'){ facePoint(it.o.x,it.o.y); if(typeof skyBirdSpeak==='function') skyBirdSpeak(); return; }
   if(it.type==='skytile'){ facePoint(it.o.x,it.o.y); if(typeof pressSkyTile==='function') pressSkyTile(it.o); return; }
+  if(it.type==='skyprism'){ facePoint(it.o.x,it.o.y); if(typeof rotateSkyPrism==='function') rotateSkyPrism(it.o); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
   if(it.type==='cat'){

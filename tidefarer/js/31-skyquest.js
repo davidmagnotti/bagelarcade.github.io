@@ -79,10 +79,14 @@ function placeObjectsSkyDungeon(){
   // a couple of cloud-lamps at the landing
   { const s=skyIsle('start');
     G.decor.push({kind:'lamp', x:s.x-3+0.5, y:s.y+0.5}); G.decor.push({kind:'lamp', x:s.x+3+0.5, y:s.y+0.5}); }
-  // PUZZLE 2 - the rune-tiles: tread I..V in order. A wrong tile wakes a wraith.
-  { const s=skyIsle('i2'), n=5, solved=!!P.story.skyG2;
-    for(let i=0;i<n;i++){ const a=(i/n)*TAU - Math.PI/2, tx=Math.round(s.x+Math.cos(a)*2.4), ty=Math.round(s.y+Math.sin(a)*2.0);
-      if(inb(tx,ty)) G.decor.push({kind:'skytile', x:tx+0.5, y:ty+0.5, ord:i+1, group:'sky', set:solved}); } }
+  // PUZZLE 2 - THE PRISM WARD: a rainbow-beam springs from a crystal; rotate the prisms to
+  // bend it onto the dark ward-crystal and the wind-ward parts. No order, no penalty - just
+  // aim the light. (Solution: first prism '/', second '\'.)
+  { const solved=!!P.story.skyG2;
+    G.decor.push({kind:'skyemitter', x:72.5, y:112.5, dir:{x:1,y:0}});
+    G.decor.push({kind:'skyprism', x:78.5, y:112.5, mirror: solved?'/':'\\'});
+    G.decor.push({kind:'skyprism', x:78.5, y:108.5, mirror:'\\'});
+    G.decor.push({kind:'skyward', x:74.5, y:108.5, lit:solved}); }
   // the gated bridges
   for(const g of SKY_GATES){
     const m=skyGateMid(g), tiles=skyGatePlugTiles(g), open=!!P.story[g.flag];
@@ -92,6 +96,36 @@ function placeObjectsSkyDungeon(){
   // the Storm-Eye's hoard, on the last isle
   { const s=skyIsle('i6'); G.decor.push({kind:'chest', x:s.x+0.5, y:s.y-3+0.5, sky:1, rich:11}); }
   G.critters=[];
+  if(typeof skyBeamTrace==='function') skyBeamTrace();   // cast the prism beam for the opening frame
+}
+/* ---------- puzzle 2: THE PRISM WARD - bend the rainbow beam to the ward-crystal ---------- */
+function skyBeamTrace(){
+  const em=G.decor.find(d=>d.kind==='skyemitter'); if(!em) return;
+  const prisms=G.decor.filter(d=>d.kind==='skyprism');
+  const tgt=G.decor.find(d=>d.kind==='skyward');
+  let x=Math.floor(em.x), y=Math.floor(em.y), dx=em.dir.x, dy=em.dir.y, hit=false;
+  const path=[];
+  for(let step=0; step<48; step++){
+    x+=dx; y+=dy; if(!inb(x,y)) break;
+    path.push([x+0.5, y+0.5]);
+    if(tgt && Math.floor(tgt.x)===x && Math.floor(tgt.y)===y){ hit=true; break; }
+    const pr=prisms.find(p=>Math.floor(p.x)===x && Math.floor(p.y)===y);
+    if(pr){ if(pr.mirror==='/'){ const nx=-dy, ny=-dx; dx=nx; dy=ny; } else { const nx=dy, ny=dx; dx=nx; dy=ny; } }
+  }
+  G._skyBeamPath=path;
+  if(tgt) tgt.lit=hit;
+  if(hit && !(P.story && P.story.skyG2)){
+    P.story=P.story||{}; P.story.skyG2=1; openSkyGate('g2');
+    banner('THE PRISM WARD ANSWERS','THE WIND-WARD PARTS');
+    if(Snd.quest) Snd.quest();
+    if(typeof autoSave==='function') autoSave();
+  }
+}
+function rotateSkyPrism(b){
+  b.mirror = (b.mirror==='/')?'\\':'/';
+  if(Snd.pickup) Snd.pickup();
+  burst(b.x, b.y-0.3, 'hsl('+((G.time*80)%360|0)+',90%,70%)', 10, 1.8);
+  skyBeamTrace();
 }
 function spawnSkyWraith(x,y,puzzle,elite){
   const sp=findOpenNear(Math.round(x),Math.round(y),4) || [Math.round(x),Math.round(y)];
@@ -189,7 +223,10 @@ function pressSkyTile(b){
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
-  ensureSnatcher();   // wakes the cloud-snatcher the instant you solve the rune-tiles further in
+  ensureSnatcher();   // wakes the cloud-snatcher the instant you solve the prism ward further in
+  // a one-time nudge when you first reach the Prism Ward isle
+  if(!P.story.skyG2 && !G._prismHint && dist(P.x,P.y,76,112)<7){ G._prismHint=1;
+    toast('<b>The Prism Ward.</b> A rainbow beam springs from the crystal - <b>rotate the prisms</b> to bend the light onto the dark ward-crystal, and the wind-ward parts. No order, no penalty; just aim the beam.',6000); }
 
   // P1 / P5 - open the perch-gate once the wraiths are all felled
   if(!P.story.skyG1 && G.mobs.filter(m=>m.puzzle===1 && !m.dead).length===0){
