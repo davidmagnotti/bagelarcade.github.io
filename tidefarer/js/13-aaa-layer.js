@@ -327,10 +327,47 @@ const THR = {
       vath:1, gold:0.04, violet:0.5, clash:0, flee:1, guards:1, dark:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
-  vath:0, gold:0.12, violet:0, clash:0, flee:0, guards:0, dark:0,
-  flash:0, flashT:5, pulseR:0, take:0, sparks:[], drops:[],
+  vAdv:0, kAdv:0, flee:0, gold:0.12, violet:0, clash:0, guards:0, kingDown:0, dark:0,
+  fx:1.3, fy:0.9, zoom:1.18, stepH:0, stepP:0, stepK:0, stepV:0,
+  hero:null, prince:null, king:null, vath:null, _ph:null, _pp:null, _pk:null, _pv:null,
+  flash:0, flashT:5, pulseR:0, take:0, sparks:[],
   running:false, ended:false, started:false,
 };
+/* Per-beat staging the beats table doesn't carry: how far the King has stepped down
+   (kAdv), where the camera centres (foc, world tiles), the scene zoom, and whether the
+   King has dropped (kingDown). Indexed 1:1 with THR.beats. */
+const THR_STAGE=[
+  {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},
+  {kAdv:0.85, foc:[1.7,1.3], zoom:1.24, kingDown:0},
+  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},
+  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},
+  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},
+];
+/* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
+   The nave runs down the line x==y (which projects straight down the screen);
+   _beside(k,o) steps o tiles to one side of the centreline at depth k. */
+const _along =k=>({x:k,y:k});
+const _beside=(k,o)=>({x:k+o,y:k-o});
+const THRONE = _along(0.6);
+const KING0  = _along(1.5),  KINGF = _along(2.55);            // King: throne-front -> stepped down to shield
+const VATH0  = _beside(-0.6,2.0), VATHF = _beside(1.5,1.15);  // Vath: side door -> at the King's right hand
+const HERO0  = _beside(3.7,-0.5), HEROF = _beside(9.4,-0.5);  // princess: mid-nave -> out the doors
+const PRIN0  = _beside(3.7, 0.5), PRINF = _beside(9.4, 0.5);  // prince: beside her
+const COLUMNS=[]; for(const k of [0.6,2.6,4.6,6.6]) for(const o of [-2.6,2.6]) COLUMNS.push(_beside(k,o));
+const GUARDPOS=[-2,-1,0,1,2].map(o=>_beside(6.1,o));
+/* Real in-game appearance objects (fed to drawHumanoid, exactly as the live world does) */
+const LOOK_HERO ={hero:true,fem:true,skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',crest:true};
+const LOOK_KING ={skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',necklace:'#c9a24e'};
+const LOOK_KSPENT={skin:'#9a9488',hair:'#c8c4ba',shirt:'#2c2836',pants:'#232030',robe:'#332b3e',trim:'#7a6a4a',beard:'#c8c4ba',beardLong:true,hat:'crown',necklace:'#6a5f45'};
+const LOOK_VATH ={skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'};
+const LOOK_PRINCE={skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'};
+const LOOK_GUARD={skin:'#c9a37a',hair:'#3a2f26',shirt:'#46525f',pants:'#33302a',armor:2,pauldrons:true,hat:'hood',hatColor:'#556170'};
 function throneCutscene(){
   const ov=document.getElementById('thrOv');
   const cv=document.getElementById('thrCv');
@@ -339,8 +376,12 @@ function throneCutscene(){
   if(!ov||!cv){ _thrEndAct(); return; }   // graceful fallback: resolve Act I and sail on
   THR.cv=cv; THR.cx=cv.getContext('2d');
   THR.t=0; THR.prev=0; THR.idx=0;
-  THR.vath=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.flee=0; THR.guards=0; THR.dark=0;
-  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.sparks.length=0; THR.drops.length=0;
+  THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
+  THR.fx=THR_STAGE[0].foc[0]; THR.fy=THR_STAGE[0].foc[1]; THR.zoom=THR_STAGE[0].zoom;
+  THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
+  THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
+  THR._ph={...HERO0}; THR._pp={...PRIN0}; THR._pk={...KING0}; THR._pv={...VATH0};
+  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.sparks.length=0;
   THR.ended=false; THR.started=false; THR.running=true;
   sub.classList.remove('show'); title.classList.remove('show');
   ov.style.display='flex';
@@ -413,24 +454,42 @@ function _thrLoop(ts){
   if(dt>0.05) dt=0.05;
   THR.t+=dt;
   const b=THR.beats[THR.idx]||THR.beats[0];
-  const ease=(cur,tgt,k)=>cur+(tgt-cur)*Math.min(1,dt*k);
-  THR.vath   = ease(THR.vath,   b.vath||0,   1.6);
-  THR.gold   = ease(THR.gold,   b.gold||0,   b.gold<THR.gold?4.5:2.2);  // guttering falls fast
-  THR.violet = ease(THR.violet, b.violet||0, 2.0);
-  THR.clash  = ease(THR.clash,  b.clash||0,  3.0);
-  THR.flee   = ease(THR.flee,   b.flee||0,   1.3);
-  THR.guards = ease(THR.guards, b.guards||0, 2.2);
-  THR.dark   = ease(THR.dark,   b.dark?1:0,  0.8);
-  THR.take   = Math.max(0,THR.take-dt*0.5);
-  // storm-lightning through the east doors, keener as the violet rises
+  const st=THR_STAGE[THR.idx]||THR_STAGE[0];
+  const e=(cur,tgt,k)=>cur+(tgt-cur)*Math.min(1,dt*k);
+  THR.vAdv    = e(THR.vAdv,    b.vath||0,     1.4);
+  THR.kAdv    = e(THR.kAdv,    st.kAdv||0,    1.8);
+  THR.flee    = e(THR.flee,    b.flee||0,     1.1);
+  THR.gold    = e(THR.gold,    b.gold||0,     (b.gold||0)<THR.gold?4.5:2.2); // guttering falls fast
+  THR.violet  = e(THR.violet,  b.violet||0,   2.0);
+  THR.clash   = e(THR.clash,   b.clash||0,    3.0);
+  THR.guards  = e(THR.guards,  b.guards||0,   2.0);
+  THR.kingDown= e(THR.kingDown,st.kingDown||0,1.6);
+  THR.dark    = e(THR.dark,    b.dark?1:0,    0.8);
+  THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
+  THR.zoom=e(THR.zoom,st.zoom||1.15,1.4);
+  THR.take=Math.max(0,THR.take-dt*0.5);
+  // storm-lightning through the high windows, keener as the violet rises
   THR.flash=Math.max(0,THR.flash-dt*3.0);
   THR.flashT-=dt*(0.35+THR.violet*1.4);
-  if(THR.flashT<=0){ THR.flashT=2.4+Math.random()*4; THR.flash=Math.max(THR.flash,0.85); }
-  // the memory-rewrite ring, once kicked off, sweeps out and fades
-  if(THR.pulseR>0){ THR.pulseR+=dt*1.9; if(THR.pulseR>1.8) THR.pulseR=0; }
-  // clash sparks at the meeting point of the two magics
-  if(THR.clash>0.35 && Math.random()<THR.clash*0.9){
-    THR.sparks.push({x:0,y:0,vx:(Math.random()*2-1)*70,vy:(Math.random()*2-1)*70-10,life:0.5,max:0.5,
+  if(THR.flashT<=0){ THR.flashT=2.6+Math.random()*4.5; THR.flash=Math.max(THR.flash,0.8); }
+  if(THR.pulseR>0){ THR.pulseR+=dt*1.7; if(THR.pulseR>1.8) THR.pulseR=0; }
+  // world positions along the fixed staging paths
+  const lp=(a,c,k)=>({x:a.x+(c.x-a.x)*k, y:a.y+(c.y-a.y)*k});
+  THR.hero  = lp(HERO0,HEROF,THR.flee);
+  THR.prince= lp(PRIN0,PRINF,THR.flee);
+  THR.king  = lp(KING0,KINGF,THR.kAdv);
+  THR.vath  = lp(VATH0,VATHF,THR.vAdv);
+  // gait: advance a walk-cycle while an actor is actually moving, decay to idle otherwise
+  const gait=(p,prev,key)=>{ const d=Math.hypot(p.x-prev.x,p.y-prev.y);
+    if(d>0.0022) THR[key]+=dt*11; else { THR[key]*=(1-Math.min(1,dt*6)); if(Math.abs(THR[key])<0.01) THR[key]=0; } };
+  gait(THR.hero,THR._ph,'stepH');   THR._ph={x:THR.hero.x,y:THR.hero.y};
+  gait(THR.prince,THR._pp,'stepP'); THR._pp={x:THR.prince.x,y:THR.prince.y};
+  gait(THR.king,THR._pk,'stepK');   THR._pk={x:THR.king.x,y:THR.king.y};
+  gait(THR.vath,THR._pv,'stepV');   THR._pv={x:THR.vath.x,y:THR.vath.y};
+  // clash sparks at the meeting point of the two magics (screen-space, drawn at the node)
+  if(THR.clash>0.35 && Math.random()<THR.clash){
+    THR.sparks.push({x:(Math.random()*2-1)*10,y:(Math.random()*2-1)*10,
+      vx:(Math.random()*2-1)*70,vy:(Math.random()*2-1)*70-10,life:0.5,max:0.5,
       col:Math.random()<0.5?'#ffd27a':'#c9a0ff'});
   }
   for(const s of THR.sparks){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=90*dt; s.life-=dt; }
@@ -440,193 +499,191 @@ function _thrLoop(ts){
 }
 function _thrDraw(){
   const cx=THR.cx, W=THR.W, H=THR.H, t=THR.t; if(!cx||!W) return;
+  const Z=THR.zoom, HW=TW/2, HH=TH/2;
+  // camera: centre the eased focus point, at ~46% down the screen
+  const camx=(THR.fx-THR.fy)*HW*Z - W*0.5;
+  const camy=(THR.fx+THR.fy)*HH*Z - H*0.46;
+  const SC=(x,y)=>({ x:(x-y)*HW*Z - camx, y:(x+y)*HH*Z - camy });   // iso world -> screen
   const gold=THR.gold, violet=THR.violet, clash=THR.clash;
-  const floorY=H*0.72;
-  const S=Math.max(0.72,Math.min(1.5,H/560));
-  // --- back wall: cold stone, faintly lit by torches, storm-dark up top ---
-  const wall=cx.createLinearGradient(0,0,0,floorY);
-  wall.addColorStop(0,'#0b0e18'); wall.addColorStop(0.55,'#171b28'); wall.addColorStop(1,'#20242f');
-  cx.fillStyle=wall; cx.fillRect(0,0,W,floorY+2);
-  // faint stone courses
-  cx.strokeStyle='rgba(255,255,255,0.03)'; cx.lineWidth=1;
-  for(let y=H*0.14;y<floorY;y+=26){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
-  // --- east doorway on the right: the storm and the sea the siblings run for ---
-  const dwX=W*0.80, dwW=W*0.17, dwTop=H*0.16, dwBot=floorY;
-  cx.save();
-  cx.beginPath();
-  cx.moveTo(dwX,dwBot); cx.lineTo(dwX,dwTop+dwW*0.5);
-  cx.quadraticCurveTo(dwX,dwTop, dwX+dwW*0.5,dwTop);
-  cx.quadraticCurveTo(dwX+dwW,dwTop, dwX+dwW,dwTop+dwW*0.5);
-  cx.lineTo(dwX+dwW,dwBot); cx.closePath();
-  cx.clip();
-  const sky=cx.createLinearGradient(0,dwTop,0,dwBot);
-  sky.addColorStop(0,'#20283c'); sky.addColorStop(0.6,'#2b3346'); sky.addColorStop(1,'#3a4152');
-  cx.fillStyle=sky; cx.fillRect(dwX,dwTop,dwW,dwBot-dwTop);
-  if(THR.flash>0.01){ cx.fillStyle=`rgba(200,214,255,${0.6*THR.flash})`; cx.fillRect(dwX,dwTop,dwW,dwBot-dwTop); }
-  // rain through the doorway
-  cx.strokeStyle='rgba(200,220,250,0.32)'; cx.lineWidth=1; cx.beginPath();
-  for(let i=0;i<40;i++){
-    const rx=dwX+((i*53+ (t*260))% (dwW)); const ry=dwTop+((i*97+ t*520)%(dwBot-dwTop));
-    cx.moveTo(rx,ry); cx.lineTo(rx-3,ry+11);
+  // base darkness
+  cx.fillStyle='#090b12'; cx.fillRect(0,0,W,H);
+  // far wall + the high storm windows behind the throne (far edge at nave depth k=-1.6)
+  const farY=SC(-1.6,-1.6).y;
+  if(farY>0){
+    const wg=cx.createLinearGradient(0,0,0,farY);
+    wg.addColorStop(0,'#0c0f18'); wg.addColorStop(1,'#191d29');
+    cx.fillStyle=wg; cx.fillRect(0,0,W,farY);
+    const thrS=SC(THRONE.x,THRONE.y);
+    for(const off of [-165,165]) _thrWindow(cx, thrS.x+off*Z, Math.max(6,farY-150*Z), 52*Z, 150*Z, THR.flash);
+    if(THR.flash>0.01){ cx.fillStyle=`rgba(190,205,255,${0.16*THR.flash})`; cx.fillRect(0,0,W,farY); }
   }
-  cx.stroke();
-  cx.restore();
-  // doorway arch stone frame
-  cx.strokeStyle='#0a0d15'; cx.lineWidth=6*S;
-  cx.beginPath();
-  cx.moveTo(dwX,dwBot); cx.lineTo(dwX,dwTop+dwW*0.5);
-  cx.quadraticCurveTo(dwX,dwTop, dwX+dwW*0.5,dwTop);
-  cx.quadraticCurveTo(dwX+dwW,dwTop, dwX+dwW,dwTop+dwW*0.5);
-  cx.lineTo(dwX+dwW,dwBot); cx.stroke();
-  // --- shattered entry doors on the left, where Vath came in, spilling violet ---
-  const inX=W*0.03, inW=W*0.14, inTop=H*0.18;
-  const ing=cx.createLinearGradient(inX,0,inX+inW,0);
-  ing.addColorStop(0,`rgba(70,30,110,${0.25+0.45*violet})`); ing.addColorStop(1,'rgba(10,10,18,0)');
-  cx.fillStyle=ing; cx.fillRect(inX,inTop,inW,floorY-inTop);
-  // --- floor ---
-  const fl=cx.createLinearGradient(0,floorY,0,H);
-  fl.addColorStop(0,'#1a1e28'); fl.addColorStop(1,'#0c0e15');
-  cx.fillStyle=fl; cx.fillRect(0,floorY,W,H-floorY);
-  cx.strokeStyle='rgba(0,0,0,0.4)'; cx.lineWidth=1;
-  for(let i=1;i<7;i++){ const y=floorY+(H-floorY)*(i/7); cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
-  // magic-light spill on the floor
-  if(gold>0.05||violet>0.05){
-    const gspill=cx.createRadialGradient(W*0.46,floorY,4,W*0.46,floorY,W*0.4);
-    gspill.addColorStop(0,`rgba(255,196,90,${0.16*gold})`); gspill.addColorStop(1,'rgba(255,196,90,0)');
-    cx.fillStyle=gspill; cx.fillRect(0,floorY-4,W,H-floorY+4);
-    const vspill=cx.createRadialGradient(W*0.24,floorY,4,W*0.24,floorY,W*0.4);
-    vspill.addColorStop(0,`rgba(160,110,240,${0.16*violet})`); vspill.addColorStop(1,'rgba(160,110,240,0)');
-    cx.fillStyle=vspill; cx.fillRect(0,floorY-4,W,H-floorY+4);
+  // the iso stone floor + carpet runner, with magic light spilling across it
+  _thrFloor(SC,Z,t,gold,violet);
+  // depth-sorted set pieces and the REAL character sprites (drawHumanoid), back-to-front
+  const items=[];
+  items.push({d:THRONE.x+THRONE.y-0.2, fn:()=>_thrThrone(SC,Z,t)});
+  for(const c of COLUMNS) items.push({d:c.x+c.y, fn:()=>_thrColumn(SC,Z,c,t)});
+  const down=THR.kingDown;
+  { const dir=_thrFace(THR.king,THR.vath), look=down>0.5?LOOK_KSPENT:LOOK_KING;
+    items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,dir,THR.stepK,
+      {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:11*Z*down,
+       scale:1-0.17*down, hurt:down>0.15&&down<0.85})}); }
+  { const dir=THR.idx>=7?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+    items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
+      {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
+  const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
+  if(sibA>0.02){
+    const hdir=THR.flee>0.2?_thrFace(THR.hero,HEROF):_thrFace(THR.hero,THRONE);
+    const pdir=THR.flee>0.2?_thrFace(THR.prince,PRINF):_thrFace(THR.prince,THRONE);
+    items.push({d:THR.hero.x+THR.hero.y,    fn:()=>_thrActor(SC,Z,THR.hero,LOOK_HERO,hdir,THR.stepH,{alpha:sibA})});
+    items.push({d:THR.prince.x+THR.prince.y,fn:()=>_thrActor(SC,Z,THR.prince,LOOK_PRINCE,pdir,THR.stepP,{alpha:sibA})});
   }
-  // --- wall torches (warm flicker) ---
-  const torch=(tx)=>{
-    const ty=H*0.30, fl=0.8+0.2*Math.sin(t*9+tx);
-    const g=cx.createRadialGradient(tx,ty,2,tx,ty,60*S);
-    g.addColorStop(0,`rgba(255,180,90,${0.5*fl})`); g.addColorStop(1,'rgba(255,180,90,0)');
-    cx.fillStyle=g; cx.beginPath(); cx.arc(tx,ty,60*S,0,TAU); cx.fill();
-    cx.fillStyle='#ffcf8a'; cx.beginPath(); cx.ellipse(tx,ty,3.5*S,7*S*fl,0,0,TAU); cx.fill();
-  };
-  torch(W*0.16); torch(W*0.66);
-  // --- the Tideglass Throne on its dais, centre ---
-  const thX=W*0.46, thBase=floorY;
-  cx.save();
-  // dais steps
-  cx.fillStyle='#232733';
-  cx.fillRect(thX-70*S, thBase-6*S, 140*S, 8*S);
-  cx.fillStyle='#1b1f29';
-  cx.fillRect(thX-54*S, thBase-14*S, 108*S, 8*S);
-  // throne body: dark seat with a glassy tideglass back
-  cx.fillStyle='#161a24';
-  cx.fillRect(thX-26*S, thBase-58*S, 52*S, 46*S);
-  const tg=cx.createLinearGradient(thX,thBase-104*S,thX,thBase-40*S);
-  const tglow=0.4+0.3*Math.sin(t*1.4);
-  tg.addColorStop(0,`rgba(120,210,220,${0.5+0.2*tglow})`);
-  tg.addColorStop(1,'rgba(30,70,90,0.75)');
-  cx.fillStyle=tg;
-  cx.beginPath();
-  cx.moveTo(thX-24*S,thBase-58*S);
-  cx.lineTo(thX-24*S,thBase-98*S);
-  cx.quadraticCurveTo(thX,thBase-116*S, thX+24*S,thBase-98*S);
-  cx.lineTo(thX+24*S,thBase-58*S); cx.closePath(); cx.fill();
-  cx.restore();
-  // --- figures ---
-  const fig=(x,body,head,opt)=>{
-    opt=opt||{}; const s=(opt.s||1)*S, a=(opt.a==null?1:opt.a);
-    if(a<=0.02) return;
-    cx.save(); cx.translate(x,floorY); cx.globalAlpha=a; cx.scale(s,s);
-    if(opt.aura){ const g=cx.createRadialGradient(0,-24,2,0,-24,42);
-      g.addColorStop(0,opt.aura); g.addColorStop(1,'rgba(0,0,0,0)');
-      cx.fillStyle=g; cx.beginPath(); cx.arc(0,-24,42,0,TAU); cx.fill(); }
-    cx.fillStyle='rgba(0,0,0,0.35)'; cx.beginPath(); cx.ellipse(0,1,11,3.2,0,0,TAU); cx.fill();
-    cx.fillStyle=body;   // robe / body
-    cx.beginPath(); cx.moveTo(-8,-38);
-    cx.quadraticCurveTo(-12,-6,-9,0); cx.lineTo(9,0);
-    cx.quadraticCurveTo(12,-6,8,-38);
-    cx.quadraticCurveTo(0,-46,-8,-38); cx.closePath(); cx.fill();
-    if(opt.arm){ cx.strokeStyle=body; cx.lineWidth=3.4; cx.beginPath();
-      cx.moveTo(opt.arm<0?-7:7,-30); cx.lineTo(opt.arm<0?-20:20,-38); cx.stroke(); }
-    cx.fillStyle=head; cx.beginPath(); cx.arc(0,-44,5.4,0,TAU); cx.fill();
-    cx.restore();
-  };
-  // Vath: advances from the shattered doors toward the throne as `vath` rises
-  const vX=W*0.10+(W*0.22)*THR.vath;
-  fig(vX, '#3a2455', '#d8c6ec', {s:1.12, a:Math.min(1,THR.vath*1.6), arm:1,
-    aura:`rgba(160,110,240,${0.5*violet+0.15})`});
-  // King Aldous before the throne (kneels grey once the fire guts out)
-  const spent=1-Math.min(1,gold*3);   // 0 while burning, ->1 when the light is gone
-  const kX=thX-2*S;
-  fig(kX, spent>0.6?'#6a5a44':'#8a6a2a', spent>0.6?'#b8a382':'#e9d59a',
-      {s:1.06-0.14*spent, a:1, arm:-1, aura:`rgba(255,196,90,${0.55*gold})`});
-  // the two siblings: run right, out the east doors, then gone
-  const sib=(x,body,head,off)=>{
-    const run=THR.flee, sx=W*(0.55)+(W*0.30)*run + off;
-    const a=run>0.9? Math.max(0,1-(run-0.9)*10) : 1;
-    const bob=Math.sin(t*10+off)* (run>0.05?3:0);
-    fig(sx, body, head, {s:0.9, a:a*Math.min(1,1.1-THR.guards*0.0)});
-    void x; void bob;
-  };
-  sib(0,'#7a2f2f','#e7c49a', 0);      // the princess (blood-red)
-  sib(0,'#2f4a7a','#e0b98a', 16*S);   // the prince (blue)
-  // --- the clash: gold and violet meeting mid-hall ---
-  if(clash>0.03){
-    const y=floorY-46*S, x0=vX+14*S, x1=kX-14*S, mid=(x0+x1)/2;
-    const beam=cx.createLinearGradient(x0,0,x1,0);
-    beam.addColorStop(0,`rgba(160,110,240,${0.85*clash})`);
-    beam.addColorStop(0.5,`rgba(255,255,255,${0.9*clash})`);
-    beam.addColorStop(1,`rgba(255,196,90,${0.85*clash})`);
-    cx.save(); cx.globalCompositeOperation='lighter';
-    cx.strokeStyle=beam; cx.lineWidth=(4+8*clash)*S+2*Math.sin(t*40)*clash;
-    cx.beginPath(); cx.moveTo(x0,y); cx.lineTo(x1,y); cx.stroke();
-    // bright collision node
-    const nr=(10+14*clash)*S*(0.85+0.15*Math.sin(t*30));
-    const ng=cx.createRadialGradient(mid,y,1,mid,y,nr);
-    ng.addColorStop(0,`rgba(255,255,255,${clash})`); ng.addColorStop(1,'rgba(255,255,255,0)');
-    cx.fillStyle=ng; cx.beginPath(); cx.arc(mid,y,nr,0,TAU); cx.fill();
-    // sparks fly from the node
-    for(const s of THR.sparks){ cx.globalAlpha=Math.max(0,s.life/s.max);
-      cx.fillStyle=s.col; cx.fillRect(mid+s.x,y+s.y,2.2,2.2); }
-    cx.globalAlpha=1; cx.restore();
-  }
-  // --- guards flooding in along the foreground ---
   if(THR.guards>0.02){
-    const n=6;
-    for(let i=0;i<n;i++){
-      const gp=(i+0.5)/n;
-      const gx=W*(0.12+0.72*gp);
-      const rise=Math.min(1,THR.guards*1.4-gp*0.3);
-      if(rise<=0.02) continue;
-      const gy=H*0.995 - (H*0.20)*rise;
-      cx.save(); cx.globalAlpha=Math.min(1,rise); cx.translate(gx,gy); const gs=S*1.25;
-      cx.scale(gs,gs);
-      cx.fillStyle='#0c0f16';
-      cx.beginPath(); cx.moveTo(-9,0); cx.quadraticCurveTo(-12,-30,-6,-40);
-      cx.lineTo(6,-40); cx.quadraticCurveTo(12,-30,9,0); cx.closePath(); cx.fill();
-      cx.beginPath(); cx.arc(0,-46,6,0,TAU); cx.fill();   // helm
-      cx.strokeStyle='#0c0f16'; cx.lineWidth=2.6;         // spear
-      cx.beginPath(); cx.moveTo(8,-8); cx.lineTo(8,-64); cx.stroke();
-      cx.restore();
+    for(let i=0;i<GUARDPOS.length;i++){
+      const gp=GUARDPOS[i], appear=Math.min(1,THR.guards*1.35-Math.abs(i-2)*0.12);
+      if(appear<=0.02) continue;
+      const dir=_thrFace(gp,THR.vath);
+      items.push({d:gp.x+gp.y, fn:()=>_thrActor(SC,Z,gp,LOOK_GUARD,dir,0,{alpha:appear, weapon:'sword'})});
     }
   }
-  // --- the memory-rewrite pulse: a violet ring washing over the hall ---
-  if(THR.pulseR>0){
-    const pr=THR.pulseR, R=W*0.75*pr, a=Math.max(0,1-pr/1.8);
-    cx.save(); cx.globalCompositeOperation='lighter';
-    const rg=cx.createRadialGradient(vX,floorY-40*S,R*0.7,vX,floorY-40*S,R);
-    rg.addColorStop(0,'rgba(160,110,240,0)');
-    rg.addColorStop(0.85,`rgba(180,140,255,${0.45*a})`);
-    rg.addColorStop(1,'rgba(160,110,240,0)');
-    cx.fillStyle=rg; cx.fillRect(0,0,W,H);
-    cx.restore();
-  }
-  // --- full-hall violet flash when the Tideglass is torn away ---
+  items.sort((a,b)=>a.d-b.d);
+  for(const it of items) it.fn();
+  // the clash of the two magics, drawn between the King and Vath
+  if(clash>0.03) _thrClash(SC,Z,clash,t);
+  // the memory-rewrite pulse sweeping out from Vath
+  if(THR.pulseR>0){ const s=SC(THR.vath.x,THR.vath.y); _thrPulse(cx,s.x,s.y-26*Z,THR.pulseR,W,H); }
+  // full-hall violet flash as the Tideglass is torn away, storm-flash, closing dark, vignette
   if(THR.take>0.01){ cx.fillStyle=`rgba(150,100,235,${0.5*THR.take})`; cx.fillRect(0,0,W,H); }
-  if(THR.flash>0.01){ cx.fillStyle=`rgba(190,205,255,${0.12*THR.flash})`; cx.fillRect(0,0,W,H); }
-  // landfall of the act: darken as the lie sets like stone
+  if(THR.flash>0.01){ cx.fillStyle=`rgba(190,205,255,${0.07*THR.flash})`; cx.fillRect(0,0,W,H); }
   if(THR.dark>0.01){ cx.fillStyle=`rgba(3,4,9,${0.62*THR.dark})`; cx.fillRect(0,0,W,H); }
-  // vignette
-  const vg=cx.createRadialGradient(W*0.5,H*0.5,H*0.18,W*0.5,H*0.5,H*0.78);
+  const vg=cx.createRadialGradient(W*0.5,H*0.5,H*0.2,W*0.5,H*0.5,H*0.8);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.6)');
   cx.fillStyle=vg; cx.fillRect(0,0,W,H);
+}
+// facing vector from one world point toward another (for drawHumanoid's `dir`)
+function _thrFace(from,to){ const dx=to.x-from.x, dy=to.y-from.y, l=Math.hypot(dx,dy);
+  return l>0.001?{x:dx/l,y:dy/l}:{x:0,y:1}; }
+// draw a real game character (drawHumanoid) at a world tile, with an optional magic aura
+function _thrActor(SC,Z,pos,look,dir,step,opt){
+  opt=opt||{}; const cx=THR.cx;
+  const s=SC(pos.x,pos.y);
+  const gy=s.y - (opt.lift||0) + (opt.drop||0);
+  const size=1.34*Z*(opt.scale||1);
+  cx.save();
+  if(opt.alpha!=null) cx.globalAlpha=Math.max(0,Math.min(1,opt.alpha));
+  if(opt.aura>0.02){
+    const ax=s.x, ay=gy-24*Z, r=50*Z;
+    const g=cx.createRadialGradient(ax,ay,2,ax,ay,r);
+    g.addColorStop(0,`rgba(${opt.auraCol},${Math.min(0.85,opt.aura*0.7)})`);
+    g.addColorStop(1,`rgba(${opt.auraCol},0)`);
+    cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle=g;
+    cx.beginPath(); cx.arc(ax,ay,r,0,TAU); cx.fill(); cx.restore();
+  }
+  if(typeof drawShadowAt==='function') drawShadowAt(cx,s.x,s.y,14*Z);
+  cx.save();  // contain the canvas filter drawHumanoid sets on entry
+  try{ if(typeof drawHumanoid==='function')
+    drawHumanoid(cx,s.x,gy,Object.assign({},look,{size,dir,step:step||0,hurt:!!opt.hurt,weapon:opt.weapon})); }catch(err){}
+  cx.restore();
+  cx.restore();
+}
+// the tiled iso floor of the nave: cool stone, a royal carpet up the centre, a raised dais
+function _thrFloor(SC,Z,t,gold,violet){
+  const cx=THR.cx, W=THR.W, H=THR.H;
+  for(let x=-4;x<=12;x++) for(let y=-4;y<=12;y++){
+    const kk=(x+y)/2, oo=(x-y)/2;
+    if(kk<-1.5||kk>10.5||oo<-3.2||oo>3.2) continue;
+    const a=SC(x-0.5,y-0.5), b=SC(x+0.5,y-0.5), c=SC(x+0.5,y+0.5), d=SC(x-0.5,y+0.5);
+    const chk=(x+y)&1, carpet=Math.abs(oo)<=0.75, dais=kk<=1.6;
+    let fill;
+    if(carpet) fill= dais? '#5a3a6a' : (chk?'#4a2f57':'#442a50');
+    else fill= dais? (chk?'#333849':'#2c3140') : (chk?'#262b37':'#20242f');
+    cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.lineTo(c.x,c.y); cx.lineTo(d.x,d.y); cx.closePath();
+    cx.fillStyle=fill; cx.fill();
+    cx.strokeStyle='rgba(0,0,0,0.16)'; cx.lineWidth=1; cx.stroke();
+  }
+  const ks=SC(THR.king.x,THR.king.y), vs=SC(THR.vath.x,THR.vath.y);
+  cx.save(); cx.globalCompositeOperation='lighter';
+  if(gold>0.05){ const g=cx.createRadialGradient(ks.x,ks.y,4,ks.x,ks.y,150*Z);
+    g.addColorStop(0,`rgba(255,196,90,${0.16*gold})`); g.addColorStop(1,'rgba(255,196,90,0)');
+    cx.fillStyle=g; cx.fillRect(0,0,W,H); }
+  if(violet>0.05){ const g=cx.createRadialGradient(vs.x,vs.y,4,vs.x,vs.y,150*Z);
+    g.addColorStop(0,`rgba(160,110,240,${0.16*violet})`); g.addColorStop(1,'rgba(160,110,240,0)');
+    cx.fillStyle=g; cx.fillRect(0,0,W,H); }
+  cx.restore();
+}
+// a colonnade pillar with a wall torch throwing warm light into the hall
+function _thrColumn(SC,Z,c,t){
+  const cx=THR.cx, base=SC(c.x,c.y), h=82*Z, w=15*Z;
+  const fl=0.75+0.25*Math.sin(t*7+c.x*2.3);
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const tg=cx.createRadialGradient(base.x,base.y-h*0.72,2,base.x,base.y-h*0.72,56*Z*fl);
+  tg.addColorStop(0,`rgba(255,178,90,${0.38*fl})`); tg.addColorStop(1,'rgba(255,178,90,0)');
+  cx.fillStyle=tg; cx.beginPath(); cx.arc(base.x,base.y-h*0.72,56*Z*fl,0,TAU); cx.fill();
+  cx.restore();
+  cx.fillStyle='#2a2f3b';
+  cx.beginPath(); cx.moveTo(base.x-w*0.5,base.y); cx.lineTo(base.x-w*0.42,base.y-h);
+  cx.lineTo(base.x+w*0.42,base.y-h); cx.lineTo(base.x+w*0.5,base.y); cx.closePath(); cx.fill();
+  cx.fillStyle='rgba(255,190,120,0.10)'; cx.fillRect(base.x-w*0.5,base.y-h,w*0.3,h);
+  cx.fillStyle='#343b49'; cx.fillRect(base.x-w*0.62,base.y-h-6*Z,w*1.24,7*Z);
+  cx.fillRect(base.x-w*0.6,base.y-6*Z,w*1.2,7*Z);
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(255,190,110,0.9)';
+  cx.beginPath(); cx.ellipse(base.x,base.y-h*0.72,3.4*Z,7*Z*fl,0,0,TAU); cx.fill(); cx.restore();
+}
+// the Tideglass Throne at the head of the nave
+function _thrThrone(SC,Z,t){
+  const cx=THR.cx, s=SC(THRONE.x,THRONE.y), y=s.y-12*Z;
+  const w=26*Z, seatH=20*Z, backH=46*Z;
+  cx.fillStyle='#161a24'; cx.fillRect(s.x-w*0.5,y-seatH,w,seatH);
+  const glow=0.4+0.3*Math.sin(t*1.4);
+  const tg=cx.createLinearGradient(s.x,y-seatH-backH,s.x,y-seatH);
+  tg.addColorStop(0,`rgba(120,210,220,${0.55+0.2*glow})`); tg.addColorStop(1,'rgba(30,70,90,0.8)');
+  cx.fillStyle=tg;
+  cx.beginPath(); cx.moveTo(s.x-w*0.46,y-seatH); cx.lineTo(s.x-w*0.46,y-seatH-backH*0.8);
+  cx.quadraticCurveTo(s.x,y-seatH-backH, s.x+w*0.46,y-seatH-backH*0.8);
+  cx.lineTo(s.x+w*0.46,y-seatH); cx.closePath(); cx.fill();
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const g=cx.createRadialGradient(s.x,y-seatH-backH*0.5,2,s.x,y-seatH-backH*0.5,42*Z);
+  g.addColorStop(0,`rgba(120,220,230,${0.18+0.1*glow})`); g.addColorStop(1,'rgba(120,220,230,0)');
+  cx.fillStyle=g; cx.beginPath(); cx.arc(s.x,y-seatH-backH*0.5,42*Z,0,TAU); cx.fill(); cx.restore();
+}
+// gold-vs-violet beam between the King and Vath, with a bright collision node + sparks
+function _thrClash(SC,Z,clash,t){
+  const cx=THR.cx, a=SC(THR.vath.x,THR.vath.y), b=SC(THR.king.x,THR.king.y);
+  const ax=a.x, ay=a.y-30*Z, bx=b.x, by=b.y-30*Z, mx=(ax+bx)/2, my=(ay+by)/2;
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
+  const beam=cx.createLinearGradient(ax,ay,bx,by);
+  beam.addColorStop(0,`rgba(160,110,240,${0.85*clash})`);
+  beam.addColorStop(0.5,`rgba(255,255,255,${0.9*clash})`);
+  beam.addColorStop(1,`rgba(255,196,90,${0.85*clash})`);
+  cx.strokeStyle=beam; cx.lineWidth=(3+7*clash)*Z+2*Math.sin(t*40)*clash;
+  cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(bx,by); cx.stroke();
+  const nr=(9+13*clash)*Z*(0.85+0.15*Math.sin(t*30));
+  const ng=cx.createRadialGradient(mx,my,1,mx,my,nr);
+  ng.addColorStop(0,`rgba(255,255,255,${clash})`); ng.addColorStop(1,'rgba(255,255,255,0)');
+  cx.fillStyle=ng; cx.beginPath(); cx.arc(mx,my,nr,0,TAU); cx.fill();
+  for(const s of THR.sparks){ cx.globalAlpha=Math.max(0,s.life/s.max); cx.fillStyle=s.col; cx.fillRect(mx+s.x,my+s.y,2.4*Z,2.4*Z); }
+  cx.globalAlpha=1; cx.restore();
+}
+// the violet memory-rewrite ring washing across the whole hall
+function _thrPulse(cx,cxp,cyp,pr,W,H){
+  const R=Math.max(W,H)*0.75*pr, a=Math.max(0,1-pr/1.8);
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const rg=cx.createRadialGradient(cxp,cyp,R*0.7,cxp,cyp,R);
+  rg.addColorStop(0,'rgba(160,110,240,0)'); rg.addColorStop(0.85,`rgba(180,140,255,${0.4*a})`); rg.addColorStop(1,'rgba(160,110,240,0)');
+  cx.fillStyle=rg; cx.fillRect(0,0,W,H); cx.restore();
+}
+// a tall arched window high on the back wall, storm-dark, flaring white with the lightning
+function _thrWindow(cx,x0,top,w,h,flash){
+  const path=()=>{ cx.beginPath(); cx.moveTo(x0-w/2,top+h); cx.lineTo(x0-w/2,top+w/2);
+    cx.quadraticCurveTo(x0-w/2,top, x0,top); cx.quadraticCurveTo(x0+w/2,top, x0+w/2,top+w/2);
+    cx.lineTo(x0+w/2,top+h); cx.closePath(); };
+  cx.save(); path(); cx.clip();
+  const sky=cx.createLinearGradient(0,top,0,top+h); sky.addColorStop(0,'#243049'); sky.addColorStop(1,'#161c2b');
+  cx.fillStyle=sky; cx.fillRect(x0-w/2,top,w,h);
+  if(flash>0.01){ cx.fillStyle=`rgba(200,214,255,${0.7*flash})`; cx.fillRect(x0-w/2,top,w,h); }
+  cx.restore();
+  cx.strokeStyle='#0b0e16'; cx.lineWidth=4; path(); cx.stroke();
+  cx.beginPath(); cx.moveTo(x0,top+4); cx.lineTo(x0,top+h); cx.stroke();
 }
 
 /* ---------- adaptive music (procedural, three moods) ---------- */
