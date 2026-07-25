@@ -773,7 +773,7 @@ function killMob(m,skill){
     setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the little bird loops back and lays a great kite of stitched stormcloth at your feet: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
       {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
   }
-  // The Drowned Warden keeps the Stormreach catacomb
+  // The Drowned Minotaur dens in the Stormreach catacomb
   if(m.tombboss){
     P.story=P.story||{}; P.story.tombBossDown=1;
     if(typeof autoSave==='function') autoSave();

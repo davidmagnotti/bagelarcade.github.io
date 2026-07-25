@@ -27,7 +27,7 @@ const ACH={
   cogbreaker:{t:'Cog-Breaker',d:"Free the Undermill's seized gear-train."},
   rocslayer:{t:'Roc-Slayer',d:'Down the Storm Roc atop the Cloudreach.'},
   brutebane:{t:'Brute-Bane',d:'Put the Barrow Brute back in its barrow.'},
-  deepwarden:{t:'Deep-Warden',d:'Put the Drowned Warden to rest.'},
+  deepwarden:{t:'Maze-Breaker',d:'Put down the Drowned Minotaur in the Stormreach catacomb.'},
   stormbreaker:{t:'Storm-Breaker',d:'Close the Storm-Eye and calm the high wind.'},
   enchantersbane:{t:"The Enchanter's Bane",d:'Bind Vath the Emberbinder for good.'}
 };

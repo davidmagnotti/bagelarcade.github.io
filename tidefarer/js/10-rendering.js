@@ -1446,6 +1446,65 @@ function drawMob(m,s){
     cx.fillStyle= m.enspelled? '#c77bff':'#bfe8ff'; cx.fillText(nm,s.x,s.y-79);
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='minotaur'){
+    // a hulking bull-headed brute: hoofed digitigrade legs, a barrel chest, and a
+    // great cleaver it heaves overhead on the wind-up (m.windup) before it swings.
+    const fl=m.face||1, wnd=(m.windup>0);
+    const gait=m.state==='chase'? Math.sin(m.anim*6)*2 : Math.sin(m.anim*1.8)*0.7;
+    const breath=Math.sin(m.anim*1.4)*1.2;
+    drawShadowAt(cx,s.x,s.y,20);
+    cx.save(); cx.translate(s.x,s.y); cx.scale(fl,1); cx.lineJoin='round';
+    const fur='#5a3f2a', furD='#3d2a1a', furL='#7a583a', horn='#ece0c6', hornD='#b9a67e', hoof='#241a12', OUT='rgba(18,12,6,0.9)';
+    cx.lineWidth=2; cx.strokeStyle=OUT;
+    // legs - digitigrade, hoofed
+    cx.fillStyle=furD;
+    cx.beginPath(); cx.moveTo(-10,-2+gait); cx.lineTo(-8,-20); cx.lineTo(-3,-20); cx.lineTo(-4,-2+gait); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=hoof; cx.beginPath(); cx.ellipse(-7,-1+gait,3.4,2.4,0,0,TAU); cx.fill(); cx.stroke();
+    cx.fillStyle=fur;
+    cx.beginPath(); cx.moveTo(9,-2-gait); cx.lineTo(7,-22); cx.lineTo(2,-22); cx.lineTo(3,-2-gait); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=hoof; cx.beginPath(); cx.ellipse(6,-1-gait,3.6,2.6,0,0,TAU); cx.fill(); cx.stroke();
+    // torso - broad barrel chest tapering to the waist
+    cx.fillStyle=fur;
+    cx.beginPath(); cx.moveTo(-11,-20); cx.lineTo(-13,-46+breath); cx.quadraticCurveTo(0,-54+breath,13,-46+breath); cx.lineTo(11,-20); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=furL; cx.beginPath(); cx.moveTo(-5,-22); cx.lineTo(-7,-44+breath); cx.quadraticCurveTo(0,-40,6,-44+breath); cx.lineTo(4,-22); cx.closePath(); cx.fill();
+    // far arm braced behind the torso
+    cx.strokeStyle=furD; cx.lineWidth=6.5; cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-9,-44+breath); cx.lineTo(-16,-30); cx.lineTo(-14,-18); cx.stroke();
+    // near arm + great cleaver, heaved overhead on the wind-up
+    const ay = wnd? -58 : -30;
+    cx.strokeStyle=fur; cx.lineWidth=7; cx.beginPath(); cx.moveTo(9,-44+breath); cx.lineTo(16,ay+8); cx.lineTo(18,ay); cx.stroke();
+    cx.lineCap='butt';
+    cx.save(); cx.translate(18,ay); cx.rotate(wnd? -0.6 : 0.5);
+    cx.strokeStyle='#3a2a1a'; cx.lineWidth=3; cx.beginPath(); cx.moveTo(0,0); cx.lineTo(0,-18); cx.stroke();
+    cx.fillStyle='#9aa2ac'; cx.strokeStyle=OUT; cx.lineWidth=1.6;
+    cx.beginPath(); cx.moveTo(-1,-18); cx.lineTo(12,-22); cx.lineTo(12,-8); cx.lineTo(-1,-6); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle='#cfd6dd'; cx.beginPath(); cx.moveTo(-1,-18); cx.lineTo(12,-22); cx.lineTo(12,-18); cx.lineTo(-1,-15); cx.closePath(); cx.fill();
+    cx.restore();
+    // shoulder/traps hump
+    cx.fillStyle=fur; cx.strokeStyle=OUT; cx.lineWidth=2;
+    cx.beginPath(); cx.ellipse(0,-46+breath,13,6,0,0,TAU); cx.fill(); cx.stroke();
+    // BULL HEAD, lowered forward
+    cx.save(); cx.translate(6,-49+breath);
+    cx.fillStyle=horn; cx.strokeStyle=hornD; cx.lineWidth=1.4;   // horns behind the skull
+    cx.beginPath(); cx.moveTo(-3,-8); cx.quadraticCurveTo(-14,-14,-13,-3); cx.quadraticCurveTo(-9,-8,-3,-5); cx.closePath(); cx.fill(); cx.stroke();
+    cx.beginPath(); cx.moveTo(6,-8); cx.quadraticCurveTo(17,-15,17,-3); cx.quadraticCurveTo(12,-8,6,-5); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=furL; cx.strokeStyle=OUT; cx.lineWidth=2;       // skull
+    cx.beginPath(); cx.moveTo(-4,-8); cx.quadraticCurveTo(2,-12,8,-8); cx.lineTo(13,4); cx.quadraticCurveTo(8,9,1,7); cx.quadraticCurveTo(-5,4,-4,-8); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=fur; cx.beginPath(); cx.ellipse(9,3,5,4,0,0,TAU); cx.fill(); cx.stroke();   // muzzle
+    cx.fillStyle='#1a120c'; cx.beginPath(); cx.arc(11,2,1.1,0,TAU); cx.arc(11,5,1.1,0,TAU); cx.fill();   // nostrils
+    cx.fillStyle=furD; cx.beginPath(); cx.ellipse(-3,-2,3,1.8,-0.5,0,TAU); cx.fill(); cx.stroke();       // ear
+    cx.fillStyle= wnd? '#ff5a3a' : '#ffd23a';                    // eye - glows, reddens on the wind-up
+    cx.beginPath(); cx.arc(4,-2,1.7,0,TAU); cx.fill();
+    cx.strokeStyle='#c9a24e'; cx.lineWidth=1.4; cx.beginPath(); cx.arc(10,7,2.4,-0.3,Math.PI+0.3); cx.stroke();  // nose ring
+    cx.restore();
+    if(m.hurtT>0){ cx.fillStyle='rgba(255,150,120,0.4)'; cx.beginPath(); cx.ellipse(0,-34,20,26,0,0,TAU); cx.fill(); }
+    cx.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    cx.font='bold 13px Georgia'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.65)'; cx.fillText(nm,s.x+1,s.y-72);
+    cx.fillStyle='#e0a15a'; cx.fillText(nm,s.x,s.y-73);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='scorpion'){ drawScorpion(m,s); drawMobBars&&drawMobBars(m,s); return; }
   if(m.kind==='dragon'){
     cx.save(); cx.translate(s.x,s.y); cx.scale(2.6,2.6); drawDragon(cx,0,0,m); cx.restore();   // a proper wyrm - ~1.7x bigger

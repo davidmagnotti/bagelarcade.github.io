@@ -2471,11 +2471,11 @@ function placeObjectsReachDeep(){
 }
 function spawnMobsReachDeep(){
   const Z=REACHDEEP_ZONES;
-  // the Drowned Warden guards the vault; skeletons haunt the ossuary
+  // the Drowned Minotaur dens in the bone-maze and guards the vault; skeletons haunt the ossuary
   if(!(P.story && P.story.tombBossDown)){
     const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
-    const w=spawnMob('gravelord', sp[0], sp[1]);
-    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED WARDEN'; w.subtitle='KEEPER OF THE CATACOMB'; w.tombboss=1; w.ach='deepwarden';
+    const w=spawnMob('minotaur', sp[0], sp[1]);
+    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='BEAST OF THE BONE-MAZE'; w.tombboss=1; w.ach='deepwarden';
       w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; }
   }
   for(const z of [Z.ossuary, Z.heart]) for(let i=0;i<2;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
@@ -3140,10 +3140,10 @@ QUESTS.barrowbrute={ giver:'mora', title:'Wrecker of Stormreach', kind:'special'
   log:'Hunt down the Barrow Brute on the barrow road above Stormreach.',
   doneText:'The whole coast felt it fall. You have given a hundred stranded souls their sea back. Tibb is already at the water with fresh timber - and we will name a cove for you, the least a grateful shore can do.',
   rw:{gold:150, item:{potion:3}, xp:{melee:320, archery:240}} };
-QUESTS.drownedwarden={ giver:'tibb', title:'Keeper of the Catacomb', kind:'special', xpL:420,
-  brief:'There is a stair under the drowned graveyard, and a cold thing that keeps it - the Drowned Warden, patient in the dark below. My grandfather\'s grandfather sealed it and told us never to dig. But the good salvage is all down there, and Stormreach is starving. Go down, put the Warden to rest, and let us bury our dead in peace.',
-  log:'Descend into the Drowned Catacomb beneath Stormreach and put the Drowned Warden to rest.',
-  doneText:'Rest at last - for the Warden, and for the poor souls it kept. You can hear the difference in the dark down there now; it is only water. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
+QUESTS.drownedwarden={ giver:'tibb', title:'Beast of the Bone-Maze', kind:'special', xpL:420,
+  brief:'There is a stair under the drowned graveyard, and a great bull-headed brute that walks the bone-maze below - the Drowned Minotaur, my grandfather\'s grandfather sealed it in and told us never to dig. But the good salvage is all down there, and Stormreach is starving. Go down, put the beast\'s horns in the dirt, and let us bury our dead in peace.',
+  log:'Descend into the catacomb beneath Stormreach and put down the Drowned Minotaur.',
+  doneText:'The whole warren went quiet when it fell - I felt the floor settle. You can walk the bone-maze safe now, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
   rw:{gold:130, item:{elixir:1, potion:2}, xp:{melee:260, magic:220}} };
 
 /* ---------- Aldermere side-work ----------------------------------------------
@@ -3823,7 +3823,7 @@ function switchWorld(id){
   }
   if(id==='reach'){
     // the castaways' two tormentors: the Brute on the barrow road (Mora) and the
-    // Warden in the drowned catacomb below (Tibb).
+    // Drowned Minotaur in the catacomb below (Tibb).
     if(qs('barrowbrute')!=='done' && !P.quests.barrowbrute) P.quests.barrowbrute='avail';
     if(qs('drownedwarden')!=='done' && !P.quests.drownedwarden) P.quests.drownedwarden='avail';
   }
