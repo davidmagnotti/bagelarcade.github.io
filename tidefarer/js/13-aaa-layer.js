@@ -292,6 +292,11 @@ const THR = {
   //   guards 0..1  the King's guard flooding the hall
   //   takeFlash/pulse/dark: one-shot flags for the beat they fire on
   beats: [
+    // The homecoming, before the storm: the King on his feet at the throne, turned to face
+    // his children - joy and disbelief - a quiet beat with no enemy in the room yet.
+    { who:'King Aldous', kingFace:'kids',
+      html:'“You’re home. I can’t believe it — both of you, home at last.”',
+      vath:0, gold:0.14, violet:0, clash:0, flee:0, guards:0 },
     { who:'Vath', title:'THE ENCHANTER COMES',
       html:'“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”',
       vath:0.55, gold:0.16, violet:0.32, clash:0, flee:0, guards:0 },
@@ -352,20 +357,21 @@ const THR = {
    (kAdv), where the camera centres (foc, world tiles), the scene zoom, and whether the
    King has dropped (kingDown). Indexed 1:1 with THR.beats. */
 const THR_STAGE=[
-  {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},  // 0  Vath comes - King still on the throne
-  {kAdv:0.8,  foc:[1.6,1.2], zoom:1.23, kingDown:0},  // 1  King declares - steps between, no beams yet
-  {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 2  Vath strikes, King in its path
-  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 3  the surge / RUN
-  {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 4  the Prince refuses to leave
-  {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 5  the King's warning
-  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 6  the grab-and-haul
-  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 7  burst the doors
-  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 8  Vath laughs
-  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 9  the Tideglass taken
-  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 10 guards flood in
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 11 the memory pulse
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 12 Vath's lie
-  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 13 END OF ACT I
+  {kAdv:0,    foc:[2.6,2.3], zoom:1.10, kingDown:0},  // 0  the homecoming - King faces his children
+  {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},  // 1  Vath comes - King still on the throne
+  {kAdv:0.8,  foc:[1.6,1.2], zoom:1.23, kingDown:0},  // 2  King declares - steps between, no beams yet
+  {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 3  Vath strikes, King in its path
+  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 4  the surge / RUN
+  {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 5  the Prince refuses to leave
+  {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 6  the King's warning
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 7  the grab-and-haul
+  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 8  burst the doors
+  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 9  Vath laughs
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 10 the Tideglass taken
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 11 guards flood in
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 12 the memory pulse
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 13 Vath's lie
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 14 END OF ACT I
 ];
 /* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
    The nave runs down the line x==y (which projects straight down the screen);
@@ -495,13 +501,13 @@ function _thrLoop(ts){
   THR.guards  = e(THR.guards,  b.guards||0,   2.0);
   THR.kingDown= e(THR.kingDown,st.kingDown||0,1.6);
   THR.dark    = e(THR.dark,    b.dark?1:0,    0.8);
-  // hands lift for the casting gesture BEFORE the beams: Vath's hand is already up as he
-  // enters (0), fully raised on the declaration (1), then thrusts down to loose the strike
-  // (2+) and closes to a grasp as he takes the Tideglass (9). The King raises both hands in
-  // front the moment he speaks (1) and holds them up while he channels, until he is broken.
+  // Vath's hand pose across the beats: absent at the homecoming (0), rising as he enters (1),
+  // fully raised on his gathering (2), then thrust down to loose the strike (3+), and closing
+  // to a grasp as he takes the Tideglass (10), lowered once it is done (11+). (The King's own
+  // hand-raise is computed but only ever drawn when he faces the camera - see _thrDraw.)
   const _i=THR.idx;
-  const kHandT = (_i>=1 && (st.kingDown||0)<0.5) ? 1 : 0;
-  const vHandT = _i<=0 ? 0.6 : _i===1 ? 1 : _i===9 ? 0.7 : _i>=10 ? 0 : 0.32;
+  const kHandT = (_i>=2 && (st.kingDown||0)<0.5) ? 1 : 0;
+  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : _i===2 ? 1 : _i===10 ? 0.7 : _i>=11 ? 0 : 0.32;
   THR.kHand = e(THR.kHand, kHandT, 3.2);
   THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
@@ -579,11 +585,18 @@ function _thrDraw(){
   items.push({d:THRONE.x+THRONE.y-0.2, fn:()=>_thrThrone(SC,Z,t)});
   for(const c of COLUMNS) items.push({d:c.x+c.y, fn:()=>_thrColumn(SC,Z,c,t)});
   const down=THR.kingDown;
-  { const dir=_thrFace(THR.king,THR.vath), look=down>0.5?LOOK_KSPENT:LOOK_KING;
-    items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,dir,THR.stepK,
+  // the King greets his children first (facing them, toward camera); once Vath is in the
+  // room he turns to face the enchanter (which is a back-to-camera view).
+  const _cb=THR.beats[THR.idx]||THR.beats[0];
+  const kMid={x:(THR.hero.x+THR.prince.x)/2, y:(THR.hero.y+THR.prince.y)/2};
+  const kingDir=_cb.kingFace==='kids'?_thrFace(THR.king,kMid):_thrFace(THR.king,THR.vath);
+  const kingAway=(kingDir.x+kingDir.y)*0.5 < -0.15;   // matches drawHumanoid's own `away`
+  { const look=down>0.5?LOOK_KSPENT:LOOK_KING;
+    items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,kingDir,THR.stepK,
       {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:11*Z*down,
        scale:1-0.17*down, hurt:down>0.15&&down<0.85})}); }
-  { const dir=THR.idx>=10?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+  if(THR.vAdv>0.03){   // Vath is absent for the homecoming, then strides in
+    const dir=THR.idx>=11?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
       {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
   const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
@@ -605,18 +618,18 @@ function _thrDraw(){
   }
   items.sort((a,b)=>a.d-b.d);
   for(const it of items) it.fn();
-  // hands raised in front (drawn over the figures): the casting gesture that precedes and
-  // then looses the beams. Vath's one hand, the King's two, palms glowing as the magic gathers.
-  // the raised hands ride the figure's ACTUALLY-DRAWN chest - matching drawHumanoid's own
-  // vertical bob (idle breath / walk bounce), plus the King's dais-lift, drop and scale - so
-  // they never drift off above or behind him as he breathes or steps.
+  // hands raised in front: the casting gesture that precedes and then looses the beams. Drawn
+  // ONLY for a figure that faces the camera - a back-to-camera figure's "front" hands would
+  // land on the wrong side of him (behind his head), so we skip them. The King turns to Vath
+  // (away) for the whole confrontation, so in practice only Vath's hand shows. Anchored to the
+  // figure's ACTUALLY-DRAWN chest - drawHumanoid's own bob plus the King's lift/drop/scale.
   const _bob=(step,size)=>{ const w=Math.abs(step||0)>0.0001;
     return w ? Math.abs(Math.sin(step))*2.2*size : (Math.sin(G.time*2.1)*0.5+0.5)*0.9*size; };
-  if(THR.vHand>0.02){
+  if(THR.vHand>0.02 && THR.vAdv>0.03){
     const vGY=SC(THR.vath.x,THR.vath.y).y - _bob(THR.stepV,1.34*Z);
     _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true,vGY,1);
   }
-  if(THR.kHand>0.02){
+  if(THR.kHand>0.02 && !kingAway){
     const kSc=1-0.17*down;
     const kGY=SC(THR.king.x,THR.king.y).y - 12*Z*(1-THR.kAdv) + 11*Z*down - _bob(THR.stepK,1.34*Z*kSc);
     _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false,kGY,kSc);
