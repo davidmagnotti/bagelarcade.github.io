@@ -2421,18 +2421,31 @@ function spawnMobsReach(){
 }
 function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
 // ---------- THE DROWNED CATACOMB (reachdeep) - a modest bone-lock dungeon ----------
+let REACHDEEP_WALLS = [];   // catacomb stone bordering the carved floor - drawn as visible ewall blocks
 function genReachDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
   carve(30,76,50,90);   // R1 THE SUNKEN STAIR - entry landing
   carve(38,60,42,78);   // corridor A
-  carve(26,40,54,62,T.RUIN);   // R2 THE OSSUARY - three bone-locks
+  carve(26,40,54,62);   // R2 THE OSSUARY - three bone-locks
   carve(38,34,42,42);   // corridor B (the sealed gate at y37)
-  for(let x=38;x<=42;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }   // BONE GATE - solid until all three locks
   carve(28,6,52,34);    // R3 THE DROWNED VAULT - warden + hoard
+  // record the visible wall faces (catacomb stone bordering the carved floor) BEFORE
+  // the bone gate goes solid, so an opened gate never leaves a phantom wall behind
+  REACHDEEP_WALLS=[];
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y)) continue;
+    let border=false;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])
+      if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
+    if(border) REACHDEEP_WALLS.push([x,y]);
+  }
+  for(let x=38;x<=42;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }   // BONE GATE - solid until all three locks
 }
 function placeObjectsReachDeep(){
   G.decor=G.decor||[];
+  // the catacomb stone that gives the rooms their shape (baked static scenery)
+  for(const [x,y] of REACHDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   G.decor.push({kind:'tombmouth', x:40.5, y:88.5, up:1, label:'the way up'});   // back to the graveyard
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
