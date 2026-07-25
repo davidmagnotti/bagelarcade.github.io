@@ -293,43 +293,42 @@ const THR = {
   //   takeFlash/pulse/dark: one-shot flags for the beat they fire on
   beats: [
     { who:'Vath', title:'THE ENCHANTER COMES',
-      html:'<i>The tall doors at the hall’s end blow inward on a wind that stinks of storm and violet. Vath strides in through the wreck of them, one hand already rising.</i> <b style="color:#c9a0ff">“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”</b>',
+      html:'“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”',
       vath:0.55, gold:0.16, violet:0.32, clash:0, flee:0, guards:0 },
     // the King speaks and moves FIRST — plants himself between, gold only just waking,
     // Vath's hand rising. No beams yet: the defiance lands before the violence.
     { who:'King Aldous', title:'THE KING RISES',
-      html:'<i>But the old King is already on his feet, stepping down off the dais to put his own body between the enchanter and his children.</i> <b>“You won’t have them, Vath. Not again — I will not let you take them from me a second time.”</b>',
+      html:'“You won’t have them, Vath. Not again — I will not let you take them from me a second time.”',
       vath:0.85, gold:0.5, violet:0.55, clash:0, flee:0, guards:0 },
-    // NOW Vath strikes, and it lands on the King who is already in its path.
-    { who:'',
-      html:'<i>Vath’s hand comes down, and the violet light leaps for the two of you like a striking snake — but the King is already in its path. He throws himself into the strike, and the Tideglass fire answers in his blood: gold against violet.</i>',
+    // NOW Vath strikes — a wordless beat: the animation carries it (auto-advances).
+    { who:'', html:'',
       vath:1, gold:0.85, violet:0.8, clash:0.6, flee:0, guards:0, strike:1 },
     { who:'King Aldous',
-      html:'<i>Gold light roars up the old King’s arms and slams into Vath, driving the enchanter back a step — then two.</i> “RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
+      html:'“RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
       vath:0.78, gold:1, violet:0.5, clash:1, flee:0.08, guards:0 },
-    { who:'',
-      html:'<i>Your brother stands rooted, staring at the father he only just remembered. So you decide for the both of you.</i> <b style="color:var(--ember)">“We need to go — NOW!”</b> <i>You lock your fist in his collar and haul him toward the east doors, and at last his legs remember how to run.</i>',
+    { who:'The Princess',
+      html:'“We need to go — NOW!”',
       vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
     { who:'King Aldous',
-      html:'<i>You burst through the east doors into the rain — and behind you the golden light does not fail. On the dais the old King bares his teeth in something almost like triumph.</i> “…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
+      html:'“…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
       vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:0.82, guards:0 },
     { who:'Vath',
-      html:'<i>And Vath begins to laugh.</i> <b style="color:#c9a0ff">“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”</b>',
+      html:'“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”',
       vath:1, gold:0.68, violet:0.6, clash:0.18, flee:1, guards:0 },
     { who:'Vath', title:'THE TIDEGLASS TAKEN',
-      html:'<i>The King’s golden fire gutters — thinning, starving, poured out with nothing left to feed it.</i> <b style="color:#c9a0ff">“You have just tired yourself out enough for me to TAKE it.”</b> <i>Vath closes his hand, and the violet folds over Aldous like a tide coming in. The old King drops to one knee, hollow and grey, the light gone out of him.</i>',
+      html:'“You have just tired yourself out enough for me to TAKE it.”',
       vath:1, gold:0.1, violet:0.95, clash:0, flee:1, guards:0, takeFlash:1 },
-    { who:'',
-      html:'<i>Boots thunder in the corridors. The King’s guard floods the hall, blades bared, and their captain levels a sword at the stranger standing over their fallen lord.</i> “STAND DOWN! On the ground, hands from your sides — you are under arrest for—”',
+    { who:'The Captain',
+      html:'“STAND DOWN! On the ground, hands from your sides — you are under arrest for—”',
       vath:1, gold:0.07, violet:0.58, clash:0, flee:1, guards:1 },
-    { who:'',
-      html:'<i>Vath only lifts two fingers, and a soft violet pulse rolls out across the hall like a held breath let go. The guards’ swords drift down; their eyes go glassy and far.</i> “…what… happened…?” <i>the captain murmurs, blinking at the blade in his own hand.</i>',
+    { who:'The Captain',
+      html:'“…what… happened…?”',
       vath:1, gold:0.05, violet:0.7, clash:0, flee:1, guards:1, pulse:1 },
     { who:'Vath',
-      html:'<b style="color:#c9a0ff">“What happened is that the old King’s own son and daughter came home to seize his throne — and struck him down with sorcery when he refused them. They fled east across the water as I arrived.”</b> <i>He lets his voice fall.</i> <b style="color:#c9a0ff">“Would that I had been sooner.”</b>',
+      html:'“What happened is that the old King’s own son and daughter came home to seize his throne — and struck him down with sorcery when he refused them. They fled east across the water as I arrived. …Would that I had been sooner.”',
       vath:1, gold:0.05, violet:0.55, clash:0, flee:1, guards:1 },
-    { who:'', title:'END OF ACT I',
-      html:'<i>The lie pours into the hollow where the captain’s memory was and sets like stone.</i> “The prince… and the princess… did this. We’ll put every hull on the water after them.” <i>Vath smiles, and does not correct him.</i>',
+    { who:'The Captain', title:'END OF ACT I',
+      html:'“The prince… and the princess… did this. We’ll put every hull on the water after them.”',
       vath:1, gold:0.04, violet:0.5, clash:0, flee:1, guards:1, dark:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
@@ -385,7 +384,7 @@ function throneCutscene(){
   THR.cv=cv; THR.cx=cv.getContext('2d');
   THR.t=0; THR.prev=0; THR.idx=0;
   THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.pflee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
-  THR.kHand=0; THR.vHand=0;
+  THR.kHand=0; THR.vHand=0; clearTimeout(THR._autoTO);
   THR.fx=THR_STAGE[0].foc[0]; THR.fy=THR_STAGE[0].foc[1]; THR.zoom=THR_STAGE[0].zoom;
   THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
   THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
@@ -415,15 +414,24 @@ function _thrResize(){
 function _thrShow(i){
   const b=THR.beats[i]; if(!b) return;
   THR.idx=i; THR.started=true;
+  clearTimeout(THR._autoTO);
   if(b.takeFlash){ THR.flash=1.2; THR.take=1; }
   if(b.strike){ THR.strike=1; }      // Vath's violet lash, aimed past the King at the children
   if(b.pulse){ THR.pulseR=0.001; }   // kick off the memory-rewrite ring
   document.getElementById('thrWho').textContent=b.who||'';
-  document.getElementById('thrLine').innerHTML=b.html;
-  const tap=document.getElementById('thrTap');
-  if(tap) tap.textContent=(i>=THR.beats.length-1)?'the sea waits ›':'click to continue ›';
+  document.getElementById('thrLine').innerHTML=b.html||'';
   const sub=document.getElementById('thrSub');
-  sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
+  const wordless=!(b.html||'').replace(/<[^>]*>/g,'').trim();
+  if(wordless){
+    // no line to read (a pure-action beat) - hide the box and let the motion play,
+    // then carry on by itself. A click still advances early.
+    sub.classList.remove('show');
+    THR._autoTO=setTimeout(()=>_thrNext(), 1800);
+  } else {
+    const tap=document.getElementById('thrTap');
+    if(tap) tap.textContent=(i>=THR.beats.length-1)?'the sea waits ›':'click to continue ›';
+    sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
+  }
   // title-card flash for the marquee beats
   if(b.title){
     const t=document.getElementById('thrTitle'), tt=document.getElementById('thrTitleT');
@@ -433,6 +441,7 @@ function _thrShow(i){
   }
 }
 function _thrNext(){
+  clearTimeout(THR._autoTO);
   if(THR.idx>=THR.beats.length-1){ _thrFinish(); return; }
   const sub=document.getElementById('thrSub');
   sub.classList.remove('show');
