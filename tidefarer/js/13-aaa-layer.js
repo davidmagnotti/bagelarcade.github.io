@@ -273,6 +273,362 @@ function _epiDraw(){
   cx.fillStyle=vg; cx.fillRect(0,0,W,H);
 }
 
+/* ---------- Act I climax: the throne-hall cutscene ----------
+   Replaces the old chain of story-cards. A self-contained animated scene (its own rAF
+   loop, since the world is paused) of the last stand in the Tideglass hall: Vath crashes
+   in, King Aldous throws his golden Tideglass fire against the enchanter's violet to buy
+   his children's escape, spends himself doing it, and Vath takes the magic and rewrites
+   the guards' memory to frame the prince and princess. On its final beat it hands off to
+   sailEpilogue() - the "six months later" sea crossing - so Act I closes straight into
+   the Act II opener. Built to mirror the EPI epilogue above. */
+const THR = {
+  // Each beat: who is speaking ('' = narration), the line, an optional title-card flash,
+  // and the scene-state the visuals ease toward while the beat is on screen.
+  //   vath   0..1  Vath's presence / advance from the shattered doors toward the throne
+  //   gold   0..1  King Aldous's Tideglass fire
+  //   violet 0..1  Vath's sorcery
+  //   clash  0..1  the two magics meeting in the middle of the hall
+  //   flee   0..1  the siblings' run from the dais (0) out the east doors (1, then gone)
+  //   guards 0..1  the King's guard flooding the hall
+  //   takeFlash/pulse/dark: one-shot flags for the beat they fire on
+  beats: [
+    { who:'Vath', title:'THE ENCHANTER COMES',
+      html:'<i>The tall doors at the hall’s end blow inward on a wind that stinks of storm and violet. Vath strides in through the wreck of them, one hand already rising.</i> <b style="color:#c9a0ff">“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”</b>',
+      vath:0.55, gold:0.18, violet:0.4, clash:0, flee:0, guards:0 },
+    { who:'',
+      html:'<i>Vath’s hand comes down and the violet light leaps for the two of you like a striking snake — but the old King is already moving.</i> <b>“You WON’T take them from me — not again, Vath!”</b> <i>King Aldous throws himself between the light and his children, and the Tideglass fire answers in his blood: gold against violet.</i>',
+      vath:1, gold:0.85, violet:0.7, clash:0.72, flee:0, guards:0 },
+    { who:'King Aldous', title:'THE KING RISES',
+      html:'<i>Gold light roars up the old King’s arms and slams into Vath, driving the enchanter back a step — then two.</i> “RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
+      vath:0.78, gold:1, violet:0.5, clash:1, flee:0.08, guards:0 },
+    { who:'',
+      html:'<i>Your brother stands rooted, staring at the father he only just remembered. So you decide for the both of you.</i> <b style="color:var(--ember)">“We need to go — NOW!”</b> <i>You lock your fist in his collar and haul him toward the east doors, and at last his legs remember how to run.</i>',
+      vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
+    { who:'King Aldous',
+      html:'<i>You burst through the east doors into the rain — and behind you the golden light does not fail. On the dais the old King bares his teeth in something almost like triumph.</i> “…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
+      vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:0.82, guards:0 },
+    { who:'Vath',
+      html:'<i>And Vath begins to laugh.</i> <b style="color:#c9a0ff">“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”</b>',
+      vath:1, gold:0.68, violet:0.6, clash:0.18, flee:1, guards:0 },
+    { who:'Vath', title:'THE TIDEGLASS TAKEN',
+      html:'<i>The King’s golden fire gutters — thinning, starving, poured out with nothing left to feed it.</i> <b style="color:#c9a0ff">“You have just tired yourself out enough for me to TAKE it.”</b> <i>Vath closes his hand, and the violet folds over Aldous like a tide coming in. The old King drops to one knee, hollow and grey, the light gone out of him.</i>',
+      vath:1, gold:0.1, violet:0.95, clash:0, flee:1, guards:0, takeFlash:1 },
+    { who:'',
+      html:'<i>Boots thunder in the corridors. The King’s guard floods the hall, blades bared, and their captain levels a sword at the stranger standing over their fallen lord.</i> “STAND DOWN! On the ground, hands from your sides — you are under arrest for—”',
+      vath:1, gold:0.07, violet:0.58, clash:0, flee:1, guards:1 },
+    { who:'',
+      html:'<i>Vath only lifts two fingers, and a soft violet pulse rolls out across the hall like a held breath let go. The guards’ swords drift down; their eyes go glassy and far.</i> “…what… happened…?” <i>the captain murmurs, blinking at the blade in his own hand.</i>',
+      vath:1, gold:0.05, violet:0.7, clash:0, flee:1, guards:1, pulse:1 },
+    { who:'Vath',
+      html:'<b style="color:#c9a0ff">“What happened is that the old King’s own son and daughter came home to seize his throne — and struck him down with sorcery when he refused them. They fled east across the water as I arrived.”</b> <i>He lets his voice fall.</i> <b style="color:#c9a0ff">“Would that I had been sooner.”</b>',
+      vath:1, gold:0.05, violet:0.55, clash:0, flee:1, guards:1 },
+    { who:'', title:'END OF ACT I',
+      html:'<i>The lie pours into the hollow where the captain’s memory was and sets like stone.</i> “The prince… and the princess… did this. We’ll put every hull on the water after them.” <i>Vath smiles, and does not correct him.</i>',
+      vath:1, gold:0.04, violet:0.5, clash:0, flee:1, guards:1, dark:1 },
+  ],
+  raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
+  vath:0, gold:0.12, violet:0, clash:0, flee:0, guards:0, dark:0,
+  flash:0, flashT:5, pulseR:0, take:0, sparks:[], drops:[],
+  running:false, ended:false, started:false,
+};
+function throneCutscene(){
+  const ov=document.getElementById('thrOv');
+  const cv=document.getElementById('thrCv');
+  const title=document.getElementById('thrTitle');
+  const sub=document.getElementById('thrSub');
+  if(!ov||!cv){ _thrEndAct(); return; }   // graceful fallback: resolve Act I and sail on
+  THR.cv=cv; THR.cx=cv.getContext('2d');
+  THR.t=0; THR.prev=0; THR.idx=0;
+  THR.vath=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.flee=0; THR.guards=0; THR.dark=0;
+  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.sparks.length=0; THR.drops.length=0;
+  THR.ended=false; THR.started=false; THR.running=true;
+  sub.classList.remove('show'); title.classList.remove('show');
+  ov.style.display='flex';
+  G.paused=true; G._credits=1;
+  if(typeof cinematic==='function') cinematic(true);
+  _thrResize();
+  window.addEventListener('resize', _thrResize);
+  setTimeout(()=>_thrShow(0), 650);   // brief fade-in, then Vath crashes the hall
+  ov.onclick=()=>{ if(THR.ended || !THR.started) return; _thrNext(); };
+  cancelAnimationFrame(THR.raf);
+  THR.raf=requestAnimationFrame(_thrLoop);
+}
+function _thrResize(){
+  const cv=THR.cv; if(!cv) return;
+  const r=cv.getBoundingClientRect();
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  THR.cx.setTransform(dpr,0,0,dpr,0,0);
+  THR.W=r.width; THR.H=r.height;
+}
+function _thrShow(i){
+  const b=THR.beats[i]; if(!b) return;
+  THR.idx=i; THR.started=true;
+  if(b.takeFlash){ THR.flash=1.2; THR.take=1; }
+  if(b.pulse){ THR.pulseR=0.001; }   // kick off the memory-rewrite ring
+  document.getElementById('thrWho').textContent=b.who||'';
+  document.getElementById('thrLine').innerHTML=b.html;
+  const tap=document.getElementById('thrTap');
+  if(tap) tap.textContent=(i>=THR.beats.length-1)?'the sea waits ›':'click to continue ›';
+  const sub=document.getElementById('thrSub');
+  sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show');
+  // title-card flash for the marquee beats
+  if(b.title){
+    const t=document.getElementById('thrTitle'), tt=document.getElementById('thrTitleT');
+    if(t&&tt){ tt.textContent=b.title; t.classList.remove('show'); void t.offsetWidth;
+      t.classList.add('show'); clearTimeout(THR._titleTO);
+      THR._titleTO=setTimeout(()=>t.classList.remove('show'), 2600); }
+  }
+}
+function _thrNext(){
+  if(THR.idx>=THR.beats.length-1){ _thrFinish(); return; }
+  const sub=document.getElementById('thrSub');
+  sub.classList.remove('show');
+  setTimeout(()=>_thrShow(THR.idx+1), 320);
+}
+function _thrFinish(){
+  THR.ended=true;
+  const sub=document.getElementById('thrSub'); if(sub) sub.classList.remove('show');
+  const title=document.getElementById('thrTitle'); if(title) title.classList.remove('show');
+  // let the hall settle to black (last beat eases dark->1), then hand to the sea crossing
+  setTimeout(_thrEndAct, 1400);
+}
+// Close Act I for good and roll straight into the "six months later" sailing epilogue.
+function _thrEndAct(){
+  THR.running=false; cancelAnimationFrame(THR.raf);
+  window.removeEventListener('resize', _thrResize);
+  const ov=document.getElementById('thrOv'); if(ov){ ov.style.display='none'; ov.onclick=null; }
+  P.story=P.story||{};
+  P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1; P.story.framed=1;
+  if(typeof qs==='function' && qs('homecoming')==='active' && typeof completeQuest==='function') completeQuest('homecoming');
+  if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
+  if(typeof autoSave==='function') autoSave();
+  if(typeof sailEpilogue==='function') sailEpilogue();
+}
+function _thrLoop(ts){
+  if(!THR.running) return;
+  if(!THR.prev) THR.prev=ts;
+  let dt=(ts-THR.prev)/1000; THR.prev=ts;
+  if(dt>0.05) dt=0.05;
+  THR.t+=dt;
+  const b=THR.beats[THR.idx]||THR.beats[0];
+  const ease=(cur,tgt,k)=>cur+(tgt-cur)*Math.min(1,dt*k);
+  THR.vath   = ease(THR.vath,   b.vath||0,   1.6);
+  THR.gold   = ease(THR.gold,   b.gold||0,   b.gold<THR.gold?4.5:2.2);  // guttering falls fast
+  THR.violet = ease(THR.violet, b.violet||0, 2.0);
+  THR.clash  = ease(THR.clash,  b.clash||0,  3.0);
+  THR.flee   = ease(THR.flee,   b.flee||0,   1.3);
+  THR.guards = ease(THR.guards, b.guards||0, 2.2);
+  THR.dark   = ease(THR.dark,   b.dark?1:0,  0.8);
+  THR.take   = Math.max(0,THR.take-dt*0.5);
+  // storm-lightning through the east doors, keener as the violet rises
+  THR.flash=Math.max(0,THR.flash-dt*3.0);
+  THR.flashT-=dt*(0.35+THR.violet*1.4);
+  if(THR.flashT<=0){ THR.flashT=2.4+Math.random()*4; THR.flash=Math.max(THR.flash,0.85); }
+  // the memory-rewrite ring, once kicked off, sweeps out and fades
+  if(THR.pulseR>0){ THR.pulseR+=dt*1.9; if(THR.pulseR>1.8) THR.pulseR=0; }
+  // clash sparks at the meeting point of the two magics
+  if(THR.clash>0.35 && Math.random()<THR.clash*0.9){
+    THR.sparks.push({x:0,y:0,vx:(Math.random()*2-1)*70,vy:(Math.random()*2-1)*70-10,life:0.5,max:0.5,
+      col:Math.random()<0.5?'#ffd27a':'#c9a0ff'});
+  }
+  for(const s of THR.sparks){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=90*dt; s.life-=dt; }
+  THR.sparks=THR.sparks.filter(s=>s.life>0);
+  _thrDraw();
+  THR.raf=requestAnimationFrame(_thrLoop);
+}
+function _thrDraw(){
+  const cx=THR.cx, W=THR.W, H=THR.H, t=THR.t; if(!cx||!W) return;
+  const gold=THR.gold, violet=THR.violet, clash=THR.clash;
+  const floorY=H*0.72;
+  const S=Math.max(0.72,Math.min(1.5,H/560));
+  // --- back wall: cold stone, faintly lit by torches, storm-dark up top ---
+  const wall=cx.createLinearGradient(0,0,0,floorY);
+  wall.addColorStop(0,'#0b0e18'); wall.addColorStop(0.55,'#171b28'); wall.addColorStop(1,'#20242f');
+  cx.fillStyle=wall; cx.fillRect(0,0,W,floorY+2);
+  // faint stone courses
+  cx.strokeStyle='rgba(255,255,255,0.03)'; cx.lineWidth=1;
+  for(let y=H*0.14;y<floorY;y+=26){ cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  // --- east doorway on the right: the storm and the sea the siblings run for ---
+  const dwX=W*0.80, dwW=W*0.17, dwTop=H*0.16, dwBot=floorY;
+  cx.save();
+  cx.beginPath();
+  cx.moveTo(dwX,dwBot); cx.lineTo(dwX,dwTop+dwW*0.5);
+  cx.quadraticCurveTo(dwX,dwTop, dwX+dwW*0.5,dwTop);
+  cx.quadraticCurveTo(dwX+dwW,dwTop, dwX+dwW,dwTop+dwW*0.5);
+  cx.lineTo(dwX+dwW,dwBot); cx.closePath();
+  cx.clip();
+  const sky=cx.createLinearGradient(0,dwTop,0,dwBot);
+  sky.addColorStop(0,'#20283c'); sky.addColorStop(0.6,'#2b3346'); sky.addColorStop(1,'#3a4152');
+  cx.fillStyle=sky; cx.fillRect(dwX,dwTop,dwW,dwBot-dwTop);
+  if(THR.flash>0.01){ cx.fillStyle=`rgba(200,214,255,${0.6*THR.flash})`; cx.fillRect(dwX,dwTop,dwW,dwBot-dwTop); }
+  // rain through the doorway
+  cx.strokeStyle='rgba(200,220,250,0.32)'; cx.lineWidth=1; cx.beginPath();
+  for(let i=0;i<40;i++){
+    const rx=dwX+((i*53+ (t*260))% (dwW)); const ry=dwTop+((i*97+ t*520)%(dwBot-dwTop));
+    cx.moveTo(rx,ry); cx.lineTo(rx-3,ry+11);
+  }
+  cx.stroke();
+  cx.restore();
+  // doorway arch stone frame
+  cx.strokeStyle='#0a0d15'; cx.lineWidth=6*S;
+  cx.beginPath();
+  cx.moveTo(dwX,dwBot); cx.lineTo(dwX,dwTop+dwW*0.5);
+  cx.quadraticCurveTo(dwX,dwTop, dwX+dwW*0.5,dwTop);
+  cx.quadraticCurveTo(dwX+dwW,dwTop, dwX+dwW,dwTop+dwW*0.5);
+  cx.lineTo(dwX+dwW,dwBot); cx.stroke();
+  // --- shattered entry doors on the left, where Vath came in, spilling violet ---
+  const inX=W*0.03, inW=W*0.14, inTop=H*0.18;
+  const ing=cx.createLinearGradient(inX,0,inX+inW,0);
+  ing.addColorStop(0,`rgba(70,30,110,${0.25+0.45*violet})`); ing.addColorStop(1,'rgba(10,10,18,0)');
+  cx.fillStyle=ing; cx.fillRect(inX,inTop,inW,floorY-inTop);
+  // --- floor ---
+  const fl=cx.createLinearGradient(0,floorY,0,H);
+  fl.addColorStop(0,'#1a1e28'); fl.addColorStop(1,'#0c0e15');
+  cx.fillStyle=fl; cx.fillRect(0,floorY,W,H-floorY);
+  cx.strokeStyle='rgba(0,0,0,0.4)'; cx.lineWidth=1;
+  for(let i=1;i<7;i++){ const y=floorY+(H-floorY)*(i/7); cx.beginPath(); cx.moveTo(0,y); cx.lineTo(W,y); cx.stroke(); }
+  // magic-light spill on the floor
+  if(gold>0.05||violet>0.05){
+    const gspill=cx.createRadialGradient(W*0.46,floorY,4,W*0.46,floorY,W*0.4);
+    gspill.addColorStop(0,`rgba(255,196,90,${0.16*gold})`); gspill.addColorStop(1,'rgba(255,196,90,0)');
+    cx.fillStyle=gspill; cx.fillRect(0,floorY-4,W,H-floorY+4);
+    const vspill=cx.createRadialGradient(W*0.24,floorY,4,W*0.24,floorY,W*0.4);
+    vspill.addColorStop(0,`rgba(160,110,240,${0.16*violet})`); vspill.addColorStop(1,'rgba(160,110,240,0)');
+    cx.fillStyle=vspill; cx.fillRect(0,floorY-4,W,H-floorY+4);
+  }
+  // --- wall torches (warm flicker) ---
+  const torch=(tx)=>{
+    const ty=H*0.30, fl=0.8+0.2*Math.sin(t*9+tx);
+    const g=cx.createRadialGradient(tx,ty,2,tx,ty,60*S);
+    g.addColorStop(0,`rgba(255,180,90,${0.5*fl})`); g.addColorStop(1,'rgba(255,180,90,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(tx,ty,60*S,0,TAU); cx.fill();
+    cx.fillStyle='#ffcf8a'; cx.beginPath(); cx.ellipse(tx,ty,3.5*S,7*S*fl,0,0,TAU); cx.fill();
+  };
+  torch(W*0.16); torch(W*0.66);
+  // --- the Tideglass Throne on its dais, centre ---
+  const thX=W*0.46, thBase=floorY;
+  cx.save();
+  // dais steps
+  cx.fillStyle='#232733';
+  cx.fillRect(thX-70*S, thBase-6*S, 140*S, 8*S);
+  cx.fillStyle='#1b1f29';
+  cx.fillRect(thX-54*S, thBase-14*S, 108*S, 8*S);
+  // throne body: dark seat with a glassy tideglass back
+  cx.fillStyle='#161a24';
+  cx.fillRect(thX-26*S, thBase-58*S, 52*S, 46*S);
+  const tg=cx.createLinearGradient(thX,thBase-104*S,thX,thBase-40*S);
+  const tglow=0.4+0.3*Math.sin(t*1.4);
+  tg.addColorStop(0,`rgba(120,210,220,${0.5+0.2*tglow})`);
+  tg.addColorStop(1,'rgba(30,70,90,0.75)');
+  cx.fillStyle=tg;
+  cx.beginPath();
+  cx.moveTo(thX-24*S,thBase-58*S);
+  cx.lineTo(thX-24*S,thBase-98*S);
+  cx.quadraticCurveTo(thX,thBase-116*S, thX+24*S,thBase-98*S);
+  cx.lineTo(thX+24*S,thBase-58*S); cx.closePath(); cx.fill();
+  cx.restore();
+  // --- figures ---
+  const fig=(x,body,head,opt)=>{
+    opt=opt||{}; const s=(opt.s||1)*S, a=(opt.a==null?1:opt.a);
+    if(a<=0.02) return;
+    cx.save(); cx.translate(x,floorY); cx.globalAlpha=a; cx.scale(s,s);
+    if(opt.aura){ const g=cx.createRadialGradient(0,-24,2,0,-24,42);
+      g.addColorStop(0,opt.aura); g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g; cx.beginPath(); cx.arc(0,-24,42,0,TAU); cx.fill(); }
+    cx.fillStyle='rgba(0,0,0,0.35)'; cx.beginPath(); cx.ellipse(0,1,11,3.2,0,0,TAU); cx.fill();
+    cx.fillStyle=body;   // robe / body
+    cx.beginPath(); cx.moveTo(-8,-38);
+    cx.quadraticCurveTo(-12,-6,-9,0); cx.lineTo(9,0);
+    cx.quadraticCurveTo(12,-6,8,-38);
+    cx.quadraticCurveTo(0,-46,-8,-38); cx.closePath(); cx.fill();
+    if(opt.arm){ cx.strokeStyle=body; cx.lineWidth=3.4; cx.beginPath();
+      cx.moveTo(opt.arm<0?-7:7,-30); cx.lineTo(opt.arm<0?-20:20,-38); cx.stroke(); }
+    cx.fillStyle=head; cx.beginPath(); cx.arc(0,-44,5.4,0,TAU); cx.fill();
+    cx.restore();
+  };
+  // Vath: advances from the shattered doors toward the throne as `vath` rises
+  const vX=W*0.10+(W*0.22)*THR.vath;
+  fig(vX, '#3a2455', '#d8c6ec', {s:1.12, a:Math.min(1,THR.vath*1.6), arm:1,
+    aura:`rgba(160,110,240,${0.5*violet+0.15})`});
+  // King Aldous before the throne (kneels grey once the fire guts out)
+  const spent=1-Math.min(1,gold*3);   // 0 while burning, ->1 when the light is gone
+  const kX=thX-2*S;
+  fig(kX, spent>0.6?'#6a5a44':'#8a6a2a', spent>0.6?'#b8a382':'#e9d59a',
+      {s:1.06-0.14*spent, a:1, arm:-1, aura:`rgba(255,196,90,${0.55*gold})`});
+  // the two siblings: run right, out the east doors, then gone
+  const sib=(x,body,head,off)=>{
+    const run=THR.flee, sx=W*(0.55)+(W*0.30)*run + off;
+    const a=run>0.9? Math.max(0,1-(run-0.9)*10) : 1;
+    const bob=Math.sin(t*10+off)* (run>0.05?3:0);
+    fig(sx, body, head, {s:0.9, a:a*Math.min(1,1.1-THR.guards*0.0)});
+    void x; void bob;
+  };
+  sib(0,'#7a2f2f','#e7c49a', 0);      // the princess (blood-red)
+  sib(0,'#2f4a7a','#e0b98a', 16*S);   // the prince (blue)
+  // --- the clash: gold and violet meeting mid-hall ---
+  if(clash>0.03){
+    const y=floorY-46*S, x0=vX+14*S, x1=kX-14*S, mid=(x0+x1)/2;
+    const beam=cx.createLinearGradient(x0,0,x1,0);
+    beam.addColorStop(0,`rgba(160,110,240,${0.85*clash})`);
+    beam.addColorStop(0.5,`rgba(255,255,255,${0.9*clash})`);
+    beam.addColorStop(1,`rgba(255,196,90,${0.85*clash})`);
+    cx.save(); cx.globalCompositeOperation='lighter';
+    cx.strokeStyle=beam; cx.lineWidth=(4+8*clash)*S+2*Math.sin(t*40)*clash;
+    cx.beginPath(); cx.moveTo(x0,y); cx.lineTo(x1,y); cx.stroke();
+    // bright collision node
+    const nr=(10+14*clash)*S*(0.85+0.15*Math.sin(t*30));
+    const ng=cx.createRadialGradient(mid,y,1,mid,y,nr);
+    ng.addColorStop(0,`rgba(255,255,255,${clash})`); ng.addColorStop(1,'rgba(255,255,255,0)');
+    cx.fillStyle=ng; cx.beginPath(); cx.arc(mid,y,nr,0,TAU); cx.fill();
+    // sparks fly from the node
+    for(const s of THR.sparks){ cx.globalAlpha=Math.max(0,s.life/s.max);
+      cx.fillStyle=s.col; cx.fillRect(mid+s.x,y+s.y,2.2,2.2); }
+    cx.globalAlpha=1; cx.restore();
+  }
+  // --- guards flooding in along the foreground ---
+  if(THR.guards>0.02){
+    const n=6;
+    for(let i=0;i<n;i++){
+      const gp=(i+0.5)/n;
+      const gx=W*(0.12+0.72*gp);
+      const rise=Math.min(1,THR.guards*1.4-gp*0.3);
+      if(rise<=0.02) continue;
+      const gy=H*0.995 - (H*0.20)*rise;
+      cx.save(); cx.globalAlpha=Math.min(1,rise); cx.translate(gx,gy); const gs=S*1.25;
+      cx.scale(gs,gs);
+      cx.fillStyle='#0c0f16';
+      cx.beginPath(); cx.moveTo(-9,0); cx.quadraticCurveTo(-12,-30,-6,-40);
+      cx.lineTo(6,-40); cx.quadraticCurveTo(12,-30,9,0); cx.closePath(); cx.fill();
+      cx.beginPath(); cx.arc(0,-46,6,0,TAU); cx.fill();   // helm
+      cx.strokeStyle='#0c0f16'; cx.lineWidth=2.6;         // spear
+      cx.beginPath(); cx.moveTo(8,-8); cx.lineTo(8,-64); cx.stroke();
+      cx.restore();
+    }
+  }
+  // --- the memory-rewrite pulse: a violet ring washing over the hall ---
+  if(THR.pulseR>0){
+    const pr=THR.pulseR, R=W*0.75*pr, a=Math.max(0,1-pr/1.8);
+    cx.save(); cx.globalCompositeOperation='lighter';
+    const rg=cx.createRadialGradient(vX,floorY-40*S,R*0.7,vX,floorY-40*S,R);
+    rg.addColorStop(0,'rgba(160,110,240,0)');
+    rg.addColorStop(0.85,`rgba(180,140,255,${0.45*a})`);
+    rg.addColorStop(1,'rgba(160,110,240,0)');
+    cx.fillStyle=rg; cx.fillRect(0,0,W,H);
+    cx.restore();
+  }
+  // --- full-hall violet flash when the Tideglass is torn away ---
+  if(THR.take>0.01){ cx.fillStyle=`rgba(150,100,235,${0.5*THR.take})`; cx.fillRect(0,0,W,H); }
+  if(THR.flash>0.01){ cx.fillStyle=`rgba(190,205,255,${0.12*THR.flash})`; cx.fillRect(0,0,W,H); }
+  // landfall of the act: darken as the lie sets like stone
+  if(THR.dark>0.01){ cx.fillStyle=`rgba(3,4,9,${0.62*THR.dark})`; cx.fillRect(0,0,W,H); }
+  // vignette
+  const vg=cx.createRadialGradient(W*0.5,H*0.5,H*0.18,W*0.5,H*0.5,H*0.78);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.6)');
+  cx.fillStyle=vg; cx.fillRect(0,0,W,H);
+}
+
 /* ---------- adaptive music (procedural, three moods) ---------- */
 const Music={
   nextT:0, beat:0, mode:'day',

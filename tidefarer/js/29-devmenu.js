@@ -26,6 +26,17 @@ function setAct(n){
   if(n>=3) P.story.kingTold=1;
   note('Act set to '+n);
 }
+// Rewind the close of Act I so the climax cutscene (and the epilogue that follows
+// it) can be played again - clears the ending flags, drops back to Act I, and
+// restores the prerequisites so talking to King Aldous re-triggers the scene.
+function resetActOneEnding(){
+  P.story=P.story||{};
+  ['act1End','vathAscendant','kingFallen','framed','act2','reachArrived'].forEach(f=>{ delete P.story[f]; });
+  P.story.act=1;
+  P.story.unmasked=1; P.story.remembered=1; P.story.kingTold=1;   // so the Aldous climax branch is reachable
+  if(P.quests) P.quests.homecoming='active';                      // re-offer the homecoming so it can complete again
+  ui(); note('Act I ending reset - talk to the King, or use the Play entries');
+}
 function freeCurse(which){
   P.story=P.story||{}; P.story.vathMet=1; P.story.vathNamed=1;
   const done=q=>{ if(QUESTS&&QUESTS[q]) P.quests[q]='done'; };
@@ -138,7 +149,9 @@ const SECTIONS=[
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
-    ['Play Act I epilogue',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
+    ['Reset Act I ending (replay)',()=>resetActOneEnding()],
+    ['Play Act I climax (throne)',()=>{ if(typeof throneCutscene==='function') throneCutscene(); }],
+    ['Play Act I epilogue (boat)',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)

@@ -259,9 +259,11 @@
   .storyCard p{font-size:16px;line-height:1.72;color:var(--parch);margin:6px 0 24px;}
   .storyCard p b{color:var(--ember);}
   .storyCard p i{color:var(--parch-dim);font-style:italic;}
+  /* Act I climax: the throne-hall cutscene, then the sailing epilogue below.
+     Both reuse the .epiTitle / .epiSub caption styling. */
+  #thrOv,#epiOv{background:#05070d;overflow:hidden;cursor:pointer;}
+  #thrCv,#epiCv{position:absolute;inset:0;width:100%;height:100%;display:block;}
   /* Act I epilogue: the "six months later" sailing cutscene into Stormreach */
-  #epiOv{background:#05070d;overflow:hidden;cursor:pointer;}
-  #epiCv{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .epiTitle{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;
     opacity:0;transition:opacity 1.4s ease;}
   .epiTitle.show{opacity:1;}
