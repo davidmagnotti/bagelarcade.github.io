@@ -162,6 +162,10 @@ function loadCode(str){
   if(P.story.aerieFreed) P.story.bossCleared.aerie=1;
   if(P.story.deepDone||P.story.tideCalm) P.story.bossCleared.east=1;
   if(P.story.undermawDown||P.story.millDone) P.story.bossCleared.main=1;
+  // Act II Warding Veil catch-up: anyone who already freed the Frozen Isle's Warden
+  // in Act II has earned the Veil that reopens the old islands. Grant it silently on
+  // load (no banner mid-restore) so returning players aren't stranded in the reaches.
+  if(P.story.frostFreed && P.story.act2 && !P.story.vathVeil){ P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1; }
   // The Emberwick mask rides the whole journey. Restore it for saves made before it
   // existed - unless the player has already reached the unmasking (or the old finale).
   if(P.story.masked===undefined){

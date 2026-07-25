@@ -43,7 +43,7 @@ function freeCurse(which){
   if(which==='dragon'||which==='all'){ P.eastDragonFreed=1; P.metDragon=1; done('wyrm'); done('vhunt'); }
   if(which==='tide'  ||which==='all'){ P.story.tideCalm=1;  done('tide');  }
   if(which==='aerie' ||which==='all'){ P.story.aerieFreed=1; done('roost'); }
-  if(which==='frost' ||which==='all'){ P.story.frostFreed=1; done('thaw');  }
+  if(which==='frost' ||which==='all'){ P.story.frostFreed=1; done('thaw'); if(typeof grantVathVeil==='function') grantVathVeil(true); }
   // clear any of those bosses still standing on the current map
   for(const m of (G.mobs||[])){ if(['leviathan','frostwarden','serpent','dragon','mage'].includes(m.kind) && !m.dead){ m.freed=1; m.dead=true; m.respawnT=-1; } }
   ui(); note('Curse(s) freed: '+which);
@@ -62,7 +62,7 @@ function resetCurse(which){
   }
   if(which==='tide' ||which==='all'){ P.story.tideCalm=0; arm('tide'); worlds.add('wind'); }
   if(which==='aerie'||which==='all'){ P.story.aerieFreed=0; arm('roost'); worlds.add('aerie'); worlds.add('aeriedeep'); }
-  if(which==='frost'||which==='all'){ P.story.frostFreed=0; P.story.deepDone=0; arm('thaw'); worlds.add('frost'); worlds.add('frostdeep'); }
+  if(which==='frost'||which==='all'){ P.story.frostFreed=0; P.story.deepDone=0; P.story.vathVeil=0; if(P.spells) delete P.spells.veil; arm('thaw'); worlds.add('frost'); worlds.add('frostdeep'); }
   // drop any lingering freed boss on the current map so a fresh one can stand
   for(const m of (G.mobs||[])){ if(['leviathan','frostwarden','serpent','dragon','icecolossus','mage'].includes(m.kind)){ m.dead=true; m.freed=0; m.respawnT=-1; } }
   // drop the cached isles so bosses respawn on re-entry; rebuild the one you're in now

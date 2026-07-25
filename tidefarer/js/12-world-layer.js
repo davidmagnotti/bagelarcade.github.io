@@ -1848,7 +1848,23 @@ function freeWarden(m){
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
-  setTimeout(()=>storyCard('The violet sloughs away like spring ice, and the Warden bows its head and <b>weeps</b> - warm meltwater running down the glacier toward the strait. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian and our sea. That <b>robed man</b> who stopped its tears - violet at the cuffs - did you cross him? He is not finished, I think.”'),1400);
+  // Felling the Frozen Isle's Warden is the second link of the Act II chain: it
+  // earns the Warding Veil, which reopens the old islands (see grantVathVeil).
+  setTimeout(()=>storyCard('The violet sloughs away like spring ice, and the Warden bows its head and <b>weeps</b> - warm meltwater running down the glacier toward the strait. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian and our sea. That <b>robed man</b> who stopped its tears - violet at the cuffs - did you cross him? He is not finished, I think.”',
+    {onOk:()=>{ if(P.story && P.story.act2) grantVathVeil(); }}),1400);
+}
+// Beating the Frozen Isle earns the WARDING VEIL: a warding woven from the freed
+// Warden's hush-frost that hides its bearer from Vath's influence, letting you
+// steal back to the old islands (all but the capital, which Vath holds outright).
+// `silent` grants the flag with no fanfare - used by save-migration and the dev menu.
+function grantVathVeil(silent){
+  P.story=P.story||{}; if(P.story.vathVeil) return;
+  P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1;
+  if(silent) return;
+  if(Snd.magic) Snd.magic();
+  banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Sigrid folds a rune of hush-frost into your palm - cut from the ice the Warden wept.</i> “The robed man\'s eye is on the old islands now, watching every sea-road home. But not on <b>you</b> - not while you carry this.” <b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s influence slides past you now, and the ferry can steal you back to the old islands - Barik, the Sunward Isle, Windsurf, Emberwick.</b> <i>“But not the capital, friend. His gaze never leaves the throne he stole. Aldermere stays shut to us.”</i>'); }, 900);
+  if(typeof autoSave==='function') autoSave();
 }
 function updateFrostFolkMood(){
   if(!(P.story && P.story.frostFreed)) return;
@@ -3609,8 +3625,22 @@ function attemptSail(){
     toast('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.',5200);
     return;
   }
-  // Stormreach is only reachable by sea, so its berth is always a ferry - prompt for a destination
-  if(G.worldId==='reach'){ boatMenu(); return; }
+  // Stormreach is only reachable by sea, so its berth is always a ferry. But in
+  // Act II the storm-coast opens stranded: the Barrow Brute's reef eats any hull
+  // that launches, so there's no sailing at all until the Brute is down and the
+  // port breathes again (P.story.reachBossDown). Beating Stormreach is the first
+  // link of the Act II chain that unlocks the Frozen Isle (see boatMenu).
+  if(G.worldId==='reach'){
+    if(P.story && P.story.act2 && !P.story.reachBossDown){
+      toast('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>',5800);
+      return;
+    }
+    boatMenu(); return;
+  }
+  // Act II: Vath holds the old world, so the ferry runs only the gated far-reach
+  // routes - and, once the Warding Veil is earned, the old islands (never the
+  // capital). boatMenu sorts out which destinations are open.
+  if(P.story && P.story.act2){ boatMenu(); return; }
   // once the seas are calm, any boat is a ferry - pick a destination
   if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
   // default single-hop routing before the archipelago reopens
@@ -3623,13 +3653,29 @@ function sailTo(dest, msg){
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
-  // once the seas are calm every dock is a ferry hub. In Act I the ferry runs only
-  // the settled routes and the capital; Stormreach, the Aerie and the Frozen Isle
-  // are ACT II - the ferrymen won't chance those waters until then (P.story.act2).
-  const all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-             ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
-  if(P.story && P.story.act2) all.push(['Sail to Stormreach','reach'],
-    ['Sail to the Aerie Isle','aerie'],['Sail to the Frozen Isle','frost']);
+  // once the seas are calm every dock is a ferry hub, but WHERE it will carry you
+  // depends on the act. In Act I: the settled routes and the capital. In Act II
+  // Vath holds the old world, so the ferry runs a GATED chain - Stormreach, then
+  // the Frozen Isle (once the Barrow Brute falls), then the Aerie - and only the
+  // Warding Veil steals you back to the old islands. Never the capital.
+  const A2       = !!(P.story && P.story.act2);
+  const beatReach= !!(P.story && P.story.reachBossDown);  // Barrow Brute down - Stormreach is a port again
+  const frostWon = !!(P.story && P.story.frostFreed);     // Weeping Warden freed - the Frozen Isle is done
+  const veil     = !!(P.story && P.story.vathVeil);       // the Warding Veil cloaks you from Vath's eye
+  let all;
+  if(!A2){
+    // ACT I: the settled routes and the capital. The far reaches - Stormreach, the
+    // Aerie, the Frozen strait - stay closed to any ferryman until Act II.
+    all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
+         ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
+  } else {
+    all=[['Sail to Stormreach','reach']];                          // the storm-coast hub, where the prince holds the boat
+    if(beatReach) all.push(['Sail to the Frozen Isle','frost']);   // the Brute's fall thaws the strait north
+    if(frostWon)  all.push(['Sail to the Aerie Isle','aerie']);    // the last far reach opens once the Frozen Isle is won
+    if(veil) all.push(['Steal home to Barik','main'],['Sail to the Sunward Isle','east'],
+                      ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle']);
+    // the capital is never listed in Act II: Vath's gaze holds the throne.
+  }
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
   document.getElementById('dialog').style.display='block';
@@ -3639,9 +3685,13 @@ function boatMenu(){
   pg.fillStyle='#8f6a3e'; pg.beginPath(); pg.moveTo(12,44); pg.quadraticCurveTo(36,60,60,44); pg.lineTo(52,38); pg.quadraticCurveTo(36,48,20,38); pg.closePath(); pg.fill();
   pg.strokeStyle='#4f3a24'; pg.lineWidth=3; pg.beginPath(); pg.moveTo(36,38); pg.lineTo(36,14); pg.stroke();
   pg.fillStyle='#e8e0d0'; pg.beginPath(); pg.moveTo(36,16); pg.quadraticCurveTo(50,22,36,34); pg.closePath(); pg.fill();
-  const line = (P.story && P.story.act2)
-    ? '“Calm seas at last, friend - the whole archipelago\'s open again. Where to?”'
-    : '“Calm seas on the settled routes now, friend, and a clear run to the capital. The far reaches - Stormreach, the Aerie, the Frozen strait - no ferryman will chance those yet. Where to?”';
+  const line = !A2
+    ? '“Calm seas on the settled routes now, friend, and a clear run to the capital. The far reaches - Stormreach, the Aerie, the Frozen strait - no ferryman will chance those yet. Where to?”'
+    : veil
+      ? '“The Veil\'s on you, friend - Vath\'s eye slides right past. The old isles are open to us again... all but the capital. Never the capital. Where to?”'
+      : beatReach
+        ? '“The Brute\'s down and the reef\'s gone quiet - the strait north to the Frozen Isle runs clear at last. Where to?”'
+        : '“Storm\'s eased enough for a short hop, friend. Where to?”';
   setDialog(line,
     dests.map(([lbl,dst])=>({label:lbl, fn:()=>{ closeDialog(); sailTo(dst); }}))
       .concat([{label:'Stay ashore',ghost:true,fn:closeDialog}]));
