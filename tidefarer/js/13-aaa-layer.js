@@ -516,7 +516,7 @@ function _thrLoop(ts){
     // towed a short step BEHIND her and off to one side, so the gripping arm bridges a
     // clear gap between them (not hidden single-file behind the big sprites).
     const hk=3.7+THR.flee*5.7;                 // the princess's depth down the nave
-    const tgt=_beside(hk-0.5, 0.32);           // a clear step behind and to his side
+    const tgt=_beside(hk-0.32, 0.12);          // tucked in close behind her, at her shoulder
     THR.prince={ x:PRIN0.x+(tgt.x-PRIN0.x)*grab, y:PRIN0.y+(tgt.y-PRIN0.y)*grab }; }
   THR.king  = lp(KING0,KINGF,THR.kAdv);
   THR.vath  = lp(VATH0,VATHF,THR.vAdv);
@@ -598,8 +598,6 @@ function _thrDraw(){
   // then looses the beams. Vath's one hand, the King's two, palms glowing as the magic gathers.
   if(THR.vHand>0.02) _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true);
   if(THR.kHand>0.02) _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false);
-  // the princess's arm, outstretched to grip the prince's collar as she hauls him out
-  if(THR.pflee>0.001) _thrGrab(SC,Z,sibA);
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
   // the clash of the two magics, drawn between the King and Vath
@@ -665,33 +663,6 @@ function _thrHands(SC,Z,pos,amt,skin,sleeve,col,single){
     cx.fillStyle=skin; cx.beginPath(); cx.arc(a.hx,hY,3.3*Z,0,TAU); cx.fill();
     cx.strokeStyle='rgba(24,16,10,0.85)'; cx.lineWidth=1.3*Z; cx.stroke();
   }
-}
-// The princess's grip on the prince: an outstretched arm from her shoulder to his collar,
-// with her mitt clamped on him, appearing as she seizes him (the same `GRAB` ramp) and held
-// while she hauls him out. This is the literal grab the escape beat describes.
-function _thrGrab(SC,Z,alpha){
-  const cx=THR.cx;
-  const g=Math.min(1,Math.max(0,(THR.flee-0.2)/0.16));  // matches the seize in _thrLoop
-  if(g<0.05 || alpha<=0.02) return;
-  const h=SC(THR.hero.x,THR.hero.y), p=SC(THR.prince.x,THR.prince.y);
-  const sx=h.x, sy=h.y-30*Z;                    // her shoulder
-  const gx=p.x, gy=p.y-30*Z;                    // his wrist
-  const ex=sx+(gx-sx)*0.5, ey=sy+(gy-sy)*0.5;   // elbow
-  cx.save(); cx.globalAlpha=Math.min(1,alpha)*g; cx.lineCap='round'; cx.lineJoin='round';
-  // upper arm (her green sleeve), shoulder -> elbow
-  cx.strokeStyle=LOOK_HERO.shirt; cx.lineWidth=5.6*Z;
-  cx.beginPath(); cx.moveTo(sx,sy); cx.lineTo(ex,ey); cx.stroke();
-  cx.strokeStyle='rgba(24,16,10,0.55)'; cx.lineWidth=1.1*Z;
-  cx.beginPath(); cx.moveTo(sx,sy); cx.lineTo(ex,ey); cx.stroke();
-  // forearm (bare skin), elbow -> hand: contrasts against both siblings so it reads
-  cx.strokeStyle=LOOK_HERO.skin; cx.lineWidth=4.6*Z;
-  cx.beginPath(); cx.moveTo(ex,ey); cx.lineTo(gx,gy); cx.stroke();
-  cx.strokeStyle='rgba(24,16,10,0.55)'; cx.lineWidth=1.1*Z;
-  cx.beginPath(); cx.moveTo(ex,ey); cx.lineTo(gx,gy); cx.stroke();
-  // her fist, clamped on him
-  cx.fillStyle=LOOK_HERO.skin; cx.beginPath(); cx.arc(gx,gy,4*Z,0,TAU); cx.fill();
-  cx.strokeStyle='rgba(24,16,10,0.9)'; cx.lineWidth=1.4*Z; cx.stroke();
-  cx.restore();
 }
 // the tiled iso floor of the nave: cool stone, a royal carpet up the centre, a raised dais
 function _thrFloor(SC,Z,t,gold,violet){
