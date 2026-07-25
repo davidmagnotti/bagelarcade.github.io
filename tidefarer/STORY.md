@@ -83,6 +83,15 @@ tied to) its island spirit. Working intent is that the boss is the spirit's
 guardian or its maddened form, so clearing the dungeon is what quiets the
 hazard on the surface.
 
+**Gating — Act II only.** These bosses and their dungeons are reachable **only
+during Act II.** They open when Act II does (Stormreach falls and the isles
+unlock) and close before the Act III finale — the same turnstile that keeps the
+capital sealed also fences the isle bosses inside Act II. Concretely: their
+dungeon mouths stay shut until Stormreach is cleared, and once the story crosses
+into the Emberwick tomb / capital endgame they are no longer enterable (the
+spirits are meant to be settled by then). Nothing here should be reachable in
+Act I, and nothing should let the player wander back into an isle boss mid-finale.
+
 - **Sunwick — the Giant Crab.** A **new barrier island** just offshore holds
   the lair; the boss is a giant crab. (Separate from the existing Emberdeep /
   Ashwing dungeon inside Mount Kea — this is its own reef-islet dungeon. Ties
@@ -187,5 +196,9 @@ you finally face Vath:
   mechanic, drained/flooded rooms? Prototype before committing two of them.
 - **Boss = spirit, or guardian?** Is each isle boss the maddened island spirit
   itself, or a guardian standing between you and calming it?
+- **Act II boss gating — mandatory or optional?** Must every isle boss be
+  cleared before Act III opens, or can the player enter the finale having skipped
+  some (and just lose the loot/story they'd have given)? And once cleared, do
+  the dungeons stay open to revisit within Act II or lock behind you?
 - **The brother's seal in the finale** — is he a controlled ally, a scripted
   cutscene role, or a mechanic you protect during the Vath fight?
