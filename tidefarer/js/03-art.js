@@ -1600,7 +1600,13 @@ function drawSlime(g,sx,sy,m){
   if(m.hurtT>0) g.globalAlpha=0.6;
   const col = m.boss? '#7ec4a0' : '#7fca6a';
   g.fillStyle=shade(col,-30); g.beginPath(); g.ellipse(0,-h*0.8+2,w,h,0,0,TAU); g.fill();
-  g.fillStyle=col; g.beginPath(); g.ellipse(0,-h*0.9,w,h,0,0,TAU); g.fill();
+  // glassy gel body: top-lit radial gradient instead of a flat fill
+  let bg; try{ bg=g.createRadialGradient(-w*0.3,-h*1.2,1,0,-h*0.9,w*1.25);
+    bg.addColorStop(0,shade(col,36)); bg.addColorStop(0.5,col); bg.addColorStop(1,shade(col,-24)); }catch(e){ bg=col; }
+  g.fillStyle=bg; g.beginPath(); g.ellipse(0,-h*0.9,w,h,0,0,TAU); g.fill();
+  // rim light along the crown
+  g.strokeStyle='rgba(255,255,255,0.30)'; g.lineWidth=1.3;
+  g.beginPath(); g.ellipse(0,-h*0.9,w*0.93,h*0.93,0,Math.PI*1.06,Math.PI*1.94); g.stroke();
   g.fillStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.ellipse(-w*0.35,-h*1.25,w*0.25,h*0.3,-.5,0,TAU); g.fill();
   g.fillStyle='#203018';
   g.beginPath(); g.arc(-4,-h*0.95,1.8,0,TAU); g.arc(4,-h*0.95,1.8,0,TAU); g.fill();
@@ -1612,8 +1618,12 @@ function drawWolf(g,sx,sy,m){
   if(m.hurtT>0) g.globalAlpha=0.6;
   g.fillStyle='#5d6068';
   g.fillRect(-14,-20+Math.max(0,trot)*0.4,4,10); g.fillRect(8,-20+Math.max(0,-trot)*0.4,4,10);
-  g.beginPath(); g.roundRect(-16,-28,30,14,6); g.fill();
-  g.fillStyle='#6e727b'; g.beginPath(); g.roundRect(-16,-28,30,7,4); g.fill();
+  // torso: vertical gradient (top-lit fur) + a rim light along the spine
+  let wg; try{ wg=g.createLinearGradient(0,-28,0,-14);
+    wg.addColorStop(0,'#7a7e88'); wg.addColorStop(1,'#484b53'); }catch(e){ wg='#5d6068'; }
+  g.fillStyle=wg; g.beginPath(); g.roundRect(-16,-28,30,14,6); g.fill();
+  g.strokeStyle='rgba(212,222,236,0.38)'; g.lineWidth=1.3;
+  g.beginPath(); g.moveTo(-13,-27.2); g.quadraticCurveTo(-2,-29.4,12,-27); g.stroke();
   // head
   g.fillStyle='#5d6068'; g.beginPath(); g.roundRect(8,-36,16,13,5); g.fill();
   g.fillStyle='#4a4d54'; g.beginPath(); g.moveTo(10,-36); g.lineTo(13,-42); g.lineTo(16,-36); g.closePath(); g.fill();
