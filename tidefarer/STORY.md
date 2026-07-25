@@ -76,6 +76,36 @@ changes the terrain or gives you a new way to move — so isles you couldn't
 fully cross before open up on a return visit. (Same shape as the existing
 Stormlight and stormsail unlocks: a mid-arc prize that re-opens the map.)
 
+### Bosses & new dungeons — [new]
+
+Each isle gets a dungeon that ends in a boss — the fight that calms (or is
+tied to) its island spirit. Working intent is that the boss is the spirit's
+guardian or its maddened form, so clearing the dungeon is what quiets the
+hazard on the surface.
+
+- **Sunwick — the Giant Crab.** A **new barrier island** just offshore holds
+  the lair; the boss is a giant crab. (Separate from the existing Emberdeep /
+  Ashwing dungeon inside Mount Kea — this is its own reef-islet dungeon. Ties
+  naturally to the "reef" already sketched at Windward Reef.)
+- **Windsurf — the Underground Temple.** A buried temple **beneath The Breakers
+  Resort.** (Separate from the existing **Undermill** beneath the windmill —
+  Windsurf ends up with two underground sites: the mill works and this temple.)
+- **Stormreach — the Barrier Reef.** A dungeon **at/below the waterline**, a
+  submerged barrier reef. (Stormreach already ships the **Drowned Catacomb**
+  under its graveyard with the Drowned Minotaur; the reef is a second,
+  distinct underwater site — decide whether it replaces or sits alongside the
+  catacomb.)
+- **Cloudreach — skipped.** Too small to carry a dungeon; leave it as the
+  optional Rainbow Road side-content it already is.
+- **Barik — TBD.** No boss/dungeon specified yet for the earthquake spirit.
+  Barik already has Stormwatch Peak, the Undermaw, and its catacombs to draw
+  on, or the quake spirit could get its own new site. Open question below.
+
+> **Underwater dungeons are a new mode.** Both Sunwick's reef-islet and
+> Stormreach's barrier reef lean on water/below-waterline traversal the engine
+> doesn't do yet — worth prototyping the "under water level" feel once before
+> committing both.
+
 ---
 
 ## Act III — Emberwick and the Tidefarer's rest
@@ -128,7 +158,11 @@ you finally face Vath:
 2. **Post-Stormreach open sailing** (capital gated) — a navigation/gating change.
 3. **Island-spirit hazards** — Windsurf winds, Barik quakes, Sunwick ash — as
    world hazards + set dressing, one isle at a time.
-4. **Emberwick Tidefarer tomb** — the reveal, the headstone strike, the
+4. **Isle dungeons & bosses** — one per isle, tied to its spirit. Prototype the
+   underwater mode first (it serves both Sunwick's reef-islet and Stormreach's
+   barrier reef), then Windsurf's temple, then settle Barik. The dungeon is
+   what calms each hazard from step 3.
+5. **Emberwick Tidefarer tomb** — the reveal, the headstone strike, the
    royal-family guardian fight, and the book that grants the two gifts. This
    ties the mechanic in (1) to the story.
 
@@ -144,7 +178,14 @@ you finally face Vath:
   does time slow, and does the player also speed up, or just the world slow?
 - **Spirit hazards — punishing or flavor?** Do quakes/gusts/ash deal damage and
   gate paths, or mostly dress the isle until you calm the spirit?
-- **Do the three spirits need boss fights**, or is calming them a quest/puzzle
-  with the hazard as the obstacle?
+- **Barik's dungeon & boss** — does the earthquake spirit get its own new site,
+  or reuse Stormwatch Peak / the Undermaw / the catacombs already on Barik?
+- **Stormreach's reef vs. its catacomb** — does the new barrier-reef dungeon
+  replace the existing Drowned Catacomb, or sit alongside it?
+- **Underwater traversal** — the reef dungeons want an "under water level" feel
+  the engine doesn't have yet. What does it play like — swimming, a diving
+  mechanic, drained/flooded rooms? Prototype before committing two of them.
+- **Boss = spirit, or guardian?** Is each isle boss the maddened island spirit
+  itself, or a guardian standing between you and calming it?
 - **The brother's seal in the finale** — is he a controlled ally, a scripted
   cutscene role, or a mechanic you protect during the Vath fight?
