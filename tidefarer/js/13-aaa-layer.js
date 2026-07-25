@@ -11,6 +11,114 @@ function banner(title,sub){
 }
 function cinematic(on){ document.body.classList.toggle('cine',on); }
 function shockwave(x,y,color,r){ G.parts.push({x,y,vx:0,vy:0,life:0.35,max:0.35,size:r,color,ring:true}); }
+
+/* ---------- in-world boss entrances ------------------------------------------
+   A reusable, ON-CANVAS entrance beat (no overlay): for ~2.5s the world holds
+   while the boss ARRIVES on the same screen the fight happens on - the dragon
+   taken by the violet, the Leviathan breaching, the Hollow King rising - then
+   control returns and combat begins with no cut. Modeled on the G.camCine
+   scripted-camera beat in 21-exploration.js: the camera eases onto the boss, a
+   title banner lands, an impact beat hits, then it hands straight to the fight.
+   Damage immunity during the beat rides on m.introKind (NOT m.invuln, which the
+   Storm-Eye's shield and the snatcher's grab-guard already own). */
+const BOSS_INTRO_KIND = {
+  enthrall:{ col:'199,123,255', dur:2.8 },   // Vath's violet washes over the beast
+  surface: { col:'150,220,245', dur:2.7 },   // rises breaching out of the water
+  rise:    { col:'120,220,160', dur:2.6 },   // hauls itself up from the ground
+  descend: { col:'210,220,255', dur:2.4 },   // drops out of the storm-sky
+  loom:    { col:'220,150,90',  dur:2.4 },   // looms up out of the dark and strides in
+};
+function startBossIntro(m, opts){
+  if(!m || G.bossIntro) return;              // one entrance at a time
+  opts=opts||{};
+  const kind=opts.kind||'rise', def=BOSS_INTRO_KIND[kind]||BOSS_INTRO_KIND.rise;
+  G.bossIntro={ m, kind, t:0, dur:opts.dur||def.dur, col:def.col,
+    foc:opts.foc||[m.hx!=null?m.hx:m.x, m.hy!=null?m.hy:m.y],
+    title:opts.title||m.title||(m.name||'').toUpperCase()||'A CHALLENGER APPROACHES',
+    sub:opts.sub||m.subtitle||'', fired:false, impact:false, _acc:0 };
+  m.introKind=kind; m.introT=0; m.entranceDone=true;
+  m.state='idle'; m.tx=null; m.ty=null; m.windup=0; m.swing=0; m.noAggroT=1e9;
+  if(kind==='enthrall' && m.ensAmt==null && !m.enspelled) m.ensAmt=0;   // the violet washes in (dragon)
+  if(kind==='surface') m.surf=0;
+  P.click=null; if(typeof input!=='undefined') input.attack=false;
+  // the generic first-chase banner in updateBossUI would double up - suppress it
+  G.flags['intro_'+m.kind]=true;
+  if(typeof cinematic==='function') cinematic(true);
+  if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+  G.shake=Math.max(G.shake||0, 0.35);
+}
+function updateBossIntro(dt){
+  const bi=G.bossIntro; if(!bi) return;
+  const m=bi.m;
+  // the boss can vanish out from under us (world switch, death, a fresh load) - bail clean
+  if(!m || m.dead || !G.mobs || G.mobs.indexOf(m)<0){ endBossIntro(true); return; }
+  bi.t+=dt; const p=Math.min(1, bi.t/bi.dur);
+  m.introT=p; m.anim=(m.anim||0)+dt; m.hurtT=Math.max(0,(m.hurtT||0)-dt);
+  if(bi.kind==='enthrall' && m.ensAmt!=null) m.ensAmt=easeInOut(Math.min(1,p*1.15));
+  if(bi.kind==='surface') m.surf=easeOut(p);
+  // ease the camera onto the boss (mirrors frame()'s follow math)
+  if(typeof isoX==='function'){
+    G.cam.x=lerp(G.cam.x, isoX(bi.foc[0],bi.foc[1])-VW/2,    Math.min(1,dt*3));
+    G.cam.y=lerp(G.cam.y, isoY(bi.foc[0],bi.foc[1])-VH/2-20, Math.min(1,dt*3));
+  }
+  // the title lands a third of the way in, once the arrival reads
+  if(!bi.fired && p>=0.28){ bi.fired=true; if(typeof banner==='function') banner(bi.title, bi.sub); }
+  // the impact beat: the breach / landfall / the King finding his feet
+  if(!bi.impact && p>=0.66){ bi.impact=true;
+    G.shake=Math.max(G.shake||0, 0.7);
+    if(typeof shockwave==='function') shockwave(m.x, m.y, 'rgba('+bi.col+',0.9)', bi.kind==='descend'?70:55);
+    if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+  }
+  bossIntroFX(m, p, dt, bi);
+  // the rest of the world is held this frame, so keep its particle/shake systems
+  // ticking here or the entrance FX would freeze mid-air
+  for(const pt of G.parts){ if(pt.pickup){ pt.life-=dt; continue; }
+    pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=(pt.grav||0)*dt; pt.life-=dt; }
+  G.parts=G.parts.filter(pp=>pp.life>0);
+  for(const f of G.floats){ f.y+=f.vy*dt; f.life-=dt; } G.floats=G.floats.filter(f=>f.life>0);
+  G.shake=Math.max(0,(G.shake||0)-dt*2.5);
+  G.flash=Math.max(0,(G.flash||0)-dt*1.6);
+  if(p>=1) endBossIntro(false);
+}
+function endBossIntro(aborted){
+  const bi=G.bossIntro; if(!bi) return;
+  const m=bi.m;
+  if(m){ m.introKind=null; m.introT=1; m.noAggroT=0;
+    if(bi.kind==='enthrall'){ m.ensAmt=1; if(m.kind==='dragon'||m.enspelled!==undefined) m.enspelled=true; }
+    if(bi.kind==='surface') m.surf=1;
+    if(!aborted) m.state='chase'; }
+  G.bossIntro=null;
+  if(typeof input!=='undefined') input.attack=false;   // don't let a held tap land the instant it ends
+  if(typeof cinematic==='function') cinematic(false);
+  if(!aborted){ G.slowmo=Math.max(G.slowmo||0,0.9); if(typeof Snd!=='undefined'&&Snd.boss) Snd.boss(); }
+}
+function bossIntroFX(m,p,dt,bi){
+  if(typeof fxOn==='function' && !fxOn('particles')) return;
+  const k=bi.kind, x=m.x, y=m.y, col=bi.col;
+  bi._acc=(bi._acc||0)+dt*(k==='enthrall'?26:k==='surface'?30:18);
+  let n=Math.floor(bi._acc); bi._acc-=n; if(n>4) n=4;
+  for(let i=0;i<n;i++){
+    if(k==='enthrall'){                       // violet motes spiral inward as the binding takes
+      const a=Math.random()*TAU, r=2.4+Math.random()*1.6;
+      const sx=x+Math.cos(a)*r, sy=y-0.6+Math.sin(a)*r*0.6;
+      G.parts.push({x:sx,y:sy,vx:(x-sx)*1.7,vy:(y-0.6-sy)*1.7,life:rnd(0.4,0.85),
+        color:'rgba('+col+',0.9)',size:rnd(2,4),grav:0,glow:true});
+    } else if(k==='surface'){                 // spray flung off the breaching beast
+      const a=Math.random()*TAU, sp=rnd(0.6,2.6);
+      G.parts.push({x:x+rnd(-1.6,1.6),y:y+rnd(-0.4,0.7),vx:Math.cos(a)*sp,vy:-Math.abs(Math.sin(a))*sp-rnd(0.6,1.8),
+        life:rnd(0.5,1.1),color:Math.random()<0.5?'#dff2fb':'rgba('+col+',0.85)',size:rnd(1.6,3.4),grav:0.12});
+    } else if(k==='rise'){                     // earth and grave-dust shaken loose as it hauls up
+      G.parts.push({x:x+rnd(-1.3,1.3),y:y+rnd(-0.2,0.5),vx:rnd(-0.5,0.5),vy:-rnd(0.5,1.6),
+        life:rnd(0.5,1.1),color:Math.random()<0.5?'rgba('+col+',0.8)':'#6b5b47',size:rnd(1.8,3.6),grav:-0.05});
+    } else if(k==='descend'){                  // wind-torn motes trailing the descent
+      G.parts.push({x:x+rnd(-1.7,1.7),y:y-3-rnd(0,3)*(1-p),vx:rnd(-0.4,0.4),vy:rnd(1.2,2.6),
+        life:rnd(0.4,0.9),color:'rgba('+col+',0.8)',size:rnd(1.6,3),grav:0.05,glow:true});
+    } else {                                   // loom: dust curling up out of the dark
+      G.parts.push({x:x+rnd(-1.5,1.5),y:y+rnd(-0.2,0.4),vx:rnd(-0.3,0.3),vy:-rnd(0.3,1.0),
+        life:rnd(0.5,1.0),color:'rgba('+col+',0.6)',size:rnd(2,3.4),grav:-0.02});
+    }
+  }
+}
 /* ---------- Act I epilogue: "six months later", the two siblings sail into Stormreach ----------
    Replaces the old credit roll. A self-contained animated scene (its own rAF loop, since the
    world is paused) of the prince and princess crossing open water into a gathering tempest,

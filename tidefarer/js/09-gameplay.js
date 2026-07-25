@@ -540,6 +540,7 @@ function drawMobBars(m,s){
 }
 function damageMob(m,dmg,knock,skill){
   if(m.fainted) return; // a felled, freed dragon takes no more harm
+  if(m.introKind){ if(Math.random()<0.4) addFloat('!',m.x,m.y-2.1,'#e8dcff'); return; } // untouchable mid-entrance
   if(m.invuln){
     m.hurtT=0.12;
     // the cloud-snatcher can't be cut - but a solid melee blow rattles it: it's stunned
@@ -1229,14 +1230,23 @@ function updateMobs(dt){
     // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
     // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
     if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
-    if(m.stormeye){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
+    if(m.stormeye){   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
+      if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function' && dist(m.x,m.y,P.x,P.y)<11)
+        startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
+      m.face=(P.x<m.x?-1:1); continue; }
     if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
       m.noAggroT=Math.max(0,(m.noAggroT||0)-dt);
-      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){ m.state='chase';
-        if(m.kind==='boss'){ Snd.boss(); toast('<b style="color:#78dca0">The Hollow King rises.</b>'); }
+      if(pd<d.aggro && !P.dead && !inSafeZone(P.x,P.y) && m.noAggroT<=0){
+        // a marquee boss ARRIVES with an in-world entrance the first time it's roused;
+        // the entrance hands straight to the fight when it finishes (see startBossIntro)
+        if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function'){
+          startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub}); continue;
+        }
+        m.state='chase';
+        if(m.kind==='boss'){ Snd.boss(); }   // the Hollow King's rise is shown now, not toasted
         else if(m.bigBoss && Snd.boss) Snd.boss(); }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }

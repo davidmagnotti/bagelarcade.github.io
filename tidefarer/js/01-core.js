@@ -31,6 +31,15 @@ let MAPW = 112, MAPH = 112;
 const T = { DEEP:0, SHALLOW:1, SAND:2, GRASS:3, FOREST:4, RUIN:5, PATH:6, SOIL:7, PLANK:8, SNOW:9, ICE:10 };
 const clamp = (v,a,b)=> v<a?a : v>b?b : v;
 const lerp = (a,b,t)=> a+(b-a)*t;
+const easeOut   = t=> 1-(1-t)*(1-t);                 // decelerate to a stop
+const easeInOut = t=> t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+// blend two "#rrggbb" colours -> "#rrggbb": t=0 => a, t=1 => b (animates the dragon's enthralling).
+// Returns hex so results stay compatible with shade() and gradient stops.
+const mixHex = (a,b,t)=>{ const A=parseInt(a.slice(1),16), B=parseInt(b.slice(1),16);
+  const r=clamp(Math.round(((A>>16)&255)+(((B>>16)&255)-((A>>16)&255))*t),0,255);
+  const g=clamp(Math.round(((A>>8)&255)+(((B>>8)&255)-((A>>8)&255))*t),0,255);
+  const c=clamp(Math.round((A&255)+((B&255)-(A&255))*t),0,255);
+  return '#'+((r<<16)|(g<<8)|c).toString(16).padStart(6,'0'); };
 const dist = (ax,ay,bx,by)=> Math.hypot(ax-bx, ay-by);
 const rndi = (a,b)=> a + Math.floor(Math.random()*(b-a+1));
 const rnd  = (a,b)=> a + Math.random()*(b-a);

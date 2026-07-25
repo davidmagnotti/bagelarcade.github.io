@@ -130,7 +130,7 @@ function spawnMobsSkyDungeon(){
     const sp=findOpenNear(s.x,s.y,4) || [s.x,s.y];
     const b=spawnMob('stormwraith', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.skyminiboss=1; b.bscale=1.7; b.title='THE STORM-WRAITH';
-      b.hp=b.maxhp=300; b.dmg=26; b.lvl=11; b.hx=b.x; b.hy=b.y; b.respawnT=-1; } }
+      b.hp=b.maxhp=300; b.dmg=26; b.lvl=11; b.hx=b.x; b.hy=b.y; b.respawnT=-1; b.entrance='descend'; } }
   // P5 - three more sky wraiths
   if(!P.story.skyG5){ const s=skyIsle('i5');
     for(let i=0;i<3;i++){ const a=i/3*TAU, r2=2.0; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 5); } }
@@ -141,7 +141,7 @@ function spawnMobsSkyDungeon(){
     const b=spawnMob('stormeye', s.x, s.y-1);
     if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE'; b.ach='stormbreaker';
       b.hp=b.maxhp=440; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
-      b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; } }
+      b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; b.entrance='descend'; } }
 }
 function genSkyDungeonAll(){
   genSkyDungeon(); bakeSolids(); placeObjectsSkyDungeon(); buildFoam();
