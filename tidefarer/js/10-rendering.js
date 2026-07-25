@@ -2165,7 +2165,10 @@ function drawProj(p,s){
     return;
   }
   if(p.kind==='arrow'){
-    const a=Math.atan2(p.vy*TH/2,p.vx*TW/2);
+    // rotate to the arrow's actual on-SCREEN travel: a world velocity (vx,vy) maps to
+    // screen ((vx-vy)*TW/2, (vx+vy)*TH/2) under the iso transform, so the angle must mix
+    // both axes - not just atan2(vy,vx), which left the arrow pointing the wrong way.
+    const a=Math.atan2((p.vx+p.vy)*TH/2,(p.vx-p.vy)*TW/2);
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(a);
     cx.strokeStyle='#c9a06a'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-9,0); cx.lineTo(7,0); cx.stroke();
     cx.fillStyle='#dfe0d8'; cx.beginPath(); cx.moveTo(10,0); cx.lineTo(5,-3); cx.lineTo(5,3); cx.closePath(); cx.fill();
@@ -2282,6 +2285,7 @@ function buildMapBase(){
       const t=G.map[y*MAPW+x];
       g.fillStyle=(CLOUD && CLOUDCOL[t]) || MAPCOL[t]; g.fillRect(x,y,1,1);
     }
+    mapBaseWorld=G.worldId;   // record which world this shared canvas now holds
   }catch(e){/* keep the previous image rather than blanking */}
 }
 let miniT=0;
@@ -2351,7 +2355,13 @@ function drawBigMap(){
     mt.textContent = d ? d.title.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase()) : 'Map'; }
   const c=document.getElementById('bigMap'), g=c.getContext('2d');
   g.imageSmoothingEnabled=false;
-  g.drawImage(mapBase,0,0,384,384);
+  // mapBase is ONE shared canvas aliased across every world and only redrawn on fresh
+  // generation, so returning to a cached world (e.g. Emberwick after a gray, RUIN-heavy
+  // dungeon) leaves it holding the previous world's terrain - the seen tiles then read
+  // as a stale/gray image. Rebuild it here whenever it doesn't match the world we're
+  // drawing, so the map always shows the isle you are actually standing on.
+  if(!mapBase || mapBaseWorld!==G.worldId) buildMapBase();
+  if(mapBase) g.drawImage(mapBase,0,0,384,384);
   const eg=EXPL[G.worldId];
   if(eg){
     g.fillStyle='rgba(22,17,11,0.94)';

@@ -463,6 +463,12 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
       [{item:'potion',price:8},{item:'elixir',price:24}])});
   }
+  // The Cloud-Tender keeps a little sky-stall at the landing - bottled mana for the
+  // spellwork the Rainbow Road demands, and a few fire-tonics besides.
+  if(npc.id==='wisp'){
+    btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
+      [{item:'manapot',price:10},{item:'potion',price:8}])});
+  }
   if(npc.id==='mira'){
     // her silk was stolen on the north road - she has none to sell until it's recovered
     // (the ribbon quest, stage 2). Before that, no cloth for sale.
@@ -627,8 +633,8 @@ function shopButtons(npc,btns){
       opts.push({label:'Farewell',ghost:true,fn:closeDialog});
       setDialog(opts.length>1? '“What\'ll it be? A house is never finished - that\'s the joy of it.”':'“She\'s complete, roof to root. A proper Barik homestead.”', shopButtons(npc,opts));
     }});
-    // Chestnut is no longer for sale - he's Orin's gift for the bluecap quest.
-    // Once you own him, Hedda can still whistle him up / stable him for you.
+    // Chestnut is no longer for sale - he's Hedda's gift for clearing the fields
+    // ('Mire in the Fields'). Once you own him, Hedda whistles him up / stables him.
     if(P.horse) btns.unshift({label:P.riding? 'Dismount Chestnut':'Whistle for Chestnut', fn:()=>{
       P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
     }});

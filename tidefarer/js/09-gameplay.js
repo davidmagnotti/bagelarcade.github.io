@@ -1336,9 +1336,18 @@ function updateMobs(dt){
           G.parts.push({x:m.x+rnd(-1.5,1.5),y:m.y-0.6,vx:rnd(-0.4,0.4),vy:-rnd(0.3,0.9),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.04}); }
       }
       if(m.kind==='leviathan'){
-        // bound in the deep - never leaves the water, but hurls spouts and
-        // rears to slam anything on the breakwater. Volleys wider when hurt.
-        m.rooted=1;
+        // bound in the deep - it never leaves the water, but it GIVES CHASE now: it swims
+        // hard after you across the light-water arena to close to slam range, still hurling
+        // spouts and rearing to slam. Flee onto the breakwater and it can't follow you up.
+        m.rooted=1;   // generic land-chase stays off; it swims via the water-only step here
+        if(l>2.4 && !((m.stunT||0)>0) && !((m.snareT||0)>0)){
+          const spd=(m.hp<m.maxhp*0.5)?2.6:1.8;   // enraged and faster once wounded
+          // only advance onto LIGHT water (shallows - the surf arena), so it stays where
+          // you can reach it and never crawls onto land or dives off into the dark deep
+          const swim=(nx,ny)=>{ const tx=nx|0, ty=ny|0; return inb(tx,ty) && tileAt(tx,ty)===T.SHALLOW; };
+          const sx=m.x+dx/l*spd*dt; if(swim(sx,m.y)) m.x=sx;
+          const sy=m.y+dy/l*spd*dt; if(swim(m.x,sy)) m.y=sy;
+        }
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>1.3 && l<14){
           m.shootCd = m.hp<m.maxhp*0.5? 1.5 : 2.3; m.swing=0.3;

@@ -69,11 +69,10 @@ const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon un
   wards:  {x:40, y:28, r:11, name:'The Three Wards',     lv:[15,17]}, // pull-all-three lever puzzle
   hoard:  {x:44, y:10, r:12, name:'The Hoarfrost Hoard', lv:[16,16]}  // the reward chamber
 };
-const SKY_ZONES = { // THE CLOUDREACH - a rock adrift in the cloud-sea; Ashwing flies you up
-  landing: {x:60, y:98, r:8,  name:'Cloudfall Landing', lv:[9,10]},  // where the dragon sets you down
-  shrine:  {x:60, y:62, r:11, name:'The Windshrine',    lv:[9,10]},
-  eyrie:   {x:60, y:30, r:13, name:"The Roc's Eyrie",   lv:[10,11]}, // the Storm Roc (optional trophy hunt)
-  leap:    {x:34, y:74, r:6,  name:'The Leap',          lv:[9,10]}   // stormsail jump-off -> Windsurf (won on the Rainbow Road)
+const SKY_ZONES = { // THE CLOUDREACH - a tiny cloud-perch hub; Ashwing flies you up, and the
+  // Wind-Lost Bird's rainbow road is the real journey (and the only way down).
+  landing: {x:32, y:42, r:7,  name:'Cloudfall Landing', lv:[9,10]},  // where the dragon sets you down
+  leap:    {x:18, y:28, r:5,  name:'The Leap',          lv:[9,10]}   // stormsail jump-off -> Windsurf (won on the Rainbow Road)
 };
 const REACH_ZONES = { // STORMREACH - a storm-coast sea stop between Windsurf and the Frozen Isle
   strand: {x:60, y:98, r:8,  name:'Wreckstrand',         lv:[11,12]}, // the ferry lands here
@@ -150,8 +149,8 @@ const WORLD_DEFS = {
   frostvault:{ W:80, H:96, seed:41983, zones:FROSTVAULT_ZONES, dungeon:1, dark:0.16,
     spawn:{x:40.5,y:86.5}, title:'THE GLACIER VAULT', sub:'THE ICE-BEAR’S DEN - FROZEN HALLS AND OLD FROST-WARDS',
     gen:()=>genFrostVaultAll() },
-  sky:{ W:120, H:120, seed:70123, zones:SKY_ZONES, cloud:1,
-    spawn:{x:60.5,y:98.5}, title:'THE CLOUDREACH', sub:'A ROCK ADRIFT IN THE CLOUD-SEA - WHERE THE STORM ROC ROOSTS',
+  sky:{ W:64, H:64, seed:70123, zones:SKY_ZONES, cloud:1,
+    spawn:{x:32.5,y:44.5}, title:'THE CLOUDREACH', sub:'A CLOUD-PERCH ABOVE THE WORLD - AND THE RAINBOW ROAD DOWN',
     gen:()=>genSkyAll() },
   reach:{ W:120, H:120, seed:60947, zones:REACH_ZONES,
     spawn:{x:60.5,y:98.5}, title:'STORMREACH', sub:'A STORM-COAST OF BROKEN KEELS - AND THE BRUTE THAT MADE THEM',
@@ -796,12 +795,17 @@ function spawnEastFolk(){
    INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
    you're driven out to the caldera to break the spell in a fight. */
 function dragonLairSpeak(){
-  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)){ // he's enthralled, right here in the chamber
+  // Only "still to be faced" while the fight is LIVE. A beaten dragon lingers a beat
+  // as a fainted (m.fainted), freed mob before disperseDragon() finally marks it dead -
+  // keying off !m.dead alone made that window read as "still enthralled", so talking
+  // showed "Face him" and blocked the flight offer below (a soft-lock: he sits there
+  // green, and you can no longer transport up). Gate on !m.fainted instead.
+  if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead && !m.fainted)){ // he's enthralled, right here in the chamber
     lairDialog('Ashwing’s Rest','The violet has him. Ashwing rears over the fire-shelf, wings cracking the basalt - no more words to give. There is nowhere left to go but through him. <b>Break the spell.</b>',
       [{label:'Face him', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); }}]);
     return;
   }
-  if(qs('wyrm')==='done'){
+  if(qs('wyrm')==='done' || P.eastDragonFreed){
     lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds. A rock that floats in the cloud-sea, where the <b>Storm Roc</b> roosts and the whole archipelago lies spread out below like a map. My wings do not fear the height. Say the word and I will carry you up.”',
       [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }},
        {label:'Rest a while', ghost:true, fn:closeDialog}]);
@@ -2281,9 +2285,9 @@ function genRadialIsle(cx0, cy0, r0){
     G.map[y*MAPW+x]=t;
   }
 }
-// ---------- THE CLOUDREACH ----------
+// ---------- THE CLOUDREACH (a tiny cloud-perch hub) ----------
 function genSky(){
-  genRadialIsle(60,60,46);
+  genRadialIsle(32,32,22);
   // The Cloudreach is CLOUD, not earth: the "land" is white foamy cloud (SNOW), and
   // the ring beyond it is open sky (the water tiles are kept only for the island's
   // shape, its foamy rim, and its solid edge - the renderer draws them as sky, not
@@ -2291,8 +2295,6 @@ function genSky(){
   for(let i=0;i<MAPW*MAPH;i++){ const t=G.map[i]; if(t===T.GRASS||t===T.SAND) G.map[i]=T.SNOW; }
   const Z=SKY_ZONES;
   carveDisc(Z.landing.x,Z.landing.y,Z.landing.r,T.SNOW,false);
-  carveDisc(Z.shrine.x,Z.shrine.y,Z.shrine.r,T.SNOW,false);
-  carveDisc(Z.eyrie.x,Z.eyrie.y,Z.eyrie.r,T.SNOW,false);
   carveDisc(Z.leap.x,Z.leap.y,Z.leap.r,T.SNOW,false);
 }
 function placeObjectsSky(){
@@ -2301,50 +2303,36 @@ function placeObjectsSky(){
   { const sp=findOpenNear(Z.landing.x, Z.landing.y+3, 6) || [Z.landing.x, Z.landing.y+3];
     G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82, sky:1});
     setSolid(sp[0],sp[1],1); setSolid(sp[0]+1,sp[1],1); }
-  // the Windshrine: a broken ring of standing stones
-  for(let i=0;i<7;i++){ const a=i/7*TAU, px=Math.round(Z.shrine.x+Math.cos(a)*4), py=Math.round(Z.shrine.y+Math.sin(a)*4);
-    if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:i%3===0, loreKey:'cloudreach'}); setSolid(px,py,1); } }
+  // a few standing stones ring the little landing for shape (and a scrap of lore)
+  for(let i=0;i<5;i++){ const a=i/5*TAU, px=Math.round(Z.landing.x+Math.cos(a)*5), py=Math.round(Z.landing.y+Math.sin(a)*4.2);
+    if(inb(px,py)&&!solidAt(px,py) && dist(px,py,Z.landing.x,Z.landing.y+3)>2){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:i%3===0, loreKey:'cloudreach'}); setSolid(px,py,1); } }
   G.decor.push({kind:'lamp', x:Z.landing.x-3+0.5, y:Z.landing.y+0.5}); G.decor.push({kind:'lamp', x:Z.landing.x+3+0.5, y:Z.landing.y+0.5});
   // THE LEAP: a jutting stone shelf over the cloud-drop. Usable once the Rainbow Road
   // is run and the sky is calmed (that grants the stormsail) - it carries you to Windsurf far below.
   G.decor.push({kind:'leappoint', x:Z.leap.x+0.5, y:Z.leap.y+0.5, name:'THE LEAP', labelY:-40});
   G.decor.push({kind:'lamp', x:Z.leap.x-2+0.5, y:Z.leap.y+0.5}); G.decor.push({kind:'lamp', x:Z.leap.x+2+0.5, y:Z.leap.y+0.5});
-  // wind-blown grass & a couple of chests for the climb
-  const pr=mulberry32(SEED+13);
-  for(let i=0;i<60;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH);
-    if(tileAt(ax,ay)===T.GRASS && !solidAt(ax,ay) && dist(ax,ay,Z.landing.x,Z.landing.y)>5) addNode('tree',ax,ay); }
-  G.decor.push({kind:'chest', x:Z.eyrie.x+0.5, y:Z.eyrie.y-6+0.5, rich:9});
   // THE WIND-LOST BIRD - her plea opens the Rainbow Road (a "sky dungeon"). She lands
   // near the Cloudfall Landing, a little apart from Ashwing and the Cloud-Tender.
-  { const sp=findOpenNear(Z.landing.x-4, Z.landing.y-3, 5) || [Z.landing.x-4, Z.landing.y-3];
+  { const sp=findOpenNear(Z.landing.x-4, Z.landing.y-2, 5) || [Z.landing.x-4, Z.landing.y-2];
     G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-40}); }
   G.critters=[];
 }
 function spawnSkyFolk(){
   const Z=SKY_ZONES;
-  G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.shrine.x-1.5, Z.shrine.y+2.5,
+  G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.landing.x-2.5, Z.landing.y+2.5,
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
     ['Few climb Ashwing’s wing this high. Fewer still leave - the wind up here is soured, and a soured sky suffers no guests.',
-     'There is a shelf on the west edge, past the shrine - The Leap. Step off it and you fall forever… unless the wind itself will bear you. It will not, the way it blows now.',
-     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Calm the wind and it will carry you DOWN from The Leap to <b>Windsurf</b>, bright on the water below - there is no other road off this rock.',
-     'The Storm Roc still rules the eyrie, aye - a terror, but not your way home. Test your blade on her for the glory of it, if you must; the road down runs along the rainbow, not through her nest.'],0.4));
+     'There is a shelf on the west edge - The Leap. Step off it and you fall forever… unless the wind itself will bear you. It will not, the way it blows now.',
+     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Calm the wind and it will carry you DOWN from The Leap to <b>Windsurf</b>, bright on the water below - there is no other road off this rock.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
-     'The way onward is the bird’s <b>rainbow road</b>, not the Roc’s eyrie - calm the wind and it bears you down. Or if the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
+     'Bottled mana, if your spellwork\'s thirsty - the rainbow road asks a lot of a staff. And the way onward is the bird\'s <b>rainbow road</b>: calm the wind and it bears you down.',
+     'If the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
 }
 function spawnMobsSky(){
-  const Z=SKY_ZONES;
-  if(!(P.story && P.story.rocDown)){
-    const sp=findOpenNear(Z.eyrie.x, Z.eyrie.y, 6) || [Z.eyrie.x, Z.eyrie.y];
-    const roc=spawnMob('raptor', sp[0], sp[1], true);
-    if(roc){ roc.boss=true; roc.bigBoss=true; roc.title='THE STORM ROC'; roc.subtitle='TERROR OF THE CLOUD-SEA'; roc.skyboss=1; roc.ach='rocslayer';
-      roc.hp=roc.maxhp=720; roc.dmg=30; roc.lvl=10; roc.hx=sp[0]; roc.hy=sp[1]; roc.respawnT=-1; }
-  }
-  // a scatter of lesser screaming raptors ride the updrafts
-  if(!(P.story && P.story.rocDown)) for(let i=0;i<3;i++){ const a=Math.random()*TAU, r2=6+Math.random()*10;
-    const sp=findOpenNear(Math.round(Z.eyrie.x+Math.cos(a)*r2), Math.round(Z.eyrie.y+Math.sin(a)*r2), 5);
-    if(sp) spawnMob('raptor', sp[0], sp[1]); }
+  // The Cloudreach is a calm little perch now - no Storm Roc, no raptors. The danger
+  // (and the whole journey) lives on the Wind-Lost Bird's rainbow road.
 }
 function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); spawnSkyFolk(); spawnMobsSky(); buildMapBase(); }
 // ---------- STORMREACH ----------
@@ -2882,8 +2870,8 @@ QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushro
 QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{slime:6},
   brief:'Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.',
   log:'Destroy 6 slimes around the Mirefen and Farmsteads.',
-  doneText:'Rows are clean, seed\'s safe, and I owe you a harvest\'s gratitude. Coin will have to stand in for it.',
-  rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}} };
+  doneText:'Rows are clean, seed\'s safe, and I owe you more than coin. See that chestnut cob by the paddock? Old plough-horse, sound legs, and bored to tears since we went over to oxen. He\'s yours - Chestnut answers a whistle, and I\'ll stable him here whenever you\'ve no need of him. Go on, a farmhand like you has ground to cover.',
+  rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}, horse:true} };
 QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{stone:10},
   brief:'Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
   log:'Mine 10 stone around the Old Barik Mines for Torv.',
@@ -3779,11 +3767,9 @@ function switchWorld(id){
   }
   if(id==='sky'){
     // The Rainbow Road is the way DOWN off the Cloudreach: run it, calm the sky, and
-    // the wind bears you to Windsurf. The Storm Roc is an optional trophy hunt Aeron
-    // offers on the side. Point first-timers at the bird so the road isn't missed.
-    if(qs('stormroc')!=='done' && !P.quests.stormroc) P.quests.stormroc='avail';
+    // the wind bears you to Windsurf. Point first-timers at the bird so it isn't missed.
     if(!(P.story && (P.story.birdQuest || P.story.skyDungeonDone || P.story.parachute)))
-      setTimeout(()=>toast('A stormtossed <b>Wind-Lost Bird</b> frets by the landing. The high wind is soured, and it is the only road down from here - hear her out and run her <b>rainbow road</b> to calm the sky. <i>(The Storm Roc in the eyrie is an optional hunt, not your way home.)</i>',7600),1200);
+      setTimeout(()=>toast('A stormtossed <b>Wind-Lost Bird</b> frets by the landing. The high wind is soured, and it is the only road down from here - hear her out and run her <b>rainbow road</b> to calm the sky.',7600),1200);
   }
   if(id==='reach'){
     // the castaways' two tormentors: the Brute on the barrow road (Mora) and the
