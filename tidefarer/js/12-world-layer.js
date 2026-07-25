@@ -1686,7 +1686,7 @@ function placeObjectsAerieDeep(){
   for(const [px,py] of [[84,82],[66,88],[86,90],[66,80]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
   // CHAMBER 2 - THE GALLERY: a stronger gust, and the pan sits off-line, so you must fight
   // the wind on a diagonal run to the Sepulchre Gate
-  G.decor.push({kind:'windzone', x:75, y:53, x0:58, y0:40, x1:92, y1:64, dir:{x:-1,y:0}, mult:1.28});
+  G.decor.push({kind:'windzone', x:75, y:53, x0:58, y0:40, x1:92, y1:64, dir:{x:-1,y:0}, mult:1.1});
   G.decor.push({kind:'bonepan', x:70.5, y:50.5, gate:'sep', pressed:false, label:'a counterweight pan'});
   G.decor.push({kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, _grace:0, done:false, label:'the Sepulchre Gate'});
   for(const [px,py] of [[84,48],[66,58],[86,58],[66,48]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
@@ -1731,7 +1731,7 @@ function exitAerieDungeon(){
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 // THE CURSED GALE: the wind gusts on a cycle - calm, then a hard blow, then calm again.
-const GALE_PERIOD=7.0, GALE_PUSH=3.2, GALE_GRACE=3.6;
+const GALE_PERIOD=7.0, GALE_PUSH=2.4, GALE_GRACE=3.6;
 function galeStrength(){   // 0 in the lulls, ramping to 1 at the height of the gust
   const ph=((G._galeT||0)%GALE_PERIOD)/GALE_PERIOD;
   if(ph<0.42) return 0;
@@ -1763,12 +1763,11 @@ function updateAerieDeep(dt){
       if(pressed) g._grace=GALE_GRACE; else g._grace=Math.max(0,(g._grace||0)-dt);
       const target=(g._grace>0)?1:0, rate=(target>g.openAmt)?3.5:1.3;
       g.openAmt=Math.max(0,Math.min(1, g.openAmt + Math.sign(target-g.openAmt)*rate*dt));
-      // slip through to the north side and the beam locks open for good
-      if(g.openAmt>0.5 && P.y<g.y-0.2 && Math.abs(P.x-g.x)<3){
-        g.done=true; if(pan) pan.pressed=false; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
-        if(g.gate==='bone'){ banner('THE BONE GATE LOCKS OPEN','THE GALLERY LIES BEYOND'); }
-        else { banner('THE SEPULCHRE GATE LOCKS OPEN','THE WARDEN AWAITS BELOW'); toast('The counterweight crashes home and the Sepulchre Gate stands open. Something vast uncoils in the crypt ahead.',5000); }
-      }
+      // the counterweight RATCHETS: once you weight the pan and the gate hauls fully up it
+      // LOCKS open for good - no race against a falling gate, so the wind is the only test
+      if(g.openAmt>0.98){ g.done=true; if(pan) pan.pressed=false; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
+        if(g.gate==='bone') banner('THE BONE GATE LOCKS OPEN','THE GALLERY LIES BEYOND');
+        else { banner('THE SEPULCHRE GATE LOCKS OPEN','THE WARDEN AWAITS BELOW'); toast('The counterweight crashes home and the Sepulchre Gate stands open. Something vast uncoils in the crypt ahead.',5000); } }
     } else g.openAmt=1;
     const openNow=g.openAmt>0.55;
     if(openNow!==g.open){
@@ -4154,7 +4153,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>A brine moat bars the way.</i> At the <b>tide-wheel</b>: <b>drain</b> the tide to walk the sump and throw the <b>tide-valve</b>, then <b>raise</b> it - the brine floats the pontoon across the moat and hauls the Bone Gate up. The wheel sits on the near bank, so you can always cross back to it.',9000),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','A CURSED GALE HOWLS THROUGH THE BONES'),1200);
-    setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your feet, so cross in the <b>lulls</b> or duck behind a pillar. To raise each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up, holds a moment, then falls - so weight the pan, then <b>run through before it drops</b>.',8500),1800); }
+    setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your line, so cross in the <b>lulls</b> or duck behind a pillar. To open each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up and <b>locks there</b> - then make your way across the wind to it.',8500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
