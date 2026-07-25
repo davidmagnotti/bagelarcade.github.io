@@ -62,6 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   surgewater:1, dais:1, drainplate:1,
+  lavachasm:1, spinwheel:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -187,7 +188,8 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    items.push({d:b.x+b.y, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
+    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel')? -9990 : b.x+b.y;   // flat lava & turning slabs are floor-level: always beneath the actors that stand on them
+    items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
   if(G.cat) items.push({d:G.cat.x+G.cat.y, kind:'cat', o:G.cat});
@@ -1365,6 +1367,32 @@ function drawDecor(b,s){
     g.strokeStyle= lit? '#ffe27a':'#6a7a8a'; g.lineWidth=1.8; g.stroke();
     if(!lit){ g.fillStyle='rgba(150,180,210,'+(0.3+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
     g.restore(); return;
+  }
+  if(b.kind==='lavachasm'){
+    // a cell of the molten chasm - glowing lava you must cross on the turning slabs
+    const g=cx, gl=0.5+0.4*Math.sin(G.time*2.2+b.seed*1.7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(90,28,14,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,110,30,'+(0.4+0.3*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-6); g.lineTo(11,-1); g.lineTo(0,4); g.lineTo(-11,-1); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,214,120,'+(0.3+0.35*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,5,2.6,0,0,TAU); g.fill();
+    if(Math.random()<0.015) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
+    g.restore(); return;
+  }
+  if(b.kind==='spinwheel'){
+    // a basalt slab that turns on a central spindle over the lava. Drawn as a flat iso
+    // parallelogram from hub to tip, projected via worldToScreen so its swing reads true.
+    const g=cx, ang=b.ang, cA=Math.cos(ang), sA=Math.sin(ang), pA=b.armw, px=-sA, py=cA;
+    const c1=worldToScreen(b.hx - px*pA, b.hy - py*pA);
+    const c2=worldToScreen(b.hx + cA*b.r - px*pA, b.hy + sA*b.r - py*pA);
+    const c3=worldToScreen(b.hx + cA*b.r + px*pA, b.hy + sA*b.r + py*pA);
+    const c4=worldToScreen(b.hx + px*pA, b.hy + py*pA);
+    g.fillStyle='rgba(0,0,0,0.28)'; g.beginPath(); g.moveTo(c1.x,c1.y+5); g.lineTo(c2.x,c2.y+5); g.lineTo(c3.x,c3.y+5); g.lineTo(c4.x,c4.y+5); g.closePath(); g.fill();
+    g.fillStyle='#6a5f52'; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
+    g.strokeStyle='#2a241e'; g.lineWidth=1.4; g.stroke();
+    g.strokeStyle='#8a7f6e'; g.lineWidth=1; g.beginPath(); g.moveTo((c1.x+c4.x)/2,(c1.y+c4.y)/2); g.lineTo((c2.x+c3.x)/2,(c2.y+c3.y)/2); g.stroke();   // seam down the slab
+    const hs=worldToScreen(b.hx,b.hy);   // the spindle hub
+    g.fillStyle='#3a332c'; g.beginPath(); g.ellipse(hs.x,hs.y-1,5.5,3,0,0,TAU); g.fill();
+    g.fillStyle='rgba(255,150,60,'+(0.4+0.3*Math.sin(G.time*3+b.hx)).toFixed(2)+')'; g.beginPath(); g.arc(hs.x,hs.y-2,2,0,TAU); g.fill();
+    return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite
   if(b.kind==='bonepan'){

@@ -201,8 +201,6 @@ function nearestInteract(){
       if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:b.on?'Sluice (open)':'Work the sluice'}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
-    if(b.kind==='lavasluice'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'lavasluice',o:b,label:b.on?'Divert back':'Divert flow'}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
     // not only a direct tap, so they can actually be pressed on mobile
     if(b.kind==='emberbutton'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -277,7 +275,6 @@ function doInteract(){
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
-  if(it.type==='lavasluice'){ facePoint(it.o.x,it.o.y); toggleLavaSluice(it.o); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
       addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
