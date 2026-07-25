@@ -264,5 +264,5 @@ function spawnMobs(){
   // while the causeway stands sealed (see sealHollowKing in 09-gameplay).
   const skelSpots=[[43,18],[49,18],[45,14],[48,15],[46,12]];
   for(const [x,y] of skelSpots){ const s=spawnMob('skeleton',x,y); if(s) s.hollowGuard=true; }
-  const boss=spawnMob('boss',46,10); if(boss) boss.hollowGuard=true;
+  const boss=spawnMob('boss',46,10); if(boss){ boss.hollowGuard=true; boss.entrance='rise'; boss.entranceSub='LORD OF THE OLD RUINS'; }
 }

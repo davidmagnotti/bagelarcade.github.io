@@ -100,6 +100,9 @@ function frame(ts){
   }
   if(G.paused || G.menuPause){ render(); return; }
   G.time+=dt;
+  // in-world boss entrance: the whole scene holds (player + foes frozen) while the
+  // boss arrives on this same screen, then hands straight to the fight. See 13-aaa-layer.
+  if(G.bossIntro){ updateBossIntro(dt); WX.update(dt); Music.update(); Amb.update(dt); render(); return; }
   P.stats.time=(P.stats.time||0)+dt;
   if(!G.interior) stampExplore(dt);
   if(G.interior){

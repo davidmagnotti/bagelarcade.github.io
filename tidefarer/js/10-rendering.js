@@ -181,7 +181,7 @@ function render(){
       case 'node': drawNode(o,s); break;
       case 'decor': case 'lamp': drawDecor(o,s); break;
       case 'npc': drawNPC(o,s); break;
-      case 'mob': drawMob(o,s); break;
+      case 'mob': drawMobEntity(o,s); break;
       case 'cat': drawShadowAt(cx,s.x,s.y,9); drawCat(cx,s.x,s.y,o); break;
       case 'critter': drawShadowAt(cx,s.x,s.y, o.kind==='crab'?7:8); drawCritter(cx,s.x,s.y,o); break;
       case 'player': drawPlayer(s); break;
@@ -1343,6 +1343,41 @@ function drawScorpion(m,s){
   g.beginPath(); g.arc(fl*6,-6,1.1,0,TAU); g.arc(fl*8.5,-6,1.1,0,TAU); g.fill();
   g.restore();
 }
+/* Boss-entrance wrapper: while m.introKind is running, transform the whole sprite for
+   its arrival (rise from the ground, drop from the sky, loom up out of the dark) or add
+   the swelling violet halo of an enthralling. Bespoke motion for the dragon (colour lerp)
+   and the Leviathan (breach) lives inside their own draw fns via m.ensAmt / m.surf. */
+function drawMobEntity(m,s){
+  const k=m.introKind;
+  if(!k || (m.introT||0)>=1){ drawMob(m,s); return; }
+  const p=m.introT||0;
+  if(k==='enthrall'){
+    const r=(m.bigBoss?62:46)*(0.5+0.7*p);
+    cx.save(); cx.globalCompositeOperation='lighter';
+    const g=cx.createRadialGradient(s.x,s.y-26,2,s.x,s.y-26,r);
+    g.addColorStop(0,'rgba(199,123,255,'+(0.45*p).toFixed(2)+')'); g.addColorStop(1,'rgba(199,123,255,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(s.x,s.y-26,r,0,TAU); cx.fill(); cx.restore();
+    drawMob(m,s); return;
+  }
+  if(k==='surface'){ drawMob(m,s); return; }        // breach handled inside drawLeviathan via m.surf
+  if(k==='rise'){
+    // clip to the feet-line so the boss appears to HEAVE up out of the ground
+    const dy=48*(1-easeOut(p));
+    cx.save();
+    cx.beginPath(); cx.rect(-1000,-1000, (VW||2000)+2000, (s.y+6)+1000); cx.clip();
+    cx.globalAlpha*=clamp(0.3+p*1.4,0,1);
+    drawMob(m,{x:s.x,y:s.y+dy});
+    cx.restore(); return;
+  }
+  // descend (drop from the storm-sky) and loom (rise faded out of the dark, striding in)
+  let dy=0, sc=1;
+  if(k==='descend'){ dy=-105*(1-easeOut(p)); }
+  else if(k==='loom'){ sc=0.7+0.3*easeOut(p); }
+  cx.save(); cx.globalAlpha*=clamp(p*2.2,0,1);
+  if(sc!==1){ cx.translate(s.x,s.y); cx.scale(sc,sc); cx.translate(-s.x,-s.y); }
+  drawMob(m,{x:s.x,y:s.y+dy});
+  cx.restore();
+}
 function drawMob(m,s){
   if((m.snareT||0)>0){
     const ra=0.6+0.4*Math.sin(G.time*6);
@@ -1627,8 +1662,13 @@ function drawMob(m,s){
     const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, freed=m.freed;
     const bodyC = freed? '#3a7a8a' : '#1d3b46';            // darker, colder, meaner
     const spine = freed? '#7fd0e0' : '#2c5866';
-    g.save(); g.translate(s.x,s.y); g.scale(3.4,3.4);      // twice the beast it was
-    g.fillStyle='rgba(180,225,245,0.20)'; g.beginPath(); g.ellipse(0,5,52,17,0,0,TAU); g.fill(); // churned water
+    const surf=(m.surf!=null)?m.surf:1;                    // 0 = still under, 1 = fully breached
+    g.save();
+    if(surf<1){                                            // heave up through the waterline as it surfaces
+      g.beginPath(); g.rect(-1000,-1000,(VW||2000)+2000,(s.y+16)+1000); g.clip();
+      g.translate(s.x, s.y+(1-easeOut(surf))*72); g.scale(3.4,3.4);
+    } else { g.translate(s.x,s.y); g.scale(3.4,3.4); }     // twice the beast it was
+    g.fillStyle='rgba(180,225,245,'+(0.20+0.16*(1-surf)).toFixed(2)+')'; g.beginPath(); g.ellipse(0,5,52*(0.8+0.4*surf),17,0,0,TAU); g.fill(); // churned water
     for(let i=2;i>=0;i--){ const bx=fl*(-15 - i*17), by=3 - Math.sin(t*2+i)*3 - i*1.5; // breaching coils
       g.fillStyle= i%2? bodyC : shade(bodyC,10);
       g.beginPath(); g.ellipse(bx,by,14-i*1.5,8-i,0,Math.PI,TAU); g.fill();

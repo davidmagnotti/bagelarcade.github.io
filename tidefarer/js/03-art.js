@@ -1622,7 +1622,9 @@ function drawSkeleton(g,sx,sy,m){
   const cog = !!m.millboss;
   g.save(); g.translate(sx,sy);
   if(m.hurtT>0) g.globalAlpha=0.6;
-  if(m.boss){ g.fillStyle= cog?'rgba(214,150,70,0.15)':'rgba(120,220,160,0.16)'; g.beginPath(); g.ellipse(0,-24*s,26*s,32*s,0,0,TAU); g.fill(); }
+  if(m.boss){ const ig=(m.introKind==='rise')?0.45*(m.introT||0):0;   // ghostlight flares as he rises
+    g.fillStyle= cog?('rgba(214,150,70,'+(0.15+ig).toFixed(2)+')'):('rgba(120,220,160,'+(0.16+ig).toFixed(2)+')');
+    g.beginPath(); g.ellipse(0,-24*s,26*s,32*s,0,0,TAU); g.fill(); }
   // the great iron gear the miller is bound into, grinding slowly behind his bones
   if(cog){
     g.save(); g.translate(0,-17*s); g.rotate(G.time*0.6);
@@ -1680,17 +1682,23 @@ function drawSkeleton(g,sx,sy,m){
   g.restore();
 }
 function drawDragon(cx,sx,sy,m){
-  const fl=m.face||1, ens=!!m.enspelled, OUTL='rgba(20,12,8,0.9)';
+  const fl=m.face||1, OUTL='rgba(20,12,8,0.9)';
+  // The enthralling ANIMATES: ensAmt 0..1 washes Vath's violet across him during the
+  // entrance beat (set in startBossIntro). Falls back to the plain enspelled boolean for
+  // the static portrait and for a boss loaded already bound. `ens` flips the discrete
+  // features (slit eye, red belly-cracks) on once the change is mostly complete.
+  const ea = m.ensAmt!=null ? clamp(m.ensAmt,0,1) : (m.enspelled?1:0);
+  const ens = ea>0.5;
   const t=G.time, breathe=Math.sin(t*1.6)*1.2, wing=Math.sin(t*2.2)*0.18;
   drawShadowAt(cx,sx,sy,26);
   cx.save(); cx.translate(sx,sy); cx.scale(fl,1);
   if(m.hurtT>0) cx.translate(rnd(-1.5,1.5),0);
-  const scaleC = ens? '#3a2740' : '#3f8f6a';
-  const scaleHi= ens? '#5a3a66' : '#5cb488';
-  const belly  = ens? '#6a4a2e' : '#e6cf87';
-  const wingMem= ens? '#2a1836' : '#2f6b52';
-  const horn   = ens? '#d8c8b0' : '#efe3c4';
-  const eyeCol = ens? '#ff4530' : '#ffd25a';
+  const scaleC = mixHex('#3f8f6a','#3a2740',ea);
+  const scaleHi= mixHex('#5cb488','#5a3a66',ea);
+  const belly  = mixHex('#e6cf87','#6a4a2e',ea);
+  const wingMem= mixHex('#2f6b52','#2a1836',ea);
+  const horn   = mixHex('#efe3c4','#d8c8b0',ea);
+  const eyeCol = mixHex('#ffd25a','#ff4530',ea);
   // tail
   cx.strokeStyle=scaleC; cx.lineWidth=13; cx.lineCap='round';
   cx.beginPath(); cx.moveTo(-4,-8); cx.quadraticCurveTo(-30,2,-20,-24); cx.stroke();

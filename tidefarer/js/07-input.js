@@ -8,6 +8,7 @@ const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints>0);
 window.addEventListener('keydown',e=>{
   if(G.state!=='play') return;
   const k=e.key.toLowerCase();
+  if(G.bossIntro){ if(k===' ') e.preventDefault(); return; }   // input held for the entrance beat
   keys[k]=true;
   if(k==='e'||k==='enter'){ doInteract(); }
   if(k===' '){ e.preventDefault(); input.attack=true; }
@@ -34,6 +35,7 @@ cv.addEventListener('mousemove',e=>{ input.mx=e.clientX; input.my=e.clientY;
 });
 cv.addEventListener('mousedown',e=>{ if(G.state!=='play') return;
   Snd.init(); input.mouseDown=true;
+  if(G.bossIntro) return;                 // input held for the entrance beat
   if(dlg.open) return;
   if(G.interior){ interiorClick(e.clientX,e.clientY); return; }
   const w=screenToWorld(e.clientX,e.clientY);

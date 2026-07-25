@@ -544,7 +544,7 @@ function spawnRealmFolk(){
 function spawnVaelCaptain(x,y){
   const cap=spawnMob('raidcap', x, y);
   if(cap){ cap.boss=true; cap.bigBoss=true; cap.title='CASTELLAN OF THE VAEL'; cap.ach='vaelbreaker';
-    cap.hx=x; cap.hy=y; cap.respawnT=-1; }
+    cap.hx=x; cap.hy=y; cap.respawnT=-1; cap.entrance='loom'; }
   return cap;
 }
 function challengeCastellan(npc){
@@ -597,7 +597,7 @@ function spawnMobsMain(){
     }
   }
   // Greymaw dens atop Wolfcrag
-  spawnMob('alpha', ZONES.highlands.x, ZONES.highlands.y-2);
+  { const gm=spawnMob('alpha', ZONES.highlands.x, ZONES.highlands.y-2); if(gm) gm.entrance='loom'; }
   // peak guardians around the chest
   spawnMob('skeleton',ZONES.tower.x-2,ZONES.tower.y+1,true);
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
@@ -821,7 +821,7 @@ function dragonLairSpeak(){
     [{label:'Continue', fn:()=> lairDialog('Ashwing',
       '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
       [{label:'Continue', fn:()=> lairDialog('Vath',
-        '<b style="color:#c77bff">Violet fire floods the chamber.</b> A voice pours from the walls: “Sentiment. Sleep, wyrm - or kill for me.” Ashwing’s eyes kindle red; his wings crack against the stone. He is between you and the only way out.',
+        'A voice pours from the walls, and the air turns cold and violet: “Sentiment. Sleep, wyrm - or kill for me.” <i>Ashwing swings his great head toward you, fighting it - and losing. He is between you and the only way out.</i>',
         [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
 }
 function lairDialog(name,text,btns){
@@ -841,8 +841,11 @@ function awakenDragon(){
   const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
         || findOpenNear(Math.round(C.x), Math.round(C.y+ (G.worldId==='eastdeep'?4:7)), 8) || [C.x, C.y+4];
   const dr=spawnMob('dragon', sp[0], sp[1]);
-  if(dr){ dr.bigBoss=true; dr.enspelled=true; dr.ach='dragonsworn'; dr.state='chase'; dr.noAggroT=0;
-    dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr; }
+  // spawn him as HIMSELF (natural green) - the violet takeover is now SHOWN by the
+  // 'enthrall' entrance (ensAmt washes the colour across him), not narrated in a card
+  if(dr){ dr.bigBoss=true; dr.enspelled=false; dr.ensAmt=0; dr.ach='dragonsworn'; dr.state='idle'; dr.noAggroT=0;
+    dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr;
+    dr.entrance='enthrall'; dr.entranceTitle='ASHWING, ENTHRALLED'; dr.entranceSub='BREAK THE SPELL - DO NOT LET HIM FALL TO IT'; }
   P.metDragon=1;
   // seal the chamber: the Dragon Gate flares shut behind you - no way out (and no
   // boar in) until the wyrm is down. Only the Emberdeep has the firegate to close.
@@ -854,8 +857,7 @@ function awakenDragon(){
       G.shake=Math.max(G.shake||0,0.5); Snd.boss&&Snd.boss(); }
     G.dragonSealed=1;
   }
-  banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
-  if(Snd.boss) Snd.boss(); G.shake=0.9;
+  // the banner + shake now ride the 'enthrall' entrance (fires as he rouses) - see startBossIntro
 }
 function startMageHunt(){
   if(P.mageHuntStarted) return;
@@ -1312,10 +1314,9 @@ function updateWind(dt){
   const pastJetty = P.y > D.y+2+WIND_JETTY-1;   // out beyond the pier's end
   if(onWater && pastJetty){
     const lv=spawnLeviathan();
-    if(lv){ G.shake=0.7; Snd.boss&&Snd.boss();
-      banner('THE BOUND LEVIATHAN','IT RISES FROM THE DEEP');
-      setTimeout(()=>toast('The water heaves and something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),300);
-    }
+    // the shake + banner now ride the 'surface' entrance (fires as it breaches); keep the
+    // toast for the gameplay hint, delayed until control returns to the player
+    if(lv){ setTimeout(()=>toast('Something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),2800); }
   }
 }
 function spawnLeviathan(){
@@ -1323,7 +1324,8 @@ function spawnLeviathan(){
   const h=leviathanHome();
   const lv=spawnMob('leviathan', h.x-0.5, h.y-0.5);
   if(lv){ lv.boss=true; lv.bigBoss=true; lv.rooted=1; lv.title='THE BOUND LEVIATHAN'; lv.ach='tidebreaker';
-    lv.hx=h.x; lv.hy=h.y; lv.x=h.x; lv.y=h.y; lv.state='chase'; lv.noAggroT=0; lv.respawnT=-1; }
+    lv.hx=h.x; lv.hy=h.y; lv.x=h.x; lv.y=h.y; lv.state='idle'; lv.noAggroT=0; lv.respawnT=-1;
+    lv.entrance='surface'; lv.surf=0; }   // it swims up and breaches - shown, then the fight
   return lv;
 }
 function freeLeviathan(m){
@@ -1533,7 +1535,7 @@ function spawnSerpent(){
   if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)) return null;
   const S=AERIE_ZONES.sanctum, sp=findOpenNear(Math.round(S.x), Math.round(S.y+2), 3) || [S.x, S.y+2];
   const sn=spawnMob('serpent', sp[0], sp[1]);
-  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; sn.entrance='rise'; }
   return sn;
 }
 function destroyTome(b){
@@ -1641,7 +1643,7 @@ function spawnMobsAerieDeep(){
   if(!(P.story && P.story.aerieFreed)){
     const sp=findOpenNear(Z.crypt.x, Z.crypt.y, 6) || [Z.crypt.x, Z.crypt.y];
     const sn=spawnMob('serpent', sp[0], sp[1]);
-    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; }
+    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; sn.entrance='rise'; }
   }
 }
 function genAerieDeepAll(){
@@ -1815,7 +1817,7 @@ function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
   const GL=FROST_ZONES.glacier, sp=findOpenNear(Math.round(GL.x), Math.round(GL.y), 5) || [GL.x, GL.y];
   const w=spawnMob('frostwarden', sp[0], sp[1]);
-  if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.ach='thawwarden'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; }
+  if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.ach='thawwarden'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; w.entrance='enthrall'; }
   return w;
 }
 function spawnMobsFrost(){
@@ -1834,7 +1836,7 @@ function spawnMobsFrost(){
   if(G.frostVaultMouth && !(P.story && P.story.iceBearDown)){
     const M=G.frostVaultMouth, sp=findOpenNear(M.x, M.y+2, 5) || [M.x, M.y+2];
     const bear=spawnMob('polarbear', sp[0], sp[1], true);   // elite
-    if(bear){ bear.boss=true; bear.bigBoss=true; bear.title='THE HOARFROST BEAR'; bear.subtitle='TERROR OF THE RIMEWOOD'; bear.vaultbear=1; bear.ach='bearslayer'; bear.hx=sp[0]; bear.hy=sp[1]; bear.respawnT=-1; }
+    if(bear){ bear.boss=true; bear.bigBoss=true; bear.title='THE HOARFROST BEAR'; bear.subtitle='TERROR OF THE RIMEWOOD'; bear.vaultbear=1; bear.ach='bearslayer'; bear.hx=sp[0]; bear.hy=sp[1]; bear.respawnT=-1; bear.entrance='loom'; }
   }
 }
 function freeWarden(m){
@@ -1917,7 +1919,7 @@ function spawnMobsFrostDeep(){
   if(!(P.story && P.story.deepDone)){
     const sp=findOpenNear(Z.boss.x, Z.boss.y, 6) || [Z.boss.x, Z.boss.y];
     const b=spawnMob('icecolossus', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; }
+    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.entrance='enthrall'; }
   }
 }
 function genFrostDeepAll(){
@@ -2160,7 +2162,7 @@ function spawnMobsMillDeep(){
   const b=spawnMob('skeleton', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
     b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
-    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; }
+    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); spawnMobsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
@@ -2260,7 +2262,7 @@ function spawnMobsUndermaw(){
   const b=spawnMob('scorpion', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.undermawBeast=1; b.bscale=1.7; b.title='THE MAW-STALKER'; b.subtitle='TERROR OF THE UNDERMAW';
     b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
-    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; }
+    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
 }
 function genUndermawAll(){ genUndermaw(); placeObjectsUndermaw(); spawnMobsUndermaw(); buildMapBase(); }
 function enterUndermaw(){
@@ -2416,7 +2418,7 @@ function spawnMobsReach(){
     const sp=findOpenNear(Z.barrow.x, Z.barrow.y, 6) || [Z.barrow.x, Z.barrow.y];
     const brute=spawnMob('raidcap', sp[0], sp[1]);
     if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1; brute.ach='brutebane';
-      brute.hp=brute.maxhp=1000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; }
+      brute.hp=brute.maxhp=1000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; brute.entrance='rise'; }
   }
   // storm-driven raiders wash up around the barrow
   if(!(P.story && P.story.reachBossDown)) for(let i=0;i<4;i++){ const a=Math.random()*TAU, r2=6+Math.random()*12;
@@ -2476,7 +2478,7 @@ function spawnMobsReachDeep(){
     const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
     const w=spawnMob('minotaur', sp[0], sp[1]);
     if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='BEAST OF THE BONE-MAZE'; w.tombboss=1; w.ach='deepwarden';
-      w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; }
+      w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; w.entrance='rise'; }
   }
   for(const z of [Z.ossuary, Z.heart]) for(let i=0;i<2;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
     const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
@@ -3178,7 +3180,8 @@ function spawnFinalVath(){
   if(!m) return null;
   m.finalVath=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER'; m.ach='enchantersbane';
   m.lvl=13; m.maxhp=700; m.hp=700; m.dmg=30; m.speed=2.9; m.aggro=16;
-  m.state='chase'; m.noAggroT=0; m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1;
+  m.state='idle'; m.noAggroT=0; m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1;
+  m.entrance='enthrall';   // the enchanter manifests in a gathering of his own violet
   return m;
 }
 // Beaten, Vath is bound by his own compulsion - sealed, not slain, vowing return.
