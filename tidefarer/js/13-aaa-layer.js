@@ -596,8 +596,20 @@ function _thrDraw(){
   for(const it of items) it.fn();
   // hands raised in front (drawn over the figures): the casting gesture that precedes and
   // then looses the beams. Vath's one hand, the King's two, palms glowing as the magic gathers.
-  if(THR.vHand>0.02) _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true);
-  if(THR.kHand>0.02) _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false);
+  // the raised hands ride the figure's ACTUALLY-DRAWN chest - matching drawHumanoid's own
+  // vertical bob (idle breath / walk bounce), plus the King's dais-lift, drop and scale - so
+  // they never drift off above or behind him as he breathes or steps.
+  const _bob=(step,size)=>{ const w=Math.abs(step||0)>0.0001;
+    return w ? Math.abs(Math.sin(step))*2.2*size : (Math.sin(G.time*2.1)*0.5+0.5)*0.9*size; };
+  if(THR.vHand>0.02){
+    const vGY=SC(THR.vath.x,THR.vath.y).y - _bob(THR.stepV,1.34*Z);
+    _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true,vGY,1);
+  }
+  if(THR.kHand>0.02){
+    const kSc=1-0.17*down;
+    const kGY=SC(THR.king.x,THR.king.y).y - 12*Z*(1-THR.kAdv) + 11*Z*down - _bob(THR.stepK,1.34*Z*kSc);
+    _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false,kGY,kSc);
+  }
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
   // the clash of the two magics, drawn between the King and Vath
@@ -641,26 +653,30 @@ function _thrActor(SC,Z,pos,look,dir,step,opt){
 // Raised hands in front of a figure - the casting gesture. `amt` 0..1 lifts the forearms;
 // the palms glow in the figure's magic colour as the power gathers, so the beams read as
 // loosed FROM the hands. `single` draws one arm (Vath), else two (the King), framing his chest.
-function _thrHands(SC,Z,pos,amt,skin,sleeve,col,single){
+// `baseY`/`sc` lock the hands to the figure's ACTUALLY-DRAWN body (its lift/drop/scale), so
+// they ride his chest as he steps down off the dais instead of floating off at a fixed height.
+function _thrHands(SC,Z,pos,amt,skin,sleeve,col,single,baseY,sc){
   const cx=THR.cx, s=SC(pos.x,pos.y);
-  const shY=s.y-25*Z;                          // where the arms leave the body
-  const hY =s.y-28*Z-12*Z*amt;                 // the raised hands, higher as the gesture peaks
-  const sp=7*Z;
-  const arms = single ? [ {hx:s.x+7*Z, ox:s.x+3.5*Z} ]
-                      : [ {hx:s.x-sp, ox:s.x-3.5*Z}, {hx:s.x+sp, ox:s.x+3.5*Z} ];
+  const by=(baseY!=null?baseY:s.y);            // the sprite's drawn base (feet), incl. lift/drop
+  sc=sc||1;
+  const shY=by-25*Z*sc;                        // where the arms leave the body
+  const hY =by-(28+12*amt)*Z*sc;               // the raised hands, higher as the gesture peaks
+  const sp=7*Z*sc;
+  const arms = single ? [ {hx:s.x+7*Z*sc, ox:s.x+3.5*Z*sc} ]
+                      : [ {hx:s.x-sp, ox:s.x-3.5*Z*sc}, {hx:s.x+sp, ox:s.x+3.5*Z*sc} ];
   for(const a of arms){
     // the raised forearm (sleeve), body -> hand
-    cx.save(); cx.lineCap='round'; cx.strokeStyle=sleeve; cx.lineWidth=4.6*Z;
+    cx.save(); cx.lineCap='round'; cx.strokeStyle=sleeve; cx.lineWidth=4.6*Z*sc;
     cx.beginPath(); cx.moveTo(a.ox,shY); cx.lineTo(a.hx,hY); cx.stroke();
     cx.strokeStyle='rgba(24,16,10,0.5)'; cx.lineWidth=1; cx.stroke(); cx.restore();
     // the palm glow (magic gathering)
     cx.save(); cx.globalCompositeOperation='lighter';
-    const r=13*Z*Math.max(0.4,amt);
+    const r=13*Z*sc*Math.max(0.4,amt);
     const g=cx.createRadialGradient(a.hx,hY,1,a.hx,hY,r);
     g.addColorStop(0,`rgba(${col},${0.75*amt})`); g.addColorStop(1,`rgba(${col},0)`);
     cx.fillStyle=g; cx.beginPath(); cx.arc(a.hx,hY,r,0,TAU); cx.fill(); cx.restore();
     // the mitt
-    cx.fillStyle=skin; cx.beginPath(); cx.arc(a.hx,hY,3.3*Z,0,TAU); cx.fill();
+    cx.fillStyle=skin; cx.beginPath(); cx.arc(a.hx,hY,3.3*Z*sc,0,TAU); cx.fill();
     cx.strokeStyle='rgba(24,16,10,0.85)'; cx.lineWidth=1.3*Z; cx.stroke();
   }
 }
