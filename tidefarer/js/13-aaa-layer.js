@@ -486,11 +486,15 @@ function _thrLoop(ts){
   const lp=(a,c,k)=>({x:a.x+(c.x-a.x)*k, y:a.y+(c.y-a.y)*k});
   THR.hero  = lp(HERO0,HEROF,THR.flee);
   // the prince stands rooted (staring at his father) until the princess seizes his
-  // collar mid-flee; only then is he hauled out - always a step behind her, never
-  // ahead, so he reads as being pulled rather than walking out on his own.
+  // collar mid-flee. Then she YANKS him off his spot and onto her own lane, and drags
+  // him out single-file just behind her - a real pull, not a stroll down a parallel
+  // track. `grab` is the seize (a quick swing across); `trail` is where he's held,
+  // a short step back along her path so he always reads as being towed.
   const GRAB=0.2;
   THR.pflee = THR.flee<=GRAB ? 0 : (THR.flee-GRAB)/(1-GRAB);
-  THR.prince= lp(PRIN0,PRINF,THR.pflee);
+  { const g=Math.min(1,Math.max(0,(THR.flee-GRAB)/0.16)), grab=g*g*(3-2*g);
+    const trail=lp(HERO0,HEROF,Math.max(0,THR.flee-0.13));   // just behind her, on her lane
+    THR.prince={ x:PRIN0.x+(trail.x-PRIN0.x)*grab, y:PRIN0.y+(trail.y-PRIN0.y)*grab }; }
   THR.king  = lp(KING0,KINGF,THR.kAdv);
   THR.vath  = lp(VATH0,VATHF,THR.vAdv);
   // gait: advance a walk-cycle while an actor is actually moving, decay to idle otherwise
@@ -551,8 +555,9 @@ function _thrDraw(){
   const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
   if(sibA>0.02){
     const hdir=THR.flee>0.2?_thrFace(THR.hero,HEROF):_thrFace(THR.hero,THRONE);
-    // rooted -> still staring back at his father; once grabbed -> hauled toward the doors
-    const pdir=THR.pflee>0.001?_thrFace(THR.prince,PRINF):_thrFace(THR.prince,THRONE);
+    // rooted -> still staring back at his father; once seized -> turned to follow the
+    // sister towing him (she's ahead toward the doors, so this also faces him out)
+    const pdir=THR.pflee>0.001?_thrFace(THR.prince,THR.hero):_thrFace(THR.prince,THRONE);
     items.push({d:THR.hero.x+THR.hero.y,    fn:()=>_thrActor(SC,Z,THR.hero,LOOK_HERO,hdir,THR.stepH,{alpha:sibA})});
     items.push({d:THR.prince.x+THR.prince.y,fn:()=>_thrActor(SC,Z,THR.prince,LOOK_PRINCE,pdir,THR.stepP,{alpha:sibA})});
   }
