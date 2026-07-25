@@ -62,7 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   surgewater:1, dais:1, drainplate:1,
-  lavachasm:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1,
+  lavachasm:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -188,7 +188,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit')? -9990 : b.x+b.y;   // flat lava/water/pit & the platforms over them are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & the platforms over them are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1431,6 +1431,19 @@ function drawDecor(b,s){
     g.fillStyle='rgba(10,8,12,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
     g.fillStyle='rgba(40,34,50,0.5)'; g.beginPath(); g.ellipse(0,-1,8,3.4,0,0,TAU); g.fill();
     if(b.seed===0){ g.fillStyle='rgba(120,105,150,0.25)'; g.beginPath(); g.arc(0,-1,1.4,0,TAU); g.fill(); }   // a faint drifting mote
+    g.restore(); return;
+  }
+  if(b.kind==='fadetile'){
+    // a tile of the fading rainbow bridge: bright colour when it's solid footing, a faint
+    // ghost outline while it's faded (so you can read the wave coming back)
+    const g=cx, solid=(typeof skyFadeSolid==='function')? skyFadeSolid(b) : true;
+    g.save(); g.translate(s.x,s.y);
+    if(solid){ const hue=((b.band*40)+G.time*90)%360;
+      g.fillStyle='hsla('+(hue|0)+',90%,62%,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(255,255,255,0.28)'; g.beginPath(); g.moveTo(0,-7); g.lineTo(11,-1); g.lineTo(0,5); g.lineTo(-11,-1); g.closePath(); g.fill();
+    } else {
+      g.strokeStyle='rgba(200,210,235,0.35)'; g.lineWidth=1; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.stroke();
+    }
     g.restore(); return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite

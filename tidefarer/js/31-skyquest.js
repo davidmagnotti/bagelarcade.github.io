@@ -79,16 +79,27 @@ function placeObjectsSkyDungeon(){
   // a couple of cloud-lamps at the landing
   { const s=skyIsle('start');
     G.decor.push({kind:'lamp', x:s.x-3+0.5, y:s.y+0.5}); G.decor.push({kind:'lamp', x:s.x+3+0.5, y:s.y+0.5}); }
-  // PUZZLE 2 - THE PRISM WARD: a rainbow-beam springs from a crystal; rotate the prisms to
-  // bend it onto the dark ward-crystal and the wind-ward parts. No order, no penalty - just
-  // aim the light. (Solution: first prism '/', second '\'.)
-  { const solved=!!P.story.skyG2;
-    G.decor.push({kind:'skyemitter', x:72.5, y:112.5, dir:{x:1,y:0}});
-    G.decor.push({kind:'skyprism', x:78.5, y:112.5, mirror: solved?'/':'\\'});
-    G.decor.push({kind:'skyprism', x:78.5, y:108.5, mirror:'\\'});
-    G.decor.push({kind:'skyward', x:74.5, y:108.5, lit:solved}); }
-  // the gated bridges
+  // PUZZLE 2 - THE FADING RAINBOW BRIDGE: the span from i2 to i3 flickers in and out in a
+  // travelling wave. Cross while the tiles are solid; step on a faded one and you drop
+  // through the cloud, back to i2 to try again. Each band spans the full width, so there's
+  // no edge to sneak along - just time your steps to the wave.
+  G._skyFade={tiles:[], speed:0.65, onFrac:0.6, entryX:76.5, entryY:112.5};
+  G._skyFadeT=0;
+  { const a=skyIsle('i2'), b=skyIsle('i3'), ax=a.x, ay=a.y, L=Math.hypot(b.x-ax,b.y-ay), ux=(b.x-ax)/L, uy=(b.y-ay)/L;
+    for(let yy=0;yy<MAPH;yy++) for(let xx=0;xx<MAPW;xx++){
+      if(tileAt(xx,yy)!==T.SNOW || skyIsleTile(xx,yy)) continue;
+      const rx=xx-ax, ry=yy-ay, along=rx*ux+ry*uy, perp=Math.abs(-rx*uy+ry*ux);
+      if(along>L*0.28 && along<L*0.72 && perp<2.2){ const band=Math.round((along-L*0.28)/2.0);
+        const f={kind:'fadetile', x:xx+0.5, y:yy+0.5, band, phase:(band*0.3)%1};
+        G.decor.push(f); G._skyFade.tiles.push(f); } }
+    // strip the static rainbow-road paint from the fading tiles, so a faded tile reads
+    // clearly as a gap (not a still-colourful road tile you'd wrongly trust)
+    const fadeSet=new Set(G._skyFade.tiles.map(f=>Math.floor(f.x)+','+Math.floor(f.y)));
+    G.decor=G.decor.filter(d=>!(d.kind==='rainbow' && fadeSet.has(Math.floor(d.x)+','+Math.floor(d.y))));
+  }
+  // the gated bridges (g2 is the fading bridge above, so it has no solid ward)
   for(const g of SKY_GATES){
+    if(g.gate==='g2') continue;
     const m=skyGateMid(g), tiles=skyGatePlugTiles(g), open=!!P.story[g.flag];
     G.decor.push({kind:'skygate', gate:g.gate, x:m.x, y:m.y, tiles, open, label:'a wind-ward'});
     for(const [x,y] of tiles){ setSolid(x,y, open?0:1); }
@@ -96,7 +107,12 @@ function placeObjectsSkyDungeon(){
   // the Storm-Eye's hoard, on the last isle
   { const s=skyIsle('i6'); G.decor.push({kind:'chest', x:s.x+0.5, y:s.y-3+0.5, sky:1, rich:11}); }
   G.critters=[];
-  if(typeof skyBeamTrace==='function') skyBeamTrace();   // cast the prism beam for the opening frame
+}
+// is this fading tile currently solid footing? (a travelling on-wave across the bands)
+function skyFadeSolid(f){
+  const F=G._skyFade; if(!F) return true;
+  const ph=(((G._skyFadeT||0)*F.speed - f.phase)%1+1)%1;
+  return ph < F.onFrac;
 }
 /* ---------- puzzle 2: THE PRISM WARD - bend the rainbow beam to the ward-crystal ---------- */
 function skyBeamTrace(){
@@ -223,10 +239,31 @@ function pressSkyTile(b){
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
-  ensureSnatcher();   // wakes the cloud-snatcher the instant you solve the prism ward further in
-  // a one-time nudge when you first reach the Prism Ward isle
-  if(!P.story.skyG2 && !G._prismHint && dist(P.x,P.y,76,112)<7){ G._prismHint=1;
-    toast('<b>The Prism Ward.</b> A rainbow beam springs from the crystal - <b>rotate the prisms</b> to bend the light onto the dark ward-crystal, and the wind-ward parts. No order, no penalty; just aim the beam.',6000); }
+  ensureSnatcher();   // wakes the cloud-snatcher the instant you cross the fading bridge
+  // ---- THE FADING RAINBOW BRIDGE (i2 -> i3) ----
+  if(G._skyFade && !P.story.skyG2){
+    G._skyFadeT=(G._skyFadeT||0)+dt;
+    // a one-time nudge on first approach
+    if(!G._fadeHint && dist(P.x,P.y,76,112)<7){ G._fadeHint=1;
+      toast('<b>The Rainbow Bridge fades in and out.</b> Cross while the tiles are lit - step on a faded one and you drop through the cloud. Time your steps to the wave; each band holds only a moment.',6000); }
+    // dropped through a faded tile -> back to i2 to try the crossing again
+    if(!P.dead && (P.rollT||0)<=0){
+      const f=G._skyFade.tiles.find(t=>Math.floor(t.x)===Math.floor(P.x) && Math.floor(t.y)===Math.floor(P.y));
+      if(f && !skyFadeSolid(f)){
+        if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(18);
+        burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',16,2.6); shockwave(P.x,P.y,'rgba(255,255,255,0.8)',40);
+        P.x=G._skyFade.entryX; P.y=G._skyFade.entryY; P.click=null; P.moving=false;
+        G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+        if(!G._fadeFellHint){ G._fadeFellHint=1; toast('You drop through a faded tile and the wind bears you back to the isle. <b>Follow the lit wave</b> across - don\'t linger on a tile that\'s about to fade.',5000); }
+      }
+    }
+    // reached the far isle - the bridge is behind you, the road opens on
+    if(dist(P.x,P.y, skyIsle('i3').x, skyIsle('i3').y) < skyIsle('i3').r-0.5){
+      P.story.skyG2=1; if(Snd.quest) Snd.quest();
+      banner('THE RAINBOW BRIDGE IS CROSSED','THE ROAD RUNS ON');
+      if(typeof autoSave==='function') autoSave();
+    }
+  }
 
   // P1 / P5 - open the perch-gate once the wraiths are all felled
   if(!P.story.skyG1 && G.mobs.filter(m=>m.puzzle===1 && !m.dead).length===0){
