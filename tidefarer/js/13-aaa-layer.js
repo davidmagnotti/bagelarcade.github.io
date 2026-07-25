@@ -297,7 +297,7 @@ const THR = {
       vath:0.55, gold:0.18, violet:0.4, clash:0, flee:0, guards:0 },
     { who:'',
       html:'<i>Vath’s hand comes down and the violet light leaps for the two of you like a striking snake — but the old King is already moving.</i> <b>“You WON’T take them from me — not again, Vath!”</b> <i>King Aldous throws himself between the light and his children, and the Tideglass fire answers in his blood: gold against violet.</i>',
-      vath:1, gold:0.85, violet:0.7, clash:0.72, flee:0, guards:0 },
+      vath:1, gold:0.85, violet:0.7, clash:0.72, flee:0, guards:0, strike:1 },
     { who:'King Aldous', title:'THE KING RISES',
       html:'<i>Gold light roars up the old King’s arms and slams into Vath, driving the enchanter back a step — then two.</i> “RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
       vath:0.78, gold:1, violet:0.5, clash:1, flee:0.08, guards:0 },
@@ -327,10 +327,10 @@ const THR = {
       vath:1, gold:0.04, violet:0.5, clash:0, flee:1, guards:1, dark:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
-  vAdv:0, kAdv:0, flee:0, gold:0.12, violet:0, clash:0, guards:0, kingDown:0, dark:0,
+  vAdv:0, kAdv:0, flee:0, pflee:0, gold:0.12, violet:0, clash:0, guards:0, kingDown:0, dark:0,
   fx:1.3, fy:0.9, zoom:1.18, stepH:0, stepP:0, stepK:0, stepV:0,
   hero:null, prince:null, king:null, vath:null, _ph:null, _pp:null, _pk:null, _pv:null,
-  flash:0, flashT:5, pulseR:0, take:0, sparks:[],
+  flash:0, flashT:5, pulseR:0, take:0, strike:0, sparks:[],
   running:false, ended:false, started:false,
 };
 /* Per-beat staging the beats table doesn't carry: how far the King has stepped down
@@ -376,12 +376,12 @@ function throneCutscene(){
   if(!ov||!cv){ _thrEndAct(); return; }   // graceful fallback: resolve Act I and sail on
   THR.cv=cv; THR.cx=cv.getContext('2d');
   THR.t=0; THR.prev=0; THR.idx=0;
-  THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
+  THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.pflee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
   THR.fx=THR_STAGE[0].foc[0]; THR.fy=THR_STAGE[0].foc[1]; THR.zoom=THR_STAGE[0].zoom;
   THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
   THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
   THR._ph={...HERO0}; THR._pp={...PRIN0}; THR._pk={...KING0}; THR._pv={...VATH0};
-  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.sparks.length=0;
+  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.strike=0; THR.sparks.length=0;
   THR.ended=false; THR.started=false; THR.running=true;
   sub.classList.remove('show'); title.classList.remove('show');
   ov.style.display='flex';
@@ -407,6 +407,7 @@ function _thrShow(i){
   const b=THR.beats[i]; if(!b) return;
   THR.idx=i; THR.started=true;
   if(b.takeFlash){ THR.flash=1.2; THR.take=1; }
+  if(b.strike){ THR.strike=1; }      // Vath's violet lash, aimed past the King at the children
   if(b.pulse){ THR.pulseR=0.001; }   // kick off the memory-rewrite ring
   document.getElementById('thrWho').textContent=b.who||'';
   document.getElementById('thrLine').innerHTML=b.html;
@@ -468,6 +469,7 @@ function _thrLoop(ts){
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
   THR.zoom=e(THR.zoom,st.zoom||1.15,1.4);
   THR.take=Math.max(0,THR.take-dt*0.5);
+  THR.strike=Math.max(0,THR.strike-dt*0.9);  // the lash retracts to the King as he catches it
   // storm-lightning through the high windows, keener as the violet rises
   THR.flash=Math.max(0,THR.flash-dt*3.0);
   THR.flashT-=dt*(0.35+THR.violet*1.4);
@@ -476,7 +478,12 @@ function _thrLoop(ts){
   // world positions along the fixed staging paths
   const lp=(a,c,k)=>({x:a.x+(c.x-a.x)*k, y:a.y+(c.y-a.y)*k});
   THR.hero  = lp(HERO0,HEROF,THR.flee);
-  THR.prince= lp(PRIN0,PRINF,THR.flee);
+  // the prince stands rooted (staring at his father) until the princess seizes his
+  // collar mid-flee; only then is he hauled out - always a step behind her, never
+  // ahead, so he reads as being pulled rather than walking out on his own.
+  const GRAB=0.2;
+  THR.pflee = THR.flee<=GRAB ? 0 : (THR.flee-GRAB)/(1-GRAB);
+  THR.prince= lp(PRIN0,PRINF,THR.pflee);
   THR.king  = lp(KING0,KINGF,THR.kAdv);
   THR.vath  = lp(VATH0,VATHF,THR.vAdv);
   // gait: advance a walk-cycle while an actor is actually moving, decay to idle otherwise
@@ -534,7 +541,8 @@ function _thrDraw(){
   const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
   if(sibA>0.02){
     const hdir=THR.flee>0.2?_thrFace(THR.hero,HEROF):_thrFace(THR.hero,THRONE);
-    const pdir=THR.flee>0.2?_thrFace(THR.prince,PRINF):_thrFace(THR.prince,THRONE);
+    // rooted -> still staring back at his father; once grabbed -> hauled toward the doors
+    const pdir=THR.pflee>0.001?_thrFace(THR.prince,PRINF):_thrFace(THR.prince,THRONE);
     items.push({d:THR.hero.x+THR.hero.y,    fn:()=>_thrActor(SC,Z,THR.hero,LOOK_HERO,hdir,THR.stepH,{alpha:sibA})});
     items.push({d:THR.prince.x+THR.prince.y,fn:()=>_thrActor(SC,Z,THR.prince,LOOK_PRINCE,pdir,THR.stepP,{alpha:sibA})});
   }
@@ -548,6 +556,8 @@ function _thrDraw(){
   }
   items.sort((a,b)=>a.d-b.d);
   for(const it of items) it.fn();
+  // Vath's opening lash, thrown past the King toward the children and caught on his gold
+  if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
   // the clash of the two magics, drawn between the King and Vath
   if(clash>0.03) _thrClash(SC,Z,clash,t);
   // the memory-rewrite pulse sweeping out from Vath
@@ -663,6 +673,33 @@ function _thrClash(SC,Z,clash,t){
   cx.fillStyle=ng; cx.beginPath(); cx.arc(mx,my,nr,0,TAU); cx.fill();
   for(const s of THR.sparks){ cx.globalAlpha=Math.max(0,s.life/s.max); cx.fillStyle=s.col; cx.fillRect(mx+s.x,my+s.y,2.4*Z,2.4*Z); }
   cx.globalAlpha=1; cx.restore();
+}
+// Vath's opening strike: a violet lash that leaps from his hand PAST the King, reaching
+// for the two children - then retracts to the King (`strike` 1->0) as he throws himself
+// into its path. Sells the beat's line: the light "leaps for the two of you... King Aldous
+// throws himself between the light and his children."
+function _thrStrike(SC,Z,strike,t){
+  const cx=THR.cx;
+  const v=SC(THR.vath.x,THR.vath.y);
+  const k=SC(THR.king.x,THR.king.y);
+  const mid={x:(THR.hero.x+THR.prince.x)/2, y:(THR.hero.y+THR.prince.y)/2};
+  const m=SC(mid.x,mid.y);
+  const vx=v.x, vy=v.y-30*Z, kx=k.x, ky=k.y-30*Z, tx=m.x, ty=m.y-24*Z;
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
+  // the lash from Vath's hand to where the King now stands (the interception point)
+  const g1=cx.createLinearGradient(vx,vy,kx,ky);
+  g1.addColorStop(0,`rgba(160,110,240,${0.85*strike})`);
+  g1.addColorStop(1,`rgba(205,175,255,${0.85*strike})`);
+  cx.strokeStyle=g1; cx.lineWidth=(3+4*strike)*Z + Math.sin(t*38)*strike;
+  cx.beginPath(); cx.moveTo(vx,vy); cx.lineTo(kx,ky); cx.stroke();
+  // ...and the tail still straining PAST him toward the children, retracting as he catches it
+  const g2=cx.createLinearGradient(kx,ky,tx,ty);
+  g2.addColorStop(0,`rgba(190,150,255,${0.55*strike})`);
+  g2.addColorStop(1,'rgba(190,150,255,0)');
+  cx.strokeStyle=g2; cx.lineWidth=(1.5+2.5*strike)*Z;
+  cx.beginPath(); cx.moveTo(kx,ky);
+  cx.lineTo(kx+(tx-kx)*strike, ky+(ty-ky)*strike); cx.stroke();
+  cx.restore();
 }
 // the violet memory-rewrite ring washing across the whole hall
 function _thrPulse(cx,cxp,cyp,pr,W,H){
