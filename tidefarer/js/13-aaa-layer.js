@@ -972,7 +972,7 @@ function _thrBanner(cx,x0,top,w,h){
 
 /* ---------- adaptive music (procedural, three moods) ---------- */
 const Music={
-  nextT:0, beat:0, mode:'day',
+  nextT:0, beat:0, mode:'day', vol:1, intensity:0,
   chords:[[220,277.2,329.6],[174.6,220,261.6],[196,246.9,293.7],[164.8,207.7,246.9]],
   scale:[440,493.9,523.3,587.3,659.3,784,880],
   update(){
@@ -980,7 +980,15 @@ const Music={
     const now=Snd.ctx.currentTime;
     if(this.nextT<now-1) this.nextT=now+0.1;
     const boss=G.mobs.some(m=>m.bigBoss&&!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<14);
-    this.mode= boss?'boss' : nightAmount()>0.5?'night':'day';
+    const newMode= boss?'boss' : nightAmount()>0.5?'night':'day';
+    // crossfade "breath": dip the mix on a mood change and ease it back so moods
+    // slide into each other instead of hard-switching mid-phrase.
+    if(newMode!==this.mode){ this.mode=newMode; this.vol=0.34; }
+    this.vol += (1-this.vol)*0.05;
+    // combat intensity: nearby chasing (non-boss) foes drive the bed harder
+    let threat=0;
+    if(!boss) for(const m of G.mobs){ if(!m.dead&&m.state==='chase'){ const d=dist(P.x,P.y,m.x,m.y); if(d<11) threat=Math.max(threat,1-d/11); } }
+    this.intensity += (threat-this.intensity)*0.04;
     const spb=this.mode==='boss'?0.30 : this.mode==='night'?0.62 : 0.5;
     while(this.nextT<now+0.35){ this.note(this.nextT,this.beat,spb); this.nextT+=spb; this.beat++; }
   },
@@ -1007,19 +1015,24 @@ const Music={
   },
   note(t,beat,spb){
     const bar=Math.floor(beat/8)%4, inBar=beat%8;
+    const vs=this.vol==null?1:this.vol;                 // crossfade gain
     if(this.mode==='boss'){
-      if(inBar%2===0) this.ping(t,55*(inBar%4===0?1:1.5),spb*0.9,0.05,'sawtooth');
-      if(inBar===0) this.pad(t,110*[1,0.94,1.12,0.89][bar],spb*8,0.026);
-      if(Math.random()<0.3) this.ping(t,this.scale[(beat*3)%7]/2,spb*0.6,0.02,'square');
+      if(inBar%2===0) this.ping(t,55*(inBar%4===0?1:1.5),spb*0.9,0.05*vs,'sawtooth');
+      if(inBar===0) this.pad(t,110*[1,0.94,1.12,0.89][bar],spb*8,0.026*vs);
+      if(Math.random()<0.3) this.ping(t,this.scale[(beat*3)%7]/2,spb*0.6,0.02*vs,'square');
       return;
     }
-    const ch=this.chords[bar], nv=this.mode==='night'?0.55:1;
+    const ch=this.chords[bar], nv=(this.mode==='night'?0.55:1)*vs;
+    const inten=this.intensity||0;
     if(inBar===0) this.pad(t,ch[0]/2,spb*8,0.028*nv);
     if(inBar===4) this.pad(t,ch[1],spb*4,0.015*nv);
-    if(Math.random()<(this.mode==='night'?0.22:0.4)){
+    // melody: denser and a shade louder as danger closes in
+    if(Math.random()<(this.mode==='night'?0.22:0.4)+inten*0.3){
       const f=this.scale[Math.floor(Math.random()*7)]*(Math.random()<0.25?0.5:1);
-      this.ping(t,f,spb*1.8,0.026*nv,'sine');
+      this.ping(t,f,spb*1.8,0.026*nv*(1+inten*0.5),'sine');
     }
+    // a low pulse that only surfaces under threat - a combat bed rising beneath
+    if(inten>0.15 && inBar%2===0) this.ping(t,110*[1,0.94,1.12,0.89][bar],spb*0.9,0.02*inten*vs,'triangle');
   }
 };
 

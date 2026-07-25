@@ -1593,6 +1593,19 @@ function drawHumanoid(g,sx,sy,o){
   g.restore();
 }
 
+/* Is a creature showing its back to the camera? Mobs only carry a left/right
+   flip (m.face), so a pure side profile reads wrong when they head up-screen
+   (away). We derive facing from the chase target / wander goal: heading up-screen
+   means world (dx+dy) is negative. Callers use it to hide forward-only features
+   (eyes, muzzle) so you never see a face on the back of the head. */
+function mobAway(m){
+  if(!m) return false;
+  let dx,dy;
+  if(m.state==='chase' && typeof P!=='undefined'){ dx=P.x-m.x; dy=P.y-m.y; }
+  else if(m.tx!=null){ dx=m.tx-m.x; dy=m.ty-m.y; }
+  else return false;
+  return (dx+dy) < -0.4;
+}
 function drawSlime(g,sx,sy,m){
   const sq = 1 + Math.sin(m.anim*6)*0.12;
   const w = 15*sq, h=12/sq;
@@ -1608,8 +1621,10 @@ function drawSlime(g,sx,sy,m){
   g.strokeStyle='rgba(255,255,255,0.30)'; g.lineWidth=1.3;
   g.beginPath(); g.ellipse(0,-h*0.9,w*0.93,h*0.93,0,Math.PI*1.06,Math.PI*1.94); g.stroke();
   g.fillStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.ellipse(-w*0.35,-h*1.25,w*0.25,h*0.3,-.5,0,TAU); g.fill();
-  g.fillStyle='#203018';
-  g.beginPath(); g.arc(-4,-h*0.95,1.8,0,TAU); g.arc(4,-h*0.95,1.8,0,TAU); g.fill();
+  if(!mobAway(m)){   // eyes are on the front face - gone when it oozes away
+    g.fillStyle='#203018';
+    g.beginPath(); g.arc(-4,-h*0.95,1.8,0,TAU); g.arc(4,-h*0.95,1.8,0,TAU); g.fill();
+  }
   g.restore();
 }
 function drawWolf(g,sx,sy,m){
@@ -1628,8 +1643,10 @@ function drawWolf(g,sx,sy,m){
   g.fillStyle='#5d6068'; g.beginPath(); g.roundRect(8,-36,16,13,5); g.fill();
   g.fillStyle='#4a4d54'; g.beginPath(); g.moveTo(10,-36); g.lineTo(13,-42); g.lineTo(16,-36); g.closePath(); g.fill();
   g.beginPath(); g.moveTo(17,-36); g.lineTo(20,-42); g.lineTo(23,-36); g.closePath(); g.fill();
-  g.fillStyle='#3a3d43'; g.fillRect(22,-31,4,4);
-  g.fillStyle='#ffd0d0'; g.beginPath(); g.arc(17,-31,1.7,0,TAU); g.fill();
+  if(!mobAway(m)){   // snout & eye only when it faces the camera; a back-of-head otherwise
+    g.fillStyle='#3a3d43'; g.fillRect(22,-31,4,4);
+    g.fillStyle='#ffd0d0'; g.beginPath(); g.arc(17,-31,1.7,0,TAU); g.fill();
+  }
   // tail
   g.strokeStyle='#5d6068'; g.lineWidth=4; g.beginPath();
   g.moveTo(-16,-24); g.quadraticCurveTo(-24,-28,-22,-34+trot); g.stroke();
@@ -1675,15 +1692,16 @@ function drawSkeleton(g,sx,sy,m){
   // skull
   g.fillStyle='#f2f3ec'; g.beginPath(); g.arc(0,-36*s,7.6*s,0,TAU); g.fill();
   g.fillRect(-4*s,-33*s,8*s,5*s);
-  g.fillStyle='#1c2418';
-  g.beginPath(); g.arc(-2.8*s,-36*s,1.9*s,0,TAU); g.arc(2.8*s,-36*s,1.9*s,0,TAU); g.fill();
+  const skAway=mobAway(m);   // no eye sockets on the back of the skull
+  if(!skAway){ g.fillStyle='#1c2418';
+    g.beginPath(); g.arc(-2.8*s,-36*s,1.9*s,0,TAU); g.arc(2.8*s,-36*s,1.9*s,0,TAU); g.fill(); }
   if(m.boss){
     if(cog){ // furnace-amber eyes and a riveted iron brow-band - no crown
-      g.fillStyle='#ffb347'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill();
+      if(!skAway){ g.fillStyle='#ffb347'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill(); }
       g.fillStyle='#5a4c38'; g.fillRect(-6.4*s,-43.4*s,12.8*s,2.8*s);
       g.fillStyle='#8a7658'; for(const bx of [-4.4,0,4.4]){ g.beginPath(); g.arc(bx*s,-42*s,0.9*s,0,TAU); g.fill(); }
     } else { // Hollow King: ghostlight eyes and a jagged gold crown
-      g.fillStyle='#78dca0'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill();
+      if(!skAway){ g.fillStyle='#78dca0'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill(); }
       g.fillStyle='#ffd76a'; g.fillRect(-6*s,-45*s,12*s,3.4*s);
       g.beginPath(); g.moveTo(-6*s,-45*s); g.lineTo(-3.5*s,-50*s); g.lineTo(-1*s,-45*s); g.lineTo(1*s,-50*s); g.lineTo(3*s,-45*s); g.lineTo(5*s,-50*s); g.lineTo(6*s,-45*s); g.closePath(); g.fill(); }
   }
