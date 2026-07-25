@@ -203,6 +203,10 @@ function nearestInteract(){
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     if(b.kind==='lavasluice'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'lavasluice',o:b,label:b.on?'Divert back':'Divert flow'}; } }
+    if(b.kind==='tidewheel'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'tidewheel',o:b,label:(G._tide?'Drain the tide':'Raise the tide')}; } }
+    if(b.kind==='tidevalve' && !b.thrown){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'tidevalve',o:b,label:'Throw the valve'}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
     // not only a direct tap, so they can actually be pressed on mobile
     if(b.kind==='emberbutton'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -276,6 +280,8 @@ function doInteract(){
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
   if(it.type==='lavasluice'){ facePoint(it.o.x,it.o.y); toggleLavaSluice(it.o); return; }
+  if(it.type==='tidewheel'){ facePoint(it.o.x,it.o.y); toggleTide(); return; }
+  if(it.type==='tidevalve'){ facePoint(it.o.x,it.o.y); throwTideValve(it.o); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
       addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
@@ -1564,6 +1570,7 @@ function updateWorld(dt){
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
   if(G.worldId==='milldeep' && typeof updateMillDeep==='function') updateMillDeep(dt);
   if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
+  if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);

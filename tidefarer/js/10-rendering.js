@@ -60,7 +60,8 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   coggate:1, millgear:1, millwheel:1, sluicelever:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
-  lavaseg:1, lavasluice:1, firewheel:1};
+  lavaseg:1, lavasluice:1, firewheel:1,
+  tidewater:1, floatbridge:1, tidewheel:1, tidevalve:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1284,6 +1285,59 @@ function drawDecor(b,s){
     g.strokeStyle= spin?'#ffb04a':'#5a4d40'; g.lineWidth=1.8;
     for(let i=0;i<6;i++){ const a=i/6*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*R,Math.sin(a)*R*0.9); g.stroke(); }
     g.fillStyle= spin?'#ffd45a':'#3a332c'; g.beginPath(); g.arc(0,0,2,0,TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='tidewater'){
+    // a cell of brine: dark water with a shifting sheen when flooded, wet stone when drained
+    const g=cx, lvl=(typeof G!=='undefined'&&G._tideAnim!=null)?G._tideAnim:0;
+    const showWater = b.flooded || (b.floodAt===0);
+    g.save(); g.translate(s.x,s.y);
+    if(showWater){
+      const a = b.floodAt===0? 0.8 : (0.35+0.55*lvl);   // the high-tide sump fades in with the level
+      const gl=0.5+0.3*Math.sin(G.time*1.8+b.x*1.7+b.y);
+      g.fillStyle='rgba(24,44,58,'+a.toFixed(2)+')'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(90,150,180,'+(0.14*a+0.12*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,9,4,0,0,TAU); g.fill();
+      g.strokeStyle='rgba(150,200,220,'+(0.18*a).toFixed(2)+')'; g.lineWidth=1; g.beginPath(); g.moveTo(-7,-2+Math.sin(G.time*2+b.x)); g.lineTo(0,0); g.lineTo(7,-3+Math.cos(G.time*2+b.y)); g.stroke();
+    } else {
+      g.fillStyle='rgba(30,34,36,0.4)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(90,120,120,0.12)'; g.beginPath(); g.ellipse(0,0,6,3,0,0,TAU); g.fill();   // a wet sheen on the drained floor
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='floatbridge'){
+    // a timber pontoon that rides the brine: at floor level when high, sunk under when low
+    const g=cx, up=(typeof G!=='undefined'&&G._tide===1); g.save(); g.translate(s.x,s.y);
+    if(!up){ // sunk - dark water with the raft dimly below
+      g.fillStyle='rgba(20,38,50,0.85)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(60,50,40,0.35)'; g.beginPath(); g.ellipse(0,1,10,4,0,0,TAU); g.fill();
+    } else {
+      g.fillStyle='#5a4a36'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.strokeStyle='#3a2f22'; g.lineWidth=1.2; g.stroke();
+      g.strokeStyle='#6a5842'; g.lineWidth=1.4;   // plank seams
+      g.beginPath(); g.moveTo(-11,-2); g.lineTo(4,-6); g.moveTo(-4,3); g.lineTo(11,-1); g.stroke();
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='tidewheel'){
+    // a great ship's-wheel valve on a post - turn it to raise or drain the tide
+    const g=cx; drawShadowAt(g,s.x,s.y,8); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a332c'; g.fillRect(-2.6,-16,5.2,16); g.strokeStyle='#1c1814'; g.lineWidth=1.2; g.strokeRect(-2.6,-16,5.2,16);
+    g.save(); g.translate(0,-17); g.rotate(((typeof G!=='undefined'&&G._tideAnim)||0)*1.4);
+    g.strokeStyle='#7fbfe0'; g.lineWidth=2.6; g.beginPath(); g.arc(0,0,8,0,TAU); g.stroke();
+    g.strokeStyle='#5a8aa8'; g.lineWidth=2; for(let i=0;i<6;i++){ const a=i/6*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*8,Math.sin(a)*8); g.stroke(); }
+    for(let i=0;i<6;i++){ const a=i/6*TAU; g.fillStyle='#9ed6f0'; g.beginPath(); g.arc(Math.cos(a)*8,Math.sin(a)*8,1.7,0,TAU); g.fill(); }   // handle knobs
+    g.restore();
+    g.fillStyle='rgba(150,205,235,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-32);
+    g.restore(); return;
+  }
+  if(b.kind==='tidevalve'){
+    // a low brine-valve wheel set in the sump floor; glows while it can be reached
+    const g=cx, reachable=(typeof G!=='undefined'&&(G._tide||0)===0 && !b.thrown); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#2a2620'; g.beginPath(); g.ellipse(0,-1,7,3.4,0,0,TAU); g.fill();
+    g.strokeStyle= b.thrown?'#6a8a78':(reachable?'#7fc4e8':'#4a5560'); g.lineWidth=2.2; g.beginPath(); g.arc(0,-3,5,0,TAU); g.stroke();
+    g.strokeStyle= b.thrown?'#5a7a68':(reachable?'#5a8aa8':'#3a444c'); g.lineWidth=1.6;
+    for(let i=0;i<4;i++){ const a=i/4*TAU+(b.thrown?0.5:0); g.beginPath(); g.moveTo(0,-3); g.lineTo(Math.cos(a)*5,-3+Math.sin(a)*5); g.stroke(); }
+    if(reachable){ g.fillStyle='rgba(127,196,232,'+(0.4+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
     g.restore(); return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite
