@@ -62,7 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   surgewater:1, dais:1, drainplate:1,
-  lavachasm:1, spinwheel:1,
+  lavachasm:1, spinwheel:1, froststream:1, icefloe:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -188,7 +188,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel')? -9990 : b.x+b.y;   // flat lava & turning slabs are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe')? -9990 : b.x+b.y;   // flat lava/water & the platforms over them are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1401,6 +1401,28 @@ function drawDecor(b,s){
     const hs=worldToScreen(b.hx,b.hy);   // the spindle hub
     g.fillStyle='#3a332c'; g.beginPath(); g.ellipse(hs.x,hs.y-1,5.5,3,0,0,TAU); g.fill();
     g.fillStyle='rgba(255,150,60,'+(0.4+0.3*Math.sin(G.time*3+b.hx)).toFixed(2)+')'; g.beginPath(); g.arc(hs.x,hs.y-2,2,0,TAU); g.fill();
+    return;
+  }
+  if(b.kind==='froststream'){
+    // a cell of black freezing water with a slow, cold shimmer - fall in and you're swept back
+    const g=cx, gl=0.5+0.3*Math.sin(G.time*1.4+b.seed*1.6); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(16,32,44,0.9)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+    g.fillStyle='rgba(120,175,205,'+(0.1+0.12*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,8,3.6,0,0,TAU); g.fill();
+    g.strokeStyle='rgba(180,215,235,'+(0.12+0.1*gl).toFixed(2)+')'; g.lineWidth=1; g.beginPath(); g.moveTo(-7,-2+Math.sin(G.time*1.6+b.seed)); g.lineTo(0,0); g.lineTo(7,-3+Math.cos(G.time*1.6+b.seed)); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='icefloe'){
+    // a slab of drift-ice sliding across the channel. Drawn as a raised iso block (w x h)
+    // centred on its current position; carries whoever stands on it.
+    const g=cx, hw=(b.w||5)/2, hh=(b.h||3)/2;
+    const c1=worldToScreen(b.x-hw, b.y-hh), c2=worldToScreen(b.x+hw, b.y-hh), c3=worldToScreen(b.x+hw, b.y+hh), c4=worldToScreen(b.x-hw, b.y+hh);
+    g.fillStyle='rgba(60,110,140,0.5)';   // the wet shadow it casts on the water
+    g.beginPath(); g.moveTo(c1.x,c1.y+5); g.lineTo(c2.x,c2.y+5); g.lineTo(c3.x,c3.y+5); g.lineTo(c4.x,c4.y+5); g.closePath(); g.fill();
+    const gr=g.createLinearGradient(c1.x,c1.y,c3.x,c3.y); gr.addColorStop(0,'#eaf6ff'); gr.addColorStop(1,'#b6d8ea');
+    g.fillStyle=gr; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
+    g.strokeStyle='#7fa8c0'; g.lineWidth=1.4; g.stroke();
+    g.strokeStyle='rgba(255,255,255,0.5)'; g.lineWidth=1;   // a cracked facet across the ice
+    g.beginPath(); g.moveTo((c1.x+c4.x)/2,(c1.y+c4.y)/2); g.lineTo((c2.x+c3.x)/2-6,(c2.y+c3.y)/2); g.stroke();
     return;
   }
   if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite

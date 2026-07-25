@@ -1954,16 +1954,15 @@ function genFrostAll(){
    frozen over until you thaw it) to reach and melt the great seal on the deep gate.
    Thin ice cracks if you linger. No levers now; the flame IS the puzzle.
    ================================================================================= */
-const FLAME_MAX = 8.0;   // seconds a carried torch burns in the cold before it gutters out
 function genFrostDeep(){
   // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing (the Emberheart burns here)
-  carve(42,54,46,60,T.ICE);               // corridor A -> the warren (a wall of ice seals it)
-  carve(30,38,54,54,T.ICE);               // THE FROST-LOCK WARREN - the brazier relay + thin ice
+  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
+  carve(42,54,46,60,T.ICE);               // corridor A -> the flooded warren
+  carve(30,38,54,54,T.ICE);               // THE DRIFT - the frozen channel the floes cross
   carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - sealed in ice until thawed
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until you cross
   carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber
 }
 function placeObjectsFrostDeep(){
@@ -1971,104 +1970,64 @@ function placeObjectsFrostDeep(){
   G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
   setSolid(44,70,0); setTile(44,70,T.RUIN);
   for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // a few frozen spires for atmosphere (kept off the route, the braziers, and the ice)
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  for(const [px,py] of [[38,66],[50,66],[32,42],[52,50],[34,52],[36,18],[52,18]]) spire(px,py);
-  // ---- THE GUTTERING FLAME ----
-  // THE EMBERHEART: the source brazier on the landing - always lit. Light your torch here.
-  G.decor.push({kind:'icebrazier', x:44.5, y:66.5, lit:true, source:true, need:0, _thaw:0, label:'the Emberheart'});
-  // a wall of living ice seals corridor A - thaw it with a lit torch to reach the warren
-  addIceWall([[42,57],[43,57],[44,57],[45,57],[46,57]], 1.2, {});
-  // two braziers relay the flame across the warren; each is frozen over, so thaw it to
-  // light it, then relight there as you press on toward the seal
-  G.decor.push({kind:'icebrazier', x:40.5, y:50.5, lit:false, frozen:true, need:1.0, _thaw:0, label:'a frozen brazier'});
-  G.decor.push({kind:'icebrazier', x:48.5, y:42.5, lit:false, frozen:true, need:1.0, _thaw:0, label:'a frozen brazier'});
-  // thin ice across the open warren - do not linger, it cracks underfoot
-  for(const [tx,ty] of [[44,47],[43,45],[45,44],[42,43]]) if(inb(tx,ty) && !solidAt(tx,ty)) G.decor.push({kind:'thinice', x:tx+0.5, y:ty+0.5, _crack:0});
-  // THE RIMEBOUND'S SEAL: a great wall of ice across the deep gate. Bring a fresh flame
-  // (relit at the second brazier) and thaw it to open the way to the Frozen Heart.
-  addIceWall([[42,37],[43,37],[44,37],[45,37],[46,37]], 2.8, {seal:true, gate:'deep'});
+  for(const [px,py] of [[38,66],[50,66],[32,40],[52,40],[36,16],[52,16]]) spire(px,py);
+  // ---- THE DRIFTING FLOES ----
+  // the warren has flooded into a channel of black, freezing water, crossed only on slabs
+  // of drift-ice that slide back and forth. Board a floe as it drifts to your ledge, ride
+  // it, and step to the next floe (or the far ledge) when they line up. Fall in and the
+  // cold sweeps you back to the landing to try the crossing again. No levers, pure timing.
+  G._frostVoid=new Set(); G._frostFloes=[]; G._frostT=0; G._frostGateOpen=false; G._frostFallHint=0;
+  for(let y=43;y<=51;y++) for(let x=30;x<=54;x++){ if(inb(x,y)&&!solidAt(x,y)){ G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); } }
+  const floe=(cy,cx,amp,spd,phase)=>{ const f={kind:'icefloe', cx:cx+0.5, y:cy+0.5, x:cx+0.5, prevx:cx+0.5, amp, spd, phase, w:5, h:3}; G.decor.push(f); G._frostFloes.push(f); };
+  floe(50, 42, 6, 0.5, 0.0);    // three floes on staggered phases -> time each step across
+  floe(47, 42, 6, 0.5, 2.1);
+  floe(44, 42, 6, 0.5, 4.2);
+  G._frostCross={cy0:43, cy1:51, farY:38, startX:44, startY:53.5};
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
   G.critters=[];
-  G._flameT=0;   // you arrive with an unlit torch
-  // an already-cleared run keeps the seal melted and the braziers lit
+  // an already-cleared run drains the channel to solid ice and leaves the gate open
   if(P.story && P.story.deepDone){
-    for(const b of G.decor){
-      if(b.kind==='icewall'){ b.melted=true; for(const [x,y] of b.tiles){ setSolid(x,y,0); setTile(x,y,T.ICE); } }
-      if(b.kind==='icebrazier'){ b.lit=true; b.frozen=false; }
-    }
+    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
+    G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe');
+    G._frostVoid=new Set(); G._frostFloes=[]; G._frostGateOpen=true;
   }
 }
-// build a wall of living ice across the given tiles (solid until thawed); opts may carry
-// {seal:true, gate:'deep'} for the great deep-gate seal
-function addIceWall(tiles, need, opts){
-  let sx=0,sy=0; for(const [x,y] of tiles){ sx+=x; sy+=y; setTile(x,y,T.RUIN); setSolid(x,y,1); }
-  G.decor.push(Object.assign({kind:'icewall', x:sx/tiles.length+0.5, y:sy/tiles.length+0.5, tiles:tiles.slice(), need:need, _thaw:0, melted:false}, opts||{}));
-}
-function nearFrostWall(b){
-  for(const [x,y] of b.tiles){ if(dist(P.x,P.y, x+0.5, y+0.5) < 1.5) return true; }
-  return false;
-}
-function meltIceWall(b){
-  b.melted=true; b._thaw=b.need;
-  for(const [x,y] of b.tiles){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+function openFrostGate(){
+  if(G._frostGateOpen) return; G._frostGateOpen=true;
+  for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
   invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); shockwave(b.x,b.y,'rgba(190,230,250,0.9)',52); G.shake=Math.max(G.shake||0,0.45);
-  for(let i=0;i<22;i++){ const a=Math.random()*TAU, sp=rnd(0.4,2);
-    G.parts.push({x:b.x+rnd(-1,1),y:b.y+rnd(-0.5,0.5),vx:Math.cos(a)*sp,vy:Math.abs(Math.sin(a))*sp+0.4,life:rnd(0.5,1.3),color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1.4,3),grav:0.12}); }
-  if(b.seal){ banner("THE RIMEBOUND'S SEAL MELTS",'THE DEEP GATE OPENS');
-    toast('The great seal sloughs away in a rush of meltwater and the deep gate stands open. The <b>Frozen Heart</b> lies beyond - and the thing Vath bound in it.',5400); }
-  else toast('The wall of ice sags, runs, and collapses into slush. The way is open.',3200);
+  Snd.quest&&Snd.quest(); shockwave(44,37.5,'rgba(180,225,245,0.9)',52); G.shake=Math.max(G.shake||0,0.5);
+  banner('THE DEEP GATE OPENS','THE FROZEN HEART LIES BEYOND');
+  toast('You spring from the last floe onto solid ice and the deep gate grinds up behind the frost. The <b>Frozen Heart</b> - and the thing Vath bound in it - lies ahead.',5200);
+  autoSave&&autoSave();
 }
-function crackThinIce(b){
-  Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(10);
-  burst(P.x,P.y,'#dff0ff',18,2.8); addFloat('the ice cracks!',P.x,P.y-1.6,'#bfe0f4',1.1);
-  // shove back toward the landing (south) to the nearest safe footing off the thin ice
-  const px=Math.floor(P.x); let yy=Math.floor(P.y)+1;
-  while(yy<Math.floor(P.y)+6 && (!inb(px,yy) || solidAt(px,yy) || G.decor.some(d=>d.kind==='thinice'&&Math.floor(d.x)===px&&Math.floor(d.y)===yy))) yy++;
-  if(inb(px,yy) && !solidAt(px,yy)){ P.y=yy+0.4; }
-  P.click=null; P.slideDir=null;
-  if(!G._thinIceHint){ G._thinIceHint=1; toast('The thin ice splits under your weight! <b>Keep moving</b> across it - don\'t stand still.',4200); }
+function frostFall(){
+  const c=G._frostCross;
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(18);
+  burst(P.x,P.y-0.3,'#cfeaf8',18,2.6); shockwave(P.x,P.y,'rgba(150,200,225,0.8)',44);
+  if(c){ P.x=c.startX+0.5; P.y=c.startY; }
+  P.click=null; P.moving=false; P.slideDir=null;
+  if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water takes you and the cold flings you back to the landing. <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up.',5200); }
 }
-// THE GUTTERING FLAME loop: drain the torch in the cold, relight at lit braziers, and
-// thaw the ice-walls (and the frozen braziers) you stand near while your torch burns.
+// carry the player on the floe they're standing on, and drop them (restart) if the open
+// water under them has no floe
 function updateFrostDeep(dt){
-  if((G._flameT||0)>0){
-    G._flameT=Math.max(0, G._flameT-dt);
-    if(G._flameT===0){ toast('Your torch gutters out in the cold. Back to a brazier to relight.',3000); Snd.step&&Snd.step(9); }
-  }
-  const lit=(G._flameT||0)>0;
-  for(const b of G.decor){
-    if(b.kind==='icebrazier'){
-      if(b.lit){
-        if(dist(P.x,P.y,b.x,b.y)<1.8 && (G._flameT||0)<FLAME_MAX-0.02){
-          const was=G._flameT||0; G._flameT=FLAME_MAX;
-          if(was<FLAME_MAX-1.2 && (G.time-(b._relT||0))>0.6){ b._relT=G.time; burst(P.x,P.y-1.2,'#ffce7a',7,1.5); Snd.pickup&&Snd.pickup(); }
-        }
-      } else if(b.frozen){
-        if(lit && dist(P.x,P.y,b.x,b.y)<1.7){
-          b._thaw=(b._thaw||0)+dt;
-          if(Math.random()<dt*8) G.parts.push({x:b.x+rnd(-0.4,0.4),y:b.y,vx:0,vy:0.5,life:0.5,color:'#bfe0f4',size:2,grav:0.1});
-          if(b._thaw>=b.need){ b.frozen=false; b.lit=true; G._flameT=FLAME_MAX;
-            Snd.quest&&Snd.quest(); burst(b.x,b.y-0.6,'#ffb04a',20,2.6); shockwave(b.x,b.y,'rgba(255,160,60,0.6)',38);
-            toast('The brazier catches - a warm island in the cold. <b>Relight here</b> as you press on.',3600); }
-        } else b._thaw=Math.max(0,(b._thaw||0)-dt*0.5);
-      }
-    }
-    else if(b.kind==='icewall' && !b.melted){
-      if(lit && nearFrostWall(b)){
-        b._thaw=(b._thaw||0)+dt;
-        if(Math.random()<dt*12){ const [tx,ty]=b.tiles[(Math.random()*b.tiles.length)|0];
-          G.parts.push({x:tx+0.5+rnd(-0.4,0.4),y:ty+0.5,vx:0,vy:0.7,life:0.5,color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1,2),grav:0.14}); }
-        if(b._thaw>=b.need) meltIceWall(b);
-      } else b._thaw=Math.max(0,(b._thaw||0)-dt*0.4);
-    }
-    else if(b.kind==='thinice'){
-      const on = Math.floor(P.x)===Math.floor(b.x) && Math.floor(P.y)===Math.floor(b.y);
-      if(on && !P.moving){ b._crack=(b._crack||0)+dt; if(b._crack>1.6){ b._crack=0; crackThinIce(b); } }
-      else b._crack=Math.max(0,(b._crack||0)-dt*1.5);
-    }
-  }
+  const floes=G._frostFloes||[]; if(!floes.length) return;
+  G._frostT=(G._frostT||0)+dt;
+  for(const f of floes){ f.prevx=f.x; f.x = f.cx + f.amp*Math.sin(G._frostT*f.spd + f.phase); }
+  const c=G._frostCross;
+  if(c && !G._frostGateOpen && P.y>=c.farY && P.y<c.cy0) openFrostGate();   // reached the far ledge
+  if(P.dead || (P.rollT||0)>0) return;
+  const tx=Math.floor(P.x), ty=Math.floor(P.y);
+  if(!(G._frostVoid && G._frostVoid.has(tx+','+ty))) return;   // on solid ice / a ledge - safe
+  // over the water: find the floe under us
+  let best=null, bestd=99;
+  for(const f of floes){ const dx=Math.abs(P.x-f.x), dy=Math.abs(P.y-f.y);
+    if(dx<=f.w/2 && dy<=f.h/2 && (dx+dy)<bestd){ best=f; bestd=dx+dy; } }
+  if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; }   // carried by the drift
+  else frostFall();
 }
 function spawnMobsFrostDeep(){
   const Z=FROSTDEEP_ZONES;
@@ -4132,8 +4091,8 @@ function switchWorld(id){
   // Dungeons keep their mystery, but a single atmospheric hint on first entry
   // points the way without solving anything - a compass, not a walkthrough.
   if(id==='frostdeep' && !P.prog.deepSeen && !(P.story && P.story.deepDone)){ P.prog.deepSeen=1;
-    setTimeout(()=>banner('THE RIMEFISSURE','WALLS OF ICE BAR THE WAY - CARRY FIRE TO THAW THEM'),1200);
-    setTimeout(()=>toast('<i>Vath\'s cold has sealed the warren in living ice.</i> Light a torch at the <b>Emberheart</b> and carry it north to <b>thaw</b> a way through - but the cold saps the flame, so <b>relight at the braziers</b> along the way (each frozen over until you thaw it) to reach and melt the great seal on the deep gate. And <b>don\'t linger on thin ice</b>.',8500),1800); }
+    setTimeout(()=>banner('THE RIMEFISSURE','RIDE THE DRIFTING FLOES ACROSS THE BLACK WATER'),1200);
+    setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. Fall in and the cold flings you back to the landing to try again.',8500),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
     setTimeout(()=>banner('THE EMBERDEEP','TIME THE TURNING SLABS ACROSS THE LAVA'),1200);
     setTimeout(()=>toast('<i>Molten chasms bar the fire-heart.</i> They are crossed only on the <b>turning basalt slabs</b>: <b>board a slab</b> when it swings to your ledge, <b>ride it round</b>, and step off (or onto the next slab) when they line up. Miss and you drop into the lava and start the crossing again. Reach the far ledge and the gate rises.',8500),1800); }
