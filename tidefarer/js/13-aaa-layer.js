@@ -306,8 +306,17 @@ const THR = {
     { who:'King Aldous',
       html:'“RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
       vath:0.78, gold:1, violet:0.5, clash:1, flee:0.08, guards:0 },
+    // the prince digs in - he won't abandon the father he only just found. The King, still
+    // holding Vath off, cuts him down: they can't win this, not yet. The siblings stay put
+    // (flee held low) through the argument; only the princess's resolve breaks it.
+    { who:'The Prince',
+      html:'“We can’t leave him!!!”',
+      vath:0.78, gold:0.98, violet:0.5, clash:0.98, flee:0.08, guards:0 },
+    { who:'King Aldous',
+      html:'“You don’t stand a chance against him, not as you are.”',
+      vath:0.8, gold:0.95, violet:0.55, clash:0.92, flee:0.08, guards:0 },
     { who:'The Princess',
-      html:'“We need to go — NOW!”',
+      html:'“We have to go — WE HAVE TO GO.”',
       vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
     { who:'King Aldous',
       html:'“…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
@@ -347,14 +356,16 @@ const THR_STAGE=[
   {kAdv:0.8,  foc:[1.6,1.2], zoom:1.23, kingDown:0},  // 1  King declares - steps between, no beams yet
   {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 2  Vath strikes, King in its path
   {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 3  the surge / RUN
-  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 4  the grab-and-haul
-  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 5  burst the doors
-  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 6  Vath laughs
-  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 7  the Tideglass taken
-  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 8  guards flood in
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 9  the memory pulse
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 10 Vath's lie
-  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 11 END OF ACT I
+  {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 4  the Prince refuses to leave
+  {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 5  the King's warning
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 6  the grab-and-haul
+  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 7  burst the doors
+  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 8  Vath laughs
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 9  the Tideglass taken
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 10 guards flood in
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 11 the memory pulse
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 12 Vath's lie
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 13 END OF ACT I
 ];
 /* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
    The nave runs down the line x==y (which projects straight down the screen);
@@ -486,11 +497,11 @@ function _thrLoop(ts){
   THR.dark    = e(THR.dark,    b.dark?1:0,    0.8);
   // hands lift for the casting gesture BEFORE the beams: Vath's hand is already up as he
   // enters (0), fully raised on the declaration (1), then thrusts down to loose the strike
-  // (2+) and closes to a grasp as he takes the Tideglass (7). The King raises both hands in
+  // (2+) and closes to a grasp as he takes the Tideglass (9). The King raises both hands in
   // front the moment he speaks (1) and holds them up while he channels, until he is broken.
   const _i=THR.idx;
   const kHandT = (_i>=1 && (st.kingDown||0)<0.5) ? 1 : 0;
-  const vHandT = _i<=0 ? 0.6 : _i===1 ? 1 : _i===7 ? 0.7 : _i>=8 ? 0 : 0.32;
+  const vHandT = _i<=0 ? 0.6 : _i===1 ? 1 : _i===9 ? 0.7 : _i>=10 ? 0 : 0.32;
   THR.kHand = e(THR.kHand, kHandT, 3.2);
   THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
@@ -572,7 +583,7 @@ function _thrDraw(){
     items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,dir,THR.stepK,
       {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:11*Z*down,
        scale:1-0.17*down, hurt:down>0.15&&down<0.85})}); }
-  { const dir=THR.idx>=8?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+  { const dir=THR.idx>=10?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
       {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
   const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
