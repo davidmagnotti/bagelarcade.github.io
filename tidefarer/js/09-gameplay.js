@@ -894,7 +894,10 @@ function hurtPlayer(dmg,src){
   addFloat('-'+dmg,P.x,P.y-1.6,'#ff8a7a',1.1);
   burst(P.x,P.y-0.5,'#e05648',8); Snd.hurt(); G.shake=Math.max(G.shake,0.25);
   G.flash=0.28; G.hitStop=Math.max(G.hitStop,0.05);
-  if(src){ const dx=P.x-src.x, dy=P.y-src.y, l=Math.hypot(dx,dy)||1; moveEntity(P,dx/l*0.5,dy/l*0.5); }
+  if(src){ const dx=P.x-src.x, dy=P.y-src.y, l=Math.hypot(dx,dy)||1;
+    moveEntity(P,dx/l*0.5,dy/l*0.5);
+    // shove the camera the way the blow throws you (screen-space kick)
+    G.kickX=(dx-dy)/l*6; G.kickY=(dx+dy)/l*3; }
   refreshUI();
   if(P.hp<=0){ P.hp=0; playerDie(); }
 }

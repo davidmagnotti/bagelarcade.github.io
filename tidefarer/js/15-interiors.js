@@ -445,16 +445,27 @@ function iBox(s,w,d,h,top,lft,rgt){
   // iso box at screen point s: footprint w×d tiles, height h px
   const gx=(dxw,dyd)=>({x:s.x+(dxw-dyd)*(TW/2), y:s.y+(dxw+dyd)*(TH/2)});
   const c1=gx(-w/2,-d/2), c2=gx(w/2,-d/2), c3=gx(w/2,d/2), c4=gx(-w/2,d/2);
+  // faces get a vertical gradient (top-lit -> shadowed base) instead of a flat fill,
+  // so interior furniture reads with the same shading as the exterior sprites. A
+  // single primitive edit lifts every table, bed, crate and counter in the game.
+  const faceGrad=(yTop,yBot,col)=>{
+    if(typeof shade!=='function' || (col&&col[0]!=='#')) return col;
+    try{ const gg=cx.createLinearGradient(0,yTop,0,yBot);
+      gg.addColorStop(0,shade(col,12)); gg.addColorStop(1,shade(col,-20)); return gg; }catch(e){ return col; }
+  };
   // left face (c4-c3)
-  cx.fillStyle=lft; cx.beginPath();
+  cx.fillStyle=faceGrad(c4.y-h,c4.y,lft); cx.beginPath();
   cx.moveTo(c4.x,c4.y-h); cx.lineTo(c3.x,c3.y-h); cx.lineTo(c3.x,c3.y); cx.lineTo(c4.x,c4.y); cx.closePath(); cx.fill();
   // right face (c3-c2)
-  cx.fillStyle=rgt; cx.beginPath();
+  cx.fillStyle=faceGrad(c2.y-h,c2.y,rgt); cx.beginPath();
   cx.moveTo(c3.x,c3.y-h); cx.lineTo(c2.x,c2.y-h); cx.lineTo(c2.x,c2.y); cx.lineTo(c3.x,c3.y); cx.closePath(); cx.fill();
-  // top
+  // top (brightest, flat)
   cx.fillStyle=top; cx.beginPath();
   cx.moveTo(c1.x,c1.y-h); cx.lineTo(c2.x,c2.y-h); cx.lineTo(c3.x,c3.y-h); cx.lineTo(c4.x,c4.y-h); cx.closePath(); cx.fill();
   cx.strokeStyle='rgba(15,9,4,0.5)'; cx.lineWidth=1; cx.stroke();
+  // warm rim catching the interior light along the top front edges
+  cx.strokeStyle='rgba(255,238,206,0.15)'; cx.lineWidth=1.2;
+  cx.beginPath(); cx.moveTo(c4.x,c4.y-h); cx.lineTo(c3.x,c3.y-h); cx.lineTo(c2.x,c2.y-h); cx.stroke();
 }
 function drawLairScene(w2s,I){
   const t=I.t;

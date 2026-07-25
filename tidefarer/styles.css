@@ -336,3 +336,15 @@
     .mbtn{min-width:32px;height:30px;padding:0 7px;}
     .mbtn .tx{display:none;}
   }
+  /* ---------- cinematic HUD dressing ----------
+     Purely additive gloss: a glassy inset sheen on the vitality bars and a thin
+     gilt ring around the maps, so the HUD reads as tooled parchment-and-brass
+     rather than flat panels. No layout changes. */
+  .bar{box-shadow:0 2px 8px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.13), inset 0 -3px 6px rgba(0,0,0,.42);}
+  .bar::after{content:'';position:absolute;left:0;right:0;top:0;height:46%;pointer-events:none;
+    border-radius:9px 9px 40% 40%/9px 9px 60% 60%;
+    background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0));}
+  #miniWrap{box-shadow:var(--shadow),inset 0 0 0 1px rgba(201,162,78,.22);}
+  #bigMap{box-shadow:0 0 0 1px rgba(201,162,78,.28),0 8px 26px rgba(0,0,0,.5);}
+  #goldRow #goldTxt{text-shadow:0 1px 3px #000,0 0 10px rgba(255,180,70,.35);}
