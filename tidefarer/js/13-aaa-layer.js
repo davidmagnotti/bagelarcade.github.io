@@ -294,11 +294,17 @@ const THR = {
   beats: [
     { who:'Vath', title:'THE ENCHANTER COMES',
       html:'<i>The tall doors at the hall’s end blow inward on a wind that stinks of storm and violet. Vath strides in through the wreck of them, one hand already rising.</i> <b style="color:#c9a0ff">“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”</b>',
-      vath:0.55, gold:0.18, violet:0.4, clash:0, flee:0, guards:0 },
-    { who:'',
-      html:'<i>Vath’s hand comes down and the violet light leaps for the two of you like a striking snake — but the old King is already moving.</i> <b>“You WON’T take them from me — not again, Vath!”</b> <i>King Aldous throws himself between the light and his children, and the Tideglass fire answers in his blood: gold against violet.</i>',
-      vath:1, gold:0.85, violet:0.7, clash:0.72, flee:0, guards:0, strike:1 },
+      vath:0.55, gold:0.16, violet:0.32, clash:0, flee:0, guards:0 },
+    // the King speaks and moves FIRST — plants himself between, gold only just waking,
+    // Vath's hand rising. No beams yet: the defiance lands before the violence.
     { who:'King Aldous', title:'THE KING RISES',
+      html:'<i>But the old King is already on his feet, stepping down off the dais to put his own body between the enchanter and his children.</i> <b>“You won’t have them, Vath. Not again — I will not let you take them from me a second time.”</b>',
+      vath:0.85, gold:0.5, violet:0.55, clash:0, flee:0, guards:0 },
+    // NOW Vath strikes, and it lands on the King who is already in its path.
+    { who:'',
+      html:'<i>Vath’s hand comes down, and the violet light leaps for the two of you like a striking snake — but the King is already in its path. He throws himself into the strike, and the Tideglass fire answers in his blood: gold against violet.</i>',
+      vath:1, gold:0.85, violet:0.8, clash:0.6, flee:0, guards:0, strike:1 },
+    { who:'King Aldous',
       html:'<i>Gold light roars up the old King’s arms and slams into Vath, driving the enchanter back a step — then two.</i> “RUN! Both of you — out the east doors, to the water — GO, and do not look back!”',
       vath:0.78, gold:1, violet:0.5, clash:1, flee:0.08, guards:0 },
     { who:'',
@@ -337,17 +343,18 @@ const THR = {
    (kAdv), where the camera centres (foc, world tiles), the scene zoom, and whether the
    King has dropped (kingDown). Indexed 1:1 with THR.beats. */
 const THR_STAGE=[
-  {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},
-  {kAdv:0.85, foc:[1.7,1.3], zoom:1.24, kingDown:0},
-  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},
-  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},
-  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},
-  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},
-  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},
-  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},
-  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},
+  {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},  // 0  Vath comes - King still on the throne
+  {kAdv:0.8,  foc:[1.6,1.2], zoom:1.23, kingDown:0},  // 1  King declares - steps between, no beams yet
+  {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 2  Vath strikes, King in its path
+  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 3  the surge / RUN
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 4  the grab-and-haul
+  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 5  burst the doors
+  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 6  Vath laughs
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 7  the Tideglass taken
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 8  guards flood in
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 9  the memory pulse
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 10 Vath's lie
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 11 END OF ACT I
 ];
 /* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
    The nave runs down the line x==y (which projects straight down the screen);
@@ -522,6 +529,9 @@ function _thrDraw(){
     cx.fillStyle=wg; cx.fillRect(0,0,W,farY);
     const thrS=SC(THRONE.x,THRONE.y);
     for(const off of [-165,165]) _thrWindow(cx, thrS.x+off*Z, Math.max(6,farY-150*Z), 52*Z, 150*Z, THR.flash);
+    // the house colours of Aldermere: purple banners with a gold roundel, inboard of
+    // the windows - matches the real great hall's 'banner' furniture (#6a3a5e / #e8c860)
+    for(const off of [-88,88]) _thrBanner(cx, thrS.x+off*Z, Math.max(4,farY-132*Z), 26*Z, 96*Z);
     if(THR.flash>0.01){ cx.fillStyle=`rgba(190,205,255,${0.16*THR.flash})`; cx.fillRect(0,0,W,farY); }
   }
   // the iso stone floor + carpet runner, with magic light spilling across it
@@ -535,7 +545,7 @@ function _thrDraw(){
     items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,dir,THR.stepK,
       {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:11*Z*down,
        scale:1-0.17*down, hurt:down>0.15&&down<0.85})}); }
-  { const dir=THR.idx>=7?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+  { const dir=THR.idx>=8?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
       {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
   const sibA=THR.flee>0.85?Math.max(0,1-(THR.flee-0.85)*6.7):1;  // fade out as they clear the doors
@@ -605,12 +615,21 @@ function _thrFloor(SC,Z,t,gold,violet){
     const a=SC(x-0.5,y-0.5), b=SC(x+0.5,y-0.5), c=SC(x+0.5,y+0.5), d=SC(x-0.5,y+0.5);
     const chk=(x+y)&1, carpet=Math.abs(oo)<=0.75, dais=kk<=1.6;
     let fill;
-    if(carpet) fill= dais? '#5a3a6a' : (chk?'#4a2f57':'#442a50');
+    // rust-red runner with gold-warm dais, matching the real hall's carpet (the 'rug'
+    // furniture: rgba(143,74,58) cloth, #c9a24e gold trim)
+    if(carpet) fill= dais? '#6a4038' : (chk?'#5c352d':'#54302a');
     else fill= dais? (chk?'#333849':'#2c3140') : (chk?'#262b37':'#20242f');
     cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.lineTo(c.x,c.y); cx.lineTo(d.x,d.y); cx.closePath();
     cx.fillStyle=fill; cx.fill();
     cx.strokeStyle='rgba(0,0,0,0.16)'; cx.lineWidth=1; cx.stroke();
   }
+  // gold trim running down both edges of the carpet (the real rug's #c9a24e ring)
+  cx.save(); cx.strokeStyle='rgba(201,162,78,0.45)'; cx.lineWidth=2*Z;
+  for(const oo of [0.78,-0.78]){
+    const a=SC(-1+oo,-1-oo), b=SC(10+oo,10-oo);
+    cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+  }
+  cx.restore();
   const ks=SC(THR.king.x,THR.king.y), vs=SC(THR.vath.x,THR.vath.y);
   cx.save(); cx.globalCompositeOperation='lighter';
   if(gold>0.05){ const g=cx.createRadialGradient(ks.x,ks.y,4,ks.x,ks.y,150*Z);
@@ -630,30 +649,44 @@ function _thrColumn(SC,Z,c,t){
   tg.addColorStop(0,`rgba(255,178,90,${0.38*fl})`); tg.addColorStop(1,'rgba(255,178,90,0)');
   cx.fillStyle=tg; cx.beginPath(); cx.arc(base.x,base.y-h*0.72,56*Z*fl,0,TAU); cx.fill();
   cx.restore();
-  cx.fillStyle='#2a2f3b';
+  // pale grey stone shaft (matches the real hall's #a8a49b/#8f8b83 columns), warm-lit face
+  cx.fillStyle='#8f8b83';
   cx.beginPath(); cx.moveTo(base.x-w*0.5,base.y); cx.lineTo(base.x-w*0.42,base.y-h);
   cx.lineTo(base.x+w*0.42,base.y-h); cx.lineTo(base.x+w*0.5,base.y); cx.closePath(); cx.fill();
-  cx.fillStyle='rgba(255,190,120,0.10)'; cx.fillRect(base.x-w*0.5,base.y-h,w*0.3,h);
-  cx.fillStyle='#343b49'; cx.fillRect(base.x-w*0.62,base.y-h-6*Z,w*1.24,7*Z);
-  cx.fillRect(base.x-w*0.6,base.y-6*Z,w*1.2,7*Z);
+  cx.fillStyle='#a8a49b'; cx.fillRect(base.x-w*0.5,base.y-h,w*0.32,h);
+  cx.fillStyle='#6e6a63'; cx.fillRect(base.x+w*0.30,base.y-h,w*0.12,h);
+  cx.fillStyle='rgba(255,190,120,0.12)'; cx.fillRect(base.x-w*0.5,base.y-h,w*0.3,h);
+  cx.fillStyle='#b8b4ab'; cx.fillRect(base.x-w*0.62,base.y-h-6*Z,w*1.24,7*Z);
+  cx.fillStyle='#9a968d'; cx.fillRect(base.x-w*0.6,base.y-6*Z,w*1.2,7*Z);
   cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(255,190,110,0.9)';
   cx.beginPath(); cx.ellipse(base.x,base.y-h*0.72,3.4*Z,7*Z*fl,0,0,TAU); cx.fill(); cx.restore();
 }
-// the Tideglass Throne at the head of the nave
+// the Tideglass Throne at the head of the nave - dark wood, a deep crimson high back
+// and gold finials, matching the real great-hall throne sprite (drawFurniture 'throne')
 function _thrThrone(SC,Z,t){
   const cx=THR.cx, s=SC(THRONE.x,THRONE.y), y=s.y-12*Z;
   const w=26*Z, seatH=20*Z, backH=46*Z;
-  cx.fillStyle='#161a24'; cx.fillRect(s.x-w*0.5,y-seatH,w,seatH);
-  const glow=0.4+0.3*Math.sin(t*1.4);
-  const tg=cx.createLinearGradient(s.x,y-seatH-backH,s.x,y-seatH);
-  tg.addColorStop(0,`rgba(120,210,220,${0.55+0.2*glow})`); tg.addColorStop(1,'rgba(30,70,90,0.8)');
-  cx.fillStyle=tg;
+  const glow=0.5+0.3*Math.sin(t*1.4);
+  // dark-wood seat block with a lit near face
+  cx.fillStyle='#3e2f1e'; cx.fillRect(s.x-w*0.5,y-seatH,w,seatH);
+  cx.fillStyle='#5a4630'; cx.fillRect(s.x-w*0.5,y-seatH,w*0.30,seatH);
+  // crimson high back
+  const bg=cx.createLinearGradient(s.x,y-seatH-backH,s.x,y-seatH);
+  bg.addColorStop(0,'#7a2a3a'); bg.addColorStop(1,'#4a1a24');
+  cx.fillStyle=bg;
   cx.beginPath(); cx.moveTo(s.x-w*0.46,y-seatH); cx.lineTo(s.x-w*0.46,y-seatH-backH*0.8);
   cx.quadraticCurveTo(s.x,y-seatH-backH, s.x+w*0.46,y-seatH-backH*0.8);
   cx.lineTo(s.x+w*0.46,y-seatH); cx.closePath(); cx.fill();
+  // gold finials: two on the shoulders, a larger crown at the peak
+  cx.fillStyle='#e8c860';
+  cx.beginPath();
+  cx.arc(s.x-w*0.44,y-seatH-backH*0.72,3.6*Z,0,TAU);
+  cx.arc(s.x+w*0.44,y-seatH-backH*0.72,3.6*Z,0,TAU); cx.fill();
+  cx.beginPath(); cx.arc(s.x,y-seatH-backH*0.94,5.2*Z,0,TAU); cx.fill();
+  // a soft warm nimbus - the seat of the Tideglass, not cold cyan glass
   cx.save(); cx.globalCompositeOperation='lighter';
   const g=cx.createRadialGradient(s.x,y-seatH-backH*0.5,2,s.x,y-seatH-backH*0.5,42*Z);
-  g.addColorStop(0,`rgba(120,220,230,${0.18+0.1*glow})`); g.addColorStop(1,'rgba(120,220,230,0)');
+  g.addColorStop(0,`rgba(255,206,120,${0.12+0.08*glow})`); g.addColorStop(1,'rgba(255,206,120,0)');
   cx.fillStyle=g; cx.beginPath(); cx.arc(s.x,y-seatH-backH*0.5,42*Z,0,TAU); cx.fill(); cx.restore();
 }
 // gold-vs-violet beam between the King and Vath, with a bright collision node + sparks
@@ -721,6 +754,16 @@ function _thrWindow(cx,x0,top,w,h,flash){
   cx.restore();
   cx.strokeStyle='#0b0e16'; cx.lineWidth=4; path(); cx.stroke();
   cx.beginPath(); cx.moveTo(x0,top+4); cx.lineTo(x0,top+h); cx.stroke();
+}
+// a hanging house-banner: purple cloth with a swallowtail hem and a gold roundel,
+// matching the great hall's 'banner' furniture (#6a3a5e cloth, #e8c860 emblem)
+function _thrBanner(cx,x0,top,w,h){
+  cx.fillStyle='#3a2a1a'; cx.fillRect(x0-w*0.62,top-3,w*1.24,3);   // the rail it hangs from
+  cx.fillStyle='#6a3a5e';
+  cx.beginPath(); cx.moveTo(x0-w/2,top); cx.lineTo(x0+w/2,top); cx.lineTo(x0+w/2,top+h);
+  cx.lineTo(x0,top+h-w*0.42); cx.lineTo(x0-w/2,top+h); cx.closePath(); cx.fill();
+  cx.fillStyle='rgba(255,255,255,0.06)'; cx.fillRect(x0-w/2,top,w*0.28,h*0.9);  // sheen
+  cx.fillStyle='#e8c860'; cx.beginPath(); cx.arc(x0,top+h*0.42,w*0.24,0,TAU); cx.fill();
 }
 
 /* ---------- adaptive music (procedural, three moods) ---------- */
