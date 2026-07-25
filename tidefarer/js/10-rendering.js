@@ -88,7 +88,17 @@ function render(){
   // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
   cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
-  if(G.shake>0 && CFG.shake){ cx.translate(rnd(-1,1)*G.shake*10, rnd(-1,1)*G.shake*10); }
+  // Trauma-style shake: squared falloff (a punchier decay than linear), a small
+  // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
+  // reads as a jolt rather than a uniform wobble. setTransform() resets fully each
+  // frame (line above), so the rotate is safe and self-clearing.
+  if(G.shake>0 && CFG.shake){
+    const tr=Math.min(1,G.shake), m=tr*tr;
+    cx.translate(rnd(-1,1)*m*13 + (G.kickX||0)*tr, rnd(-1,1)*m*10 + (G.kickY||0)*tr);
+    cx.rotate(rnd(-1,1)*m*0.010);
+  }
+  if(G.kickX){ G.kickX*=0.86; if(Math.abs(G.kickX)<0.1) G.kickX=0; }
+  if(G.kickY){ G.kickY*=0.86; if(Math.abs(G.kickY)<0.1) G.kickY=0; }
 
   // visible tile range
   const corners=[screenToWorld(0,0),screenToWorld(VW,0),screenToWorld(0,VH),screenToWorld(VW,VH)];
@@ -123,6 +133,12 @@ function render(){
           const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
           if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
             cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
+          // deeper water reads darker/greener; a caustic ribbon crawls the surface
+          if(t===T.DEEP){ cx.fillStyle='rgba(6,20,40,0.16)';
+            cx.beginPath(); cx.ellipse(sx, sy+3, 15, 6, 0, 0, TAU); cx.fill(); }
+          const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
+          if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
+            cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }
           if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
             const sa=0.35+0.35*Math.sin(G.time*6+x);
             cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
@@ -2507,6 +2523,7 @@ function drawPlayer(s){
     cx.restore();
     return;
   }
+  if((P.rollT||0)>0 && !P.riding) drawRollFX(s);
   drawShadowAt(cx,s.x,s.y,14);
   drawPlayerFigure(s);
   drawCarriedFlame(s);
@@ -2528,6 +2545,26 @@ function drawCarriedFlame(s){
   g.fillStyle='rgba(0,0,0,0.5)'; g.fillRect(s.x-11,s.y-52,22,4);
   g.fillStyle= life>0.33? '#ffb04a' : '#ff5a3a'; g.fillRect(s.x-10,s.y-51, 20*life, 2);
   if(Math.random()<0.4) G.parts.push({x:P.x+0.25,y:P.y-1.1,vx:rnd(-0.2,0.2),vy:-rnd(0.6,1.4),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ffd07a':'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
+}
+/* The dodge roll used to reuse a sped-up walk with a puff of dust. Give it real
+   presence: a couple of fading afterimages streaking behind the dash line and a
+   bright i-frame shimmer hugging the ground, peaking mid-roll. */
+function drawRollFX(s){
+  const p=1-(P.rollT||0)/0.26;
+  const dxs=(P.dir.x-P.dir.y), dys=(P.dir.x+P.dir.y)*0.5;
+  if(!LOWFX){
+    for(let i=1;i<=2;i++){
+      const k=i*8*(1-p*0.4);
+      cx.save(); cx.globalAlpha=0.16*(1-p)*(1-i*0.28);
+      drawPlayerFigure({x:s.x-dxs*k, y:s.y-dys*k});
+      cx.restore();
+    }
+  }
+  const sh=Math.sin(Math.max(0,Math.min(1,p))*Math.PI);
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.globalAlpha=0.5*sh;
+  cx.strokeStyle='rgba(150,210,255,0.9)'; cx.lineWidth=2;
+  cx.beginPath(); cx.ellipse(s.x,s.y-2,15,7,0,0,TAU); cx.stroke();
+  cx.restore();
 }
 function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :

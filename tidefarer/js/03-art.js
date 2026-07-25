@@ -713,8 +713,18 @@ function _buildShadowSprite(){
 function drawShadowAt(g,sx,sy,r){
   const sp=_shadowSprite||_buildShadowSprite();
   // original ellipse: horizontal radius r*1.25, vertical squashed to 0.45
-  const w=r*1.25*2, h=w*0.45;
-  g.drawImage(sp, sx-w/2, sy-h/2, w, h);
+  const baseW=r*1.25*2;
+  let w=baseW, h=baseW*0.45, ox=0;
+  // Directional cast: shadows stretch and lean away from the sun with the time of
+  // day - long at dawn/dusk, tight at noon, long-soft at night. Skipped on the
+  // fixed-daylight tutorial isle, in dungeons, and at the low quality tier.
+  if(!LOWFX && G.worldId!=='isle' && !(typeof inDungeon==='function' && inDungeon())){
+    const t=G.dayT; let low, dir, k;
+    if(t>=0.06 && t<=0.44){ low=Math.min(1,Math.abs((t-0.25)/0.19)); dir=(t<0.25)?-1:1; k=1.5; }
+    else { low=0.85; dir=(t<0.25||t>0.9)?-1:1; k=0.6; }
+    w=baseW*(1+low*k); h=baseW*0.42; ox=dir*low*r*0.75;
+  }
+  g.drawImage(sp, sx-w/2+ox, sy-h/2, w, h);
 }
 
 function dirOct(d){
