@@ -197,6 +197,16 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'emberlever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
+    if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:b.on?'Sluice (open)':'Work the sluice'}; } }
+    if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
+    if(b.kind==='lavasluice'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.9 && d<bd){ bd=d; best={type:'lavasluice',o:b,label:b.on?'Divert back':'Divert flow'}; } }
+    if(b.kind==='tidewheel'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'tidewheel',o:b,label:(G._tide?'Drain the tide':'Raise the tide')}; } }
+    if(b.kind==='tidevalve' && !b.thrown){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'tidevalve',o:b,label:'Throw the valve'}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
     // not only a direct tap, so they can actually be pressed on mobile
     if(b.kind==='emberbutton'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -217,6 +227,8 @@ function nearestInteract(){
       if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
     if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.7 && d<bd){ bd=d; best={type:'skytile',o:b,label:b.set?'Rune (lit)':'Tread rune'}; } }
+    if(b.kind==='skyprism' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'skyprism',o:b,label:'Rotate prism'}; } }
     if((b.kind==='chest'||b.kind==='chestOpen') && !(b.cache && !qs('ribbon2'))){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'chest',o:b,label:'Open'}; } }
   }
@@ -268,6 +280,15 @@ function doInteract(){
     enterFrostVault(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
+  if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
+  if(it.type==='lavasluice'){ facePoint(it.o.x,it.o.y); toggleLavaSluice(it.o); return; }
+  if(it.type==='tidewheel'){ facePoint(it.o.x,it.o.y); toggleTide(); return; }
+  if(it.type==='tidevalve'){ facePoint(it.o.x,it.o.y); throwTideValve(it.o); return; }
+  if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
+    if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
+      addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
+    else toast('The brazier is crusted over with ice. Thaw it with a <b>lit torch</b> to wake its fire.',3400);
+    return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
   if(it.type==='staffgate'){ facePoint(it.o.x,it.o.y); dispelStaffGate(it.o); return; }
   if(it.type==='tomb'){ facePoint(it.o.x,it.o.y); if(it.o.up) exitReachDeep(); else enterReachDeep(); return; }
@@ -280,6 +301,7 @@ function doInteract(){
   if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
   if(it.type==='skybird'){ facePoint(it.o.x,it.o.y); if(typeof skyBirdSpeak==='function') skyBirdSpeak(); return; }
   if(it.type==='skytile'){ facePoint(it.o.x,it.o.y); if(typeof pressSkyTile==='function') pressSkyTile(it.o); return; }
+  if(it.type==='skyprism'){ facePoint(it.o.x,it.o.y); if(typeof rotateSkyPrism==='function') rotateSkyPrism(it.o); return; }
   if(it.type==='chest'){ facePoint(it.o.x,it.o.y); beginOpenChest(it.o); return; }
   if(it.type==='npc'){ facePoint(it.o.x,it.o.y); openDialog(it.o); return; }
   if(it.type==='cat'){
@@ -788,9 +810,11 @@ function killMob(m,skill){
   // THE COG-BOUND (Undermill mini-boss) - felling it frees the seized gear-train,
   // which grinds the millstone gate up and opens the way to Nessa's sail.
   if(m.millboss){
-    P.story=P.story||{}; P.story.millDone=1;
+    P.story=P.story||{}; P.story.millDone=1; P.story.millSluice=1;
+    G._millPower=1;   // the freed gear-train runs on; updateMillDeep grounds the cog-gates open
     if(typeof MILL_GATE!=='undefined') for(const [x,y] of MILL_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='mill'); if(cg) cg.open=true;
+    for(const g of G.decor){ if(g.kind==='coggate'){ g.open=true; g.openAmt=1; for(const [x,y] of g.tiles) setSolid(x,y,0); } }
     if(typeof invalidateScenery==='function') invalidateScenery();
     banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');   // the banner says it; no follow-up popup
     if(typeof autoSave==='function') autoSave();
@@ -1547,6 +1571,9 @@ function updateWorld(dt){
   }
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
+  if(G.worldId==='milldeep' && typeof updateMillDeep==='function') updateMillDeep(dt);
+  if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
+  if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);

@@ -977,21 +977,39 @@ function placeObjectsEastDeep(){
   // torches bracketed along the chamber walls
   for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,41],[51,41],[29,22],[51,22],[24,4],[56,4],[40,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- PUZZLE 1 - THE EMBER FONT: tread all three fonts to raise Gate 1 ----
-  edeepLava(40,68,2.2);                                    // a central molten font to route around
-  edeepLava(31,63,1.2); edeepLava(49,63,1.2);
-  for(const [tx,ty] of [[33,71],[40,61],[47,71]])
-    G.decor.push({kind:'emberplate', x:tx+0.5, y:ty+0.5, group:'font', set:false});
+  // ============ THE MOLTEN WORKS: route the lava across three chambers ============
+  // Throw the sluice-stones to divert the molten flow. Diverting COOLS the channel that
+  // bars your way (walk it once it goes dark) AND floods a trough that spins a fire-wheel;
+  // a gate grinds up once its wheel(s) turn. No plates, no rune-order - just the flow.
+  // CHAMBER 1 - THE EMBER FONT: one sluice. Divert the barring channel into the east
+  // trough - it cools your crossing AND spins the wheel that lifts Gate 1.
+  edeepSeg('c1cross', rowTiles(28,52,66), true);                     // the channel barring the crossing (hot)
+  edeepSeg('c1trough', [[49,64],[49,63],[49,62],[50,62]], false);    // the east trough -> the wheel
+  G.decor.push({kind:'firewheel', x:49.5, y:61.5, feed:'c1trough', gate:'g1', charged:false});
+  G.decor.push({kind:'lavasluice', x:33.5, y:69.5, id:'s1', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
-  // ---- PUZZLE 2 - THE SUNKEN CAUSEWAY: throw the floodgate lever ----
-  // a lava channel bars the room; the lever waits past the notch, to the north-west
-  for(let x=30;x<=50;x++){ if(x<38||x>42) edeepLava(x,48,1.0); }   // the channel (a walkable notch at x38..42)
-  G.decor.push({kind:'emberlever', x:30.5, y:44.5, on:false, gate:'g2', label:'the floodgate lever'});
+  // CHAMBER 2 - THE SUNKEN CAUSEWAY: two sluices. The channel stays molten unless BOTH
+  // flows are diverted to their troughs - and only then do both wheels spin to lift Gate 2.
+  edeepSeg('c2cross', rowTiles(28,52,47), true);
+  edeepSeg('c2tW', [[30,46],[30,45],[30,44],[31,44]], false);
+  edeepSeg('c2tE', [[50,46],[50,45],[50,44],[49,44]], false);
+  G.decor.push({kind:'firewheel', x:30.5, y:43.5, feed:'c2tW', gate:'g2', charged:false});
+  G.decor.push({kind:'firewheel', x:49.5, y:43.5, feed:'c2tE', gate:'g2', charged:false});
+  G.decor.push({kind:'lavasluice', x:34.5, y:52.5, id:'s2a', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:46.5, y:52.5, id:'s2b', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
-  // ---- PUZZLE 3 - THE WARDING LOCKS: press the four runes in order I->IV ----
-  // a wrong press wakes a barrow archer and darkens every rune
-  for(const [tx,ty,ord] of [[32,33,1],[48,33,2],[48,24,3],[32,24,4]])
-    G.decor.push({kind:'emberbutton', x:tx+0.5, y:ty+0.5, group:'lock', ord, set:false});
+  // CHAMBER 3 - THE MOLTEN LOCKS: three wheels, one flow. Throwing a sluice diverts the
+  // flow OFF the others, so route it to each wheel in turn - each stays lit once fed.
+  // Charge all three and the Dragon Gate opens. (Order does not matter; there is no reset.)
+  edeepSeg('c3a', [[29,28],[29,27],[30,26],[31,26]], false);
+  edeepSeg('c3b', [[45,25],[46,25],[46,24],[47,24]], false);
+  edeepSeg('c3c', [[51,28],[51,27],[50,26],[49,26]], false);
+  G.decor.push({kind:'firewheel', x:30.5, y:25.5, feed:'c3a', gate:'g3', charged:false});
+  G.decor.push({kind:'firewheel', x:46.5, y:23.5, feed:'c3b', gate:'g3', charged:false});
+  G.decor.push({kind:'firewheel', x:50.5, y:25.5, feed:'c3c', gate:'g3', charged:false});
+  G.decor.push({kind:'lavasluice', x:32.5, y:33.5, id:'s3a', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:40.5, y:33.5, id:'s3b', on:false, label:'a sluice-stone'});
+  G.decor.push({kind:'lavasluice', x:48.5, y:33.5, id:'s3c', on:false, label:'a sluice-stone'});
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
@@ -1009,12 +1027,51 @@ function placeObjectsEastDeep(){
   G.decor.push({kind:'dragonrest', x:40.5, y:9.5});
   G.decor.push({kind:'chest', x:26.5, y:15.5, deep:1, rich:9});
   G.critters=[];
-  G._emberPlate=null;   // reset the plate-tread tracker for this world
-  // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing
+  emberRecompute();   // set the initial molten state (all sluices off - the channels bar the way)
+  // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing: gates
+  // up, every channel cooled, the wheels turning free
   if(P.story && P.story.emberDone){
-    for(const b of G.decor){ if(b.kind==='firegate'){ b.open=true;
-      for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } } }
+    for(const b of G.decor){
+      if(b.kind==='firegate'){ b.open=true; for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } }
+      if(b.kind==='lavaseg'){ b.hot=false; setSolid(Math.floor(b.x),Math.floor(b.y),0); }
+      if(b.kind==='firewheel'){ b.charged=true; }
+    }
   }
+}
+// a lava channel/trough laid down one glowing tile per cell, grouped under a seg id so a
+// sluice can flip the whole run molten (solid, barring the way) or cool (dark, walkable)
+function edeepSeg(id, tiles, hot){
+  for(const [x,y] of tiles){ if(!inb(x,y)) continue; G.decor.push({kind:'lavaseg', x:x+0.5, y:y+0.5, seg:id, hot:!!hot}); setSolid(x,y, hot?1:0); }
+}
+function rowTiles(x0,x1,y){ const t=[]; for(let x=x0;x<=x1;x++) t.push([x,y]); return t; }
+// recompute the molten network from the sluice states: which channels run hot, which
+// wheels turn (latching once fed), and which gates that opens
+function emberRecompute(){
+  const S=id=>G.decor.find(d=>d.kind==='lavasluice' && d.id===id);
+  const segTiles=id=>G.decor.filter(d=>d.kind==='lavaseg' && d.seg===id);
+  const setSeg=(id,hot)=>{ for(const d of segTiles(id)){ if(d.hot===hot) continue; d.hot=hot;
+    const tx=Math.floor(d.x), ty=Math.floor(d.y); setSolid(tx,ty, hot?1:0);
+    if(hot && Math.floor(P.x)===tx && Math.floor(P.y)===ty){   // molten runs in under you - hop clear south
+      let yy=ty+1; while(yy<ty+5 && (!inb(tx,yy)||solidAt(tx,yy))) yy++; if(inb(tx,yy)&&!solidAt(tx,yy)) P.y=yy+0.4; P.click=null; }
+  } };
+  const s1=S('s1'), s2a=S('s2a'), s2b=S('s2b');
+  if(s1){ setSeg('c1cross', !s1.on); setSeg('c1trough', s1.on); }
+  if(s2a&&s2b){ setSeg('c2tW', s2a.on); setSeg('c2tE', s2b.on); setSeg('c2cross', !(s2a.on&&s2b.on)); }
+  setSeg('c3a', !!(S('s3a')&&S('s3a').on)); setSeg('c3b', !!(S('s3b')&&S('s3b').on)); setSeg('c3c', !!(S('s3c')&&S('s3c').on));
+  // wheels latch-charge the moment their trough runs molten; a gate opens once all its
+  // wheels have charged
+  for(const w of G.decor){ if(w.kind==='firewheel' && !w.charged && segTiles(w.feed).some(d=>d.hot)) w.charged=true; }
+  const gwheels=g=>G.decor.filter(d=>d.kind==='firewheel' && d.gate===g);
+  for(const g of ['g1','g2','g3']){ const ws=gwheels(g); if(ws.length && ws.every(d=>d.charged)) openFireGate(g); }
+  invalidateScenery&&invalidateScenery();
+}
+// throw a sluice-stone. In the Molten Locks (chamber 3) the single flow diverts off the
+// others, so lighting one darkens its neighbours (but a wheel, once fed, stays charged).
+function toggleLavaSluice(b){
+  b.on=!b.on;
+  if(b.on && b.id && b.id[1]==='3'){ for(const d of G.decor){ if(d.kind==='lavasluice' && d!==b && d.id && d.id[1]==='3') d.on=false; } }
+  Snd.quest&&Snd.quest(); buzz&&buzz(6); shockwave(b.x,b.y,'rgba(255,150,60,0.7)',30); burst(b.x,b.y-0.4,'#ffb04a',10,1.8);
+  emberRecompute();
 }
 function spawnMobsEastDeep(){
   // bristlebacks have denned in the warm dark of the chambers - a little
@@ -1048,13 +1105,13 @@ function openFireGate(gate){
   for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); }
   shockwave(b.x0+2.5, b.gy+0.5, 'rgba(255,150,60,0.9)', 55); G.shake=0.5;
   invalidateScenery();
-  const msg={ g1:['THE EMBERFONT GATE RISES','THE FONTS BURN AS ONE'],
-              g2:['THE CAUSEWAY GATE GRINDS UP','THE LAVA SINKS AWAY'],
-              g3:['THE DRAGON GATE OPENS','SOMETHING VAST STIRS BEYOND'] }[gate];
+  const msg={ g1:['THE EMBERFONT GATE RISES','THE WHEEL CATCHES AND TURNS'],
+              g2:['THE CAUSEWAY GATE GRINDS UP','BOTH WHEELS TURN AS ONE'],
+              g3:['THE DRAGON GATE OPENS','THE THREE WHEELS BLAZE'] }[gate];
   if(msg) banner(msg[0],msg[1]);
-  if(gate==='g1') toast('All three fonts flare gold at once and, deep in the wall, a counterweight lets go - the Emberfont Gate grinds up into the rock.',5000);
-  else if(gate==='g2') toast('Old iron shrieks and the floodgate hauls open - the lava channel drains hissing into the dark, and the Causeway Gate lifts.',5200);
-  else toast('The four runes blaze in sequence, the seal breaks, and the last gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
+  if(gate==='g1') toast('The diverted flow floods the trough and the fire-wheel groans into motion - deep in the wall a counterweight lets go and the Emberfont Gate grinds up.',5000);
+  else if(gate==='g2') toast('With both channels routed to their troughs, the twin wheels turn as one - old iron shrieks and the Causeway Gate hauls up into the rock.',5200);
+  else toast('The last wheel blazes into life and all three turn together - the seal breaks and the Dragon Gate swings inward on a wash of heat. Ashwing rests just beyond.',5400);
 }
 function pullEmberLever(b){
   if(b.on){ toast('The floodgate is already thrown - the lava has drained north.',3200); return; }
@@ -1115,13 +1172,9 @@ function dispelStaffGate(b){
   autoSave&&autoSave();
 }
 function updateEastDeep(dt){
-  const gx=Math.floor(P.x), gy=Math.floor(P.y);
-  let onPlate=null;
-  for(const b of G.decor){ if(b.kind==='emberplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
-  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
-  if(id===G._emberPlate) return;   // still on the same plate (or none) - nothing new
-  G._emberPlate=id;
-  if(onPlate) stepEmberPlate(onPlate);
+  // molten sparks thrown off the turning fire-wheels, for life
+  for(const w of G.decor){ if(w.kind==='firewheel' && w.charged && Math.random()<dt*3)
+    G.parts.push({x:w.x+rnd(-0.3,0.3),y:w.y-0.4,vx:rnd(-0.3,0.3),vy:-rnd(0.4,1.0),life:rnd(0.4,0.9),color:'#ffb04a',size:rnd(1,2),grav:-0.04}); }
 }
 /* =====================================================================
    WINDSURF ISLE - an industrious city you drop onto from the Cloudreach by parachute
@@ -1620,15 +1673,23 @@ function placeObjectsAerieDeep(){
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
   for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
     G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
-  // PUZZLE 1 - THE OSSUARY: three bone-plates; stand on all three to raise the Bone Gate
-  for(const [tx,ty] of [[63,90],[75,80],[87,90]])
-    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'oss', set:false});
-  G.decor.push({kind:'catgate', x:75, y:70, open:false, gate:'bone', tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], label:'the Bone Gate'});
-  // PUZZLE 2 - THE GALLERY OF SIGILS: four numbered plates; tread them I,II,III,IV in
-  // order to open the Sepulchre Gate. Step out of order and the sigils darken and reset.
-  for(const [tx,ty,ord] of [[62,58,1],[88,58,2],[88,48,3],[62,48,4]])
-    G.decor.push({kind:'boneplate', x:tx+0.5, y:ty+0.5, group:'seq', ord:ord, set:false});
-  G.decor.push({kind:'catgate', x:75, y:38, open:false, gate:'sep', tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], label:'the Sepulchre Gate'});
+  // ---- THE CURSED GALE ----
+  // Vath's wind howls up through the catacomb, gusting on a cycle. It shoves you off your
+  // line, so time your run to the lulls (or duck behind a pillar). Weight a bone-
+  // counterweight pan to haul a gate up; it holds a moment then falls, so cross before it
+  // drops. Two chambers, escalating - no plates, no order to memorise.
+  // CHAMBER 1 - THE OSSUARY: a westerly gust across the hall; the pan raises the Bone Gate
+  G.decor.push({kind:'windzone', x:75, y:85, x0:58, y0:74, x1:92, y1:96, dir:{x:-1,y:0}, mult:1.0});
+  G.decor.push({kind:'bonepan', x:75.5, y:82.5, gate:'bone', pressed:false, label:'a counterweight pan'});
+  G.decor.push({kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, _grace:0, done:false, label:'the Bone Gate'});
+  // shelter pillars (solid) - their lee stays calm; duck behind one when the gust rises
+  for(const [px,py] of [[84,82],[66,88],[86,90],[66,80]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
+  // CHAMBER 2 - THE GALLERY: a stronger gust, and the pan sits off-line, so you must fight
+  // the wind on a diagonal run to the Sepulchre Gate
+  G.decor.push({kind:'windzone', x:75, y:53, x0:58, y0:40, x1:92, y1:64, dir:{x:-1,y:0}, mult:1.28});
+  G.decor.push({kind:'bonepan', x:70.5, y:50.5, gate:'sep', pressed:false, label:'a counterweight pan'});
+  G.decor.push({kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, _grace:0, done:false, label:'the Sepulchre Gate'});
+  for(const [px,py] of [[84,48],[66,58],[86,58],[66,48]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:((px+py)%2===0)}); setSolid(px,py,1); }
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
@@ -1636,7 +1697,11 @@ function placeObjectsAerieDeep(){
   // a warden's hoard, once the deed is done
   G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
   G.critters=[];
-  G._plateOn=null;   // reset the plate-tread tracker for this world
+  G._galeT=0;   // reset the wind cycle for this descent
+  // a cleared run leaves both beam-gates locked open
+  if(P.story && P.story.aerieFreed){
+    for(const g of G.decor){ if(g.kind==='beamgate'){ g.done=true; g.open=true; g.openAmt=1; for(const [x,y] of g.tiles){ setSolid(x,y,0); setTile(x,y,T.RUIN); } } }
+  }
 }
 function spawnMobsAerieDeep(){
   const Z=AERIEDEEP_ZONES;
@@ -1665,47 +1730,68 @@ function exitAerieDungeon(){
     const r=P._aerieReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
-function openCatGate(gate){
-  const b=G.decor.find(d=>d.kind==='catgate' && d.gate===gate);
-  if(!b || b.open) return;
-  b.open=true; if(Snd.quest) Snd.quest();
-  for(const [tx,ty] of b.tiles){ setSolid(tx,ty,0); setTile(tx,ty,T.RUIN); }
-  shockwave(b.x,b.y,'rgba(199,123,255,0.85)',55); G.shake=0.5;
-  invalidateScenery();
-  if(gate==='bone'){ banner('THE BONE GATE GRINDS UP','THE WAY NORTH IS OPEN'); toast('Old counterweights of stacked skulls shudder and the Bone Gate grinds up into the ceiling. The Gallery lies beyond.',5000); }
-  else { banner('THE SEPULCHRE GATE OPENS','THE WARDEN AWAITS BELOW'); toast('The sigils flare once, all four alight, and the Sepulchre Gate swings inward on the dark. Something vast uncoils in the crypt ahead.',5200); }
+// THE CURSED GALE: the wind gusts on a cycle - calm, then a hard blow, then calm again.
+const GALE_PERIOD=7.0, GALE_PUSH=3.2, GALE_GRACE=3.6;
+function galeStrength(){   // 0 in the lulls, ramping to 1 at the height of the gust
+  const ph=((G._galeT||0)%GALE_PERIOD)/GALE_PERIOD;
+  if(ph<0.42) return 0;
+  if(ph<0.52) return (ph-0.42)/0.10;
+  if(ph<0.82) return 1;
+  if(ph<0.92) return (0.92-ph)/0.10;
+  return 0;
 }
 function updateAerieDeep(dt){
-  const gx=Math.floor(P.x), gy=Math.floor(P.y);
-  let onPlate=null;
-  for(const b of G.decor){ if(b.kind==='boneplate' && Math.floor(b.x)===gx && Math.floor(b.y)===gy){ onPlate=b; break; } }
-  const id = onPlate? (onPlate.group+':'+(onPlate.ord||0)) : null;
-  if(id===G._plateOn) return;   // still on the same plate (or still on none) - nothing new
-  G._plateOn=id;
-  if(onPlate) stepPlate(onPlate);
-}
-function stepPlate(b){
-  if(b.set) return;   // treading an already-lit plate does nothing
-  if(b.group==='oss'){
-    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
-    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='oss');
-    if(grp.every(d=>d.set)) openCatGate('bone');
-    else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#e0c0ff',1.1);
-    return;
-  }
-  if(b.group==='seq'){
-    const grp=G.decor.filter(d=>d.kind==='boneplate' && d.group==='seq');
-    const nextNeeded=grp.filter(d=>d.set).length+1;
-    if(b.ord===nextNeeded){
-      b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#c77bff',10,1.6);
-      if(grp.every(d=>d.set)) openCatGate('sep');
-    } else {
-      // wrong order - the whole sequence darkens and resets
-      for(const d of grp) d.set=false;
-      Snd.hit&&Snd.hit(); G.shake=0.35; burst(b.x,b.y-0.2,'#5a4466',12,1.8);
-      toast('The sigils darken and go cold - trodden out of order. Begin again from <b>I</b>.',3600);
+  G._galeT=(G._galeT||0)+dt;
+  const gust=galeStrength();
+  // ---- the wind shoves you through any gust-zone you stand in, unless a wall or pillar
+  //      just upwind shelters you ----
+  if(gust>0 && !dlg.open && (P.rollT||0)<=0){
+    for(const z of G.decor){ if(z.kind!=='windzone') continue;
+      if(P.x>=z.x0 && P.x<=z.x1 && P.y>=z.y0 && P.y<=z.y1){
+        const d=z.dir, sheltered=solidAt(Math.floor(P.x-d.x), Math.floor(P.y-d.y));
+        if(!sheltered){ const f=GALE_PUSH*(z.mult||1)*gust*dt; moveEntity(P, d.x*f, d.y*f, 0.28); }
+      }
     }
-    return;
+  }
+  // ---- the bone-counterweight beam-gates: weight the pan to haul the gate up; it holds
+  //      GALE_GRACE seconds after you leave the pan, then falls ----
+  for(const g of G.decor){ if(g.kind!=='beamgate') continue;
+    if(!g.done){
+      const pan=G.decor.find(p=>p.kind==='bonepan' && p.gate===g.gate);
+      const pressed = pan && Math.floor(P.x)===Math.floor(pan.x) && Math.floor(P.y)===Math.floor(pan.y);
+      if(pan) pan.pressed=pressed;
+      if(pressed) g._grace=GALE_GRACE; else g._grace=Math.max(0,(g._grace||0)-dt);
+      const target=(g._grace>0)?1:0, rate=(target>g.openAmt)?3.5:1.3;
+      g.openAmt=Math.max(0,Math.min(1, g.openAmt + Math.sign(target-g.openAmt)*rate*dt));
+      // slip through to the north side and the beam locks open for good
+      if(g.openAmt>0.5 && P.y<g.y-0.2 && Math.abs(P.x-g.x)<3){
+        g.done=true; if(pan) pan.pressed=false; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
+        if(g.gate==='bone'){ banner('THE BONE GATE LOCKS OPEN','THE GALLERY LIES BEYOND'); }
+        else { banner('THE SEPULCHRE GATE LOCKS OPEN','THE WARDEN AWAITS BELOW'); toast('The counterweight crashes home and the Sepulchre Gate stands open. Something vast uncoils in the crypt ahead.',5000); }
+      }
+    } else g.openAmt=1;
+    const openNow=g.openAmt>0.55;
+    if(openNow!==g.open){
+      g.open=openNow;
+      for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1);
+      if(!openNow){
+        Snd.hit&&Snd.hit();
+        const px=Math.floor(P.x), py=Math.floor(P.y);
+        if(g.tiles.some(t=>t[0]===px && t[1]===py)){   // caught under the falling gate - shove south, clear
+          let yy=py+1; while(yy<py+5 && (!inb(px,yy)||solidAt(px,yy))) yy++;
+          if(inb(px,yy)&&!solidAt(px,yy)) P.y=yy+0.4;
+          P.click=null; G.shake=Math.max(G.shake||0,0.4); burst(P.x,P.y-0.4,'#c8b0d8',10,2.0);
+          if(!G._beamHint){ G._beamHint=1; toast('The counterweight runs out and the gate drops - you scramble back. <b>Weight the pan, then run</b> before it falls.',4600); }
+        }
+      }
+    }
+  }
+  // ---- streaming wind, for readability, blown along each zone while it gusts ----
+  if(gust>0.12){
+    for(const z of G.decor){ if(z.kind!=='windzone') continue;
+      if(Math.random()<gust*0.7){ const wx=z.x0+Math.random()*(z.x1-z.x0), wy=z.y0+Math.random()*(z.y1-z.y0);
+        G.parts.push({x:wx,y:wy,vx:z.dir.x*(2.4+2.6*gust),vy:z.dir.y*(2.4+2.6*gust),life:rnd(0.3,0.7),color:'rgba(205,214,230,0.5)',size:rnd(1,2.3),grav:0}); }
+    }
   }
 }
 /* =====================================================================
@@ -1880,39 +1966,128 @@ function genFrostAll(){
   buildMapBase();
 }
 
-/* ---------- THE RIMEFISSURE: the frozen dungeon beneath the Frozen Isle ---------- */
+/* ---------- THE RIMEFISSURE: the frozen dungeon beneath the Frozen Isle ----------
+   THE GUTTERING FLAME - Vath's winter has sealed the warren with walls of living ice.
+   Light a torch at the Emberheart and carry it north to THAW a way through - but the
+   cold saps the flame, so you must relight at braziers along the relay (each itself
+   frozen over until you thaw it) to reach and melt the great seal on the deep gate.
+   Thin ice cracks if you linger. No levers now; the flame IS the puzzle.
+   ================================================================================= */
+const FLAME_MAX = 8.0;   // seconds a carried torch burns in the cold before it gutters out
 function genFrostDeep(){
   // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
-  carve(42,54,46,60,T.ICE);               // corridor A -> the Frost-Lock Warren
-  carve(30,38,54,54,T.ICE);               // THE FROST-LOCK WARREN - three frost-locks to find & throw
+  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing (the Emberheart burns here)
+  carve(42,54,46,60,T.ICE);               // corridor A -> the warren (a wall of ice seals it)
+  carve(30,38,54,54,T.ICE);               // THE FROST-LOCK WARREN - the brazier relay + thin ice
   carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - solid until all three locks
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - sealed in ice until thawed
   carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
   setSolid(44,70,0); setTile(44,70,T.RUIN);
-  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[44,15]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE FROST-LOCK WARREN: three frost-lock levers hidden among a thicket of frozen
-  // spires - find and throw all three (in any order) to raise the deep gate. No
-  // sliding: you simply weave the pillar-maze to reach each lock.
-  const DEEP=[[42,37],[43,37],[44,37],[45,37],[46,37]];
+  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // a few frozen spires for atmosphere (kept off the route, the braziers, and the ice)
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  // pillar maze through the warren (kept clear of the three lock tiles below)
-  for(const [px,py] of [[38,66],[50,66],[34,42],[40,46],[46,44],[50,48],[36,50],[44,41],[36,18],[52,18],[44,17]]) spire(px,py);
-  for(const [lx,ly] of [[32,52],[52,52],[42,40]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'rime', gateTiles:DEEP, label:'a frost-lock lever',
-      openBanner:'THE FROST-LOCKS YIELD', openSub:'THE DEEP GATE GRINDS OPEN',
-      openMsg:'The last frost-lock turns and the deep gate hauls up into the ceiling on a shriek of old iron. The way north - to the Frozen Heart - lies open.'});
+  for(const [px,py] of [[38,66],[50,66],[32,42],[52,50],[34,52],[36,18],[52,18]]) spire(px,py);
+  // ---- THE GUTTERING FLAME ----
+  // THE EMBERHEART: the source brazier on the landing - always lit. Light your torch here.
+  G.decor.push({kind:'icebrazier', x:44.5, y:66.5, lit:true, source:true, need:0, _thaw:0, label:'the Emberheart'});
+  // a wall of living ice seals corridor A - thaw it with a lit torch to reach the warren
+  addIceWall([[42,57],[43,57],[44,57],[45,57],[46,57]], 1.2, {});
+  // two braziers relay the flame across the warren; each is frozen over, so thaw it to
+  // light it, then relight there as you press on toward the seal
+  G.decor.push({kind:'icebrazier', x:40.5, y:50.5, lit:false, frozen:true, need:1.0, _thaw:0, label:'a frozen brazier'});
+  G.decor.push({kind:'icebrazier', x:48.5, y:42.5, lit:false, frozen:true, need:1.0, _thaw:0, label:'a frozen brazier'});
+  // thin ice across the open warren - do not linger, it cracks underfoot
+  for(const [tx,ty] of [[44,47],[43,45],[45,44],[42,43]]) if(inb(tx,ty) && !solidAt(tx,ty)) G.decor.push({kind:'thinice', x:tx+0.5, y:ty+0.5, _crack:0});
+  // THE RIMEBOUND'S SEAL: a great wall of ice across the deep gate. Bring a fresh flame
+  // (relit at the second brazier) and thaw it to open the way to the Frozen Heart.
+  addIceWall([[42,37],[43,37],[44,37],[45,37],[46,37]], 2.8, {seal:true, gate:'deep'});
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
-  // an already-cleared run keeps the deep gate open
-  if(P.story && P.story.deepDone){ for(const [x,y] of DEEP){ setTile(x,y,T.ICE); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='rime') d.on=true; } }
   G.critters=[];
+  G._flameT=0;   // you arrive with an unlit torch
+  // an already-cleared run keeps the seal melted and the braziers lit
+  if(P.story && P.story.deepDone){
+    for(const b of G.decor){
+      if(b.kind==='icewall'){ b.melted=true; for(const [x,y] of b.tiles){ setSolid(x,y,0); setTile(x,y,T.ICE); } }
+      if(b.kind==='icebrazier'){ b.lit=true; b.frozen=false; }
+    }
+  }
+}
+// build a wall of living ice across the given tiles (solid until thawed); opts may carry
+// {seal:true, gate:'deep'} for the great deep-gate seal
+function addIceWall(tiles, need, opts){
+  let sx=0,sy=0; for(const [x,y] of tiles){ sx+=x; sy+=y; setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  G.decor.push(Object.assign({kind:'icewall', x:sx/tiles.length+0.5, y:sy/tiles.length+0.5, tiles:tiles.slice(), need:need, _thaw:0, melted:false}, opts||{}));
+}
+function nearFrostWall(b){
+  for(const [x,y] of b.tiles){ if(dist(P.x,P.y, x+0.5, y+0.5) < 1.5) return true; }
+  return false;
+}
+function meltIceWall(b){
+  b.melted=true; b._thaw=b.need;
+  for(const [x,y] of b.tiles){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+  invalidateScenery&&invalidateScenery();
+  Snd.quest&&Snd.quest(); shockwave(b.x,b.y,'rgba(190,230,250,0.9)',52); G.shake=Math.max(G.shake||0,0.45);
+  for(let i=0;i<22;i++){ const a=Math.random()*TAU, sp=rnd(0.4,2);
+    G.parts.push({x:b.x+rnd(-1,1),y:b.y+rnd(-0.5,0.5),vx:Math.cos(a)*sp,vy:Math.abs(Math.sin(a))*sp+0.4,life:rnd(0.5,1.3),color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1.4,3),grav:0.12}); }
+  if(b.seal){ banner("THE RIMEBOUND'S SEAL MELTS",'THE DEEP GATE OPENS');
+    toast('The great seal sloughs away in a rush of meltwater and the deep gate stands open. The <b>Frozen Heart</b> lies beyond - and the thing Vath bound in it.',5400); }
+  else toast('The wall of ice sags, runs, and collapses into slush. The way is open.',3200);
+}
+function crackThinIce(b){
+  Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(10);
+  burst(P.x,P.y,'#dff0ff',18,2.8); addFloat('the ice cracks!',P.x,P.y-1.6,'#bfe0f4',1.1);
+  // shove back toward the landing (south) to the nearest safe footing off the thin ice
+  const px=Math.floor(P.x); let yy=Math.floor(P.y)+1;
+  while(yy<Math.floor(P.y)+6 && (!inb(px,yy) || solidAt(px,yy) || G.decor.some(d=>d.kind==='thinice'&&Math.floor(d.x)===px&&Math.floor(d.y)===yy))) yy++;
+  if(inb(px,yy) && !solidAt(px,yy)){ P.y=yy+0.4; }
+  P.click=null; P.slideDir=null;
+  if(!G._thinIceHint){ G._thinIceHint=1; toast('The thin ice splits under your weight! <b>Keep moving</b> across it - don\'t stand still.',4200); }
+}
+// THE GUTTERING FLAME loop: drain the torch in the cold, relight at lit braziers, and
+// thaw the ice-walls (and the frozen braziers) you stand near while your torch burns.
+function updateFrostDeep(dt){
+  if((G._flameT||0)>0){
+    G._flameT=Math.max(0, G._flameT-dt);
+    if(G._flameT===0){ toast('Your torch gutters out in the cold. Back to a brazier to relight.',3000); Snd.step&&Snd.step(9); }
+  }
+  const lit=(G._flameT||0)>0;
+  for(const b of G.decor){
+    if(b.kind==='icebrazier'){
+      if(b.lit){
+        if(dist(P.x,P.y,b.x,b.y)<1.8 && (G._flameT||0)<FLAME_MAX-0.02){
+          const was=G._flameT||0; G._flameT=FLAME_MAX;
+          if(was<FLAME_MAX-1.2 && (G.time-(b._relT||0))>0.6){ b._relT=G.time; burst(P.x,P.y-1.2,'#ffce7a',7,1.5); Snd.pickup&&Snd.pickup(); }
+        }
+      } else if(b.frozen){
+        if(lit && dist(P.x,P.y,b.x,b.y)<1.7){
+          b._thaw=(b._thaw||0)+dt;
+          if(Math.random()<dt*8) G.parts.push({x:b.x+rnd(-0.4,0.4),y:b.y,vx:0,vy:0.5,life:0.5,color:'#bfe0f4',size:2,grav:0.1});
+          if(b._thaw>=b.need){ b.frozen=false; b.lit=true; G._flameT=FLAME_MAX;
+            Snd.quest&&Snd.quest(); burst(b.x,b.y-0.6,'#ffb04a',20,2.6); shockwave(b.x,b.y,'rgba(255,160,60,0.6)',38);
+            toast('The brazier catches - a warm island in the cold. <b>Relight here</b> as you press on.',3600); }
+        } else b._thaw=Math.max(0,(b._thaw||0)-dt*0.5);
+      }
+    }
+    else if(b.kind==='icewall' && !b.melted){
+      if(lit && nearFrostWall(b)){
+        b._thaw=(b._thaw||0)+dt;
+        if(Math.random()<dt*12){ const [tx,ty]=b.tiles[(Math.random()*b.tiles.length)|0];
+          G.parts.push({x:tx+0.5+rnd(-0.4,0.4),y:ty+0.5,vx:0,vy:0.7,life:0.5,color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1,2),grav:0.14}); }
+        if(b._thaw>=b.need) meltIceWall(b);
+      } else b._thaw=Math.max(0,(b._thaw||0)-dt*0.4);
+    }
+    else if(b.kind==='thinice'){
+      const on = Math.floor(P.x)===Math.floor(b.x) && Math.floor(P.y)===Math.floor(b.y);
+      if(on && !P.moving){ b._crack=(b._crack||0)+dt; if(b._crack>1.6){ b._crack=0; crackThinIce(b); } }
+      else b._crack=Math.max(0,(b._crack||0)-dt*1.5);
+    }
+  }
 }
 function spawnMobsFrostDeep(){
   const Z=FROSTDEEP_ZONES;
@@ -2092,10 +2267,16 @@ function exitFrostVault(){
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 const MILL_GATE = [[17,15],[18,15],[19,15],[20,15],[21,15]];   // the millstone-gate corridor tiles
-// THE SLUICE GATE - an iron drop-gate across the entry stair (corridor A), barring the
-// guardian's chamber. Its winch-crank is locked in the miller's arms-chest, so you must
-// open that chest (and take the bow inside) before the way up to the Cog-Bound opens.
-const MILL_ANTE_GATE = [[17,36],[18,36],[19,36],[20,36],[21,36]];
+// THE COG-GATES - two gear-driven portcullises across the works corridor (A). Once the
+// headrace floods and the gear-train turns, they rise and fall on the wheel's rhythm,
+// half a beat out of phase, with a footing island between them - a timing gate, not a
+// lock. Jammed shut until the sluice is thrown; ground open for good once the guardian
+// falls. (See updateMillDeep for the cycle and the shove if you're caught underneath.)
+const MILL_COG_A = [[17,37],[18,37],[19,37],[20,37],[21,37]];  // south gate (mid-corridor)
+const MILL_COG_B = [[17,34],[18,34],[19,34],[20,34],[21,34]];  // north gate (mouth of the grinding floor)
+// THE TAILRACE POOL - the corner of the landing where the great wheel dips; dry stone
+// until the sluice is thrown, then it floods and the wheel begins to turn.
+const MILL_POOL = [[11,46],[12,46],[11,47],[12,47]];
 function genMillDeep(){
   // a compact undercroft: three small stone chambers cut out of solid rock. Every
   // solid tile bordering the carved floor is recorded as a WALL (ewall decor) so the
@@ -2119,8 +2300,10 @@ function genMillDeep(){
   }
   // the millstone gate starts as solid stone across corridor B (rendered by the catgate)
   for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
-  // the sluice gate starts solid across the entry stair (corridor A), rendered by its catgate
-  for(const [x,y] of MILL_ANTE_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  // the two cog-gates start jammed shut across the works corridor (rendered by the coggate);
+  // updateMillDeep lifts and drops them once the sluice floods the race
+  for(const [x,y] of MILL_COG_A){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  for(const [x,y] of MILL_COG_B){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsMillDeep(){
   G.decor=G.decor||[];
@@ -2129,28 +2312,109 @@ function placeObjectsMillDeep(){
   G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:46.5, label:'the way up'});  // back to the surface
   setSolid(19,46,0); setTile(19,46,T.RUIN);
   for(const [tx,ty] of [[12,40],[26,40],[11,20],[27,20],[11,32],[27,32],[13,5],[25,5]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE MILLSTONE GATE - an iron portcullis jammed shut by the seized gear-train.
-  // It grinds up once the guardian fouling the works is put down.
+  // THE MILLSTONE GATE - the reward gate onto the vault. The seized gear-train grinds it
+  // up once the guardian fouling the works is put down (see the millboss death hook).
   G.decor.push({kind:'catgate', x:19, y:15, open:false, gate:'mill', tiles:MILL_GATE.slice(), label:'the Millstone Gate'});
-  // THE SLUICE GATE - a second iron portcullis across the entry stair, barring the
-  // guardian's chamber until you work the crank stowed in the miller's arms-chest.
-  G.decor.push({kind:'catgate', x:19, y:36, open:false, gate:'millante', tiles:MILL_ANTE_GATE.slice(), label:'the Sluice Gate'});
-  // THE MILLER'S ARMS-CHEST: his old hunting bow, and the winch-crank that lifts the
-  // sluice. Open it to arm yourself with a ranged weapon AND raise the gate to the boss.
+  // ---- THE HEADRACE: the great waterwheel + the sluice that powers the works ----
+  // the wheel dips into the tailrace pool in the landing's SW corner; the sluice wheel
+  // stands opposite. Throwing it (with the crank) floods the race and turns the train.
+  G.decor.push({kind:'millwheel', x:12.2, y:45.4, r:11});
+  G.decor.push({kind:'sluicelever', x:24.5, y:40.5, on:false, label:'the sluice wheel'});
+  // ---- THE GEAR-TRAIN: cogs that spin once the water runs, driving the cog-gates ----
+  G.decor.push({kind:'millgear', x:23.5, y:21.5, r:9,   spin:0.9});    // the great drive cog, up on the grinding floor
+  G.decor.push({kind:'millgear', x:12.8, y:23.0, r:5.5, spin:-1.4});   // an idler off the main shaft
+  G.decor.push({kind:'millgear', x:16.1, y:37.1, r:3.6, spin:2.0});    // the pair that work cog-gate A
+  G.decor.push({kind:'millgear', x:21.9, y:37.1, r:3.6, spin:-2.0});
+  G.decor.push({kind:'millgear', x:16.1, y:34.1, r:3.6, spin:-2.0});   // the pair that work cog-gate B
+  G.decor.push({kind:'millgear', x:21.9, y:34.1, r:3.6, spin:2.0});
+  // ---- THE COG-GATES: two gear-driven portcullises, half a beat out of phase ----
+  G.decor.push({kind:'coggate', gate:'coga', x:19, y:37, x0:17, x1:21, tiles:MILL_COG_A.slice(), phase:0.00, period:3.6, openFrac:0.56, openAmt:0, open:false, label:'a cog-gate'});
+  G.decor.push({kind:'coggate', gate:'cogb', x:19, y:34, x0:17, x1:21, tiles:MILL_COG_B.slice(), phase:0.50, period:3.6, openFrac:0.56, openAmt:0, open:false, label:'a cog-gate'});
+  // THE MILLER'S ARMS-CHEST: his old hunting bow, and the winch-crank that frees the
+  // seized sluice. Open it to arm yourself AND to be able to throw the sluice wheel.
   if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:14.5, y:42.5, bow:1});
   // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:19.5, y:7.5, sail:1});
-  // an already-cleared run keeps the millstone gate open (the guardian is gone)
+  G.critters=[];
+  // ---- restore the puzzle's state on (re)entry (worlds regenerate on every descent) ----
+  G._millPower=0; G._millT=0; G._millGateHint=0;
   if(P.story && P.story.millDone){
+    // the guardian is gone and the works turn free for good: millstone gate up, cog-gates
+    // ground open, the wheel still turning
     for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
     for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
+    for(const g of G.decor){ if(g.kind==='coggate'){ g.open=true; g.openAmt=1; for(const [x,y] of g.tiles) setSolid(x,y,0); } }
+    for(const d of G.decor){ if(d.kind==='sluicelever') d.on=true; }
+    millDeepFlood(); G._millPower=1;
+  } else if(P.story && P.story.millSluice){
+    // the race is already flooded from a prior run but the guardian still stands: the
+    // water runs and the cog-gates cycle
+    for(const d of G.decor){ if(d.kind==='sluicelever') d.on=true; }
+    millDeepFlood(); G._millPower=1;
   }
-  // once the arms-chest is opened (or the guardian's down), the sluice stays raised
-  if(P.story && (P.story.millBowTaken || P.story.millDone)){
-    for(const [x,y] of MILL_ANTE_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='millante') d.open=true; }
+}
+// flood the tailrace pool - the visible water at the wheel's foot
+function millDeepFlood(){
+  for(const [x,y] of MILL_POOL){ if(inb(x,y)){ setTile(x,y,T.SHALLOW); setSolid(x,y,1); } }
+}
+// THE SLUICE WHEEL: throwing it floods the headrace and sets the whole gear-train (and
+// with it the cog-gates) turning. Seized until you've taken the crank from the arms-chest.
+function pullSluiceLever(b){
+  if(b.on){ toast('The sluice already stands open - the race runs full and the works turn.',3000); return; }
+  if(!(P.story && P.story.millBowTaken)){
+    toast('The sluice wheel is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
+    Snd.step&&Snd.step(5); return;
   }
-  G.critters=[];
+  b.on=true; G._millPower=1; G._millT=0;
+  P.story=P.story||{}; P.story.millSluice=1;
+  millDeepFlood();
+  Snd.quest&&Snd.quest(); buzz&&buzz(10);
+  shockwave(b.x,b.y,'rgba(120,190,235,0.85)',52); burst(b.x,b.y-0.4,'#9ecbe8',16,2.4);
+  // a wash of water crashing down the race at the wheel
+  for(let i=0;i<26;i++){ const a=Math.random()*TAU, sp=rnd(0.6,2.6);
+    G.parts.push({x:11.9+rnd(-1,1),y:46.2+rnd(-0.5,0.5),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.5-0.4,life:rnd(0.5,1.4),color:Math.random()<0.5?'#bfe0f4':'#8fc4dd',size:rnd(1.5,3.5),grav:0.06}); }
+  G.shake=Math.max(G.shake,0.5);
+  banner('THE HEADRACE FLOODS','THE GEAR-TRAIN GRINDS TO LIFE');
+  toast('The crank bites and the sluice hauls open - dark water crashes down the race, the great wheel shudders into motion, and all through the works the seized cogs catch and spin. <b>The cog-gates lift and fall with the wheel now - time your run through them.</b>',7000);
+  autoSave&&autoSave();
+}
+// THE COG-GATES cycle here: each rises and falls on the gear-train's beat, the two of
+// them half a turn apart, so you cross one, wait on the footing between, then cross the
+// next. Caught under a falling gate, you're shoved clear - no death, just a beat lost.
+function updateMillDeep(dt){
+  const done = !!(P.story && P.story.millDone);
+  if(G._millPower) G._millT=(G._millT||0)+dt;   // the train (and the gear visuals) turn while powered
+  for(const g of G.decor){
+    if(g.kind!=='coggate') continue;
+    let amt;   // 0 = fully dropped (closed), 1 = hauled up (open)
+    if(done) amt=1;
+    else if(!G._millPower) amt=0;
+    else {
+      const ph=((((G._millT/g.period)+g.phase)%1)+1)%1, w=g.openFrac, e=0.14;
+      if(ph<e) amt=ph/e;                 // rising
+      else if(ph<w-e) amt=1;             // fully up
+      else if(ph<w) amt=(w-ph)/e;        // falling
+      else amt=0;                        // dropped
+    }
+    g.openAmt=amt;
+    const openNow = amt>0.5;             // collision follows the visible bar - open once it's more than half up
+    if(openNow!==g.open){
+      g.open=openNow;
+      for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1);
+      if(!openNow){
+        Snd.hit&&Snd.hit();
+        const px=Math.floor(P.x), py=Math.floor(P.y);
+        if(g.tiles.some(t=>t[0]===px && t[1]===py)){
+          // caught under the falling gate - shove to the nearest open footing to the south
+          let yy=py+1; while(yy<py+5 && (!inb(px,yy) || solidAt(px,yy))) yy++;
+          if(inb(px,yy) && !solidAt(px,yy)) P.y=yy+0.4;
+          P.click=null; P.slideDir=null; G.shake=Math.max(G.shake||0,0.45);
+          burst(P.x,P.y-0.4,'#b7a684',12,2.2);
+          if(!G._millGateHint){ G._millGateHint=1; toast('The cog-gate slams down and shoulders you back. <b>Wait for it to rise, then cross</b> - the two gates beat half a turn apart.',4800); }
+        }
+      }
+    }
+  }
 }
 // THE COG-BOUND: the miller who was caught in the gear-train when it seized, risen
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
@@ -2456,20 +2720,69 @@ function placeObjectsReachDeep(){
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
-  // R2: three bone-locks, all must be thrown to raise the Bone Gate (reuses the ward mechanic)
-  const GATE=[[38,37],[39,37],[40,37],[41,37],[42,37]];
-  for(const [lx,ly] of [[29,44],[51,44],[40,58]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'tomb', gateTiles:GATE, label:'a bone-lock',
-      openBanner:'THE BONE-LOCKS YIELD', openSub:'THE BONE GATE GRINDS OPEN',
-      openMsg:'The last bone-lock drops with a wet crack and the Bone Gate hauls up, weeping brine. The Drowned Vault lies open to the north.'});
-  for(const [gx,gy] of [[34,48],[46,48],[30,56],[50,56]]) grave(gx,gy);
+  // ---- THE TIDE ----
+  // A tide-wheel floods or drains the catacomb. DRAIN (low) to reach the sump and throw
+  // the tide-valve; RAISE (high) to float the pontoon across the moat AND let the tide-
+  // float haul the Bone Gate up. Softlock-safe: the only wheel sits SOUTH of the moat, so
+  // you can always cross back to it on the raised pontoon, and can never drain from the far side.
+  const water=(x,y,floodAt)=>{ if(inb(x,y)) G.decor.push({kind:'tidewater', x:x+0.5, y:y+0.5, floodAt, flooded:false}); };
+  // THE MOAT: a brine channel across y52, always flooded save the central pontoon slot
+  for(let x=26;x<=54;x++){ if(x<38||x>42) water(x,52,0); }               // floodAt 0 => always a water gap
+  for(let x=38;x<=42;x++) G.decor.push({kind:'floatbridge', x:x+0.5, y:52.5});  // the pontoon - up (walkable) only at high tide
+  // THE SUMP: a low SW pocket, drained (walkable) at low tide, flooded at high; the valve waits at its floor
+  for(const [x,y] of [[28,57],[29,57],[28,58],[29,58],[28,56],[30,57]]) water(x,y,1);
+  G.decor.push({kind:'tidevalve', x:28.5, y:57.5, thrown:false, label:'the tide-valve'});
+  // THE TIDE-WHEEL, south of the moat (always reachable)
+  G.decor.push({kind:'tidewheel', x:44.5, y:58.5, label:'the tide-wheel'});
+  for(const [gx,gy] of [[34,48],[46,48],[50,44],[30,44]]) grave(gx,gy);
   // R3: the warden's hoard
   G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
   G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
   for(const [gx,gy] of [[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
   G.critters=[];
-  if(P.story && P.story.tombDone){ for(const [x,y] of GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='tomb') d.on=true; } }
+  // ---- init the tide (starts drained) ----
+  G._tide=0; G._tideAnim=0; G._tideValve=false; G._tombGateOpen=false;
+  reTide();
+  // a cleared run (the warden is down) leaves the vault open: valve thrown, brine high, gate up
+  if(P.story && P.story.tombBossDown){ G._tideValve=true; G._tide=1; G._tideAnim=1; reTide(); }
+}
+// float the player off a tile that just went under, to the nearest dry footing (south first)
+function shoveToDry(tx,ty){
+  for(let r=1;r<=5;r++) for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){
+    const nx=tx+dx*r, ny=ty+dy*r; if(inb(nx,ny) && !solidAt(nx,ny)){ P.x=nx+0.5; P.y=ny+0.5; P.click=null; burst(P.x,P.y-0.3,'#bfe0f4',10,2); return; } }
+}
+// recompute what the current tide floods/drains, floats the pontoon, and (valve + high) the gate
+function reTide(){
+  const t=G._tide||0;
+  for(const d of G.decor){
+    if(d.kind==='tidewater'){ const f=(t>=d.floodAt); if(f!==d.flooded){ d.flooded=f; const tx=Math.floor(d.x),ty=Math.floor(d.y);
+      setSolid(tx,ty, f?1:0); if(f && Math.floor(P.x)===tx && Math.floor(P.y)===ty) shoveToDry(tx,ty); } }
+    else if(d.kind==='floatbridge'){ const up=(t===1), tx=Math.floor(d.x),ty=Math.floor(d.y); setSolid(tx,ty, up?0:1);
+      if(!up && Math.floor(P.x)===tx && Math.floor(P.y)===ty) shoveToDry(tx,ty); }
+  }
+  if(G._tideValve && t===1 && !G._tombGateOpen){ G._tombGateOpen=true;
+    for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
+    Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,190,235,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
+    banner('THE BONE GATE RISES','THE TIDE-FLOAT HAULS IT UP');
+    toast('Brine surges into the gate-well and the great float lifts, hauling the Bone Gate up on streaming chains. <b>The Drowned Vault lies open.</b>',5200); }
+  invalidateScenery&&invalidateScenery();
+}
+function toggleTide(){
+  G._tide = G._tide? 0:1;
+  Snd.quest&&Snd.quest(); buzz&&buzz(8); G.shake=Math.max(G.shake||0,0.35);
+  reTide();
+  if(G._tide) banner('THE TIDE RISES','BRINE FLOODS THE CATACOMB');
+  else banner('THE TIDE FALLS','THE BRINE DRAINS AWAY');
+}
+function throwTideValve(b){
+  if(b.thrown){ toast('The tide-valve is already open.',2600); return; }
+  if((G._tide||0)!==0){ toast('The tide-valve lies deep under the brine. <b>Drain the tide</b> at the wheel to reach it.',4000); Snd.step&&Snd.step(5); return; }
+  b.thrown=true; G._tideValve=true;
+  Snd.quest&&Snd.quest(); burst(b.x,b.y-0.3,'#bfe0f4',14,2.2); shockwave(b.x,b.y,'rgba(120,190,235,0.7)',36);
+  toast('The tide-valve grinds open, weeping brine. Now <b>raise the tide</b> at the wheel - the gate-float will haul the Bone Gate up.',4600);
+}
+function updateReachDeep(dt){
+  G._tideAnim = (G._tideAnim||0) + ((G._tide||0)-(G._tideAnim||0))*Math.min(1,dt*3);   // smooth the visible brine level
 }
 function spawnMobsReachDeep(){
   const Z=REACHDEEP_ZONES;
@@ -3474,23 +3787,21 @@ function openChest(b){
   if(b.bow){
     bumpStat('chests');
     P.story=P.story||{}; P.story.millBowTaken=1;
-    // the crank inside frees the sluice gate - it grinds up into the guardian's chamber
-    if(typeof MILL_ANTE_GATE!=='undefined') for(const [x,y] of MILL_ANTE_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
-    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='millante'); if(cg) cg.open=true;
-    if(typeof invalidateScenery==='function') invalidateScenery();
+    // the crank stowed with the bow is what frees the seized sluice wheel - the water
+    // itself waits on you throwing it (see pullSluiceLever)
     shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
     if(!(P.unlocked && P.unlocked.bow)){
       P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
       if(typeof buildHotbar==='function') buildHotbar();
       Snd.levelup&&Snd.levelup();
-      banner("THE MILLER'S BOW",'A RANGED ARM - AND THE SLUICE GRINDS UP');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and the crank stowed with them frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber.<br><br><b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' - loose arrows from range at the thing in the works.', {label:'OK'});
-        else toast('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts. <b style="color:var(--ember)">Bow unlocked!</b>',7400); },400);
+      banner("THE MILLER'S BOW",'A RANGED ARM - AND THE WINCH-CRANK');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and, laid beside them, the heavy <b>winch-crank</b> that fits the seized sluice wheel down on the landing.<br><br><b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. Now <b>work the sluice</b> to flood the race and wake the works.', {label:'OK'});
+        else toast('The miller’s arms-chest gives up a good yew <b>bow</b>, a quiver of shafts, and the <b>winch-crank</b> for the sluice. <b style="color:var(--ember)">Bow unlocked!</b>',7400); },400);
     } else {
       giveGold(30); give('potion',1);
       Snd.quest&&Snd.quest();
-      banner('THE ARMS-CHEST OPENS','THE SLUICE GRINDS UP');
-      setTimeout(()=>toast('You’ve a bow of your own already, so the spare goes to the pack with a few coins and a tonic - and the crank stowed with it frees the <b>sluice gate</b>, grinding it up into the guardian’s chamber.',6200),400);
+      banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
+      setTimeout(()=>toast('You’ve a bow of your own already, so the spare goes to the pack with a few coins and a tonic - but the heavy <b>winch-crank</b> stowed with it is what you came for. Now <b>work the sluice wheel</b> on the landing to flood the race and wake the works.',6600),400);
     }
     setTimeout(autoSave,300);
     return;
@@ -3832,15 +4143,23 @@ function switchWorld(id){
   }
   // Dungeons keep their mystery, but a single atmospheric hint on first entry
   // points the way without solving anything - a compass, not a walkthrough.
-  if(id==='frostdeep' && !P.prog.deepSeen){ P.prog.deepSeen=1;
-    setTimeout(()=>toast('<i>Three frost-locks bar the deep gate.</i> Somewhere in the pillar-warren stand three levers - throw them all, and the way opens.',7000),1400); }
-  // (no arrival hint for the Emberdeep - the player reads the locks for themselves)
-  if(id==='aeriedeep' && !P.prog.underSeen){ P.prog.underSeen=1;
-    setTimeout(()=>toast('<i>Bone gates and sigil-locks guard the Warden.</i> Set the bone-plates first; then walk the floor-sigils in the order they were struck.',7500),1400); }
+  if(id==='frostdeep' && !P.prog.deepSeen && !(P.story && P.story.deepDone)){ P.prog.deepSeen=1;
+    setTimeout(()=>banner('THE RIMEFISSURE','WALLS OF ICE BAR THE WAY - CARRY FIRE TO THAW THEM'),1200);
+    setTimeout(()=>toast('<i>Vath\'s cold has sealed the warren in living ice.</i> Light a torch at the <b>Emberheart</b> and carry it north to <b>thaw</b> a way through - but the cold saps the flame, so <b>relight at the braziers</b> along the way (each frozen over until you thaw it) to reach and melt the great seal on the deep gate. And <b>don\'t linger on thin ice</b>.',8500),1800); }
+  if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
+    setTimeout(()=>banner('THE EMBERDEEP','ROUTE THE MOLTEN FLOW TO OPEN THE WAY'),1200);
+    setTimeout(()=>toast('<i>Rivers of lava bar the fire-heart.</i> Throw the <b>sluice-stones</b> to divert the flow: it <b>cools the channel</b> in your way (walk it once it darkens) and <b>floods a trough</b> that spins a fire-wheel - and a gate grinds up once its wheels turn.',8500),1800); }
+  if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
+    setTimeout(()=>banner('THE DROWNED CATACOMB','WORK THE TIDE - DRAIN TO DELVE, RAISE TO CROSS'),1200);
+    setTimeout(()=>toast('<i>A brine moat bars the way.</i> At the <b>tide-wheel</b>: <b>drain</b> the tide to walk the sump and throw the <b>tide-valve</b>, then <b>raise</b> it - the brine floats the pontoon across the moat and hauls the Bone Gate up. The wheel sits on the near bank, so you can always cross back to it.',9000),1800); }
+  if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
+    setTimeout(()=>banner('THE UNDERCLIMB','A CURSED GALE HOWLS THROUGH THE BONES'),1200);
+    setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves</i> - it will shove you off your feet, so cross in the <b>lulls</b> or duck behind a pillar. To raise each gate, stand on its <b>bone counterweight-pan</b>: the gate hauls up, holds a moment, then falls - so weight the pan, then <b>run through before it drops</b>.',8500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
-  if(id==='milldeep' && !P.prog.millSeen){ P.prog.millSeen=1;
-    if(!(P.story && P.story.millBowTaken)) setTimeout(()=>toast('<i>An iron sluice gate bars the stair up into the works.</i> The miller’s arms-chest here holds the crank that lifts it - <b>open the chest</b> to raise the gate, and arm yourself for what grinds in the dark above.',7200),1400); }
+  if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
+    setTimeout(()=>banner('THE UNDERMILL','THE WORKS ARE SEIZED - GET THE WATER RUNNING'),1200);
+    setTimeout(()=>toast('<i>The old grinding works stand dead and dry</i>, two iron <b>cog-gates</b> jammed shut across the way up. The miller’s arms-chest holds the <b>winch-crank</b> - take it, throw the <b>sluice wheel</b> to flood the race and set the gear-train turning, then <b>time your run</b> through the cog-gates to the thing that fouls the works.',8000),1800); }
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){

@@ -56,7 +56,13 @@ function buildGroundCache(){
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
-  skygate:1, skytile:1, skybird:1, stormbead:1};
+  skygate:1, skytile:1, skybird:1, stormbead:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1,
+  icebrazier:1, icewall:1, thinice:1,
+  beamgate:1, bonepan:1, windzone:1,
+  lavaseg:1, lavasluice:1, firewheel:1,
+  tidewater:1, floatbridge:1, tidewheel:1, tidevalve:1,
+  skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
   const {OX,OY,W,H}=gcDims();
@@ -1095,6 +1101,314 @@ function drawDecor(b,s){
     g.fillStyle= b.on? '#ff9a3c':'#ffcf6a'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
     if(!b.on){ g.fillStyle='rgba(255,180,80,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
     g.restore(); return;
+  }
+  if(b.kind==='millgear'){
+    // a spinning iron cog of the gear-train - turns only while the works are powered
+    const g=cx, R=b.r||6, N=Math.max(7,Math.round(R)+2);
+    const rot=(G._millPower? (G._millT||0):0)*(b.spin||1);
+    g.save(); g.translate(s.x,s.y-R*0.5); g.rotate(rot);
+    // teeth
+    g.fillStyle='#4a423a';
+    for(let i=0;i<N;i++){ const a=i/N*TAU, cx2=Math.cos(a)*R, cy2=Math.sin(a)*R*0.55;
+      g.save(); g.translate(cx2,cy2); g.rotate(a); g.fillRect(-R*0.16,-R*0.16,R*0.34,R*0.34); g.restore(); }
+    // rim + hub (squashed for the iso tilt)
+    g.fillStyle='#5a5048'; g.beginPath(); g.ellipse(0,0,R,R*0.6,0,0,TAU); g.fill();
+    g.strokeStyle='#2a241e'; g.lineWidth=1.6; g.stroke();
+    g.fillStyle='#3a332c'; g.beginPath(); g.ellipse(0,0,R*0.62,R*0.37,0,0,TAU); g.fill();
+    // spokes
+    g.strokeStyle='#6a5f54'; g.lineWidth=Math.max(1.4,R*0.14);
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*R*0.6,Math.sin(a)*R*0.36); g.stroke(); }
+    g.fillStyle='#7a6f62'; g.beginPath(); g.ellipse(0,0,R*0.2,R*0.13,0,0,TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='millwheel'){
+    // the great mill-wheel standing in its race - dark and still until the water runs,
+    // then it turns steadily with a churn of spray at its foot
+    const g=cx, R=b.r||11, powered=!!G._millPower;
+    const rot=(powered? (G._millT||0):0)*0.7;
+    drawShadowAt(g,s.x,s.y,R*0.9);
+    g.save(); g.translate(s.x,s.y-R);
+    // a stone axle-block behind the wheel
+    g.fillStyle='#2c2620'; g.fillRect(-R*0.28,-R*0.2,R*0.56,R+8);
+    // the flooded race glinting at the wheel's foot
+    if(powered){ g.fillStyle='rgba(120,180,220,0.4)'; g.beginPath(); g.ellipse(0,R*0.92,R*1.1,R*0.4,0,0,TAU); g.fill(); }
+    g.save(); g.rotate(rot);
+    // outer + inner timber rims (an upright wheel - barely squashed)
+    g.strokeStyle='#6a5540'; g.lineWidth=R*0.15; g.beginPath(); g.ellipse(0,0,R,R*0.95,0,0,TAU); g.stroke();
+    g.strokeStyle='#7d6449'; g.lineWidth=R*0.08; g.beginPath(); g.ellipse(0,0,R*0.66,R*0.62,0,0,TAU); g.stroke();
+    // spokes + paddle-boards around the rim
+    const N=8; for(let i=0;i<N;i++){ const a=i/N*TAU, ox=Math.cos(a), oy=Math.sin(a)*0.95;
+      g.strokeStyle='#5a4835'; g.lineWidth=R*0.09; g.beginPath(); g.moveTo(0,0); g.lineTo(ox*R,oy*R); g.stroke();
+      g.save(); g.translate(ox*R*0.86,oy*R*0.86); g.rotate(a); g.fillStyle=(i%2)?'#8a7052':'#755d43'; g.fillRect(-R*0.07,-R*0.2,R*0.14,R*0.4);
+      g.strokeStyle='#4a3a2a'; g.lineWidth=1; g.strokeRect(-R*0.07,-R*0.2,R*0.14,R*0.4); g.restore(); }
+    // hub
+    g.fillStyle='#3a2f24'; g.beginPath(); g.ellipse(0,0,R*0.2,R*0.19,0,0,TAU); g.fill();
+    g.fillStyle='#8a7052'; g.beginPath(); g.ellipse(0,0,R*0.09,R*0.085,0,0,TAU); g.fill();
+    g.restore(); g.restore();
+    // a lazy churn of spray at the wheel's foot while it turns
+    if(powered && Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.6,0.6),y:b.y+0.5,vx:rnd(-0.6,0.6),vy:-rnd(0.5,1.4),life:rnd(0.4,1.1),color:Math.random()<0.5?'#cfeaf8':'#9ecbe8',size:rnd(1.4,3),grav:0.08});
+    return;
+  }
+  if(b.kind==='sluicelever'){
+    // an iron sluice wheel on a post - turn it (with the crank) to open the headrace
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a332c'; g.fillRect(-2.4,-16,4.8,16);                 // the post
+    g.strokeStyle='#1c1814'; g.lineWidth=1.2; g.strokeRect(-2.4,-16,4.8,16);
+    g.save(); g.translate(0,-17); g.rotate(b.on? 1.1 : 0);              // the hand-wheel, turned when thrown
+    g.strokeStyle= b.on? '#7fc4e8':'#8a7f70'; g.lineWidth=2.6;
+    g.beginPath(); g.arc(0,0,7,0,TAU); g.stroke();
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*7,Math.sin(a)*7); g.stroke(); }
+    for(let i=0;i<4;i++){ const a=i/4*TAU+0.3; g.fillStyle=b.on?'#9ed6f0':'#a89a88'; g.beginPath(); g.arc(Math.cos(a)*7,Math.sin(a)*7,1.8,0,TAU); g.fill(); }   // spoke handles
+    g.restore();
+    if(!b.on){ g.fillStyle='rgba(150,205,235,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-32); }
+    g.restore(); return;
+  }
+  if(b.kind==='coggate'){
+    // a gear-driven portcullis that rises and falls with the works. openAmt: 0=dropped,
+    // 1=hauled up into the lintel. Drawn one panel per corridor tile (a down-right iso
+    // diagonal), mirroring the firegate so the whole span is plugged.
+    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=38;
+    const tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
+    if(amt<0.98) drawShadowAt(g,s.x,s.y,30);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      // top lintel + gear housing (always shown)
+      g.fillStyle='#33261c'; g.fillRect(-18,-40,36,6);
+      g.strokeStyle='#140c06'; g.lineWidth=1.5; g.strokeRect(-18,-40,36,6);
+      // the sliding bar-panel: full height H, hauled up by amt (clipped at the lintel)
+      const drop=H*(1-amt);                    // how far the bars hang below the lintel
+      if(drop>0.5){
+        g.save();
+        g.beginPath(); g.rect(-18,-34,36,drop); g.clip();
+        g.fillStyle='#4a423a';
+        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.5,-34,5,H); g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(i*11-2.5,-34,5,H); }
+        g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-16,yy,32,3.4); }
+        g.fillStyle='#5a5048'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(i*11,-34+drop); g.lineTo(i*11-4,-34+drop-6); g.lineTo(i*11+4,-34+drop-6); g.closePath(); g.fill(); }   // spiked feet
+        g.restore();
+      }
+      g.restore();
+    }
+    return;
+  }
+  if(b.kind==='icebrazier'){
+    // a stone fire-bowl on a plinth. Lit: warm flame + glow. Frozen: crusted in blue ice.
+    const g=cx, t=G.time; drawShadowAt(g,s.x,s.y,8); g.save(); g.translate(s.x,s.y);
+    // plinth + bowl
+    g.fillStyle='#3a352e'; g.beginPath(); g.moveTo(-6,-2); g.lineTo(0,1); g.lineTo(6,-2); g.lineTo(5,-14); g.lineTo(-5,-14); g.closePath(); g.fill();
+    g.fillStyle='#4a443c'; g.beginPath(); g.ellipse(0,-14,8,3.2,0,0,TAU); g.fill();
+    g.strokeStyle='#221e19'; g.lineWidth=1.2; g.stroke();
+    if(b.lit){
+      const fl=0.8+0.2*Math.sin(t*20)+0.1*Math.sin(t*6.3);
+      const gg=g.createRadialGradient(0,-20,1,0,-18,26); gg.addColorStop(0,'rgba(255,240,180,0.5)'); gg.addColorStop(1,'rgba(255,120,40,0)');
+      g.fillStyle=gg; g.beginPath(); g.ellipse(0,-18,20,20,0,0,TAU); g.fill();
+      const h=(13+3*Math.sin(t*9))*fl;
+      g.fillStyle='#ff8a2c'; g.beginPath(); g.moveTo(-5,-14); g.quadraticCurveTo(-3,-14-h*0.6,0,-14-h); g.quadraticCurveTo(3,-14-h*0.6,5,-14); g.closePath(); g.fill();
+      g.fillStyle='#ffd45a'; g.beginPath(); g.moveTo(-2.6,-14); g.quadraticCurveTo(-1.4,-14-h*0.5,0,-14-h*0.72); g.quadraticCurveTo(1.4,-14-h*0.5,2.6,-14); g.closePath(); g.fill();
+      if(Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.2,0.2),y:b.y-1.4,vx:rnd(-0.15,0.15),vy:-rnd(0.5,1.2),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ffd07a':'#ff9a3c',size:rnd(1,2),grav:-0.05});
+    } else if(b.frozen){
+      // ice crust over the bowl, with a thaw-shimmer as it melts
+      const p=Math.max(0,Math.min(1,(b._thaw||0)/(b.need||1)));
+      g.fillStyle='#bfe6f4'; g.beginPath(); g.moveTo(-7,-13); g.lineTo(-3,-13-8*(1-p)); g.lineTo(2,-13-11*(1-p)); g.lineTo(6,-13-6*(1-p)); g.lineTo(7,-13); g.closePath(); g.fill();
+      g.strokeStyle='rgba(120,175,205,0.8)'; g.lineWidth=1; g.stroke();
+      if(p>0){ g.fillStyle='rgba(255,170,70,'+(0.15+0.3*p).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-14,6*p,3*p,0,0,TAU); g.fill(); }
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='icewall'){
+    // a wall of living ice across a corridor; drawn one jagged pane per tile (the tiles
+    // share a row, so they step down-right in iso). Thaws down as _thaw fills; the seal
+    // is taller and bluer. Per-tile offset from s follows the firegate/coggate pattern.
+    const g=cx, prog=Math.max(0,Math.min(1,(b._thaw||0)/(b.need||1)));
+    const c0=b.tiles.reduce((a,t)=>a+t[0],0)/b.tiles.length;   // centre x of the row
+    const H=b.seal?46:36, h=H*(1-prog*0.8);                    // melts down as it thaws
+    if(prog<0.99) drawShadowAt(g,s.x,s.y,20);
+    for(const [tx,ty] of b.tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      if(prog>0){ g.fillStyle='rgba(150,200,225,'+(0.2*prog).toFixed(2)+')'; g.beginPath(); g.ellipse(0,2,15,6,0,0,TAU); g.fill(); }
+      const g1=g.createLinearGradient(0,-h,0,4);
+      g1.addColorStop(0, b.seal?'#dff2fb':'#cfe9f6'); g1.addColorStop(1, b.seal?'#8fc0dd':'#a6cfe2');
+      g.fillStyle=g1;
+      g.beginPath(); g.moveTo(-15,2); g.lineTo(-11,-h*0.8); g.lineTo(-4,-h); g.lineTo(3,-h*0.85); g.lineTo(11,-h*0.7); g.lineTo(15,2); g.closePath(); g.fill();
+      g.strokeStyle='rgba(110,165,195,0.7)'; g.lineWidth=1.2; g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.35)'; g.lineWidth=1;   // internal facets
+      g.beginPath(); g.moveTo(-4,-h); g.lineTo(-1,2); g.moveTo(6,-h*0.75); g.lineTo(2,2); g.stroke();
+      if(prog>0){ g.fillStyle='rgba(255,160,70,'+(0.10+0.22*prog).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-h*0.4,10,h*0.5,0,0,TAU); g.fill(); }   // torch-bite glow
+      g.restore();
+    }
+    return;
+  }
+  if(b.kind==='thinice'){
+    // a pane of thin ice set into the floor; stress-cracks spread as you linger on it
+    const g=cx, c=Math.max(0,Math.min(1,(b._crack||0)/1.6));
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(200,232,244,0.5)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(15,0); g.lineTo(0,9); g.lineTo(-15,0); g.closePath(); g.fill();
+    g.strokeStyle='rgba(120,170,200,0.65)'; g.lineWidth=1; g.stroke();
+    // crack lines - faint by default, vivid as it's about to break
+    g.strokeStyle='rgba(90,120,150,'+(0.35+0.5*c).toFixed(2)+')'; g.lineWidth=0.8+c;
+    g.beginPath(); g.moveTo(-9,-2); g.lineTo(-2,2); g.lineTo(4,-3); g.lineTo(11,1);
+    g.moveTo(0,-7); g.lineTo(-3,1); g.lineTo(2,7); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='lavaseg'){
+    // one cell of a lava channel: molten (hot, blocking) or cooled crust (dark, walkable)
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(b.hot){
+      const gl=0.5+0.4*Math.sin(G.time*2.4+b.x*1.3+b.y);
+      g.fillStyle='rgba(120,40,20,0.75)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(255,110,30,'+(0.45+0.3*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-6); g.lineTo(11,-1); g.lineTo(0,4); g.lineTo(-11,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(255,214,120,'+(0.35+0.4*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,6,3,0,0,TAU); g.fill();
+      if(Math.random()<0.02) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
+    } else {
+      g.fillStyle='rgba(26,18,16,0.55)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.strokeStyle='rgba(180,80,40,0.22)'; g.lineWidth=1; g.beginPath(); g.moveTo(-8,-2); g.lineTo(0,1); g.lineTo(7,-3); g.stroke();
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='lavasluice'){
+    // a diverter stone with a paddle that swings to the flowing side, glowing when open
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a2a20'; g.beginPath(); g.ellipse(0,-1,7,3.2,0,0,TAU); g.fill();
+    const ang=b.on? 0.9 : -0.9;
+    g.strokeStyle= b.on?'#ff9a3c':'#c9a890'; g.lineWidth=3.4; g.lineCap='round';
+    g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*12,-2-Math.cos(ang)*11); g.stroke();
+    g.fillStyle= b.on?'#ffd45a':'#8a6a50'; g.beginPath(); g.arc(Math.sin(ang)*12,-2-Math.cos(ang)*11,3.2,0,TAU); g.fill();
+    if(b.on){ g.fillStyle='rgba(255,150,60,0.22)'; g.beginPath(); g.ellipse(0,-3,10,6,0,0,TAU); g.fill(); }
+    else { g.fillStyle='rgba(255,154,60,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-26); }
+    g.restore(); return;
+  }
+  if(b.kind==='firewheel'){
+    // a fire-wheel in its trough; turns and glows molten once the flow reaches it
+    const g=cx, R=6, spin=b.charged; drawShadowAt(g,s.x,s.y,7);
+    g.save(); g.translate(s.x,s.y-6);
+    if(spin){ g.fillStyle='rgba(255,140,50,0.28)'; g.beginPath(); g.ellipse(0,0,R+6,R+4,0,0,TAU); g.fill(); }
+    g.rotate(spin? G.time*2.2 : 0);
+    g.strokeStyle= spin?'#c26a2a':'#4a3d32'; g.lineWidth=2.4; g.beginPath(); g.ellipse(0,0,R,R*0.9,0,0,TAU); g.stroke();
+    g.strokeStyle= spin?'#ffb04a':'#5a4d40'; g.lineWidth=1.8;
+    for(let i=0;i<6;i++){ const a=i/6*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*R,Math.sin(a)*R*0.9); g.stroke(); }
+    g.fillStyle= spin?'#ffd45a':'#3a332c'; g.beginPath(); g.arc(0,0,2,0,TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='tidewater'){
+    // a cell of brine: dark water with a shifting sheen when flooded, wet stone when drained
+    const g=cx, lvl=(typeof G!=='undefined'&&G._tideAnim!=null)?G._tideAnim:0;
+    const showWater = b.flooded || (b.floodAt===0);
+    g.save(); g.translate(s.x,s.y);
+    if(showWater){
+      const a = b.floodAt===0? 0.8 : (0.35+0.55*lvl);   // the high-tide sump fades in with the level
+      const gl=0.5+0.3*Math.sin(G.time*1.8+b.x*1.7+b.y);
+      g.fillStyle='rgba(24,44,58,'+a.toFixed(2)+')'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(90,150,180,'+(0.14*a+0.12*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,9,4,0,0,TAU); g.fill();
+      g.strokeStyle='rgba(150,200,220,'+(0.18*a).toFixed(2)+')'; g.lineWidth=1; g.beginPath(); g.moveTo(-7,-2+Math.sin(G.time*2+b.x)); g.lineTo(0,0); g.lineTo(7,-3+Math.cos(G.time*2+b.y)); g.stroke();
+    } else {
+      g.fillStyle='rgba(30,34,36,0.4)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(90,120,120,0.12)'; g.beginPath(); g.ellipse(0,0,6,3,0,0,TAU); g.fill();   // a wet sheen on the drained floor
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='floatbridge'){
+    // a timber pontoon that rides the brine: at floor level when high, sunk under when low
+    const g=cx, up=(typeof G!=='undefined'&&G._tide===1); g.save(); g.translate(s.x,s.y);
+    if(!up){ // sunk - dark water with the raft dimly below
+      g.fillStyle='rgba(20,38,50,0.85)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.fillStyle='rgba(60,50,40,0.35)'; g.beginPath(); g.ellipse(0,1,10,4,0,0,TAU); g.fill();
+    } else {
+      g.fillStyle='#5a4a36'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.strokeStyle='#3a2f22'; g.lineWidth=1.2; g.stroke();
+      g.strokeStyle='#6a5842'; g.lineWidth=1.4;   // plank seams
+      g.beginPath(); g.moveTo(-11,-2); g.lineTo(4,-6); g.moveTo(-4,3); g.lineTo(11,-1); g.stroke();
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='tidewheel'){
+    // a great ship's-wheel valve on a post - turn it to raise or drain the tide
+    const g=cx; drawShadowAt(g,s.x,s.y,8); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a332c'; g.fillRect(-2.6,-16,5.2,16); g.strokeStyle='#1c1814'; g.lineWidth=1.2; g.strokeRect(-2.6,-16,5.2,16);
+    g.save(); g.translate(0,-17); g.rotate(((typeof G!=='undefined'&&G._tideAnim)||0)*1.4);
+    g.strokeStyle='#7fbfe0'; g.lineWidth=2.6; g.beginPath(); g.arc(0,0,8,0,TAU); g.stroke();
+    g.strokeStyle='#5a8aa8'; g.lineWidth=2; for(let i=0;i<6;i++){ const a=i/6*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*8,Math.sin(a)*8); g.stroke(); }
+    for(let i=0;i<6;i++){ const a=i/6*TAU; g.fillStyle='#9ed6f0'; g.beginPath(); g.arc(Math.cos(a)*8,Math.sin(a)*8,1.7,0,TAU); g.fill(); }   // handle knobs
+    g.restore();
+    g.fillStyle='rgba(150,205,235,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-32);
+    g.restore(); return;
+  }
+  if(b.kind==='tidevalve'){
+    // a low brine-valve wheel set in the sump floor; glows while it can be reached
+    const g=cx, reachable=(typeof G!=='undefined'&&(G._tide||0)===0 && !b.thrown); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#2a2620'; g.beginPath(); g.ellipse(0,-1,7,3.4,0,0,TAU); g.fill();
+    g.strokeStyle= b.thrown?'#6a8a78':(reachable?'#7fc4e8':'#4a5560'); g.lineWidth=2.2; g.beginPath(); g.arc(0,-3,5,0,TAU); g.stroke();
+    g.strokeStyle= b.thrown?'#5a7a68':(reachable?'#5a8aa8':'#3a444c'); g.lineWidth=1.6;
+    for(let i=0;i<4;i++){ const a=i/4*TAU+(b.thrown?0.5:0); g.beginPath(); g.moveTo(0,-3); g.lineTo(Math.cos(a)*5,-3+Math.sin(a)*5); g.stroke(); }
+    if(reachable){ g.fillStyle='rgba(127,196,232,'+(0.4+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
+    g.restore(); return;
+  }
+  if(b.kind==='skyemitter'){
+    // the prism-ward emitter crystal, plus the traced rainbow beam (screen-projected dots)
+    const g=cx; g.save(); g.translate(s.x,s.y-4);
+    g.fillStyle='#eaf2ff'; g.beginPath(); g.moveTo(0,-8); g.lineTo(6,0); g.lineTo(0,8); g.lineTo(-6,0); g.closePath(); g.fill();
+    g.strokeStyle='#8aa0c0'; g.lineWidth=1.4; g.stroke();
+    g.restore();
+    const path=(typeof G!=='undefined'&&G._skyBeamPath)||[];
+    if(path.length && typeof worldToScreen==='function'){ const g2=cx;
+      for(let i=0;i<path.length;i++){ const ss=worldToScreen(path[i][0],path[i][1]); const hue=(i*24+G.time*140)%360;
+        g2.fillStyle='hsla('+(hue|0)+',95%,70%,0.9)'; g2.beginPath(); g2.arc(ss.x, ss.y-8, 3.2, 0, TAU); g2.fill(); } }
+    return;
+  }
+  if(b.kind==='skyprism'){
+    // a rotatable prism; the coloured bar shows its mirror orientation ('/' or '\')
+    const g=cx; drawShadowAt(g,s.x,s.y,6); g.save(); g.translate(s.x,s.y-4);
+    g.fillStyle='rgba(222,236,255,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(7,0); g.lineTo(0,9); g.lineTo(-7,0); g.closePath(); g.fill();
+    g.strokeStyle='#7f9ec0'; g.lineWidth=1.4; g.stroke();
+    g.strokeStyle='hsl('+((G.time*60)%360|0)+',90%,72%)'; g.lineWidth=2.6; g.lineCap='round';
+    if(b.mirror==='/'){ g.beginPath(); g.moveTo(-4,4); g.lineTo(4,-4); g.stroke(); }
+    else { g.beginPath(); g.moveTo(-4,-4); g.lineTo(4,4); g.stroke(); }
+    g.restore(); return;
+  }
+  if(b.kind==='skyward'){
+    // the ward-crystal target: dark until the beam lands, then blazing white-gold
+    const g=cx, lit=b.lit; drawShadowAt(g,s.x,s.y,6); g.save(); g.translate(s.x,s.y-6);
+    if(lit){ const gl=0.5+0.4*Math.sin(G.time*4); g.fillStyle='rgba(255,255,255,'+(0.3+0.2*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,0,13,0,TAU); g.fill(); }
+    g.fillStyle= lit? '#fff6c0':'#3a4a5a'; g.beginPath(); g.moveTo(0,-11); g.lineTo(7,0); g.lineTo(0,11); g.lineTo(-7,0); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#ffe27a':'#6a7a8a'; g.lineWidth=1.8; g.stroke();
+    if(!lit){ g.fillStyle='rgba(150,180,210,'+(0.3+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
+    g.restore(); return;
+  }
+  if(b.kind==='windzone') return;   // the wind is drawn as streaming particles (see updateAerieDeep), not a sprite
+  if(b.kind==='bonepan'){
+    // a low bone counterweight-plate; sinks and glows violet when weighted
+    const g=cx, pr=b.pressed?1:0; g.save(); g.translate(s.x,s.y); drawShadowAt(g,0,2,8);
+    g.fillStyle= pr? '#3a2c4a':'#2a2622';
+    g.beginPath(); g.moveTo(0,-9+pr*2); g.lineTo(14,-2+pr*2); g.lineTo(0,5+pr*2); g.lineTo(-14,-2+pr*2); g.closePath(); g.fill();
+    g.strokeStyle= pr? '#c77bff':'#6a5c4c'; g.lineWidth= pr?2.2:1.5; g.stroke();
+    g.fillStyle= pr? 'rgba(199,123,255,0.35)':'rgba(20,16,14,0.4)';
+    g.beginPath(); g.moveTo(0,-5+pr*2); g.lineTo(9,-1+pr*2); g.lineTo(0,3+pr*2); g.lineTo(-9,-1+pr*2); g.closePath(); g.fill();
+    if(!pr){ g.fillStyle='rgba(199,123,255,'+(0.35+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 11px Georgia'; g.textAlign='center'; g.fillText('✦',0,-1); }
+    g.restore(); return;
+  }
+  if(b.kind==='beamgate'){
+    // a bone portcullis hauled up by a counterweight beam. openAmt: 0=dropped, 1=up.
+    // Drawn one pale-bone pane per corridor tile (an iso down-right diagonal).
+    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=40;
+    const tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
+    if(amt<0.98) drawShadowAt(g,s.x,s.y,30);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(s.x+ox, s.y+oy);
+      g.fillStyle='#2c2622'; g.fillRect(-18,-42,36,6); g.strokeStyle='#120f0c'; g.lineWidth=1.4; g.strokeRect(-18,-42,36,6);   // lintel
+      const drop=H*(1-amt);
+      if(drop>0.5){ g.save(); g.beginPath(); g.rect(-18,-36,36,drop); g.clip();
+        g.fillStyle='#cabfa6';                                             // pale bone bars
+        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.2,-36,4.4,H); g.strokeStyle='#7a6f58'; g.lineWidth=1; g.strokeRect(i*11-2.2,-36,4.4,H); }
+        g.fillStyle='#b3a888'; for(let yy=-30;yy<=-6;yy+=12){ g.fillRect(-16,yy,32,3); }   // rib cross-bars
+        g.fillStyle='#ddd3bd'; for(let i=-1;i<=1;i++){ g.beginPath(); g.arc(i*11,-36+drop-3,3,0,TAU); g.fill(); }   // skull knobs at the feet
+        g.restore();
+      }
+      g.restore();
+    }
+    // the counterweight beam over the centre, tipping as the gate rises
+    g.save(); g.translate(s.x, s.y-47); g.rotate((amt-0.5)*0.5);
+    g.strokeStyle='#6a5c48'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); g.moveTo(-20,0); g.lineTo(20,0); g.stroke();
+    g.fillStyle='#4a4038'; g.beginPath(); g.arc(-20,0,4,0,TAU); g.fill(); g.beginPath(); g.arc(20,0,4.5,0,TAU); g.fill();
+    g.restore();
+    return;
   }
   if(b.kind==='dragonrest'){
     // the old dragon dozing on his fire-shelf; hidden while his enthralled self rages
@@ -2195,6 +2509,25 @@ function drawPlayer(s){
   }
   drawShadowAt(cx,s.x,s.y,14);
   drawPlayerFigure(s);
+  drawCarriedFlame(s);
+}
+// THE GUTTERING FLAME (Rimefissure): a torch you carry to thaw the ice. It burns down
+// in the cold - relight at a brazier before it gutters. Shown as a held torch + a life pip.
+function drawCarriedFlame(s){
+  if(G.worldId!=='frostdeep' || (G._flameT||0)<=0) return;
+  const g=cx, t=G.time, life=Math.max(0,Math.min(1,(G._flameT||0)/(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8)));
+  const fx=s.x+11, fy=s.y-26;
+  // the torch haft
+  g.strokeStyle='#5a4838'; g.lineWidth=2.4; g.lineCap='round'; g.beginPath(); g.moveTo(fx-3,fy+9); g.lineTo(fx,fy); g.stroke();
+  // the flame - bright and tall when full, guttering low when near dead
+  const flick=0.82+0.18*Math.sin(t*22)+0.1*Math.sin(t*7.3), h=(5+11*life)*flick;
+  const grad=g.createRadialGradient(fx,fy-h*0.3,1,fx,fy-h*0.3,h*1.7);
+  grad.addColorStop(0,'rgba(255,244,190,0.95)'); grad.addColorStop(0.5,'rgba(255,150,50,'+(0.55*life+0.25).toFixed(2)+')'); grad.addColorStop(1,'rgba(255,80,20,0)');
+  g.fillStyle=grad; g.beginPath(); g.ellipse(fx,fy-h*0.3,h*0.85,h*1.4,0,0,TAU); g.fill();
+  // life pip above the head
+  g.fillStyle='rgba(0,0,0,0.5)'; g.fillRect(s.x-11,s.y-52,22,4);
+  g.fillStyle= life>0.33? '#ffb04a' : '#ff5a3a'; g.fillRect(s.x-10,s.y-51, 20*life, 2);
+  if(Math.random()<0.4) G.parts.push({x:P.x+0.25,y:P.y-1.1,vx:rnd(-0.2,0.2),vy:-rnd(0.6,1.4),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ffd07a':'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
 }
 function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
