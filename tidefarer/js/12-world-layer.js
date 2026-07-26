@@ -2192,10 +2192,13 @@ function freeColossus(m){
 }
 
 /* =====================================================================
-   THE GLACIER VAULT - a 5-room ice-puzzle dungeon sealed behind the
-   Hoarfrost Bear's den on the Frozen Isle. Opened only once the bear is
-   driven off. Two slick sliding rooms, a three-ward lever lock, and a
-   reward hoard - no boss, pure puzzle. Reuses the ice-slide + icelever.
+   THE GLACIER VAULT - a wave-gauntlet dungeon sealed behind the Hoarfrost
+   Bear's den on the Frozen Isle. Opened only once the bear is driven off.
+   THREE arena halls, each sealed by its own gate: step in and the ice-beasts
+   come in mounting waves - clear the whole escalating horde and that hall's
+   gate grinds up, letting you press on to the next. Past the last gate lies
+   the Hoarfrost Hoard. The first two halls are slick ice, so you slide as you
+   fight. Reuses spawnMob + the ice-slide.
    ===================================================================== */
 function genFrostVault(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -2238,13 +2241,15 @@ function placeObjectsFrostVault(){
   // ---- THE GAUNTLET: three halls, each a wave-fight. Step in and the ice-beasts come in
   // waves, one lot after the next; clear them all and the hall's gate grinds up. ----
   G._vaultT=0;
+  // each hall is a longer, escalating gauntlet - the packs grow and the last wave of each
+  // brings elites, so you fight a large, mounting horde before its gate ever grinds up.
   G._vaultRooms=[
     { key:'A', gy:57, gx0:38, gx1:42, y0:58, y1:73, sx:40, sy:65, active:false, done:false, wi:-1, spawnT:0,
-      waves:[ [['wolf',3]], [['wolf',3],['polarbear',1]] ] },
+      waves:[ [['wolf',4]], [['wolf',4],['polarbear',1]], [['wolf',3],['polarbear',2]], [['wolf',5],['polarbear',1]] ] },
     { key:'B', gy:38, gx0:38, gx1:42, y0:40, y1:54, sx:40, sy:47, active:false, done:false, wi:-1, spawnT:0,
-      waves:[ [['wolf',4]], [['polarbear',2]], [['wolf',3],['polarbear',1]] ] },
+      waves:[ [['wolf',5]], [['polarbear',2],['wolf',3]], [['polarbear',3],['wolf',3]], [['wolf',5],['polarbear',2]], [['polarbear',2,true],['wolf',3]] ] },
     { key:'C', gy:19, gx0:38, gx1:42, y0:21, y1:35, sx:40, sy:28, active:false, done:false, wi:-1, spawnT:0,
-      waves:[ [['wolf',4]], [['polarbear',2],['wolf',2]], [['polarbear',2,true]] ] },
+      waves:[ [['wolf',6]], [['polarbear',3],['wolf',3]], [['polarbear',2,true],['wolf',4]], [['polarbear',3],['wolf',5]], [['polarbear',3,true],['wolf',4]] ] },
   ];
   // ---- R5: the Hoarfrost Hoard (the reward past the last gate) ----
   G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
