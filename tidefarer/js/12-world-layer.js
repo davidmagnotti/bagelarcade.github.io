@@ -2341,23 +2341,23 @@ function placeObjectsMillDeep(){
   // THE MILLER'S ARMS-CHEST: his old hunting bow + the winch-crank that frees the seized
   // sluice valves. You cannot work a valve until you've taken the crank.
   if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:46.5, bow:1});
-  // ---- THE FLOODED HALLS: two water-mazes. Each hall is barred by WATER-WALLS whose doorways
-  // stay flooded shut until you turn their sluice valve, draining a way through. The doorways are
-  // staggered, so you weave the drained path north from valve to valve. ----
+  // ---- THE FLOODED HALLS: two water-mazes. Each hall is barred by four WATER-WALLS, every
+  // doorway flooded shut by default (you cannot get through). Three sluice valves sit at the
+  // hall's mouth, and each valve is coupled to TWO of the doorways - throwing it drains one pair
+  // and floods another. You must find the COMBINATION of valves that leaves a drained doorway in
+  // every wall at once, then weave the open path north. ----
   G._millWalls=[];
-  const wwall=(id, y, doorX0, doorX1, vx, vy)=>{
+  const wwall=(hall, id, y, doorX0, doorX1)=>{
     for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }   // the whole row floods, blocking
-    const w={id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
-    G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, wall:id, label:'a sluice valve'});
+    const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
   };
-  // HALL A (y26-40): three staggered water-walls - left, right, centre
-  wwall('a1', 36,  9,12, 11,38);
-  wwall('a2', 32, 28,31, 29,34);
-  wwall('a3', 28, 17,20, 18,30);
-  // HALL B (y9-23): three more, staggered the other way
-  wwall('b1', 20, 26,30, 28,22);
-  wwall('b2', 16,  8,12, 10,18);
-  wwall('b3', 12, 18,22, 20,14);
+  const valve=(hall, vx, vy, flips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, flips, label:'a sluice valve'}); };
+  // HALL A (y26-40): four staggered water-walls; three coupled valves. Solve: valve1 on, valve2 off, valve3 on.
+  wwall('A','a1', 37,  9,13); wwall('A','a2', 34, 20,24); wwall('A','a3', 31, 9,13); wwall('A','a4', 28, 20,24);
+  valve('A', 11,39, ['a1','a2']); valve('A', 20,39, ['a2','a3']); valve('A', 29,39, ['a3','a4']);
+  // HALL B (y9-23): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
+  wwall('B','b1', 20, 20,24); wwall('B','b2', 17, 9,13); wwall('B','b3', 14, 20,24); wwall('B','b4', 11, 9,13);
+  valve('B', 11,22, ['b2','b3']); valve('B', 20,22, ['b1','b2']); valve('B', 29,22, ['b3','b4']);
   // THE STORMSAIL, in the guardian's chamber at the top
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
   G.critters=[];
@@ -2371,23 +2371,29 @@ function applyMillWall(w){
     else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
 // read a diverter valve's state by its id ('d1'/'d2')
-// THE SLUICE VALVES: each drains (or re-floods) the doorway of one water-wall. Seized until you
-// take the winch-crank from the arms-chest. Drain the doorways and weave the path north.
+// THE SLUICE VALVES: each valve is coupled to TWO doorways - throwing it flips both (drains a
+// shut one, floods an open one). Seized until you take the winch-crank. Find the combination that
+// opens a doorway in every wall of the hall, then weave the drained path north.
 function pullSluiceLever(b){
-  if(!b.wall) return;   // the mill's only valves are the water-wall sluices now
+  if(!b.flips) return;   // the mill's only valves are the coupled water-sluices
   if(!(P.story && P.story.millBowTaken)){
     toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
     Snd.step&&Snd.step(5); return;
   }
-  const w=(G._millWalls||[]).find(x=>x.id===b.wall); if(!w) return;
-  w.on=!w.on; b.on=w.on; applyMillWall(w); invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
-  const dw=w.dx1-w.dx0;
-  for(let i=0;i<16;i++){ const px=w.dx0+Math.random()*(dw+1), a=Math.random()*TAU, sp=rnd(0.5,2.2);
-    G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.3, life:rnd(0.4,1.0), color:w.on?'#bfe0f4':'#6a9ab8', size:rnd(1.5,3), grav:0.05}); }
-  addFloat(w.on?'drained':'flooded', b.x, b.y-1.4, '#bfe0f4', 1.1);
-  if(w.on) toast('The sluice grinds and the water drains from that stretch - a doorway opens in the flooded wall. <b>Weave on to the next.</b>',3400);
-  else toast('The sluice shuts and the stretch floods over again.',2600);
+  b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
+  for(const id of b.flips){ const w=(G._millWalls||[]).find(x=>x.id===id); if(!w) continue;
+    w.on=!w.on; applyMillWall(w);
+    for(let i=0;i<8;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.5,2.0);
+      G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.3, life:rnd(0.4,1.0), color:w.on?'#bfe0f4':'#6a9ab8', size:rnd(1.5,3), grav:0.05}); } }
+  invalidateScenery&&invalidateScenery();
+  const hw=(G._millWalls||[]).filter(w=>w.hall===b.hall), openN=hw.filter(w=>w.on).length;
+  if(hw.length && openN===hw.length){
+    G.shake=Math.max(G.shake||0,0.4); banner('THE HALL DRAINS','A DOORWAY OPENS IN EVERY WALL');
+    toast('The last stretch drains - a doorway now stands open in every wall of the hall. <b>Weave the open path north.</b>',4600);
+  } else {
+    addFloat(openN+' / '+hw.length+' walls open', b.x, b.y-1.4, '#bfe0f4', 1.1);
+    toast('The coupled sluices shift - some stretches drain as others flood over. <b>'+openN+' of '+hw.length+'</b> walls stand open. Find the combination that opens them all at once.',3600);
+  }
 }
 // the flooded halls are set entirely by the sluice valves - no per-frame work needed
 function updateMillDeep(dt){}
@@ -4153,8 +4159,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
     setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
-    setTimeout(()=>banner('THE UNDERMILL','DRAIN THE FLOODED HALLS AND WEAVE THROUGH'),1200);
-    setTimeout(()=>toast('<i>The works have drowned - two halls stand flooded, walled off by deep water.</i> The miller’s arms-chest holds the <b>winch-crank</b> - take it, then work each hall\'s <b>sluice valves</b> to <b>drain a doorway</b> through the water-walls. The doorways are staggered, so weave the drained path north from valve to valve, then face the thing that fouls the works.',9000),1800); }
+    setTimeout(()=>banner('THE UNDERMILL','FIND THE SLUICE COMBINATION'),1200);
+    setTimeout(()=>toast('<i>The works have drowned - two halls stand flooded, walled off by deep water, and by default there is no way through.</i> Take the <b>winch-crank</b> from the miller\'s arms-chest, then work the three <b>sluice valves</b> at each hall\'s mouth. Each valve is <b>coupled to two doorways</b> - throwing it drains one pair and floods another. <b>Find the combination</b> that opens a doorway in every wall at once, then weave the path north, hall after hall, to the thing that fouls the works.',9500),1800); }
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){
