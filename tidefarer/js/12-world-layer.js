@@ -1752,7 +1752,10 @@ function spawnSerpent(){
 }
 function destroyTome(b){
   if(b.destroyed) return;
-  if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)){
+  // the tome cannot be touched while the Tome-Warden still guards it - felling the serpent
+  // is what breaks the binding. This holds whether the warden is roused or still sealed in
+  // its crypt, so there's no slipping past it to burn the tome early.
+  if(G.mobs && G.mobs.some(m=>(m.ach==='tomewarden'||m.kind==='serpent') && !m.dead)){
     toast('The tome will not so much as singe while the <b>serpent warden</b> lives. Put the warden down first.',4600); return;
   }
   b.destroyed=true;
