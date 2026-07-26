@@ -57,10 +57,10 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
-const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
-  entry: {x:44, y:64, r:6,  name:'The Frostgate',     lv:[13,15]},
-  ice:   {x:42, y:46, r:12, name:'The Frost-Lock Warren', lv:[13,15]},
-  boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
+const FROSTDEEP_ZONES = { // the ice-dungeon beneath the Frozen Isle
+  entry: {x:44, y:107, r:6,  name:'The Frostgate',     lv:[13,15]},
+  ice:   {x:42, y:66,  r:16, name:'The Long Drift',    lv:[13,15]},
+  boss:  {x:44, y:22,  r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
 const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon under
   entry:  {x:40, y:84, r:8,  name:'The Icefall Landing', lv:[14,16]}, // the bear's old den
@@ -137,8 +137,8 @@ const WORLD_DEFS = {
   crown:{ W:180, H:180, seed:61137, zones:CROWN_ZONES,
     spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
     gen:()=>genCrownAll() },
-  frostdeep:{ W:88, H:80, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
-    spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
+  frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
+    spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -2109,15 +2109,18 @@ function genFrostAll(){
    frozen over until you thaw it) to reach and melt the great seal on the deep gate.
    Thin ice cracks if you linger. No levers now; the flame IS the puzzle.
    ================================================================================= */
+// THE LONG DRIFT: a solid lever-island parked mid-channel (carved into the water later)
+const FROST_ISLAND={x0:39, x1:49, y0:62, y1:69};   // reach it, pull its lever to open the Deep Gate
 function genFrostDeep(){
-  // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
+  // an ice-dungeon carved from solid frozen rock: a long drift-channel crossing up to the Frozen Heart.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
-  carve(42,54,46,60,T.ICE);               // corridor A -> the flooded warren
-  carve(30,38,54,54,T.ICE);               // THE DRIFT - the frozen channel the floes cross
-  carve(42,30,46,40,T.ICE);               // corridor B -> the antechamber
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until you cross
+  carve(34,100,54,114,T.ICE);             // THE FROSTGATE - the ice-cavern landing (entry)
+  carve(42,92,46,101,T.ICE);              // corridor A -> the long drift
+  carve(30,44,54,92,T.ICE);               // THE LONG DRIFT - a 3x channel of floes + rotating slabs
+  carve(FROST_ISLAND.x0, FROST_ISLAND.y0, FROST_ISLAND.x1, FROST_ISLAND.y1, T.ICE);   // the solid lever-island, mid-channel
+  carve(42,30,46,45,T.ICE);               // corridor B -> the antechamber
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until the island lever is thrown
   // THE FROZEN HEART: a sealed inner sanctum reached only after unbinding the ward-locks.
   carve(36,26,52,32,T.ICE);               // the antechamber (you arrive here from corridor B)
   carve(42,24,46,26,T.ICE);               // the throat (the HEART GATE sits at y=25)
@@ -2129,11 +2132,13 @@ function genFrostDeep(){
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
-  G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
-  setSolid(44,70,0); setTile(44,70,T.RUIN);
-  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[20,25],[68,25]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G.decor.push({kind:'dungeonmouth', x:44.5, y:112.5, exit:1, label:'the way up'});  // back to the surface
+  setSolid(44,112,0); setTile(44,112,T.ICE);
+  // the long drift turns on the DASH (to board the rotating slabs) - guarantee it so nothing soft-locks
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The cold quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
+  for(const [tx,ty] of [[36,44],[52,44],[40,64],[48,64],[36,90],[52,90],[34,16],[54,16],[20,25],[68,25],[38,108],[50,108]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  for(const [px,py] of [[38,66],[50,66],[32,40],[52,40],[36,16],[52,16],[19,31],[69,31]]) spire(px,py);
+  for(const [px,py] of [[38,110],[50,110],[36,16],[52,16],[19,31],[69,31]]) spire(px,py);
   // ---- THE WARD-LOCKS ----
   // the Rimebound sleeps behind the HEART GATE; two frost-lock levers, one in each flanking
   // ward-room, must both be thrown to unchain it. Pull one and the other still holds.
@@ -2148,35 +2153,45 @@ function placeObjectsFrostDeep(){
     openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
     tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
     label:'the east ward-lock'});
-  // ---- THE DRIFTING FLOES ----
-  // the warren has flooded into a channel of black, freezing water, crossed only on slabs
-  // of drift-ice that slide back and forth. Board a floe as it drifts to your ledge, ride
-  // it, and step to the next floe (or the far ledge) when they line up. Fall in and the
-  // cold sweeps you back to the landing to try the crossing again. No levers, pure timing.
-  G._frostVoid=new Set(); G._frostFloes=[]; G._frostT=0; G._frostGateOpen=false; G._frostFallHint=0;
-  for(let y=43;y<=51;y++) for(let x=30;x<=54;x++){ if(inb(x,y)&&!solidAt(x,y)){ G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); } }
+  // ---- THE LONG DRIFT ----
+  // a 3x channel of black freezing water. The SOUTH half is crossed on drift-ice floes that slide
+  // back and forth; midway sits a solid ISLAND with the DRIFT-LOCK LEVER - throw it to grind the
+  // Deep Gate up. The NORTH half is crossed on ROTATING SLABS (dash to board, like the Emberdeep).
+  // Fall in and the cold flings you back - to the landing, or (once the lever is thrown) the island.
+  G._frostVoid=new Set(); G._frostFloes=[]; G._frostWheels=[]; G._frostT=0; G._frostGateOpen=false; G._frostFallHint=0;
+  for(let y=46;y<=89;y++) for(let x=30;x<=54;x++){ if(!inb(x,y)||solidAt(x,y)) continue;
+    if(x>=FROST_ISLAND.x0 && x<=FROST_ISLAND.x1 && y>=FROST_ISLAND.y0 && y<=FROST_ISLAND.y1) continue;   // the island stays dry land
+    G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); }
   const floe=(cy,cx,amp,spd,phase)=>{ const f={kind:'icefloe', cx:cx+0.5, y:cy+0.5, x:cx+0.5, prevx:cx+0.5, amp, spd, phase, w:5, h:3}; G.decor.push(f); G._frostFloes.push(f); };
-  floe(50, 42, 6, 0.5, 0.0);    // three floes on staggered phases -> time each step across
-  floe(47, 42, 6, 0.5, 2.1);
-  floe(44, 42, 6, 0.5, 4.2);
-  G._frostCross={cy0:43, cy1:51, farY:38, startX:44, startY:53.5};
+  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._frostWheels.push(w); };
+  // SOUTH HALF: floes (3 apart, so they touch as they line up) from the entry ledge to the island
+  floe(88,42,6,0.5,0.0); floe(85,42,6,0.5,1.3); floe(82,42,6,0.5,2.6); floe(79,42,6,0.5,3.9);
+  floe(76,42,6,0.5,5.2); floe(73,42,6,0.5,0.7); floe(70,42,6,0.5,2.0);
+  // NORTH HALF: rotating slabs (their reaches overlap) from the island up to the far ledge
+  wheel(42,58, 3.0,  0.9,  Math.PI/2); wheel(42,52, 3.0, -0.9, -Math.PI/2); wheel(42,47, 3.0, 0.9, Math.PI/2);
+  // the drift-lock lever, on the island (a bare icelever opens the Deep Gate; see pullIceLever)
+  G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
+  G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
   G.critters=[];
   // an already-cleared run drains the channel to solid ice and leaves both gates open
   if(P.story && P.story.deepDone){
     for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); setSolid(x,25,0); setTile(x,25,T.ICE); }
     for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='heart') d.on=true; }
-    G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe');
-    G._frostVoid=new Set(); G._frostFloes=[]; G._frostGateOpen=true;
+    G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe' && d.kind!=='spinwheel');
+    G._frostVoid=new Set(); G._frostFloes=[]; G._frostWheels=[]; G._frostGateOpen=true;
   }
 }
+// throwing the island's drift-lock lever grinds the Deep Gate up (far to the north) and moves the
+// respawn checkpoint out to the island for the rotating-slab half of the crossing.
 function openFrostGate(){
   if(G._frostGateOpen) return; G._frostGateOpen=true;
   for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
   invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); shockwave(44,37.5,'rgba(180,225,245,0.9)',52); G.shake=Math.max(G.shake||0,0.5);
-  banner('THE DEEP GATE OPENS','THE FROZEN HEART LIES BEYOND');
-  toast('You spring from the last floe onto solid ice and the deep gate grinds up behind the frost. The <b>Frozen Heart</b> - and the thing Vath bound in it - lies ahead.',5200);
+  if(G._frostCross && G._frostCross.island){ G._frostCross.startX=G._frostCross.island[0]; G._frostCross.startY=G._frostCross.island[1]; }
+  Snd.quest&&Snd.quest(); shockwave(44,66,'rgba(180,225,245,0.9)',52); G.shake=Math.max(G.shake||0,0.5);
+  banner('THE DEEP GATE GRINDS OPEN','THE FROZEN HEART LIES BEYOND');
+  toast('You throw the drift-lock and, far to the north, the deep gate grinds up. Ride the <b>rotating slabs</b> the rest of the way - fall now and you wake back here on the island.',5600);
   autoSave&&autoSave();
 }
 // plunging into the freezing water: control freezes and the hero flails in the cracking ice,
@@ -2201,22 +2216,23 @@ function frostRespawn(){
 // carry the player on the floe they're standing on, and drop them (restart) if the open
 // water under them has no floe
 function updateFrostDeep(dt){
-  // the plunge plays out (control frozen in updatePlayer), then flings you back to the landing
+  // the plunge plays out (control frozen in updatePlayer), then flings you back to the checkpoint
   if(G._frostPlunge){ G._frostPlunge.t+=dt; if(G._frostPlunge.t>=G._frostPlunge.dur) frostRespawn(); return; }
-  const floes=G._frostFloes||[]; if(!floes.length) return;
+  const floes=G._frostFloes||[], wheels=G._frostWheels||[];
+  if(!floes.length && !wheels.length) return;   // a cleared run - the channel is solid ice
   G._frostT=(G._frostT||0)+dt;
   for(const f of floes){ f.prevx=f.x; f.x = f.cx + f.amp*Math.sin(G._frostT*f.spd + f.phase); }
-  const c=G._frostCross;
-  if(c && !G._frostGateOpen && P.y>=c.farY && P.y<c.cy0) openFrostGate();   // reached the far ledge
-  if(P.dead || (P.rollT||0)>0) return;
+  for(const w of wheels) w.ang += w.spd*dt;
+  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the water
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
-  if(!(G._frostVoid && G._frostVoid.has(tx+','+ty))) return;   // on solid ice / a ledge - safe
-  // over the water: find the floe under us
+  if(!(G._frostVoid && G._frostVoid.has(tx+','+ty))) return;   // on solid ice / a ledge / the island - safe
+  // over the water: a floe carries you, else a rotating slab, else you plunge
   let best=null, bestd=99;
   for(const f of floes){ const dx=Math.abs(P.x-f.x), dy=Math.abs(P.y-f.y);
     if(dx<=f.w/2 && dy<=f.h/2 && (dx+dy)<bestd){ best=f; bestd=dx+dy; } }
-  if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; }   // carried by the drift
-  else frostPlungeStart();
+  if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; return; }   // carried by the drift
+  if(wheelCarry(wheels, dt)) return;   // riding a rotating slab
+  frostPlungeStart();
 }
 function spawnMobsFrostDeep(){
   const Z=FROSTDEEP_ZONES;
@@ -2243,13 +2259,9 @@ function exitFrostDungeon(){
 }
 function pullIceLever(b){
   if(b.gateTiles || b.wardGroup || b.gate) return pullVaultLever(b);   // Glacier Vault + Undermill levers open their own gates
-  if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
-  b.on=true; if(Snd.quest) Snd.quest();
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,0); }   // grind the gate open
-  invalidateScenery&&invalidateScenery();
-  shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
-  banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north to the Frozen Heart - lies open.',5200);
+  if(b.on){ toast('The drift-lock is already thrown - the deep gate stands open to the north.',3200); return; }
+  b.on=true;
+  openFrostGate();   // grind the Deep Gate up and move the checkpoint out to the island
 }
 function freeColossus(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
