@@ -797,10 +797,13 @@ function killMob(m,skill){
   // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
   if(m.skyfinalboss){
     P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.parachute=1;
+    // the reward at the end of the rainbow road: the calmed sky's lightness stays in your
+    // step, and your dash now carries you half-again as far (see tryRoll's dashReach).
+    P.unlocked=P.unlocked||{}; P.unlocked.dashfar=true;
     Snd.boss&&Snd.boss();
-    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - THE SKY WILL BEAR YOU NOW');
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - YOUR DASH REACHES FARTHER');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the little bird loops back and lays a great kite of stitched stormcloth at your feet: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the settled sky keeps its lightness in your step: your <b style="color:#c9b0ff">dash now carries you half-again as far</b>. The little bird loops back and lays a great kite of stitched stormcloth at your feet too: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
       {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
   }
   // The Drowned Minotaur dens in the Stormreach catacomb
