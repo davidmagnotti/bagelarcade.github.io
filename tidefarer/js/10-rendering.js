@@ -1211,7 +1211,31 @@ function drawDecor(b,s){
     for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*7,Math.sin(a)*7); g.stroke(); }
     for(let i=0;i<4;i++){ const a=i/4*TAU+0.3; g.fillStyle=b.on?'#9ed6f0':'#a89a88'; g.beginPath(); g.arc(Math.cos(a)*7,Math.sin(a)*7,1.8,0,TAU); g.fill(); }   // spoke handles
     g.restore();
+    // a tide-lock valve is carved with a NUMBER (pips) matching the plaque's order
+    if(b.pips){ const n=b.pips, perRow=Math.min(n,3), rows=Math.ceil(n/3), pw=Math.max(11,perRow*4.2+5), ph=rows*4.2+4, top=-10.5;
+      g.fillStyle='#241c13'; g.fillRect(-pw/2,top,pw,ph); g.strokeStyle='#0c0805'; g.lineWidth=1; g.strokeRect(-pw/2,top,pw,ph);
+      g.fillStyle=b.on?'#9ed6f0':'#e7d6ac';
+      for(let i=0;i<n;i++){ const r=Math.floor(i/3), cn=(r===rows-1)?(n-r*3):3, c=i%3;
+        g.beginPath(); g.arc((c-(cn-1)/2)*4.2, top+3+r*4.2, 1.35, 0, TAU); g.fill(); } }
     if(!b.on){ g.fillStyle='rgba(150,205,235,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-32); }
+    g.restore(); return;
+  }
+  if(b.kind==='millplaque'){
+    // a standing stone stele at a tide-lock's mouth, carved top-to-bottom with the ORDER the
+    // numbered valves must be thrown (each row's pips = that step's valve-number)
+    const g=cx, seq=b.seq||[], maxP=seq.reduce((m,v)=>Math.max(m,v),1);
+    const rowH=12, W=Math.max(34, 20+maxP*4.6), H=seq.length*rowH+18;
+    drawShadowAt(g,s.x,s.y,W*0.4); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3b332a'; g.fillRect(-W/2,-H,W,H);                       // the slab
+    g.fillStyle='#2a231b'; g.fillRect(-W/2,-H,W,6);                        // a darker cap
+    g.strokeStyle='#120d08'; g.lineWidth=1.6; g.strokeRect(-W/2,-H,W,H);
+    g.fillStyle='#9a8f79'; g.font='bold 8px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('THE ORDER', 0, -H+9);
+    g.strokeStyle='#221b12'; g.lineWidth=1; g.beginPath(); g.moveTo(-W/2+3,-H+15); g.lineTo(W/2-3,-H+15); g.stroke();
+    for(let i=0;i<seq.length;i++){ const y=-H+18+i*rowH+rowH/2, n=seq[i];
+      g.fillStyle='#6f6555'; g.font='bold 8px Georgia'; g.textAlign='left'; g.fillText((i+1)+'', -W/2+4, y);
+      g.fillStyle='#d9c59b'; for(let k=0;k<n;k++){ g.beginPath(); g.arc(-W/2+14+k*4.6, y, 1.7, 0, TAU); g.fill(); }
+      if(i<seq.length-1){ g.strokeStyle='#4a4234'; g.lineWidth=0.8; g.beginPath(); g.moveTo(-W/2+4,y+rowH/2); g.lineTo(W/2-4,y+rowH/2); g.stroke(); } }
     g.restore(); return;
   }
   if(b.kind==='coggate'){

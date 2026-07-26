@@ -202,7 +202,9 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.on?'Sluice (open)':'Turn the sluice valve'}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.order? 'Throw lock valve '+b.pips : (b.on?'Sluice (open)':'Turn the sluice valve')}; } }
+    if(b.kind==='millplaque'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'millplaque',o:b,label:'Read the carved plaque'}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
@@ -281,6 +283,11 @@ function doInteract(){
   if(it.type==='bonelever'){ facePoint(it.o.x,it.o.y); pullBoneLever(it.o); return; }
   if(it.type==='firelever'){ facePoint(it.o.x,it.o.y); pullFireLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
+  if(it.type==='millplaque'){ facePoint(it.o.x,it.o.y);
+    const seq=(it.o.seq||[]); const S=(typeof G!=='undefined' && G._millSeq)? G._millSeq[it.o.hall] : null;
+    const done=S? S.idx : 0;
+    toast('<i>Worn miller\'s script, carved deep in the stone:</i> "Throw the sluices in this order, or the tide takes it all back - <b>'+seq.join(' , ')+'</b>."'+(done? ' <i>('+done+' of '+seq.length+' thrown so far.)</i>':''), 6000);
+    Snd.quest&&Snd.quest(); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
       addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
