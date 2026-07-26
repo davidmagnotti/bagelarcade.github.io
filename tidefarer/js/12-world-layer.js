@@ -1006,17 +1006,15 @@ function placeObjectsEastDeep(){
   G.decor.push({kind:'firelever', x:34.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
   G._eastCross.push({gate:'g2', cy0:40, cy1:53, farY:39, startY:54.5, lever:true, leverDur:20});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, perm:false, label:'the Causeway Gate'});
-  // CH3 - three counter-turning slabs (the true test), then a roomy far-ledge landing with its
-  // own LEVER at the Dragon Gate. Same rule on the slabs: pit always gaps them, so every hop is a
-  // dash. Cross the three slabs onto the landing, then pull the lever - the Dragon Gate holds open
-  // long enough to walk through at your own pace (it re-shuts if you dawdle, but you have room).
+  // CH3 - three counter-turning slabs (the true test), then a roomy far-ledge landing. Same rule
+  // on the slabs: pit always gaps them, so every hop is a dash. Cross all three onto the landing
+  // and the Dragon Gate simply grinds open for good - no lever, no timer, just the way through.
   chasm(28,52,23,36);
   wheel(40,33, 1.7,  1.0,  Math.PI/2, 'g3');
   wheel(40,27.8, 1.7, -1.0, -Math.PI/2, 'g3');
   wheel(40,22.6, 1.7,  1.0,  Math.PI/2, 'g3');
-  G.decor.push({kind:'firelever', x:43.5, y:21.5, gate:'g3', on:false, label:'a fire-lever'});
-  G._eastCross.push({gate:'g3', cy0:23, cy1:36, farY:20, startY:37.5, lever:true, leverDur:10});
-  G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, perm:false, label:'the Dragon Gate'});
+  G._eastCross.push({gate:'g3', cy0:23, cy1:36, farY:20, startY:37.5});
+  G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
   const FENCE=[[53,28],[53,29],[53,30]];
