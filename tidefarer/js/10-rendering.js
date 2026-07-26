@@ -1379,9 +1379,10 @@ function drawDecor(b,s){
   }
   if(b.kind==='firepit'){
     // a cell of the bottomless pit you must dash across on the turning slabs. Pure opaque black,
-    // drawn a touch oversized so the cells fuse into one seamless void (no visible grid squares).
+    // drawn as a FULL tile diamond (half-tile is 32x16) plus a little overlap so the cells fuse
+    // into one seamless void with no floor showing through between them.
     const g=cx; g.save(); g.translate(s.x,s.y);
-    g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-10); g.lineTo(17.5,-1); g.lineTo(0,8); g.lineTo(-17.5,-1); g.closePath(); g.fill();
+    g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-18); g.lineTo(34,0); g.lineTo(0,18); g.lineTo(-34,0); g.closePath(); g.fill();
     g.restore(); return;
   }
   if(b.kind==='firelever'){
