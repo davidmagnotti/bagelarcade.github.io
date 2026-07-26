@@ -226,7 +226,7 @@ const MOBDEF = {
   hare:{hp:12, dmg:0, speed:2.6, aggro:0, xp:10, gold:[0,0], lvl:1, name:'Garden Hare'},   // a harmless lettuce thief - bonk it and it bolts
   polarbear:{hp:560, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
   icecolossus:{hp:1120, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'},   // Vath-cursed dungeon guardian - freed, not slain
-  minotaur:{hp:900, dmg:34, speed:2.7, aggro:11, xp:520, gold:[40,70], lvl:14, name:'The Drowned Minotaur'},   // bull-headed brute denning in the Stormreach bone-maze
+  minotaur:{hp:900, dmg:34, speed:2.7, aggro:11, xp:520, gold:[40,70], lvl:14, name:'The Drowned Minotaur'},   // bull-headed brute wardening the vault past the Stormreach Ossuary
   // -- the Rainbow Road (sky-dungeon) --
   skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank

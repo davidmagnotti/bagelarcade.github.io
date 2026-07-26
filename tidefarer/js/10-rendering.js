@@ -63,6 +63,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   lavaseg:1, lavasluice:1, firewheel:1,
   axetrap:1, arrowtrap:1, traparrow:1, spiketile:1, skybeam:1,
   firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, shoottarget:1, bonepit:1, fadetile:1,
+  dancebtn:1, danceghost:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -188,7 +189,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -826,6 +827,30 @@ function drawDecor(b,s){
     g.fillStyle='#cabfa6'; g.strokeStyle='#7a6f58'; g.lineWidth=1;
     for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.4,-35,4.8,40); g.strokeRect(i*11-2.4,-35,4.8,40); }   // vertical bars
     g.fillStyle='#b3a888'; for(let yy=-30;yy<=-4;yy+=12){ g.fillRect(-16,yy,32,3.2); }               // rib cross-bars
+    g.restore(); return;
+  }
+  if(b.kind==='dancebtn'){
+    // an Ossuary floor-stone: a sunken bone-ringed flagstone that blazes ghost-green when trodden
+    const g=cx, lit=b.lit, gl=0.45+0.45*Math.sin(G.time*4 + b.x*1.3);
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle= lit? '#1e3a2c' : '#241f1b';
+    g.beginPath(); g.moveTo(0,-11); g.lineTo(16,-1); g.lineTo(0,9); g.lineTo(-16,-1); g.closePath(); g.fill();
+    g.strokeStyle= lit? '#9fe8c0' : '#5f5346'; g.lineWidth= lit?2.4:1.6; g.stroke();
+    g.fillStyle= lit? 'rgba(120,220,160,'+(0.30+0.35*gl).toFixed(2)+')' : 'rgba(15,12,10,0.55)';
+    g.beginPath(); g.moveTo(0,-6); g.lineTo(10,-1); g.lineTo(0,5); g.lineTo(-10,-1); g.closePath(); g.fill();
+    if(lit){ g.fillStyle='rgba(220,255,235,'+(0.55+0.4*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,-1,2.4,0,TAU); g.fill(); }
+    else { g.fillStyle='rgba(150,140,120,0.5)'; g.font='bold 10px Georgia'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('✦',0,-1); g.textBaseline='alphabetic'; }
+    g.restore(); return;
+  }
+  if(b.kind==='danceghost'){
+    // the spectral bonewright who treads the pattern during a chamber's cut scene
+    if(b.hidden) return;
+    const g=cx, a=(b.fadeA!=null?b.fadeA:1);
+    g.save(); g.translate(s.x,s.y);
+    g.globalAlpha=0.30*a; g.fillStyle='rgba(120,220,160,1)';
+    g.beginPath(); g.ellipse(0,-20,19,26,0,0,TAU); g.fill();
+    g.globalAlpha=0.82*a;
+    try{ drawSkeleton(g,0,0,{anim:b.anim||0, face:b.face||1, hurtT:0}); }catch(e){}
     g.restore(); return;
   }
   if(b.kind==='boneplate'){

@@ -3047,16 +3047,42 @@ function spawnMobsReach(){
     if(sp) spawnMob('raider', sp[0], sp[1]); }
 }
 function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
-// ---------- THE DROWNED CATACOMB (reachdeep) - a modest bone-lock dungeon ----------
+// ---------- THE DROWNED CATACOMB (reachdeep) - THE OSSUARY DANCE ----------
+// The Ossuary is cut into three stacked button-chambers. On first setting foot in each,
+// a spectral BONEWRIGHT treads the chamber's floor-stones in a set order (a cut scene);
+// then the stones go dark and you must tread the same steps. A wrong stone looses a
+// ward-jolt (-HP) and the bonewright shows you the pattern again. Solve all three to
+// grind the Bone Gate up onto the Drowned Vault. Leaving and re-descending replays the
+// dances (the dungeon regenerates fresh until the warden is felled).
+const RDANCE = {
+  x0:27, x1:53, gateX0:39, gateX1:41,   // Ossuary interior span + the 3-wide central ward-gates
+  chambers:[
+    { name:'THE FIRST STEP',     y0:55, y1:62, entryY:61.4, gateY:54,
+      cells:[[37,57],[43,57],[37,60],[43,60]],
+      seq:[2,0,3] },
+    { name:'THE SECOND MEASURE', y0:48, y1:53, entryY:53.2, gateY:47,
+      cells:[[35,49],[40,49],[45,49],[35,52],[40,52],[45,52]],
+      seq:[3,1,5,0] },
+    { name:'THE LAST DANCE',     y0:41, y1:46, entryY:46.2, gateY:null,   // last -> the Bone Gate (y37)
+      cells:[[35,42],[40,42],[45,42],[35,44],[40,44],[45,44],[35,46],[40,46],[45,46]],
+      seq:[8,4,0,5,3] }
+  ]
+};
 let REACHDEEP_WALLS = [];   // catacomb stone bordering the carved floor - drawn as visible ewall blocks
 function genReachDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
   carve(30,76,50,90);   // R1 THE SUNKEN STAIR - entry landing
   carve(38,60,42,78);   // corridor A
-  carve(26,40,54,62);   // R2 THE OSSUARY - three bone-locks
+  carve(26,40,54,62);   // R2 THE OSSUARY - the three dance-chambers
   carve(38,34,42,42);   // corridor B (the sealed gate at y37)
   carve(28,6,52,34);    // R3 THE DROWNED VAULT - warden + hoard
+  // the two internal ward-walls that split the Ossuary into three chambers: solid stone
+  // across the room, save the 3-wide central doorway each ward-gate seals (see setupReachDance)
+  for(const gy of [54,47]) for(let x=RDANCE.x0;x<=RDANCE.x1;x++){
+    if(x>=RDANCE.gateX0 && x<=RDANCE.gateX1) continue;   // leave the central doorway carved
+    setSolid(x,gy,1); setTile(x,gy,T.RUIN);
+  }
   // record the visible wall faces (catacomb stone bordering the carved floor) BEFORE
   // the bone gate goes solid, so an opened gate never leaves a phantom wall behind
   REACHDEEP_WALLS=[];
@@ -3075,132 +3101,185 @@ function placeObjectsReachDeep(){
   for(const [x,y] of REACHDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   G.decor.push({kind:'tombmouth', x:40.5, y:88.5, up:1, label:'the way up'});   // back to the graveyard
   setSolid(40,88,0); setTile(40,88,T.RUIN);
-  for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[32,80],[48,80],[28,58],[52,58],[28,50],[52,50],[28,44],[52,44],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
-  // ---- THE BONE-MAZE GAUNTLET ----
-  // The brine long since drained - what's left is a serpentine of catacomb stone, its corridors
-  // strung with killing traps. Bone-hafted axes swing across the halls, arrow-slits loose bolts
-  // down the lanes, and spike-plates snap up underfoot. TWO bone-gates seal the maze; each is
-  // held by a bone-lever you must find and throw before the way opens. The traps thicken the
-  // deeper you climb. A clip costs blood, not a restart - so weave (or DASH clean through a blade).
-  G._reachT=0; G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachGateOpen=false; G._reachMazeTiles=[];
-  const axe=(x,y,amp,spd,phase,dmg)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:dmg||22}; G.decor.push(a); G._axes.push(a); };
-  const emitter=(x,y,dx,dy,period,phase,dmg)=>{ const e={kind:'arrowtrap', x:x+0.5, y:y+0.5, dx, dy, period, phase, t:phase*period, warn:0, dmg:dmg||14}; G.decor.push(e); G._emitters.push(e); };
-  const spikes=(x0,x1,y,spd,phase,dmg)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:dmg||16}; G.decor.push(s); G._spikes.push(s); } };
-  // --- carve the serpentine safe path, then fill the rest of the Ossuary with solid bone walls ---
-  const OX0=26,OX1=54,OY0=40,OY1=62, LANE=3, leftX=28, rightX=50, entryX=40, exitX=40;
-  const safe=new Set();
-  const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
-  const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
-  for(let x=38;x<=42;x++) for(let y=58;y<=62;y++) safe.add(x+','+y);   // entry vestibule (meets corridor A)
-  for(let x=38;x<=42;x++) for(let y=40;y<=42;y++) safe.add(x+','+y);   // exit vestibule (meets corridor B)
-  V(entryX,58,62); H(58,entryX,rightX);        // in from corridor A, east along leg 1
-  V(rightX,52,58); H(52,leftX,rightX);         // up, then west along leg 2
-  V(leftX,46,52);  H(46,leftX,rightX);         // up, then east along leg 3
-  V(rightX,42,46); H(42,exitX,rightX); V(exitX,40,42);   // up, west along leg 4, out to corridor B
-  for(let y=OY0;y<=OY1;y++) for(let x=OX0;x<=OX1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
-    setSolid(x,y,1); G._reachMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }
-  // --- two bone-gates across the connectors, each freed by a lever earlier on the path ---
-  const gate1=[[rightX,56],[rightX+1,56],[rightX+2,56]];   // across the leg1->leg2 climb
-  const gate2=[[leftX,50],[leftX+1,50],[leftX+2,50]];      // across the leg2->leg3 climb
-  for(const [x,y] of gate1){ setSolid(x,y,1); setTile(x,y,T.RUIN); G.decor.push({kind:'bonebars', x:x+0.5, y:y+0.5, gate:'r1'}); }
-  for(const [x,y] of gate2){ setSolid(x,y,1); setTile(x,y,T.RUIN); G.decor.push({kind:'bonebars', x:x+0.5, y:y+0.5, gate:'r2'}); }
-  G.decor.push({kind:'bonelever', x:45.5, y:59.5, on:false, gate:'r1', gateTiles:gate1,
-    openBanner:'THE FIRST BONE-GATE GRINDS UP', openSub:'THE MAZE OPENS NORTH', label:'a bone-lever'});
-  G.decor.push({kind:'bonelever', x:35.5, y:53.5, on:false, gate:'r2', gateTiles:gate2,
-    openBanner:'THE SECOND BONE-GATE GRINDS UP', openSub:'THE WAY TO THE VAULT NEARS', label:'a bone-lever'});
-  // dressing graves set into the maze walls
-  for(const [gx,gy] of [[27,61],[53,61],[27,41],[53,41],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
-  // --- the traps, thickening leg by leg as you climb ---
-  axe(40, 72, 2.0, 2.4, 0); axe(40, 66, 2.0, 2.4, Math.PI);   // CORRIDOR A - teach the rhythm
-  axe(48, 59, 2.0, 2.0, 0.2);                                 // LEG 1 (easy) - one slow blade
-  spikes(30, 49, 53, 0.8, 0.0); axe(31, 53, 2.0, 2.2, 0.6);   // LEG 2 (medium) - spike strip + blade
-  emitter(28, 47,  1, 0, 2.0, 0.00); emitter(52, 47, -1, 0, 2.0, 0.5); axe(40, 47, 3.4, 2.0, 0.3);  // LEG 3 (hard) - crossfire + wide blade
-  axe(40, 43, 3.0, 2.6, 0.0); spikes(34, 47, 43, 0.9, 0.4);   // LEG 4 (hardest) - fast blade + spikes
-  // R3: the warden's hoard
+  G._reachGateOpen=false;
+  // ---- THE OSSUARY DANCE: three floor-stone memory chambers (see setupReachDance) ----
+  setupReachDance();
+  // dressing graves in the far corners of the chambers (clear of the stones + their lanes)
+  for(const [gx,gy] of [[29,56],[51,56],[29,43],[51,43],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
+  // R3: the warden's hoard, beyond the Bone Gate
   G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
   G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
   G.critters=[];
-  G._reachHint=0;
-  // a cleared run (the warden is down) tears the maze down, stills the traps and stands every gate open
+  // a cleared run (the warden is down) tears the dance down and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
-    for(const [x,y] of (G._reachMazeTiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
-    for(const [x,y] of [...gate1,...gate2]){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
-    G.decor=G.decor.filter(d=>d.kind!=='axetrap' && d.kind!=='arrowtrap' && d.kind!=='spiketile' && d.kind!=='traparrow'
-      && !(d.kind==='ewall'&&d.maze) && d.kind!=='bonebars' && d.kind!=='bonelever');
-    G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachMazeTiles=[];
+    collapseReachDance();
     for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); } }
 }
-// throw a catacomb bone-lever: grind its bone-gate up (its tiles clear) for good
-function pullBoneLever(b){
-  if(b.on){ toast('This bone-lever is already thrown - its gate stands open.',2800); return; }
-  b.on=true; Snd.quest&&Snd.quest(); buzz&&buzz(8);
-  shockwave(b.x,b.y,'rgba(200,190,170,0.85)',46); burst(b.x,b.y-0.4,'#d8cbb0',12,1.8); G.shake=Math.max(G.shake||0,0.35);
-  for(const [x,y] of (b.gateTiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
-  G.decor=G.decor.filter(d=>!(d.kind==='bonebars' && d.gate===b.gate));
-  invalidateScenery&&invalidateScenery();
-  banner(b.openBanner||'A BONE-GATE GRINDS UP', b.openSub||'THE MAZE OPENS AHEAD');
+// ================= THE OSSUARY DANCE =================
+// Build the three button-chambers: the floor-stones, and the two ward-gates that seal each
+// chamber's northern doorway until its pattern is trodden true.
+function setupReachDance(){
+  const D={ chambers:[], demo:null, zap:null, lastKey:'',
+            ghostDecor:{kind:'danceghost', x:-99, y:-99, hidden:true, anim:0, face:1, fadeA:1} };
+  G.decor.push(D.ghostDecor);
+  for(const spec of RDANCE.chambers){
+    const c={ name:spec.name, y0:spec.y0, y1:spec.y1, entryY:spec.entryY, gateY:spec.gateY,
+              seq:spec.seq.slice(), lit:0, shown:false, solved:false, awaitInput:false, btns:[], gateTiles:null };
+    for(let i=0;i<spec.cells.length;i++){ const [x,y]=spec.cells[i];
+      const b={kind:'dancebtn', x:x+0.5, y:y+0.5, tx:x, ty:y, lit:false, litT:0};
+      G.decor.push(b); c.btns.push(b); }
+    if(spec.gateY!=null){   // seal the ward-gate doorway (the last chamber exits by the Bone Gate)
+      const tiles=[]; const tag='dance'+c.name;
+      for(let x=RDANCE.gateX0;x<=RDANCE.gateX1;x++){ tiles.push([x,spec.gateY]);
+        setSolid(x,spec.gateY,1); setTile(x,spec.gateY,T.RUIN);
+        G.decor.push({kind:'bonebars', x:x+0.5, y:spec.gateY+0.5, gate:tag}); }
+      c.gateTiles=tiles; c.gateTag=tag;
+    }
+    D.chambers.push(c);
+  }
+  G._dance=D;
 }
-// spawn a single bolt from a wall-slit, travelling in the emitter's fixed direction
-function spawnTrapArrow(e){
-  const ar={kind:'traparrow', x:e.x+e.dx*0.6, y:e.y+e.dy*0.6, dx:e.dx, dy:e.dy, spd:9.0, life:4.0, dmg:e.dmg};
-  G.decor.push(ar); G._arrows.push(ar);
+// tear the whole dance down (the warden has fallen): open every ward-gate, strip the stones
+function collapseReachDance(){
+  const D=G._dance; if(!D) return;
+  D.demo=null; D.zap=null; if(D.ghostDecor) D.ghostDecor.hidden=true;
+  for(const c of D.chambers){ c.solved=true; c.awaitInput=false;
+    if(c.gateTiles) for(const [x,y] of c.gateTiles){ setSolid(x,y,0); setTile(x,y,T.RUIN); } }
+  G.decor=G.decor.filter(d=> d.kind!=='dancebtn' && d.kind!=='danceghost'
+    && !(d.kind==='bonebars' && (''+d.gate).indexOf('dance')===0));
+  G._dance=null;
+}
+// the spectral bonewright rises and treads chamber c's stones in order - the cut scene
+function startReachDemo(c){
+  const D=G._dance; if(!D) return;
+  c.shown=true; c.awaitInput=false; c.lit=0;
+  for(const b of c.btns){ b.lit=false; b.litT=0; }
+  const wp=[{x:40.5, y:c.entryY}];                         // in from the south doorway...
+  for(const idx of c.seq) wp.push({x:c.btns[idx].x, y:c.btns[idx].y, btn:idx});   // ...onto each stone in turn
+  D.demo={ chamber:c, wp, seg:0, pause:0.55, done:false };
+  const gh=D.ghostDecor; gh.hidden=false; gh.x=40.5; gh.y=c.entryY+1.4; gh.face=1; gh.anim=0; gh.fadeA=1;
+  if(typeof cinematic==='function') cinematic(true);
+  banner(c.name, 'THE BONEWRIGHT TREADS THE WARD - MARK EACH STONE');
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.2);
+  P.click=null; P.moving=false;
+}
+// advance the cut scene: walk the bonewright waypoint to waypoint, lighting each stone as trod
+function advanceReachDemo(dt){
+  const D=G._dance, dm=D.demo, gh=D.ghostDecor, c=dm.chamber;
+  gh.anim=(gh.anim||0)+dt*3.2;
+  if(dm.done){ gh.fadeA=(gh.fadeA!=null?gh.fadeA:1)-dt*2.0; if(gh.fadeA<=0) finishReachDemo(); return; }
+  if(dm.pause>0){ dm.pause-=dt; return; }
+  const tgt=dm.wp[dm.seg];
+  if(!tgt){ dm.done=true; dm.pause=0.5; return; }          // route done -> hold, then fade
+  const dx=tgt.x-gh.x, dy=tgt.y-gh.y, dd=Math.hypot(dx,dy)||1e-4;
+  if(dx<-0.03) gh.face=-1; else if(dx>0.03) gh.face=1;
+  const step=4.2*dt;
+  if(dd<=step){ gh.x=tgt.x; gh.y=tgt.y;
+    if(tgt.btn!=null){ const b=c.btns[tgt.btn]; b.lit=true; b.litT=0;
+      Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#9fe8c0',10,1.8); shockwave(b.x,b.y,'rgba(120,220,160,0.6)',22);
+      G.shake=Math.max(G.shake||0,0.12); dm.pause=0.44; }
+    dm.seg++;
+  } else { gh.x+=dx/dd*step; gh.y+=dy/dd*step; }
+}
+// the cut scene ends: the stones go dark and control returns for the player's turn
+function finishReachDemo(){
+  const D=G._dance, c=D.demo.chamber, gh=D.ghostDecor;
+  gh.hidden=true; gh.x=-99; gh.y=-99;
+  for(const b of c.btns){ b.lit=false; b.litT=0; }
+  c.awaitInput=true; c.lit=0; D.demo=null;
+  D.lastKey=Math.floor(P.x)+','+Math.floor(P.y);
+  if(typeof cinematic==='function') cinematic(false);
+  banner('YOUR TURN', 'TREAD THE SAME STONES, IN THE SAME ORDER');
+  Snd.quest&&Snd.quest();
+}
+// read the hero's footfalls onto chamber c's stones (called only while awaiting input)
+function reachDanceStep(c){
+  const D=G._dance;
+  const tx=Math.floor(P.x), ty=Math.floor(P.y), key=tx+','+ty;
+  if(key===D.lastKey) return;        // only act as we step onto a NEW tile
+  D.lastKey=key;
+  const bi=c.btns.findIndex(b=>b.tx===tx && b.ty===ty);
+  if(bi<0) return;                   // plain floor between the stones - safe
+  const b=c.btns[bi];
+  if(bi===c.seq[c.lit]){             // the right stone, in turn
+    b.lit=true; b.litT=0; c.lit++;
+    Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#9fe8c0',10,1.8);
+    addFloat(String(c.lit), b.x, b.y-1.4, '#bff0d0', 1.0);
+    if(c.lit>=c.seq.length) solveReachChamber(c);
+  } else {                           // a wrong stone - the ward jolts you
+    reachDanceZap(c);
+  }
+}
+// the pattern is trodden true: the ward-gate (or the Bone Gate) grinds up
+function solveReachChamber(c){
+  c.solved=true; c.awaitInput=false;
+  for(const b of c.btns) b.lit=true;
+  Snd.quest&&Snd.quest(); G.shake=Math.max(G.shake||0,0.4);
+  if(c.gateTiles){
+    for(const [x,y] of c.gateTiles){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    G.decor=G.decor.filter(d=>!(d.kind==='bonebars' && d.gate===c.gateTag));
+    invalidateScenery&&invalidateScenery();
+    shockwave(40.5, c.gateY+0.5, 'rgba(120,220,160,0.85)', 48);
+    banner('A WARD-GATE GRINDS UP','THE DANCE WAS TRUE - CLIMB ON');
+  } else {
+    openBoneGate();   // the last chamber opens onto the Drowned Vault
+  }
+  autoSave&&autoSave();
+}
+// a wrong step: the ward looses a bone-green jolt (-HP), wipes the stones, and re-shows the dance
+function reachDanceZap(c){
+  const D=G._dance; if(D.zap) return;
+  if(P.hp>1){ P.hp=Math.max(1, P.hp-6); if(typeof refreshUI==='function') refreshUI(); addFloat('-6',P.x,P.y-1.4,'#9fe8c0',1.0); }
+  Snd.boss&&Snd.boss(); Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(24); G.flash=Math.max(G.flash||0,0.35);
+  shockwave(P.x,P.y,'rgba(120,220,160,0.85)',46); burst(P.x,P.y-0.4,'#9fe8c0',18,2.6);
+  for(const b of c.btns){ b.lit=false; b.litT=0; }
+  c.lit=0; c.awaitInput=false;
+  D.zap={ chamber:c, t:0, dur:0.75, x:P.x, y:P.y };
+  P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  banner('A WARD-JOLT!','A WRONG STONE - WATCH THE DANCE AGAIN');
 }
 function openBoneGate(){
   if(G._reachGateOpen) return; G._reachGateOpen=true;
   for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
   invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(200,190,170,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
+  Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,220,160,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
   banner('THE BONE GATE GRINDS UP','THE DROWNED VAULT LIES OPEN');
-  toast('You clear the last of the traps and the Bone Gate hauls up. The Drowned Vault - and the thing that wardens it - lie beyond.',5000);
   autoSave&&autoSave();
 }
-// drive the catacomb's traps: swing the axes, cycle the spike-plates, loose the wall-bolts, and
-// bleed the player on a clean hit (a dash's roll frames pass through everything unharmed).
+// drive THE OSSUARY DANCE: play each chamber's cut scene on first entry, then read the
+// hero's footfalls against the pattern; a wrong stone looses a ward-jolt and re-shows it.
 function updateReachDeep(dt){
-  const t=(G._reachT=(G._reachT||0)+dt);
-  const safe = P.dead || (P.rollT||0)>0;   // dashing (or dead) - no trap can touch you
-  const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:13}); };
-  // swinging axes
-  for(const a of (G._axes||[])){
-    a.hx = a.x + a.amp*Math.sin(t*a.spd + a.phase); a.hy = a.y;
-    if(Math.hypot(P.x-a.hx, P.y-a.hy) < a.hitR) HIT(a.dmg, a.hx, a.hy);
+  const D=G._dance; if(!D) return;
+  // gently age each lit stone's glow phase
+  for(const c of D.chambers) for(const b of c.btns) if(b.lit) b.litT=(b.litT||0)+dt;
+  // the cut scene plays out (the hero is held still, see updatePlayer)
+  if(D.demo){ advanceReachDemo(dt); return; }
+  // the ward-jolt plays out, then the bonewright shows the dance again
+  if(D.zap){ D.zap.t+=dt;
+    if(Math.random()<0.6) burst(D.zap.x+rnd(-0.4,0.4), D.zap.y-rnd(0,1.4), '#9fe8c0', 1, 1.6);
+    if(D.zap.t>=D.zap.dur){ const c=D.zap.chamber; D.zap=null; startReachDemo(c); }
+    return;
   }
-  // spike-plates: a short WARNING (cracks/rumble) then the spikes stab up for part of the cycle
-  for(const s of (G._spikes||[])){
-    const ph=((t*s.spd + s.phase)%1 + 1)%1;
-    s.warnP = (ph>=0.55 && ph<0.68)? (ph-0.55)/0.13 : 0;   // telegraph window
-    s.up = ph>=0.68 && ph<0.95;
-    if(s.up && Math.floor(P.x)===s.gx && Math.floor(P.y)===s.gy) HIT(s.dmg, s.x, s.y);
-  }
-  // wall-slit emitters: a brief glow, then a bolt on each period
-  for(const e of (G._emitters||[])){
-    e.t=(e.t||0)+dt; const untilFire=e.period-e.t; e.warn=(untilFire<0.35)?1:0;
-    if(e.t>=e.period){ e.t-=e.period; spawnTrapArrow(e); }
-  }
-  // bolts in flight
-  if(G._arrows && G._arrows.length){
-    let died=false;
-    for(const ar of G._arrows){ ar.x+=ar.dx*ar.spd*dt; ar.y+=ar.dy*ar.spd*dt; ar.life-=dt;
-      if(!ar.dead && Math.hypot(P.x-ar.x, P.y-ar.y)<0.55){ HIT(ar.dmg, ar.x, ar.y); ar.dead=true; }
-      if(!ar.dead && (!inb(Math.floor(ar.x),Math.floor(ar.y)) || solidAt(Math.floor(ar.x),Math.floor(ar.y)) || ar.life<=0)) ar.dead=true;
-      if(ar.dead) died=true;
-    }
-    if(died){ G._arrows=G._arrows.filter(a=>!a.dead); G.decor=G.decor.filter(d=>d.kind!=='traparrow' || !d.dead); }
-  }
-  // clearing the north end of the ossuary hauls the Bone Gate up for good
-  if(!G._reachGateOpen && P.y<=43 && P.x>=27 && P.x<=53) openBoneGate();
+  if(P.dead) return;
+  // which chamber is the hero standing in?
+  let cur=null;
+  for(const c of D.chambers){ if(P.x>=RDANCE.x0-0.5 && P.x<=RDANCE.x1+1.5 && P.y>=c.y0-0.4 && P.y<=c.y1+0.6){ cur=c; break; } }
+  if(!cur) return;
+  if(!cur.shown && !cur.solved){ startReachDemo(cur); return; }   // first arrival -> the cut scene
+  if(cur.awaitInput && !cur.solved) reachDanceStep(cur);          // the player's turn
 }
 function spawnMobsReachDeep(){
   const Z=REACHDEEP_ZONES;
-  // the Drowned Minotaur dens in the bone-maze and guards the vault; skeletons haunt the ossuary
+  // the Drowned Minotaur wardens the vault beyond the Bone Gate; skeletons haunt it with him
   if(!(P.story && P.story.tombBossDown)){
     const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
     const w=spawnMob('minotaur', sp[0], sp[1]);
-    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='BEAST OF THE BONE-MAZE'; w.tombboss=1; w.ach='deepwarden';
+    if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='WARDEN OF THE DROWNED VAULT'; w.tombboss=1; w.ach='deepwarden';
       w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; w.entrance='rise'; }
   }
-  // skeletons haunt the vault only - the ossuary is left to its traps
+  // skeletons haunt the vault only - the Ossuary above is left to its ward-dance
   for(let i=0;i<3;i++){ const z=Z.heart, a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
     const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
     if(sp) spawnMob('skeleton', sp[0], sp[1]); }
@@ -3863,10 +3942,10 @@ QUESTS.barrowbrute={ giver:'mora', title:'Wrecker of Stormreach', kind:'special'
   log:'Hunt down the Barrow Brute on the barrow road above Stormreach.',
   doneText:'The whole coast felt it fall. You have given a hundred stranded souls their sea back. Tibb is already at the water with fresh timber - and we will name a cove for you, the least a grateful shore can do.',
   rw:{gold:150, item:{potion:3}, xp:{melee:320, archery:240}} };
-QUESTS.drownedwarden={ giver:'tibb', title:'Beast of the Bone-Maze', kind:'special', xpL:420,
-  brief:'There is a stair under the drowned graveyard, and a great bull-headed brute that walks the bone-maze below - the Drowned Minotaur, my grandfather\'s grandfather sealed it in and told us never to dig. But the good salvage is all down there, and Stormreach is starving. Go down, put the beast\'s horns in the dirt, and let us bury our dead in peace.',
-  log:'Descend into the catacomb beneath Stormreach and put down the Drowned Minotaur.',
-  doneText:'The whole warren went quiet when it fell - I felt the floor settle. You can walk the bone-maze safe now, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
+QUESTS.drownedwarden={ giver:'tibb', title:'Warden of the Drowned Vault', kind:'special', xpL:420,
+  brief:'There is a stair under the drowned graveyard, and a great bull-headed brute wardening the vault below - the Drowned Minotaur, my grandfather\'s grandfather sealed it in and told us never to dig. But the old ward still guards the deep: the Ossuary floor is a lock of bone-stones, and a dead thing dances you the key. Tread its steps true, chamber by chamber, and the Bone Gate opens. Go down, put the beast\'s horns in the dirt, and let us bury our dead in peace.',
+  log:'Descend into the catacomb beneath Stormreach, tread the Ossuary\'s ward-dance, and put down the Drowned Minotaur.',
+  doneText:'The whole warren went quiet when it fell - I felt the floor settle. The bone-stones lie dark and the way stands open now, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
   rw:{gold:130, item:{elixir:1, potion:2}, xp:{melee:260, magic:220}} };
 
 /* ---------- Aldermere side-work ----------------------------------------------
