@@ -139,7 +139,11 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
     spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
-    slide:[{x0:28,y0:10,x1:60,y1:33},{x0:34,y0:100,x1:54,y1:114}],   // the arena and the entry landing are slick ice
+    slide:[{x0:34,y0:100,x1:54,y1:114}],   // the entry landing is slick ice (full glide)
+    // the Frozen Heart arena is slick underfoot but FOOTED - a short coasting slide (like the
+    // drift-floes), not the hall's full glide, so a misstep drifts a little instead of flinging
+    // you clear across the room into the spiked edge.
+    driftFloor:[{x0:28,y0:10,x1:60,y1:33}],
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -2119,7 +2123,7 @@ function genFrostAll(){
    ================================================================================= */
 // THE LONG DRIFT: a solid lever-island parked mid-channel (carved into the water later)
 const FROST_ISLAND={x0:39, x1:49, y0:62, y1:69};   // reach it, pull its lever to open the Deep Gate
-const HEART_SEAL=[[42,34],[43,34],[44,34],[45,34],[46,34]];   // slams shut behind you when you enter the arena
+const HEART_SEAL=[[40,34],[41,34],[42,34],[43,34],[44,34],[45,34],[46,34],[47,34],[48,34]];   // spans the whole arena mouth; slams shut behind you when you enter
 function genFrostDeep(){
   // an ice-dungeon carved from solid frozen rock: a long drift-channel crossing up to the Frozen Heart.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -2129,6 +2133,7 @@ function genFrostDeep(){
   carve(30,44,54,92,T.ICE);               // THE LONG DRIFT - a 3x channel of floes + rotating slabs
   carve(FROST_ISLAND.x0, FROST_ISLAND.y0, FROST_ISLAND.x1, FROST_ISLAND.y1, T.ICE);   // the solid lever-island, mid-channel
   carve(42,30,46,45,T.ICE);               // corridor B -> the arena
+  carve(40,34,48,34,T.ICE);               // the Heart-Seal mouth - flared to the arena's full doorway so the seal spans it
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until the island lever is thrown
   // THE FROZEN HEART: one large slippery arena where you fight THE RIMEBOUND. Its edges drop away
   // into spiked freezing water (placed in placeObjectsFrostDeep), and a seal slams shut behind you.
@@ -2229,6 +2234,11 @@ function updateFrostDeep(dt){
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
     banner('THE ICE SEALS BEHIND YOU','NO RETREAT - FELL THE RIMEBOUND');
+    // now that the way back is shut, the Rimebound arrives: reveal it and hand into its entrance beat
+    const boss=(G.mobs||[]).find(m=>m.ach==='rimebreaker' && !m.dead);
+    if(boss){ boss.sealed=false;
+      if(typeof startBossIntro==='function' && !boss.entranceDone && !G.bossIntro)
+        startBossIntro(boss,{kind:boss.entrance, title:boss.entranceTitle, sub:boss.entranceSub}); }
   }
   const floes=G._frostFloes||[], wheels=G._frostWheels||[];
   if(!floes.length && !wheels.length) return;   // a cleared run - the channel is solid ice
@@ -2251,7 +2261,10 @@ function spawnMobsFrostDeep(){
   if(!(P.story && P.story.deepDone)){
     const sp=findOpenNear(Z.boss.x, Z.boss.y, 6) || [Z.boss.x, Z.boss.y];
     const b=spawnMob('icecolossus', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.entrance='enthrall'; }
+    // sealed = inert and unseen until you walk into the Heart and the seal shuts behind you
+    // (updateFrostDeep reveals it and hands into its entrance beat then) - so the Rimebound
+    // never stands waiting in view; it arrives once there's no backing out.
+    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.sealed=true; b.title='THE RIMEBOUND'; b.entranceSub='VATH\'S ICE-THRALL - BREAK THE BINDING'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.entrance='enthrall'; }
   }
 }
 function genFrostDeepAll(){
