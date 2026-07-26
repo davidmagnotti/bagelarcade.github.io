@@ -197,6 +197,8 @@ function nearestInteract(){
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'emberlever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
+    if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:b.on?'Sluice (open)':'Work the sluice'}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -274,6 +276,7 @@ function doInteract(){
     enterFrostVault(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
+  if(it.type==='firelever'){ facePoint(it.o.x,it.o.y); pullFireLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();

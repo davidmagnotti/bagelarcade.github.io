@@ -62,7 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   surgewater:1, dais:1, drainplate:1,
-  lavachasm:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
+  firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -188,7 +188,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='lavachasm'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & the platforms over them are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & the platforms over them are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1377,13 +1377,28 @@ function drawDecor(b,s){
     if(!lit){ g.fillStyle='rgba(150,180,210,'+(0.3+0.3*Math.sin(G.time*3+b.y)).toFixed(2)+')'; g.font='bold 12px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
     g.restore(); return;
   }
-  if(b.kind==='lavachasm'){
-    // a cell of the molten chasm - glowing lava you must cross on the turning slabs
-    const g=cx, gl=0.5+0.4*Math.sin(G.time*2.2+b.seed*1.7); g.save(); g.translate(s.x,s.y);
-    g.fillStyle='rgba(90,28,14,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
-    g.fillStyle='rgba(255,110,30,'+(0.4+0.3*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-6); g.lineTo(11,-1); g.lineTo(0,4); g.lineTo(-11,-1); g.closePath(); g.fill();
-    g.fillStyle='rgba(255,214,120,'+(0.3+0.35*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,5,2.6,0,0,TAU); g.fill();
-    if(Math.random()<0.015) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ff9a3c',size:rnd(1,2.2),grav:-0.05});
+  if(b.kind==='firepit'){
+    // a cell of the bottomless fire-pit you must dash across on the turning slabs. Drawn as a
+    // black void with only a distant ember glow far below, so it reads as "fall = death", not lava.
+    const g=cx, gl=0.5+0.4*Math.sin(G.time*1.6+b.seed*1.7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(8,6,7,0.96)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+    g.fillStyle='rgba(70,26,12,'+(0.22+0.12*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-5); g.lineTo(9,-1); g.lineTo(0,3); g.lineTo(-9,-1); g.closePath(); g.fill();   // faint glow of magma far, far below
+    g.fillStyle='rgba(255,120,40,'+(0.06+0.06*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,3.4,1.7,0,0,TAU); g.fill();
+    if(Math.random()<0.006) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.15,0.15),vy:-rnd(0.3,0.8),life:rnd(0.6,1.3),color:'#c8621f',size:rnd(0.8,1.6),grav:-0.04});
+    g.restore(); return;
+  }
+  if(b.kind==='firelever'){
+    // the fire-lever on CH2's side pad: pull it to haul the Causeway Gate up for a few seconds.
+    // Glows hot amber when armed (ready to pull), dim once thrown.
+    const g=cx, on=b.on, pulse=0.5+0.5*Math.sin(G.time*4+b.x); g.save(); g.translate(s.x,s.y); drawShadowAt(g,0,3,7);
+    g.strokeStyle='#3a2a1e'; g.lineWidth=3.5; g.beginPath(); g.moveTo(0,2); g.lineTo(0,-6); g.stroke();   // the iron post
+    g.save(); g.translate(0,-6); g.rotate(on? 0.7 : -0.5);   // the throw-arm
+    g.strokeStyle='#5a4634'; g.lineWidth=3; g.beginPath(); g.moveTo(0,0); g.lineTo(0,-9); g.stroke();
+    g.fillStyle= on? '#7a3a1a' : 'hsl('+(24+8*pulse).toFixed(0)+',95%,'+(52+10*pulse).toFixed(0)+'%)';
+    g.beginPath(); g.arc(0,-10,3.2,0,TAU); g.fill();
+    if(!on){ g.fillStyle='rgba(255,180,90,'+(0.3+0.35*pulse).toFixed(2)+')'; g.beginPath(); g.arc(0,-10,5.2,0,TAU); g.fill(); }
+    g.restore();
+    g.fillStyle='#2a2018'; g.beginPath(); g.ellipse(0,2,4,2,0,0,TAU); g.fill();   // the base plate
     g.restore(); return;
   }
   if(b.kind==='spinwheel'){

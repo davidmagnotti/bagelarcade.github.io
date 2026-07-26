@@ -968,6 +968,8 @@ function edeepLava(x,y,r){ // a molten pool that both glows and blocks the floor
 }
 function placeObjectsEastDeep(){
   G.decor=G.decor||[];
+  // the whole dungeon turns on the DASH - make sure it's available so the crossings can't soft-lock
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The heat quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
   const Z=EASTDEEP_ZONES;
   // the basalt walls that give the rooms their shape (baked static scenery)
   for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
@@ -977,32 +979,36 @@ function placeObjectsEastDeep(){
   // torches bracketed along the chamber walls
   for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,41],[51,41],[29,22],[51,22],[24,4],[56,4],[40,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ============ THE TURNING BRIDGES: cross the lava on rotating basalt slabs ============
-  // Each chamber is a molten chasm spanned only by stone slabs that turn on a central
-  // spindle. Board a slab when it swings to your ledge, ride it round, and step off (or
-  // onto the next slab) when they line up - miss and you drop into the lava and start the
-  // crossing again. No levers, no plates: pure timing. Reach the far ledge and the gate rises.
-  G._eastChasm=new Set(); G._eastWheels=[]; G._eastCross=[]; G._eastFallHint=0;
-  const chasm=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._eastChasm.add(x+','+y); G.decor.push({kind:'lavachasm', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
-  const wheel=(hx,hy,r,spd,ang0,gate)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:0.95, gate}; G.decor.push(w); G._eastWheels.push(w); };
-  // CHAMBER 1 - THE EMBER FONT: one turning slab (learn the board-ride-step rhythm)
-  chasm(28,52,64,70);
-  wheel(40,67, 4.0, 1.0, Math.PI/2, 'g1');
-  G._eastCross.push({gate:'g1', cy0:64, cy1:70, farY:60, startY:72.5});
+  // ============ THE TURNING BRIDGES: DASH across the pit on rotating basalt slabs ============
+  // Each chamber is a bottomless fire-pit spanned only by stone slabs that turn on a central
+  // spindle. There is a gap of open pit between every ledge and slab, so you must DASH (roll)
+  // to board a slab and to leap from one to the next - time the dash to when a slab swings to
+  // you. Miss and you drop into the pit (you climb back out singed: -5 HP) and start the
+  // crossing over. Reach the far ledge and the gate rises.
+  G._eastChasm=new Set(); G._eastWheels=[]; G._eastCross=[]; G._eastFallHint=0; G._emberG2T=0;
+  const chasm=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._eastChasm.add(x+','+y); G.decor.push({kind:'firepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
+  const pad=(x,y)=>{ G._eastChasm.delete(x+','+y); const k=(x+0.5)+','+(y+0.5); G.decor=G.decor.filter(d=>!(d.kind==='firepit' && d.x===x+0.5 && d.y===y+0.5)); };
+  const wheel=(hx,hy,r,spd,ang0,gate)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15, gate}; G.decor.push(w); G._eastWheels.push(w); };
+  // CH1 - one slab. South ledge y72+, pit y62-71, far ledge y59-61. (learn the dash-board rhythm)
+  chasm(28,52,62,71);
+  wheel(40,66, 3.2, 0.9, Math.PI/2, 'g1');
+  G._eastCross.push({gate:'g1', cy0:62, cy1:71, farY:59, startY:73.0});
   G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
-  // CHAMBER 2 - THE SUNKEN CAUSEWAY: two slabs in series, half a turn apart - ride one up,
-  // step onto the second where their arms overlap, ride it to the far ledge
-  chasm(28,52,45,50);
-  wheel(40,49, 4.0, 1.12,  Math.PI/2, 'g2');
-  wheel(40,44, 4.0, 1.12, -Math.PI/2, 'g2');
-  G._eastCross.push({gate:'g2', cy0:45, cy1:50, farY:40, startY:53.5});
-  G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, label:'the Causeway Gate'});
-  // CHAMBER 3 - THE MOLTEN LOCKS: three slabs in series, the true test
+  // CH2 - two slabs + a TIMED LEVER on a side pad: dash to the pad, pull the lever (it opens
+  // the Causeway Gate for 7s, then resets), then dash the two slabs and through the gate before it shuts.
+  chasm(28,52,43,52);
+  wheel(40,48, 3.0, 1.0,  Math.PI/2, 'g2');
+  wheel(40,44, 3.0, 1.0, -Math.PI/2, 'g2');
+  for(const [px,py] of [[31,49],[32,49],[31,50],[32,50],[31,51],[32,51]]) pad(px,py);   // the side pad (safe island, one dash NW off the entrance ledge)
+  G.decor.push({kind:'firelever', x:31.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
+  G._eastCross.push({gate:'g2', cy0:43, cy1:52, farY:40, startY:53.0, lever:true, leverDur:7});
+  G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, perm:false, label:'the Causeway Gate'});
+  // CH3 - three slabs, the true test. South ledge y34+, pit y24-33, far ledge y21-23.
   chasm(28,52,24,33);
-  wheel(40,32, 3.2, 1.22,  Math.PI/2, 'g3');
-  wheel(40,28, 3.2, 1.22, -Math.PI/2, 'g3');
-  wheel(40,24, 3.2, 1.22,  Math.PI/2, 'g3');
-  G._eastCross.push({gate:'g3', cy0:24, cy1:33, farY:21, startY:35.5});
+  wheel(40,32, 3.0, 1.1,  Math.PI/2, 'g3');
+  wheel(40,29, 3.0, 1.1, -Math.PI/2, 'g3');
+  wheel(40,26, 3.0, 1.1,  Math.PI/2, 'g3');
+  G._eastCross.push({gate:'g3', cy0:24, cy1:33, farY:21, startY:34.0});
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
@@ -1024,42 +1030,70 @@ function placeObjectsEastDeep(){
   // and the chasms filled to solid basalt, so there's no timing to redo
   if(P.story && P.story.emberDone){
     for(const b of G.decor){ if(b.kind==='firegate'){ b.open=true; for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } } }
-    G.decor=G.decor.filter(d=>d.kind!=='lavachasm' && d.kind!=='spinwheel');
+    G.decor=G.decor.filter(d=>d.kind!=='firepit' && d.kind!=='spinwheel' && d.kind!=='firelever');
     G._eastChasm=new Set(); G._eastWheels=[];
   }
 }
-// carry the player around on the slab they're standing on, and drop them into the lava
-// (restart the crossing) if the open floor under them has no slab
+// carry the player on the slab they're standing on, and drop them into the pit (restart the
+// crossing, -5 HP) if the open pit under them has no slab. Mid-dash you're airborne over the
+// pit - that's the only way across the gaps, so boarding a slab always takes an active dash.
 function updateEastDeep(dt){
   const wheels=G._eastWheels||[]; if(!wheels.length) return;
   for(const w of wheels) w.ang += w.spd*dt;
-  // reaching a chamber's far ledge (just north of its chasm) grinds that gate up
-  for(const c of (G._eastCross||[])){ const fg=G.decor.find(d=>d.kind==='firegate' && d.gate===c.gate);
+  // CH1/CH3: reaching the far ledge grinds the gate up. CH2's gate is worked by its lever.
+  for(const c of (G._eastCross||[])){ if(c.lever) continue; const fg=G.decor.find(d=>d.kind==='firegate' && d.gate===c.gate);
     if(fg && !fg.open && P.y>=c.farY && P.y<c.cy0) openFireGate(c.gate); }
-  if(P.dead || (P.rollT||0)>0) return;
+  // CH2 timed lever: while its clock runs the Causeway Gate stands open; stepping through it
+  // (north of the gate) locks it for good, else it shuts when the clock runs out
+  if(G._emberG2T>0){
+    G._emberG2T-=dt;
+    const g2=G.decor.find(d=>d.kind==='firegate' && d.gate==='g2');
+    if(g2 && !g2.perm && P.y < g2.gy){ g2.perm=true; G._emberG2T=0; banner('THE CAUSEWAY GATE HOLDS','THE WAY NORTH IS YOURS'); }
+    else if(G._emberG2T<=0 && g2 && !g2.perm){ emberCloseG2(); }
+  }
+  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the pit
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
-  if(!(G._eastChasm && G._eastChasm.has(tx+','+ty))) return;   // on a ledge / solid - safe footing
-  // over the lava: find the slab under us (smallest perpendicular offset), if any
+  if(!(G._eastChasm && G._eastChasm.has(tx+','+ty))) return;   // on a ledge / pad / solid - safe footing
+  // grounded over the pit: on a slab -> carried; else -> fall
   let best=null, bestPerp=99;
   for(const w of wheels){ const dx=P.x-w.hx, dy=P.y-w.hy;
     const along=dx*Math.cos(w.ang)+dy*Math.sin(w.ang), perp=-dx*Math.sin(w.ang)+dy*Math.cos(w.ang);
-    if(along>=-0.7 && along<=w.r+0.6 && Math.abs(perp)<=w.armw && Math.abs(perp)<bestPerp){ best=w; bestPerp=Math.abs(perp); } }
-  if(best){   // carried round with the slab
+    if(along>=-1.1 && along<=w.r+1.0 && Math.abs(perp)<=w.armw+0.5 && Math.abs(perp)<bestPerp){ best=w; bestPerp=Math.abs(perp); } }   // generous footprint so you never fall while visibly aboard
+  if(best){
     const dA=best.spd*dt, dx=P.x-best.hx, dy=P.y-best.hy;
     const nx=best.hx + dx*Math.cos(dA)-dy*Math.sin(dA), ny=best.hy + dx*Math.sin(dA)+dy*Math.cos(dA);
     if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; }
-  } else {   // nothing underfoot - into the lava, back to the ledge to try again
-    eastFall(ty);
-  }
+  } else eastFall(ty);
+}
+// the fire-lever on CH2's side pad: opens the Causeway Gate for a few seconds, then resets
+function pullFireLever(b){
+  const c=(G._eastCross||[]).find(cc=>cc.gate===b.gate);
+  const g2=G.decor.find(d=>d.kind==='firegate' && d.gate===b.gate);
+  if(g2 && g2.perm){ toast('The Causeway Gate already stands open.',2600); return; }
+  b.on=true;
+  G._emberG2T = (c&&c.leverDur)||7;
+  if(g2){ g2.open=true; for(let x=g2.x0;x<=g2.x1;x++){ setSolid(x,g2.gy,0); setTile(x,g2.gy,T.RUIN); } }
+  invalidateScenery&&invalidateScenery();
+  Snd.quest&&Snd.quest(); buzz&&buzz(9); shockwave(b.x,b.y,'rgba(255,150,60,0.8)',40); burst(b.x,b.y-0.4,'#ffb04a',14,2.2);
+  banner('THE CAUSEWAY GATE HAULS UP','CROSS BEFORE IT SHUTS');
+  toast('The lever bites and the Causeway Gate grinds up - but it will fall again in <b>'+(((c&&c.leverDur)||7))+' seconds</b>. <b>Dash the slabs and through the gate before it shuts.</b>',5200);
+}
+function emberCloseG2(){
+  const g2=G.decor.find(d=>d.kind==='firegate' && d.gate==='g2'); if(!g2 || g2.perm) return;
+  g2.open=false; for(let x=g2.x0;x<=g2.x1;x++){ setSolid(x,g2.gy,1); setTile(x,g2.gy,T.RUIN); }
+  const fl=G.decor.find(d=>d.kind==='firelever' && d.gate==='g2'); if(fl) fl.on=false;
+  invalidateScenery&&invalidateScenery(); Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.35);
+  toast('The Causeway Gate slams shut - the lever has reset. Work it again and be quicker across.',3600);
 }
 function eastFall(ty){
   const c=(G._eastCross||[]).find(cc=>ty>=cc.cy0 && ty<=cc.cy1) || (G._eastCross||[])[0];
+  if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4,'#ff8a5a',0.95); }
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(22);
   burst(P.x,P.y-0.3,'#ff9a3c',18,2.8); shockwave(P.x,P.y,'rgba(255,140,50,0.85)',46);
   if(c){ P.x=40.5; P.y=c.startY; }
   P.click=null; P.moving=false; P.slideDir=null;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._eastFallHint){ G._eastFallHint=1; toast('You drop into the lava and scramble back to the ledge. <b>Board a slab when it swings to your ledge, ride it round, and step off when it lines up.</b>',5200); }
+  if(!G._eastFallHint){ G._eastFallHint=1; toast('You plunge into the pit and haul yourself back out, singed (<b>-5 HP</b>). <b>DASH onto a slab when it swings to your ledge, ride it round, and dash off when it lines up with the next.</b>',5200); }
 }
 function spawnMobsEastDeep(){
   // bristlebacks den on the ledges (NOT out over the lava) - fight them on solid footing
@@ -4087,8 +4121,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE RIMEFISSURE','RIDE THE DRIFTING FLOES ACROSS THE BLACK WATER'),1200);
     setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. Fall in and the cold flings you back to the landing to try again.',8500),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
-    setTimeout(()=>banner('THE EMBERDEEP','TIME THE TURNING SLABS ACROSS THE LAVA'),1200);
-    setTimeout(()=>toast('<i>Molten chasms bar the fire-heart.</i> They are crossed only on the <b>turning basalt slabs</b>: <b>board a slab</b> when it swings to your ledge, <b>ride it round</b>, and step off (or onto the next slab) when they line up. Miss and you drop into the lava and start the crossing again. Reach the far ledge and the gate rises.',8500),1800); }
+    setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
+    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. Reach the far ledge and the gate rises.',9000),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
     setTimeout(()=>banner('THE DROWNED CATACOMB','READ THE SURGE - CROSS ON THE LOW WAVE'),1200);
     setTimeout(()=>toast('<i>The brine rises and falls in waves.</i> Cross the hall by hopping the raised <b>bone-daises</b> - dash across the open floor only while the surge is <b>low</b>, and wait on a dais when it rises. Get caught in the open and it sweeps you back. Reach the <b>drain-plate</b> on the far side to still the surge and raise the gate.',9000),1800); }
