@@ -39,7 +39,5 @@
   if(btn) btn.onclick=()=>togglePause();
   const rb=document.getElementById('resumeBtn');
   if(rb) rb.onclick=()=>togglePause(false);
-  const rt=document.getElementById('resumeTopBtn');
-  if(rt) rt.onclick=()=>togglePause(false);
 })();
 

@@ -176,12 +176,11 @@
     text-shadow:0 -1px 0 rgba(0,0,0,.8);}
   /* Header bar: full-width opaque strip (negative side margins span the card
      padding). The card's top padding is removed so the bar sits flush. */
-  #pauseTopBar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  #pauseTopBar{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     gap:12px;margin:0 -20px;padding:14px 20px 11px;border-radius:14px 14px 0 0;
     background:linear-gradient(180deg,#3a372f 0%,#312e28 100%);
     border-bottom:1px solid #4a473e;box-shadow:0 5px 10px rgba(0,0,0,.3);}
-  #pauseTopBar h2{margin:0;flex:1;text-align:left;}
-  #resumeTopBtn{flex:0 0 auto;white-space:nowrap;padding:9px 16px;font-size:13px;animation:none;}
+  #pauseTopBar h2{margin:0;text-align:center;}
   /* Tab strip - horizontally scrollable if it can't fit (older/narrow phones),
      but sized to fit iPhone width without a swipe in the common case. */
   #pauseTabs{flex:0 0 auto;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;
