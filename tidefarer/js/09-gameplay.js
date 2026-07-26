@@ -813,6 +813,8 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.millDone=1;
     // drain every flooded hall for good (the mazes need no re-solving on a later descent)
     if(G._millWalls && typeof applyMillWall==='function') for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
+    // the works fall silent: still the grind-blades and spike-grates
+    G._millAxes=[]; G._millSpikes=[]; G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap');
     if(typeof invalidateScenery==='function') invalidateScenery();
     banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();

@@ -2412,11 +2412,24 @@ function placeObjectsMillDeep(){
   // HALL B (y9-23): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
   wwall('B','b1', 20, 20,24); wwall('B','b2', 17, 9,13); wwall('B','b3', 14, 20,24); wwall('B','b4', 11, 9,13);
   valve('B', 11,22, ['b2','b3']); valve('B', 20,22, ['b1','b2']); valve('B', 29,22, ['b3','b4']);
+  // ---- THE GRINDING HAZARDS ----
+  // the drowned works still turn where the shaft never fully seized: rusted spike-grates snap up
+  // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
+  // restart - and a DASH's roll frames pass clean through. Hall B grinds harder than Hall A.
+  G._millT=0; G._millSpikes=[]; G._millAxes=[];
+  const mspikes=(x0,x1,y,spd,phase)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:14}; G.decor.push(s); G._millSpikes.push(s); } };
+  const maxe=(x,y,amp,spd,phase)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:18}; G.decor.push(a); G._millAxes.push(a); };
+  // Hall A - a couple of spike-grates and one slow grind-blade
+  mspikes(12,20,35, 0.75, 0.0); mspikes(20,28,30, 0.75, 0.4); maxe(20,32, 2.4, 1.9, 0.2);
+  // Hall B - thicker: three grates and two faster blades
+  mspikes(12,22,18, 0.9, 0.0); mspikes(20,28,15, 0.9, 0.5); mspikes(10,18,12, 0.9, 0.25);
+  maxe(20,21, 2.8, 2.2, 0.0); maxe(20,13, 2.8, 2.3, 0.5);
   // THE STORMSAIL, in the guardian's chamber at the top
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
   G.critters=[];
-  // a cleared run leaves every hall drained (the mazes are solved) so you pass freely
-  if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); } }
+  // a cleared run leaves every hall drained (the mazes are solved) and the works stilled
+  if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
+    G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap'); G._millSpikes=[]; G._millAxes=[]; }
 }
 // drain (walkable) or flood (blocking water) a water-wall's doorway to match its valve
 function applyMillWall(w){
@@ -2449,8 +2462,23 @@ function pullSluiceLever(b){
     toast('The coupled sluices shift - some stretches drain as others flood over. <b>'+openN+' of '+hw.length+'</b> walls stand open. Find the combination that opens them all at once.',3600);
   }
 }
-// the flooded halls are set entirely by the sluice valves - no per-frame work needed
-function updateMillDeep(dt){}
+// drive the mill's grinding hazards: cycle the spike-grates and sweep the grind-blades, bleeding
+// the player on a clean hit (a dash's roll frames pass through everything unharmed).
+function updateMillDeep(dt){
+  const t=(G._millT=(G._millT||0)+dt);
+  const safe = P.dead || (P.rollT||0)>0;
+  const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:12}); };
+  for(const a of (G._millAxes||[])){
+    a.hx = a.x + a.amp*Math.sin(t*a.spd + a.phase); a.hy = a.y;
+    if(Math.hypot(P.x-a.hx, P.y-a.hy) < a.hitR) HIT(a.dmg, a.hx, a.hy);
+  }
+  for(const s of (G._millSpikes||[])){
+    const ph=((t*s.spd + s.phase)%1 + 1)%1;
+    s.warnP = (ph>=0.55 && ph<0.68)? (ph-0.55)/0.13 : 0;
+    s.up = ph>=0.68 && ph<0.95;
+    if(s.up && Math.floor(P.x)===s.gx && Math.floor(P.y)===s.gy) HIT(s.dmg, s.x, s.y);
+  }
+}
 // THE COG-BOUND: the miller who was caught in the gear-train when it seized, risen
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
 // millstone gate up. A single mini-boss - the whole reason the dungeon exists.
@@ -4108,6 +4136,10 @@ function switchWorld(id){
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];
   MAPW=def.W; MAPH=def.H; SEED=def.seed; ZONES=def.zones;
+  // THE UNDERMILL resets its water-maze every visit: the sluices seize shut again once you
+  // leave, so the halls always stand UNSOLVED (flooded) until you fell the Cog-Bound. Skip the
+  // cached (possibly already-drained) copy and regenerate a fresh, blocked puzzle each entry.
+  if(id==='milldeep' && !(P.story && P.story.millDone)) delete WORLDS[id];
   if(WORLDS[id]){
     const w=WORLDS[id];
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;
