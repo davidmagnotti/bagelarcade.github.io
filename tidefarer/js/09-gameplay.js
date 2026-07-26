@@ -1078,44 +1078,20 @@ function updatePlayer(dt){
     }
   }
   const ml=Math.hypot(mx,my);
-  // --- Frostdeep ice-slide: on the dungeon's slick ice you glide in one world
-  //     direction until a wall stops you or you glide off the ice onto footing ---
-  // only the Sliding Halls are slick; the Frostgate and Frozen Heart are ice-floored
-  // for the theme but keep your footing (G.slideZone bounds the slippery room).
-  // slide zones come from the world def (single-source), so they survive cached
-  // re-entry - a mutable global would go stale after hopping between ice dungeons
-  const zones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].slide) || [];
-  const inSlide = zones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1);
-  const onSlick = zones.length && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
+  // --- Rimefissure ice: every slick floor is a FOOTED coasting slide, never a full
+  //     glide. Steps carry a beat of momentum that quickly settles on release, and you
+  //     always keep your feet - so no floor ever sends you sliding endlessly. ---
   // Rimefissure drift-ice: standing on a floe over the channel gives a SLIGHT slide (momentum),
-  // so lining up a precise hop takes timing - distinct from the full glide of the Sliding Halls
+  // so lining up a precise hop takes timing.
   const onFloe = G.worldId==='frostdeep' && !dlg.open && G._frostVoid && G._frostVoid.has(Math.floor(P.x)+','+Math.floor(P.y));
-  // a FOOTED-but-slick floor (the Frozen Heart arena): the same slight-slide as the drift-floes,
-  // so your steps carry a little momentum and coast a beat on release - but you keep your feet
-  // and never full-glide across the room into the spikes.
+  // a FOOTED-but-slick floor (the Frostgate entry landing and the Frozen Heart arena):
+  // the same slight-slide as the drift-floes, so your steps carry a little momentum and
+  // coast a beat on release - but you keep your feet and never glide across the room.
   const driftZones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].driftFloor) || [];
   const onDriftFloor = driftZones.length && P.rollT<=0 && !dlg.open
     && driftZones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1)
     && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
-  if(onSlick){
-    if(!P.slideDir && ml>0.25){
-      // push off along the stronger input axis - but never INTO a wall. If that
-      // way is blocked, push off the other axis instead (so you can turn); if
-      // both are walled you're in a corner and simply hold until you aim clear.
-      const ax={x:Math.sign(mx),y:0}, ay={x:0,y:Math.sign(my)};
-      const primary = Math.abs(mx)>Math.abs(my)? ax : ay, other = (primary===ax)? ay : ax;
-      const open=(dir)=> (dir.x||dir.y) && !circleBlocked(P.x+dir.x*0.5, P.y+dir.y*0.5, 0.28);
-      P.slideDir = open(primary)? primary : (open(other)? other : null);
-    }
-    if(P.slideDir){
-      const ss=7.0*dt; let moved=false;
-      const nx=P.x+P.slideDir.x*ss; if(!circleBlocked(nx,P.y,0.28)){ P.x=nx; moved=true; }
-      const ny=P.y+P.slideDir.y*ss; if(!circleBlocked(P.x,ny,0.28)){ P.y=ny; moved=true; }
-      P.dir=P.slideDir; P.moving=true; P.anim+=ss*3.1;
-      if(Math.random()<dt*20) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-P.slideDir.x*0.6,vy:-P.slideDir.y*0.6,life:0.4,color:'#eaf6ff',size:2.2,grav:0});
-      if(!moved || tileAt(Math.floor(P.x),Math.floor(P.y))!==T.ICE){ P.slideDir=null; Snd.step&&Snd.step(T.ICE); }
-    } else P.moving=false;
-  } else if(onFloe || onDriftFloor){
+  if(onFloe || onDriftFloor){
     // a slight slide: your steps build a little momentum and coast a beat when you let go,
     // so a precise step between drifting floes takes timing (over-run and you slide into the water)
     if(P.slideDir) P.slideDir=null;
