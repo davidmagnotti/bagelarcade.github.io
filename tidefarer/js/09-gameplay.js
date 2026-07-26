@@ -1478,6 +1478,14 @@ function updateProjs(dt){
     if(p.kind==='hex'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#c77bff',size:3,grav:0});
     if(p.kind==='arrow'&&Math.random()<0.5) G.parts.push({x:p.x,y:p.y-0.35,vx:0,vy:0,life:0.18,color:'rgba(230,225,205,0.55)',size:2});
     const tx=Math.floor(p.x), ty=Math.floor(p.y);
+    // a player shot striking a ward-eye mechanism works its gate (checked before the wall-kill so a
+    // wall-mounted eye still registers)
+    if(p.from==='player'){
+      let struck=false;
+      for(const d of G.decor){ if(d.kind==='shoottarget' && !d.hit && dist(p.x,p.y,d.x,d.y-0.3)<0.75){
+        if(typeof hitShootTarget==='function') hitShootTarget(d); p.life=0; struck=true; break; } }
+      if(struck) continue;
+    }
     if(G.solid[ty*MAPW+tx]===1 && tileAt(tx,ty)>=T.SAND){ p.life=0; burst(p.x,p.y-0.3,'#c9b990',4,1.5); continue; }
     if(p.from==='player'){
       for(const m of G.mobs){
@@ -1603,6 +1611,7 @@ function updateWorld(dt){
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
   if(G.worldId==='milldeep' && typeof updateMillDeep==='function') updateMillDeep(dt);
+  if(G.worldId==='undermaw' && typeof updateUndermaw==='function') updateUndermaw(dt);
   if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
   if(G.worldId==='frostvault' && typeof updateFrostVault==='function') updateFrostVault(dt);
   if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);

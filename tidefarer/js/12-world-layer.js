@@ -98,10 +98,10 @@ const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Winds
   works: {x:20, y:4,  r:6,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian + the stormsail
   vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
 };
-const UNDERMAW_ZONES = { // THE UNDERMAW - a brief beast-den under the Barik hills
-  maw:  {x:20, y:34, r:6,  name:'The Maw',        lv:[11,13]},   // the entry
-  den:  {x:20, y:19, r:11, name:'The Beast-Den',  lv:[11,13]},   // the one fight
-  hoard:{x:20, y:5,  r:6,  name:'The Deep Hoard',  lv:[0,0]}     // the reward alcove past the door
+const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
+  maw:  {x:22, y:146, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
+  den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[12,13]},   // the boss fight
+  hoard:{x:22, y:5,   r:5,  name:'The Deep Hoard',    lv:[0,0]}      // the reward alcove past the door
 };
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
@@ -161,8 +161,8 @@ const WORLD_DEFS = {
   milldeep:{ W:40, H:52, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
     spawn:{x:19.5,y:46.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
     gen:()=>genMillDeepAll() },
-  undermaw:{ W:40, H:44, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
-    spawn:{x:20.5,y:37.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
+  undermaw:{ W:44, H:154, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:22.5,y:147.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
     gen:()=>genUndermawAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -1059,6 +1059,18 @@ function driftCarry(slabs){
   for(const s of (slabs||[])){ const dx=Math.abs(P.x-s.x), dy=Math.abs(P.y-s.y);
     if(dx<=(s.w||3)/2+0.2 && dy<=(s.h||3)/2+0.2 && (dx+dy)<bd){ best=s; bd=dx+dy; } }
   if(best){ const nx=P.x+(best.x-best.prevx), ny=P.y+(best.y-best.prevy);
+    if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } return true; }
+  return false;
+}
+// ROTATING PLATFORMS (spinwheels): if the player rides a turning slab-arm, sweep them around it.
+// Returns true if aboard. Shared by the Undermaw (the Emberdeep keeps its own inline copy).
+function wheelCarry(wheels, dt){
+  let best=null, bestPerp=99;
+  for(const w of (wheels||[])){ const dx=P.x-w.hx, dy=P.y-w.hy;
+    const along=dx*Math.cos(w.ang)+dy*Math.sin(w.ang), perp=-dx*Math.sin(w.ang)+dy*Math.cos(w.ang);
+    if(along>=-0.5 && along<=w.r+0.3 && Math.abs(perp)<=w.armw+0.5 && Math.abs(perp)<bestPerp){ best=w; bestPerp=Math.abs(perp); } }
+  if(best){ const dA=best.spd*dt, dx=P.x-best.hx, dy=P.y-best.hy;
+    const nx=best.hx + dx*Math.cos(dA)-dy*Math.sin(dA), ny=best.hy + dx*Math.sin(dA)+dy*Math.cos(dA);
     if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } return true; }
   return false;
 }
@@ -2565,21 +2577,33 @@ function enterMillFromInterior(){
 }
 
 /* =====================================================================
-   THE UNDERMAW - a brief one-room beast-den under the Barik hills. Enter
-   the maw, fell the beast that dens here, and the door at the back grinds
-   open onto a hoard chest holding the Deepiron Ward (a defence boost).
-   Reuses ewall walls, the catgate portcullis, and a scaled boss mob.
+   THE UNDERMAW - a four-trial gauntlet under the Barik hills, climbing north
+   to the Maw-Stalker's den and the hoard beyond. The trials:
+     R1  floating slabs drifting across a bottomless scar
+     R2  shoot the ward-eye (bow / staff) to grind a gate up
+     R3  a mix of a rotating slab and a floating slab
+     R4  floating slabs run under fire from rooted skeleton archers
+   Reuses ewall walls, driftslabs, spinwheels, the catgate, bonepit, archers.
    ===================================================================== */
 let UNDERMAW_WALLS = [];
-const UNDERMAW_GATE = [[18,9],[19,9],[20,9],[21,9],[22,9]];   // the Hoard Door, sealed until the beast falls
+const UNDERMAW_GATE = [[19,11],[20,11],[21,11],[22,11],[23,11]];   // the Hoard Door, sealed until the beast falls
+const MAW_SHOOTGATE = [[20,87],[21,87],[22,87],[23,87],[24,87]];   // the Warded Gate, sealed until the ward-eye is struck
 function genUndermaw(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(15,30,25,38);   // THE MAW - entry landing (the way up sits here)
-  carve(18,25,22,31);   // throat -> the den
-  carve(9,12,31,26);    // THE BEAST-DEN - the one fight chamber
-  carve(18,6,22,13);    // corridor -> the hoard (the Hoard Door sits at y=9)
-  carve(13,2,27,8);     // THE DEEP HOARD - the reward alcove
+  carve(16,141,28,151);   // R0 THE MAW - entry landing (the way up sits here)
+  carve(20,136,24,142);   // throat
+  carve(6,115,38,136);    // R1 - floating platforms over the scar
+  carve(20,110,24,116);   // corridor 1
+  carve(6,89,38,110);     // R2 - the ward-eye (shoot to open the gate)
+  carve(20,84,24,90);     // corridor 2 (the Warded Gate sits at y=87)
+  carve(6,63,38,84);      // R3 - rotating + floating platforms
+  carve(20,58,24,64);     // corridor 3
+  carve(6,37,38,58);      // R4 - floating platforms under archer fire
+  carve(20,32,24,38);     // corridor 4 -> the den
+  carve(8,15,36,32);      // R5 THE MAW-STALKER'S DEN (the boss fight)
+  carve(19,9,23,16);      // hoard corridor (the Hoard Door sits at y=11)
+  carve(14,2,30,9);       // R6 THE DEEP HOARD - the reward alcove
   UNDERMAW_WALLS=[];
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(!solidAt(x,y)) continue;
@@ -2589,23 +2613,51 @@ function genUndermaw(){
     if(border) UNDERMAW_WALLS.push([x,y]);
   }
   for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  for(const [x,y] of MAW_SHOOTGATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
   for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
-  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:20.5, y:37.5, label:'the way up'});
-  setSolid(20,37,0); setTile(20,37,T.RUIN);
-  for(const [tx,ty] of [[11,14],[29,14],[11,24],[29,24],[15,4],[25,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE HOARD DOOR - a stone portcullis the beast dens behind; it grinds up when the beast falls
-  G.decor.push({kind:'catgate', x:20, y:9, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
-  // the reward: the Deepiron Ward, sealed in the hoard past the door
-  if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:20.5, y:4.5, undermawArmor:1});
-  // an already-cleared run keeps the door open (the beast is gone)
-  if(P.story && P.story.undermawDown){
-    for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='undermaw') d.open=true; }
-  }
+  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:150.5, label:'the way up'});
+  setSolid(22,150,0); setTile(22,150,T.RUIN);
+  // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
+  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
+    toast('A barrow-bow hangs racked by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  for(const [tx,ty] of [[8,146],[36,146],[8,120],[36,120],[8,94],[36,94],[8,68],[36,68],[8,42],[36,42],[10,18],[34,18],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+
+  G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0;
+  const pit=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
+  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._mawWheels.push(w); };
+  const slab=(ax,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax, ay, bx:ax, by, spd, phase:phase||0, x:ax, y:ay, prevx:ax, prevy:ay, w:3, h:4}; G.decor.push(s); G._mawSlabs.push(s); };
+  // ---- R1: FLOATING PLATFORMS (learn the drift) - two pit-bands split by a rest ledge ----
+  pit(6,38,128,131); pit(6,38,120,123);
+  slab(22,131, 127, 0.8, 0.0);       // ferry across band 1 (south ledge -> rest ledge)
+  slab(22,123, 119, 0.85, 1.6);      // ferry across band 2 (rest ledge -> north ledge)
+  G._mawCross.push({y0:115,y1:136, sx:22, sy:134});
+  // ---- R3: ROTATING + FLOATING (a spinwheel, then a ferry) ----
+  pit(6,38,76,79); pit(6,38,67,71);
+  wheel(22,77, 3.0, 1.0, Math.PI/2);  // rotating slab across band A
+  slab(22,71, 66, 0.85, 0.0);         // ferry across band B
+  G._mawCross.push({y0:63,y1:84, sx:22, sy:82});
+  // ---- R4: FLOATING under ARCHER FIRE - two ferries, archers rooted on the ledges ----
+  pit(6,38,49,53); pit(6,38,40,44);
+  slab(22,53, 48, 0.85, 0.0);         // ferry across band 1
+  slab(22,44, 39, 0.9, 1.6);          // ferry across band 2
+  G._mawCross.push({y0:37,y1:58, sx:22, sy:56});
+  // ---- R2: THE WARD-EYE - shoot the mechanism to grind the Warded Gate up ----
+  for(const [px,py] of [[13,99],[31,99]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
+  G.decor.push({kind:'catgate', x:22, y:87, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
+  G.decor.push({kind:'shoottarget', x:22.5, y:90.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
+  // ---- THE HOARD DOOR + reward ----
+  G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
+  if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
   G.critters=[];
+  // an already-cleared run stands every gate open and quiets the den (the slabs remain to re-cross)
+  if(P.story && P.story.undermawDown){
+    for(const [x,y] of [...UNDERMAW_GATE, ...MAW_SHOOTGATE]){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const d of G.decor){ if(d.kind==='catgate') d.open=true; if(d.kind==='shoottarget') d.hit=true; }
+  }
 }
 function spawnMobsUndermaw(){
   if(P.story && P.story.undermawDown) return;   // already felled - the den is quiet
@@ -2615,6 +2667,45 @@ function spawnMobsUndermaw(){
   if(b){ b.boss=true; b.bigBoss=true; b.undermawBeast=1; b.bscale=1.7; b.title='THE MAW-STALKER'; b.subtitle='TERROR OF THE UNDERMAW';
     b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
+  // R4 skeleton archers: rooted on the ledges flanking the crossing, raining bone arrows as you cross
+  for(const [ax,ay] of [[14,38],[30,38],[9,47],[35,47]]){
+    const a=spawnMob('archer', ax, ay);
+    if(a){ a.rooted=true; a.hx=ax; a.hy=ay; a.respawnT=-1; a.state='idle'; a.noAggroT=0; }
+  }
+}
+// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, and drop the player back to
+// the ledge (-5 HP) if they stand over the scar with no platform beneath them.
+function updateUndermaw(dt){
+  G._mawT=(G._mawT||0)+dt;
+  for(const w of (G._mawWheels||[])) w.ang += w.spd*dt;
+  updateDriftSlabs(G._mawSlabs, G._mawT);
+  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
+  const tx=Math.floor(P.x), ty=Math.floor(P.y);
+  if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
+  if(wheelCarry(G._mawWheels, dt)) return;                 // riding a rotating slab
+  if(driftCarry(G._mawSlabs)) return;                      // riding a floating slab
+  mawFall(ty);
+}
+function mawFall(ty){
+  const c=(G._mawCross||[]).find(cc=>ty>=cc.y0 && ty<=cc.y1) || (G._mawCross||[])[0];
+  if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4,'#c9b48a',0.95); }
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.45); buzz&&buzz(16);
+  burst(P.x,P.y-0.3,'#6a5c48',12,2.0); shockwave(P.x,P.y,'rgba(120,105,80,0.7)',36);
+  if(c){ P.x=c.sx+0.5; P.y=c.sy+0.5; }
+  P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+  if(!G._mawFallHint){ G._mawFallHint=1; toast('You drop into the scar and haul yourself back to the ledge, battered (<b>-5 HP</b>). <b>Ride the drifting slabs across</b> - board one as it reaches your ledge, and step off when it lines up with the next.',5400); }
+}
+// strike a ward-eye with an arrow or bolt: grind its gate up for good
+function hitShootTarget(d){
+  if(d.hit) return; d.hit=true;
+  Snd.quest&&Snd.quest(); G.shake=Math.max(G.shake||0,0.4); buzz&&buzz(10);
+  shockwave(d.x,d.y,'rgba(255,150,60,0.85)',48); burst(d.x,d.y-0.3,'#ffb04a',16,2.6);
+  for(const [x,y] of (d.gateTiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+  const cg=G.decor.find(g=>g.kind==='catgate' && g.gate===d.gate); if(cg) cg.open=true;
+  invalidateScenery&&invalidateScenery();
+  banner('THE WARD-EYE SHATTERS','THE WARDED GATE GRINDS UP');
+  toast('Your shot bursts the ward-eye and the gate grinds up beyond it. The way deeper lies open.',4400);
 }
 function genUndermawAll(){ genUndermaw(); placeObjectsUndermaw(); spawnMobsUndermaw(); buildMapBase(); }
 function enterUndermaw(){
