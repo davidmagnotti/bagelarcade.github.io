@@ -293,19 +293,36 @@ function pressSkyTile(b){
   }
 }
 
+/* ---------- falling through the cloud: the drop plays out (control frozen in updatePlayer),
+   THEN the wind bears you back to the target isle (see skyFallRespawn + the draw branch in
+   drawPlayer). Used by both the platform gaps and the fading bridge. ---------- */
+function skyFallStart(tx,ty,hint){
+  if(G._skyFall) return;
+  if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(16);
+  burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',14,2.4); shockwave(P.x,P.y,'rgba(255,255,255,0.8)',38);
+  G._skyFall={ t:0, dur:0.85, x:P.x, y:P.y, tx, ty, hint:hint||'' };
+  P.click=null; P.moving=false; P.rollT=0;
+}
+function skyFallRespawn(){
+  const z=G._skyFall; G._skyFall=null; if(!z) return;
+  P.x=z.tx; P.y=z.ty; P.click=null; P.moving=false;
+  G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+  burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',12,2.0); shockwave(P.x,P.y,'rgba(255,255,255,0.7)',30);
+  if(z.hint) toast(z.hint,5600);
+}
+
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
+  // a fall in progress plays out (control frozen), then bears you back to the target isle
+  if(G._skyFall){ G._skyFall.t+=dt; if(G._skyFall.t>=G._skyFall.dur) skyFallRespawn(); return; }
   // fall between the floating rainbow platforms -> the wind bears you back to the isle behind you
   if(G._skyPits && G._skyPits.size && !P.dead && (P.rollT||0)<=0 && G._skyPits.has(Math.floor(P.x)+','+Math.floor(P.y))){
     let best=null,bd=1e9;
     for(const is of SKY_ISLES){ if(is.y < P.y-2) continue; const d=dist(P.x,P.y,is.x,is.y); if(d<bd){bd=d;best=is;} }
     if(!best) for(const is of SKY_ISLES){ const d=dist(P.x,P.y,is.x,is.y); if(d<bd){bd=d;best=is;} }
-    if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(16);
-    burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',14,2.4); shockwave(P.x,P.y,'rgba(255,255,255,0.8)',38);
-    P.x=best.x+0.5; P.y=best.y+0.5; P.click=null; P.moving=false;
-    G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
-    if(!G._skyFellHint){ G._skyFellHint=1; toast('You drop between the floating rainbow platforms and the wind bears you back. <b>DASH across the gaps</b> - time your jumps from platform to platform.',5600); }
+    let hint=''; if(!G._skyFellHint){ G._skyFellHint=1; hint='You drop between the floating rainbow platforms and the wind bears you back. <b>DASH across the gaps</b> - time your jumps from platform to platform.'; }
+    skyFallStart(best.x+0.5, best.y+0.5, hint);
     return;
   }
   ensureSnatcher();   // wakes the cloud-snatcher the instant you cross the fading bridge
@@ -319,11 +336,9 @@ function updateSkyDungeon(dt){
     if(!P.dead && (P.rollT||0)<=0){
       const f=G._skyFade.tiles.find(t=>Math.floor(t.x)===Math.floor(P.x) && Math.floor(t.y)===Math.floor(P.y));
       if(f && !skyFadeSolid(f)){
-        if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(18);
-        burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',16,2.6); shockwave(P.x,P.y,'rgba(255,255,255,0.8)',40);
-        P.x=G._skyFade.entryX; P.y=G._skyFade.entryY; P.click=null; P.moving=false;
-        G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
-        if(!G._fadeFellHint){ G._fadeFellHint=1; toast('You drop through a faded tile and the wind bears you back to the isle. <b>Follow the lit wave</b> across - don\'t linger on a tile that\'s about to fade.',5000); }
+        let hint=''; if(!G._fadeFellHint){ G._fadeFellHint=1; hint='You drop through a faded tile and the wind bears you back to the isle. <b>Follow the lit wave</b> across - don\'t linger on a tile that\'s about to fade.'; }
+        skyFallStart(G._skyFade.entryX, G._skyFade.entryY, hint);
+        return;
       }
     }
     // reached the far isle - the bridge is behind you, the road opens on

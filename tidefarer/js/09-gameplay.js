@@ -968,6 +968,9 @@ function updatePlayer(dt){
   // PLUNGING into the Rimefissure's freezing water: control frozen while the hero flails in the
   // cracking ice (updateFrostDeep ticks the timer and respawns). Roll cooldown still recovers.
   if(typeof G!=='undefined' && G._frostPlunge){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
+  // FALLING between the Rainbow Road's floating platforms: control frozen while the hero
+  // drops through the cloud (updateSkyDungeon ticks the timer and respawns). Roll cd recovers.
+  if(typeof G!=='undefined' && G._skyFall){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
   // hold the hero still during a scripted camera pan (the ward-gate reveal), so
   // control returns exactly where it left off and no dash/move fires unseen
   if(G.camCine){ P.moving=false; P.click=null; return; }
