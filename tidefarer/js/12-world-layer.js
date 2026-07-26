@@ -1718,19 +1718,20 @@ function placeObjectsAerieDeep(){
   // little less blood (-5 HP). Reach the far side and the gate grinds up.
   G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[];
   const beam=(x,y,dx,dy,len,period,phase)=>{ const b={kind:'skybeam', x, y, dx, dy, len, period, phase, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
-  // carve a serpentine maze into [x0..x1]x[y0..y1]: all pit except a 2-wide path that snakes up
+  // carve a serpentine maze into [x0..x1]x[y0..y1]: all pit except a 3-wide path that snakes up
   // through the horizontal `legs` (south->north), with a vertical ward-lance across each leg.
+  const LANE=3;   // corridor thickness (tiles)
   const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period)=>{
     const safe=new Set();
-    const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++){ safe.add(x+','+y); safe.add(x+','+(y+1)); } };
-    const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++){ safe.add(x+','+y); safe.add((x+1)+','+y); } };
-    const leftX=x0+2, rightX=x1-3; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
+    const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
+    const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
+    const leftX=x0+2, rightX=x1-2-LANE; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
     for(let i=0;i<legs.length;i++){ const y=legs[i], goRight=(i%2===0), b=goRight?rightX:leftX;
       H(y, prevEnd, b); beamsAt.push([Math.round((Math.min(prevEnd,b)+Math.max(prevEnd,b))/2), y]);
       if(i<legs.length-1){ V(b, legs[i+1], y); prevEnd=b; } else { H(y, b, exitX); V(exitX, y0, y); } }
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
       G._aerieVoid.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*5)%9}); }
-    beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+1.0, 0,1, 2.0, period, (i*0.41)%1));   // a vertical lance across each leg
+    beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+LANE/2, 0,1, 2.6, period, (i*0.41)%1));   // a vertical lance across each leg
     G.decor.push(gateObj); G._aerieCross.push(cross);
   };
   // CHAMBER 1 - THE OSSUARY: a 3-leg maze -> the Bone Gate
