@@ -1030,6 +1030,9 @@ function updatePlayer(dt){
   const zones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].slide) || [];
   const inSlide = zones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1);
   const onSlick = zones.length && inSlide && P.rollT<=0 && !dlg.open && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
+  // Rimefissure drift-ice: standing on a floe over the channel gives a SLIGHT slide (momentum),
+  // so lining up a precise hop takes timing - distinct from the full glide of the Sliding Halls
+  const onFloe = G.worldId==='frostdeep' && !dlg.open && G._frostVoid && G._frostVoid.has(Math.floor(P.x)+','+Math.floor(P.y));
   if(onSlick){
     if(!P.slideDir && ml>0.25){
       // push off along the stronger input axis - but never INTO a wall. If that
@@ -1048,7 +1051,23 @@ function updatePlayer(dt){
       if(Math.random()<dt*20) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-P.slideDir.x*0.6,vy:-P.slideDir.y*0.6,life:0.4,color:'#eaf6ff',size:2.2,grav:0});
       if(!moved || tileAt(Math.floor(P.x),Math.floor(P.y))!==T.ICE){ P.slideDir=null; Snd.step&&Snd.step(T.ICE); }
     } else P.moving=false;
+  } else if(onFloe){
+    // a slight slide: your steps build a little momentum and coast a beat when you let go,
+    // so a precise step between drifting floes takes timing (over-run and you slide into the water)
+    if(P.slideDir) P.slideDir=null;
+    P._glv=P._glv||{x:0,y:0};
+    const spF=P.speed*(has('boots',1)?1.14:1);
+    let tvx=0,tvy=0;
+    if(ml>0.05){ tvx=mx/ml*spF; tvy=my/ml*spF; P.dir={x:mx/ml,y:my/ml}; }
+    const acc=(ml>0.05?7.0:4.0)*dt;
+    P._glv.x += (tvx-P._glv.x)*Math.min(1,acc);
+    P._glv.y += (tvy-P._glv.y)*Math.min(1,acc);
+    const gm=Math.hypot(P._glv.x,P._glv.y);
+    P.moving = P.rollT<=0 && gm>0.4;
+    if(P.moving){ moveEntity(P, P._glv.x*dt, P._glv.y*dt, 0.28); P.anim+=gm*dt*3.1;
+      P.stepT=(P.stepT||0)+dt; if(P.stepT>0.27){ P.stepT=0; Snd.step&&Snd.step(T.ICE); } }
   } else {
+  if(P._glv){ P._glv.x=0; P._glv.y=0; }
   if(P.slideDir) P.slideDir=null;
   if(P.rollT<=0) P.moving = ml>0.05 && !dlg.open;
   if(P.moving && P.rollT<=0){

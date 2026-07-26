@@ -2058,9 +2058,9 @@ function frostFall(){
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(18);
   burst(P.x,P.y-0.3,'#cfeaf8',18,2.6); shockwave(P.x,P.y,'rgba(150,200,225,0.8)',44);
   if(c){ P.x=c.startX+0.5; P.y=c.startY; }
-  P.click=null; P.moving=false; P.slideDir=null;
+  P.click=null; P.moving=false; P.slideDir=null; P._glv=null;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water takes you and the cold flings you back to the landing. <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up.',5200); }
+  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water takes you and the cold flings you back to the landing. <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up. The ice is slick, so <b>mind your momentum</b>.',5200); }
 }
 // carry the player on the floe they're standing on, and drop them (restart) if the open
 // water under them has no floe
@@ -4155,7 +4155,7 @@ function switchWorld(id){
   // points the way without solving anything - a compass, not a walkthrough.
   if(id==='frostdeep' && !P.prog.deepSeen && !(P.story && P.story.deepDone)){ P.prog.deepSeen=1;
     setTimeout(()=>banner('THE RIMEFISSURE','RIDE THE DRIFTING FLOES ACROSS THE BLACK WATER'),1200);
-    setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. Fall in and the cold flings you back to the landing to try again.',8500),1800); }
+    setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. The floe-ice is <b>slick - your steps carry momentum</b>, so time each hop and don\'t over-run it. Fall in and the cold flings you back to the landing to try again.',9000),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
     setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. Some chambers have a <b>fire-lever</b> that hauls the gate open for a while - pull it, then get north through the gate before it shuts.',9000),1800); }
