@@ -114,6 +114,29 @@ function setDungeon(id,flag,won){
   note((won?'WON: ':'RESET: ')+id+(G.worldId===id?' (rebuilt)':' (on re-entry)'));
 }
 function toggleDungeon(id,flag){ setDungeon(id,flag,!dungWon(flag)); }
+// Full dungeon-state wipe: the one-tap "make every dungeon fresh & replayable again"
+// button. Existing saves carry each dungeon's WON flag (vaultDone, millDone, ...) plus a
+// one-time "seen" marker and, for the Glacier Vault, live wave/gate runtime - any of which
+// can leave a re-entered dungeon standing open and empty. This clears the lot.
+function clearDungeonState(){
+  P.story=P.story||{}; P.prog=P.prog||{};
+  // 1. every dungeon back to NOT-won (setDungeon also drops its cached copy, syncs any
+  //    coupled quest/surface, and rebuilds it in place if you happen to be standing in it)
+  DUNGEONS.forEach(([n,id,f])=>setDungeon(id,f,false));
+  // 2. wipe the one-time intro markers so each dungeon's how-to banner plays again -
+  //    a clear on-entry signal that the fresh challenge is armed
+  ['vaultSeen','millSeen','deepSeen','emberSeen','tombSeen','underSeen','mawSeen'].forEach(s=>{ delete P.prog[s]; });
+  // 3. drop any live wave/gate runtime (the Glacier Vault) so a re-entry re-arms from zero
+  if(typeof G!=='undefined'){ delete G._vaultRooms; delete G._vaultT; }
+  // 4. belt-and-braces: clear every cached dungeon world outright
+  const DIDS=['frostvault','milldeep','frostdeep','aeriedeep','eastdeep','reachdeep','undermaw','skydungeon'];
+  if(typeof WORLDS!=='undefined') for(const id of DIDS){ if(WORLDS[id]) delete WORLDS[id]; }
+  // 5. standing in a dungeon right now? rebuild it fresh this instant
+  if(typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].dungeon) regenWorld(G.worldId);
+  try{ autoSave&&autoSave(); }catch(e){}   // persist so it survives a reload
+  ui(); refreshDungeonLabels();
+  note('Dungeon state cleared - all halls unbeaten, gates re-armed, intros reset');
+}
 function refreshDungeonLabels(){
   const p=panelEl(); if(!p) return;
   p.querySelectorAll('button[data-dflag]').forEach(b=>{
@@ -185,7 +208,8 @@ const SECTIONS=[
   ]],
   ['Dungeons (tap to toggle won / not)',
     DUNGEONS.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
-      .concat([ ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
+      .concat([ ['★ Clear ALL dungeon state', ()=>clearDungeonState()],
+                ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
                 ['Win ALL dungeons',   ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
   ],
   ['Quests', [
