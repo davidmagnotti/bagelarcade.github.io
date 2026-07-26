@@ -1362,56 +1362,71 @@ function drawHumanoid(g,sx,sy,o){
     }
     else if(!away){
       if(o.fem){
-        // long side hair, drawn UNDER the crown dome (below) so its top is hidden
-        // by the dome - one smooth curtain each side, no seam and no floating flap
-        for(const e of [-1,1]){
-          g.fillStyle=hc;
-          g.beginPath();
-          g.moveTo(e*HR*0.18,-13);
-          g.quadraticCurveTo(e*HR*1.05,-9, e*HR*1.06,2);
-          g.quadraticCurveTo(e*HR*1.02,13, e*HR*0.62,20.5);
-          g.quadraticCurveTo(e*HR*0.42,14.5, e*HR*0.54,2.5);
-          g.quadraticCurveTo(e*HR*0.42,-7, e*HR*0.18,-13);
-          g.closePath(); g.fill();
-          g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
-        }
-      }
-      const hgr=g.createLinearGradient(0,-13,0,-2);
-      hgr.addColorStop(0,shade(hc,12)); hgr.addColorStop(1,shade(hc,-4));
-      g.fillStyle=hgr;
-      g.beginPath();
-      g.moveTo(-HR*0.98,0.8);
-      g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
-      g.quadraticCurveTo(-4.8,-16.2, 0.6,-14.0);
-      g.lineTo(-0.6,-11.4);
-      g.quadraticCurveTo(4.4,-15.6, 8.0,-12.0);
-      g.quadraticCurveTo(HR*1.1,-8.0, HR*0.94,0.6);
-      g.quadraticCurveTo(6.4,-3.2, 5.2,-4.6);
-      g.quadraticCurveTo(3.4,-6.4, 1.9,-4.1);
-      g.quadraticCurveTo(0.2,-6.8, -1.7,-4.3);
-      g.quadraticCurveTo(-3.5,-6.5, -5.3,-4.1);
-      g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
-      g.closePath(); g.fill();
-      g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
-      if(o.fem){ // a smooth rounded crown cap over the dome's pointed hairline, so the
-        // top of the head reads as one clean sweep of hair instead of a notch
-        g.fillStyle=hc;
+        // ONE continuous hair mass: crown, temples and side falls are a single
+        // outlined shape, so the sides read as hair grown from the crown rather
+        // than two panels bolted onto the head. Traced outer-edge down each fall,
+        // over the crown, then back up the inner edges with a soft fringe across
+        // the brow.
+        const hgr=g.createLinearGradient(0,-18,0,12);
+        hgr.addColorStop(0,shade(hc,13)); hgr.addColorStop(0.52,hc); hgr.addColorStop(1,shade(hc,-7));
+        g.fillStyle=hgr;
         g.beginPath();
-        g.moveTo(-HR*0.72,-6.2);
-        g.quadraticCurveTo(-HR*0.54,-16.8, 0,-17.2);
-        g.quadraticCurveTo(HR*0.54,-16.8, HR*0.72,-6.2);
-        g.quadraticCurveTo(0,-9.6, -HR*0.72,-6.2);
+        g.moveTo(-HR*0.60,20.6);                              // left hair tip
+        g.quadraticCurveTo(-HR*1.02,10.5, -HR*1.02,-1.4);     // outer edge of the left fall, widest at the cheek
+        g.quadraticCurveTo(-HR*1.05,-8.8, -HR*0.72,-13.9);    // sweep up to the left temple
+        g.quadraticCurveTo(-HR*0.40,-18.4, 0,-18.6);          // over the crown, left half
+        g.quadraticCurveTo(HR*0.40,-18.4, HR*0.72,-13.9);     // over the crown, right half
+        g.quadraticCurveTo(HR*1.05,-8.8, HR*1.02,-1.4);       // down to the right temple
+        g.quadraticCurveTo(HR*1.02,10.5, HR*0.60,20.6);       // outer edge of the right fall to its tip
+        g.quadraticCurveTo(HR*0.40,13.2, HR*0.52,2.2);        // inner edge of the right fall, up beside the jaw
+        g.quadraticCurveTo(HR*0.58,-2.6, HR*0.62,-4.0);       // up to the hairline
+        g.quadraticCurveTo(5.6,-6.9, 5.0,-4.3);               // fringe: soft points across the brow, right to left
+        g.quadraticCurveTo(3.3,-6.7, 1.8,-4.0);
+        g.quadraticCurveTo(0.1,-7.1, -1.8,-4.1);
+        g.quadraticCurveTo(-3.3,-6.7, -5.0,-4.3);
+        g.quadraticCurveTo(-5.6,-6.9, -HR*0.62,-4.0);         // left end of the hairline
+        g.quadraticCurveTo(-HR*0.58,-2.6, -HR*0.52,2.2);      // down beside the left cheek
+        g.quadraticCurveTo(-HR*0.40,13.2, -HR*0.60,20.6);     // inner edge of the left fall, back to the tip
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+        g.fillStyle='rgba(255,250,235,0.20)';                 // soft top-light on the crown
+        g.beginPath(); g.ellipse(-3.6,-11.0,4.2,1.9,-0.3,0,TAU); g.fill();
+        g.strokeStyle=shade(hc,-12); g.lineWidth=1.1; g.lineCap='round';   // a couple of strand lines for depth
+        for(const e of [-1,1]){
+          g.beginPath();
+          g.moveTo(e*HR*0.80,-9);
+          g.quadraticCurveTo(e*HR*0.86,4, e*HR*0.66,17);
+          g.stroke();
+        }
+        g.lineCap='butt';
+      } else {
+        const hgr=g.createLinearGradient(0,-13,0,-2);
+        hgr.addColorStop(0,shade(hc,12)); hgr.addColorStop(1,shade(hc,-4));
+        g.fillStyle=hgr;
+        g.beginPath();
+        g.moveTo(-HR*0.98,0.8);
+        g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
+        g.quadraticCurveTo(-4.8,-16.2, 0.6,-14.0);
+        g.lineTo(-0.6,-11.4);
+        g.quadraticCurveTo(4.4,-15.6, 8.0,-12.0);
+        g.quadraticCurveTo(HR*1.1,-8.0, HR*0.94,0.6);
+        g.quadraticCurveTo(6.4,-3.2, 5.2,-4.6);
+        g.quadraticCurveTo(3.4,-6.4, 1.9,-4.1);
+        g.quadraticCurveTo(0.2,-6.8, -1.7,-4.3);
+        g.quadraticCurveTo(-3.5,-6.5, -5.3,-4.1);
+        g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
+        g.closePath(); g.fill();
+        g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
+        g.fillStyle='rgba(255,250,235,0.20)'; // dome gloss
+        g.beginPath(); g.ellipse(-3.8,-10.4,3.8,1.7,-0.3,0,TAU); g.fill();
+        g.fillStyle=shade(hc,-9);
+        g.beginPath();
+        g.moveTo(-HR*0.98,0.8);
+        g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
+        g.quadraticCurveTo(-6.4,-8.5, -5.3,-4.1);
+        g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
         g.closePath(); g.fill();
       }
-      g.fillStyle='rgba(255,250,235,0.20)'; // dome gloss
-      g.beginPath(); g.ellipse(-3.8,-10.4,3.8,1.7,-0.3,0,TAU); g.fill();
-      g.fillStyle=shade(hc,-9);
-      g.beginPath();
-      g.moveTo(-HR*0.98,0.8);
-      g.quadraticCurveTo(-HR*1.14,-6.5, -HR*0.6,-11.6);
-      g.quadraticCurveTo(-6.4,-8.5, -5.3,-4.1);
-      g.quadraticCurveTo(-6.7,-3.1, -HR*0.98,0.8);
-      g.closePath(); g.fill();
     }
     if(o.hairstyle==='long'){
       for(const e of (away?[-1,1]:[-1,1])){
