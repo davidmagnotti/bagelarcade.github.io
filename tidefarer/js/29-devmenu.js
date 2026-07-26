@@ -131,6 +131,16 @@ function xp(n){ if(typeof gainLXP==='function') gainLXP(n); ui(); note('+'+n+' l
 function maxSkills(){ for(const s in (P.skills||{})){ if(typeof addXP==='function') addXP(s, 9999); } ui(); note('Skills boosted'); }
 function toggleGod(btn){ god=!god; btn.textContent='God mode: '+(god?'ON':'off'); btn.style.color=god?'#9be07f':''; note('God mode '+(god?'on':'off')); }
 function saveNow(){ try{ autoSave&&autoSave(); note('Saved'); }catch(e){} }
+// build + copy a shareable deep-link that drops a tester straight into a dungeon
+function copyDungeonLink(id){
+  const url=location.origin+location.pathname+'?dungeon='+id;
+  let done=false;
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); done=true; } }catch(e){}
+  if(!done){ try{ const ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done=true; }catch(e){} }
+  try{ console.log('Tidefarer test link:', url); }catch(e){}
+  note(done?'Link copied ✓':'Copy failed - see console');
+}
 
 setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P.maxhp; P.mp=P.maxmp; } }catch(e){} }, 400);
 
@@ -146,6 +156,12 @@ const SECTIONS=[
     ['Rimefissure (frozen)',()=>tp('frostdeep')], ['Glacier Vault',()=>tp('frostvault')],
     ['Drowned Catacomb',()=>tp('reachdeep')], ['Undermill (Windsurf)',()=>tp('milldeep')],
     ['Undermaw (Barik)',()=>tp('undermaw')], ['Rainbow Road (sky)',()=>tp('skydungeon')],
+  ]],
+  ['Copy test link (share)', [
+    ['Emberdeep',()=>copyDungeonLink('eastdeep')], ['Underclimb',()=>copyDungeonLink('aeriedeep')],
+    ['Rimefissure',()=>copyDungeonLink('frostdeep')], ['Glacier Vault',()=>copyDungeonLink('frostvault')],
+    ['Drowned Catacomb',()=>copyDungeonLink('reachdeep')], ['Undermill',()=>copyDungeonLink('milldeep')],
+    ['Undermaw',()=>copyDungeonLink('undermaw')], ['Rainbow Road',()=>copyDungeonLink('skydungeon')],
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],

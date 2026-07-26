@@ -12,6 +12,7 @@ const store={
 let autoT=0;
 function autoSave(){
   if(G.wiping) return;   // a "Start Over" reset is in flight - never resurrect the save
+  if(G.noPersist) return;   // a ?dungeon= test-link session - never overwrite the player's real save
   if(G.state!=='play' || P.dead || G.interior) return;
   store.set(saveCode());
 }

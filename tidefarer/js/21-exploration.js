@@ -178,8 +178,11 @@ function boot(){
 /* No title screen: on load, continue the saved adventure, or begin a new one
    (the shipwreck opening). A reset lives in the pause menu ("Start Over"). */
 function enterGame(){
-  const sc = store.get();
   const t=document.getElementById('titleOv'); if(t) t.style.display='none';
+  // a ?dungeon=<name> deep-link drops testers straight into a dungeon, ahead of any save
+  const dl=dungeonLinkId();
+  if(dl){ enterDungeonLink(dl); return; }
+  const sc = store.get();
   if(sc){
     Snd.init(); Amb.ensure(); Music.nextT=0;
     G.state='play';
@@ -187,6 +190,47 @@ function enterGame(){
   } else {
     startFresh();
   }
+}
+// ---- DUNGEON DEEP-LINKS ----
+// Share a link like  .../tidefarer/?dungeon=undermaw  to drop a tester straight into that
+// dungeon with a full kit. Accepts world ids or friendly names, in ?dungeon=, ?d=, or the hash.
+const DUNGEON_LINKS={
+  emberdeep:'eastdeep', eastdeep:'eastdeep',
+  underclimb:'aeriedeep', aeriedeep:'aeriedeep',
+  rimefissure:'frostdeep', frostdeep:'frostdeep',
+  glaciervault:'frostvault', frostvault:'frostvault', vault:'frostvault',
+  catacomb:'reachdeep', drownedcatacomb:'reachdeep', reachdeep:'reachdeep',
+  undermill:'milldeep', milldeep:'milldeep',
+  undermaw:'undermaw',
+  rainbowroad:'skydungeon', skydungeon:'skydungeon', rainbow:'skydungeon'
+};
+function dungeonLinkId(){
+  try{
+    const p=new URLSearchParams(location.search); let v=p.get('dungeon')||p.get('d')||'';
+    if(!v && location.hash){ const h=new URLSearchParams(location.hash.replace(/^#/,'')); v=h.get('dungeon')||h.get('d')||''; }
+    v=(v||'').toLowerCase().replace(/[^a-z]/g,'');
+    return DUNGEON_LINKS[v]||null;
+  }catch(e){ return null; }
+}
+// boot straight into a dungeon for testing: a fully-kitted hero, no story, no saving over the
+// player's real progress (a shared link is a scratch session).
+function enterDungeonLink(id){
+  Snd.init(); Amb.ensure(); Music.nextT=0;
+  G.wiping=false; G.noPersist=true;   // a shared test link must never overwrite anyone's own save
+  P.story=P.story||{}; P.story.masked=1;
+  for(const k in EXPL) delete EXPL[k];
+  G.state='play';
+  // a test-ready hero: every arm unlocked, kitted, and at full health so the trial is playable
+  P.unlocked=P.unlocked||{};
+  P.unlocked.melee=P.unlocked.bow=P.unlocked.staff=P.unlocked.dash=P.unlocked.dash2=P.unlocked.surf=true;
+  P.kit=true; P.swordTier=Math.max(P.swordTier||0,3);
+  P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
+  P.hp=P.maxhp; P.mp=P.maxmp;
+  try{ buildHotbar&&buildHotbar(); refreshUI&&refreshUI(); }catch(e){}
+  switchWorld(id);
+  const def=(typeof WORLD_DEFS!=='undefined') && WORLD_DEFS[id];
+  const name=(def&&def.title)||id;
+  setTimeout(()=>toast('<b>Test link:</b> dropped straight into <b>'+name+'</b> with a full kit. Progress here <b>won’t be saved</b>.',6500),600);
 }
 let CINE=null;   // retired opening cinematic - kept null so old "not during CINE" guards still read
 // The game opens on a shipwreck: Elder Maren, the island's old wise-woman, finds
