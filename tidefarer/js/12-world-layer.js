@@ -57,10 +57,10 @@ const FROST_ZONES = {
   strait:   {x:114,y:112, r:13, name:'The Frozen Strait', lv:[0,0]},     // iced-over sea
   rimewood: {x:44, y:72,  r:12, name:'Rimewood', lv:[0,0]}
 };
-const FROSTDEEP_ZONES = { // the compact ice-dungeon beneath the Frozen Isle
-  entry: {x:44, y:64, r:6,  name:'The Frostgate',     lv:[13,15]},
-  ice:   {x:42, y:46, r:12, name:'The Frost-Lock Warren', lv:[13,15]},
-  boss:  {x:44, y:22, r:11, name:'The Frozen Heart',  lv:[15,15]}
+const FROSTDEEP_ZONES = { // the ice-dungeon beneath the Frozen Isle
+  entry: {x:44, y:107, r:6,  name:'The Frostgate',     lv:[13,15]},
+  ice:   {x:42, y:66,  r:16, name:'The Long Drift',    lv:[13,15]},
+  boss:  {x:44, y:22,  r:11, name:'The Frozen Heart',  lv:[15,15]}
 };
 const FROSTVAULT_ZONES = { // THE GLACIER VAULT - a 5-room ice-puzzle dungeon under
   entry:  {x:40, y:84, r:8,  name:'The Icefall Landing', lv:[14,16]}, // the bear's old den
@@ -94,12 +94,12 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
   rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
-  entry: {x:20, y:46, r:6,  name:'The Millstair',         lv:[0,0]},
+  entry: {x:20, y:95, r:6,  name:'The Millstair',         lv:[0,0]},
   works: {x:20, y:4,  r:6,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian + the stormsail
   vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
-  maw:  {x:22, y:146, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
+  maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
   den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[12,13]},   // the boss fight
   hoard:{x:22, y:5,   r:5,  name:'The Deep Hoard',    lv:[0,0]}      // the reward alcove past the door
 };
@@ -137,8 +137,9 @@ const WORLD_DEFS = {
   crown:{ W:180, H:180, seed:61137, zones:CROWN_ZONES,
     spawn:{x:33.5,y:150.5}, title:'ALDERMERE', sub:'THE ROYAL CAPITAL - SEAT OF THE TIDEGLASS THRONE',
     gen:()=>genCrownAll() },
-  frostdeep:{ W:88, H:80, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
-    spawn:{x:44.5,y:69.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
+  frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
+    spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
+    slide:[{x0:28,y0:10,x1:60,y1:33},{x0:34,y0:100,x1:54,y1:114}],   // the arena and the entry landing are slick ice
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -158,11 +159,11 @@ const WORLD_DEFS = {
   reachdeep:{ W:80, H:96, seed:48311, zones:REACHDEEP_ZONES, dungeon:1, dark:0.42,
     spawn:{x:40.5,y:86.5}, title:'THE DROWNED CATACOMB', sub:'BENEATH THE STORMREACH GRAVES - BONE, BRINE, AND OLD LOCKS',
     gen:()=>genReachDeepAll() },
-  milldeep:{ W:40, H:52, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
-    spawn:{x:19.5,y:46.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
+  milldeep:{ W:40, H:104, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
+    spawn:{x:19.5,y:95.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
     gen:()=>genMillDeepAll() },
-  undermaw:{ W:44, H:154, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
-    spawn:{x:22.5,y:147.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
+  undermaw:{ W:44, H:192, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:22.5,y:185.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
     gen:()=>genUndermawAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -1022,12 +1023,12 @@ function placeObjectsEastDeep(){
   const ward={kind:'staffgate', x:53.5, y:29.5, tiles:FENCE, open:false, label:'the Ember Ward'};
   G.decor.push(ward);
   G.decor.push({kind:'chest', x:58.5, y:29.5, deep:1, emberking:1});
-  // ---- THE VAULT FERRY: the approach was swallowed by the pit, so a floating basalt slab
-  // drifts across it. Board from the R3 far ledge, ride south to the landing pad, then break
-  // the Ember Ward with the fire staff. ----
+  // ---- THE VAULT CROSSING: a STATIONARY stepping-stone. A drifting slab used to nudge you off,
+  // so instead a fixed basalt slab sits mid-pit - DASH from the R3 far ledge onto it, then DASH
+  // again onto the landing pad west of the Ember Ward (break the Ward with the fire staff). ----
   for(const [x,y] of [[50,28],[51,28],[52,28],[50,29],[51,29],[52,29],[50,30],[51,30],[52,30]]) pad(x,y);   // solid landing pad west of the fence
-  G._eastSlabs.push({kind:'driftslab', ax:51, ay:22.5, bx:51, by:28.5, spd:0.95, phase:0, x:51, y:22.5, prevx:51, prevy:22.5, w:3, h:4});
-  G.decor.push(G._eastSlabs[G._eastSlabs.length-1]);
+  for(const [x,y] of [[50,24],[51,24],[52,24],[50,25],[51,25],[52,25],[50,26],[51,26],[52,26]]) pad(x,y);   // the mid-pit stepping stone (solid footing)
+  G.decor.push({kind:'driftslab', x:51.5, y:25.5, w:3, h:3});   // drawn as a raised stone slab; STATIC (not in G._eastSlabs, so it never drifts)
   G.decor.push({kind:'lamp', x:55.5, y:25.5}); G.decor.push({kind:'lamp', x:60.5, y:25.5});
   if(P.story && (P.story.emberWard || P.story.emberDone)){   // already broken - keep it open
     ward.open=true; for(const [x,y] of FENCE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
@@ -1740,11 +1741,9 @@ function placeObjectsAerieDeep(){
   // torches lighting the long dark
   for(const [tx,ty] of [[68,110],[82,110],[60,78],[90,78],[60,44],[90,44],[56,12],[94,12],[70,14],[80,14]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // catacomb dressing: broken columns and a few readable crypts
+  // catacomb dressing: broken columns (the readable crypts have been removed)
   for(const [px,py,br] of [[62,90,1],[88,90,0],[62,50,0],[88,50,1],[58,20,1],[92,20,0]])
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
-  for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
-    G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
   // ---- THE WARD-MAZE ----
   // Each chamber is a long maze of solid stone cut through by a snaking corridor you must weave.
   // Vath's curse fires lances of violet light ACROSS each corridor on a beat: watch the telegraph
@@ -1754,33 +1753,71 @@ function placeObjectsAerieDeep(){
   G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[]; G._aerieMazeTiles=[];
   G._aerieSpawnT=6; G._aerieZap=null;
   const beam=(x,y,dx,dy,len,period,phase)=>{ const b={kind:'skybeam', x, y, dx, dy, len, period, phase, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
-  // carve a serpentine maze into [x0..x1]x[y0..y1]: solid stone everywhere except a 3-wide path that
-  // snakes up through the horizontal `legs` (south->north), with a vertical ward-lance across each leg.
-  const LANE=3;   // corridor thickness (tiles)
-  const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period)=>{
+  // A WIDE BRANCHING GRID-MAZE: a spanning tree over a cols x rows grid of 3-wide cells, so the
+  // corridors fork into many FALSE PATHS and dead ends. Enter from the south, and the ward-plate
+  // that unlocks the gate is hidden in the dead end FARTHEST from the door - so you must weave the
+  // whole maze to reach it, then double back to the gate. Ward-lances span each guarded corridor
+  // WALL TO WALL, the first one right off the entry.
+  const LANE=3, PITCH=4;   // 3-wide corridors, 1-wide walls between cells
+  const aerieMaze=(o)=>{
+    const {x0,y0,cols,rows,col,wall,entryStub,gateStub,gateObj,cross,period,seed,beams=3}=o;
     const safe=new Set();
-    const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
-    const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
-    const leftX=x0+2, rightX=x1-2-LANE; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
-    for(let i=0;i<legs.length;i++){ const y=legs[i], goRight=(i%2===0), b=goRight?rightX:leftX;
-      H(y, prevEnd, b); beamsAt.push([Math.round((Math.min(prevEnd,b)+Math.max(prevEnd,b))/2), y]);
-      if(i<legs.length-1){ V(b, legs[i+1], y); prevEnd=b; } else { H(y, b, exitX); V(exitX, y0, y); } }
-    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
-      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }   // solid stone maze walls
-    beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+LANE/2, 0,1, 2.6, period, (i*0.41)%1));   // a vertical lance across each leg
-    // the ward-plate at the maze's far end unlocks the gate when trodden
-    G.decor.push({kind:'boneplate', x:exitX+0.5, y:y0+0.5, gate:cross.gate, pressed:false, label:'a ward-plate'});
-    cross.plate=[exitX, y0];
+    const cX=cx=> x0 + cx*PITCH, cY=cy=> y0 + cy*PITCH;
+    const addRect=(ax,ay,w,h)=>{ for(let dx=0;dx<w;dx++) for(let dy=0;dy<h;dy++) safe.add((ax+dx)+','+(ay+dy)); };
+    const doorE=(cx,cy)=> addRect(cX(cx)+LANE, cY(cy), 1, LANE);   // open the wall between (cx,cy)&(cx+1,cy)
+    const doorS=(cx,cy)=> addRect(cX(cx), cY(cy)+LANE, LANE, 1);   // open the wall between (cx,cy)&(cx,cy+1)
+    // seeded DFS spanning tree (deterministic, so shared test links show the same maze)
+    let s=(seed>>>0)||1; const rng=()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+    const K=(cx,cy)=>cx+','+cy, adj={}; const link=(a,b)=>{ (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a); };
+    const eCx=col, eCy=rows-1, gCx=col, gCy=0, vis=new Set(), stack=[[eCx,eCy]]; vis.add(K(eCx,eCy));
+    while(stack.length){ const [cx,cy]=stack[stack.length-1], nb=[];
+      if(cx>0 && !vis.has(K(cx-1,cy))) nb.push([cx-1,cy,'W']);
+      if(cx<cols-1 && !vis.has(K(cx+1,cy))) nb.push([cx+1,cy,'E']);
+      if(cy>0 && !vis.has(K(cx,cy-1))) nb.push([cx,cy-1,'N']);
+      if(cy<rows-1 && !vis.has(K(cx,cy+1))) nb.push([cx,cy+1,'S']);
+      if(!nb.length){ stack.pop(); continue; }
+      const [nx,ny,dir]=nb[(rng()*nb.length)|0]; vis.add(K(nx,ny)); link(K(cx,cy),K(nx,ny));
+      if(dir==='E') doorE(cx,cy); else if(dir==='W') doorE(nx,ny); else if(dir==='S') doorS(cx,cy); else doorS(nx,ny);
+      stack.push([nx,ny]); }
+    for(let cy=0;cy<rows;cy++) for(let cx=0;cx<cols;cx++) addRect(cX(cx), cY(cy), LANE, LANE);   // carve every cell
+    addRect(cX(col), entryStub[0], LANE, entryStub[1]-entryStub[0]+1);   // entry stub -> south corridor
+    addRect(cX(col), gateStub[0],  LANE, gateStub[1]-gateStub[0]+1);     // gate stub  -> north corridor
+    // BFS from the gate cell: distances + parents, for the main path and the farthest dead end
+    const dist={}, par={}, gK=K(gCx,gCy); dist[gK]=0; const q=[gK];
+    for(let i=0;i<q.length;i++){ for(const n of (adj[q[i]]||[])){ if(!(n in dist)){ dist[n]=dist[q[i]]+1; par[n]=q[i]; q.push(n); } } }
+    // the ward-plate: the leaf cell (a dead end) farthest from the gate, never the entry/gate itself
+    let plateK=K(eCx,eCy), best=-1;
+    for(const k in dist){ if(k===K(eCx,eCy)||k===gK) continue; if((adj[k]||[]).length===1 && dist[k]>best){ best=dist[k]; plateK=k; } }
+    const [pcx,pcy]=plateK.split(',').map(Number), plateTile=[cX(pcx)+1, cY(pcy)+1];
+    // wall-fill the chamber around the carved maze
+    for(let y=wall[1];y<=wall[3];y++) for(let x=wall[0];x<=wall[2];x++){ if(!inb(x,y)||solidAt(x,y)||safe.has(x+','+y)) continue;
+      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }
+    // the true path entry -> gate, for placing the ward-lances that guard it
+    const path=[]; let k=K(eCx,eCy); while(k && k!==gK){ path.push(k); k=par[k]; } path.push(gK);
+    const innerN=path.length-2; const idxs=[];
+    for(let i=0;i<Math.min(beams,innerN);i++) idxs.push(1+Math.floor((i+1)*innerN/(Math.min(beams,innerN)+1)));
+    if(innerN>0) idxs[0]=1;   // the FIRST lance sits in the first corridor off the entry
+    const seenB=new Set();
+    idxs.filter(j=>j>=1 && j<=path.length-2 && !seenB.has(j) && seenB.add(j)).forEach((j,i)=>{
+      const [bx,by]=path[j].split(',').map(Number), [ax,ay]=path[j-1].split(',').map(Number), [nx,ny]=path[j+1].split(',').map(Number);
+      const horiz=Math.abs(ax-nx)>=Math.abs(ay-ny);   // path runs across this cell -> a vertical lance blocks it (wall to wall)
+      beam(cX(bx)+LANE/2, cY(by)+LANE/2, horiz?0:1, horiz?1:0, LANE/2+0.6, period, (i*0.37)%1); });
+    // tonic caches in the next-farthest dead ends
+    const leaves=Object.keys(adj).filter(kk=>(adj[kk]||[]).length===1 && kk!==plateK && kk!==K(eCx,eCy) && kk!==gK).sort((a,b)=>dist[b]-dist[a]);
+    for(const lk of leaves.slice(0,2)){ const [lx,ly]=lk.split(',').map(Number); G.decor.push({kind:'chest', x:cX(lx)+1.5, y:cY(ly)+1.5, deep:1, potions:1}); }
+    // the ward-plate, planted in the far dead end
+    G.decor.push({kind:'boneplate', x:plateTile[0]+0.5, y:plateTile[1]+0.5, gate:cross.gate, pressed:false, label:'a ward-plate'});
+    cross.plate=[plateTile[0], plateTile[1]];
     G.decor.push(gateObj); G._aerieCross.push(cross);
   };
-  // CHAMBER 1 - THE OSSUARY: a long 4-leg maze -> the ward-plate -> the Bone Gate
-  aerieMaze(58,92, 77,95, [93,88,83,78], 75, 75,
-    {kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
-    {gate:'bone', openY:77, southY:96.0, entryX:75}, 2.5);
-  // CHAMBER 2 - THE GALLERY: a longer 4-leg maze, faster lances -> the Sepulchre Gate
-  aerieMaze(58,92, 43,61, [59,54,49,44], 75, 75,
-    {kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
-    {gate:'sep', openY:43, southY:62.0, entryX:75}, 2.1);
+  // CHAMBER 1 - THE OSSUARY: a wide 8x4 grid-maze -> a far ward-plate -> the Bone Gate
+  aerieMaze({ x0:59, y0:78, cols:8, rows:4, col:4, wall:[58,76,92,96], entryStub:[90,96], gateStub:[76,80],
+    gateObj:{kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
+    cross:{gate:'bone', openY:77, southY:95.0, entryX:75}, period:2.5, seed:52411, beams:3 });
+  // CHAMBER 2 - THE GALLERY: a wide 8x5 grid-maze, faster lances -> a far ward-plate -> the Sepulchre Gate
+  aerieMaze({ x0:59, y0:44, cols:8, rows:5, col:4, wall:[58,42,92,64], entryStub:[60,64], gateStub:[42,46],
+    gateObj:{kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
+    cross:{gate:'sep', openY:43, southY:61.0, entryX:75}, period:2.1, seed:60947, beams:4 });
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
@@ -2073,74 +2110,85 @@ function genFrostAll(){
    frozen over until you thaw it) to reach and melt the great seal on the deep gate.
    Thin ice cracks if you linger. No levers now; the flame IS the puzzle.
    ================================================================================= */
+// THE LONG DRIFT: a solid lever-island parked mid-channel (carved into the water later)
+const FROST_ISLAND={x0:39, x1:49, y0:62, y1:69};   // reach it, pull its lever to open the Deep Gate
+const HEART_SEAL=[[42,34],[43,34],[44,34],[45,34],[46,34]];   // slams shut behind you when you enter the arena
 function genFrostDeep(){
-  // a compact warren of THREE ice-themed chambers, carved from solid frozen rock.
+  // an ice-dungeon carved from solid frozen rock: a long drift-channel crossing up to the Frozen Heart.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
-  carve(42,54,46,60,T.ICE);               // corridor A -> the flooded warren
-  carve(30,38,54,54,T.ICE);               // THE DRIFT - the frozen channel the floes cross
-  carve(42,30,46,40,T.ICE);               // corridor B -> the antechamber
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until you cross
-  // THE FROZEN HEART: a sealed inner sanctum reached only after unbinding the ward-locks.
-  carve(36,26,52,32,T.ICE);               // the antechamber (you arrive here from corridor B)
-  carve(42,24,46,26,T.ICE);               // the throat (the HEART GATE sits at y=25)
-  carve(32,14,56,24,T.ICE);               // the inner sanctum - THE RIMEBOUND sleeps here, sealed
-  // two ward-rooms flanking the antechamber, each with a frost-lock lever
-  carve(30,27,38,31,T.ICE); carve(18,23,30,33,T.ICE);   // WEST WARD-ROOM + its approach
-  carve(50,27,58,31,T.ICE); carve(58,23,70,33,T.ICE);   // EAST WARD-ROOM + its approach
-  for(let x=42;x<=46;x++){ setTile(x,25,T.RUIN); setSolid(x,25,1); }  // the HEART GATE - the ward-locks hold it shut
+  carve(34,100,54,114,T.ICE);             // THE FROSTGATE - the ice-cavern landing (entry)
+  carve(42,92,46,101,T.ICE);              // corridor A -> the long drift
+  carve(30,44,54,92,T.ICE);               // THE LONG DRIFT - a 3x channel of floes + rotating slabs
+  carve(FROST_ISLAND.x0, FROST_ISLAND.y0, FROST_ISLAND.x1, FROST_ISLAND.y1, T.ICE);   // the solid lever-island, mid-channel
+  carve(42,30,46,45,T.ICE);               // corridor B -> the arena
+  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until the island lever is thrown
+  // THE FROZEN HEART: one large slippery arena where you fight THE RIMEBOUND. Its edges drop away
+  // into spiked freezing water (placed in placeObjectsFrostDeep), and a seal slams shut behind you.
+  carve(28,10,60,33,T.ICE);               // the arena (enters from corridor B at y33, x42-46)
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
-  G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
-  setSolid(44,70,0); setTile(44,70,T.RUIN);
-  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[20,25],[68,25]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G.decor.push({kind:'dungeonmouth', x:44.5, y:112.5, exit:1, label:'the way up'});  // back to the surface
+  setSolid(44,112,0); setTile(44,112,T.ICE);
+  // the long drift turns on the DASH (to board the rotating slabs) - guarantee it so nothing soft-locks
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The cold quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
+  for(const [tx,ty] of [[36,44],[52,44],[40,64],[48,64],[36,90],[52,90],[31,14],[57,14],[31,30],[57,30],[38,108],[50,108]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  for(const [px,py] of [[38,66],[50,66],[32,40],[52,40],[36,16],[52,16],[19,31],[69,31]]) spire(px,py);
-  // ---- THE WARD-LOCKS ----
-  // the Rimebound sleeps behind the HEART GATE; two frost-lock levers, one in each flanking
-  // ward-room, must both be thrown to unchain it. Pull one and the other still holds.
-  const heartTiles=[[42,25],[43,25],[44,25],[45,25],[46,25]];
-  G.decor.push({kind:'icelever', x:23.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
-    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
-    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
-    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
-    label:'the west ward-lock'});
-  G.decor.push({kind:'icelever', x:64.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
-    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
-    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
-    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
-    label:'the east ward-lock'});
-  // ---- THE DRIFTING FLOES ----
-  // the warren has flooded into a channel of black, freezing water, crossed only on slabs
-  // of drift-ice that slide back and forth. Board a floe as it drifts to your ledge, ride
-  // it, and step to the next floe (or the far ledge) when they line up. Fall in and the
-  // cold sweeps you back to the landing to try the crossing again. No levers, pure timing.
-  G._frostVoid=new Set(); G._frostFloes=[]; G._frostT=0; G._frostGateOpen=false; G._frostFallHint=0;
-  for(let y=43;y<=51;y++) for(let x=30;x<=54;x++){ if(inb(x,y)&&!solidAt(x,y)){ G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); } }
+  for(const [px,py] of [[38,110],[50,110]]) spire(px,py);
+  // ---- THE FROZEN HEART ARENA ----
+  // one big slippery room. Its edges drop away into spiked freezing water - avoid them - and a
+  // seal slams shut behind you when you step in, so there's no backing out to kite the Rimebound.
+  G._heartSealed=0;
+  G.decor.push({kind:'catgate', x:44, y:34, open:true, gate:'heart', tiles:HEART_SEAL.slice(), label:'the Heart-Seal'});
+  // ---- THE LONG DRIFT ----
+  // a 3x channel of black freezing water. The SOUTH half is crossed on drift-ice floes that slide
+  // back and forth; midway sits a solid ISLAND with the DRIFT-LOCK LEVER - throw it to grind the
+  // Deep Gate up. The NORTH half is crossed on ROTATING SLABS (dash to board, like the Emberdeep).
+  // Fall in and the cold flings you back - to the landing, or (once the lever is thrown) the island.
+  G._frostVoid=new Set(); G._frostFloes=[]; G._frostWheels=[]; G._frostT=0; G._frostGateOpen=false; G._frostFallHint=0;
+  for(let y=46;y<=89;y++) for(let x=30;x<=54;x++){ if(!inb(x,y)||solidAt(x,y)) continue;
+    if(x>=FROST_ISLAND.x0 && x<=FROST_ISLAND.x1 && y>=FROST_ISLAND.y0 && y<=FROST_ISLAND.y1) continue;   // the island stays dry land
+    G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); }
   const floe=(cy,cx,amp,spd,phase)=>{ const f={kind:'icefloe', cx:cx+0.5, y:cy+0.5, x:cx+0.5, prevx:cx+0.5, amp, spd, phase, w:5, h:3}; G.decor.push(f); G._frostFloes.push(f); };
-  floe(50, 42, 6, 0.5, 0.0);    // three floes on staggered phases -> time each step across
-  floe(47, 42, 6, 0.5, 2.1);
-  floe(44, 42, 6, 0.5, 4.2);
-  G._frostCross={cy0:43, cy1:51, farY:38, startX:44, startY:53.5};
+  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._frostWheels.push(w); };
+  // SOUTH HALF: floes (3 apart, so they touch as they line up) from the entry ledge to the island
+  floe(88,42,6,0.5,0.0); floe(85,42,6,0.5,1.3); floe(82,42,6,0.5,2.6); floe(79,42,6,0.5,3.9);
+  floe(76,42,6,0.5,5.2); floe(73,42,6,0.5,0.7); floe(70,42,6,0.5,2.0);
+  // NORTH HALF: rotating slabs (their reaches overlap) from the island up to the far ledge
+  wheel(42,58, 3.0,  0.9,  Math.PI/2); wheel(42,52, 3.0, -0.9, -Math.PI/2); wheel(42,47, 3.0, 0.9, Math.PI/2);
+  // the drift-lock lever, on the island (a bare icelever opens the Deep Gate; see pullIceLever)
+  G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
+  G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
+  // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
+  // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
+  for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
+    if(!inb(x,y) || solidAt(x,y)) continue;
+    const edge=(x<=29 || x>=59 || y<=11 || y>=32), entry=(x>=40 && x<=48 && y>=31);
+    if(edge && !entry){ setTile(x,y,T.DEEP); setSolid(x,y,0); G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); }
+  }
   G.critters=[];
-  // an already-cleared run drains the channel to solid ice and leaves both gates open
+  // an already-cleared run drains the channel + arena edge to solid ice and leaves the gates open
   if(P.story && P.story.deepDone){
-    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); setSolid(x,25,0); setTile(x,25,T.ICE); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='heart') d.on=true; }
-    G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe');
-    G._frostVoid=new Set(); G._frostFloes=[]; G._frostGateOpen=true;
+    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
+    for(const [x,y] of HEART_SEAL){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='heart') d.open=true; }
+    for(const k of G._frostVoid){ const [x,y]=k.split(',').map(Number); if(y<=33){ setTile(x,y,T.ICE); setSolid(x,y,0); } }   // arena edge freezes over
+    G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe' && d.kind!=='spinwheel');
+    G._frostVoid=new Set(); G._frostFloes=[]; G._frostWheels=[]; G._frostGateOpen=true;
   }
 }
+// throwing the island's drift-lock lever grinds the Deep Gate up (far to the north) and moves the
+// respawn checkpoint out to the island for the rotating-slab half of the crossing.
 function openFrostGate(){
   if(G._frostGateOpen) return; G._frostGateOpen=true;
   for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
   invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); shockwave(44,37.5,'rgba(180,225,245,0.9)',52); G.shake=Math.max(G.shake||0,0.5);
-  banner('THE DEEP GATE OPENS','THE FROZEN HEART LIES BEYOND');
-  toast('You spring from the last floe onto solid ice and the deep gate grinds up behind the frost. The <b>Frozen Heart</b> - and the thing Vath bound in it - lies ahead.',5200);
+  if(G._frostCross && G._frostCross.island){ G._frostCross.startX=G._frostCross.island[0]; G._frostCross.startY=G._frostCross.island[1]; }
+  Snd.quest&&Snd.quest(); shockwave(44,66,'rgba(180,225,245,0.9)',52); G.shake=Math.max(G.shake||0,0.5);
+  banner('THE DEEP GATE GRINDS OPEN','THE FROZEN HEART LIES BEYOND');
+  toast('You throw the drift-lock and, far to the north, the deep gate grinds up. Ride the <b>rotating slabs</b> the rest of the way - fall now and you wake back here on the island.',5600);
   autoSave&&autoSave();
 }
 // plunging into the freezing water: control freezes and the hero flails in the cracking ice,
@@ -2155,32 +2203,41 @@ function frostPlungeStart(){
 }
 function frostRespawn(){
   const z=G._frostPlunge; G._frostPlunge=null; if(!z) return;
-  const c=G._frostCross;
   burst(P.x,P.y-0.3,'#cfeaf8',12,2.0);
-  if(c){ P.x=c.startX+0.5; P.y=c.startY; }
+  if(z.y<=34){ P.x=44.5; P.y=30; }   // fell off the arena's spiked edge -> back onto the arena floor
+  else { const c=G._frostCross; if(c){ P.x=c.startX+0.5; P.y=c.startY; } }   // fell in the drift -> the checkpoint
   P.click=null; P.moving=false; P.slideDir=null; P._glv=null;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water drags you under and the cold flings you back to the landing, shivering (<b>-4 HP</b>). <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up. The ice is slick, so <b>mind your momentum</b>.',5200); }
+  if(!G._frostFallHint){ G._frostFallHint=1; toast('The freezing water drags you under, shivering (<b>-4 HP</b>). Mind the <b>spiked edges</b> - and the ice is slick, so <b>mind your momentum</b>.',5200); }
 }
 // carry the player on the floe they're standing on, and drop them (restart) if the open
 // water under them has no floe
 function updateFrostDeep(dt){
-  // the plunge plays out (control frozen in updatePlayer), then flings you back to the landing
+  // the plunge plays out (control frozen in updatePlayer), then flings you back to the checkpoint
   if(G._frostPlunge){ G._frostPlunge.t+=dt; if(G._frostPlunge.t>=G._frostPlunge.dur) frostRespawn(); return; }
-  const floes=G._frostFloes||[]; if(!floes.length) return;
+  // THE HEART-SEAL: stepping into the arena with the Rimebound alive slams the seal shut behind you
+  if(!G._heartSealed && !(P.story&&P.story.deepDone) && P.y>=11 && P.y<=31 && P.x>=28 && P.x<=60
+     && (G.mobs||[]).some(m=>m.ach==='rimebreaker' && !m.dead)){
+    G._heartSealed=1; for(const [x,y] of HEART_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=false;
+    invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
+    banner('THE ICE SEALS BEHIND YOU','NO RETREAT - FELL THE RIMEBOUND');
+  }
+  const floes=G._frostFloes||[], wheels=G._frostWheels||[];
+  if(!floes.length && !wheels.length) return;   // a cleared run - the channel is solid ice
   G._frostT=(G._frostT||0)+dt;
   for(const f of floes){ f.prevx=f.x; f.x = f.cx + f.amp*Math.sin(G._frostT*f.spd + f.phase); }
-  const c=G._frostCross;
-  if(c && !G._frostGateOpen && P.y>=c.farY && P.y<c.cy0) openFrostGate();   // reached the far ledge
-  if(P.dead || (P.rollT||0)>0) return;
+  for(const w of wheels) w.ang += w.spd*dt;
+  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the water
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
-  if(!(G._frostVoid && G._frostVoid.has(tx+','+ty))) return;   // on solid ice / a ledge - safe
-  // over the water: find the floe under us
+  if(!(G._frostVoid && G._frostVoid.has(tx+','+ty))) return;   // on solid ice / a ledge / the island - safe
+  // over the water: a floe carries you, else a rotating slab, else you plunge
   let best=null, bestd=99;
   for(const f of floes){ const dx=Math.abs(P.x-f.x), dy=Math.abs(P.y-f.y);
     if(dx<=f.w/2 && dy<=f.h/2 && (dx+dy)<bestd){ best=f; bestd=dx+dy; } }
-  if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; }   // carried by the drift
-  else frostPlungeStart();
+  if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; return; }   // carried by the drift
+  if(wheelCarry(wheels, dt)) return;   // riding a rotating slab
+  frostPlungeStart();
 }
 function spawnMobsFrostDeep(){
   const Z=FROSTDEEP_ZONES;
@@ -2207,16 +2264,17 @@ function exitFrostDungeon(){
 }
 function pullIceLever(b){
   if(b.gateTiles || b.wardGroup || b.gate) return pullVaultLever(b);   // Glacier Vault + Undermill levers open their own gates
-  if(b.on){ toast('The lever is already thrown - the deep gate stands open to the north.',3200); return; }
-  b.on=true; if(Snd.quest) Snd.quest();
-  for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,0); }   // grind the gate open
-  invalidateScenery&&invalidateScenery();
-  shockwave(b.x,b.y,'rgba(180,225,245,0.9)',55);
-  banner('THE DEEP GATE GRINDS OPEN','THE WAY NORTH IS CLEAR');
-  toast('Frost cracks off the old mechanism and a slab of ice grinds up into the ceiling. The way deeper - north to the Frozen Heart - lies open.',5200);
+  if(b.on){ toast('The drift-lock is already thrown - the deep gate stands open to the north.',3200); return; }
+  b.on=true;
+  openFrostGate();   // grind the Deep Gate up and move the checkpoint out to the island
 }
 function freeColossus(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
+  // the fight is won - the Heart-Seal grinds back open
+  if(typeof HEART_SEAL!=='undefined') for(const [x,y] of HEART_SEAL){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+  G._heartSealed=0;
+  { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=true; }
+  invalidateScenery&&invalidateScenery();
   Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(190,230,250,0.95)',100);
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
@@ -2397,18 +2455,25 @@ function exitFrostVault(){
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 function genMillDeep(){
-  // the flooded undercroft: an entry landing, TWO flooded water-maze halls, and the guardian's
-  // chamber at the top with the sail. Every solid tile bordering the carved floor is recorded as
-  // a WALL (ewall decor) so the rooms read clearly - no invisible collision.
+  // the flooded undercroft: an entry landing, then FOUR flooded halls climbing north, and the
+  // guardian's chamber at the top with the sail. The first two halls (A,B) are COMBINATION
+  // water-mazes (find the valve-states that open a door in every wall). The two DEEPER halls
+  // (C,D) are TIDE-LOCKS - you must throw their valves in the one CARVED ORDER or the whole hall
+  // floods back and the sequence resets. Every solid tile bordering the carved floor is recorded
+  // as a WALL (ewall decor) so the rooms read clearly - no invisible collision.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(10,43,30,50);   // THE MILLSTAIR - entry landing (the way up + the arms-chest)
-  carve(18,39,22,44);   // corridor -> Maze A
-  carve(7,26,33,40);    // FLOODED HALL A - water-maze
-  carve(18,23,22,27);   // corridor -> Maze B
-  carve(7,9,33,23);     // FLOODED HALL B - water-maze
-  carve(18,6,22,10);    // corridor -> the guardian's chamber
   carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian + the stormsail
+  carve(18,8,22,11);    // corridor -> Hall D
+  carve(7,11,33,28);    // TIDE-LOCK HALL D - the five-lock sequence (deepest, hardest)
+  carve(18,28,22,31);   // corridor -> Hall C
+  carve(7,31,33,48);    // TIDE-LOCK HALL C - the four-lock sequence
+  carve(18,48,22,51);   // corridor -> Hall B
+  carve(7,51,33,68);    // FLOODED HALL B - combination water-maze
+  carve(18,68,22,71);   // corridor -> Hall A
+  carve(7,71,33,88);    // FLOODED HALL A - combination water-maze
+  carve(18,88,22,91);   // corridor -> the entry landing
+  carve(10,91,30,100);  // THE MILLSTAIR - entry landing (the way up + the arms-chest)
   // record the visible wall faces (stone bordering the carved floor) BEFORE the water goes down,
   // so the water-walls read as water (not phantom stone)
   MILL_WALLS=[];
@@ -2424,48 +2489,75 @@ function placeObjectsMillDeep(){
   G.decor=G.decor||[];
   // the stone walls that give the rooms their shape (static baked scenery)
   for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
-  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:48.5, label:'the way up'});  // back to the surface
-  setSolid(19,48,0); setTile(19,48,T.RUIN);
-  for(const [tx,ty] of [[12,45],[28,45],[9,33],[31,33],[9,16],[31,16],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:98.5, label:'the way up'});  // back to the surface
+  setSolid(19,98,0); setTile(19,98,T.RUIN);
+  for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // a decorative great wheel in the landing (the works are drowned, not turning)
-  G.decor.push({kind:'millwheel', x:12.5, y:47.2, r:6});
+  G.decor.push({kind:'millwheel', x:12.5, y:97.2, r:6});
   // THE MILLER'S ARMS-CHEST: his old hunting bow + the winch-crank that frees the seized
   // sluice valves. You cannot work a valve until you've taken the crank.
-  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:46.5, bow:1});
-  // ---- THE FLOODED HALLS: two water-mazes. Each hall is barred by four WATER-WALLS, every
-  // doorway flooded shut by default (you cannot get through). Three sluice valves sit at the
-  // hall's mouth, and each valve is coupled to TWO of the doorways - throwing it drains one pair
-  // and floods another. You must find the COMBINATION of valves that leaves a drained doorway in
-  // every wall at once, then weave the open path north. ----
+  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, bow:1});
+  // ---- THE FLOODED HALLS. Each hall is barred by four WATER-WALLS, every doorway flooded shut by
+  // default (you cannot get through). Sluice valves sit at each hall's mouth. There are TWO kinds:
+  //   * COMBINATION halls (A,B): each valve is coupled to TWO doorways - throwing it drains one pair
+  //     and floods another. Find the STATE that leaves a drained doorway in every wall at once.
+  //   * TIDE-LOCK halls (C,D): the deeper locks. The water only falls if you throw the valves in the
+  //     one CARVED ORDER (read the stone plaque at the mouth). Each correct valve drains the next
+  //     wall northward; a WRONG valve reverses the sluices and floods the whole hall back to the
+  //     start. Hall D adds a sixth DECOY valve whose number never appears in the order - touch it
+  //     and the locks slam shut. ----
   G._millWalls=[];
   const wwall=(hall, id, y, doorX0, doorX1)=>{
     for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }   // the whole row floods, blocking
     const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
   };
   const valve=(hall, vx, vy, flips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, flips, label:'a sluice valve'}); };
-  // HALL A (y26-40): four staggered water-walls; three coupled valves. Solve: valve1 on, valve2 off, valve3 on.
-  wwall('A','a1', 37,  9,13); wwall('A','a2', 34, 20,24); wwall('A','a3', 31, 9,13); wwall('A','a4', 28, 20,24);
-  valve('A', 11,39, ['a1','a2']); valve('A', 20,39, ['a2','a3']); valve('A', 29,39, ['a3','a4']);
-  // HALL B (y9-23): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
-  wwall('B','b1', 20, 20,24); wwall('B','b2', 17, 9,13); wwall('B','b3', 14, 20,24); wwall('B','b4', 11, 9,13);
-  valve('B', 11,22, ['b2','b3']); valve('B', 20,22, ['b1','b2']); valve('B', 29,22, ['b3','b4']);
+  const ovalve=(hall, vx, vy, pips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, order:true, pips, label:'a tide-lock valve'}); };
+  const plaque=(hall, px, py, seq)=>{ G.decor.push({kind:'millplaque', x:px+0.5, y:py+0.5, hall, seq}); };
+  // HALL A (y71-88): four staggered water-walls; three coupled valves. Solve: valve1 on, valve2 off, valve3 on.
+  wwall('A','a1', 86, 20,24); wwall('A','a2', 83, 9,13); wwall('A','a3', 80, 20,24); wwall('A','a4', 77, 9,13);
+  valve('A', 11,87, ['a1','a2']); valve('A', 20,87, ['a2','a3']); valve('A', 29,87, ['a3','a4']);
+  // HALL B (y51-68): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
+  wwall('B','b1', 66, 20,24); wwall('B','b2', 63, 9,13); wwall('B','b3', 60, 20,24); wwall('B','b4', 57, 9,13);
+  valve('B', 11,67, ['b2','b3']); valve('B', 20,67, ['b1','b2']); valve('B', 29,67, ['b3','b4']);
+  // HALL C (y31-48): the first TIDE-LOCK. Four walls; four numbered valves. Carved order: 2,4,1,3.
+  wwall('C','c1', 46, 20,24); wwall('C','c2', 43, 9,13); wwall('C','c3', 40, 26,30); wwall('C','c4', 37, 15,19);
+  ovalve('C', 9,47, 3); ovalve('C', 15,47, 1); ovalve('C', 25,47, 4); ovalve('C', 31,47, 2);
+  plaque('C', 20,49, [2,4,1,3]);
+  // HALL D (y11-28): the deepest TIDE-LOCK. Five walls; SIX numbered valves (one a decoy). Carved
+  // order: 4,1,5,2,6 - the valve numbered 3 is never called, and throwing it slams the locks shut.
+  wwall('D','d1', 26, 20,24); wwall('D','d2', 23, 9,13); wwall('D','d3', 20, 26,30); wwall('D','d4', 17, 15,19); wwall('D','d5', 14, 9,13);
+  ovalve('D', 8,27, 5); ovalve('D', 12,27, 2); ovalve('D', 17,27, 6); ovalve('D', 22,27, 1); ovalve('D', 27,27, 4); ovalve('D', 31,27, 3);
+  plaque('D', 20,29, [4,1,5,2,6]);
+  // the two tide-lock sequences: which valve-number opens the next wall northward, in order
+  G._millSeq={
+    C:{ order:[2,4,1,3],   gates:['c1','c2','c3','c4'],           idx:0 },
+    D:{ order:[4,1,5,2,6], gates:['d1','d2','d3','d4','d5'],       idx:0 }
+  };
   // ---- THE GRINDING HAZARDS ----
   // the drowned works still turn where the shaft never fully seized: rusted spike-grates snap up
   // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
-  // restart - and a DASH's roll frames pass clean through. Hall B grinds harder than Hall A.
+  // restart - and a DASH's roll frames pass clean through. The deeper the hall, the harder it grinds.
   G._millT=0; G._millSpikes=[]; G._millAxes=[];
   const mspikes=(x0,x1,y,spd,phase)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:14}; G.decor.push(s); G._millSpikes.push(s); } };
   const maxe=(x,y,amp,spd,phase)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:18}; G.decor.push(a); G._millAxes.push(a); };
   // Hall A - a couple of spike-grates and one slow grind-blade
-  mspikes(12,20,35, 0.75, 0.0); mspikes(20,28,30, 0.75, 0.4); maxe(20,32, 2.4, 1.9, 0.2);
+  mspikes(12,20,84, 0.75, 0.0); mspikes(21,29,80, 0.75, 0.4); maxe(20,79, 2.4, 1.9, 0.2);
   // Hall B - thicker: three grates and two faster blades
-  mspikes(12,22,18, 0.9, 0.0); mspikes(20,28,15, 0.9, 0.5); mspikes(10,18,12, 0.9, 0.25);
-  maxe(20,21, 2.8, 2.2, 0.0); maxe(20,13, 2.8, 2.3, 0.5);
+  mspikes(12,22,64, 0.9, 0.0); mspikes(20,28,58, 0.9, 0.5); mspikes(10,18,54, 0.9, 0.25);
+  maxe(20,61, 2.8, 2.2, 0.0); maxe(20,55, 2.8, 2.3, 0.5);
+  // Hall C (tide-lock) - blades sweep the crossing you earn once the order is right
+  mspikes(12,20,44, 0.85, 0.0); mspikes(21,29,39, 0.85, 0.4); maxe(20,42, 2.6, 2.1, 0.2); maxe(20,35, 2.6, 2.2, 0.6);
+  // Hall D (tide-lock) - the meat-grinder: grates and three blades over the deepest locks
+  mspikes(12,22,25, 0.95, 0.0); mspikes(20,28,21, 0.95, 0.5); mspikes(10,18,15, 0.95, 0.25);
+  maxe(20,24, 3.0, 2.4, 0.0); maxe(20,18, 3.0, 2.5, 0.5); maxe(13,21, 2.2, 2.6, 0.3);
   // THE STORMSAIL, in the guardian's chamber at the top
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
   G.critters=[];
   // a cleared run leaves every hall drained (the mazes are solved) and the works stilled
   if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
+    for(const d of G.decor) if(d.kind==='sluicelever') d.on=true;
+    if(G._millSeq) for(const k in G._millSeq) G._millSeq[k].idx=G._millSeq[k].order.length;
     G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap'); G._millSpikes=[]; G._millAxes=[]; }
 }
 // drain (walkable) or flood (blocking water) a water-wall's doorway to match its valve
@@ -2474,16 +2566,16 @@ function applyMillWall(w){
     if(w.on){ setTile(x,w.y,T.RUIN); setSolid(x,w.y,0); }
     else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
-// read a diverter valve's state by its id ('d1'/'d2')
-// THE SLUICE VALVES: each valve is coupled to TWO doorways - throwing it flips both (drains a
-// shut one, floods an open one). Seized until you take the winch-crank. Find the combination that
-// opens a doorway in every wall of the hall, then weave the drained path north.
+// THE SLUICE VALVES. Combination valves (flips) are coupled to TWO doorways - throwing one flips
+// both. Tide-lock valves (order) must be thrown in the one carved order (see pullSluiceOrder). All
+// are seized until you take the winch-crank from the miller's arms-chest.
 function pullSluiceLever(b){
-  if(!b.flips) return;   // the mill's only valves are the coupled water-sluices
+  if(!b.order && !b.flips) return;   // the mill's only valves are the water-sluices
   if(!(P.story && P.story.millBowTaken)){
     toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
     Snd.step&&Snd.step(5); return;
   }
+  if(b.order) return pullSluiceOrder(b);   // the deeper tide-locks read the carved order
   b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
   for(const id of b.flips){ const w=(G._millWalls||[]).find(x=>x.id===id); if(!w) continue;
     w.on=!w.on; applyMillWall(w);
@@ -2497,6 +2589,44 @@ function pullSluiceLever(b){
   } else {
     addFloat(openN+' / '+hw.length+' walls open', b.x, b.y-1.4, '#bfe0f4', 1.1);
     toast('The coupled sluices shift - some stretches drain as others flood over. <b>'+openN+' of '+hw.length+'</b> walls stand open. Find the combination that opens them all at once.',3600);
+  }
+}
+// THE TIDE-LOCKS (halls C & D): the water only falls if the numbered valves are thrown in the one
+// carved order shown on the hall's plaque. Each correct valve drains the next wall northward; ANY
+// wrong valve reverses the sluices, floods every drained stretch back, and resets the sequence.
+function pullSluiceOrder(b){
+  const S=G._millSeq && G._millSeq[b.hall]; if(!S) return;
+  const gateWall=id=>(G._millWalls||[]).find(w=>w.id===id);
+  if(S.idx>=S.order.length){ b.on=true; return; }   // already open - nothing left to throw
+  const expected=S.order[S.idx];
+  if(b.pips===expected){
+    // the right lock, in the right place: drain the next wall northward and hold it
+    b.on=true;
+    const w=gateWall(S.gates[S.idx]);
+    if(w){ w.on=true; applyMillWall(w);
+      for(let i=0;i<12;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.6,2.4);
+        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.4, life:rnd(0.4,1.1), color:'#bfe0f4', size:rnd(1.5,3), grav:0.05}); } }
+    S.idx++;
+    Snd.quest&&Snd.quest(); buzz&&buzz(7); shockwave(b.x,b.y,'rgba(150,205,235,0.85)',44);
+    invalidateScenery&&invalidateScenery();
+    if(S.idx>=S.order.length){
+      G.shake=Math.max(G.shake||0,0.5); banner('THE TIDE-LOCK OPENS','THE WATER FALLS - THE WAY NORTH IS CLEAR');
+      toast('The last lock gives and the whole hall drains at once - a clear channel opens all the way north. <b>Cross it before you touch another valve.</b>',5000);
+    } else {
+      addFloat('lock '+S.idx+' / '+S.order.length, b.x, b.y-1.4, '#bfe0f4', 1.1);
+      toast('The water recedes a stretch and holds - <b>'+S.idx+' of '+S.order.length+'</b> locks thrown in order. Read the plaque for the next number.',3000);
+    }
+  } else {
+    // wrong lock: the whole hall floods black again and the order resets
+    const had=S.idx; S.idx=0;
+    for(const gid of S.gates){ const w=gateWall(gid); if(w && w.on){ w.on=false; applyMillWall(w);
+      for(let i=0;i<7;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.5,1.8);
+        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.2, life:rnd(0.3,0.9), color:'#5a7a92', size:rnd(1.5,3), grav:0.04}); } } }
+    for(const v of (G.decor||[])) if(v.kind==='sluicelever' && v.order && v.hall===b.hall) v.on=false;
+    G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(14); Snd.hit&&Snd.hit();
+    invalidateScenery&&invalidateScenery();
+    if(had>0) banner('THE LOCKS SLAM SHUT','THE ORDER BREAKS - THE HALL FLOODS BACK');
+    toast('Wrong valve - the sluices reverse with a roar and every stretch you drained floods black again. The tide-lock resets. <b>Read the carved plaque and throw the numbers in that order.</b>',4400);
   }
 }
 // drive the mill's grinding hazards: cycle the spike-grates and sweep the grind-blades, bleeding
@@ -2587,23 +2717,23 @@ function enterMillFromInterior(){
    ===================================================================== */
 let UNDERMAW_WALLS = [];
 const UNDERMAW_GATE = [[19,11],[20,11],[21,11],[22,11],[23,11]];   // the Hoard Door, sealed until the beast falls
-const MAW_SHOOTGATE = [[20,87],[21,87],[22,87],[23,87],[24,87]];   // the Warded Gate, sealed until the ward-eye is struck
+const MAW_SHOOTGATE = [[20,112],[21,112],[22,112],[23,112],[24,112]];   // the Warded Gate, sealed until the ward-eye is struck
 function genUndermaw(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(16,141,28,151);   // R0 THE MAW - entry landing (the way up sits here)
-  carve(20,136,24,142);   // throat
-  carve(6,115,38,136);    // R1 - floating platforms over the scar
-  carve(20,110,24,116);   // corridor 1
-  carve(6,89,38,110);     // R2 - the ward-eye (shoot to open the gate)
-  carve(20,84,24,90);     // corridor 2 (the Warded Gate sits at y=87)
-  carve(6,63,38,84);      // R3 - rotating + floating platforms
-  carve(20,58,24,64);     // corridor 3
-  carve(6,37,38,58);      // R4 - floating platforms under archer fire
-  carve(20,32,24,38);     // corridor 4 -> the den
-  carve(8,15,36,32);      // R5 THE MAW-STALKER'S DEN (the boss fight)
-  carve(19,9,23,16);      // hoard corridor (the Hoard Door sits at y=11)
-  carve(14,2,30,9);       // R6 THE DEEP HOARD - the reward alcove
+  carve(16,180,28,190);   // R0 THE MAW - entry landing (the way up sits here)
+  carve(20,174,24,181);   // throat
+  carve(6,142,38,174);    // R1 - a long black scar, crossed on scattered floating platforms
+  carve(20,136,24,143);   // corridor 1
+  carve(6,114,38,136);    // R2 - the ward-eye (shoot to open the gate)
+  carve(20,108,24,115);   // corridor 2 (the Warded Gate sits at y=112)
+  carve(6,76,38,108);     // R3 - a long black scar of scattered floating platforms
+  carve(20,70,24,77);     // corridor 3
+  carve(6,38,38,70);      // R4 - floating platforms under archer fire
+  carve(20,32,24,39);     // corridor 4 -> the den
+  carve(8,14,36,33);      // R5 THE MAW-STALKER'S DEN (the boss fight)
+  carve(19,8,23,15);      // hoard corridor (the Hoard Door sits at y=11)
+  carve(14,2,30,8);       // R6 THE DEEP HOARD - the reward alcove
   UNDERMAW_WALLS=[];
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(!solidAt(x,y)) continue;
@@ -2618,42 +2748,49 @@ function genUndermaw(){
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
   for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
-  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:150.5, label:'the way up'});
-  setSolid(22,150,0); setTile(22,150,T.RUIN);
+  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:188.5, label:'the way up'});
+  setSolid(22,188,0); setTile(22,188,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
   if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
     toast('A barrow-bow hangs racked by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
-  for(const [tx,ty] of [[8,146],[36,146],[8,120],[36,120],[8,94],[36,94],[8,68],[36,68],[8,42],[36,42],[10,18],[34,18],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
-  G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0;
+  G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
   const pit=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
-  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._mawWheels.push(w); };
-  const slab=(ax,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax, ay, bx:ax, by, spd, phase:phase||0, x:ax, y:ay, prevx:ax, prevy:ay, w:3, h:4}; G.decor.push(s); G._mawSlabs.push(s); };
-  // ---- R1: FLOATING PLATFORMS (learn the drift) - two pit-bands split by a rest ledge ----
-  pit(6,38,128,131); pit(6,38,120,123);
-  slab(22,131, 127, 0.8, 0.0);       // ferry across band 1 (south ledge -> rest ledge)
-  slab(22,123, 119, 0.85, 1.6);      // ferry across band 2 (rest ledge -> north ledge)
-  G._mawCross.push({y0:115,y1:136, sx:22, sy:134});
-  // ---- R3: ROTATING + FLOATING (a spinwheel, then a ferry) ----
-  pit(6,38,76,79); pit(6,38,67,71);
-  wheel(22,77, 3.0, 1.0, Math.PI/2);  // rotating slab across band A
-  slab(22,71, 66, 0.85, 0.0);         // ferry across band B
-  G._mawCross.push({y0:63,y1:84, sx:22, sy:82});
-  // ---- R4: FLOATING under ARCHER FIRE - two ferries, archers rooted on the ledges ----
-  pit(6,38,49,53); pit(6,38,40,44);
-  slab(22,53, 48, 0.85, 0.0);         // ferry across band 1
-  slab(22,44, 39, 0.9, 1.6);          // ferry across band 2
-  G._mawCross.push({y0:37,y1:58, sx:22, sy:56});
+  // a small platform that slides only a SHORT way left-and-right
+  const slab=(cx,cy,amp,spd,phase)=>{ const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:2, h:2}; G.decor.push(s); G._mawSlabs.push(s); };
+  // scatter a navigable FIELD of small sliding platforms across a big black pit: a guaranteed
+  // zig-zag "spine" of dash-hops from the south ledge to the north, plus spread-out extra
+  // platforms (left and right) so there are several routes up.
+  const field=(nY,sY,seed)=>{
+    let prng=(seed>>>0)||1; const rng=()=>{ prng=(prng*1664525+1013904223)>>>0; return prng/4294967296; };
+    let px=22;
+    for(let y=sY-2; y>=nY+2; y-=3){
+      px=Math.max(11, Math.min(33, px + (rng()<0.5?-3:3)));                 // spine hop (<=3 tiles: dashable)
+      slab(px, y, 1.0, 0.55+rng()*0.3, rng()*6.28);                         // the spine platform (guarantees a path)
+      for(const ex of [11,18,26,33]){ if(Math.abs(ex-px)>=5 && rng()<0.5)   // extras, spread wide left and right
+        slab(Math.max(10,Math.min(34,ex)), y, 1.0, 0.55+rng()*0.3, rng()*6.28); }
+    }
+  };
+  // ---- R1: the long black scar - learn the hop ----
+  pit(6,38, 145,171); field(145,171, 5201);
+  G._mawCross.push({y0:142,y1:174, sx:22, sy:173});
+  // ---- R3: a longer, busier scar ----
+  pit(6,38, 79,105); field(79,105, 6203);
+  G._mawCross.push({y0:76,y1:108, sx:22, sy:107});
+  // ---- R4: the scar under archer fire ----
+  pit(6,38, 41,67); field(41,67, 7207);
+  G._mawCross.push({y0:38,y1:70, sx:22, sy:69});
   // ---- R2: THE WARD-EYE - shoot the mechanism to grind the Warded Gate up ----
-  for(const [px,py] of [[13,99],[31,99]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
-  G.decor.push({kind:'catgate', x:22, y:87, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
-  G.decor.push({kind:'shoottarget', x:22.5, y:90.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
+  for(const [px,py] of [[13,125],[31,125]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
+  G.decor.push({kind:'catgate', x:22, y:112, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
+  G.decor.push({kind:'shoottarget', x:22.5, y:115.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
   // ---- THE HOARD DOOR + reward ----
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
   G.critters=[];
-  // an already-cleared run stands every gate open and quiets the den (the slabs remain to re-cross)
+  // an already-cleared run stands every gate open and quiets the den (the platforms remain to re-cross)
   if(P.story && P.story.undermawDown){
     for(const [x,y] of [...UNDERMAW_GATE, ...MAW_SHOOTGATE]){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
     for(const d of G.decor){ if(d.kind==='catgate') d.open=true; if(d.kind==='shoottarget') d.hit=true; }
@@ -2668,17 +2805,23 @@ function spawnMobsUndermaw(){
     b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
   // R4 skeleton archers: rooted on the ledges flanking the crossing, raining bone arrows as you cross
-  for(const [ax,ay] of [[14,38],[30,38],[9,47],[35,47]]){
+  for(const [ax,ay] of [[14,39],[30,39],[14,69],[30,69]]){
     const a=spawnMob('archer', ax, ay);
     if(a){ a.rooted=true; a.hx=ax; a.hy=ay; a.respawnT=-1; a.state='idle'; a.noAggroT=0; }
   }
 }
-// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, and drop the player back to
-// the ledge (-5 HP) if they stand over the scar with no platform beneath them.
+// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, swarm the bats, and drop
+// the player back to the ledge (-5 HP) if they stand over the scar with no platform beneath them.
 function updateUndermaw(dt){
   G._mawT=(G._mawT||0)+dt;
   for(const w of (G._mawWheels||[])) w.ang += w.spd*dt;
   updateDriftSlabs(G._mawSlabs, G._mawT);
+  updateMawBats(dt);
+  // a fall is in progress: the hero tumbles down into the black, then respawns on the ledge
+  if(G._mawDrop){ G._mawDrop.t+=dt;
+    if(Math.random()<0.4) burst(G._mawDrop.x+rnd(-0.3,0.3), G._mawDrop.y+rnd(-0.2,0.2), '#1a1512', 1, 1.2);
+    if(G._mawDrop.t>=G._mawDrop.dur) mawRespawn();
+    return; }
   if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
@@ -2686,15 +2829,50 @@ function updateUndermaw(dt){
   if(driftCarry(G._mawSlabs)) return;                      // riding a floating slab
   mawFall(ty);
 }
+// CAVE BATS: killable flyers that keep swooping in over the crossings; a bite shoves you hard
+// (off a platform, into the pit). Fly straight at you (over walls and scar alike) and can be cut
+// down like any mob. Capped, and only while the Maw-Stalker still lives.
+function updateMawBats(dt){
+  if(!(P.story && P.story.undermawDown)){
+    G._mawBatT=(G._mawBatT||0)-dt;
+    if(G._mawBatT<=0){ G._mawBatT=4.5;
+      const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
+      if(alive<4 && !P.dead && P.y>36 && P.y<176){
+        const a=Math.random()*TAU, r=8+Math.random()*4;
+        const m=spawnMob('bat', Math.round(P.x+Math.cos(a)*r), Math.round(P.y+Math.sin(a)*r));
+        if(m){ m.bat=1; m.respawnT=-1; m.hx=m.x; m.hy=m.y; m.state='chase'; m.bob=Math.random()*TAU; }
+      }
+    }
+  }
+  for(const m of (G.mobs||[])){ if(!m.bat || m.dead) continue;
+    m.bob=(m.bob||0)+dt*9;
+    const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
+    const sp=(MOBDEF.bat?MOBDEF.bat.speed:5)*(P.dead?0.4:1);
+    m.x+=dx/l*sp*dt; m.y+=dy/l*sp*dt;   // flies straight in - over walls and the scar
+    m.face=(dx<0?-1:1);
+    if(l<0.85 && !P.dead && (P.rollT||0)<=0 && P.hurtT<=0){
+      hurtPlayer(m.dmg||12, m);
+      moveEntity(P, dx/l*0.8, dy/l*0.8);   // an extra shove away from the bat - enough to knock you off a slab
+      burst(P.x,P.y-0.4,'#2a2233',10,2.2);
+    }
+  }
+}
+// hit the black scar with no platform under you: the hero plummets (a drop animation plays in
+// drawPlayer; updateUndermaw ticks it), then wakes back on the ledge with -5 HP.
 function mawFall(ty){
+  if(G._mawDrop) return;
   const c=(G._mawCross||[]).find(cc=>ty>=cc.y0 && ty<=cc.y1) || (G._mawCross||[])[0];
   if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4,'#c9b48a',0.95); }
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.45); buzz&&buzz(16);
-  burst(P.x,P.y-0.3,'#6a5c48',12,2.0); shockwave(P.x,P.y,'rgba(120,105,80,0.7)',36);
-  if(c){ P.x=c.sx+0.5; P.y=c.sy+0.5; }
   P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  G._mawDrop={ t:0, dur:0.6, x:P.x, y:P.y, sx:(c?c.sx:22), sy:(c?c.sy:173) };
+}
+function mawRespawn(){
+  const d=G._mawDrop; G._mawDrop=null; if(!d) return;
+  P.x=d.sx+0.5; P.y=d.sy+0.5; P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  burst(P.x,P.y-0.3,'#6a5c48',12,2.0); shockwave(P.x,P.y,'rgba(120,105,80,0.7)',36);
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._mawFallHint){ G._mawFallHint=1; toast('You drop into the scar and haul yourself back to the ledge, battered (<b>-5 HP</b>). <b>Ride the drifting slabs across</b> - board one as it reaches your ledge, and step off when it lines up with the next.',5400); }
+  if(!G._mawFallHint){ G._mawFallHint=1; toast('You plunge into the black scar and haul yourself back to the ledge, battered (<b>-5 HP</b>). <b>Hop the small platforms</b> - they slide as you go, so time each jump.',5400); }
 }
 // strike a ward-eye with an arrow or bolt: grind its gate up for good
 function hitShootTarget(d){
@@ -4077,6 +4255,14 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
+  if(b.potions){
+    const n=2+(Math.random()<0.5?1:0);
+    give('potion',n); giveGold(rndi(10,24));
+    if(Math.random()<0.3) give('elixir',1);
+    banner('A CACHE OF TONICS', n+' EMBER TONIC'+(n>1?'S':''));
+    shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',14,2.2); Snd.quest&&Snd.quest();
+    setTimeout(autoSave,300); return;
+  }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
     if(Math.random()<0.6) give('potion',1);
@@ -4252,10 +4438,12 @@ function switchWorld(id){
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];
   MAPW=def.W; MAPH=def.H; SEED=def.seed; ZONES=def.zones;
-  // THE UNDERMILL resets its water-maze every visit: the sluices seize shut again once you
-  // leave, so the halls always stand UNSOLVED (flooded) until you fell the Cog-Bound. Skip the
-  // cached (possibly already-drained) copy and regenerate a fresh, blocked puzzle each entry.
-  if(id==='milldeep' && !(P.story && P.story.millDone)) delete WORLDS[id];
+  // Wave / puzzle / trap dungeons reset fresh on every visit until they are BEATEN: otherwise a
+  // cached copy from an earlier descent (waves already killed, gates already open, traps sprung)
+  // shows up empty on re-entry. Skip the cache and regenerate a fresh challenge until it's won.
+  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown' };
+  const _fw=FRESH_UNTIL_WON[id];
+  if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
   if(WORLDS[id]){
     const w=WORLDS[id];
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;
@@ -4393,8 +4581,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
     setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
-    setTimeout(()=>banner('THE UNDERMILL','FIND THE SLUICE COMBINATION'),1200);
-    setTimeout(()=>toast('<i>The works have drowned - two halls stand flooded, walled off by deep water, and by default there is no way through.</i> Take the <b>winch-crank</b> from the miller\'s arms-chest, then work the three <b>sluice valves</b> at each hall\'s mouth. Each valve is <b>coupled to two doorways</b> - throwing it drains one pair and floods another. <b>Find the combination</b> that opens a doorway in every wall at once, then weave the path north, hall after hall, to the thing that fouls the works.',9500),1800); }
+    setTimeout(()=>banner('THE UNDERMILL','WORK THE SLUICES - FOUR DROWNED HALLS'),1200);
+    setTimeout(()=>toast('<i>The works have drowned - FOUR halls stand flooded, walled off by deep water, no way through by default.</i> Take the <b>winch-crank</b> from the miller\'s arms-chest first. The first two halls are <b>combination</b> locks: each valve is coupled to two doorways, so <b>find the states</b> that open a doorway in every wall at once. The two deeper halls are <b>TIDE-LOCKS</b> - carved with a numbered ORDER on a stone plaque. Throw those numbered valves <b>in the exact order</b> or the whole hall floods back and you start over. Weave north, hall after hall, to the thing that fouls the works.',11000),1800); }
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){

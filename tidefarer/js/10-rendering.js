@@ -1211,7 +1211,31 @@ function drawDecor(b,s){
     for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*7,Math.sin(a)*7); g.stroke(); }
     for(let i=0;i<4;i++){ const a=i/4*TAU+0.3; g.fillStyle=b.on?'#9ed6f0':'#a89a88'; g.beginPath(); g.arc(Math.cos(a)*7,Math.sin(a)*7,1.8,0,TAU); g.fill(); }   // spoke handles
     g.restore();
+    // a tide-lock valve is carved with a NUMBER (pips) matching the plaque's order
+    if(b.pips){ const n=b.pips, perRow=Math.min(n,3), rows=Math.ceil(n/3), pw=Math.max(11,perRow*4.2+5), ph=rows*4.2+4, top=-10.5;
+      g.fillStyle='#241c13'; g.fillRect(-pw/2,top,pw,ph); g.strokeStyle='#0c0805'; g.lineWidth=1; g.strokeRect(-pw/2,top,pw,ph);
+      g.fillStyle=b.on?'#9ed6f0':'#e7d6ac';
+      for(let i=0;i<n;i++){ const r=Math.floor(i/3), cn=(r===rows-1)?(n-r*3):3, c=i%3;
+        g.beginPath(); g.arc((c-(cn-1)/2)*4.2, top+3+r*4.2, 1.35, 0, TAU); g.fill(); } }
     if(!b.on){ g.fillStyle='rgba(150,205,235,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-32); }
+    g.restore(); return;
+  }
+  if(b.kind==='millplaque'){
+    // a standing stone stele at a tide-lock's mouth, carved top-to-bottom with the ORDER the
+    // numbered valves must be thrown (each row's pips = that step's valve-number)
+    const g=cx, seq=b.seq||[], maxP=seq.reduce((m,v)=>Math.max(m,v),1);
+    const rowH=12, W=Math.max(34, 20+maxP*4.6), H=seq.length*rowH+18;
+    drawShadowAt(g,s.x,s.y,W*0.4); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3b332a'; g.fillRect(-W/2,-H,W,H);                       // the slab
+    g.fillStyle='#2a231b'; g.fillRect(-W/2,-H,W,6);                        // a darker cap
+    g.strokeStyle='#120d08'; g.lineWidth=1.6; g.strokeRect(-W/2,-H,W,H);
+    g.fillStyle='#9a8f79'; g.font='bold 8px Georgia'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('THE ORDER', 0, -H+9);
+    g.strokeStyle='#221b12'; g.lineWidth=1; g.beginPath(); g.moveTo(-W/2+3,-H+15); g.lineTo(W/2-3,-H+15); g.stroke();
+    for(let i=0;i<seq.length;i++){ const y=-H+18+i*rowH+rowH/2, n=seq[i];
+      g.fillStyle='#6f6555'; g.font='bold 8px Georgia'; g.textAlign='left'; g.fillText((i+1)+'', -W/2+4, y);
+      g.fillStyle='#d9c59b'; for(let k=0;k<n;k++){ g.beginPath(); g.arc(-W/2+14+k*4.6, y, 1.7, 0, TAU); g.fill(); }
+      if(i<seq.length-1){ g.strokeStyle='#4a4234'; g.lineWidth=0.8; g.beginPath(); g.moveTo(-W/2+4,y+rowH/2); g.lineTo(W/2-4,y+rowH/2); g.stroke(); } }
     g.restore(); return;
   }
   if(b.kind==='coggate'){
@@ -1537,11 +1561,10 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='bonepit'){
-    // a cell of the black pit the bridge spans - fall in and you're swept back to the bank
+    // a cell of the bottomless black pit you fall into. Pure opaque black, drawn as a FULL tile
+    // diamond (half-tile is 32x16) plus a little overlap so the cells fuse into one seamless void.
     const g=cx; g.save(); g.translate(s.x,s.y);
-    g.fillStyle='rgba(10,8,12,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
-    g.fillStyle='rgba(40,34,50,0.5)'; g.beginPath(); g.ellipse(0,-1,8,3.4,0,0,TAU); g.fill();
-    if(b.seed===0){ g.fillStyle='rgba(120,105,150,0.25)'; g.beginPath(); g.arc(0,-1,1.4,0,TAU); g.fill(); }   // a faint drifting mote
+    g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-18); g.lineTo(34,0); g.lineTo(0,18); g.lineTo(-34,0); g.closePath(); g.fill();
     g.restore(); return;
   }
   if(b.kind==='fadetile'){
@@ -2241,6 +2264,24 @@ function drawMob(m,s){
     g.restore();
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='bat'){
+    const g=cx, fl=(m.face||1), t=G.time+(m.anim||0), flap=Math.sin((m.bob||0)+t*4);
+    drawShadowAt(g,s.x,s.y,5);
+    g.save(); g.translate(s.x, s.y-18+Math.sin((m.bob||0))*2);   // hovers well off the floor
+    const bc = m.hurtT>0? '#e0a0a0' : '#2a2230';
+    // wings, flapping
+    g.fillStyle=bc;
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(-11,-6-flap*7,-16,-1+flap*3); g.quadraticCurveTo(-9,0,-3,2); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(11,-6+flap*7,16,-1-flap*3); g.quadraticCurveTo(9,0,3,2); g.closePath(); g.fill();
+    // body + ears
+    g.fillStyle= m.hurtT>0? '#e8b0b0':'#3a3040'; g.beginPath(); g.ellipse(0,0,4,5,0,0,TAU); g.fill();
+    g.beginPath(); g.moveTo(-2.5,-4); g.lineTo(-3.5,-8); g.lineTo(-0.5,-5); g.closePath();
+    g.moveTo(2.5,-4); g.lineTo(3.5,-8); g.lineTo(0.5,-5); g.closePath(); g.fill();
+    // eyes
+    g.fillStyle='#ffcf4a'; g.beginPath(); g.arc(-1.6,-1,0.9,0,TAU); g.arc(1.6,-1,0.9,0,TAU); g.fill();
+    g.restore();
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='serpent'){
     const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, bodyC='#3a6a3a';
     drawShadowAt(g,s.x,s.y,20);
@@ -2652,8 +2693,9 @@ function drawHorse(s){
 function drawPlayer(s){
   // plunging into the Emberdeep pit: the hero tumbles down, shrinking and fading into the dark,
   // then respawns (see eastFall / emberRespawn). Drawn in place of the normal figure.
-  if(typeof G!=='undefined' && G._emberDrop){
-    const p=Math.min(1, G._emberDrop.t/G._emberDrop.dur), g=cx;
+  {const _drop = (typeof G!=='undefined') && (G._emberDrop||G._mawDrop);
+  if(_drop){
+    const p=Math.min(1, _drop.t/_drop.dur), g=cx;
     g.save();
     g.globalAlpha=Math.max(0, 1-p*0.9);
     const fy=s.y + p*p*46;            // accelerating fall
@@ -2661,7 +2703,7 @@ function drawPlayer(s){
     drawPlayerFigure({x:s.x, y:fy});
     g.restore();
     return;
-  }
+  }}
   // ZAPPED by an Underclimb ward-lance: the hero convulses in a cage of violet arcs, flashing
   // white, then respawns at the hall's mouth (see aerieZapStart / aerieRespawn).
   if(typeof G!=='undefined' && G._aerieZap){

@@ -202,7 +202,9 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.on?'Sluice (open)':'Turn the sluice valve'}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.order? 'Throw lock valve '+b.pips : (b.on?'Sluice (open)':'Turn the sluice valve')}; } }
+    if(b.kind==='millplaque'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.0 && d<bd){ bd=d; best={type:'millplaque',o:b,label:'Read the carved plaque'}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
@@ -281,6 +283,11 @@ function doInteract(){
   if(it.type==='bonelever'){ facePoint(it.o.x,it.o.y); pullBoneLever(it.o); return; }
   if(it.type==='firelever'){ facePoint(it.o.x,it.o.y); pullFireLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
+  if(it.type==='millplaque'){ facePoint(it.o.x,it.o.y);
+    const seq=(it.o.seq||[]); const S=(typeof G!=='undefined' && G._millSeq)? G._millSeq[it.o.hall] : null;
+    const done=S? S.idx : 0;
+    toast('<i>Worn miller\'s script, carved deep in the stone:</i> "Throw the sluices in this order, or the tide takes it all back - <b>'+seq.join(' , ')+'</b>."'+(done? ' <i>('+done+' of '+seq.length+' thrown so far.)</i>':''), 6000);
+    Snd.quest&&Snd.quest(); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
       addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
@@ -951,7 +958,7 @@ function updatePlayer(dt){
   if(P.dead) return;
   // falling into the Emberdeep pit: control is frozen while the drop animation plays out
   // (updateEastDeep ticks the timer and respawns). Roll cooldown still recovers.
-  if(typeof G!=='undefined' && G._emberDrop){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
+  if(typeof G!=='undefined' && (G._emberDrop||G._mawDrop)){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
   // ZAPPED by an Underclimb ward-lance: control is frozen while the shock plays out
   // (updateAerieDeep ticks the timer and respawns). Roll cooldown still recovers.
   if(typeof G!=='undefined' && G._aerieZap){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
@@ -1285,6 +1292,7 @@ function updateMobs(dt){
     // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
     // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
     if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
+    if(m.bat){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom flying AI (see updateUndermaw) - still killable/damageable as a mob
     if(m.stormeye){   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
       if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function' && dist(m.x,m.y,P.x,P.y)<11)
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
