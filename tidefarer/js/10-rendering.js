@@ -62,7 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   axetrap:1, arrowtrap:1, traparrow:1, spiketile:1, skybeam:1,
-  firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
+  firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, shoottarget:1, bonepit:1, fadetile:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
@@ -188,7 +188,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1502,6 +1502,39 @@ function drawDecor(b,s){
     g.strokeStyle='rgba(255,255,255,0.5)'; g.lineWidth=1;   // a cracked facet across the ice
     g.beginPath(); g.moveTo((c1.x+c4.x)/2,(c1.y+c4.y)/2); g.lineTo((c2.x+c3.x)/2-6,(c2.y+c3.y)/2); g.stroke();
     return;
+  }
+  if(b.kind==='driftslab'){
+    // a floating stone platform that drifts back and forth across a pit; carries whoever rides it.
+    // Drawn as a raised iso block (w x h) centred on its current position.
+    const g=cx, hw=(b.w||3)/2, hh=(b.h||3)/2;
+    const c1=worldToScreen(b.x-hw, b.y-hh), c2=worldToScreen(b.x+hw, b.y-hh), c3=worldToScreen(b.x+hw, b.y+hh), c4=worldToScreen(b.x-hw, b.y+hh);
+    g.fillStyle='rgba(0,0,0,0.4)';    // shadow cast down into the pit
+    g.beginPath(); g.moveTo(c1.x,c1.y+7); g.lineTo(c2.x,c2.y+7); g.lineTo(c3.x,c3.y+7); g.lineTo(c4.x,c4.y+7); g.closePath(); g.fill();
+    const gr=g.createLinearGradient(c1.x,c1.y,c3.x,c3.y); gr.addColorStop(0,'#6a6058'); gr.addColorStop(1,'#3a332d');
+    g.fillStyle=gr; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
+    g.strokeStyle='#8a7f70'; g.lineWidth=1.6; g.stroke();   // pale carved rim
+    g.strokeStyle='rgba(20,16,12,0.5)'; g.lineWidth=1;      // a seam across the slab
+    g.beginPath(); g.moveTo((c1.x+c4.x)/2,(c1.y+c4.y)/2); g.lineTo((c2.x+c3.x)/2,(c2.y+c3.y)/2); g.stroke();
+    // a faint rune glimmer so it reads as an enchanted, floating slab
+    const cc=worldToScreen(b.x,b.y); g.fillStyle='rgba(150,200,235,'+(0.25+0.2*Math.sin(G.time*3+b.x)).toFixed(2)+')';
+    g.beginPath(); g.arc(cc.x, cc.y-2, 2.2, 0, TAU); g.fill();
+    return;
+  }
+  if(b.kind==='shoottarget'){
+    // a wall-mounted mechanism you must strike with an arrow or bolt to work its gate. Glows warm
+    // while armed; goes dark and cracked once struck.
+    const g=cx, hit=!!b.hit; g.save(); g.translate(s.x,s.y-8);
+    g.fillStyle= hit? '#2a2620':'#3a332a'; g.beginPath(); g.arc(0,0,7,0,TAU); g.fill();   // iron housing
+    g.strokeStyle='#1c1814'; g.lineWidth=1.6; g.stroke();
+    if(hit){ g.strokeStyle='#4a443a'; g.lineWidth=1.3;   // cracked, spent
+      g.beginPath(); g.moveTo(-4,-3); g.lineTo(1,0); g.lineTo(-2,4); g.moveTo(4,-2); g.lineTo(0,1); g.stroke();
+    } else {   // armed: a bright ringed eye, pulsing, with concentric target rings
+      const gl=0.5+0.5*Math.sin(G.time*4+b.y);
+      g.strokeStyle='rgba(255,150,60,'+(0.5+0.4*gl).toFixed(2)+')'; g.lineWidth=1.6; g.beginPath(); g.arc(0,0,5,0,TAU); g.stroke();
+      g.fillStyle='rgba(255,180,80,'+(0.55+0.4*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,0,2.6,0,TAU); g.fill();
+      g.fillStyle='#ffe6b0'; g.beginPath(); g.arc(0,0,1.1,0,TAU); g.fill();
+    }
+    g.restore(); return;
   }
   if(b.kind==='bonepit'){
     // a cell of the black pit the bridge spans - fall in and you're swept back to the bank

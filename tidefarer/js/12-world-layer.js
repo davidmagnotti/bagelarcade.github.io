@@ -985,7 +985,7 @@ function placeObjectsEastDeep(){
   // to board a slab and to leap from one to the next - time the dash to when a slab swings to
   // you. Miss and you drop into the pit (you climb back out singed: -5 HP) and start the
   // crossing over. Reach the far ledge and the gate rises.
-  G._eastChasm=new Set(); G._eastWheels=[]; G._eastCross=[]; G._eastFallHint=0; G._emberGateT={}; G._emberDrop=null;
+  G._eastChasm=new Set(); G._eastWheels=[]; G._eastSlabs=[]; G._eastT=0; G._eastCross=[]; G._eastFallHint=0; G._emberGateT={}; G._emberDrop=null;
   const chasm=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._eastChasm.add(x+','+y); G.decor.push({kind:'firepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
   const pad=(x,y)=>{ G._eastChasm.delete(x+','+y); const k=(x+0.5)+','+(y+0.5); G.decor=G.decor.filter(d=>!(d.kind==='firepit' && d.x===x+0.5 && d.y===y+0.5)); };
   const wheel=(hx,hy,r,spd,ang0,gate)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15, gate}; G.decor.push(w); G._eastWheels.push(w); };
@@ -1022,6 +1022,12 @@ function placeObjectsEastDeep(){
   const ward={kind:'staffgate', x:53.5, y:29.5, tiles:FENCE, open:false, label:'the Ember Ward'};
   G.decor.push(ward);
   G.decor.push({kind:'chest', x:58.5, y:29.5, deep:1, emberking:1});
+  // ---- THE VAULT FERRY: the approach was swallowed by the pit, so a floating basalt slab
+  // drifts across it. Board from the R3 far ledge, ride south to the landing pad, then break
+  // the Ember Ward with the fire staff. ----
+  for(const [x,y] of [[50,28],[51,28],[52,28],[50,29],[51,29],[52,29],[50,30],[51,30],[52,30]]) pad(x,y);   // solid landing pad west of the fence
+  G._eastSlabs.push({kind:'driftslab', ax:51, ay:22.5, bx:51, by:28.5, spd:0.95, phase:0, x:51, y:22.5, prevx:51, prevy:22.5, w:3, h:4});
+  G.decor.push(G._eastSlabs[G._eastSlabs.length-1]);
   G.decor.push({kind:'lamp', x:55.5, y:25.5}); G.decor.push({kind:'lamp', x:60.5, y:25.5});
   if(P.story && (P.story.emberWard || P.story.emberDone)){   // already broken - keep it open
     ward.open=true; for(const [x,y] of FENCE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
@@ -1035,9 +1041,26 @@ function placeObjectsEastDeep(){
   // and the chasms filled to solid basalt, so there's no timing to redo
   if(P.story && P.story.emberDone){
     for(const b of G.decor){ if(b.kind==='firegate'){ b.open=true; for(let x=b.x0;x<=b.x1;x++){ setSolid(x,b.gy,0); setTile(x,b.gy,T.RUIN); } } }
-    G.decor=G.decor.filter(d=>d.kind!=='firepit' && d.kind!=='spinwheel' && d.kind!=='firelever');
-    G._eastChasm=new Set(); G._eastWheels=[];
+    G.decor=G.decor.filter(d=>d.kind!=='firepit' && d.kind!=='spinwheel' && d.kind!=='firelever' && d.kind!=='driftslab');
+    G._eastChasm=new Set(); G._eastWheels=[]; G._eastSlabs=[];
   }
+}
+// ---- FLOATING PLATFORMS (driftslabs) ----
+// a slab drifts back and forth between (ax,ay) and (bx,by) and carries whoever rides it. Shared
+// by the Emberdeep vault ferry and the Undermaw's floating-platform rooms.
+function updateDriftSlabs(slabs, t){
+  for(const s of (slabs||[])){ s.prevx=(s.x!=null?s.x:s.ax); s.prevy=(s.y!=null?s.y:s.ay);
+    const u=(Math.sin(t*s.spd + (s.phase||0))+1)/2;
+    s.x = s.ax + (s.bx-s.ax)*u; s.y = s.ay + (s.by-s.ay)*u; }
+}
+// if the player stands within a slab's footprint, carry them by the slab's motion; return true if aboard
+function driftCarry(slabs){
+  let best=null, bd=99;
+  for(const s of (slabs||[])){ const dx=Math.abs(P.x-s.x), dy=Math.abs(P.y-s.y);
+    if(dx<=(s.w||3)/2+0.2 && dy<=(s.h||3)/2+0.2 && (dx+dy)<bd){ best=s; bd=dx+dy; } }
+  if(best){ const nx=P.x+(best.x-best.prevx), ny=P.y+(best.y-best.prevy);
+    if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } return true; }
+  return false;
 }
 // carry the player on the slab they're standing on, and drop them into the pit (restart the
 // crossing, -5 HP) if the open pit under them has no slab. Mid-dash you're airborne over the
@@ -1045,6 +1068,7 @@ function placeObjectsEastDeep(){
 function updateEastDeep(dt){
   const wheels=G._eastWheels||[]; if(!wheels.length) return;
   for(const w of wheels) w.ang += w.spd*dt;
+  G._eastT=(G._eastT||0)+dt; updateDriftSlabs(G._eastSlabs, G._eastT);   // drift the vault ferry
   // chambers 1 and 3 have no crossing-gate now - only chamber 2's Causeway Gate, worked by its lever.
   // the lever gate: while its clock runs it stands open; stepping through it
   // (north of the gate) locks it for good, else it shuts when the clock runs out
@@ -1073,7 +1097,8 @@ function updateEastDeep(dt){
     const dA=best.spd*dt, dx=P.x-best.hx, dy=P.y-best.hy;
     const nx=best.hx + dx*Math.cos(dA)-dy*Math.sin(dA), ny=best.hy + dx*Math.sin(dA)+dy*Math.cos(dA);
     if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; }
-  } else eastFall(ty);
+  } else if(driftCarry(G._eastSlabs)){ /* riding the vault ferry across the pit */ }
+  else eastFall(ty);
 }
 // a fire-lever (CH2's side pad, CH3's far landing): hauls its gate open for a while, then resets
 function pullFireLever(b){
