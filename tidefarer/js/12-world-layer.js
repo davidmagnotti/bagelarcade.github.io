@@ -2767,6 +2767,7 @@ function enterMillFromInterior(){
 let UNDERMAW_WALLS = [];
 const UNDERMAW_GATE = [[19,11],[20,11],[21,11],[22,11],[23,11]];   // the Hoard Door, sealed until the beast falls
 const MAW_SHOOTGATE = [[20,112],[21,112],[22,112],[23,112],[24,112]];   // the Warded Gate, sealed until the ward-eye is struck
+const MAW_HORDEGATE = [[20,139],[21,139],[22,139],[23,139],[24,139]];   // the Bone Gate, sealed until the bone-yard horde is put down
 function genUndermaw(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
@@ -2793,6 +2794,7 @@ function genUndermaw(){
   }
   for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
   for(const [x,y] of MAW_SHOOTGATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  for(const [x,y] of MAW_HORDEGATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
@@ -2822,9 +2824,11 @@ function placeObjectsUndermaw(){
         slab(Math.max(10,Math.min(34,ex)), y, 1.0, 0.55+rng()*0.3, rng()*6.28); }
     }
   };
-  // ---- R1: the long black scar - learn the hop ----
-  pit(6,38, 145,171); field(145,171, 5201);
-  G._mawCross.push({y0:142,y1:174, sx:22, sy:173});
+  // ---- R1: THE BONE-YARD - a solid-floored chamber where a horde of the maw's
+  // bone-guard rouses and gives chase. Clear every last one and the Bone Gate at
+  // the room's north throat grinds up, opening the way deeper. (No scar here - the
+  // platform-hop trial waits in R3/R4.) ----
+  G.decor.push({kind:'catgate', x:22, y:139, open:false, gate:'horde', tiles:MAW_HORDEGATE.slice(), label:'the Bone Gate'});
   // ---- R3: a longer, busier scar ----
   pit(6,38, 79,105); field(79,105, 6203);
   G._mawCross.push({y0:76,y1:108, sx:22, sy:107});
@@ -2839,10 +2843,15 @@ function placeObjectsUndermaw(){
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
   G.critters=[];
+  G._mawHordeLeft=0;   // set in spawnMobsUndermaw when the bone-guard is placed
   // an already-cleared run stands every gate open and quiets the den (the platforms remain to re-cross)
   if(P.story && P.story.undermawDown){
-    for(const [x,y] of [...UNDERMAW_GATE, ...MAW_SHOOTGATE]){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    for(const [x,y] of [...UNDERMAW_GATE, ...MAW_SHOOTGATE, ...MAW_HORDEGATE]){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
     for(const d of G.decor){ if(d.kind==='catgate') d.open=true; if(d.kind==='shoottarget') d.hit=true; }
+  } else if(P.story && P.story.mawHordeDown){
+    // the bone-yard's already been swept on an earlier descent - its gate stays up
+    for(const [x,y] of MAW_HORDEGATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    const bg=G.decor.find(d=>d.kind==='catgate' && d.gate==='horde'); if(bg) bg.open=true;
   }
 }
 function spawnMobsUndermaw(){
@@ -2857,6 +2866,25 @@ function spawnMobsUndermaw(){
   for(const [ax,ay] of [[14,39],[30,39],[14,69],[30,69]]){
     const a=spawnMob('archer', ax, ay);
     if(a){ a.rooted=true; a.hx=ax; a.hy=ay; a.respawnT=-1; a.state='idle'; a.noAggroT=0; }
+  }
+  // R1 THE BONE-YARD: 15 skeletons scattered across the second room. They rouse as you
+  // climb in and give chase in a swarm; every last one must fall before the Bone Gate
+  // at the north throat grinds up. (Individually a touch lighter than a lone skeleton -
+  // it's the numbers that make the fight.) They never respawn and never leash home, so
+  // the horde hounds you across the whole chamber until it's cleared.
+  if(!(P.story && P.story.mawHordeDown)){
+    const hordeSpots=[[10,150],[17,148],[24,150],[31,148],[35,152],
+                      [10,158],[17,159],[22,157],[27,159],[34,158],
+                      [12,167],[18,169],[24,167],[30,169],[33,166]];
+    let placed=0;
+    for(const [sx,sy] of hordeSpots){
+      const o=findOpenNear(sx,sy,3) || [sx,sy];
+      const s=spawnMob('skeleton', o[0], o[1]);
+      if(s){ s.mawHorde=1; s.arena=1; s.respawnT=-1; s.noAggroT=0;
+        s.hp=s.maxhp=40; s.dmg=16; s.speed=2.5; s.aggro=16; s.xp=24; s.lvl=10;
+        placed++; }
+    }
+    G._mawHordeLeft=placed;
   }
 }
 // drive the Undermaw's crossings: turn the spinwheels, drift the slabs, swarm the bats, and drop
@@ -2933,6 +2961,17 @@ function hitShootTarget(d){
   invalidateScenery&&invalidateScenery();
   banner('THE WARD-EYE SHATTERS','THE WARDED GATE GRINDS UP');
   toast('Your shot bursts the ward-eye and the gate grinds up beyond it. The way deeper lies open.',4400);
+}
+// clear the R1 bone-yard horde: grind the Bone Gate up for good and let the player press on
+function openMawHordeGate(){
+  P.story=P.story||{}; if(P.story.mawHordeDown) return; P.story.mawHordeDown=1;
+  for(const [x,y] of MAW_HORDEGATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+  const cg=(G.decor||[]).find(g=>g.kind==='catgate' && g.gate==='horde'); if(cg) cg.open=true;
+  invalidateScenery&&invalidateScenery();
+  Snd.quest&&Snd.quest(); G.shake=Math.max(G.shake||0,0.45); buzz&&buzz(10);
+  banner('THE BONE-YARD IS STILLED','THE BONE GATE GRINDS UP');
+  toast('The last of the bone-guard clatters into a heap, and the Bone Gate grinds up. The way deeper lies open.',4600);
+  if(typeof autoSave==='function') autoSave();
 }
 function genUndermawAll(){ genUndermaw(); placeObjectsUndermaw(); spawnMobsUndermaw(); buildMapBase(); }
 function enterUndermaw(){

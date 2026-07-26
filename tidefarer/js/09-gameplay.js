@@ -826,6 +826,14 @@ function killMob(m,skill){
     banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
   }
+  // THE BONE-YARD (Undermaw R1): the second room's horde. Each fallen skeleton stays
+  // down; when the last one drops, the Bone Gate grinds up and the way deeper opens.
+  if(m.mawHorde){
+    m.respawnT=-1;   // horde bones never rise again
+    G._mawHordeLeft=Math.max(0,(G._mawHordeLeft||0)-1);
+    if(G._mawHordeLeft>0) addFloat(G._mawHordeLeft+' left', m.x, m.y-1.6, '#d8d8c8', 1.1);
+    else if(typeof openMawHordeGate==='function') openMawHordeGate();
+  }
   if(m.undermawBeast){
     P.story=P.story||{}; P.story.undermawDown=1;
     if(typeof UNDERMAW_GATE!=='undefined') for(const [x,y] of UNDERMAW_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
@@ -1329,8 +1337,8 @@ function updateMobs(dt){
       if(m.tx!=null){ const dx=m.tx-m.x, dy=m.ty-m.y, l=Math.hypot(dx,dy);
         if(l>0.15 && !((m.snareT||0)>0)){ moveEntity(m,dx/l*d.speed*0.4*dt,dy/l*d.speed*0.4*dt); if(Math.abs(dx)>0.35) m.face=dx<0?-1:1; } else if(l<=0.15) m.tx=null; }
     } else {
-      // leash
-      if(pd>d.aggro*2.2 || P.dead || dist(m.x,m.y,m.hx,m.hy)>14){
+      // leash (arena mobs - e.g. the Undermaw bone-yard horde - never leash home; they hound you until felled)
+      if(!m.arena && (pd>d.aggro*2.2 || P.dead || dist(m.x,m.y,m.hx,m.hy)>14)){
         m.state='idle';
         m.noAggroT=4; // walk it off: ignore the player while heading home
         if(!m.boss && !m.bigBoss && G.time-(m.leashHealT||0)>10){ // bosses keep their wounds
