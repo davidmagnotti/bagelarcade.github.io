@@ -2360,12 +2360,15 @@ function placeObjectsFrostVault(){
   G._vaultT=0;
   // each hall is a longer, escalating gauntlet - the packs grow and the last wave of each
   // brings elites, so you fight a large, mounting horde before its gate ever grinds up.
+  // gy = the FORWARD gate (grinds up when the hall is cleared, letting you press on).
+  // ey = the ENTRY gate, in the corridor BEHIND you: it slams shut the moment you step
+  // into the hall, sealing you in with the horde, and lifts again the instant it's cleared.
   G._vaultRooms=[
-    { key:'A', gy:57, gx0:38, gx1:42, y0:58, y1:73, sx:40, sy:65, active:false, done:false, wi:-1, spawnT:0,
+    { key:'A', gy:57, ey:76, gx0:38, gx1:42, y0:58, y1:73, sx:40, sy:65, active:false, done:false, sealed:false, wi:-1, spawnT:0,
       waves:[ [['wolf',4]], [['wolf',4],['polarbear',1]], [['wolf',3],['polarbear',2]], [['wolf',5],['polarbear',1]] ] },
-    { key:'B', gy:38, gx0:38, gx1:42, y0:40, y1:54, sx:40, sy:47, active:false, done:false, wi:-1, spawnT:0,
+    { key:'B', gy:38, ey:56, gx0:38, gx1:42, y0:40, y1:54, sx:40, sy:47, active:false, done:false, sealed:false, wi:-1, spawnT:0,
       waves:[ [['wolf',5]], [['polarbear',2],['wolf',3]], [['polarbear',3],['wolf',3]], [['wolf',5],['polarbear',2]], [['polarbear',2,true],['wolf',3]] ] },
-    { key:'C', gy:19, gx0:38, gx1:42, y0:21, y1:35, sx:40, sy:28, active:false, done:false, wi:-1, spawnT:0,
+    { key:'C', gy:19, ey:37, gx0:38, gx1:42, y0:21, y1:35, sx:40, sy:28, active:false, done:false, sealed:false, wi:-1, spawnT:0,
       waves:[ [['wolf',6]], [['polarbear',3],['wolf',3]], [['polarbear',2,true],['wolf',4]], [['polarbear',3],['wolf',5]], [['polarbear',3,true],['wolf',4]] ] },
   ];
   // ---- R5: the Hoarfrost Hoard (the reward past the last gate) ----
@@ -2395,23 +2398,47 @@ function startVaultWave(r, i){
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.3); buzz&&buzz(8);
   banner(i===0?'THE ICE STIRS':'ANOTHER WAVE', 'WAVE '+(i+1)+' OF '+r.waves.length);
 }
+// the entry gate BEHIND you: seal it to lock you in the hall, lift it to let you leave.
+function sealVaultRoom(r){
+  if(r.sealed || r.ey==null) return; r.sealed=true;
+  for(let x=r.gx0;x<=r.gx1;x++){ setTile(x,r.ey,T.RUIN); setSolid(x,r.ey,1); }
+  invalidateScenery&&invalidateScenery();
+  shockwave(40.5, r.ey+0.5, 'rgba(180,225,245,0.9)', 46); G.shake=Math.max(G.shake||0,0.4); buzz&&buzz(8);
+}
+function unsealVaultRoom(r){
+  if(!r.sealed || r.ey==null) return; r.sealed=false;
+  for(let x=r.gx0;x<=r.gx1;x++){ setTile(x,r.ey,T.ICE); setSolid(x,r.ey,0); }
+  invalidateScenery&&invalidateScenery();
+}
 function openVaultGate(r){
   for(let x=r.gx0;x<=r.gx1;x++){ setTile(x,r.gy,T.ICE); setSolid(x,r.gy,0); }
+  unsealVaultRoom(r);   // clearing the hall also lifts the gate you were sealed behind
   invalidateScenery&&invalidateScenery();
   shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
   if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
     banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
     toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
-  } else banner('THE HALL IS CLEARED','THE GATE GRINDS UP');
+  } else banner('THE HALL IS CLEARED','THE GATES GRIND UP');
 }
-// drive the vault gauntlet: activate a hall when the player steps in, then feed waves until clear
+// drive the vault gauntlet: activate a hall when the player steps in (sealing them in),
+// then feed waves until the horde is cleared - at which point both gates grind up.
 function updateFrostVault(dt){
   const rooms=G._vaultRooms||[]; if(!rooms.length) return;
   G._vaultT=(G._vaultT||0)+dt;
   for(const r of rooms){
     if(r.done) continue;
     if(!r.active){
-      if(!P.dead && P.x>=28 && P.x<=54 && P.y>=r.y0 && P.y<=r.y1){ r.active=true; startVaultWave(r,0); }
+      if(!P.dead && P.x>=28 && P.x<=54 && P.y>=r.y0 && P.y<=r.y1){
+        r.active=true; sealVaultRoom(r); startVaultWave(r,0);   // gate slams shut behind you - fight your way out
+      }
+      continue;
+    }
+    // died mid-fight: unseal and reset the hall so it re-triggers fresh on your way back in
+    // (respawn is at the vault mouth, SOUTH of the sealed gate - never leave the hero locked out)
+    if(P.dead){
+      unsealVaultRoom(r);
+      for(const m of G.mobs){ if(m._vaultRoom===r.key && !m.dead){ m.dead=true; m.respawnT=-1; } }
+      r.active=false; r.wi=-1;
       continue;
     }
     if(r.wi>=0 && (G._vaultT - r.spawnT)>0.5){
@@ -4603,7 +4630,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>Each chamber is a maze of solid stone, its corridors snaking north.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Touch a lit lance and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
-    setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
+    setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and a <b>gate slams shut behind you</b>, sealing you in as the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and both gates grind up, opening the way on. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',9000),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
     setTimeout(()=>banner('THE UNDERMILL','WORK THE SLUICES - FOUR DROWNED HALLS'),1200);
     setTimeout(()=>toast('<i>The works have drowned - FOUR halls stand flooded, walled off by deep water, no way through by default.</i> Take the <b>winch-crank</b> from the miller\'s arms-chest first. The first two halls are <b>combination</b> locks: each valve is coupled to two doorways, so <b>find the states</b> that open a doorway in every wall at once. The two deeper halls are <b>TIDE-LOCKS</b> - carved with a numbered ORDER on a stone plaque. Throw those numbered valves <b>in the exact order</b> or the whole hall floods back and you start over. Weave north, hall after hall, to the thing that fouls the works.',11000),1800); }
