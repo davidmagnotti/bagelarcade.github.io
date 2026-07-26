@@ -94,9 +94,9 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
   rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
-  entry: {x:19, y:43, r:6,  name:'The Millstair',         lv:[0,0]},
-  works: {x:19, y:26, r:10, name:'The Grinding Floor',    lv:[0,0]}, // the three gear-locks
-  vault: {x:19, y:8,  r:7,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's sealed stormsail
+  entry: {x:20, y:46, r:6,  name:'The Millstair',         lv:[0,0]},
+  works: {x:20, y:4,  r:6,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian + the stormsail
+  vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a brief beast-den under the Barik hills
   maw:  {x:20, y:34, r:6,  name:'The Maw',        lv:[11,13]},   // the entry
@@ -1770,8 +1770,8 @@ function enterAerieDungeon(){
   P._aerieReturn={x:P.x, y:P.y+1.3}; P.click=null;
   setTimeout(()=>{ switchWorld('aeriedeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200);
     if(!(P.story && P.story.aerieFreed)){
-      banner('THE UNDERCLIMB','A CATACOMB, NOT A ROOST - BEAT IT TO REACH THE TOME');
-      setTimeout(()=>toast('The tunnel does not climb - it <b>descends</b>, into cold bone-and-stone dark. The cursed tome lies at the very bottom, past two sealed gates and the thing that wardens it. <b>Clear the catacomb first;</b> the tome cannot be touched until its warden falls.',7000),1200);
+      banner('THE UNDERCLIMB','A CATACOMB, NOT A ROOST - PUT DOWN THE WARDEN');
+      setTimeout(()=>toast('The tunnel does not climb - it <b>descends</b>, into cold bone-and-stone dark. At the very bottom, past two sealed gates, coils the <b>Tome-Warden</b>. Put it down and the cursed tome it guards crumbles with it - that breaks the curse.',7000),1200);
     } }, 300);
 }
 function exitAerieDungeon(){
@@ -1779,8 +1779,8 @@ function exitAerieDungeon(){
   // is destroyed. Once it's burnt, the way up is free.
   if(!(P.story && P.story.aerieFreed)){
     Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.3);
-    banner('THE CLIMB IS SEALED','DESTROY THE CURSED TOME TO LEAVE');
-    toast('Violet frost crawls across the stair and will not let you pass. <b>The curse seals the Underclimb until the tome is destroyed</b> - put down its warden and burn it, then the way up opens.',5200);
+    banner('THE CLIMB IS SEALED','PUT DOWN THE WARDEN TO LEAVE');
+    toast('Violet frost crawls across the stair and will not let you pass. <b>The curse seals the Underclimb until the Tome-Warden falls</b> - put the serpent down and the tome crumbles with it, then the way up opens.',5200);
     return;
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
@@ -2304,30 +2304,21 @@ function exitFrostVault(){
    Reuses ewall walls, the catgate portcullis, and a scaled skeleton boss.
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
-const MILL_GATE = [[17,15],[18,15],[19,15],[20,15],[21,15]];   // the millstone-gate corridor tiles
-// THE COG-GATES - two gear-driven portcullises across the works corridor (A). Once the
-// headrace floods and the gear-train turns, they rise and fall on the wheel's rhythm,
-// half a beat out of phase, with a footing island between them - a timing gate, not a
-// lock. Jammed shut until the sluice is thrown; ground open for good once the guardian
-// falls. (See updateMillDeep for the cycle and the shove if you're caught underneath.)
-const MILL_COG_A = [[17,37],[18,37],[19,37],[20,37],[21,37]];  // south gate (mid-corridor)
-const MILL_COG_B = [[17,34],[18,34],[19,34],[20,34],[21,34]];  // north gate (mouth of the grinding floor)
-// THE TAILRACE POOL - the corner of the landing where the great wheel dips; dry stone
-// until the sluice is thrown, then it floods and the wheel begins to turn.
-const MILL_POOL = [[11,46],[12,46],[11,47],[12,47]];
 function genMillDeep(){
-  // a compact undercroft: three small stone chambers cut out of solid rock. Every
-  // solid tile bordering the carved floor is recorded as a WALL (ewall decor) so the
-  // rooms read clearly - no invisible collision. Kept small on purpose.
+  // the flooded undercroft: an entry landing, TWO flooded water-maze halls, and the guardian's
+  // chamber at the top with the sail. Every solid tile bordering the carved floor is recorded as
+  // a WALL (ewall decor) so the rooms read clearly - no invisible collision.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(11,38,27,48);   // THE MILLSTAIR - entry landing (the way up sits here)
-  carve(17,33,21,39);   // corridor A -> the grinding floor
-  carve(9,18,29,34);    // THE GRINDING FLOOR - the guardian's chamber
-  carve(17,12,21,19);   // corridor B -> the vault (the millstone gate sits at y=15)
-  carve(11,3,27,13);    // THE SAILWRIGHT'S VAULT - the reward chamber
-  // record the visible wall faces (stone bordering the carved floor) BEFORE the gate
-  // goes solid, so the raised gate never leaves a phantom wall behind
+  carve(10,43,30,50);   // THE MILLSTAIR - entry landing (the way up + the arms-chest)
+  carve(18,39,22,44);   // corridor -> Maze A
+  carve(7,26,33,40);    // FLOODED HALL A - water-maze
+  carve(18,23,22,27);   // corridor -> Maze B
+  carve(7,9,33,23);     // FLOODED HALL B - water-maze
+  carve(18,6,22,10);    // corridor -> the guardian's chamber
+  carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian + the stormsail
+  // record the visible wall faces (stone bordering the carved floor) BEFORE the water goes down,
+  // so the water-walls read as water (not phantom stone)
   MILL_WALLS=[];
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(!solidAt(x,y)) continue;
@@ -2336,139 +2327,69 @@ function genMillDeep(){
       if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
     if(border) MILL_WALLS.push([x,y]);
   }
-  // the millstone gate starts as solid stone across corridor B (rendered by the catgate)
-  for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
-  // the two cog-gates start jammed shut across the works corridor (rendered by the coggate);
-  // updateMillDeep lifts and drops them once the sluice floods the race
-  for(const [x,y] of MILL_COG_A){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
-  for(const [x,y] of MILL_COG_B){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
 }
 function placeObjectsMillDeep(){
   G.decor=G.decor||[];
   // the stone walls that give the rooms their shape (static baked scenery)
   for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
-  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:46.5, label:'the way up'});  // back to the surface
-  setSolid(19,46,0); setTile(19,46,T.RUIN);
-  for(const [tx,ty] of [[12,40],[26,40],[11,20],[27,20],[11,32],[27,32],[13,5],[25,5]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // THE MILLSTONE GATE - the reward gate onto the vault. The seized gear-train grinds it
-  // up once the guardian fouling the works is put down (see the millboss death hook).
-  G.decor.push({kind:'catgate', x:19, y:15, open:false, gate:'mill', tiles:MILL_GATE.slice(), label:'the Millstone Gate'});
-  // ---- THE HEADRACE: the great waterwheel + the sluice that powers the works ----
-  // the wheel dips into the tailrace pool in the landing's SW corner; the sluice wheel
-  // stands opposite. Throwing it (with the crank) floods the race and turns the train.
-  G.decor.push({kind:'millwheel', x:12.2, y:45.4, r:11});
-  // THE HEADGATE - the master wheel; the crank frees it, and throwing it sends water into the
-  // race. On its own it powers nothing until the DIVERTERS aim the flow at a wheel.
-  G.decor.push({kind:'sluicelever', x:24.5, y:40.5, on:false, label:'the headgate wheel'});
-  // THE DIVERTERS - two junction valves that route the single flow. The works only turn a wheel
-  // the flow actually reaches, so you must aim the race at each cog-gate's wheel in turn to open it.
-  G.decor.push({kind:'sluicelever', x:22.5, y:43.5, on:false, divert:'d1', label:'a diverter valve'});
-  G.decor.push({kind:'sluicelever', x:25.5, y:43.5, on:false, divert:'d2', label:'a diverter valve'});
-  // ---- THE GEAR-TRAIN: cogs that spin once the water runs, driving the cog-gates ----
-  G.decor.push({kind:'millgear', x:23.5, y:21.5, r:9,   spin:0.9});    // the great drive cog, up on the grinding floor
-  G.decor.push({kind:'millgear', x:12.8, y:23.0, r:5.5, spin:-1.4});   // an idler off the main shaft
-  G.decor.push({kind:'millgear', x:16.1, y:37.1, r:3.6, spin:2.0});    // the pair that work cog-gate A
-  G.decor.push({kind:'millgear', x:21.9, y:37.1, r:3.6, spin:-2.0});
-  G.decor.push({kind:'millgear', x:16.1, y:34.1, r:3.6, spin:-2.0});   // the pair that work cog-gate B
-  G.decor.push({kind:'millgear', x:21.9, y:34.1, r:3.6, spin:2.0});
-  // ---- THE COG-GATES: two gear-driven portcullises. Each lifts (and latches open) once the
-  // race is routed to its own wheel - a flow-routing lock, not a timing gate. ----
-  G.decor.push({kind:'coggate', gate:'coga', x:19, y:37, x0:17, x1:21, tiles:MILL_COG_A.slice(), openAmt:0, open:false, latched:false, label:'a cog-gate'});
-  G.decor.push({kind:'coggate', gate:'cogb', x:19, y:34, x0:17, x1:21, tiles:MILL_COG_B.slice(), openAmt:0, open:false, latched:false, label:'a cog-gate'});
-  // THE MILLER'S ARMS-CHEST: his old hunting bow, and the winch-crank that frees the
-  // seized sluice. Open it to arm yourself AND to be able to throw the sluice wheel.
-  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:14.5, y:42.5, bow:1});
-  // THE VAULT: Nessa's lost stormsail, sealed here the season the works jammed
-  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:19.5, y:7.5, sail:1});
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:48.5, label:'the way up'});  // back to the surface
+  setSolid(19,48,0); setTile(19,48,T.RUIN);
+  for(const [tx,ty] of [[12,45],[28,45],[9,33],[31,33],[9,16],[31,16],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // a decorative great wheel in the landing (the works are drowned, not turning)
+  G.decor.push({kind:'millwheel', x:12.5, y:47.2, r:6});
+  // THE MILLER'S ARMS-CHEST: his old hunting bow + the winch-crank that frees the seized
+  // sluice valves. You cannot work a valve until you've taken the crank.
+  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:46.5, bow:1});
+  // ---- THE FLOODED HALLS: two water-mazes. Each hall is barred by WATER-WALLS whose doorways
+  // stay flooded shut until you turn their sluice valve, draining a way through. The doorways are
+  // staggered, so you weave the drained path north from valve to valve. ----
+  G._millWalls=[];
+  const wwall=(id, y, doorX0, doorX1, vx, vy)=>{
+    for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }   // the whole row floods, blocking
+    const w={id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
+    G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, wall:id, label:'a sluice valve'});
+  };
+  // HALL A (y26-40): three staggered water-walls - left, right, centre
+  wwall('a1', 36,  9,12, 11,38);
+  wwall('a2', 32, 28,31, 29,34);
+  wwall('a3', 28, 17,20, 18,30);
+  // HALL B (y9-23): three more, staggered the other way
+  wwall('b1', 20, 26,30, 28,22);
+  wwall('b2', 16,  8,12, 10,18);
+  wwall('b3', 12, 18,22, 20,14);
+  // THE STORMSAIL, in the guardian's chamber at the top
+  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
   G.critters=[];
-  // ---- restore the puzzle's state on (re)entry (worlds regenerate on every descent) ----
-  G._millPower=0; G._millT=0; G._millGateHint=0;
-  if(P.story && P.story.millDone){
-    // the guardian is gone and the works turn free for good: millstone gate up, cog-gates
-    // latched open, the wheel still turning
-    for(const [x,y] of MILL_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
-    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='mill') d.open=true; }
-    for(const g of G.decor){ if(g.kind==='coggate'){ g.open=true; g.latched=true; g.openAmt=1; for(const [x,y] of g.tiles) setSolid(x,y,0); } }
-    for(const d of G.decor){ if(d.kind==='sluicelever') d.on=true; }
-    millDeepFlood(); G._millPower=1;
-  } else if(P.story && P.story.millSluice){
-    // the race was routed on a prior run but the guardian still stands: the flow runs and both
-    // cog-gates stay latched open (the routing puzzle is solved once, not every descent)
-    for(const d of G.decor){ if(d.kind==='sluicelever') d.on=true; }
-    for(const g of G.decor){ if(g.kind==='coggate'){ g.latched=true; g.open=true; g.openAmt=1; for(const [x,y] of g.tiles) setSolid(x,y,0); } }
-    millDeepFlood(); G._millPower=1;
-  }
+  // a cleared run leaves every hall drained (the mazes are solved) so you pass freely
+  if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); } }
 }
-// flood the tailrace pool - the visible water at the wheel's foot
-function millDeepFlood(){
-  for(const [x,y] of MILL_POOL){ if(inb(x,y)){ setTile(x,y,T.SHALLOW); setSolid(x,y,1); } }
+// drain (walkable) or flood (blocking water) a water-wall's doorway to match its valve
+function applyMillWall(w){
+  for(let x=w.dx0;x<=w.dx1;x++){ if(!inb(x,w.y)) continue;
+    if(w.on){ setTile(x,w.y,T.RUIN); setSolid(x,w.y,0); }
+    else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
 // read a diverter valve's state by its id ('d1'/'d2')
-function millValve(id){ const v=G.decor.find(d=>d.kind==='sluicelever' && d.divert===id); return v? !!v.on : false; }
-// which wheel the routed flow currently reaches: d1 OFF -> wheel A (cog-gate A); d1 ON + d2 OFF
-// -> wheel B (cog-gate B); d1 ON + d2 ON -> the drive wheel (spills to the tailrace, opens nothing)
-function millRoutedGate(){
-  if(!(P.story && P.story.millSluice)) return null;   // no flow until the headgate is thrown
-  const d1=millValve('d1'), d2=millValve('d2');
-  return d1 ? (d2? null : 'cogb') : 'coga';
-}
-// re-evaluate the routing: latch open whichever cog-gate the flow now reaches (latched gates stay)
-function millRouteEval(){
-  const gate=millRoutedGate(); if(!gate) return;
-  const g=G.decor.find(d=>d.kind==='coggate' && d.gate===gate);
-  if(g && !g.latched){
-    g.latched=true;
-    Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(120,190,235,0.85)',46); G.shake=Math.max(G.shake||0,0.4);
-    for(let i=0;i<14;i++){ const a=Math.random()*TAU,sp=rnd(0.5,2.2); G.parts.push({x:g.x+rnd(-1,1),y:g.y+rnd(-0.4,0.4),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.5-0.3,life:rnd(0.4,1.0),color:'#bfe0f4',size:rnd(1.5,3),grav:0.05}); }
-    banner('THE COG-GATE GRINDS UP','THE FLOW HAS FOUND ITS WHEEL');
-    const other=G.decor.find(d=>d.kind==='coggate' && !d.latched);
-    if(other) toast('Water floods that wheel and the cog-gate hauls up for good. <b>Re-aim the diverters</b> to send the race to the other wheel and lift the second gate.',5200);
-    autoSave&&autoSave();
-  }
-}
-// THE HEADGATE + DIVERTERS. The headgate (needs the crank) sends water into the race; the
-// diverters aim that single flow at a wheel. A wheel the flow reaches lifts and LATCHES its
-// cog-gate. Route the race to each wheel in turn to open both gates.
+// THE SLUICE VALVES: each drains (or re-floods) the doorway of one water-wall. Seized until you
+// take the winch-crank from the arms-chest. Drain the doorways and weave the path north.
 function pullSluiceLever(b){
-  if(b.divert){
-    if(!(P.story && P.story.millSluice)){ toast('The valve turns freely, but no water runs yet - <b>throw the headgate wheel</b> first to flood the race.',4200); Snd.step&&Snd.step(5); b.on=!b.on; return; }
-    b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(6); burst(b.x,b.y-0.4,'#9ecbe8',8,1.6);
-    const gate=millRoutedGate();
-    addFloat(gate==='coga'?'→ lower wheel':gate==='cogb'?'→ upper wheel':'→ tailrace (no wheel)', b.x, b.y-1.4, '#bfe0f4', 1.2);
-    millRouteEval();
-    return;
-  }
-  if(b.on){ toast('The headgate already stands open - the race runs full. Aim the <b>diverters</b> to power the wheels.',3400); return; }
+  if(!b.wall) return;   // the mill's only valves are the water-wall sluices now
   if(!(P.story && P.story.millBowTaken)){
-    toast('The headgate wheel is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
+    toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
     Snd.step&&Snd.step(5); return;
   }
-  b.on=true; G._millPower=1; G._millT=0;
-  P.story=P.story||{}; P.story.millSluice=1;
-  millDeepFlood();
-  Snd.quest&&Snd.quest(); buzz&&buzz(10);
-  shockwave(b.x,b.y,'rgba(120,190,235,0.85)',52); burst(b.x,b.y-0.4,'#9ecbe8',16,2.4);
-  for(let i=0;i<26;i++){ const a=Math.random()*TAU, sp=rnd(0.6,2.6);
-    G.parts.push({x:11.9+rnd(-1,1),y:46.2+rnd(-0.5,0.5),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.5-0.4,life:rnd(0.5,1.4),color:Math.random()<0.5?'#bfe0f4':'#8fc4dd',size:rnd(1.5,3.5),grav:0.06}); }
-  G.shake=Math.max(G.shake,0.5);
-  banner('THE HEADRACE FLOODS','NOW ROUTE THE FLOW');
-  toast('The crank bites and the headgate hauls open - dark water crashes down the race and the great wheel turns. But the works are dry beyond it: <b>set the two diverter valves</b> to aim the flow at each cog-gate\'s wheel in turn, and each gate will grind up.',7500);
-  millRouteEval();   // in case a diverter is already aimed at a wheel
-  autoSave&&autoSave();
+  const w=(G._millWalls||[]).find(x=>x.id===b.wall); if(!w) return;
+  w.on=!w.on; b.on=w.on; applyMillWall(w); invalidateScenery&&invalidateScenery();
+  Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
+  const dw=w.dx1-w.dx0;
+  for(let i=0;i<16;i++){ const px=w.dx0+Math.random()*(dw+1), a=Math.random()*TAU, sp=rnd(0.5,2.2);
+    G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.3, life:rnd(0.4,1.0), color:w.on?'#bfe0f4':'#6a9ab8', size:rnd(1.5,3), grav:0.05}); }
+  addFloat(w.on?'drained':'flooded', b.x, b.y-1.4, '#bfe0f4', 1.1);
+  if(w.on) toast('The sluice grinds and the water drains from that stretch - a doorway opens in the flooded wall. <b>Weave on to the next.</b>',3400);
+  else toast('The sluice shuts and the stretch floods over again.',2600);
 }
-// the cog-gates now hold whatever the routing set them to (latched open, else shut); the gears
-// keep turning for show while the race runs. No more timing cycle - it's a flow-routing lock.
-function updateMillDeep(dt){
-  const done = !!(P.story && P.story.millDone);
-  if(G._millPower) G._millT=(G._millT||0)+dt;   // gear visuals keep turning while powered
-  for(const g of G.decor){
-    if(g.kind!=='coggate') continue;
-    const target = (done||g.latched)? 1 : 0;
-    g.openAmt += (target-(g.openAmt||0))*Math.min(1,dt*3);
-    const openNow = g.openAmt>0.5;
-    if(openNow!==g.open){ g.open=openNow; for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1); }
-  }
-}
+// the flooded halls are set entirely by the sluice valves - no per-frame work needed
+function updateMillDeep(dt){}
 // THE COG-BOUND: the miller who was caught in the gear-train when it seized, risen
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
 // millstone gate up. A single mini-boss - the whole reason the dungeon exists.
@@ -4226,13 +4147,13 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
-    setTimeout(()=>toast('<i>Each chamber is a bottomless pit cut by a snaking safe path - a maze.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Step into the pit, or touch a lit lance, and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you destroy the tome below.</b>',9500),1800); }
+    setTimeout(()=>toast('<i>Each chamber is a bottomless pit cut by a snaking safe path - a maze.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Step into the pit, or touch a lit lance, and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
     setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
-    setTimeout(()=>banner('THE UNDERMILL','ROUTE THE RACE - POWER EACH WHEEL IN TURN'),1200);
-    setTimeout(()=>toast('<i>The old grinding works stand dead and dry</i>, two iron <b>cog-gates</b> jammed shut across the way up. The miller’s arms-chest holds the <b>winch-crank</b> - take it and <b>throw the headgate</b> to flood the race. But one flow can drive only one wheel at a time: <b>set the two diverter valves</b> to aim the water at each cog-gate’s wheel in turn, lifting both gates, then face the thing that fouls the works.',9000),1800); }
+    setTimeout(()=>banner('THE UNDERMILL','DRAIN THE FLOODED HALLS AND WEAVE THROUGH'),1200);
+    setTimeout(()=>toast('<i>The works have drowned - two halls stand flooded, walled off by deep water.</i> The miller’s arms-chest holds the <b>winch-crank</b> - take it, then work each hall\'s <b>sluice valves</b> to <b>drain a doorway</b> through the water-walls. The doorways are staggered, so weave the drained path north from valve to valve, then face the thing that fouls the works.',9000),1800); }
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){

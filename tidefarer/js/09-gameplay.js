@@ -200,7 +200,7 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.divert?('Aim the diverter'+(b.on?' (right)':' (left)')):(b.on?'Headgate (open)':'Throw the headgate')}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.on?'Sluice (open)':'Turn the sluice valve'}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
@@ -753,6 +753,14 @@ function killMob(m,skill){
       if(Snd.levelup) Snd.levelup(); }, 3400);
     if(typeof autoSave==='function') autoSave();
   }
+  // The Tome-Warden: felling the serpent IS the deed now - the cursed tome crumbles with it,
+  // so there's no separate "destroy the tome" step to hunt down after the fight.
+  if(m.ach==='tomewarden'){
+    m.dead=true;
+    const tome=G.decor && G.decor.find(d=>d.kind==='tome' && !d.destroyed);
+    if(tome && typeof destroyTome==='function') setTimeout(()=>destroyTome(tome), 600);
+    else { P.story=P.story||{}; P.story.aerieFreed=1; if(typeof autoSave==='function') autoSave(); }
+  }
   // The Storm Roc - the Cloudreach's apex terror. She is an OPTIONAL trophy hunt
   // now: felling her wins glory and a fat purse, but the road DOWN comes from
   // calming the sky on the Rainbow Road, not from her eyrie.
@@ -799,13 +807,11 @@ function killMob(m,skill){
   // THE COG-BOUND (Undermill mini-boss) - felling it frees the seized gear-train,
   // which grinds the millstone gate up and opens the way to Nessa's sail.
   if(m.millboss){
-    P.story=P.story||{}; P.story.millDone=1; P.story.millSluice=1;
-    G._millPower=1;   // the freed gear-train runs on; updateMillDeep grounds the cog-gates open
-    if(typeof MILL_GATE!=='undefined') for(const [x,y] of MILL_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
-    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='mill'); if(cg) cg.open=true;
-    for(const g of G.decor){ if(g.kind==='coggate'){ g.open=true; g.openAmt=1; for(const [x,y] of g.tiles) setSolid(x,y,0); } }
+    P.story=P.story||{}; P.story.millDone=1;
+    // drain every flooded hall for good (the mazes need no re-solving on a later descent)
+    if(G._millWalls && typeof applyMillWall==='function') for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE GEAR-TRAIN CATCHES','THE MILLSTONE GATE GRINDS UP');   // the banner says it; no follow-up popup
+    banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
   }
   if(m.undermawBeast){
