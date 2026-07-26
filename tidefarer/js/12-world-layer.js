@@ -1740,11 +1740,9 @@ function placeObjectsAerieDeep(){
   // torches lighting the long dark
   for(const [tx,ty] of [[68,110],[82,110],[60,78],[90,78],[60,44],[90,44],[56,12],[94,12],[70,14],[80,14]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // catacomb dressing: broken columns and a few readable crypts
+  // catacomb dressing: broken columns (the readable crypts have been removed)
   for(const [px,py,br] of [[62,90,1],[88,90,0],[62,50,0],[88,50,1],[58,20,1],[92,20,0]])
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
-  for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
-    G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
   // ---- THE WARD-MAZE ----
   // Each chamber is a long maze of solid stone cut through by a snaking corridor you must weave.
   // Vath's curse fires lances of violet light ACROSS each corridor on a beat: watch the telegraph
@@ -1757,30 +1755,39 @@ function placeObjectsAerieDeep(){
   // carve a serpentine maze into [x0..x1]x[y0..y1]: solid stone everywhere except a 3-wide path that
   // snakes up through the horizontal `legs` (south->north), with a vertical ward-lance across each leg.
   const LANE=3;   // corridor thickness (tiles)
-  const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period)=>{
+  const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period, branches)=>{
     const safe=new Set();
     const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
     const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
-    const leftX=x0+2, rightX=x1-2-LANE; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
+    const leftX=x0+3, rightX=x1-3-LANE; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
     for(let i=0;i<legs.length;i++){ const y=legs[i], goRight=(i%2===0), b=goRight?rightX:leftX;
       H(y, prevEnd, b); beamsAt.push([Math.round((Math.min(prevEnd,b)+Math.max(prevEnd,b))/2), y]);
       if(i<legs.length-1){ V(b, legs[i+1], y); prevEnd=b; } else { H(y, b, exitX); V(exitX, y0, y); } }
+    // DEAD-END BRANCHES: full-lane spurs off the path into the adjacent wall margin, each the same
+    // width as the corridors and running a few tiles wide into the stone, ending in a tonic cache.
+    const chestSpots=[];
+    for(const br of (branches||[])){ const a=Math.min(br.x0,br.x1), b=Math.max(br.x0,br.x1);
+      for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(br.row+k));
+      chestSpots.push([br.chestX, br.row+1]); }
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
       setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }   // solid stone maze walls
     beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+LANE/2, 0,1, 2.6, period, (i*0.41)%1));   // a vertical lance across each leg
+    for(const [cx,cy] of chestSpots) G.decor.push({kind:'chest', x:cx+0.5, y:cy+0.5, deep:1, potions:1});   // a tonic cache at each dead end
     // the ward-plate at the maze's far end unlocks the gate when trodden
     G.decor.push({kind:'boneplate', x:exitX+0.5, y:y0+0.5, gate:cross.gate, pressed:false, label:'a ward-plate'});
     cross.plate=[exitX, y0];
     G.decor.push(gateObj); G._aerieCross.push(cross);
   };
-  // CHAMBER 1 - THE OSSUARY: a long 4-leg maze -> the ward-plate -> the Bone Gate
+  // CHAMBER 1 - THE OSSUARY: a long 4-leg maze with two tonic dead ends -> ward-plate -> Bone Gate
   aerieMaze(58,92, 77,95, [93,88,83,78], 75, 75,
     {kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
-    {gate:'bone', openY:77, southY:96.0, entryX:75}, 2.5);
-  // CHAMBER 2 - THE GALLERY: a longer 4-leg maze, faster lances -> the Sepulchre Gate
+    {gate:'bone', openY:77, southY:96.0, entryX:75}, 2.5,
+    [{row:93, x0:85, x1:90, chestX:90}, {row:88, x0:58, x1:64, chestX:58}]);
+  // CHAMBER 2 - THE GALLERY: a longer 4-leg maze with two tonic dead ends -> ward-plate -> Sepulchre Gate
   aerieMaze(58,92, 43,61, [59,54,49,44], 75, 75,
     {kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
-    {gate:'sep', openY:43, southY:62.0, entryX:75}, 2.1);
+    {gate:'sep', openY:43, southY:62.0, entryX:75}, 2.1,
+    [{row:59, x0:85, x1:90, chestX:90}, {row:54, x0:58, x1:64, chestX:58}]);
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
@@ -4076,6 +4083,14 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,150,80,0.9)',60); burst(b.x,b.y-0.5,'#ffb060',22,2.8); Snd.levelup();
     setTimeout(autoSave,300);
     return;
+  }
+  if(b.potions){
+    const n=2+(Math.random()<0.5?1:0);
+    give('potion',n); giveGold(rndi(10,24));
+    if(Math.random()<0.3) give('elixir',1);
+    banner('A CACHE OF TONICS', n+' EMBER TONIC'+(n>1?'S':''));
+    shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',14,2.2); Snd.quest&&Snd.quest();
+    setTimeout(autoSave,300); return;
   }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
