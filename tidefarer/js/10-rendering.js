@@ -2759,6 +2759,25 @@ function drawPlayer(s){
     g.restore();
     return;
   }
+  // FALLING through the cloud between the Rainbow Road's floating platforms: the hero drops
+  // away below the road, tumbling and shrinking into the blue, then the wind bears them back
+  // to the isle (see skyFallStart / skyFallRespawn). A wisp of torn cloud lingers where they fell.
+  if(typeof G!=='undefined' && G._skyFall){
+    const z=G._skyFall, p=Math.min(1, z.t/z.dur), g=cx;
+    // a torn scrap of cloud left hanging at the gap's edge, thinning as you drop
+    g.save(); g.globalAlpha=0.5*(1-p); g.fillStyle='rgba(236,246,255,0.9)';
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.ellipse(s.x+Math.cos(a)*7, s.y+2+Math.sin(a)*3, 5, 3, 0, 0, TAU); g.fill(); }
+    g.restore();
+    // the hero, falling: accelerating downward, spinning, shrinking and fading into the blue
+    g.save();
+    const fy=s.y + p*p*90;                 // accelerating plunge
+    const sc=Math.max(0.15, 1-p*0.85);     // dwindling with distance
+    g.globalAlpha=Math.max(0, 1-p*0.9);
+    g.translate(s.x, fy); g.rotate(p*4.2); g.scale(sc,sc); g.translate(-s.x, -fy);
+    drawPlayerFigure({x:s.x, y:fy});
+    g.restore();
+    return;
+  }
   // dazed: little stars circle overhead while a stun holds you (see stunPlayer)
   if((P.stunT||0)>0){
     const g=cx, n=3, base=-46;
@@ -2768,7 +2787,7 @@ function drawPlayer(s){
   // ---- water reflection + wake ----
   // When wading, surfing or sailing over water, cast a wobbling, flipped mirror of
   // the figure and open a V-wake behind the stride. Water only, top tier only.
-  if(!LOWFX && !G.interior && !P.dead && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
+  if(!LOWFX && !G.interior && !P.dead && G.worldId!=='skydungeon' && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
     cx.save();
     cx.globalAlpha=0.20;
     const wob=Math.sin(G.time*3)*1.3;
@@ -2792,7 +2811,7 @@ function drawPlayer(s){
     drawPlayerFigure(s2);
     return;
   }
-  if(P.unlocked&&P.unlocked.surf&&!G.interior&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
+  if(P.unlocked&&P.unlocked.surf&&!G.interior&&G.worldId!=='skydungeon'&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
     // a WINDSURF: pale-wood board on its bow-wave, and a tall stormcloth sail
     // (Nessa's) that billows out to the heading side - drawn IN FRONT of the sailor,
     // who grips the boom. The sail dwarfs the rider, as a real windsurf rig does.
