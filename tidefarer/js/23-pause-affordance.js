@@ -23,29 +23,18 @@
   const pp=document.getElementById('pausePanel');
   pp.insertBefore(pg, pp.firstChild);
   const btn=document.getElementById('btnPause');
-  const card=document.getElementById('pauseCard');
-  const hint=document.getElementById('pauseScrollHint');
-  // bottom fade + chevron signalling "there's more below"; fades out at the end
-  const cue=document.createElement('div');
-  cue.id='pauseMoreCue'; cue.textContent='\u2193 more';
-  if(card) card.appendChild(cue);
-  function updateCue(){
-    if(!card) return;
-    const scrollable = card.scrollHeight - card.clientHeight > 8;
-    const atEnd = card.scrollTop + card.clientHeight >= card.scrollHeight - 4;
-    cue.classList.toggle('atEnd', atEnd || !scrollable);
-    if(hint) hint.style.display = (!scrollable || card.scrollTop>6) ? 'none' : '';
-  }
-  if(card) card.addEventListener('scroll', updateCue, {passive:true});
-
+  const body=document.getElementById('pauseTabBody');
+  // The menu is now tabbed (see 17-pause-menu.js): the header, tab strip and
+  // footer stay fixed and only the active pane scrolls, so the old
+  // "scroll for more" cue and hint are gone.
   const _tp=togglePause;
   togglePause=function(force){
     _tp(force);
     const on=!!G.paused;
     pg.style.display=on?'flex':'none';
     if(btn){ btn.textContent=on?'\u25B6':'\u23F8'; btn.classList.toggle('playing',on); }
-    // open at the top so the Resume button is visible without scrolling
-    if(on && card){ card.scrollTop=0; if(hint) hint.style.display=''; requestAnimationFrame(updateCue); }
+    // open each pane at the top so the settings are visible without scrolling
+    if(on && body){ body.scrollTop=0; }
   };
   if(btn) btn.onclick=()=>togglePause();
   const rb=document.getElementById('resumeBtn');

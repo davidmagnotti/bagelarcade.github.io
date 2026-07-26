@@ -129,6 +129,13 @@
   /* keep the quest log to ~70% of the screen height, list scrolls, search stays put */
   #questPanel{max-height:70vh;}
   #qlog{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  /* Satchel can hold a lot; the base .panel caps at 82vh but on iOS `vh` is the
+     tall viewport behind the toolbar, so a centred panel's bottom (and the hint)
+     could sit off-screen. `dvh` tracks the *visible* height, so cap to that with
+     a little margin - the grid scrolls inside instead of running off the screen.
+     (Older browsers that don't know dvh ignore this and keep the 82vh fallback.) */
+  #invPanel{max-height:min(82vh, calc(100dvh - 24px));overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;}
   .btn{background:
     radial-gradient(circle at 22% 16%, rgba(255,255,255,.09), transparent 42%),
     radial-gradient(circle at 80% 88%, rgba(0,0,0,.28), transparent 46%),
@@ -155,7 +162,11 @@
   .qcard .qp.ready, .qlogItem .qp.ready{color:#ffd76a;text-shadow:0 0 8px rgba(255,215,106,.5);}
   #pausePanel{position:fixed;inset:0;background:rgba(8,5,3,.78);z-index:40;display:none;
     align-items:center;justify-content:center;}
-  #pauseCard{width:min(480px,94vw);max-height:88vh;overflow-y:auto;padding:0 20px 18px;border-radius:14px;
+  /* Tabbed pause menu: fixed header + tab bar + fixed footer never scroll, so
+     Resume and the tab strip stay put on iPhone; only the active pane's body
+     scrolls (and settings panes are short enough that it usually won't). */
+  #pauseCard{width:min(480px,94vw);max-height:88vh;display:flex;flex-direction:column;
+    padding:0 20px 16px;border-radius:14px;
     background:
       radial-gradient(circle at 22% 10%, rgba(255,255,255,.06), transparent 45%),
       linear-gradient(165deg,#3a372f 0%,#2b2922 55%,#1f1d18 100%);
@@ -163,26 +174,29 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.5), 0 12px 40px rgba(0,0,0,.7);}
   #pauseCard h2{font-size:20px;color:var(--ember);text-align:center;letter-spacing:2px;margin-bottom:10px;
     text-shadow:0 -1px 0 rgba(0,0,0,.8);}
-  /* Sticky header so Resume is always reachable without scrolling on mobile.
-     Full-width opaque bar (negative side margins span the card padding) that
-     hides content sliding underneath as you scroll. The card's top padding is
-     removed so the bar sits flush and leaves no gap for content to peek above. */
-  #pauseTopBar{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;
-    gap:12px;margin:0 -20px 4px;padding:14px 20px 11px;border-radius:14px 14px 0 0;
+  /* Header bar: full-width opaque strip (negative side margins span the card
+     padding). The card's top padding is removed so the bar sits flush. */
+  #pauseTopBar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin:0 -20px;padding:14px 20px 11px;border-radius:14px 14px 0 0;
     background:linear-gradient(180deg,#3a372f 0%,#312e28 100%);
     border-bottom:1px solid #4a473e;box-shadow:0 5px 10px rgba(0,0,0,.3);}
   #pauseTopBar h2{margin:0;flex:1;text-align:left;}
   #resumeTopBtn{flex:0 0 auto;white-space:nowrap;padding:9px 16px;font-size:13px;animation:none;}
-  #pauseScrollHint{text-align:center;font-size:11px;letter-spacing:.5px;color:#9a917f;
-    margin:2px 0 6px;opacity:.9;animation:pauseHintBob 1.8s ease-in-out infinite;}
-  @keyframes pauseHintBob{0%,100%{opacity:.55;}50%{opacity:.95;}}
-  /* fade + chevron pinned to the bottom edge of the scroll area; JS hides it
-     once you've scrolled to the end (.atEnd). */
-  #pauseMoreCue{position:sticky;bottom:-18px;z-index:3;margin:6px -20px -18px;padding:16px 0 8px;
-    text-align:center;font-size:16px;color:#ffd76a;pointer-events:none;
-    background:linear-gradient(0deg,#1f1d18 30%,rgba(31,29,24,.85) 60%,transparent 100%);
-    transition:opacity .25s ease;animation:pauseHintBob 1.8s ease-in-out infinite;}
-  #pauseMoreCue.atEnd{opacity:0;}
+  /* Tab strip - horizontally scrollable if it can't fit (older/narrow phones),
+     but sized to fit iPhone width without a swipe in the common case. */
+  #pauseTabs{flex:0 0 auto;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;
+    margin:0 -20px;padding:9px 14px;background:rgba(0,0,0,.22);border-bottom:1px solid #45423a;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  #pauseTabs::-webkit-scrollbar{display:none;}
+  .pTabBtn{flex:0 0 auto;white-space:nowrap;cursor:pointer;font:inherit;font-size:11px;font-weight:bold;
+    letter-spacing:.3px;padding:7px 10px;border-radius:8px;border:1px solid #3a352c;
+    background:rgba(20,14,8,.4);color:var(--parch-dim);touch-action:manipulation;transition:color .12s,background .12s,border-color .12s;}
+  .pTabBtn.on{color:#ffd76a;border-color:#8a6d30;background:rgba(120,90,20,.28);
+    box-shadow:inset 0 1px 0 rgba(255,235,180,.18), 0 0 8px rgba(255,154,60,.2);}
+  /* Only the active pane scrolls; the header/tabs/footer stay fixed. */
+  #pauseTabBody{flex:1 1 auto;min-height:0;overflow-y:auto;padding-top:10px;}
+  .pTab{display:none;}
+  .pTab.on{display:block;}
   .pRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:12px;color:var(--parch);}
   .pRow input[type=range]{flex:1;max-width:200px;accent-color:#ff9a3c;}
   .pSeg{display:flex;gap:6px;}
@@ -196,7 +210,8 @@
   #achGrid{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
   .achRow{font-size:11px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.25);color:#7d7466;}
   .achRow.got{color:#ffe0a0;background:rgba(120,90,20,.22);border-left:3px solid #c9a24e;}
-  #pauseBtns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+  #pauseBtns{flex:0 0 auto;display:flex;gap:10px;justify-content:center;margin:0 -20px;
+    padding:12px 20px 0;flex-wrap:wrap;border-top:1px solid #45423a;}
   /* dialog */
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
@@ -217,7 +232,11 @@
   /* skills */
   .skrow{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .skrow .skn{width:98px;font-size:13px;font-weight:bold;}
-  .skrow .sklv{width:44px;font-family:Georgia,serif;color:var(--ember);font-size:15px;text-align:center;}
+  .skrow .sklv{width:52px;font-family:Georgia,serif;color:var(--ember);font-size:15px;text-align:center;line-height:1.05;}
+  .skrow .sklv.maxed{color:#ffd76a;}
+  .skrow .sklv .skcap{font-family:Verdana,Geneva,sans-serif;font-size:9px;color:var(--parch-dim);}
+  .skrow .sklv .skmax{display:block;font-family:Verdana,Geneva,sans-serif;font-size:8px;font-weight:bold;
+    letter-spacing:1px;color:#ffd76a;text-shadow:0 0 6px rgba(255,215,106,.6);}
   .skbar{flex:1;height:12px;background:#170f07;border-radius:6px;overflow:hidden;border:1px solid #4a3826;}
   .skbar .fill{height:100%;background:linear-gradient(90deg,#8bc34a,#c8e06a);}
   .skrow .perk{font-size:10px;color:var(--parch-dim);width:110px;}

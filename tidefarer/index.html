@@ -13,7 +13,7 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=196">
+<link rel="stylesheet" href="styles.css?v=198">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -115,27 +115,44 @@
       <h2>- PAUSED -</h2>
       <button class="btn gold" id="resumeTopBtn">Resume</button>
     </div>
-    <div id="pauseScrollHint">Scroll for sound, difficulty, stats &amp; deeds ↓</div>
-    <div class="pHead">Sound</div>
-    <div class="pRow"><span>Music</span><input type="range" id="cfgMus" min="0" max="100"></div>
-    <div class="pRow"><span>Effects &amp; ambience</span><input type="range" id="cfgSfx" min="0" max="100"></div>
-    <div class="pHead">Display &amp; comfort</div>
-    <div class="pRow"><span>Screen shake &amp; haptics</span>
-      <div class="pSeg"><button class="btn" id="cfgShakeOn">On</button><button class="btn" id="cfgShakeOff">Off</button></div></div>
-    <div class="pRow"><span>Lightning &amp; flash effects</span>
-      <div class="pSeg"><button class="btn" id="cfgFlashOn">On</button><button class="btn" id="cfgFlashOff">Off</button></div></div>
-    <div class="pHead">Difficulty <span style="text-transform:none;letter-spacing:0;">(damage you take)</span></div>
-    <div class="pRow"><div class="pSeg" style="margin:0 auto;">
-      <button class="btn" id="diff0">Story</button>
-      <button class="btn" id="diff1">Normal</button>
-      <button class="btn" id="diff2">Heroic</button></div></div>
-    <div class="pHead">Chronicle</div>
-    <div id="statGrid"></div>
-    <div class="pHead">Deeds</div>
-    <div id="achGrid"></div>
-    <div class="pHead">Controls</div>
-    <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
-      Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · E interact &amp; enter buildings · 1-4 hotbar · Esc pause · gamepad supported</div>
+    <div id="pauseTabs" role="tablist">
+      <button class="pTabBtn on" data-tab="sound" role="tab">♪ Sound</button>
+      <button class="pTabBtn" data-tab="display" role="tab">✦ Display</button>
+      <button class="pTabBtn" data-tab="difficulty" role="tab">⚔ Difficulty</button>
+      <button class="pTabBtn" data-tab="deeds" role="tab">★ Deeds</button>
+      <button class="pTabBtn" data-tab="chronicle" role="tab">✎ Chronicle</button>
+      <button class="pTabBtn" data-tab="save" role="tab">❖ Save</button>
+    </div>
+    <div id="pauseTabBody">
+      <div class="pTab on" data-pane="sound" role="tabpanel">
+        <div class="pRow"><span>Music</span><input type="range" id="cfgMus" min="0" max="100"></div>
+        <div class="pRow"><span>Effects &amp; ambience</span><input type="range" id="cfgSfx" min="0" max="100"></div>
+      </div>
+      <div class="pTab" data-pane="display" role="tabpanel">
+        <div class="pRow"><span>Screen shake &amp; haptics</span>
+          <div class="pSeg"><button class="btn" id="cfgShakeOn">On</button><button class="btn" id="cfgShakeOff">Off</button></div></div>
+        <div class="pRow"><span>Lightning &amp; flash effects</span>
+          <div class="pSeg"><button class="btn" id="cfgFlashOn">On</button><button class="btn" id="cfgFlashOff">Off</button></div></div>
+      </div>
+      <div class="pTab" data-pane="difficulty" role="tabpanel">
+        <div class="pHead">Difficulty <span style="text-transform:none;letter-spacing:0;">(damage you take)</span></div>
+        <div class="pRow"><div class="pSeg" style="margin:0 auto;">
+          <button class="btn" id="diff0">Story</button>
+          <button class="btn" id="diff1">Normal</button>
+          <button class="btn" id="diff2">Heroic</button></div></div>
+      </div>
+      <div class="pTab" data-pane="deeds" role="tabpanel">
+        <div id="achGrid"></div>
+      </div>
+      <div class="pTab" data-pane="chronicle" role="tabpanel">
+        <div class="pHead">Chronicle</div>
+        <div id="statGrid"></div>
+        <div class="pHead">Controls</div>
+        <div style="font-size:11px;color:var(--parch-dim);line-height:1.7;">
+          Click to walk, gather, talk &amp; fight · WASD move · Space attack · Shift dodge roll · E interact &amp; enter buildings · 1-4 hotbar · Esc pause · gamepad supported</div>
+      </div>
+      <div class="pTab" data-pane="save" role="tabpanel" id="pauseSavePane"></div>
+    </div>
     <div id="pauseBtns">
       <button class="btn gold" id="resumeBtn">Resume</button>
       <button class="btn ghostly" id="quitTitleBtn">Start Over</button>
@@ -201,38 +218,38 @@
   </div>
 </div>
 
-<script src="js/01-core.js?v=196"></script>
-<script src="js/01b-gpu-probe.js?v=196"></script>
-<script src="js/02-worldgen.js?v=196"></script>
-<script src="js/03-art.js?v=196"></script>
-<script src="js/04-data.js?v=196"></script>
-<script src="js/05-inventory-skills-quests.js?v=196"></script>
-<script src="js/06-dialog.js?v=196"></script>
-<script src="js/07-input.js?v=196"></script>
-<script src="js/08-ui-panels.js?v=196"></script>
-<script src="js/09-gameplay.js?v=196"></script>
-<script src="js/10-rendering.js?v=196"></script>
-<script src="js/11-main-loop.js?v=196"></script>
-<script src="js/12-world-layer.js?v=196"></script>
-<script src="js/13-aaa-layer.js?v=196"></script>
-<script src="js/14-meta-layer.js?v=196"></script>
-<script src="js/15-interiors.js?v=196"></script>
-<script src="js/16-autosave.js?v=196"></script>
-<script src="js/17-pause-menu.js?v=196"></script>
-<script src="js/18-economy.js?v=196"></script>
-<script src="js/19-purpose.js?v=196"></script>
-<script src="js/20-lore.js?v=196"></script>
-<script src="js/21-exploration.js?v=196"></script>
-<script src="js/22-definitive-edition.js?v=196"></script>
-<script src="js/23-pause-affordance.js?v=196"></script>
-<script src="js/24-perf.js?v=196"></script>
-<script src="js/25-debug.js?v=196"></script>
-<script src="js/26-bench.js?v=196"></script>
-<script src="js/27-perfmode.js?v=196"></script>
-<script src="js/28-fxpanel.js?v=196"></script>
-<script src="js/29-devmenu.js?v=196"></script>
-<script src="js/30-perks.js?v=196"></script>
-<script src="js/31-skyquest.js?v=196"></script>
-<script src="js/32-cinematic.js?v=196"></script>
+<script src="js/01-core.js?v=198"></script>
+<script src="js/01b-gpu-probe.js?v=198"></script>
+<script src="js/02-worldgen.js?v=198"></script>
+<script src="js/03-art.js?v=198"></script>
+<script src="js/04-data.js?v=198"></script>
+<script src="js/05-inventory-skills-quests.js?v=198"></script>
+<script src="js/06-dialog.js?v=198"></script>
+<script src="js/07-input.js?v=198"></script>
+<script src="js/08-ui-panels.js?v=198"></script>
+<script src="js/09-gameplay.js?v=198"></script>
+<script src="js/10-rendering.js?v=198"></script>
+<script src="js/11-main-loop.js?v=198"></script>
+<script src="js/12-world-layer.js?v=198"></script>
+<script src="js/13-aaa-layer.js?v=198"></script>
+<script src="js/14-meta-layer.js?v=198"></script>
+<script src="js/15-interiors.js?v=198"></script>
+<script src="js/16-autosave.js?v=198"></script>
+<script src="js/17-pause-menu.js?v=198"></script>
+<script src="js/18-economy.js?v=198"></script>
+<script src="js/19-purpose.js?v=198"></script>
+<script src="js/20-lore.js?v=198"></script>
+<script src="js/21-exploration.js?v=198"></script>
+<script src="js/22-definitive-edition.js?v=198"></script>
+<script src="js/23-pause-affordance.js?v=198"></script>
+<script src="js/24-perf.js?v=198"></script>
+<script src="js/25-debug.js?v=198"></script>
+<script src="js/26-bench.js?v=198"></script>
+<script src="js/27-perfmode.js?v=198"></script>
+<script src="js/28-fxpanel.js?v=198"></script>
+<script src="js/29-devmenu.js?v=198"></script>
+<script src="js/30-perks.js?v=198"></script>
+<script src="js/31-skyquest.js?v=198"></script>
+<script src="js/32-cinematic.js?v=198"></script>
 </body>
 </html>
