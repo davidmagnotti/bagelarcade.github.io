@@ -162,6 +162,9 @@ function loadCode(str){
   if(P.story.iceBearDown) P.story.bossCleared.frost=1;
   if(P.story.frostFreed) P.story.bossCleared.frost=1;
   if(P.story.rocDown||P.story.skyDungeonDone) P.story.bossCleared.sky=1;
+  // The Rainbow Road's longer-dash prize is a later addition: grant it to any save that
+  // already put out the Storm-Eye, so returning runners keep the reward they earned.
+  if(P.story.skyDungeonDone){ P.unlocked=P.unlocked||{}; P.unlocked.dashfar=true; }
   if(P.story.aerieFreed) P.story.bossCleared.aerie=1;
   if(P.story.deepDone||P.story.tideCalm) P.story.bossCleared.east=1;
   if(P.story.undermawDown||P.story.millDone) P.story.bossCleared.main=1;

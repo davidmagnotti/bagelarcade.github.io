@@ -89,6 +89,9 @@ function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  // the Rainbow Road's little stepping-isles gently sway (skyIsleSwingAt); skipped in
+  // low-gfx, where the ground is a static blit and a sway would slide actors off it.
+  const SKYSWING = !LOWFX && G.worldId==='skydungeon' && typeof skyIsleSwingAt==='function';
   cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
   // Trauma-style shake: squared falloff (a punchier decay than linear), a small
   // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
@@ -125,7 +128,8 @@ function render(){
       const t=G.map[y*MAPW+x];
       if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - let the backdrop show
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
-      const sx=s.x - 0, sy=s.y;
+      let sx=s.x - 0; const sy=s.y;
+      if(SKYSWING && t===T.SNOW){ const sw=skyIsleSwingAt(x,y); if(sw) sx+=sw; }   // sway the isle tiles
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
       cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
       if(t===T.SHALLOW || t===T.DEEP){
@@ -202,6 +206,7 @@ function render(){
 
   if(DBG.entities) for(const it of items){
     const o=it.o, s=worldToScreen(o.x,o.y);
+    if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }   // ride the isle's sway
     switch(it.kind){
       case 'node': drawNode(o,s); break;
       case 'decor': case 'lamp': drawDecor(o,s); break;
@@ -869,20 +874,23 @@ function drawDecor(b,s){
   }
   if(b.kind==='catgate'){
     const g=cx; g.save(); g.translate(s.x,s.y);
+    // width scales with the sealed span (its tile-row), so a wide mouth gets a wide portcullis
+    // and a 5-tile corridor keeps the original look (half = 2 -> W = 30, the old hardcoded value)
+    const half=Math.floor((((b.tiles&&b.tiles.length)||5)-1)/2), W=half*11+8;
     if(b.open){ // raised into the ceiling - just the top lintel and stubs remain
-      g.fillStyle='#3a332c'; g.fillRect(-30,-44,60,7);
-      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-30,-44,60,7);
-      g.fillStyle='#2a241e'; for(let i=-2;i<=2;i++){ g.fillRect(i*11-2,-44,4,7); }
+      g.fillStyle='#3a332c'; g.fillRect(-W,-44,W*2,7);
+      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-W,-44,W*2,7);
+      g.fillStyle='#2a241e'; for(let i=-half;i<=half;i++){ g.fillRect(i*11-2,-44,4,7); }
       g.restore(); return;
     }
-    drawShadowAt(g,s.x,s.y,30);
+    drawShadowAt(g,s.x,s.y,W);
     // an iron portcullis dropped across the corridor
-    g.fillStyle='#3a332c'; g.fillRect(-30,-40,60,6);           // top lintel
+    g.fillStyle='#3a332c'; g.fillRect(-W,-40,W*2,6);           // top lintel
     g.strokeStyle='#1c1814'; g.lineWidth=1.6;
     g.fillStyle='#4a423a';
-    for(let i=-2;i<=2;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
-    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-27,yy,54,3.5); }          // cross-bars
-    g.fillStyle='#5a5048'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
+    for(let i=-half;i<=half;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
+    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-(W-3),yy,(W-3)*2,3.5); }        // cross-bars
+    g.fillStyle='#5a5048'; for(let i=-half;i<=half;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
     g.restore(); return;
   }
   if(b.kind==='ashwing'){
@@ -2781,6 +2789,25 @@ function drawPlayer(s){
     g.restore();
     return;
   }
+  // FALLING through the cloud between the Rainbow Road's floating platforms: the hero drops
+  // away below the road, tumbling and shrinking into the blue, then the wind bears them back
+  // to the isle (see skyFallStart / skyFallRespawn). A wisp of torn cloud lingers where they fell.
+  if(typeof G!=='undefined' && G._skyFall){
+    const z=G._skyFall, p=Math.min(1, z.t/z.dur), g=cx;
+    // a torn scrap of cloud left hanging at the gap's edge, thinning as you drop
+    g.save(); g.globalAlpha=0.5*(1-p); g.fillStyle='rgba(236,246,255,0.9)';
+    for(let i=0;i<4;i++){ const a=i/4*TAU; g.beginPath(); g.ellipse(s.x+Math.cos(a)*7, s.y+2+Math.sin(a)*3, 5, 3, 0, 0, TAU); g.fill(); }
+    g.restore();
+    // the hero, falling: accelerating downward, spinning, shrinking and fading into the blue
+    g.save();
+    const fy=s.y + p*p*90;                 // accelerating plunge
+    const sc=Math.max(0.15, 1-p*0.85);     // dwindling with distance
+    g.globalAlpha=Math.max(0, 1-p*0.9);
+    g.translate(s.x, fy); g.rotate(p*4.2); g.scale(sc,sc); g.translate(-s.x, -fy);
+    drawPlayerFigure({x:s.x, y:fy});
+    g.restore();
+    return;
+  }
   // dazed: little stars circle overhead while a stun holds you (see stunPlayer)
   if((P.stunT||0)>0){
     const g=cx, n=3, base=-46;
@@ -2790,7 +2817,7 @@ function drawPlayer(s){
   // ---- water reflection + wake ----
   // When wading, surfing or sailing over water, cast a wobbling, flipped mirror of
   // the figure and open a V-wake behind the stride. Water only, top tier only.
-  if(!LOWFX && !G.interior && !P.dead && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
+  if(!LOWFX && !G.interior && !P.dead && G.worldId!=='skydungeon' && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
     cx.save();
     cx.globalAlpha=0.20;
     const wob=Math.sin(G.time*3)*1.3;
@@ -2814,7 +2841,7 @@ function drawPlayer(s){
     drawPlayerFigure(s2);
     return;
   }
-  if(P.unlocked&&P.unlocked.surf&&!G.interior&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
+  if(P.unlocked&&P.unlocked.surf&&!G.interior&&G.worldId!=='skydungeon'&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
     // a WINDSURF: pale-wood board on its bow-wave, and a tall stormcloth sail
     // (Nessa's) that billows out to the heading side - drawn IN FRONT of the sailor,
     // who grips the boom. The sail dwarfs the rider, as a real windsurf rig does.

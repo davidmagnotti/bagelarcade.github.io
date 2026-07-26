@@ -794,10 +794,13 @@ function killMob(m,skill){
   // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
   if(m.skyfinalboss){
     P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.parachute=1;
+    // the reward at the end of the rainbow road: the calmed sky's lightness stays in your
+    // step, and your dash now carries you half-again as far (see tryRoll's dashReach).
+    P.unlocked=P.unlocked||{}; P.unlocked.dashfar=true;
     Snd.boss&&Snd.boss();
-    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - THE SKY WILL BEAR YOU NOW');
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - YOUR DASH REACHES FARTHER');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the little bird loops back and lays a great kite of stitched stormcloth at your feet: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the settled sky keeps its lightness in your step: your <b style="color:#c9b0ff">dash now carries you half-again as far</b>. The little bird loops back and lays a great kite of stitched stormcloth at your feet too: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
       {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
   }
   // The Drowned Minotaur dens in the Stormreach catacomb
@@ -965,6 +968,9 @@ function updatePlayer(dt){
   // THE OSSUARY DANCE: control is frozen while the bonewright treads the pattern (the cut
   // scene) and while a ward-jolt plays out (updateReachDeep drives both). Cooldowns still tick.
   if(typeof G!=='undefined' && G._dance && (G._dance.demo||G._dance.zap)){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
+  // FALLING between the Rainbow Road's floating platforms: control frozen while the hero
+  // drops through the cloud (updateSkyDungeon ticks the timer and respawns). Roll cd recovers.
+  if(typeof G!=='undefined' && G._skyFall){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
   // hold the hero still during a scripted camera pan (the ward-gate reveal), so
   // control returns exactly where it left off and no dash/move fires unseen
   if(G.camCine){ P.moving=false; P.click=null; return; }
@@ -1057,6 +1063,13 @@ function updatePlayer(dt){
   // Rimefissure drift-ice: standing on a floe over the channel gives a SLIGHT slide (momentum),
   // so lining up a precise hop takes timing - distinct from the full glide of the Sliding Halls
   const onFloe = G.worldId==='frostdeep' && !dlg.open && G._frostVoid && G._frostVoid.has(Math.floor(P.x)+','+Math.floor(P.y));
+  // a FOOTED-but-slick floor (the Frozen Heart arena): the same slight-slide as the drift-floes,
+  // so your steps carry a little momentum and coast a beat on release - but you keep your feet
+  // and never full-glide across the room into the spikes.
+  const driftZones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].driftFloor) || [];
+  const onDriftFloor = driftZones.length && P.rollT<=0 && !dlg.open
+    && driftZones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1)
+    && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
   if(onSlick){
     if(!P.slideDir && ml>0.25){
       // push off along the stronger input axis - but never INTO a wall. If that
@@ -1075,7 +1088,7 @@ function updatePlayer(dt){
       if(Math.random()<dt*20) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-P.slideDir.x*0.6,vy:-P.slideDir.y*0.6,life:0.4,color:'#eaf6ff',size:2.2,grav:0});
       if(!moved || tileAt(Math.floor(P.x),Math.floor(P.y))!==T.ICE){ P.slideDir=null; Snd.step&&Snd.step(T.ICE); }
     } else P.moving=false;
-  } else if(onFloe){
+  } else if(onFloe || onDriftFloor){
     // a slight slide: your steps build a little momentum and coast a beat when you let go,
     // so a precise step between drifting floes takes timing (over-run and you slide into the water)
     if(P.slideDir) P.slideDir=null;

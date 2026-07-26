@@ -139,7 +139,11 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
     spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
-    slide:[{x0:28,y0:10,x1:60,y1:33},{x0:34,y0:100,x1:54,y1:114}],   // the arena and the entry landing are slick ice
+    slide:[{x0:34,y0:100,x1:54,y1:114}],   // the entry landing is slick ice (full glide)
+    // the Frozen Heart arena is slick underfoot but FOOTED - a short coasting slide (like the
+    // drift-floes), not the hall's full glide, so a misstep drifts a little instead of flinging
+    // you clear across the room into the spiked edge.
+    driftFloor:[{x0:28,y0:10,x1:60,y1:33}],
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -1519,7 +1523,9 @@ function askAshwingHome(){
     btns.push({label:'Fly up into the Cloudreach', fn:()=>{ closeDialog(); flyToCloudreach(); }});
   }
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
-  setDialog('<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
+  // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
+  // into a hidden panel - otherwise the "Fly home" menu never shows
+  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
@@ -1799,9 +1805,16 @@ function placeObjectsAerieDeep(){
     if(innerN>0) idxs[0]=1;   // the FIRST lance sits in the first corridor off the entry
     const seenB=new Set();
     idxs.filter(j=>j>=1 && j<=path.length-2 && !seenB.has(j) && seenB.add(j)).forEach((j,i)=>{
-      const [bx,by]=path[j].split(',').map(Number), [ax,ay]=path[j-1].split(',').map(Number), [nx,ny]=path[j+1].split(',').map(Number);
-      const horiz=Math.abs(ax-nx)>=Math.abs(ay-ny);   // path runs across this cell -> a vertical lance blocks it (wall to wall)
-      beam(cX(bx)+LANE/2, cY(by)+LANE/2, horiz?0:1, horiz?1:0, LANE/2+0.6, period, (i*0.37)%1); });
+      // anchor the lance ACROSS the doorway chokepoint between this path cell and the next: a
+      // doorway is always exactly LANE wide with solid wall on both sides, so a lance spanning it
+      // (plus a tile into each wall) is guaranteed to connect WALL TO WALL - no slipping past its end.
+      const A=path[j].split(',').map(Number), B=path[j+1].split(',').map(Number);
+      const ax=A[0],ay=A[1],bx=B[0],by=B[1]; let lx,ly,ldx,ldy;
+      if(bx>ax){ lx=cX(ax)+LANE+0.5; ly=cY(ay)+LANE/2; ldx=0; ldy=1; }        // east doorway  -> vertical lance
+      else if(bx<ax){ lx=cX(ax)-0.5;    ly=cY(ay)+LANE/2; ldx=0; ldy=1; }     // west doorway
+      else if(by>ay){ lx=cX(ax)+LANE/2; ly=cY(ay)+LANE+0.5; ldx=1; ldy=0; }   // south doorway -> horizontal lance
+      else          { lx=cX(ax)+LANE/2; ly=cY(ay)-0.5;     ldx=1; ldy=0; }    // north doorway
+      beam(lx, ly, ldx, ldy, LANE/2+1.0, period, (i*0.37)%1); });   // len reaches a tile into each wall
     // tonic caches in the next-farthest dead ends
     const leaves=Object.keys(adj).filter(kk=>(adj[kk]||[]).length===1 && kk!==plateK && kk!==K(eCx,eCy) && kk!==gK).sort((a,b)=>dist[b]-dist[a]);
     for(const lk of leaves.slice(0,2)){ const [lx,ly]=lk.split(',').map(Number); G.decor.push({kind:'chest', x:cX(lx)+1.5, y:cY(ly)+1.5, deep:1, potions:1}); }
@@ -2112,7 +2125,7 @@ function genFrostAll(){
    ================================================================================= */
 // THE LONG DRIFT: a solid lever-island parked mid-channel (carved into the water later)
 const FROST_ISLAND={x0:39, x1:49, y0:62, y1:69};   // reach it, pull its lever to open the Deep Gate
-const HEART_SEAL=[[42,34],[43,34],[44,34],[45,34],[46,34]];   // slams shut behind you when you enter the arena
+const HEART_SEAL=[[40,34],[41,34],[42,34],[43,34],[44,34],[45,34],[46,34],[47,34],[48,34]];   // spans the whole arena mouth; slams shut behind you when you enter
 function genFrostDeep(){
   // an ice-dungeon carved from solid frozen rock: a long drift-channel crossing up to the Frozen Heart.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -2122,6 +2135,7 @@ function genFrostDeep(){
   carve(30,44,54,92,T.ICE);               // THE LONG DRIFT - a 3x channel of floes + rotating slabs
   carve(FROST_ISLAND.x0, FROST_ISLAND.y0, FROST_ISLAND.x1, FROST_ISLAND.y1, T.ICE);   // the solid lever-island, mid-channel
   carve(42,30,46,45,T.ICE);               // corridor B -> the arena
+  carve(40,34,48,34,T.ICE);               // the Heart-Seal mouth - flared to the arena's full doorway so the seal spans it
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until the island lever is thrown
   // THE FROZEN HEART: one large slippery arena where you fight THE RIMEBOUND. Its edges drop away
   // into spiked freezing water (placed in placeObjectsFrostDeep), and a seal slams shut behind you.
@@ -2222,6 +2236,11 @@ function updateFrostDeep(dt){
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
     banner('THE ICE SEALS BEHIND YOU','NO RETREAT - FELL THE RIMEBOUND');
+    // now that the way back is shut, the Rimebound arrives: reveal it and hand into its entrance beat
+    const boss=(G.mobs||[]).find(m=>m.ach==='rimebreaker' && !m.dead);
+    if(boss){ boss.sealed=false;
+      if(typeof startBossIntro==='function' && !boss.entranceDone && !G.bossIntro)
+        startBossIntro(boss,{kind:boss.entrance, title:boss.entranceTitle, sub:boss.entranceSub}); }
   }
   const floes=G._frostFloes||[], wheels=G._frostWheels||[];
   if(!floes.length && !wheels.length) return;   // a cleared run - the channel is solid ice
@@ -2244,7 +2263,10 @@ function spawnMobsFrostDeep(){
   if(!(P.story && P.story.deepDone)){
     const sp=findOpenNear(Z.boss.x, Z.boss.y, 6) || [Z.boss.x, Z.boss.y];
     const b=spawnMob('icecolossus', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.title='THE RIMEBOUND'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.entrance='enthrall'; }
+    // sealed = inert and unseen until you walk into the Heart and the seal shuts behind you
+    // (updateFrostDeep reveals it and hands into its entrance beat then) - so the Rimebound
+    // never stands waiting in view; it arrives once there's no backing out.
+    if(b){ b.boss=true; b.bigBoss=true; b.enspelled=true; b.sealed=true; b.title='THE RIMEBOUND'; b.entranceSub='VATH\'S ICE-THRALL - BREAK THE BINDING'; b.ach='rimebreaker'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.entrance='enthrall'; }
   }
 }
 function genFrostDeepAll(){
@@ -3321,7 +3343,9 @@ function askSkyDragon(){
   btns.push({label:'Fly back to the Sunward Isle', cls: runRoad?undefined:'gold', fn:()=>{ closeDialog();
     flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
-  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
+  // open the dialog window itself (dlg.open + display + portrait) via lairDialog - calling
+  // setDialog alone only fills a HIDDEN panel, so the menu never appeared and "Fly down" read as dead
+  lairDialog('Ashwing','<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
@@ -4700,7 +4724,11 @@ function tryRoll(){
     if(!(P.unlocked&&P.unlocked.dash2) || P.dashChain) return;
     P.dashChain=1;
   } else P.dashChain=0;
-  P.rollT=0.26; P.rollCd=1.0; buzz(9);
+  // the Rainbow Road's prize (P.unlocked.dashfar) keeps the calmed sky's lightness in
+  // your step: a half-again longer dash. rollT drives the whole roll - movement, footwork
+  // animation and i-frames all scale together - so the dash simply reaches 1.5x as far.
+  const dashReach=(P.unlocked&&P.unlocked.dashfar)?1.5:1;
+  P.rollT=0.26*dashReach; P.rollCd=1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});
