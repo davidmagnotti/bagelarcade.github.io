@@ -806,7 +806,7 @@ function drawDecor(b,s){
   }
   if(b.kind==='boneplate'){
     const g=cx; g.save(); g.translate(s.x,s.y);
-    const lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x);
+    const lit=b.set||b.pressed, gl=0.4+0.5*Math.sin(G.time*3+b.x);
     // a sunken flagstone plate ringed in bone
     g.fillStyle= lit? '#3a2c4a' : '#2a2622'; g.beginPath(); g.moveTo(0,-11); g.lineTo(15,-2); g.lineTo(0,7); g.lineTo(-15,-2); g.closePath(); g.fill();
     g.strokeStyle= lit? '#c77bff' : '#6a5c4c'; g.lineWidth= lit?2.2:1.6; g.stroke();
@@ -1506,25 +1506,47 @@ function drawDecor(b,s){
   }
   if(b.kind==='beamgate'){
     // a bone portcullis hauled up by a counterweight beam. openAmt: 0=dropped, 1=up.
-    // Drawn one pale-bone pane per corridor tile (an iso down-right diagonal).
-    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=40;
+    // The corridor runs down the iso diagonal, so the closed gate is a continuous slab of
+    // dark stone (no see-through gaps) filling wall-to-wall, with pale bone bars ribbed over it.
+    const g=cx, c0=(b.x0+b.x1)/2, amt=b.openAmt||0, H=42;
     const tiles=[]; for(let tx=b.x0; tx<=b.x1; tx++) tiles.push(tx);
-    if(amt<0.98) drawShadowAt(g,s.x,s.y,30);
-    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
-      g.save(); g.translate(s.x+ox, s.y+oy);
-      g.fillStyle='#2c2622'; g.fillRect(-18,-42,36,6); g.strokeStyle='#120f0c'; g.lineWidth=1.4; g.strokeRect(-18,-42,36,6);   // lintel
-      const drop=H*(1-amt);
-      if(drop>0.5){ g.save(); g.beginPath(); g.rect(-18,-36,36,drop); g.clip();
+    const oxL=(b.x0-c0)*32, oyL=(b.x0-c0)*16;   // leftmost (north-west) tile face
+    const oxR=(b.x1-c0)*32, oyR=(b.x1-c0)*16;    // rightmost (south-east) tile face
+    const drop=H*(1-amt);
+    if(amt<0.98) drawShadowAt(g,s.x,s.y,34);
+    // --- the lintel: one continuous beam across the whole corridor mouth ---
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#2c2622'; g.strokeStyle='#120f0c'; g.lineWidth=1.4;
+    g.beginPath();
+    g.moveTo(oxL-19,-42+oyL); g.lineTo(oxR+19,-42+oyR); g.lineTo(oxR+19,-36+oyR); g.lineTo(oxL-19,-36+oyL); g.closePath();
+    g.fill(); g.stroke();
+    g.restore();
+    if(drop>0.5){
+      // --- solid dark stone backing filling the gap wall-to-wall (a parallelogram down the diagonal) ---
+      g.save(); g.translate(s.x,s.y);
+      g.beginPath();
+      g.moveTo(oxL-19,-36+oyL); g.lineTo(oxR+19,-36+oyR);
+      g.lineTo(oxR+19,-36+oyR+drop); g.lineTo(oxL-19,-36+oyL+drop); g.closePath();
+      g.save(); g.clip();
+      g.fillStyle='#1a1512'; g.fill();
+      // faint vertical grain so the slab reads as stone, not a void
+      g.strokeStyle='rgba(70,58,50,0.5)'; g.lineWidth=1;
+      for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16; g.beginPath(); g.moveTo(ox,-36+oy); g.lineTo(ox,-36+oy+drop); g.stroke(); }
+      g.restore();
+      g.restore();
+      // --- the pale bone bars, one set per corridor tile, riding on the slab ---
+      for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+        g.save(); g.translate(s.x+ox, s.y+oy);
+        g.beginPath(); g.rect(-18,-36,36,drop); g.clip();
         g.fillStyle='#cabfa6';                                             // pale bone bars
-        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.2,-36,4.4,H); g.strokeStyle='#7a6f58'; g.lineWidth=1; g.strokeRect(i*11-2.2,-36,4.4,H); }
-        g.fillStyle='#b3a888'; for(let yy=-30;yy<=-6;yy+=12){ g.fillRect(-16,yy,32,3); }   // rib cross-bars
-        g.fillStyle='#ddd3bd'; for(let i=-1;i<=1;i++){ g.beginPath(); g.arc(i*11,-36+drop-3,3,0,TAU); g.fill(); }   // skull knobs at the feet
+        for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.6,-36,5.2,H); g.strokeStyle='#7a6f58'; g.lineWidth=1; g.strokeRect(i*11-2.6,-36,5.2,H); }
+        g.fillStyle='#b3a888'; for(let yy=-30;yy<=-6;yy+=12){ g.fillRect(-17,yy,34,3.4); }   // rib cross-bars
+        g.fillStyle='#ddd3bd'; for(let i=-1;i<=1;i++){ g.beginPath(); g.arc(i*11,-36+drop-3,3.2,0,TAU); g.fill(); }   // skull knobs at the feet
         g.restore();
       }
-      g.restore();
     }
     // the counterweight beam over the centre, tipping as the gate rises
-    g.save(); g.translate(s.x, s.y-47); g.rotate((amt-0.5)*0.5);
+    g.save(); g.translate(s.x, s.y-49); g.rotate((amt-0.5)*0.5);
     g.strokeStyle='#6a5c48'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); g.moveTo(-20,0); g.lineTo(20,0); g.stroke();
     g.fillStyle='#4a4038'; g.beginPath(); g.arc(-20,0,4,0,TAU); g.fill(); g.beginPath(); g.arc(20,0,4.5,0,TAU); g.fill();
     g.restore();
@@ -2572,6 +2594,33 @@ function drawPlayer(s){
     const fy=s.y + p*p*46;            // accelerating fall
     g.translate(s.x, fy); g.rotate(p*0.8); const sc=1-p*0.55; g.scale(sc,sc); g.translate(-s.x, -fy);
     drawPlayerFigure({x:s.x, y:fy});
+    g.restore();
+    return;
+  }
+  // ZAPPED by an Underclimb ward-lance: the hero convulses in a cage of violet arcs, flashing
+  // white, then respawns at the hall's mouth (see aerieZapStart / aerieRespawn).
+  if(typeof G!=='undefined' && G._aerieZap){
+    const p=Math.min(1, G._aerieZap.t/G._aerieZap.dur), g=cx;
+    const jx=Math.sin(G.time*90)*3.2*(1-p), jy=Math.cos(G.time*77)*2.2*(1-p);   // electric jitter
+    g.save();
+    g.translate(s.x+jx, s.y+jy); g.translate(-s.x, -s.y);
+    // the figure, tinted violet-white and flickering
+    g.save(); g.globalAlpha=0.9;
+    drawPlayerFigure({x:s.x, y:s.y});
+    g.restore();
+    // a white over-flash on the beat
+    if(Math.sin(G.time*60)>0){ g.save(); g.globalAlpha=0.32*(1-p*0.5); g.globalCompositeOperation='lighter';
+      drawPlayerFigure({x:s.x, y:s.y}); g.restore(); }
+    // jagged arcs of violet lightning crackling over the body
+    g.strokeStyle='rgba(216,176,255,0.95)'; g.lineWidth=1.6; g.lineCap='round';
+    const arcs=5;
+    for(let a=0;a<arcs;a++){
+      const ang=G.time*13 + a/arcs*TAU;
+      let ax=s.x+Math.cos(ang)*4, ay=s.y-22+Math.sin(ang)*3;
+      g.beginPath(); g.moveTo(ax,ay);
+      for(let k=0;k<4;k++){ ax+=Math.cos(ang)*5 + Math.sin(G.time*50+a*3+k)*4; ay+=Math.sin(ang)*6 + Math.cos(G.time*44+a*2+k)*4; g.lineTo(ax,ay); }
+      g.stroke();
+    }
     g.restore();
     return;
   }
