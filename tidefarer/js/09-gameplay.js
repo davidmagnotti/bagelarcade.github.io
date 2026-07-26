@@ -497,16 +497,11 @@ function tryAttack(useMouse){
     if(P.mp<8){ toastErr('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
     if(TRAIN && TRAIN.who==='aelin') TRAIN.casts=(TRAIN.casts||0)+1;   // Aelin's drill counts staff casts
-    if(P.spell==='snare' && P.spells && P.spells.snare)
-      G.projs.push({kind:'snarebolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:Math.max(4,Math.round(magicDmg()*0.4)),from:'player',skill:'magic',aoe:1.2,snare:2.5});
-    else{
-      // Emberburst perk (magic L5): bigger splash. Frostbolt perk: the bolt slows.
-      const eb=P.perks&&P.perks.emberburst, fb=P.perks&&P.perks.frostbolt;
-      const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
-      if(fb) bolt.snare=2.0;
-      if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
-      G.projs.push(bolt);
-    }
+    // Emberburst perk (magic L5): bigger splash. Overcharge perk: the bolt strikes twice as hard.
+    const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
+    const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:oc?magicDmg()*2:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
+    if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
+    G.projs.push(bolt);
     refreshUI();
   }
 }

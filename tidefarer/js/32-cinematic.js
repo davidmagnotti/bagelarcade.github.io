@@ -116,7 +116,7 @@ function drawBolt(){
 let _farDrops=[];
 function drawRainExtra(){
   const rain=(WX&&typeof WX.rain==='number')?WX.rain:0;
-  if(rain<=0.03) return;
+  if(rain<=0.03 || G.worldId==='frost') return;   // Frozen Isle squalls fall as snow (see drawSnow)
   const drift=(G.worldId==='reach')?0.5:0.18;
   const wantFar=Math.round(rain*70);
   while(_farDrops.length<wantFar) _farDrops.push({x:Math.random()*(VW+80)-40,y:Math.random()*VH,spd:320+Math.random()*160,len:5+Math.random()*4});

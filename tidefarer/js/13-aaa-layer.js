@@ -1114,11 +1114,12 @@ const WX={
     for(const d of this.drops){
       d.y+=d.spd*dt; d.x+=d.spd*windDrift*dt;
       if(d.y>VH){ d.y=-20-Math.random()*40; d.x=Math.random()*(VW+120)-60;
-        if(Math.random()<0.4&&G.state==='play')
+        if(Math.random()<0.4&&G.state==='play'&&G.worldId!=='frost')   // no rain-splash puffs on the snowy isle
           G.parts.push({x:P.x+rnd(-7,7),y:P.y+rnd(-5,5),vx:0,vy:0,life:0.22,color:'rgba(205,228,255,0.55)',size:2});
       }
     }
-    if(this.rain>0.65){
+    // the Frozen Isle gets snow, never a thunderstorm - its squalls are silent, lightning-free
+    if(this.rain>0.65 && G.worldId!=='frost'){
       this.boltT-=dt;
       if(this.boltT<=0){ this.boltT=rnd(9,22); G.lightning=0.5; Snd.thunder(); }
     }
@@ -1130,7 +1131,7 @@ const WX={
     }
   },
   drawRain(){
-    if(this.rain<=0.02) return;
+    if(this.rain<=0.02 || G.worldId==='frost') return;   // the Frozen Isle falls as snow, not rain (see drawSnow)
     cx.strokeStyle='rgba(200,220,250,'+(0.28*this.rain)+')'; cx.lineWidth=1;
     cx.beginPath();
     for(const d of this.drops){ cx.moveTo(d.x,d.y); cx.lineTo(d.x-d.len*0.18,d.y-d.len); }

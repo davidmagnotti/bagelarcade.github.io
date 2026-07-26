@@ -1919,8 +1919,8 @@ function spawnFrostFolk(){
   const Z=FROST_ZONES, V=Z.village;
   G.npcs.push(makeNPC('bryn','Bryn the Kettlewarden', V.x+0.5, V.y+2.5,
     {skin:'#c2a488',hair:'#cfc7b8',shirt:'#4a5a72',pants:'#33384a',beard:'#cfc7b8'},
-    ['Two moons of this, and the strait still hard as a smith\'s anvil. No boat in, no fish out. Hearthhold is eating its own boots.',
-     'The Warden used to keep our winters kind - it wept meltwater every spring and the strait ran free. Then a robed man walked onto the glacier, and the ice stopped weeping.',
+    ['Two moons of this cursed cold, and the strait locked dead and silent - no seal on the floes, no fish beneath them. Hearthhold is eating its own boots.',
+     'The Warden used to keep our winters KIND - deep snow and thick safe ice, seals fat on the floes and fish under them. A hard season, but a living one. Then a robed man walked onto the glacier, and the cold turned cruel - violet frost, and the life went out of the ice.',
      'You\'ll want the Rimefissure if you mean to fix this at the root - a crack in the ice that opened the night the cold came, right off the glacier road. We put a cairn and lamps at the turn so none of ours wanders past it. Mind the warren down there; three old frost-locks bar the deep gate, and you must throw them all.'],0.4));
   G.npcs.push(makeNPC('sigrid','Sigrid the Icewright', V.x+4.5, V.y+3.5,
     {skin:'#b58a5e',hair:'#8a7a5e',shirt:'#5a6a5a',pants:'#3a3a2c',hairstyle:'bun'},
@@ -1962,12 +1962,12 @@ function freeWarden(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.8),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.05}); }
   P.story.frostFreed=1; P.story.vathMet=1;
   bossReward(m);
-  banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE STRAIT WILL THAW');
+  banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE CRUEL COLD BREAKS');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
   // Felling the Frozen Isle's Warden is the second link of the Act II chain: it
   // earns the Warding Veil, which reopens the old islands (see grantVathVeil).
-  setTimeout(()=>storyCard('The violet sloughs away like spring ice, and the Warden bows its head and <b>weeps</b> - warm meltwater running down the glacier toward the strait. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian and our sea. That <b>robed man</b> who stopped its tears - violet at the cuffs - did you cross him? He is not finished, I think.”',
+  setTimeout(()=>storyCard('The violet sloughs away like rotten ice, and the Warden lifts its head - itself again. The killing cold breaks, and a clean, ordinary winter settles back over Hearthhold: the snow still falls, soft now, and the life creeps back into the ice - seals on the floes, fish beneath them. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian, and a winter we can live in. That <b>robed man</b> who twisted the cold - violet at the cuffs - did you cross him? He is not finished, I think.”',
     {onOk:()=>{ if(P.story && P.story.act2) grantVathVeil(); }}),1400);
 }
 // Beating the Frozen Isle earns the WARDING VEIL: a warding woven from the freed
@@ -1986,8 +1986,8 @@ function grantVathVeil(silent){
 function updateFrostFolkMood(){
   if(!(P.story && P.story.frostFreed)) return;
   const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
-  set('bryn',['You hear it? Water. Running water! The strait\'s breaking up floe by floe - there\'ll be a fishing boat out by morning.','The Warden weeps again and Hearthhold with it, from joy. We owe you our whole winter, friend.']);
-  set('sigrid',['The glacier drips like a spring morning. I could kiss you, but my lips would freeze - so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian AND our sea.']);
+  set('bryn',['The cold\'s gone KIND again - you can breathe without it biting, and there\'s seals back on the floes. A boat\'ll work the strait-edge by morning.','Still deep in snow, thank the Warden - but it\'s OUR winter now, not his. We owe you the whole season, friend.']);
+  set('sigrid',['The glacier\'s stopped bleeding that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in.']);
 }
 function genFrostAll(){
   genFrost(); bakeSolids(); placeObjectsFrost(); buildFoam();
@@ -3116,7 +3116,7 @@ function spawnCrownFolk(){
   // ---- the Herald: town crier in the plaza ----
   G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
     {skin:'#8a5a3a',hair:'#2a2018',shirt:'#7a5a2f',pants:'#4a3a24',hairstyle:'bun'},
-    ['Hear it! The strait to the Frozen Isle runs free again - trade convoys sail within the fortnight!',
+    ['Hear it! The Frozen Isle\'s cursed cold is broken - the strait is safe to sail again, and trade convoys run within the fortnight!',
      'Hear it! The skies over the Aerie have quieted; her Rookmother sends her thanks to the unnamed traveler!',
      'Word comes off every isle at once - old curses breaking like ice in spring. The city cannot decide if it is a miracle or a warning.'],0.1));
   // ---- the Gardener, tending the memorial ----
@@ -3128,7 +3128,7 @@ function spawnCrownFolk(){
   // ---- market + harbor flavor ----
   G.npcs.push(makeNPC('doran','Doran the Factor', M.x+0.5, M.y+2.5,
     {skin:'#a0703f',hair:'#3a2f26',shirt:'#5a4a7a',pants:'#3a3244',beard:'#3a2f26'},
-    ['Silk from the Sunward Isle, ore from Barik, ice-wine from the Frozen strait once it thaws - the Bazaar sells the whole map.',
+    ['Silk from the Sunward Isle, ore from Barik, ice-wine off the Frozen strait now the road\'s safe - the Bazaar sells the whole map.',
      'Coin talks in Aldermere, friend, and lately it can\'t stop talking about you.'],0.3));
   G.npcs.push(makeNPC('mabley','Old Mabley', H.x+0.5, H.y+2.5,
     {skin:'#b58a5e',hair:'#cfc7b8',shirt:'#3a5a5a',pants:'#2f3a3a',beard:'#cfc7b8',beardLong:true},
@@ -3286,8 +3286,8 @@ QUESTS.roost={ giver:'wrenna', title:'The Screaming Aerie', kind:'special', xpL:
   doneText:'The screaming stopped, and my old grey hen landed on my shoulder like nothing was ever wrong. You gave a whole island back its sky. There is no thanks big enough - but here is what I have, and it is yours.',
   rw:{gold:320, item:{potion:3}, xp:{melee:440, archery:440, magic:440}} };
 QUESTS.thaw={ giver:'bryn', title:'The Weeping Warden', kind:'kill', kill:{frostwarden:1}, xpL:460,
-  brief:'Our Warden kept these winters gentle for a hundred years - wept the strait free every spring. Then the robed man walked onto the glacier and the weeping stopped, and the cold has only deepened since. It is bound, not turned. Climb the ice road, break whatever holds it, and give the old thing back its tears. Hearthhold is freezing to death down here.',
-  log:'Climb to the Weeping Glacier and free the bound ice Warden to thaw the strait. (Lv 13 - dress warm.)',
+  brief:'Our Warden kept these winters KIND for a hundred years - deep snow and thick safe ice, seals on the floes and fish beneath them. Then the robed man walked onto the glacier and the weeping stopped, and the cold turned cruel and dead. It is bound, not turned. Climb the ice road, break whatever holds it, and give the old thing back its tears - and Hearthhold its living winter. We are freezing to death down here.',
+  log:'Climb to the Weeping Glacier and free the bound ice Warden to break the cursed cold. (Lv 13 - dress warm.)',
   doneText:'Water in the strait and tears on the glacier - you gave us back our guardian and our sea in one stroke. Hearthhold will drink your name warm for a generation. Take this, and our thanks.',
   rw:{gold:340, item:{potion:3}, xp:{melee:460, archery:460, magic:460}} };
 QUESTS.audience={ giver:'brea', title:'An Audience with the King', kind:'talk', talkTo:'aldous', xpL:520,

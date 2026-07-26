@@ -16,7 +16,7 @@ const PERKS = {
     {id:'quickdraw', name:'Quickdraw', desc:'Nock and loose far faster - about 30% quicker shots.'} ]},
   magic: { lvl:5, label:'Magic', choices:[
     {id:'emberburst', name:'Emberburst', desc:'Fire bolts erupt in a far wider blast.'},
-    {id:'frostbolt',  name:'Frostbolt',  desc:'Your bolts chill and slow whatever they strike.'} ]}
+    {id:'frostbolt',  name:'Overcharge', desc:'Your bolts strike for double damage.'} ]}
 };
 
 // has the player already picked a perk for this skill?
