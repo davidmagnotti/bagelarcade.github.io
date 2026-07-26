@@ -129,6 +129,13 @@
   /* keep the quest log to ~70% of the screen height, list scrolls, search stays put */
   #questPanel{max-height:70vh;}
   #qlog{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  /* Satchel can hold a lot; the base .panel caps at 82vh but on iOS `vh` is the
+     tall viewport behind the toolbar, so a centred panel's bottom (and the hint)
+     could sit off-screen. `dvh` tracks the *visible* height, so cap to that with
+     a little margin - the grid scrolls inside instead of running off the screen.
+     (Older browsers that don't know dvh ignore this and keep the 82vh fallback.) */
+  #invPanel{max-height:min(82vh, calc(100dvh - 24px));overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;}
   .btn{background:
     radial-gradient(circle at 22% 16%, rgba(255,255,255,.09), transparent 42%),
     radial-gradient(circle at 80% 88%, rgba(0,0,0,.28), transparent 46%),
@@ -225,7 +232,11 @@
   /* skills */
   .skrow{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .skrow .skn{width:98px;font-size:13px;font-weight:bold;}
-  .skrow .sklv{width:44px;font-family:Georgia,serif;color:var(--ember);font-size:15px;text-align:center;}
+  .skrow .sklv{width:52px;font-family:Georgia,serif;color:var(--ember);font-size:15px;text-align:center;line-height:1.05;}
+  .skrow .sklv.maxed{color:#ffd76a;}
+  .skrow .sklv .skcap{font-family:Verdana,Geneva,sans-serif;font-size:9px;color:var(--parch-dim);}
+  .skrow .sklv .skmax{display:block;font-family:Verdana,Geneva,sans-serif;font-size:8px;font-weight:bold;
+    letter-spacing:1px;color:#ffd76a;text-shadow:0 0 6px rgba(255,215,106,.6);}
   .skbar{flex:1;height:12px;background:#170f07;border-radius:6px;overflow:hidden;border:1px solid #4a3826;}
   .skbar .fill{height:100%;background:linear-gradient(90deg,#8bc34a,#c8e06a);}
   .skrow .perk{font-size:10px;color:var(--parch-dim);width:110px;}

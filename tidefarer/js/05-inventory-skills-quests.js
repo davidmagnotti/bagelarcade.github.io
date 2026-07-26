@@ -14,16 +14,20 @@ function giveGold(n){ n=Math.round(+n)||0; P.gold=(Math.round(+P.gold)||0)+n; P.
 
 function addXP(skill,amt){
   const sk=P.skills[skill]; if(!sk) return;
+  const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
+  if(sk.lvl>=cap){ sk.lvl=cap; sk.xp=0; return; }   // already mastered - no more XP to gain
   sk.xp+=amt;
   addFloat('+'+amt+' '+SKILLS[skill].name+' XP', P.x, P.y-1.8, '#9be07f');
-  while(sk.xp >= xpForLevel(sk.lvl)){
+  while(sk.lvl<cap && sk.xp >= xpForLevel(sk.lvl)){
     sk.xp -= xpForLevel(sk.lvl); sk.lvl++;
     addFloat(SKILLS[skill].name+' Lv '+sk.lvl+'!', P.x, P.y-2.3, '#ffd76a', 1.6);
     burst(P.x,P.y-0.5,'#ffd76a',16); Snd.levelup();
     shockwave(P.x,P.y,'rgba(255,215,106,0.9)',40);
-    banner(SKILLS[skill].name.toUpperCase()+' - LEVEL '+sk.lvl, SKILLS[skill].perk);
+    banner(SKILLS[skill].name.toUpperCase()+' - LEVEL '+sk.lvl,
+      sk.lvl>=cap ? 'Mastered - the highest rank' : SKILLS[skill].perk);
     P.cheerT=3;
   }
+  if(sk.lvl>=cap) sk.xp=0;   // clamp any leftover XP once the cap is reached
   if(typeof checkPerkMilestone==='function') checkPerkMilestone(skill);
   refreshSkillsPanel();
 }

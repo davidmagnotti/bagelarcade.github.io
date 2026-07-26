@@ -259,11 +259,19 @@ function unequipArmor(){
 function refreshSkillsPanel(){
   if(document.getElementById('skillPanel').style.display!=='block') return;
   const rows=document.getElementById('skillRows'); rows.innerHTML='';
+  const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
   for(const k in SKILLS){
-    const sk=P.skills[k], need=xpForLevel(sk.lvl);
+    const sk=P.skills[k];
+    const maxed=sk.lvl>=cap;
+    const need=xpForLevel(sk.lvl);
+    const pct=maxed?100:Math.max(0,Math.min(100,Math.round(sk.xp/need*100)));
+    const lvHtml=maxed
+      ? cap+'<span class="skmax">MAX</span>'
+      : sk.lvl+'<span class="skcap">/'+cap+'</span>';
     rows.insertAdjacentHTML('beforeend',
-      '<div class="skrow"><div class="skn">'+SKILLS[k].name+'</div><div class="sklv">'+sk.lvl+'</div>'+
-      '<div class="skbar"><div class="fill" style="width:'+Math.round(sk.xp/need*100)+'%"></div></div>'+
+      '<div class="skrow"><div class="skn">'+SKILLS[k].name+'</div>'+
+      '<div class="sklv'+(maxed?' maxed':'')+'">'+lvHtml+'</div>'+
+      '<div class="skbar"><div class="fill" style="width:'+pct+'%"></div></div>'+
       '<div class="perk">'+SKILLS[k].perk+'</div></div>');
   }
 }

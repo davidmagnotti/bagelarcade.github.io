@@ -26,6 +26,7 @@ const SKILLS = {
   farming:{name:'Farming', perk:'+crop yield'}
 };
 const xpForLevel = lv => Math.round(60*Math.pow(lv,1.55));
+const MAX_SKILL_LVL = 100;   // every skill climbs to a shared mastery cap of 100
 
 const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,

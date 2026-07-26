@@ -120,6 +120,9 @@ function loadCode(str){
   // boss defeats) silently resets to the starting well on reload
   P.maxmp=d.maxmp||30; P.mp=Math.min(d.mp||30,P.maxmp);
   P.inv=d.inv||{}; if(d.skills) P.skills=d.skills;
+  // Clamp skills to the 100 mastery cap (older saves / dev boosts could exceed it).
+  {const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
+   for(const k in P.skills){ const sk=P.skills[k]; if(sk && sk.lvl>=cap){ sk.lvl=cap; sk.xp=0; } }}
   P.quests=d.quests||{}; P.prog=d.prog||{};
   // One-time migration: anyone who felled the wyrm under the PRE-rework version
   // never saw the inside-the-volcano scene, the faint-not-die twist, or the
