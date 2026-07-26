@@ -48,9 +48,8 @@ try{ document.body.appendChild(document.getElementById('confirmWipe')); }catch(e
    wipes without warning. Surface the copy/paste save code (it always existed
    under the hood) so a player can keep a real backup and restore it anywhere. */
 try{
-  const card=document.getElementById('pauseCard');
-  const btns=document.getElementById('pauseBtns');
-  if(card && btns && !document.getElementById('backupSection')){
+  const savePane=document.getElementById('pauseSavePane');
+  if(savePane && !document.getElementById('backupSection')){
     const head=document.createElement('div');
     head.className='pHead'; head.textContent='Backup';
     const wrap=document.createElement('div'); wrap.id='backupSection';
@@ -63,7 +62,7 @@ try{
       '</div>'+
       '<textarea id="saveCodeBox" spellcheck="false" autocomplete="off" placeholder="Save code appears here / paste one to restore" '+
         'style="display:none;width:100%;box-sizing:border-box;height:70px;resize:vertical;border-radius:8px;border:1.5px solid #4a3a26;background:#241a10;color:var(--parch);font:inherit;font-size:11px;padding:7px 10px;"></textarea>';
-    card.insertBefore(head,btns); card.insertBefore(wrap,btns);
+    savePane.appendChild(head); savePane.appendChild(wrap);
     const box=wrap.querySelector('#saveCodeBox');
     box.addEventListener('keydown',e=>e.stopPropagation());   // don't let hotbar/pause keys eat typing
     wrap.querySelector('#copySaveBtn').onclick=()=>{
@@ -109,4 +108,37 @@ document.getElementById('cfgShakeOff').onclick=()=>{ CFG.shake=0; saveCfg(); syn
 document.getElementById('cfgFlashOn').onclick=()=>{ CFG.flash=1; saveCfg(); syncCfgUI(); };
 document.getElementById('cfgFlashOff').onclick=()=>{ CFG.flash=0; saveCfg(); syncCfgUI(); };
 for(let i=0;i<3;i++) document.getElementById('diff'+i).onclick=()=>{ CFG.diff=i; saveCfg(); syncCfgUI(); };
+
+/* ---------- Tabbed pause menu -----------------------------------------------
+   Settings are split across taps (Sound / Display / Difficulty / Deeds /
+   Chronicle / Save) so no single pane needs scrolling to the bottom on a phone.
+   Injected rows (bloom, cinematic grade, performance mode, per-effect toggles)
+   anchor to elements inside the Display pane, so they land there automatically. */
+(function(){
+  const tabs=document.getElementById('pauseTabs');
+  const body=document.getElementById('pauseTabBody');
+  if(!tabs || !body) return;
+  function showTab(name){
+    let active=null;
+    tabs.querySelectorAll('.pTabBtn').forEach(b=>{
+      const on=b.getAttribute('data-tab')===name;
+      b.classList.toggle('on', on);
+      if(on) active=b;
+    });
+    body.querySelectorAll('.pTab').forEach(p=>
+      p.classList.toggle('on', p.getAttribute('data-pane')===name));
+    body.scrollTop=0;   // start each pane at the top
+    // keep the active tab in view if the strip scrolls on a narrow phone
+    if(active && active.scrollIntoView){
+      try{ active.scrollIntoView({inline:'nearest',block:'nearest'}); }catch(e){}
+    }
+  }
+  tabs.querySelectorAll('.pTabBtn').forEach(b=>{
+    b.onclick=()=>{ showTab(b.getAttribute('data-tab')); if(typeof Snd!=='undefined'&&Snd.tone) Snd.tone(540,0.05,'sine',0.04); };
+  });
+  window.showPauseTab=showTab;
+  // Always open on the first tab so settings are one tap away, never mid-scroll.
+  const _tp=togglePause;
+  togglePause=function(force){ _tp(force); if(G.paused) showTab('sound'); };
+})();
 
