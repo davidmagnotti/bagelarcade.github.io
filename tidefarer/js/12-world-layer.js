@@ -87,11 +87,15 @@ const REACHDEEP_ZONES = { // THE DROWNED CATACOMB - beneath the Stormreach grave
   heart:  {x:40, y:18, r:12, name:'The Drowned Vault', lv:[13,14]}  // the warden + the hoard
 };
 const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount Kea
-  entry:   {x:40, y:84, r:8,  name:'The Emberthroat',     lv:[6,8]},
-  font:    {x:40, y:66, r:11, name:'The Ember Font',      lv:[6,8]},   // visit-all plate puzzle
-  causeway:{x:40, y:47, r:11, name:'The Sunken Causeway', lv:[7,9]},   // lever / lava-drain puzzle
-  glyph:   {x:40, y:28, r:11, name:'The Warding Locks',   lv:[7,9]},   // button-order puzzle
-  rest:    {x:40, y:10, r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
+  // the four lower chambers sit +47 from where they used to, to open room for the
+  // two new island crossings (the Floating Isles + the Bat Roost) before the dragon.
+  entry:   {x:40, y:131, r:8,  name:'The Emberthroat',     lv:[6,8]},
+  font:    {x:40, y:113, r:11, name:'The Ember Font',      lv:[6,8]},   // visit-all plate puzzle
+  causeway:{x:40, y:94,  r:11, name:'The Sunken Causeway', lv:[7,9]},   // lever / lava-drain puzzle
+  glyph:   {x:40, y:75,  r:11, name:'The Warding Locks',   lv:[7,9]},   // button-order puzzle
+  isles:   {x:40, y:56,  r:12, name:'The Floating Isles',  lv:[8,9]},   // hop the stationary isles, ride the last (turning) one
+  roost:   {x:40, y:34,  r:15, name:'The Bat Roost',       lv:[8,9]},   // a wide isle-field crossed under bat assault
+  rest:    {x:40, y:10,  r:14, name:"Ashwing's Rest",      lv:[9,9]}    // the dragon, at the very end
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
   entry: {x:20, y:95, r:6,  name:'The Millstair',         lv:[0,0]},
@@ -148,8 +152,8 @@ const WORLD_DEFS = {
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
     gen:()=>genAerieDeepAll() },
-  eastdeep:{ W:80, H:96, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
-    spawn:{x:40.5,y:85.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - WALLED, WARDED, AND OLD',
+  eastdeep:{ W:80, H:142, seed:55219, zones:EASTDEEP_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:40.5,y:132.5}, title:'THE EMBERDEEP', sub:'THE FIRE-HEART OF MOUNT KEA - WALLED, WARDED, AND OLD',
     gen:()=>genEastDeepAll() },
   frostvault:{ W:80, H:96, seed:41983, zones:FROSTVAULT_ZONES, dungeon:1, dark:0.16,
     spawn:{x:40.5,y:86.5}, title:'THE GLACIER VAULT', sub:'THE ICE-BEAR’S DEN - FROZEN HALLS AND OLD FROST-WARDS',
@@ -930,28 +934,39 @@ function genEastAll(){
    Only past all three does the last gate open onto Ashwing's Rest - the dragon
    conversation is the END of the dungeon, exactly as the fire-heart should be. */
 const EDEEP = { // the tiles each sealed gate occupies (the 3-wide central corridors)
-  gate1:{y:57, x0:39, x1:41}, gate2:{y:38, x0:39, x1:41}, gate3:{y:19, x0:39, x1:41}
+  // gate1/gate2 ride +47 down with the lower chambers; gate3 (the Dragon Gate) stays put
+  // at the boss doorway - only its room-below neighbour changed (now the Bat Roost).
+  gate1:{y:104, x0:39, x1:41}, gate2:{y:85, x0:39, x1:41}, gate3:{y:19, x0:39, x1:41}
 };
 let EDEEP_WALLS = [];   // basalt tiles that read as visible walls (bordering the floor)
 function genEastDeep(){
   // the whole map begins as solid basalt; we cut the chambers out of it
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(30,78,50,90);   // R0 THE EMBERTHROAT - entry landing (the way up sits here)
-  carve(39,73,41,79);   // doorway A -> the Ember Font
-  carve(28,59,52,74);   // R1 THE EMBER FONT - visit-all plate chamber
-  carve(39,54,41,60);   // doorway B (Gate 1 seals it at y=57)
-  carve(28,40,52,55);   // R2 THE SUNKEN CAUSEWAY - lever chamber
-  carve(39,35,41,41);   // doorway C (Gate 2 seals it at y=38)
-  carve(28,21,52,36);   // R3 THE WARDING LOCKS - button-order chamber
-  carve(39,16,41,22);   // doorway D (Gate 3 seals it at y=19)
-  carve(20,2,60,18);    // R4 ASHWING'S REST - the end chamber (room to break the spell)
-  // R5 THE EMBER KING'S HOARD - an OPTIONAL walled vault off the Warding Locks,
+  // ---- the four lower chambers (entry up through the Warding Locks), all +47 from
+  //      their old spots to make room for the two new island crossings above them ----
+  carve(30,125,50,137); // R0 THE EMBERTHROAT - entry landing (the way up sits here)
+  carve(39,120,41,126); // doorway A -> the Ember Font
+  carve(28,106,52,121); // R1 THE EMBER FONT - visit-all plate chamber
+  carve(39,101,41,107); // doorway B (Gate 1 seals it at y=104)
+  carve(28,87,52,102);  // R2 THE SUNKEN CAUSEWAY - lever chamber
+  carve(39,82,41,88);   // doorway C (Gate 2 seals it at y=85)
+  carve(28,68,52,83);   // R3 THE WARDING LOCKS - button-order chamber
+  carve(39,63,41,69);   // doorway D -> the Floating Isles (stands open - the pit is the test)
+  // ---- the two NEW island crossings, between the Warding Locks and the dragon ----
+  carve(28,48,52,64);   // R4 THE FLOATING ISLES - hop the stationary isles, ride the last (turning) one
+  carve(39,44,41,49);   // doorway E -> the Bat Roost (stands open)
+  carve(24,24,56,44);   // R5 THE BAT ROOST - a wide field of stationary isles crossed under bat assault
+  carve(18,31,25,36);   // the WEST bat-tunnel - bats swoop out of this offscreen mouth
+  carve(55,31,62,36);   // the EAST bat-tunnel
+  carve(39,16,41,26);   // doorway F (Gate 3, the Dragon Gate, seals it at y=19)
+  carve(20,2,60,18);    // R6 ASHWING'S REST - the end chamber (room to break the spell)
+  // THE EMBER KING'S HOARD - an OPTIONAL walled vault off the Warding Locks,
   // sealed by an arcane ember-fence only the fire staff can break. Carved here (as
   // floor, before the wall-face pass) so its basalt walls render as real walls and
   // the fence doorway does NOT get recorded as basalt (it becomes the ember-gate).
-  carve(54,24,61,34);   // the vault chamber, east of R3
-  carve(52,28,54,30);   // the short approach corridor + the fence doorway
+  carve(54,71,61,81);   // the vault chamber, east of R3
+  carve(52,75,54,77);   // the short approach corridor + the fence doorway
   // record the visible wall faces (basalt bordering the carved floor) BEFORE the
   // gates go solid, so an opened gate never leaves a phantom wall behind
   EDEEP_WALLS=[];
@@ -979,10 +994,11 @@ function placeObjectsEastDeep(){
   // the basalt walls that give the rooms their shape (baked static scenery)
   for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   // the way back up the Emberthroat, in the landing chamber
-  G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:40.5, y:88.5, label:'the way up'});
-  setSolid(40,88,0); setTile(40,88,T.RUIN);
-  // torches bracketed along the chamber walls
-  for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,41],[51,41],[29,22],[51,22],[24,4],[56,4],[40,3]])
+  G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:40.5, y:135.5, label:'the way up'});
+  setSolid(40,135,0); setTile(40,135,T.RUIN);
+  // torches bracketed along the chamber walls (the two new island rooms get their own pair)
+  for(const [tx,ty] of [[31,126],[49,126],[29,107],[51,107],[29,88],[51,88],[29,69],[51,69],
+                        [29,50],[51,50],[26,27],[54,27],[24,4],[56,4],[40,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // ============ THE TURNING BRIDGES: DASH across the pit on rotating basalt slabs ============
   // Each chamber is a bottomless fire-pit spanned only by stone slabs that turn on a central
@@ -991,49 +1007,75 @@ function placeObjectsEastDeep(){
   // you. Miss and you drop into the pit (you climb back out singed: -5 HP) and start the
   // crossing over. Reach the far ledge and the gate rises.
   G._eastChasm=new Set(); G._eastWheels=[]; G._eastSlabs=[]; G._eastT=0; G._eastCross=[]; G._eastFallHint=0; G._emberGateT={}; G._emberDrop=null;
+  G._eastBatT=0; G._eastBatN=0; G._eastBatHint=0;
   const chasm=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._eastChasm.add(x+','+y); G.decor.push({kind:'firepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
   const pad=(x,y)=>{ G._eastChasm.delete(x+','+y); const k=(x+0.5)+','+(y+0.5); G.decor=G.decor.filter(d=>!(d.kind==='firepit' && d.x===x+0.5 && d.y===y+0.5)); };
   const wheel=(hx,hy,r,spd,ang0,gate)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15, gate}; G.decor.push(w); G._eastWheels.push(w); };
-  // CH1 - one slab. South ledge y72+, pit y62-71, far ledge y59-61. (learn the dash-board rhythm)
-  chasm(28,52,62,71);
-  wheel(40,66, 3.2, 0.9, Math.PI/2, 'g1');
-  G._eastCross.push({gate:'g1', cy0:62, cy1:71, farY:59, startY:73.0});
+  // a STATIONARY floating isle: a 3x3 block of solid footing over the pit, drawn as a raised
+  // basalt slab. It never drifts (not added to G._eastSlabs) - you DASH from isle to isle.
+  const isle=(cx,cy)=>{ for(let y=cy-1;y<=cy+1;y++) for(let x=cx-1;x<=cx+1;x++) pad(x,y);
+    G.decor.push({kind:'driftslab', x:cx+0.5, y:cy+0.5, w:3, h:3}); };
+  // CH1 - one slab. South ledge y119+, pit y109-118, far ledge y106-108. (learn the dash-board rhythm)
+  chasm(28,52,109,118);
+  wheel(40,113, 3.2, 0.9, Math.PI/2, 'g1');
+  G._eastCross.push({gate:'g1', cy0:109, cy1:118, farY:106, startY:120.0});
   // (no crossing-gate here - dash the pit and walk on)
   // CH2 - two COUNTER-TURNING slabs, spaced so open pit always lies between them (no walking
   // across) + a TIMED LEVER on a side pad. Dash to the pad, pull the lever (the Causeway Gate
   // hauls up for 14s, then resets), dash back, then time the two slabs and slip through the gate
   // before it shuts. The slabs turn opposite ways so their tips meet (with a gap) mid-swing:
   // board the low slab at the ledge, dash to the high slab when they line up, dash off to the gate.
-  chasm(28,52,40,53);
-  wheel(40,49, 2.6,  1.2,  Math.PI/2, 'g2');   // low slab: swings toward the entrance ledge (dash to board)
-  wheel(40,42, 2.6, -1.2, -Math.PI/2, 'g2');   // high slab: counter-turns, points to the far ledge at the start
-  for(const [px,py] of [[34,49],[35,49],[34,50],[35,50],[34,51],[35,51]]) pad(px,py);   // the side pad (safe island, one dash N off the entrance ledge)
-  G.decor.push({kind:'firelever', x:34.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
-  G._eastCross.push({gate:'g2', cy0:40, cy1:53, farY:39, startY:54.5, lever:true, leverDur:20});
+  chasm(28,52,87,100);
+  wheel(40,96, 2.6,  1.2,  Math.PI/2, 'g2');   // low slab: swings toward the entrance ledge (dash to board)
+  wheel(40,89, 2.6, -1.2, -Math.PI/2, 'g2');   // high slab: counter-turns, points to the far ledge at the start
+  for(const [px,py] of [[34,96],[35,96],[34,97],[35,97],[34,98],[35,98]]) pad(px,py);   // the side pad (safe island, one dash N off the entrance ledge)
+  G.decor.push({kind:'firelever', x:34.5, y:96.5, gate:'g2', on:false, label:'a fire-lever'});
+  G._eastCross.push({gate:'g2', cy0:87, cy1:100, farY:86, startY:101.5, lever:true, leverDur:20});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, perm:false, label:'the Causeway Gate'});
   // CH3 - three counter-turning slabs (the true test), then a roomy far-ledge landing. No
-  // crossing-gate: dash all three slabs and walk on. (The Dragon Gate here starts OPEN and exists
-  // only as the boss-arena seal - it slams shut when you rouse Ashwing, then reopens when he's freed.)
-  chasm(28,52,23,36);
-  wheel(40,33, 1.7,  1.0,  Math.PI/2, 'g3');
-  wheel(40,27.8, 1.7, -1.0, -Math.PI/2, 'g3');
-  wheel(40,22.6, 1.7,  1.0,  Math.PI/2, 'g3');
-  G._eastCross.push({gate:'g3', cy0:23, cy1:36, farY:20, startY:37.5});
+  // crossing-gate: dash all three slabs and walk on into the Floating Isles.
+  chasm(28,52,70,83);
+  wheel(40,80, 1.7,  1.0,  Math.PI/2, 'g3');
+  wheel(40,74.8, 1.7, -1.0, -Math.PI/2, 'g3');
+  wheel(40,69.6, 1.7,  1.0,  Math.PI/2, 'g3');
+  G._eastCross.push({gate:'g3', cy0:70, cy1:83, farY:67, startY:84.5});
+  // ============ R4 THE FLOATING ISLES: hop the stationary isles, ride the last (turning) one ====
+  // A pit spanned by three fixed basalt isles you DASH between, then a single TURNING slab at the
+  // north end - board it as it swings to the last isle, ride it round, and dash off to the far
+  // ledge when it lines up. Miss any hop and you drop into the pit (climb out singed, -5 HP).
+  chasm(28,52,50,61);
+  isle(40,59);   // first isle - one dash off the south ledge
+  isle(38,56);   // second - a short dash up-left
+  isle(42,53);   // third - dash up-right; the turning slab waits just north of it
+  wheel(40,50, 2.3, 0.85, -Math.PI/2, 'ga');   // the ROTATING isle: hop on at the third isle, ride it, hop off north
+  G._eastCross.push({gate:'ga', cy0:50, cy1:61, farY:48, startY:62.5});
+  // ============ R5 THE BAT ROOST: a wide field of stationary isles, crossed under bat assault ====
+  // The final crossing before the dragon: a broad pit strewn with many fixed isles. Cave bats
+  // pour out of the offscreen tunnels east and west and dive at you - a bite SHOVES you hard,
+  // enough to knock you off an isle into the pit. Cut them down or weave through and press north.
+  chasm(25,55,26,41);
+  // the guaranteed north-bound spine (each hop is dashable)...
+  isle(40,39); isle(38,36); isle(41,33); isle(37,30); isle(42,28);
+  // ...and a scatter of extra isles (a multitude - wider routes, and room to dodge the bats)
+  isle(30,38); isle(50,38); isle(30,33); isle(50,32); isle(46,40); isle(33,28); isle(48,27); isle(45,30);
+  G._eastCross.push({gate:'gb', cy0:26, cy1:41, farY:24, startY:43.5});
+  // the Dragon Gate (Gate 3) - the boss-arena seal at the Bat Roost's north doorway. Starts OPEN;
+  // it slams shut when you rouse Ashwing, then reopens when he's freed.
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:true, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
-  const FENCE=[[53,28],[53,29],[53,30]];
+  const FENCE=[[53,75],[53,76],[53,77]];
   for(const [x,y] of FENCE) setSolid(x,y,1);
-  const ward={kind:'staffgate', x:53.5, y:29.5, tiles:FENCE, open:false, label:'the Ember Ward'};
+  const ward={kind:'staffgate', x:53.5, y:76.5, tiles:FENCE, open:false, label:'the Ember Ward'};
   G.decor.push(ward);
-  G.decor.push({kind:'chest', x:58.5, y:29.5, deep:1, emberking:1});
+  G.decor.push({kind:'chest', x:58.5, y:76.5, deep:1, emberking:1});
   // ---- THE VAULT CROSSING: a STATIONARY stepping-stone. A drifting slab used to nudge you off,
   // so instead a fixed basalt slab sits mid-pit - DASH from the R3 far ledge onto it, then DASH
   // again onto the landing pad west of the Ember Ward (break the Ward with the fire staff). ----
-  for(const [x,y] of [[50,28],[51,28],[52,28],[50,29],[51,29],[52,29],[50,30],[51,30],[52,30]]) pad(x,y);   // solid landing pad west of the fence
-  for(const [x,y] of [[50,24],[51,24],[52,24],[50,25],[51,25],[52,25],[50,26],[51,26],[52,26]]) pad(x,y);   // the mid-pit stepping stone (solid footing)
-  G.decor.push({kind:'driftslab', x:51.5, y:25.5, w:3, h:3});   // drawn as a raised stone slab; STATIC (not in G._eastSlabs, so it never drifts)
-  G.decor.push({kind:'lamp', x:55.5, y:25.5}); G.decor.push({kind:'lamp', x:60.5, y:25.5});
+  for(const [x,y] of [[50,75],[51,75],[52,75],[50,76],[51,76],[52,76],[50,77],[51,77],[52,77]]) pad(x,y);   // solid landing pad west of the fence
+  for(const [x,y] of [[50,71],[51,71],[52,71],[50,72],[51,72],[52,72],[50,73],[51,73],[52,73]]) pad(x,y);   // the mid-pit stepping stone (solid footing)
+  G.decor.push({kind:'driftslab', x:51.5, y:72.5, w:3, h:3});   // drawn as a raised stone slab; STATIC (not in G._eastSlabs, so it never drifts)
+  G.decor.push({kind:'lamp', x:55.5, y:72.5}); G.decor.push({kind:'lamp', x:60.5, y:72.5});
   if(P.story && (P.story.emberWard || P.story.emberDone)){   // already broken - keep it open
     ward.open=true; for(const [x,y] of FENCE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
   }
@@ -1086,6 +1128,7 @@ function updateEastDeep(dt){
   const wheels=G._eastWheels||[]; if(!wheels.length) return;
   for(const w of wheels) w.ang += w.spd*dt;
   G._eastT=(G._eastT||0)+dt; updateDriftSlabs(G._eastSlabs, G._eastT);   // drift the vault ferry
+  updateEmberBats(dt);   // the Bat Roost: swarm the bats and shove the player off the isles
   // chambers 1 and 3 have no crossing-gate now - only chamber 2's Causeway Gate, worked by its lever.
   // the lever gate: while its clock runs it stands open; stepping through it
   // (north of the gate) locks it for good, else it shuts when the clock runs out
@@ -1156,12 +1199,49 @@ function emberRespawn(){
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
   if(!G._eastFallHint){ G._eastFallHint=1; toast('You plunge into the pit and haul yourself back out, singed (<b>-5 HP</b>). <b>DASH onto a slab when it swings to your ledge, ride it round, and dash off when it lines up with the next.</b>',5200); }
 }
+// THE BAT ROOST: cave bats pour out of the offscreen tunnels (west x~20, east x~60) and dive at
+// the hero as they cross the isle-field. A bite SHOVES hard - enough to knock you off an isle
+// into the pit. Capped, active only while you're in the roost and the dragon still sleeps. They
+// fly straight in (over walls and pit alike) and can be cut down like any mob.
+function updateEmberBats(dt){
+  if(P.story && P.story.emberDone) return;   // dungeon already cleared - no swarm
+  const inRoost = P.y>25 && P.y<45;           // the Bat Roost's y-band (R5)
+  G._eastBatT=(G._eastBatT||0)-dt;
+  if(inRoost && !P.dead && G._eastBatT<=0){
+    G._eastBatT=3.0;
+    const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
+    if(alive<4){
+      G._eastBatN=(G._eastBatN||0)+1;
+      const fromLeft=(G._eastBatN%2===0);
+      const sx=fromLeft?20:60, sy=31+Math.floor(Math.random()*5);   // out of the tunnel mouths (y31-35)
+      const m=spawnMob('bat', sx, sy);
+      if(m){ m.bat=1; m.respawnT=-1; m.hx=sx; m.hy=sy; m.state='chase'; m.bob=Math.random()*TAU;
+        burst(sx+0.5, sy+0.5, '#2a2233', 8, 2.0); Snd.hit&&Snd.hit(); }
+    }
+    if(!G._eastBatHint){ G._eastBatHint=1; toast('<b>Bats!</b> They swoop from the tunnels to either side - a bite will <b>shove you off an isle into the pit</b>. Cut them down or weave through, and press north to the Dragon Gate.',5200); }
+  }
+  for(const m of (G.mobs||[])){ if(!m.bat || m.dead) continue;
+    // don't let a bat trail the hero through the Dragon Gate into Ashwing's arena - it wheels
+    // back at the gate line and, if it somehow gets past, is culled rather than joining the boss.
+    if(m.y<23.5){ if(m.y<21){ m.dead=true; burst(m.x,m.y-0.4,'#2a2233',8,1.8); continue; } m.y=23.5; }
+    m.bob=(m.bob||0)+dt*9;
+    const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
+    const sp=(MOBDEF.bat?MOBDEF.bat.speed:5)*(P.dead?0.4:1);
+    m.x+=dx/l*sp*dt; m.y+=dy/l*sp*dt;   // flies straight in - over walls and the pit
+    m.face=(dx<0?-1:1);
+    if(l<0.85 && !P.dead && (P.rollT||0)<=0 && P.hurtT<=0){
+      hurtPlayer(m.dmg||12, m);
+      moveEntity(P, dx/l*0.8, dy/l*0.8);   // an extra shove - enough to knock you off an isle
+      burst(P.x,P.y-0.4,'#2a2233',10,2.2);
+    }
+  }
+}
 function spawnMobsEastDeep(){
   // bristlebacks den on the ledges (NOT out over the lava) - fight them on solid footing
   // before you time the turning slabs. Kept off the central board-point (x40) and off any
   // chasm tile so nothing can bump you into the lava mid-crossing.
   const isChasm=(x,y)=>G._eastChasm && G._eastChasm.has(x+','+y);
-  for(const [sx,sy] of [[34,72],[46,72],[34,53],[46,35]]){
+  for(const [sx,sy] of [[34,119],[46,119],[34,100],[46,82]]){   // +47 with the lower chambers
     const sp=findOpenNear(sx,sy,4);
     if(sp && !isChasm(Math.round(sp[0]),Math.round(sp[1]))) spawnMob('boar', sp[0], sp[1]); }
 }
@@ -4797,7 +4877,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. The floe-ice is <b>slick - your steps carry momentum</b>, so time each hop and don\'t over-run it. Fall in and the cold flings you back to the landing to try again.',9000),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
-    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b> - pull it, then get north through the gate before it shuts.',9000),1800); }
+    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
     setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
     setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
