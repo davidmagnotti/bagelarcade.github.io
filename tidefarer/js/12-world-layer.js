@@ -1799,9 +1799,16 @@ function placeObjectsAerieDeep(){
     if(innerN>0) idxs[0]=1;   // the FIRST lance sits in the first corridor off the entry
     const seenB=new Set();
     idxs.filter(j=>j>=1 && j<=path.length-2 && !seenB.has(j) && seenB.add(j)).forEach((j,i)=>{
-      const [bx,by]=path[j].split(',').map(Number), [ax,ay]=path[j-1].split(',').map(Number), [nx,ny]=path[j+1].split(',').map(Number);
-      const horiz=Math.abs(ax-nx)>=Math.abs(ay-ny);   // path runs across this cell -> a vertical lance blocks it (wall to wall)
-      beam(cX(bx)+LANE/2, cY(by)+LANE/2, horiz?0:1, horiz?1:0, LANE/2+0.6, period, (i*0.37)%1); });
+      // anchor the lance ACROSS the doorway chokepoint between this path cell and the next: a
+      // doorway is always exactly LANE wide with solid wall on both sides, so a lance spanning it
+      // (plus a tile into each wall) is guaranteed to connect WALL TO WALL - no slipping past its end.
+      const A=path[j].split(',').map(Number), B=path[j+1].split(',').map(Number);
+      const ax=A[0],ay=A[1],bx=B[0],by=B[1]; let lx,ly,ldx,ldy;
+      if(bx>ax){ lx=cX(ax)+LANE+0.5; ly=cY(ay)+LANE/2; ldx=0; ldy=1; }        // east doorway  -> vertical lance
+      else if(bx<ax){ lx=cX(ax)-0.5;    ly=cY(ay)+LANE/2; ldx=0; ldy=1; }     // west doorway
+      else if(by>ay){ lx=cX(ax)+LANE/2; ly=cY(ay)+LANE+0.5; ldx=1; ldy=0; }   // south doorway -> horizontal lance
+      else          { lx=cX(ax)+LANE/2; ly=cY(ay)-0.5;     ldx=1; ldy=0; }    // north doorway
+      beam(lx, ly, ldx, ldy, LANE/2+1.0, period, (i*0.37)%1); });   // len reaches a tile into each wall
     // tonic caches in the next-farthest dead ends
     const leaves=Object.keys(adj).filter(kk=>(adj[kk]||[]).length===1 && kk!==plateK && kk!==K(eCx,eCy) && kk!==gK).sort((a,b)=>dist[b]-dist[a]);
     for(const lk of leaves.slice(0,2)){ const [lx,ly]=lk.split(',').map(Number); G.decor.push({kind:'chest', x:cX(lx)+1.5, y:cY(ly)+1.5, deep:1, potions:1}); }
