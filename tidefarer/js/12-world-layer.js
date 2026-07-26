@@ -143,11 +143,11 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
     spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
-    slide:[{x0:34,y0:100,x1:54,y1:114}],   // the entry landing is slick ice (full glide)
-    // the Frozen Heart arena is slick underfoot but FOOTED - a short coasting slide (like the
-    // drift-floes), not the hall's full glide, so a misstep drifts a little instead of flinging
-    // you clear across the room into the spiked edge.
-    driftFloor:[{x0:28,y0:10,x1:60,y1:33}],
+    // Both the entry landing and the Frozen Heart arena are FOOTED slick floors: a short
+    // coasting slide (a beat of momentum that quickly settles), NOT a full glide. Keeping your
+    // feet means a misstep drifts a little and stops, instead of the old full glide that flung
+    // you across the ice endlessly until you fetched up on a wall.
+    driftFloor:[{x0:34,y0:100,x1:54,y1:114},{x0:28,y0:10,x1:60,y1:33}],
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
