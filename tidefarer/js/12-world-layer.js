@@ -957,9 +957,9 @@ function genEastDeep(){
       if(inb(x+dx,y+dy) && !solidAt(x+dx,y+dy)){ border=true; break; }
     if(border) EDEEP_WALLS.push([x,y]);
   }
-  // the three sealed gates start as solid basalt across their corridors
-  for(const G2 of [EDEEP.gate1,EDEEP.gate2,EDEEP.gate3])
-    for(let x=G2.x0;x<=G2.x1;x++){ setTile(x,G2.y,T.RUIN); setSolid(x,G2.y,1); }
+  // only the Causeway Gate (chamber 2, worked by its lever) is sealed across its corridor;
+  // chambers 1 and 3 have no crossing-gate, so their corridors stand open (the pit is the test)
+  for(let x=EDEEP.gate2.x0;x<=EDEEP.gate2.x1;x++){ setTile(x,EDEEP.gate2.y,T.RUIN); setSolid(x,EDEEP.gate2.y,1); }
 }
 function edeepLava(x,y,r){ // a molten pool that both glows and blocks the floor
   G.decor.push({kind:'lava', x:x+0.5, y:y+0.5, r});
@@ -993,7 +993,7 @@ function placeObjectsEastDeep(){
   chasm(28,52,62,71);
   wheel(40,66, 3.2, 0.9, Math.PI/2, 'g1');
   G._eastCross.push({gate:'g1', cy0:62, cy1:71, farY:59, startY:73.0});
-  G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
+  // (no crossing-gate here - dash the pit and walk on)
   // CH2 - two COUNTER-TURNING slabs, spaced so open pit always lies between them (no walking
   // across) + a TIMED LEVER on a side pad. Dash to the pad, pull the lever (the Causeway Gate
   // hauls up for 14s, then resets), dash back, then time the two slabs and slip through the gate
@@ -1006,15 +1006,15 @@ function placeObjectsEastDeep(){
   G.decor.push({kind:'firelever', x:34.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
   G._eastCross.push({gate:'g2', cy0:40, cy1:53, farY:39, startY:54.5, lever:true, leverDur:20});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, perm:false, label:'the Causeway Gate'});
-  // CH3 - three counter-turning slabs (the true test), then a roomy far-ledge landing. Same rule
-  // on the slabs: pit always gaps them, so every hop is a dash. Cross all three onto the landing
-  // and the Dragon Gate simply grinds open for good - no lever, no timer, just the way through.
+  // CH3 - three counter-turning slabs (the true test), then a roomy far-ledge landing. No
+  // crossing-gate: dash all three slabs and walk on. (The Dragon Gate here starts OPEN and exists
+  // only as the boss-arena seal - it slams shut when you rouse Ashwing, then reopens when he's freed.)
   chasm(28,52,23,36);
   wheel(40,33, 1.7,  1.0,  Math.PI/2, 'g3');
   wheel(40,27.8, 1.7, -1.0, -Math.PI/2, 'g3');
   wheel(40,22.6, 1.7,  1.0,  Math.PI/2, 'g3');
   G._eastCross.push({gate:'g3', cy0:23, cy1:36, farY:20, startY:37.5});
-  G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
+  G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:true, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
   const FENCE=[[53,28],[53,29],[53,30]];
@@ -1045,10 +1045,8 @@ function placeObjectsEastDeep(){
 function updateEastDeep(dt){
   const wheels=G._eastWheels||[]; if(!wheels.length) return;
   for(const w of wheels) w.ang += w.spd*dt;
-  // CH1: reaching the far ledge grinds the gate up. CH2/CH3 gates are worked by their levers.
-  for(const c of (G._eastCross||[])){ if(c.lever) continue; const fg=G.decor.find(d=>d.kind==='firegate' && d.gate===c.gate);
-    if(fg && !fg.open && P.y>=c.farY && P.y<c.cy0) openFireGate(c.gate); }
-  // lever-worked gates (CH2, CH3): while a gate's clock runs it stands open; stepping through it
+  // chambers 1 and 3 have no crossing-gate now - only chamber 2's Causeway Gate, worked by its lever.
+  // the lever gate: while its clock runs it stands open; stepping through it
   // (north of the gate) locks it for good, else it shuts when the clock runs out
   G._emberGateT=G._emberGateT||{};
   for(const c of (G._eastCross||[])){ if(!c.lever) continue;
@@ -4143,7 +4141,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. The floe-ice is <b>slick - your steps carry momentum</b>, so time each hop and don\'t over-run it. Fall in and the cold flings you back to the landing to try again.',9000),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
-    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. Some chambers have a <b>fire-lever</b> that hauls the gate open for a while - pull it, then get north through the gate before it shuts.',9000),1800); }
+    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b> - pull it, then get north through the gate before it shuts.',9000),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
     setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
     setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
