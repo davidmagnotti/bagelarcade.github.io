@@ -1450,11 +1450,19 @@ function drawDecor(b,s){
     return;
   }
   if(b.kind==='froststream'){
-    // a cell of black freezing water with a slow, cold shimmer - fall in and you're swept back
+    // a cell of black freezing water bristling with jagged rime-shards - a clear "do not tread"
+    // hazard. Fall in and the cold drags you under and flings you back.
     const g=cx, gl=0.5+0.3*Math.sin(G.time*1.4+b.seed*1.6); g.save(); g.translate(s.x,s.y);
     g.fillStyle='rgba(16,32,44,0.9)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
     g.fillStyle='rgba(120,175,205,'+(0.1+0.12*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,8,3.6,0,0,TAU); g.fill();
-    g.strokeStyle='rgba(180,215,235,'+(0.12+0.1*gl).toFixed(2)+')'; g.lineWidth=1; g.beginPath(); g.moveTo(-7,-2+Math.sin(G.time*1.6+b.seed)); g.lineTo(0,0); g.lineTo(7,-3+Math.cos(G.time*1.6+b.seed)); g.stroke();
+    // upthrust ice-shards: sharp pale spikes so the cell clearly reads as spiked, deadly water
+    const sway=Math.sin(G.time*1.3+b.seed)*0.6;
+    const shards=[[-9,-1,7],[0,-4,10],[8,-1,7],[-3,2,5],[4,2,5]];
+    for(const [ox,oy,h] of shards){
+      g.fillStyle='rgba(206,230,246,0.92)';
+      g.beginPath(); g.moveTo(ox-2.3,oy); g.lineTo(ox+sway,oy-h); g.lineTo(ox+2.3,oy); g.closePath(); g.fill();
+      g.strokeStyle='rgba(240,250,255,0.85)'; g.lineWidth=0.8; g.beginPath(); g.moveTo(ox+sway,oy-h); g.lineTo(ox-0.4,oy-1); g.stroke();
+    }
     g.restore(); return;
   }
   if(b.kind==='icefloe'){
@@ -2621,6 +2629,31 @@ function drawPlayer(s){
       for(let k=0;k<4;k++){ ax+=Math.cos(ang)*5 + Math.sin(G.time*50+a*3+k)*4; ay+=Math.sin(ang)*6 + Math.cos(G.time*44+a*2+k)*4; g.lineTo(ax,ay); }
       g.stroke();
     }
+    g.restore();
+    return;
+  }
+  // PLUNGING into the Rimefissure's freezing water: the hero sinks into a ring of cracking ice,
+  // shivering and paling with frost, then is flung back to the landing (see frostPlungeStart).
+  if(typeof G!=='undefined' && G._frostPlunge){
+    const p=Math.min(1, G._frostPlunge.t/G._frostPlunge.dur), g=cx;
+    const sh=Math.sin(G.time*70)*2.6*(1-p);   // shiver
+    // dark water welling up around the hole
+    g.save(); g.globalAlpha=0.85; g.fillStyle='rgba(16,32,44,0.9)';
+    g.beginPath(); g.ellipse(s.x, s.y+2, 20, 9, 0, 0, TAU); g.fill(); g.restore();
+    // the hero, sinking and frosting over
+    g.save();
+    const fy=s.y + p*p*20;             // sinking
+    g.globalAlpha=Math.max(0,1-p*0.7);
+    g.translate(s.x+sh, fy); g.translate(-s.x, -fy);
+    drawPlayerFigure({x:s.x, y:fy});
+    // a pale rime glaze washing over the figure
+    g.globalAlpha=0.30*p; g.globalCompositeOperation='lighter'; g.fillStyle='#dff0ff';
+    g.beginPath(); g.ellipse(s.x, fy-11, 8, 13, 0, 0, TAU); g.fill();
+    g.restore();
+    // jagged shards of broken ice jutting up around the hole
+    g.save(); g.strokeStyle='rgba(223,240,255,0.9)'; g.fillStyle='rgba(198,225,245,0.75)'; g.lineWidth=1.2;
+    for(let i=0;i<7;i++){ const a=i/7*TAU + 0.3; const rx=Math.cos(a)*15, ry=Math.sin(a)*7;
+      const hgt=5+((i*3)%4); g.beginPath(); g.moveTo(s.x+rx-2.4, s.y+2+ry); g.lineTo(s.x+rx, s.y+2+ry-hgt); g.lineTo(s.x+rx+2.4, s.y+2+ry); g.closePath(); g.fill(); g.stroke(); }
     g.restore();
     return;
   }

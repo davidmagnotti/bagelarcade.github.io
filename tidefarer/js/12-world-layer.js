@@ -2043,17 +2043,38 @@ function genFrostDeep(){
   carve(36,58,52,72,T.ICE);               // THE FROSTGATE - the ice-cavern landing
   carve(42,54,46,60,T.ICE);               // corridor A -> the flooded warren
   carve(30,38,54,54,T.ICE);               // THE DRIFT - the frozen channel the floes cross
-  carve(42,30,46,40,T.ICE);               // corridor B -> the boss chamber
+  carve(42,30,46,40,T.ICE);               // corridor B -> the antechamber
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until you cross
-  carve(32,14,56,32,T.ICE);               // THE FROZEN HEART - boss chamber
+  // THE FROZEN HEART: a sealed inner sanctum reached only after unbinding the ward-locks.
+  carve(36,26,52,32,T.ICE);               // the antechamber (you arrive here from corridor B)
+  carve(42,24,46,26,T.ICE);               // the throat (the HEART GATE sits at y=25)
+  carve(32,14,56,24,T.ICE);               // the inner sanctum - THE RIMEBOUND sleeps here, sealed
+  // two ward-rooms flanking the antechamber, each with a frost-lock lever
+  carve(30,27,38,31,T.ICE); carve(18,23,30,33,T.ICE);   // WEST WARD-ROOM + its approach
+  carve(50,27,58,31,T.ICE); carve(58,23,70,33,T.ICE);   // EAST WARD-ROOM + its approach
+  for(let x=42;x<=46;x++){ setTile(x,25,T.RUIN); setSolid(x,25,1); }  // the HEART GATE - the ward-locks hold it shut
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:44.5, y:70.5, exit:1, label:'the way up'});  // back to the surface
   setSolid(44,70,0); setTile(44,70,T.RUIN);
-  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[38,60],[50,60],[32,52],[52,40],[34,16],[54,16],[20,25],[68,25]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  for(const [px,py] of [[38,66],[50,66],[32,40],[52,40],[36,16],[52,16]]) spire(px,py);
+  for(const [px,py] of [[38,66],[50,66],[32,40],[52,40],[36,16],[52,16],[19,31],[69,31]]) spire(px,py);
+  // ---- THE WARD-LOCKS ----
+  // the Rimebound sleeps behind the HEART GATE; two frost-lock levers, one in each flanking
+  // ward-room, must both be thrown to unchain it. Pull one and the other still holds.
+  const heartTiles=[[42,25],[43,25],[44,25],[45,25],[46,25]];
+  G.decor.push({kind:'icelever', x:23.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
+    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
+    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
+    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
+    label:'the west ward-lock'});
+  G.decor.push({kind:'icelever', x:64.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
+    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
+    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
+    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
+    label:'the east ward-lock'});
   // ---- THE DRIFTING FLOES ----
   // the warren has flooded into a channel of black, freezing water, crossed only on slabs
   // of drift-ice that slide back and forth. Board a floe as it drifts to your ledge, ride
@@ -2068,9 +2089,10 @@ function placeObjectsFrostDeep(){
   G._frostCross={cy0:43, cy1:51, farY:38, startX:44, startY:53.5};
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
   G.critters=[];
-  // an already-cleared run drains the channel to solid ice and leaves the gate open
+  // an already-cleared run drains the channel to solid ice and leaves both gates open
   if(P.story && P.story.deepDone){
-    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
+    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); setSolid(x,25,0); setTile(x,25,T.ICE); }
+    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='heart') d.on=true; }
     G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe');
     G._frostVoid=new Set(); G._frostFloes=[]; G._frostGateOpen=true;
   }
@@ -2084,18 +2106,30 @@ function openFrostGate(){
   toast('You spring from the last floe onto solid ice and the deep gate grinds up behind the frost. The <b>Frozen Heart</b> - and the thing Vath bound in it - lies ahead.',5200);
   autoSave&&autoSave();
 }
-function frostFall(){
+// plunging into the freezing water: control freezes and the hero flails in the cracking ice,
+// the cold biting (-4 HP), before being flung back to the landing (see frostRespawn).
+function frostPlungeStart(){
+  if(G._frostPlunge) return;
+  if(P.hp>1){ P.hp=Math.max(1, P.hp-4); if(typeof refreshUI==='function') refreshUI(); addFloat('-4',P.x,P.y-1.4,'#cfeaf8',0.95); }
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(18);
+  burst(P.x,P.y-0.3,'#cfeaf8',16,2.4); shockwave(P.x,P.y,'rgba(150,200,225,0.8)',40);
+  G._frostPlunge={ t:0, dur:0.7, x:P.x, y:P.y };
+  P.click=null; P.moving=false; P.slideDir=null; P._glv=null; P.rollT=0;
+}
+function frostRespawn(){
+  const z=G._frostPlunge; G._frostPlunge=null; if(!z) return;
   const c=G._frostCross;
-  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(18);
-  burst(P.x,P.y-0.3,'#cfeaf8',18,2.6); shockwave(P.x,P.y,'rgba(150,200,225,0.8)',44);
+  burst(P.x,P.y-0.3,'#cfeaf8',12,2.0);
   if(c){ P.x=c.startX+0.5; P.y=c.startY; }
   P.click=null; P.moving=false; P.slideDir=null; P._glv=null;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water takes you and the cold flings you back to the landing. <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up. The ice is slick, so <b>mind your momentum</b>.',5200); }
+  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water drags you under and the cold flings you back to the landing, shivering (<b>-4 HP</b>). <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up. The ice is slick, so <b>mind your momentum</b>.',5200); }
 }
 // carry the player on the floe they're standing on, and drop them (restart) if the open
 // water under them has no floe
 function updateFrostDeep(dt){
+  // the plunge plays out (control frozen in updatePlayer), then flings you back to the landing
+  if(G._frostPlunge){ G._frostPlunge.t+=dt; if(G._frostPlunge.t>=G._frostPlunge.dur) frostRespawn(); return; }
   const floes=G._frostFloes||[]; if(!floes.length) return;
   G._frostT=(G._frostT||0)+dt;
   for(const f of floes){ f.prevx=f.x; f.x = f.cx + f.amp*Math.sin(G._frostT*f.spd + f.phase); }
@@ -2109,7 +2143,7 @@ function updateFrostDeep(dt){
   for(const f of floes){ const dx=Math.abs(P.x-f.x), dy=Math.abs(P.y-f.y);
     if(dx<=f.w/2 && dy<=f.h/2 && (dx+dy)<bestd){ best=f; bestd=dx+dy; } }
   if(best){ const nx=P.x + (best.x-best.prevx); if(!circleBlocked(nx,P.y,0.28)) P.x=nx; }   // carried by the drift
-  else frostFall();
+  else frostPlungeStart();
 }
 function spawnMobsFrostDeep(){
   const Z=FROSTDEEP_ZONES;
