@@ -1790,6 +1790,7 @@ function genAerieAll(){
    of Sigils in the right order, then face the Tome-Warden serpent in its crypt.
    Put the warden down, and the cursed tome behind it can finally be destroyed. */
 let AERIE_WALLS = [];   // catacomb stone bordering the carved floor - drawn as visible ewall blocks
+const AERIE_CRYPT_SEAL=[[73,32],[74,32],[75,32],[76,32],[77,32]];   // the crypt mouth; a portcullis slams shut here the moment you step into the Warden's Crypt
 function genAerieDeep(){
   // the whole map begins as solid catacomb rock; we cut the chambers out of it
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -1915,6 +1916,11 @@ function placeObjectsAerieDeep(){
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
   setSolid(75,14,1);
+  // THE CRYPT SEAL - a portcullis at the crypt mouth. It stands open as you approach; stepping
+  // into the Warden's Crypt slams it shut behind you (see updateAerieDeep), so the Tome-Warden's
+  // rise (and the fight) begins only once you're inside, with no way back out until it falls.
+  G._cryptSealed=0;
+  G.decor.push({kind:'catgate', x:75, y:32, open:true, gate:'crypt', tiles:AERIE_CRYPT_SEAL.slice(), label:'the Sepulchre Seal'});
   // a warden's hoard, once the deed is done
   G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
   G.critters=[];
@@ -1930,7 +1936,10 @@ function spawnMobsAerieDeep(){
   if(!(P.story && P.story.aerieFreed)){
     const sp=findOpenNear(Z.crypt.x, Z.crypt.y, 6) || [Z.crypt.x, Z.crypt.y];
     const sn=spawnMob('serpent', sp[0], sp[1]);
-    if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; sn.entrance='rise'; }
+    // sealed = inert and unseen until you step into the crypt and the seal shuts behind you
+    // (updateAerieDeep reveals it and hands into its rise entrance then) - so the Tome-Warden
+    // never coils waiting in view; it hauls up out of the crypt floor once there's no backing out.
+    if(sn){ sn.boss=true; sn.bigBoss=true; sn.sealed=true; sn.title='THE TOME-WARDEN'; sn.entranceSub='GUARDIAN OF THE CURSED TOME'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; sn.entrance='rise'; }
   }
 }
 function genAerieDeepAll(){
@@ -2007,6 +2016,21 @@ function updateAerieDeep(dt){
     g.openAmt = g.done? Math.min(1,(g.openAmt||0)+dt*3) : 0;
     const openNow=g.openAmt>0.55;
     if(openNow!==g.open){ g.open=openNow; for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1); }
+  }
+  // THE CRYPT SEAL: stepping into the Warden's Crypt with the Tome-Warden alive slams a portcullis
+  // shut behind you, and the serpent hauls up out of the crypt floor - so the fight (and its rise
+  // entrance) begins only once you're inside the room, with no retreat.
+  if(!G._cryptSealed && !(P.story&&P.story.aerieFreed) && P.y<=31 && P.y>=10 && P.x>=52 && P.x<=98
+     && (G.mobs||[]).some(m=>m.ach==='tomewarden' && !m.dead)){
+    G._cryptSealed=1; for(const [x,y] of AERIE_CRYPT_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='crypt'); if(cg) cg.open=false;
+    invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
+    banner('THE CRYPT SEALS BEHIND YOU','NO RETREAT - PUT DOWN THE TOME-WARDEN');
+    // now that the way back is shut, the Tome-Warden rises: reveal it and hand into its entrance beat
+    const boss=(G.mobs||[]).find(m=>m.ach==='tomewarden' && !m.dead);
+    if(boss){ boss.sealed=false;
+      if(typeof startBossIntro==='function' && !boss.entranceDone && !G.bossIntro)
+        startBossIntro(boss,{kind:boss.entrance, title:boss.title, sub:boss.entranceSub}); }
   }
   // the zap plays out, then respawns you
   if(G._aerieZap){ G._aerieZap.t+=dt; if(G._aerieZap.t>=G._aerieZap.dur) aerieRespawn(); return; }

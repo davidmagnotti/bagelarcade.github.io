@@ -764,6 +764,10 @@ function killMob(m,skill){
   // so there's no separate "destroy the tome" step to hunt down after the fight.
   if(m.ach==='tomewarden'){
     m.dead=true;
+    // the crypt seal grinds back up now the warden is down - the way out (back to the Underclimb) is clear
+    if(typeof AERIE_CRYPT_SEAL!=='undefined') for(const [x,y] of AERIE_CRYPT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='crypt'); if(cg) cg.open=true; }
+    invalidateScenery&&invalidateScenery();
     const tome=G.decor && G.decor.find(d=>d.kind==='tome' && !d.destroyed);
     if(tome && typeof destroyTome==='function') setTimeout(()=>destroyTome(tome), 600);
     else { P.story=P.story||{}; P.story.aerieFreed=1; if(typeof autoSave==='function') autoSave(); }
@@ -940,6 +944,15 @@ document.getElementById('respawnBtn').onclick=()=>{
       if(typeof invalidateScenery==='function') invalidateScenery(); }
     for(const m of G.mobs){ if(m.kind==='dragon' && !m.fainted){ m.dead=true; m.respawnT=-1; } }
     G.dragonMob=null; G.dragonSealed=0;
+  }
+  // if you died sealed in the Warden's Crypt, reset the encounter: raise the crypt seal and
+  // re-seal the Tome-Warden so re-entering the room re-triggers (and re-seals) the fight cleanly
+  if(G._cryptSealed){
+    if(typeof AERIE_CRYPT_SEAL!=='undefined') for(const [x,y] of AERIE_CRYPT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='crypt'); if(cg) cg.open=true; }
+    for(const m of G.mobs){ if(m.ach==='tomewarden' && !m.dead){ m.sealed=true; m.entranceDone=false; m.introKind=null; } }
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    G._cryptSealed=0;
   }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
