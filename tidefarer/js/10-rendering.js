@@ -844,20 +844,23 @@ function drawDecor(b,s){
   }
   if(b.kind==='catgate'){
     const g=cx; g.save(); g.translate(s.x,s.y);
+    // width scales with the sealed span (its tile-row), so a wide mouth gets a wide portcullis
+    // and a 5-tile corridor keeps the original look (half = 2 -> W = 30, the old hardcoded value)
+    const half=Math.floor((((b.tiles&&b.tiles.length)||5)-1)/2), W=half*11+8;
     if(b.open){ // raised into the ceiling - just the top lintel and stubs remain
-      g.fillStyle='#3a332c'; g.fillRect(-30,-44,60,7);
-      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-30,-44,60,7);
-      g.fillStyle='#2a241e'; for(let i=-2;i<=2;i++){ g.fillRect(i*11-2,-44,4,7); }
+      g.fillStyle='#3a332c'; g.fillRect(-W,-44,W*2,7);
+      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-W,-44,W*2,7);
+      g.fillStyle='#2a241e'; for(let i=-half;i<=half;i++){ g.fillRect(i*11-2,-44,4,7); }
       g.restore(); return;
     }
-    drawShadowAt(g,s.x,s.y,30);
+    drawShadowAt(g,s.x,s.y,W);
     // an iron portcullis dropped across the corridor
-    g.fillStyle='#3a332c'; g.fillRect(-30,-40,60,6);           // top lintel
+    g.fillStyle='#3a332c'; g.fillRect(-W,-40,W*2,6);           // top lintel
     g.strokeStyle='#1c1814'; g.lineWidth=1.6;
     g.fillStyle='#4a423a';
-    for(let i=-2;i<=2;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
-    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-27,yy,54,3.5); }          // cross-bars
-    g.fillStyle='#5a5048'; for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
+    for(let i=-half;i<=half;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
+    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-(W-3),yy,(W-3)*2,3.5); }        // cross-bars
+    g.fillStyle='#5a5048'; for(let i=-half;i<=half;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
     g.restore(); return;
   }
   if(b.kind==='ashwing'){

@@ -1057,6 +1057,13 @@ function updatePlayer(dt){
   // Rimefissure drift-ice: standing on a floe over the channel gives a SLIGHT slide (momentum),
   // so lining up a precise hop takes timing - distinct from the full glide of the Sliding Halls
   const onFloe = G.worldId==='frostdeep' && !dlg.open && G._frostVoid && G._frostVoid.has(Math.floor(P.x)+','+Math.floor(P.y));
+  // a FOOTED-but-slick floor (the Frozen Heart arena): the same slight-slide as the drift-floes,
+  // so your steps carry a little momentum and coast a beat on release - but you keep your feet
+  // and never full-glide across the room into the spikes.
+  const driftZones = (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].driftFloor) || [];
+  const onDriftFloor = driftZones.length && P.rollT<=0 && !dlg.open
+    && driftZones.some(sz=> P.x>=sz.x0 && P.x<=sz.x1 && P.y>=sz.y0 && P.y<=sz.y1)
+    && tileAt(Math.floor(P.x),Math.floor(P.y))===T.ICE;
   if(onSlick){
     if(!P.slideDir && ml>0.25){
       // push off along the stronger input axis - but never INTO a wall. If that
@@ -1075,7 +1082,7 @@ function updatePlayer(dt){
       if(Math.random()<dt*20) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-P.slideDir.x*0.6,vy:-P.slideDir.y*0.6,life:0.4,color:'#eaf6ff',size:2.2,grav:0});
       if(!moved || tileAt(Math.floor(P.x),Math.floor(P.y))!==T.ICE){ P.slideDir=null; Snd.step&&Snd.step(T.ICE); }
     } else P.moving=false;
-  } else if(onFloe){
+  } else if(onFloe || onDriftFloor){
     // a slight slide: your steps build a little momentum and coast a beat when you let go,
     // so a precise step between drifting floes takes timing (over-run and you slide into the water)
     if(P.slideDir) P.slideDir=null;
