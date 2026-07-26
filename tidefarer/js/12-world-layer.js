@@ -139,6 +139,7 @@ const WORLD_DEFS = {
     gen:()=>genCrownAll() },
   frostdeep:{ W:88, H:120, seed:33377, zones:FROSTDEEP_ZONES, dungeon:1, dark:0.18,
     spawn:{x:44.5,y:110.5}, title:'THE RIMEFISSURE', sub:'BENEATH THE FROZEN ISLE - A WARREN OF FROZEN STONE',
+    slide:[{x0:28,y0:10,x1:60,y1:33},{x0:34,y0:100,x1:54,y1:114}],   // the arena and the entry landing are slick ice
     gen:()=>genFrostDeepAll() },
   aeriedeep:{ W:150, H:130, seed:52411, zones:AERIEDEEP_ZONES, dungeon:1, dark:0.5,
     spawn:{x:75.5,y:119.5}, title:'THE UNDERCLIMB', sub:'A CATACOMB BENEATH THE ROOST - GRIT, BONE, AND OLD SIGILS',
@@ -2111,6 +2112,7 @@ function genFrostAll(){
    ================================================================================= */
 // THE LONG DRIFT: a solid lever-island parked mid-channel (carved into the water later)
 const FROST_ISLAND={x0:39, x1:49, y0:62, y1:69};   // reach it, pull its lever to open the Deep Gate
+const HEART_SEAL=[[42,34],[43,34],[44,34],[45,34],[46,34]];   // slams shut behind you when you enter the arena
 function genFrostDeep(){
   // an ice-dungeon carved from solid frozen rock: a long drift-channel crossing up to the Frozen Heart.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -2119,16 +2121,11 @@ function genFrostDeep(){
   carve(42,92,46,101,T.ICE);              // corridor A -> the long drift
   carve(30,44,54,92,T.ICE);               // THE LONG DRIFT - a 3x channel of floes + rotating slabs
   carve(FROST_ISLAND.x0, FROST_ISLAND.y0, FROST_ISLAND.x1, FROST_ISLAND.y1, T.ICE);   // the solid lever-island, mid-channel
-  carve(42,30,46,45,T.ICE);               // corridor B -> the antechamber
+  carve(42,30,46,45,T.ICE);               // corridor B -> the arena
   for(let x=42;x<=46;x++){ setTile(x,37,T.RUIN); setSolid(x,37,1); }  // the DEEP GATE - shut until the island lever is thrown
-  // THE FROZEN HEART: a sealed inner sanctum reached only after unbinding the ward-locks.
-  carve(36,26,52,32,T.ICE);               // the antechamber (you arrive here from corridor B)
-  carve(42,24,46,26,T.ICE);               // the throat (the HEART GATE sits at y=25)
-  carve(32,14,56,24,T.ICE);               // the inner sanctum - THE RIMEBOUND sleeps here, sealed
-  // two ward-rooms flanking the antechamber, each with a frost-lock lever
-  carve(30,27,38,31,T.ICE); carve(18,23,30,33,T.ICE);   // WEST WARD-ROOM + its approach
-  carve(50,27,58,31,T.ICE); carve(58,23,70,33,T.ICE);   // EAST WARD-ROOM + its approach
-  for(let x=42;x<=46;x++){ setTile(x,25,T.RUIN); setSolid(x,25,1); }  // the HEART GATE - the ward-locks hold it shut
+  // THE FROZEN HEART: one large slippery arena where you fight THE RIMEBOUND. Its edges drop away
+  // into spiked freezing water (placed in placeObjectsFrostDeep), and a seal slams shut behind you.
+  carve(28,10,60,33,T.ICE);               // the arena (enters from corridor B at y33, x42-46)
 }
 function placeObjectsFrostDeep(){
   G.decor=G.decor||[];
@@ -2136,23 +2133,14 @@ function placeObjectsFrostDeep(){
   setSolid(44,112,0); setTile(44,112,T.ICE);
   // the long drift turns on the DASH (to board the rotating slabs) - guarantee it so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The cold quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  for(const [tx,ty] of [[36,44],[52,44],[40,64],[48,64],[36,90],[52,90],[34,16],[54,16],[20,25],[68,25],[38,108],[50,108]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[36,44],[52,44],[40,64],[48,64],[36,90],[52,90],[31,14],[57,14],[31,30],[57,30],[38,108],[50,108]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
-  for(const [px,py] of [[38,110],[50,110],[36,16],[52,16],[19,31],[69,31]]) spire(px,py);
-  // ---- THE WARD-LOCKS ----
-  // the Rimebound sleeps behind the HEART GATE; two frost-lock levers, one in each flanking
-  // ward-room, must both be thrown to unchain it. Pull one and the other still holds.
-  const heartTiles=[[42,25],[43,25],[44,25],[45,25],[46,25]];
-  G.decor.push({kind:'icelever', x:23.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
-    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
-    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
-    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
-    label:'the west ward-lock'});
-  G.decor.push({kind:'icelever', x:64.5, y:28.5, on:false, wardGroup:'heart', gateTiles:heartTiles,
-    openBanner:'THE WARD-LOCKS BREAK', openSub:'THE HEART GATE GRINDS OPEN',
-    openMsg:'Both frost-locks give at once and the Heart Gate grinds up. Whatever Vath chained in the Frozen Heart stirs awake beyond it.',
-    tickMsg:'One ward-lock shatters - but <b>{n} more</b> still holds the Heart Gate shut. Find the other lever.',
-    label:'the east ward-lock'});
+  for(const [px,py] of [[38,110],[50,110]]) spire(px,py);
+  // ---- THE FROZEN HEART ARENA ----
+  // one big slippery room. Its edges drop away into spiked freezing water - avoid them - and a
+  // seal slams shut behind you when you step in, so there's no backing out to kite the Rimebound.
+  G._heartSealed=0;
+  G.decor.push({kind:'catgate', x:44, y:34, open:true, gate:'heart', tiles:HEART_SEAL.slice(), label:'the Heart-Seal'});
   // ---- THE LONG DRIFT ----
   // a 3x channel of black freezing water. The SOUTH half is crossed on drift-ice floes that slide
   // back and forth; midway sits a solid ISLAND with the DRIFT-LOCK LEVER - throw it to grind the
@@ -2173,11 +2161,20 @@ function placeObjectsFrostDeep(){
   G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
   G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
   G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
+  // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
+  // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
+  for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
+    if(!inb(x,y) || solidAt(x,y)) continue;
+    const edge=(x<=29 || x>=59 || y<=11 || y>=32), entry=(x>=40 && x<=48 && y>=31);
+    if(edge && !entry){ setTile(x,y,T.DEEP); setSolid(x,y,0); G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); }
+  }
   G.critters=[];
-  // an already-cleared run drains the channel to solid ice and leaves both gates open
+  // an already-cleared run drains the channel + arena edge to solid ice and leaves the gates open
   if(P.story && P.story.deepDone){
-    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); setSolid(x,25,0); setTile(x,25,T.ICE); }
-    for(const d of G.decor){ if(d.kind==='icelever' && d.wardGroup==='heart') d.on=true; }
+    for(let x=42;x<=46;x++){ setSolid(x,37,0); setTile(x,37,T.ICE); }
+    for(const [x,y] of HEART_SEAL){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+    for(const d of G.decor){ if(d.kind==='catgate' && d.gate==='heart') d.open=true; }
+    for(const k of G._frostVoid){ const [x,y]=k.split(',').map(Number); if(y<=33){ setTile(x,y,T.ICE); setSolid(x,y,0); } }   // arena edge freezes over
     G.decor=G.decor.filter(d=>d.kind!=='froststream' && d.kind!=='icefloe' && d.kind!=='spinwheel');
     G._frostVoid=new Set(); G._frostFloes=[]; G._frostWheels=[]; G._frostGateOpen=true;
   }
@@ -2206,18 +2203,26 @@ function frostPlungeStart(){
 }
 function frostRespawn(){
   const z=G._frostPlunge; G._frostPlunge=null; if(!z) return;
-  const c=G._frostCross;
   burst(P.x,P.y-0.3,'#cfeaf8',12,2.0);
-  if(c){ P.x=c.startX+0.5; P.y=c.startY; }
+  if(z.y<=34){ P.x=44.5; P.y=30; }   // fell off the arena's spiked edge -> back onto the arena floor
+  else { const c=G._frostCross; if(c){ P.x=c.startX+0.5; P.y=c.startY; } }   // fell in the drift -> the checkpoint
   P.click=null; P.moving=false; P.slideDir=null; P._glv=null;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._frostFallHint){ G._frostFallHint=1; toast('The black water drags you under and the cold flings you back to the landing, shivering (<b>-4 HP</b>). <b>Ride the floes</b> - board one as it drifts to you, and step across when they line up. The ice is slick, so <b>mind your momentum</b>.',5200); }
+  if(!G._frostFallHint){ G._frostFallHint=1; toast('The freezing water drags you under, shivering (<b>-4 HP</b>). Mind the <b>spiked edges</b> - and the ice is slick, so <b>mind your momentum</b>.',5200); }
 }
 // carry the player on the floe they're standing on, and drop them (restart) if the open
 // water under them has no floe
 function updateFrostDeep(dt){
   // the plunge plays out (control frozen in updatePlayer), then flings you back to the checkpoint
   if(G._frostPlunge){ G._frostPlunge.t+=dt; if(G._frostPlunge.t>=G._frostPlunge.dur) frostRespawn(); return; }
+  // THE HEART-SEAL: stepping into the arena with the Rimebound alive slams the seal shut behind you
+  if(!G._heartSealed && !(P.story&&P.story.deepDone) && P.y>=11 && P.y<=31 && P.x>=28 && P.x<=60
+     && (G.mobs||[]).some(m=>m.ach==='rimebreaker' && !m.dead)){
+    G._heartSealed=1; for(const [x,y] of HEART_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=false;
+    invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
+    banner('THE ICE SEALS BEHIND YOU','NO RETREAT - FELL THE RIMEBOUND');
+  }
   const floes=G._frostFloes||[], wheels=G._frostWheels||[];
   if(!floes.length && !wheels.length) return;   // a cleared run - the channel is solid ice
   G._frostT=(G._frostT||0)+dt;
@@ -2265,6 +2270,11 @@ function pullIceLever(b){
 }
 function freeColossus(m){
   m.freed=1; m.enspelled=false; m.dead=true; m.respawnT=-1; m.state='idle';
+  // the fight is won - the Heart-Seal grinds back open
+  if(typeof HEART_SEAL!=='undefined') for(const [x,y] of HEART_SEAL){ setSolid(x,y,0); setTile(x,y,T.ICE); }
+  G._heartSealed=0;
+  { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='heart'); if(cg) cg.open=true; }
+  invalidateScenery&&invalidateScenery();
   Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(190,230,250,0.95)',100);
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
