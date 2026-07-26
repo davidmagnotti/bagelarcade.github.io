@@ -985,7 +985,7 @@ function placeObjectsEastDeep(){
   // to board a slab and to leap from one to the next - time the dash to when a slab swings to
   // you. Miss and you drop into the pit (you climb back out singed: -5 HP) and start the
   // crossing over. Reach the far ledge and the gate rises.
-  G._eastChasm=new Set(); G._eastWheels=[]; G._eastCross=[]; G._eastFallHint=0; G._emberG2T=0;
+  G._eastChasm=new Set(); G._eastWheels=[]; G._eastCross=[]; G._eastFallHint=0; G._emberG2T=0; G._emberDrop=null;
   const chasm=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._eastChasm.add(x+','+y); G.decor.push({kind:'firepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
   const pad=(x,y)=>{ G._eastChasm.delete(x+','+y); const k=(x+0.5)+','+(y+0.5); G.decor=G.decor.filter(d=>!(d.kind==='firepit' && d.x===x+0.5 && d.y===y+0.5)); };
   const wheel=(hx,hy,r,spd,ang0,gate)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15, gate}; G.decor.push(w); G._eastWheels.push(w); };
@@ -994,21 +994,25 @@ function placeObjectsEastDeep(){
   wheel(40,66, 3.2, 0.9, Math.PI/2, 'g1');
   G._eastCross.push({gate:'g1', cy0:62, cy1:71, farY:59, startY:73.0});
   G.decor.push({kind:'firegate', gate:'g1', x:40.5, y:EDEEP.gate1.y+0.5, gy:EDEEP.gate1.y, x0:EDEEP.gate1.x0, x1:EDEEP.gate1.x1, open:false, label:'the Emberfont Gate'});
-  // CH2 - two slabs + a TIMED LEVER on a side pad: dash to the pad, pull the lever (it opens
-  // the Causeway Gate for 7s, then resets), then dash the two slabs and through the gate before it shuts.
-  chasm(28,52,43,52);
-  wheel(40,48, 3.0, 1.0,  Math.PI/2, 'g2');
-  wheel(40,44, 3.0, 1.0, -Math.PI/2, 'g2');
-  for(const [px,py] of [[31,49],[32,49],[31,50],[32,50],[31,51],[32,51]]) pad(px,py);   // the side pad (safe island, one dash NW off the entrance ledge)
-  G.decor.push({kind:'firelever', x:31.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
-  G._eastCross.push({gate:'g2', cy0:43, cy1:52, farY:40, startY:53.0, lever:true, leverDur:7});
+  // CH2 - two COUNTER-TURNING slabs, spaced so open pit always lies between them (no walking
+  // across) + a TIMED LEVER on a side pad. Dash to the pad, pull the lever (the Causeway Gate
+  // hauls up for 14s, then resets), dash back, then time the two slabs and slip through the gate
+  // before it shuts. The slabs turn opposite ways so their tips meet (with a gap) mid-swing:
+  // board the low slab at the ledge, dash to the high slab when they line up, dash off to the gate.
+  chasm(28,52,40,53);
+  wheel(40,49, 2.6,  1.2,  Math.PI/2, 'g2');   // low slab: swings toward the entrance ledge (dash to board)
+  wheel(40,41.5, 2.6, -1.2, -Math.PI/2, 'g2'); // high slab: counter-turns, points to the far ledge at the start
+  for(const [px,py] of [[34,49],[35,49],[34,50],[35,50],[34,51],[35,51]]) pad(px,py);   // the side pad (safe island, one dash N off the entrance ledge)
+  G.decor.push({kind:'firelever', x:34.5, y:49.5, gate:'g2', on:false, label:'a fire-lever'});
+  G._eastCross.push({gate:'g2', cy0:40, cy1:53, farY:39, startY:54.5, lever:true, leverDur:14});
   G.decor.push({kind:'firegate', gate:'g2', x:40.5, y:EDEEP.gate2.y+0.5, gy:EDEEP.gate2.y, x0:EDEEP.gate2.x0, x1:EDEEP.gate2.x1, open:false, perm:false, label:'the Causeway Gate'});
-  // CH3 - three slabs, the true test. South ledge y34+, pit y24-33, far ledge y21-23.
-  chasm(28,52,24,33);
-  wheel(40,32, 3.0, 1.1,  Math.PI/2, 'g3');
-  wheel(40,29, 3.0, 1.1, -Math.PI/2, 'g3');
-  wheel(40,26, 3.0, 1.1,  Math.PI/2, 'g3');
-  G._eastCross.push({gate:'g3', cy0:24, cy1:33, farY:21, startY:34.0});
+  // CH3 - three counter-turning slabs, the true test. Same rule: pit always gaps the slabs, so
+  // every hop is a dash. Board the low slab, dash up the chain as each pair lines up, dash off north.
+  chasm(28,52,21,36);
+  wheel(40,33, 2.0,  1.0,  Math.PI/2, 'g3');
+  wheel(40,27, 2.0, -1.0, -Math.PI/2, 'g3');
+  wheel(40,21, 2.0,  1.0,  Math.PI/2, 'g3');
+  G._eastCross.push({gate:'g3', cy0:21, cy1:36, farY:20, startY:37.5});
   G.decor.push({kind:'firegate', gate:'g3', x:40.5, y:EDEEP.gate3.y+0.5, gy:EDEEP.gate3.y, x0:EDEEP.gate3.x0, x1:EDEEP.gate3.x1, open:false, label:'the Dragon Gate'});
   // ---- THE EMBER KING'S HOARD (optional): an arcane ember-fence across the vault
   // doorway, solid until the FIRE STAFF unmakes it. Inside waits the Double Dash. ----
@@ -1051,6 +1055,11 @@ function updateEastDeep(dt){
     if(g2 && !g2.perm && P.y < g2.gy){ g2.perm=true; G._emberG2T=0; banner('THE CAUSEWAY GATE HOLDS','THE WAY NORTH IS YOURS'); }
     else if(G._emberG2T<=0 && g2 && !g2.perm){ emberCloseG2(); }
   }
+  // a fall is in progress: run the drop animation, then respawn at the crossing's start
+  if(G._emberDrop){ G._emberDrop.t+=dt;
+    if(Math.random()<0.5) burst(G._emberDrop.x+rnd(-0.3,0.3), G._emberDrop.y+rnd(-0.2,0.2), '#c8621f', 1, 1.4);
+    if(G._emberDrop.t>=G._emberDrop.dur) emberRespawn();
+    return; }
   if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the pit
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._eastChasm && G._eastChasm.has(tx+','+ty))) return;   // on a ledge / pad / solid - safe footing
@@ -1058,7 +1067,7 @@ function updateEastDeep(dt){
   let best=null, bestPerp=99;
   for(const w of wheels){ const dx=P.x-w.hx, dy=P.y-w.hy;
     const along=dx*Math.cos(w.ang)+dy*Math.sin(w.ang), perp=-dx*Math.sin(w.ang)+dy*Math.cos(w.ang);
-    if(along>=-1.1 && along<=w.r+1.0 && Math.abs(perp)<=w.armw+0.5 && Math.abs(perp)<bestPerp){ best=w; bestPerp=Math.abs(perp); } }   // generous footprint so you never fall while visibly aboard
+    if(along>=-0.5 && along<=w.r+0.5 && Math.abs(perp)<=w.armw+0.5 && Math.abs(perp)<bestPerp){ best=w; bestPerp=Math.abs(perp); } }   // perp stays generous (never fall while aboard); along is snug so the slabs never bridge the pit
   if(best){
     const dA=best.spd*dt, dx=P.x-best.hx, dy=P.y-best.hy;
     const nx=best.hx + dx*Math.cos(dA)-dy*Math.sin(dA), ny=best.hy + dx*Math.sin(dA)+dy*Math.cos(dA);
@@ -1071,12 +1080,12 @@ function pullFireLever(b){
   const g2=G.decor.find(d=>d.kind==='firegate' && d.gate===b.gate);
   if(g2 && g2.perm){ toast('The Causeway Gate already stands open.',2600); return; }
   b.on=true;
-  G._emberG2T = (c&&c.leverDur)||7;
+  G._emberG2T = (c&&c.leverDur)||14;
   if(g2){ g2.open=true; for(let x=g2.x0;x<=g2.x1;x++){ setSolid(x,g2.gy,0); setTile(x,g2.gy,T.RUIN); } }
   invalidateScenery&&invalidateScenery();
   Snd.quest&&Snd.quest(); buzz&&buzz(9); shockwave(b.x,b.y,'rgba(255,150,60,0.8)',40); burst(b.x,b.y-0.4,'#ffb04a',14,2.2);
   banner('THE CAUSEWAY GATE HAULS UP','CROSS BEFORE IT SHUTS');
-  toast('The lever bites and the Causeway Gate grinds up - but it will fall again in <b>'+(((c&&c.leverDur)||7))+' seconds</b>. <b>Dash the slabs and through the gate before it shuts.</b>',5200);
+  toast('The lever bites and the Causeway Gate grinds up - but it will fall again in <b>'+(((c&&c.leverDur)||14))+' seconds</b>. <b>Dash the slabs and through the gate before it shuts.</b>',5200);
 }
 function emberCloseG2(){
   const g2=G.decor.find(d=>d.kind==='firegate' && d.gate==='g2'); if(!g2 || g2.perm) return;
@@ -1086,12 +1095,19 @@ function emberCloseG2(){
   toast('The Causeway Gate slams shut - the lever has reset. Work it again and be quicker across.',3600);
 }
 function eastFall(ty){
+  if(G._emberDrop) return;   // already falling
   const c=(G._eastCross||[]).find(cc=>ty>=cc.cy0 && ty<=cc.cy1) || (G._eastCross||[])[0];
+  // deduct the singe up front, then hand off to the drop animation (updateEastDeep ticks it)
   if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4,'#ff8a5a',0.95); }
-  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(22);
-  burst(P.x,P.y-0.3,'#ff9a3c',18,2.8); shockwave(P.x,P.y,'rgba(255,140,50,0.85)',46);
-  if(c){ P.x=40.5; P.y=c.startY; }
-  P.click=null; P.moving=false; P.slideDir=null;
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(18);
+  burst(P.x,P.y-0.3,'#ff9a3c',12,2.2); shockwave(P.x,P.y,'rgba(255,140,50,0.75)',38);
+  P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  G._emberDrop={ t:0, dur:0.62, x:P.x, y:P.y, startY:(c?c.startY:73.0) };
+}
+// end the drop: set the hero back on the crossing's south ledge and hand control back
+function emberRespawn(){
+  const d=G._emberDrop; G._emberDrop=null; if(!d) return;
+  P.x=40.5; P.y=d.startY; P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
   if(!G._eastFallHint){ G._eastFallHint=1; toast('You plunge into the pit and haul yourself back out, singed (<b>-5 HP</b>). <b>DASH onto a slab when it swings to your ledge, ride it round, and dash off when it lines up with the next.</b>',5200); }
 }

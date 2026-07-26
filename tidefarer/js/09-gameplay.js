@@ -943,6 +943,9 @@ document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv')
 /* ---- per-frame updates ---- */
 function updatePlayer(dt){
   if(P.dead) return;
+  // falling into the Emberdeep pit: control is frozen while the drop animation plays out
+  // (updateEastDeep ticks the timer and respawns). Roll cooldown still recovers.
+  if(typeof G!=='undefined' && G._emberDrop){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
   // hold the hero still during a scripted camera pan (the ward-gate reveal), so
   // control returns exactly where it left off and no dash/move fires unseen
   if(G.camCine){ P.moving=false; P.click=null; return; }

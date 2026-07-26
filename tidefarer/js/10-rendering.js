@@ -1378,13 +1378,10 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='firepit'){
-    // a cell of the bottomless fire-pit you must dash across on the turning slabs. Drawn as a
-    // black void with only a distant ember glow far below, so it reads as "fall = death", not lava.
-    const g=cx, gl=0.5+0.4*Math.sin(G.time*1.6+b.seed*1.7); g.save(); g.translate(s.x,s.y);
-    g.fillStyle='rgba(8,6,7,0.96)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
-    g.fillStyle='rgba(70,26,12,'+(0.22+0.12*gl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-5); g.lineTo(9,-1); g.lineTo(0,3); g.lineTo(-9,-1); g.closePath(); g.fill();   // faint glow of magma far, far below
-    g.fillStyle='rgba(255,120,40,'+(0.06+0.06*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,3.4,1.7,0,0,TAU); g.fill();
-    if(Math.random()<0.006) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.15,0.15),vy:-rnd(0.3,0.8),life:rnd(0.6,1.3),color:'#c8621f',size:rnd(0.8,1.6),grav:-0.04});
+    // a cell of the bottomless pit you must dash across on the turning slabs. Pure opaque black,
+    // drawn a touch oversized so the cells fuse into one seamless void (no visible grid squares).
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-10); g.lineTo(17.5,-1); g.lineTo(0,8); g.lineTo(-17.5,-1); g.closePath(); g.fill();
     g.restore(); return;
   }
   if(b.kind==='firelever'){
@@ -2532,6 +2529,18 @@ function drawHorse(s){
   g.restore();
 }
 function drawPlayer(s){
+  // plunging into the Emberdeep pit: the hero tumbles down, shrinking and fading into the dark,
+  // then respawns (see eastFall / emberRespawn). Drawn in place of the normal figure.
+  if(typeof G!=='undefined' && G._emberDrop){
+    const p=Math.min(1, G._emberDrop.t/G._emberDrop.dur), g=cx;
+    g.save();
+    g.globalAlpha=Math.max(0, 1-p*0.9);
+    const fy=s.y + p*p*46;            // accelerating fall
+    g.translate(s.x, fy); g.rotate(p*0.8); const sc=1-p*0.55; g.scale(sc,sc); g.translate(-s.x, -fy);
+    drawPlayerFigure({x:s.x, y:fy});
+    g.restore();
+    return;
+  }
   // dazed: little stars circle overhead while a stun holds you (see stunPlayer)
   if((P.stunT||0)>0){
     const g=cx, n=3, base=-46;
