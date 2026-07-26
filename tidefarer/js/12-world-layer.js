@@ -2793,8 +2793,10 @@ function genUndermaw(){
     if(border) UNDERMAW_WALLS.push([x,y]);
   }
   for(const [x,y] of UNDERMAW_GATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
-  for(const [x,y] of MAW_SHOOTGATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
   for(const [x,y] of MAW_HORDEGATE){ setTile(x,y,T.RUIN); setSolid(x,y,1); }
+  // R2's old Warded Gate no longer seals the corridor - the room is a conveyor
+  // crossing now, so its exit stands open (the pit is the trial, not a gate).
+  for(const [x,y] of MAW_SHOOTGATE){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
 }
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
@@ -2835,10 +2837,13 @@ function placeObjectsUndermaw(){
   // ---- R4: the scar under archer fire ----
   pit(6,38, 41,67); field(41,67, 7207);
   G._mawCross.push({y0:38,y1:70, sx:22, sy:69});
-  // ---- R2: THE WARD-EYE - shoot the mechanism to grind the Warded Gate up ----
-  for(const [px,py] of [[13,125],[31,125]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
-  G.decor.push({kind:'catgate', x:22, y:112, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
-  G.decor.push({kind:'shoottarget', x:22.5, y:115.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
+  // ---- R2: THE CONVEYOR - a grinding belt of stone tiles that surface at the LEFT
+  // wall, slide steadily RIGHT across the pit, and tip off the RIGHT edge into the
+  // black (then resurface at the left and come round again). Cross by dashing tile-to-
+  // tile: the gaps are a dash wide side-to-side, and the belt drifts you east, so you
+  // must dash sideways to line back up with the north exit. Ride a tile to the right
+  // end and it falls out from under you. ----
+  buildMawConveyor();
   // ---- THE HOARD DOOR + reward ----
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
@@ -2887,12 +2892,64 @@ function spawnMobsUndermaw(){
     G._mawHordeLeft=placed;
   }
 }
-// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, swarm the bats, and drop
-// the player back to the ledge (-5 HP) if they stand over the scar with no platform beneath them.
+// R2 THE CONVEYOR: lay the crossing pit and its rightward-running belts of stone tiles.
+// Tiles surface at the left wall, slide right, and tip off the right edge (then loop back
+// round). Called from placeObjectsUndermaw with G._mawPits/_mawCross already initialised.
+function buildMawConveyor(){
+  G._mawConvey=[];
+  // the crossing pit fills R2's middle, leaving a south entry ledge (y>=132) and a
+  // north exit ledge (y<=116) of solid footing
+  for(let y=117;y<=131;y++) for(let x=7;x<=37;x++) if(inb(x,y)&&!solidAt(x,y)){
+    G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); }
+  G._mawCross.push({y0:114,y1:136, sx:22, sy:134});   // a fall here restarts you on the south ledge
+  // five belts climbing the pit. Each surfaces n tiles at the left, streams them right at
+  // `spd`, and drops each off the right edge; the belts are phase-staggered so no two lanes
+  // line up - you dash sideways to catch the next tile, not just straight north. `gap` is the
+  // centre-to-centre spacing (tile is 2 wide, so the side-to-side hole between tiles is ~3: a
+  // dash wide). Lanes sit 3 apart, so the north hops are dashable too.
+  const lane=(ly,phase)=>{
+    const x0=8.5, x1=35.5, spd=2.0, gap=5, w=2, n=6, span=x1-x0;
+    for(let k=0;k<n;k++){
+      const x=x0 + ((k*gap + phase) % span);
+      const t={kind:'conveytile', x, y:ly+0.5, prevx:x, prevy:ly+0.5, x0, x1, spd, w, h:2, falling:false, fallT:0};
+      G.decor.push(t); G._mawConvey.push(t);
+    }
+  };
+  lane(130,0); lane(127,2.6); lane(124,1.1); lane(121,3.7); lane(118,1.9);
+}
+// advance the conveyor belts: slide each tile right, tip it off the right edge (a short
+// fall animation), then resurface it at the left wall to come round again.
+function updateConveyor(dt){
+  for(const t of (G._mawConvey||[])){
+    t.prevx=t.x; t.prevy=t.y;
+    if(t.falling){
+      t.fallT+=dt;
+      if(t.fallT>=0.55){ t.falling=false; t.fallT=0; t.x=t.x0; t.prevx=t.x0; }   // back up at the left; no carry-jump
+    } else {
+      t.x+=t.spd*dt;
+      if(t.x>=t.x1){ t.falling=true; t.fallT=0; }   // reached the right edge - it tips into the black
+    }
+  }
+}
+// if the player stands on a conveyor tile, carry them by its motion (drifting them east).
+// Falling tiles give no footing - ride one to the edge and you drop with it. Returns true if aboard.
+function conveyCarry(tiles){
+  let best=null, bd=99;
+  for(const s of (tiles||[])){ if(s.falling) continue;
+    const dx=Math.abs(P.x-s.x), dy=Math.abs(P.y-s.y);
+    if(dx<=(s.w||2)/2+0.2 && dy<=(s.h||2)/2+0.2 && (dx+dy)<bd){ best=s; bd=dx+dy; } }
+  if(best){ const nx=P.x+(best.x-best.prevx), ny=P.y+(best.y-best.prevy);
+    if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } return true; }
+  return false;
+}
+// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, run the conveyor,
+// swarm the bats, and drop the player back to the ledge (-5 HP) if they stand over the scar
+// with no platform beneath them.
 function updateUndermaw(dt){
   G._mawT=(G._mawT||0)+dt;
   for(const w of (G._mawWheels||[])) w.ang += w.spd*dt;
   updateDriftSlabs(G._mawSlabs, G._mawT);
+  updateConveyor(dt);
   updateMawBats(dt);
   // a fall is in progress: the hero tumbles down into the black, then respawns on the ledge
   if(G._mawDrop){ G._mawDrop.t+=dt;
@@ -2904,6 +2961,7 @@ function updateUndermaw(dt){
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
   if(wheelCarry(G._mawWheels, dt)) return;                 // riding a rotating slab
   if(driftCarry(G._mawSlabs)) return;                      // riding a floating slab
+  if(conveyCarry(G._mawConvey)) return;                    // riding a conveyor tile
   mawFall(ty);
 }
 // CAVE BATS: killable flyers that keep swooping in over the crossings; a bite shoves you hard

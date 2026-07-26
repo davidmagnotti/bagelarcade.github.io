@@ -62,7 +62,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
   axetrap:1, arrowtrap:1, traparrow:1, spiketile:1, skybeam:1,
-  firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, shoottarget:1, bonepit:1, fadetile:1,
+  firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, conveytile:1, shoottarget:1, bonepit:1, fadetile:1,
   dancebtn:1, danceghost:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
@@ -193,7 +193,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1576,6 +1576,28 @@ function drawDecor(b,s){
     const cc=worldToScreen(b.x,b.y); g.fillStyle='rgba(150,200,235,'+(0.25+0.2*Math.sin(G.time*3+b.x)).toFixed(2)+')';
     g.beginPath(); g.arc(cc.x, cc.y-2, 2.2, 0, TAU); g.fill();
     return;
+  }
+  if(b.kind==='conveytile'){
+    // a slab of the grinding conveyor: a raised stone tile streaming rightward across the
+    // pit. When it tips off the right edge it drops and fades (falling state) before it
+    // resurfaces at the left. Drawn a warmer grey than the drift-slabs so the belt reads
+    // as machinery, not enchanted stone.
+    const g=cx, hw=(b.w||2)/2, hh=(b.h||2)/2;
+    let yoff=0, alpha=1;
+    if(b.falling){ const p=Math.min(1,(b.fallT||0)/0.55); yoff=p*p*30; alpha=1-p*0.9; }   // accelerating drop + fade
+    const c1=worldToScreen(b.x-hw,b.y-hh), c2=worldToScreen(b.x+hw,b.y-hh), c3=worldToScreen(b.x+hw,b.y+hh), c4=worldToScreen(b.x-hw,b.y+hh);
+    for(const c of [c1,c2,c3,c4]) c.y+=yoff;
+    g.save(); g.globalAlpha=alpha;
+    if(!b.falling){ g.fillStyle='rgba(0,0,0,0.4)';   // shadow down into the pit (none once it's tipped away)
+      g.beginPath(); g.moveTo(c1.x,c1.y+7); g.lineTo(c2.x,c2.y+7); g.lineTo(c3.x,c3.y+7); g.lineTo(c4.x,c4.y+7); g.closePath(); g.fill(); }
+    const gr=g.createLinearGradient(c1.x,c1.y,c3.x,c3.y); gr.addColorStop(0,'#7a6f60'); gr.addColorStop(1,'#403830');
+    g.fillStyle=gr; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
+    g.strokeStyle='#9a8d78'; g.lineWidth=1.6; g.stroke();   // pale carved rim
+    // two grooves running along the direction of travel, so the tile reads as a moving belt-plate
+    g.strokeStyle='rgba(24,18,12,0.5)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo((c1.x*3+c4.x)/4,(c1.y*3+c4.y)/4); g.lineTo((c2.x*3+c3.x)/4,(c2.y*3+c3.y)/4);
+    g.moveTo((c1.x+c4.x*3)/4,(c1.y+c4.y*3)/4); g.lineTo((c2.x+c3.x*3)/4,(c2.y+c3.y*3)/4); g.stroke();
+    g.restore(); return;
   }
   if(b.kind==='shoottarget'){
     // a wall-mounted mechanism you must strike with an arrow or bolt to work its gate. Glows warm
