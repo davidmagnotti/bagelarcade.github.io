@@ -1022,12 +1022,12 @@ function placeObjectsEastDeep(){
   const ward={kind:'staffgate', x:53.5, y:29.5, tiles:FENCE, open:false, label:'the Ember Ward'};
   G.decor.push(ward);
   G.decor.push({kind:'chest', x:58.5, y:29.5, deep:1, emberking:1});
-  // ---- THE VAULT FERRY: the approach was swallowed by the pit, so a floating basalt slab
-  // drifts across it. Board from the R3 far ledge, ride south to the landing pad, then break
-  // the Ember Ward with the fire staff. ----
+  // ---- THE VAULT CROSSING: a STATIONARY stepping-stone. A drifting slab used to nudge you off,
+  // so instead a fixed basalt slab sits mid-pit - DASH from the R3 far ledge onto it, then DASH
+  // again onto the landing pad west of the Ember Ward (break the Ward with the fire staff). ----
   for(const [x,y] of [[50,28],[51,28],[52,28],[50,29],[51,29],[52,29],[50,30],[51,30],[52,30]]) pad(x,y);   // solid landing pad west of the fence
-  G._eastSlabs.push({kind:'driftslab', ax:51, ay:22.5, bx:51, by:28.5, spd:0.95, phase:0, x:51, y:22.5, prevx:51, prevy:22.5, w:3, h:4});
-  G.decor.push(G._eastSlabs[G._eastSlabs.length-1]);
+  for(const [x,y] of [[50,24],[51,24],[52,24],[50,25],[51,25],[52,25],[50,26],[51,26],[52,26]]) pad(x,y);   // the mid-pit stepping stone (solid footing)
+  G.decor.push({kind:'driftslab', x:51.5, y:25.5, w:3, h:3});   // drawn as a raised stone slab; STATIC (not in G._eastSlabs, so it never drifts)
   G.decor.push({kind:'lamp', x:55.5, y:25.5}); G.decor.push({kind:'lamp', x:60.5, y:25.5});
   if(P.story && (P.story.emberWard || P.story.emberDone)){   // already broken - keep it open
     ward.open=true; for(const [x,y] of FENCE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
@@ -1752,42 +1752,71 @@ function placeObjectsAerieDeep(){
   G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[]; G._aerieMazeTiles=[];
   G._aerieSpawnT=6; G._aerieZap=null;
   const beam=(x,y,dx,dy,len,period,phase)=>{ const b={kind:'skybeam', x, y, dx, dy, len, period, phase, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
-  // carve a serpentine maze into [x0..x1]x[y0..y1]: solid stone everywhere except a 3-wide path that
-  // snakes up through the horizontal `legs` (south->north), with a vertical ward-lance across each leg.
-  const LANE=3;   // corridor thickness (tiles)
-  const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period, branches)=>{
+  // A WIDE BRANCHING GRID-MAZE: a spanning tree over a cols x rows grid of 3-wide cells, so the
+  // corridors fork into many FALSE PATHS and dead ends. Enter from the south, and the ward-plate
+  // that unlocks the gate is hidden in the dead end FARTHEST from the door - so you must weave the
+  // whole maze to reach it, then double back to the gate. Ward-lances span each guarded corridor
+  // WALL TO WALL, the first one right off the entry.
+  const LANE=3, PITCH=4;   // 3-wide corridors, 1-wide walls between cells
+  const aerieMaze=(o)=>{
+    const {x0,y0,cols,rows,col,wall,entryStub,gateStub,gateObj,cross,period,seed,beams=3}=o;
     const safe=new Set();
-    const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
-    const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
-    const leftX=x0+3, rightX=x1-3-LANE; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
-    for(let i=0;i<legs.length;i++){ const y=legs[i], goRight=(i%2===0), b=goRight?rightX:leftX;
-      H(y, prevEnd, b); beamsAt.push([Math.round((Math.min(prevEnd,b)+Math.max(prevEnd,b))/2), y]);
-      if(i<legs.length-1){ V(b, legs[i+1], y); prevEnd=b; } else { H(y, b, exitX); V(exitX, y0, y); } }
-    // DEAD-END BRANCHES: full-lane spurs off the path into the adjacent wall margin, each the same
-    // width as the corridors and running a few tiles wide into the stone, ending in a tonic cache.
-    const chestSpots=[];
-    for(const br of (branches||[])){ const a=Math.min(br.x0,br.x1), b=Math.max(br.x0,br.x1);
-      for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(br.row+k));
-      chestSpots.push([br.chestX, br.row+1]); }
-    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
-      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }   // solid stone maze walls
-    beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+LANE/2, 0,1, 2.6, period, (i*0.41)%1));   // a vertical lance across each leg
-    for(const [cx,cy] of chestSpots) G.decor.push({kind:'chest', x:cx+0.5, y:cy+0.5, deep:1, potions:1});   // a tonic cache at each dead end
-    // the ward-plate at the maze's far end unlocks the gate when trodden
-    G.decor.push({kind:'boneplate', x:exitX+0.5, y:y0+0.5, gate:cross.gate, pressed:false, label:'a ward-plate'});
-    cross.plate=[exitX, y0];
+    const cX=cx=> x0 + cx*PITCH, cY=cy=> y0 + cy*PITCH;
+    const addRect=(ax,ay,w,h)=>{ for(let dx=0;dx<w;dx++) for(let dy=0;dy<h;dy++) safe.add((ax+dx)+','+(ay+dy)); };
+    const doorE=(cx,cy)=> addRect(cX(cx)+LANE, cY(cy), 1, LANE);   // open the wall between (cx,cy)&(cx+1,cy)
+    const doorS=(cx,cy)=> addRect(cX(cx), cY(cy)+LANE, LANE, 1);   // open the wall between (cx,cy)&(cx,cy+1)
+    // seeded DFS spanning tree (deterministic, so shared test links show the same maze)
+    let s=(seed>>>0)||1; const rng=()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+    const K=(cx,cy)=>cx+','+cy, adj={}; const link=(a,b)=>{ (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a); };
+    const eCx=col, eCy=rows-1, gCx=col, gCy=0, vis=new Set(), stack=[[eCx,eCy]]; vis.add(K(eCx,eCy));
+    while(stack.length){ const [cx,cy]=stack[stack.length-1], nb=[];
+      if(cx>0 && !vis.has(K(cx-1,cy))) nb.push([cx-1,cy,'W']);
+      if(cx<cols-1 && !vis.has(K(cx+1,cy))) nb.push([cx+1,cy,'E']);
+      if(cy>0 && !vis.has(K(cx,cy-1))) nb.push([cx,cy-1,'N']);
+      if(cy<rows-1 && !vis.has(K(cx,cy+1))) nb.push([cx,cy+1,'S']);
+      if(!nb.length){ stack.pop(); continue; }
+      const [nx,ny,dir]=nb[(rng()*nb.length)|0]; vis.add(K(nx,ny)); link(K(cx,cy),K(nx,ny));
+      if(dir==='E') doorE(cx,cy); else if(dir==='W') doorE(nx,ny); else if(dir==='S') doorS(cx,cy); else doorS(nx,ny);
+      stack.push([nx,ny]); }
+    for(let cy=0;cy<rows;cy++) for(let cx=0;cx<cols;cx++) addRect(cX(cx), cY(cy), LANE, LANE);   // carve every cell
+    addRect(cX(col), entryStub[0], LANE, entryStub[1]-entryStub[0]+1);   // entry stub -> south corridor
+    addRect(cX(col), gateStub[0],  LANE, gateStub[1]-gateStub[0]+1);     // gate stub  -> north corridor
+    // BFS from the gate cell: distances + parents, for the main path and the farthest dead end
+    const dist={}, par={}, gK=K(gCx,gCy); dist[gK]=0; const q=[gK];
+    for(let i=0;i<q.length;i++){ for(const n of (adj[q[i]]||[])){ if(!(n in dist)){ dist[n]=dist[q[i]]+1; par[n]=q[i]; q.push(n); } } }
+    // the ward-plate: the leaf cell (a dead end) farthest from the gate, never the entry/gate itself
+    let plateK=K(eCx,eCy), best=-1;
+    for(const k in dist){ if(k===K(eCx,eCy)||k===gK) continue; if((adj[k]||[]).length===1 && dist[k]>best){ best=dist[k]; plateK=k; } }
+    const [pcx,pcy]=plateK.split(',').map(Number), plateTile=[cX(pcx)+1, cY(pcy)+1];
+    // wall-fill the chamber around the carved maze
+    for(let y=wall[1];y<=wall[3];y++) for(let x=wall[0];x<=wall[2];x++){ if(!inb(x,y)||solidAt(x,y)||safe.has(x+','+y)) continue;
+      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }
+    // the true path entry -> gate, for placing the ward-lances that guard it
+    const path=[]; let k=K(eCx,eCy); while(k && k!==gK){ path.push(k); k=par[k]; } path.push(gK);
+    const innerN=path.length-2; const idxs=[];
+    for(let i=0;i<Math.min(beams,innerN);i++) idxs.push(1+Math.floor((i+1)*innerN/(Math.min(beams,innerN)+1)));
+    if(innerN>0) idxs[0]=1;   // the FIRST lance sits in the first corridor off the entry
+    const seenB=new Set();
+    idxs.filter(j=>j>=1 && j<=path.length-2 && !seenB.has(j) && seenB.add(j)).forEach((j,i)=>{
+      const [bx,by]=path[j].split(',').map(Number), [ax,ay]=path[j-1].split(',').map(Number), [nx,ny]=path[j+1].split(',').map(Number);
+      const horiz=Math.abs(ax-nx)>=Math.abs(ay-ny);   // path runs across this cell -> a vertical lance blocks it (wall to wall)
+      beam(cX(bx)+LANE/2, cY(by)+LANE/2, horiz?0:1, horiz?1:0, LANE/2+0.6, period, (i*0.37)%1); });
+    // tonic caches in the next-farthest dead ends
+    const leaves=Object.keys(adj).filter(kk=>(adj[kk]||[]).length===1 && kk!==plateK && kk!==K(eCx,eCy) && kk!==gK).sort((a,b)=>dist[b]-dist[a]);
+    for(const lk of leaves.slice(0,2)){ const [lx,ly]=lk.split(',').map(Number); G.decor.push({kind:'chest', x:cX(lx)+1.5, y:cY(ly)+1.5, deep:1, potions:1}); }
+    // the ward-plate, planted in the far dead end
+    G.decor.push({kind:'boneplate', x:plateTile[0]+0.5, y:plateTile[1]+0.5, gate:cross.gate, pressed:false, label:'a ward-plate'});
+    cross.plate=[plateTile[0], plateTile[1]];
     G.decor.push(gateObj); G._aerieCross.push(cross);
   };
-  // CHAMBER 1 - THE OSSUARY: a long 4-leg maze with two tonic dead ends -> ward-plate -> Bone Gate
-  aerieMaze(58,92, 77,95, [93,88,83,78], 75, 75,
-    {kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
-    {gate:'bone', openY:77, southY:96.0, entryX:75}, 2.5,
-    [{row:93, x0:85, x1:90, chestX:90}, {row:88, x0:58, x1:64, chestX:58}]);
-  // CHAMBER 2 - THE GALLERY: a longer 4-leg maze with two tonic dead ends -> ward-plate -> Sepulchre Gate
-  aerieMaze(58,92, 43,61, [59,54,49,44], 75, 75,
-    {kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
-    {gate:'sep', openY:43, southY:62.0, entryX:75}, 2.1,
-    [{row:59, x0:85, x1:90, chestX:90}, {row:54, x0:58, x1:64, chestX:58}]);
+  // CHAMBER 1 - THE OSSUARY: a wide 8x4 grid-maze -> a far ward-plate -> the Bone Gate
+  aerieMaze({ x0:59, y0:78, cols:8, rows:4, col:4, wall:[58,76,92,96], entryStub:[90,96], gateStub:[76,80],
+    gateObj:{kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
+    cross:{gate:'bone', openY:77, southY:95.0, entryX:75}, period:2.5, seed:52411, beams:3 });
+  // CHAMBER 2 - THE GALLERY: a wide 8x5 grid-maze, faster lances -> a far ward-plate -> the Sepulchre Gate
+  aerieMaze({ x0:59, y0:44, cols:8, rows:5, col:4, wall:[58,42,92,64], entryStub:[60,64], gateStub:[42,46],
+    gateObj:{kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
+    cross:{gate:'sep', openY:43, southY:61.0, entryX:75}, period:2.1, seed:60947, beams:4 });
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
