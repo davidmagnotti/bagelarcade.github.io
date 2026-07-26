@@ -71,6 +71,33 @@ function skyGatePlugTiles(g){
   }
   return out;
 }
+// break a road segment into floating rainbow PLATFORMS separated by open-sky GAPS you dash across.
+// A tile-space state machine keeps every gap run to 2 tiles (a dash clears ~2.8), so the crossing
+// is always makeable; the gate area (and the fading bridge) are left as solid road.
+function skyPlatformize(a,b){
+  const L=Math.hypot(b.x-a.x,b.y-a.y); if(L<1) return;
+  const ux=(b.x-a.x)/L, uy=(b.y-a.y)/L, px=-uy, py=ux;
+  let gm=null; for(const gg of SKY_GATES){ if((gg.a===a.key&&gg.b===b.key)||(gg.a===b.key&&gg.b===a.key)){ gm=skyGateMid(gg); break; } }
+  const stubA=a.r+2.2, stubB=b.r+2.2;   // keep solid footing right at each isle
+  // ordered, deduped centre tiles across the middle of the segment
+  const seq=[]; let last='';
+  for(let s=stubA; s<=L-stubB; s+=0.5){ const cx=a.x+ux*s, cy=a.y+uy*s, tx=Math.round(cx), ty=Math.round(cy), k=tx+','+ty;
+    if(k===last) continue; last=k; seq.push([cx,cy]); }
+  let mode='plat', run=0;   // 3 platform tiles, then 2 gap tiles, repeating
+  for(const [cx,cy] of seq){
+    if(mode==='plat' && run>=3){ mode='gap'; run=0; }
+    else if(mode==='gap' && run>=2){ mode='plat'; run=0; }
+    const nearGate = gm && Math.hypot(cx-gm.x, cy-gm.y) < 3.4;
+    if(mode==='gap' && !nearGate){
+      for(let w=-2;w<=2;w++){ const gx=Math.round(cx+px*w), gy=Math.round(cy+py*w);
+        if(!inb(gx,gy) || skyIsleTile(gx,gy) || tileAt(gx,gy)!==T.SNOW) continue;
+        setTile(gx,gy,T.DEEP); setSolid(gx,gy,0); G._skyPits.add(gx+','+gy);   // open-sky gap: walkable, but you fall
+        G.decor=G.decor.filter(d=>!(d.kind==='rainbow' && Math.floor(d.x)===gx && Math.floor(d.y)===gy));
+      }
+    }
+    run++;
+  }
+}
 function placeObjectsSkyDungeon(){
   P.story=P.story||{};
   // the wind-lost bird waits at the landing - your ride back down to the Cloudreach
@@ -106,6 +133,16 @@ function placeObjectsSkyDungeon(){
   }
   // the Storm-Eye's hoard, on the last isle
   { const s=skyIsle('i6'); G.decor.push({kind:'chest', x:s.x+0.5, y:s.y-3+0.5, sky:1, rich:11}); }
+  // ---- FLOATING RAINBOW PLATFORMS ----
+  // break each road (except the fading bridge) into rainbow platforms with open-sky GAPS you must
+  // DASH across; fall between them and the wind bears you back to the isle behind you.
+  G._skyPits=new Set(); G._skyFellHint=0;
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true;
+    toast('The high wind lifts your step - you can <b>DASH</b> across the gaps (tap <b>Shift</b> / the dodge button).',5000); }
+  for(let i=0;i<SKY_ISLES.length-1;i++){ const a=SKY_ISLES[i], b=SKY_ISLES[i+1];
+    if(a.key==='i2' && b.key==='i3') continue;   // the fading bridge is its own crossing
+    skyPlatformize(a,b);
+  }
   G.critters=[];
 }
 // is this fading tile currently solid footing? (a travelling on-wave across the bands)
@@ -239,6 +276,18 @@ function pressSkyTile(b){
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
+  // fall between the floating rainbow platforms -> the wind bears you back to the isle behind you
+  if(G._skyPits && G._skyPits.size && !P.dead && (P.rollT||0)<=0 && G._skyPits.has(Math.floor(P.x)+','+Math.floor(P.y))){
+    let best=null,bd=1e9;
+    for(const is of SKY_ISLES){ if(is.y < P.y-2) continue; const d=dist(P.x,P.y,is.x,is.y); if(d<bd){bd=d;best=is;} }
+    if(!best) for(const is of SKY_ISLES){ const d=dist(P.x,P.y,is.x,is.y); if(d<bd){bd=d;best=is;} }
+    if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(16);
+    burst(P.x,P.y-0.4,'hsl('+((G.time*120)%360|0)+',90%,70%)',14,2.4); shockwave(P.x,P.y,'rgba(255,255,255,0.8)',38);
+    P.x=best.x+0.5; P.y=best.y+0.5; P.click=null; P.moving=false;
+    G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+    if(!G._skyFellHint){ G._skyFellHint=1; toast('You drop between the floating rainbow platforms and the wind bears you back. <b>DASH across the gaps</b> - time your jumps from platform to platform.',5600); }
+    return;
+  }
   ensureSnatcher();   // wakes the cloud-snatcher the instant you cross the fading bridge
   // ---- THE FADING RAINBOW BRIDGE (i2 -> i3) ----
   if(G._skyFade && !P.story.skyG2){
