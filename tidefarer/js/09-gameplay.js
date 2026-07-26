@@ -675,6 +675,13 @@ function dragonFaints(m){
 // the isle above it too, so its nights fall quiet like any other cleared isle.
 const OVERWORLD_PARENT = { frostvault:'frost', frostdeep:'frost', aeriedeep:'aerie',
   eastdeep:'east', reachdeep:'reach', milldeep:'main', undermaw:'main', skydungeon:'sky' };
+// Is this mob a boss of any stripe? Covers the marquee bosses, the regional
+// named foes, and every dungeon beast - the full roster crowd-control (snare)
+// must never touch. Keep this list in step with the isle-clear check below.
+function isBossMob(m){
+  return !!(m && (m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
+    ||m.skyminiboss||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
+}
 // Record that this isle's boss has fallen. Once cleared, the wilds stop sending
 // night-wraiths here after dark, and any still abroad quietly disperse. This is
 // deliberately unannounced - the night simply stops being dangerous.
@@ -699,8 +706,7 @@ function killMob(m,skill){
   bossReward(m);
   // felling any isle boss - the marquee bosses, the regional named foes, or the
   // beasts denning in the isle's dungeons - marks the isle cleared and stills its nights
-  if(m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
-     ||m.skyminiboss||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast){
+  if(isBossMob(m)){
     markBossCleared();
   }
   killCredit(m.kind);
@@ -1535,7 +1541,7 @@ function updateProjs(dt){
         if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
           if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && !m2.sealed && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
-              if(p.snare && !m2.boss && !m2.bigBoss){ m2.snareT=p.snare; m2.windup=0;
+              if(p.snare && !isBossMob(m2)){ m2.snareT=p.snare; m2.windup=0;
                 burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); }
               if(p.stun){ m2.stunT=Math.max(m2.stunT||0,p.stun); m2.windup=0;
                 burst(m2.x,m2.y-0.3,'#eae0ff',8,2); } } }
