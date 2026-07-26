@@ -195,6 +195,8 @@ function nearestInteract(){
         label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
+    if(b.kind==='bonelever'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<1.8 && d<bd){ bd=d; best={type:'bonelever',o:b,label:b.on?'Lever (thrown)':'Pull the bone-lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'emberlever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -276,6 +278,7 @@ function doInteract(){
     enterFrostVault(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
+  if(it.type==='bonelever'){ facePoint(it.o.x,it.o.y); pullBoneLever(it.o); return; }
   if(it.type==='firelever'){ facePoint(it.o.x,it.o.y); pullFireLever(it.o); return; }
   if(it.type==='sluicelever'){ facePoint(it.o.x,it.o.y); pullSluiceLever(it.o); return; }
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);

@@ -2755,37 +2755,69 @@ function placeObjectsReachDeep(){
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
-  // ---- THE TRAP GAUNTLET ----
-  // The brine has long since drained - what's left is a killing corridor. Bone-hafted axes swing
-  // across the halls on a beat, arrow-slits in the walls loose bolts across the room, and spike
-  // plates snap up underfoot. Weave through the gaps (or DASH - a roll's frames pass clean through
-  // a blade), and clearing the far end of the ossuary grinds the Bone Gate up. A clip costs blood,
-  // not a restart, so keep moving. Pure read-the-hazard timing.
-  G._reachT=0; G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachGateOpen=false;
+  // ---- THE BONE-MAZE GAUNTLET ----
+  // The brine long since drained - what's left is a serpentine of catacomb stone, its corridors
+  // strung with killing traps. Bone-hafted axes swing across the halls, arrow-slits loose bolts
+  // down the lanes, and spike-plates snap up underfoot. TWO bone-gates seal the maze; each is
+  // held by a bone-lever you must find and throw before the way opens. The traps thicken the
+  // deeper you climb. A clip costs blood, not a restart - so weave (or DASH clean through a blade).
+  G._reachT=0; G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachGateOpen=false; G._reachMazeTiles=[];
   const axe=(x,y,amp,spd,phase,dmg)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:dmg||22}; G.decor.push(a); G._axes.push(a); };
   const emitter=(x,y,dx,dy,period,phase,dmg)=>{ const e={kind:'arrowtrap', x:x+0.5, y:y+0.5, dx, dy, period, phase, t:phase*period, warn:0, dmg:dmg||14}; G.decor.push(e); G._emitters.push(e); };
   const spikes=(x0,x1,y,spd,phase,dmg)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:dmg||16}; G.decor.push(s); G._spikes.push(s); } };
-  // dressing graves along the walls
-  for(const [gx,gy] of [[30,58],[50,58],[28,44],[52,44],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
-  // CORRIDOR A - two sweeping axes to teach the rhythm
-  axe(40, 72, 2.0, 2.4, 0);
-  axe(40, 66, 2.0, 2.4, Math.PI);
-  // THE OSSUARY - the gauntlet proper. The player climbs north (y62 -> y40) through, in order:
-  emitter(27, 58,  1, 0, 2.2, 0.00);   // an arrow-slit lane (west wall -> east)
-  spikes(32, 48, 54, 0.75, 0);         // a spike-plate strip
-  emitter(53, 51, -1, 0, 2.0, 0.30);   // an arrow-slit lane (east wall -> west)
-  axe(40, 48, 3.6, 1.9, 0.4);          // a wide swinging axe
-  emitter(27, 45,  1, 0, 2.1, 0.55);   // a last arrow-slit lane before the gate
+  // --- carve the serpentine safe path, then fill the rest of the Ossuary with solid bone walls ---
+  const OX0=26,OX1=54,OY0=40,OY1=62, LANE=3, leftX=28, rightX=50, entryX=40, exitX=40;
+  const safe=new Set();
+  const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++) for(let k=0;k<LANE;k++) safe.add(x+','+(y+k)); };
+  const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++) for(let k=0;k<LANE;k++) safe.add((x+k)+','+y); };
+  for(let x=38;x<=42;x++) for(let y=58;y<=62;y++) safe.add(x+','+y);   // entry vestibule (meets corridor A)
+  for(let x=38;x<=42;x++) for(let y=40;y<=42;y++) safe.add(x+','+y);   // exit vestibule (meets corridor B)
+  V(entryX,58,62); H(58,entryX,rightX);        // in from corridor A, east along leg 1
+  V(rightX,52,58); H(52,leftX,rightX);         // up, then west along leg 2
+  V(leftX,46,52);  H(46,leftX,rightX);         // up, then east along leg 3
+  V(rightX,42,46); H(42,exitX,rightX); V(exitX,40,42);   // up, west along leg 4, out to corridor B
+  for(let y=OY0;y<=OY1;y++) for(let x=OX0;x<=OX1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
+    setSolid(x,y,1); G._reachMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }
+  // --- two bone-gates across the connectors, each freed by a lever earlier on the path ---
+  const gate1=[[rightX,56],[rightX+1,56],[rightX+2,56]];   // across the leg1->leg2 climb
+  const gate2=[[leftX,50],[leftX+1,50],[leftX+2,50]];      // across the leg2->leg3 climb
+  for(const [x,y] of gate1){ setSolid(x,y,1); setTile(x,y,T.RUIN); G.decor.push({kind:'bonebars', x:x+0.5, y:y+0.5, gate:'r1'}); }
+  for(const [x,y] of gate2){ setSolid(x,y,1); setTile(x,y,T.RUIN); G.decor.push({kind:'bonebars', x:x+0.5, y:y+0.5, gate:'r2'}); }
+  G.decor.push({kind:'bonelever', x:45.5, y:59.5, on:false, gate:'r1', gateTiles:gate1,
+    openBanner:'THE FIRST BONE-GATE GRINDS UP', openSub:'THE MAZE OPENS NORTH', label:'a bone-lever'});
+  G.decor.push({kind:'bonelever', x:35.5, y:53.5, on:false, gate:'r2', gateTiles:gate2,
+    openBanner:'THE SECOND BONE-GATE GRINDS UP', openSub:'THE WAY TO THE VAULT NEARS', label:'a bone-lever'});
+  // dressing graves set into the maze walls
+  for(const [gx,gy] of [[27,61],[53,61],[27,41],[53,41],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
+  // --- the traps, thickening leg by leg as you climb ---
+  axe(40, 72, 2.0, 2.4, 0); axe(40, 66, 2.0, 2.4, Math.PI);   // CORRIDOR A - teach the rhythm
+  axe(48, 59, 2.0, 2.0, 0.2);                                 // LEG 1 (easy) - one slow blade
+  spikes(30, 49, 53, 0.8, 0.0); axe(31, 53, 2.0, 2.2, 0.6);   // LEG 2 (medium) - spike strip + blade
+  emitter(28, 47,  1, 0, 2.0, 0.00); emitter(52, 47, -1, 0, 2.0, 0.5); axe(40, 47, 3.4, 2.0, 0.3);  // LEG 3 (hard) - crossfire + wide blade
+  axe(40, 43, 3.0, 2.6, 0.0); spikes(34, 47, 43, 0.9, 0.4);   // LEG 4 (hardest) - fast blade + spikes
   // R3: the warden's hoard
   G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
   G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
   G.critters=[];
   G._reachHint=0;
-  // a cleared run (the warden is down) leaves the traps stilled and the gate standing open
+  // a cleared run (the warden is down) tears the maze down, stills the traps and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
-    G.decor=G.decor.filter(d=>d.kind!=='axetrap' && d.kind!=='arrowtrap' && d.kind!=='spiketile' && d.kind!=='traparrow');
-    G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[];
+    for(const [x,y] of (G._reachMazeTiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    for(const [x,y] of [...gate1,...gate2]){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    G.decor=G.decor.filter(d=>d.kind!=='axetrap' && d.kind!=='arrowtrap' && d.kind!=='spiketile' && d.kind!=='traparrow'
+      && !(d.kind==='ewall'&&d.maze) && d.kind!=='bonebars' && d.kind!=='bonelever');
+    G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachMazeTiles=[];
     for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); } }
+}
+// throw a catacomb bone-lever: grind its bone-gate up (its tiles clear) for good
+function pullBoneLever(b){
+  if(b.on){ toast('This bone-lever is already thrown - its gate stands open.',2800); return; }
+  b.on=true; Snd.quest&&Snd.quest(); buzz&&buzz(8);
+  shockwave(b.x,b.y,'rgba(200,190,170,0.85)',46); burst(b.x,b.y-0.4,'#d8cbb0',12,1.8); G.shake=Math.max(G.shake||0,0.35);
+  for(const [x,y] of (b.gateTiles||[])){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+  G.decor=G.decor.filter(d=>!(d.kind==='bonebars' && d.gate===b.gate));
+  invalidateScenery&&invalidateScenery();
+  banner(b.openBanner||'A BONE-GATE GRINDS UP', b.openSub||'THE MAZE OPENS AHEAD');
 }
 // spawn a single bolt from a wall-slit, travelling in the emitter's fixed direction
 function spawnTrapArrow(e){

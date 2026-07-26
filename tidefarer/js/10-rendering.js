@@ -54,7 +54,7 @@ function buildGroundCache(){
    live entities. Rebuilt only when a node is harvested or respawns. */
 /* Decor that changes/moves stays drawn live; everything else (houses, lamps,
    walls, fences, pillars, stumps...) is static and gets baked. */
-const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
+const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1,
   coggate:1, millgear:1, millwheel:1, sluicelever:1,
@@ -802,6 +802,30 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(0,-2); g.lineTo(Math.sin(ang)*11,-2-Math.cos(ang)*13); g.stroke();
     g.fillStyle= b.on? '#8fe0b0':'#7fd4ff'; g.beginPath(); g.arc(Math.sin(ang)*11,-2-Math.cos(ang)*13,3.4,0,TAU); g.fill();
     if(!b.on){ g.fillStyle='rgba(127,212,255,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    g.restore(); return;
+  }
+  if(b.kind==='bonelever'){
+    // a catacomb bone-lever: a skull-capped handle on a stone socket, throwing it grinds a bone-gate up
+    const g=cx; drawShadowAt(g,s.x,s.y,7); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#5a5048'; g.beginPath(); g.ellipse(0,-1,6,3,0,0,TAU); g.fill();   // stone socket
+    g.strokeStyle='#2c261f'; g.lineWidth=1.2; g.stroke();
+    g.strokeStyle='#cabfa6'; g.lineWidth=3; g.lineCap='round';                      // bone haft
+    const ang=b.on? 0.75 : -0.75;
+    const hx=Math.sin(ang)*11, hy=-2-Math.cos(ang)*13;
+    g.beginPath(); g.moveTo(0,-2); g.lineTo(hx,hy); g.stroke();
+    g.fillStyle= b.on? '#8a7c6c':'#e8ddc4'; g.beginPath(); g.arc(hx,hy,3.6,0,TAU); g.fill();   // skull knob
+    g.strokeStyle='#7a6f58'; g.lineWidth=1; g.stroke();
+    if(!b.on){ g.fillStyle='rgba(232,221,196,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 14px Georgia'; g.textAlign='center'; g.fillText('!',0,-30); }
+    g.restore(); return;
+  }
+  if(b.kind==='bonebars'){
+    // one tile of a bone portcullis sealing a maze corridor - pale bone bars on a dark socket
+    const g=cx; g.save(); g.translate(s.x,s.y); drawShadowAt(g,0,0,16);
+    g.fillStyle='#2c2622'; g.fillRect(-17,-40,34,5); g.strokeStyle='#120f0c'; g.lineWidth=1.2; g.strokeRect(-17,-40,34,5);   // lintel
+    g.fillStyle='rgba(20,16,14,0.72)'; g.fillRect(-16,-35,32,40);   // dark backing so no gaps show
+    g.fillStyle='#cabfa6'; g.strokeStyle='#7a6f58'; g.lineWidth=1;
+    for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.4,-35,4.8,40); g.strokeRect(i*11-2.4,-35,4.8,40); }   // vertical bars
+    g.fillStyle='#b3a888'; for(let yy=-30;yy<=-4;yy+=12){ g.fillRect(-16,yy,32,3.2); }               // rib cross-bars
     g.restore(); return;
   }
   if(b.kind==='boneplate'){
