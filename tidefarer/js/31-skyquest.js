@@ -16,6 +16,26 @@ const SKY_ISLES = [
   {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
 ];
 function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
+/* ---------- gentle side-to-side sway for the little stepping-isles ----------
+   The small isles you hop across drift left and right on the high wind - one slow,
+   one brisk, alternating up the road. The landing (start) and the two boss-isles
+   (i4 the Storm-Perch, i6 the Broken Crown) stay dead still, so a fight never shifts
+   under your feet. This is a purely visual, screen-space offset applied in the
+   renderer: an isle's tiles, its decor, and whoever stands on it all sway together,
+   so footing, dashes and the gaps between isles play exactly as before. */
+const SKY_SWING = {
+  i1:{amp:7, spd:0.8, phase:0.0},   // slow
+  i2:{amp:7, spd:1.7, phase:1.2},   // fast
+  i3:{amp:7, spd:0.8, phase:2.4},   // slow
+  i5:{amp:7, spd:1.7, phase:3.6}    // fast
+};
+// horizontal screen-space sway (px) for a world position, if it sits on a swaying isle
+function skyIsleSwingAt(wx,wy){
+  if(G.worldId!=='skydungeon') return 0;
+  for(const s of SKY_ISLES){ const cfg=SKY_SWING[s.key]; if(!cfg) continue;
+    if(dist(wx,wy,s.x,s.y) <= s.r+0.6) return cfg.amp*Math.sin(G.time*cfg.spd + cfg.phase); }
+  return 0;
+}
 // the gated bridges: each opens once its island's trial is met
 const SKY_GATES = [
   {gate:'g1', a:'i1', b:'i2', flag:'skyG1'},

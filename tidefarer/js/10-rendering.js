@@ -88,6 +88,9 @@ function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  // the Rainbow Road's little stepping-isles gently sway (skyIsleSwingAt); skipped in
+  // low-gfx, where the ground is a static blit and a sway would slide actors off it.
+  const SKYSWING = !LOWFX && G.worldId==='skydungeon' && typeof skyIsleSwingAt==='function';
   cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
   // Trauma-style shake: squared falloff (a punchier decay than linear), a small
   // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
@@ -124,7 +127,8 @@ function render(){
       const t=G.map[y*MAPW+x];
       if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - let the backdrop show
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
-      const sx=s.x - 0, sy=s.y;
+      let sx=s.x - 0; const sy=s.y;
+      if(SKYSWING && t===T.SNOW){ const sw=skyIsleSwingAt(x,y); if(sw) sx+=sw; }   // sway the isle tiles
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
       cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
       if(t===T.SHALLOW || t===T.DEEP){
@@ -201,6 +205,7 @@ function render(){
 
   if(DBG.entities) for(const it of items){
     const o=it.o, s=worldToScreen(o.x,o.y);
+    if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }   // ride the isle's sway
     switch(it.kind){
       case 'node': drawNode(o,s); break;
       case 'decor': case 'lamp': drawDecor(o,s); break;
