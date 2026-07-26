@@ -1710,24 +1710,28 @@ function placeObjectsAerieDeep(){
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
   for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
     G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
-  // ---- THE CURSED GALE ----
-  // Vath's wind howls up through the catacomb, gusting on a cycle. Each chamber is a black
-  // PIT crossed by a single narrow bone-bridge; the gust tries to shove you off the bridge
-  // into the dark. Cross in the lulls, or duck behind a bone-pillar (a pillar just upwind
-  // shelters you). Fall and you climb back to the near bank to try the crossing again.
-  G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0;
+  // ---- THE WARD-LANCES ----
+  // Vath's curse fires lances of violet light across the catacomb on a beat. Each chamber is a
+  // black PIT crossed by a single narrow bone-bridge, and the lances sweep the bridge at set
+  // points along it. Watch the telegraph, then MOVE UP through a lance the instant it dies and
+  // PAUSE in the gap before the next - a dash's roll passes through a live lance unharmed. Get
+  // caught in a lance and it blasts you (and can pitch you off into the dark). Fall and you
+  // climb back to the near bank to try the crossing again.
+  G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[];
   const pit=(x0,x1,y0,y1,bx0,bx1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(x>=bx0&&x<=bx1) continue; /* the bridge stays safe */ G._aerieVoid.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*5)%9}); } };
-  const shelter=(x,y)=>{ if(inb(x,y)){ G.decor.push({kind:'pillarBroken', x:x+0.5, y:y+0.5, broken:((x+y)%2===0)}); setSolid(x,y,1); G._aerieVoid.delete(x+','+y); } };
-  // CHAMBER 1 - THE OSSUARY: a westerly gust across a bridge over the pit -> the Bone Gate
-  G.decor.push({kind:'windzone', x:75, y:85, x0:58, y0:76, x1:92, y1:96, dir:{x:-1,y:0}, mult:1.0});
+  const beam=(x,y,len,period,phase,dmg)=>{ const b={kind:'skybeam', x:x+0.5, y:y+0.5, dx:1, dy:0, len, period, phase, dmg:dmg||18, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
+  // CHAMBER 1 - THE OSSUARY: a bone-bridge over the pit, swept by three ward-lances -> the Bone Gate
   pit(58,92, 79,94, 74,76);
-  for(const [sx,sy] of [[77,90],[77,84]]) shelter(sx,sy);   // east-edge pillars to duck behind mid-bridge
+  beam(75, 91, 9, 2.5, 0.00);
+  beam(75, 87, 9, 2.5, 0.40);
+  beam(75, 83, 9, 2.5, 0.80);
   G.decor.push({kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'});
   G._aerieCross.push({gate:'bone', openY:79, southY:95.0});
-  // CHAMBER 2 - THE GALLERY: a stronger gust over a longer bridge -> the Sepulchre Gate
-  G.decor.push({kind:'windzone', x:75, y:53, x0:58, y0:42, x1:92, y1:64, dir:{x:-1,y:0}, mult:1.25});
+  // CHAMBER 2 - THE GALLERY: a longer bridge, faster lances -> the Sepulchre Gate
   pit(58,92, 45,61, 74,76);
-  for(const [sx,sy] of [[77,57],[77,50]]) shelter(sx,sy);
+  beam(75, 58, 9, 2.15, 0.20);
+  beam(75, 54, 9, 2.15, 0.60);
+  beam(75, 50, 9, 2.15, 0.00);
   G.decor.push({kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'});
   G._aerieCross.push({gate:'sep', openY:45, southY:63.0});
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
@@ -1737,11 +1741,10 @@ function placeObjectsAerieDeep(){
   // a warden's hoard, once the deed is done
   G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
   G.critters=[];
-  G._galeT=0;   // reset the wind cycle for this descent
   // a cleared run leaves the gates open and the pits floored over (no crossing to redo)
   if(P.story && P.story.aerieFreed){
     for(const g of G.decor){ if(g.kind==='beamgate'){ g.done=true; g.open=true; g.openAmt=1; for(const [x,y] of g.tiles){ setSolid(x,y,0); setTile(x,y,T.RUIN); } } }
-    G.decor=G.decor.filter(d=>d.kind!=='bonepit'); G._aerieVoid=new Set();
+    G.decor=G.decor.filter(d=>d.kind!=='bonepit' && d.kind!=='skybeam'); G._aerieVoid=new Set(); G._aerieBeams=[];
   }
 }
 function spawnMobsAerieDeep(){
@@ -1765,36 +1768,43 @@ function enterAerieDungeon(){
     } }, 300);
 }
 function exitAerieDungeon(){
+  // Vath's curse seals the climb: you cannot leave (to slip away and heal) until the cursed tome
+  // is destroyed. Once it's burnt, the way up is free.
+  if(!(P.story && P.story.aerieFreed)){
+    Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.3);
+    banner('THE CLIMB IS SEALED','DESTROY THE CURSED TOME TO LEAVE');
+    toast('Violet frost crawls across the stair and will not let you pass. <b>The curse seals the Underclimb until the tome is destroyed</b> - put down its warden and burn it, then the way up opens.',5200);
+    return;
+  }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P.click=null;
   setTimeout(()=>{ switchWorld('aerie');
     const r=P._aerieReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
-// THE CURSED GALE: the wind gusts on a cycle - calm, then a hard blow, then calm again.
-const GALE_PERIOD=7.0, GALE_PUSH=2.4, GALE_GRACE=3.6;
-function galeStrength(){   // 0 in the lulls, ramping to 1 at the height of the gust
-  const ph=((G._galeT||0)%GALE_PERIOD)/GALE_PERIOD;
-  if(ph<0.42) return 0;
-  if(ph<0.52) return (ph-0.42)/0.10;
-  if(ph<0.82) return 1;
-  if(ph<0.92) return (0.92-ph)/0.10;
-  return 0;
+// distance from a point to a line segment (used by the ward-lance hit test)
+function distToSeg(px,py, ax,ay, bx,by){
+  const dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
+  let tt = l2? ((px-ax)*dx+(py-ay)*dy)/l2 : 0; tt=Math.max(0,Math.min(1,tt));
+  const cx2=ax+tt*dx, cy2=ay+tt*dy; return Math.hypot(px-cx2, py-cy2);
 }
+// THE WARD-LANCES: violet beams fire across each bridge on a beat. Telegraph, then fire; a live
+// lance blasts you (and can knock you off into the pit). A dash passes through unharmed.
 function updateAerieDeep(dt){
-  G._galeT=(G._galeT||0)+dt;
-  const gust=galeStrength();
-  // ---- the wind shoves you through any gust-zone you stand in, unless a wall or pillar
-  //      just upwind shelters you ----
-  if(gust>0 && !dlg.open && (P.rollT||0)<=0){
-    for(const z of G.decor){ if(z.kind!=='windzone') continue;
-      if(P.x>=z.x0 && P.x<=z.x1 && P.y>=z.y0 && P.y<=z.y1){
-        const d=z.dir, sheltered=solidAt(Math.floor(P.x-d.x), Math.floor(P.y-d.y));
-        if(!sheltered){ const f=GALE_PUSH*(z.mult||1)*gust*dt; moveEntity(P, d.x*f, d.y*f, 0.28); }
-      }
+  const t=(G._aerieT=(G._aerieT||0)+dt);
+  const safe = P.dead || (P.rollT||0)>0;
+  for(const b of (G._aerieBeams||[])){
+    const p=((t/b.period + b.phase)%1 + 1)%1;
+    b.warn = (p>=0.55 && p<0.70)? (p-0.55)/0.15 : 0;
+    b.on   = p>=0.70 && p<0.92;
+    if(b.on && !safe){
+      const d=distToSeg(P.x,P.y, b.x-b.dx*b.len, b.y-b.dy*b.len, b.x+b.dx*b.len, b.y+b.dy*b.len);
+      if(d<0.5) hurtPlayer(b.dmg, {x:b.x, y:b.y, lvl:12});
     }
+    if(b.on && Math.random()<0.5){   // sparks streaming off a live lance
+      const s=rnd(-b.len,b.len); G.parts.push({x:b.x+b.dx*s, y:b.y+b.dy*s, vx:rnd(-0.4,0.4), vy:rnd(-0.6,0.2), life:rnd(0.2,0.5), color:'rgba(199,123,255,0.7)', size:rnd(1,2.4), grav:0}); }
   }
-  // ---- reaching the far bank of a pit opens that chamber's bone gate ----
+  // ---- reaching the far bank of a pit opens that chamber's gate ----
   for(const c of (G._aerieCross||[])){ const g=G.decor.find(d=>d.kind==='beamgate' && d.gate===c.gate);
     if(g && !g.done && P.y < c.openY){ g.done=true; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
       if(g.gate==='bone') banner('THE BONE GATE GRINDS UP','THE GALLERY LIES BEYOND');
@@ -1805,7 +1815,7 @@ function updateAerieDeep(dt){
     const openNow=g.openAmt>0.55;
     if(openNow!==g.open){ g.open=openNow; for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1); }
   }
-  // ---- the pit: blown or stepped off the bridge and you fall, back to the near bank ----
+  // ---- the pit: blasted or stepped off the bridge and you fall, back to the near bank ----
   if(!P.dead && (P.rollT||0)<=0 && G._aerieVoid && G._aerieVoid.has(Math.floor(P.x)+','+Math.floor(P.y))){
     const py=Math.floor(P.y);
     let c=(G._aerieCross||[]).find(cc=>py>=cc.openY && py<cc.southY) || (G._aerieCross||[])[0];
@@ -1813,14 +1823,7 @@ function updateAerieDeep(dt){
     burst(P.x,P.y-0.3,'#c8b0d8',16,2.6); shockwave(P.x,P.y,'rgba(180,160,200,0.7)',40);
     if(c){ P.x=75.0; P.y=c.southY; } P.click=null; P.moving=false; P.slideDir=null;
     if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-    if(!G._aerieFallHint){ G._aerieFallHint=1; toast('The gust pitches you off the bridge into the dark, and you haul yourself back to the near bank. <b>Cross in the lulls</b>, and duck behind a pillar when the wind rises.',5200); }
-  }
-  // ---- streaming wind, for readability, blown along each zone while it gusts ----
-  if(gust>0.12){
-    for(const z of G.decor){ if(z.kind!=='windzone') continue;
-      if(Math.random()<gust*0.7){ const wx=z.x0+Math.random()*(z.x1-z.x0), wy=z.y0+Math.random()*(z.y1-z.y0);
-        G.parts.push({x:wx,y:wy,vx:z.dir.x*(2.4+2.6*gust),vy:z.dir.y*(2.4+2.6*gust),life:rnd(0.3,0.7),color:'rgba(205,214,230,0.5)',size:rnd(1,2.3),grav:0}); }
-    }
+    if(!G._aerieFallHint){ G._aerieFallHint=1; toast('You pitch off the bridge into the dark and haul yourself back to the near bank. <b>Move up through a lance the instant it dies, and pause in the gap before the next</b> - or dash straight through.',5200); }
   }
 }
 /* =====================================================================
@@ -4160,8 +4163,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
     setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
-    setTimeout(()=>banner('THE UNDERCLIMB','CROSS THE BRIDGES BEFORE THE GUST TAKES YOU'),1200);
-    setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves.</i> Each chamber is a black <b>pit</b> spanned by one narrow <b>bone-bridge</b> - the gust tries to shove you off it into the dark. <b>Cross in the lulls</b>, and duck behind a <b>pillar</b> when the wind rises (a pillar just upwind shelters you). Reach the far bank and the gate grinds up.',8500),1800); }
+    setTimeout(()=>banner('THE UNDERCLIMB','TIME THE WARD-LANCES ACROSS THE BRIDGES'),1200);
+    setTimeout(()=>toast('<i>Vath\'s curse fires lances of violet light across the catacomb.</i> Each chamber is a black <b>pit</b> spanned by one narrow <b>bone-bridge</b>, swept by ward-lances at points along it. Watch the telegraph, then <b>move up through a lance the instant it dies and pause in the gap</b> before the next - or <b>DASH</b> (tap <b>Shift</b> / the dodge button) straight through a live one. Get blasted and it can pitch you off into the dark. Reach the far bank and the gate grinds up. <b>The curse seals the climb until you destroy the tome below.</b>',9500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;

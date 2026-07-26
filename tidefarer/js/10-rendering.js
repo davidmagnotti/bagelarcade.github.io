@@ -61,7 +61,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
-  axetrap:1, arrowtrap:1, traparrow:1, spiketile:1,
+  axetrap:1, arrowtrap:1, traparrow:1, spiketile:1, skybeam:1,
   firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
@@ -1343,6 +1343,23 @@ function drawDecor(b,s){
     g.fillStyle='#eef0f2'; g.beginPath(); g.moveTo(10,0); g.lineTo(5,-2.6); g.lineTo(5,2.6); g.closePath(); g.fill();   // steel head
     g.strokeStyle='#c9b48a'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-7,0); g.lineTo(-9,-2.4); g.moveTo(-7,0); g.lineTo(-9,2.4); g.stroke();   // fletching
     g.restore(); return;
+  }
+  if(b.kind==='skybeam'){
+    // a ward-lance: a violet emitter at each end, and the beam itself when it telegraphs / fires
+    const g=cx;
+    const a=worldToScreen(b.x-b.dx*b.len, b.y-b.dy*b.len), c=worldToScreen(b.x+b.dx*b.len, b.y+b.dy*b.len);
+    const ay=a.y-7, cy=c.y-7;
+    g.fillStyle='#2a2038'; g.beginPath(); g.arc(a.x,ay,4.5,0,TAU); g.arc(c.x,cy,4.5,0,TAU); g.fill();   // emitter nubs
+    g.fillStyle='rgba(199,123,255,'+(0.4+0.5*(b.on?1:b.warn)).toFixed(2)+')'; g.beginPath(); g.arc(a.x,ay,2.4,0,TAU); g.arc(c.x,cy,2.4,0,TAU); g.fill();
+    if(b.on){
+      g.strokeStyle='rgba(199,123,255,0.9)'; g.lineWidth=5; g.lineCap='round';
+      g.beginPath(); g.moveTo(a.x,ay); g.lineTo(c.x,cy); g.stroke();
+      g.strokeStyle='rgba(244,228,255,0.95)'; g.lineWidth=2; g.beginPath(); g.moveTo(a.x,ay); g.lineTo(c.x,cy); g.stroke();
+    } else if(b.warn>0){
+      g.strokeStyle='rgba(199,123,255,'+(0.15+0.4*b.warn).toFixed(2)+')'; g.lineWidth=1.5; g.setLineDash([4,6]);
+      g.beginPath(); g.moveTo(a.x,ay); g.lineTo(c.x,cy); g.stroke(); g.setLineDash([]);
+    }
+    return;
   }
   if(b.kind==='axetrap'){
     // a pendulum bone-axe: a haft hung from a high pivot, a broad blade at its swinging foot.
