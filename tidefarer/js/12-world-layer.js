@@ -1523,7 +1523,9 @@ function askAshwingHome(){
     btns.push({label:'Fly up into the Cloudreach', fn:()=>{ closeDialog(); flyToCloudreach(); }});
   }
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
-  setDialog('<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
+  // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
+  // into a hidden panel - otherwise the "Fly home" menu never shows
+  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
@@ -3262,7 +3264,9 @@ function askSkyDragon(){
   btns.push({label:'Fly back to the Sunward Isle', cls: runRoad?undefined:'gold', fn:()=>{ closeDialog();
     flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
-  setDialog('<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
+  // open the dialog window itself (dlg.open + display + portrait) via lairDialog - calling
+  // setDialog alone only fills a HIDDEN panel, so the menu never appeared and "Fly down" read as dead
+  lairDialog('Ashwing','<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
