@@ -873,24 +873,44 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='catgate'){
-    const g=cx; g.save(); g.translate(s.x,s.y);
-    // width scales with the sealed span (its tile-row), so a wide mouth gets a wide portcullis
-    // and a 5-tile corridor keeps the original look (half = 2 -> W = 30, the old hardcoded value)
-    const half=Math.floor((((b.tiles&&b.tiles.length)||5)-1)/2), W=half*11+8;
-    if(b.open){ // raised into the ceiling - just the top lintel and stubs remain
-      g.fillStyle='#3a332c'; g.fillRect(-W,-44,W*2,7);
-      g.strokeStyle='#1c1814'; g.lineWidth=1.4; g.strokeRect(-W,-44,W*2,7);
-      g.fillStyle='#2a241e'; for(let i=-half;i<=half;i++){ g.fillRect(i*11-2,-44,4,7); }
+    // an iron portcullis dropped across the corridor. The sealed tiles run along the iso
+    // diagonal (a constant-y tile row => +1 tile is +32 screen-x, +16 screen-y), so the gate
+    // is drawn WALL-TO-WALL down that diagonal - one bar-set per corridor tile - rather than as
+    // a flat screen-aligned fence that left the mouth uncovered and faced the wrong way.
+    const g=cx, H=38;
+    const txs=(b.tiles&&b.tiles.length)? b.tiles.map(t=>t[0]) : [b.x];
+    const x0=Math.min(...txs), x1=Math.max(...txs), c0=(x0+x1)/2;
+    const oxL=(x0-c0)*32, oyL=(x0-c0)*16;   // leftmost (north-west) tile face
+    const oxR=(x1-c0)*32, oyR=(x1-c0)*16;   // rightmost (south-east) tile face
+    const tiles=[]; for(let tx=x0;tx<=x1;tx++) tiles.push(tx);
+    if(b.open){ // raised into the ceiling - just the lintel beam and stub teeth remain
+      g.save(); g.translate(s.x,s.y);
+      g.fillStyle='#3a332c'; g.strokeStyle='#1c1814'; g.lineWidth=1.4;
+      g.beginPath(); g.moveTo(oxL-19,-44+oyL); g.lineTo(oxR+19,-44+oyR); g.lineTo(oxR+19,-37+oyR); g.lineTo(oxL-19,-37+oyL); g.closePath();
+      g.fill(); g.stroke();
+      g.fillStyle='#2a241e'; for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16; g.fillRect(ox-2,-44+oy,4,7); }
       g.restore(); return;
     }
-    drawShadowAt(g,s.x,s.y,W);
-    // an iron portcullis dropped across the corridor
-    g.fillStyle='#3a332c'; g.fillRect(-W,-40,W*2,6);           // top lintel
-    g.strokeStyle='#1c1814'; g.lineWidth=1.6;
-    g.fillStyle='#4a423a';
-    for(let i=-half;i<=half;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }  // vertical bars
-    g.fillStyle='#3f382f'; for(let yy=-30;yy<=-4;yy+=13){ g.fillRect(-(W-3),yy,(W-3)*2,3.5); }        // cross-bars
-    g.fillStyle='#5a5048'; for(let i=-half;i<=half;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet up top
+    drawShadowAt(g,s.x,s.y,(x1-x0)*16+18);
+    g.save(); g.translate(s.x,s.y);
+    // top lintel: one continuous beam across the whole corridor mouth, down the diagonal
+    g.fillStyle='#3a332c'; g.strokeStyle='#1c1814'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(oxL-19,-40+oyL); g.lineTo(oxR+19,-40+oyR); g.lineTo(oxR+19,-34+oyR); g.lineTo(oxL-19,-34+oyL); g.closePath();
+    g.fill(); g.stroke();
+    // dark backing slab filling the mouth wall-to-wall (a parallelogram down the diagonal)
+    g.beginPath(); g.moveTo(oxL-19,-34+oyL); g.lineTo(oxR+19,-34+oyR); g.lineTo(oxR+19,-34+oyR+H); g.lineTo(oxL-19,-34+oyL+H); g.closePath();
+    g.save(); g.clip(); g.fillStyle='#171310'; g.fill(); g.restore();
+    // iron vertical bars, one set per corridor tile, riding along the diagonal
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.save(); g.translate(ox,oy);
+      g.fillStyle='#4a423a'; g.strokeStyle='#1c1814'; g.lineWidth=1.2;
+      for(let i=-1;i<=1;i++){ g.fillRect(i*11-2.5,-38,5,38); g.strokeRect(i*11-2.5,-38,5,38); }   // 3 bars per tile
+      g.fillStyle='#5a5048'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(i*11,-38); g.lineTo(i*11-4,-32); g.lineTo(i*11+4,-32); g.closePath(); g.fill(); } // spiked feet
+      g.restore();
+    }
+    // cross-bars following the diagonal, tying the bar-sets together
+    g.strokeStyle='#3f382f'; g.lineWidth=3.2;
+    for(let yy=-30;yy<=-4;yy+=13){ g.beginPath(); g.moveTo(oxL-17,yy+oyL); g.lineTo(oxR+17,yy+oyR); g.stroke(); }
     g.restore(); return;
   }
   if(b.kind==='ashwing'){
