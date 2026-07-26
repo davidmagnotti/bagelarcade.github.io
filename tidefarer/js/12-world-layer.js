@@ -4267,10 +4267,12 @@ function switchWorld(id){
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;
   const def=WORLD_DEFS[id];
   MAPW=def.W; MAPH=def.H; SEED=def.seed; ZONES=def.zones;
-  // THE UNDERMILL resets its water-maze every visit: the sluices seize shut again once you
-  // leave, so the halls always stand UNSOLVED (flooded) until you fell the Cog-Bound. Skip the
-  // cached (possibly already-drained) copy and regenerate a fresh, blocked puzzle each entry.
-  if(id==='milldeep' && !(P.story && P.story.millDone)) delete WORLDS[id];
+  // Wave / puzzle / trap dungeons reset fresh on every visit until they are BEATEN: otherwise a
+  // cached copy from an earlier descent (waves already killed, gates already open, traps sprung)
+  // shows up empty on re-entry. Skip the cache and regenerate a fresh challenge until it's won.
+  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown' };
+  const _fw=FRESH_UNTIL_WON[id];
+  if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
   if(WORLDS[id]){
     const w=WORLDS[id];
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;

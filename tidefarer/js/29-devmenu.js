@@ -76,9 +76,13 @@ function clearMobs(){
 }
 /* ---- dungeons: toggle each dungeon's WON state either way ---- */
 const DUNGEONS=[
-  ['Rimefissure', 'frostdeep', 'deepDone'],    // frost boss (Rimebound) freed
-  ['Underclimb',  'aeriedeep', 'aerieFreed'],  // aerie tome destroyed (+ surface birds calmed)
-  ['Emberdeep',   'eastdeep',  'emberDone'],   // Kea gates opened through to Ashwing
+  ['Rimefissure', 'frostdeep', 'deepDone'],       // frost boss (Rimebound) freed
+  ['Underclimb',  'aeriedeep', 'aerieFreed'],     // aerie tome destroyed (+ surface birds calmed)
+  ['Emberdeep',   'eastdeep',  'emberDone'],      // Kea gates opened through to Ashwing
+  ['Glacier Vault','frostvault','vaultDone'],     // the wave-gauntlet cleared
+  ['Drowned Catacomb','reachdeep','tombBossDown'],// the Drowned Minotaur felled
+  ['Undermill',   'milldeep',  'millDone'],       // the Cog-Bound felled
+  ['Undermaw',    'undermaw',  'undermawDown'],   // the Maw-Stalker felled
 ];
 function dungWon(flag){ return !!(typeof P!=='undefined' && P && P.story && P.story[flag]); }
 function dungLabel(name,flag){ return name+': '+(dungWon(flag)?'WON ✓':'not won'); }
