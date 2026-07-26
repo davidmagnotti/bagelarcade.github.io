@@ -2168,37 +2168,69 @@ function placeObjectsFrostVault(){
   for(const [tx,ty] of [[31,79],[49,79],[29,60],[51,60],[29,42],[53,42],[29,22],[51,22],[32,4],[56,4],[44,3]])
     if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire',x:x+0.5,y:y+0.5}); setSolid(x,y,1); } };
-  // ---- R2: one lever opens Gate 1 ----
-  G.decor.push({kind:'icelever', x:30.5, y:72.5, on:false, gateTiles:[[38,57],[39,57],[40,57],[41,57],[42,57]], label:'a frost-locked lever'});
-  spire(34,62); spire(46,68);   // a couple of pillars to slide around
-  // ---- R3: pillars to weave through on the slide, one lever opens Gate 2 ----
-  G.decor.push({kind:'icelever', x:30.5, y:53.5, on:false, gateTiles:[[38,38],[39,38],[40,38],[41,38],[42,38]], label:'a frost-locked lever'});
-  for(const [px,py] of [[36,46],[44,44],[48,50],[40,52],[34,50]]) spire(px,py);
-  // ---- R4: THREE wards; all must be thrown before Gate 3 opens ----
-  const G3=[[38,19],[39,19],[40,19],[41,19],[42,19]];
-  for(const [lx,ly] of [[31,33],[44,24],[49,32]])
-    G.decor.push({kind:'icelever', x:lx+0.5, y:ly+0.5, on:false, wardGroup:'vault', gateTiles:G3, label:'a frost-ward lever',
-      doneFlag:'vaultDone', openBanner:'THE THREE WARDS YIELD', openSub:'THE HOARD GATE GRINDS OPEN',
-      openMsg:'The last frost-ward turns and, with a groan of ancient ice, the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard lies open.</b>'});
-  spire(36,28); spire(46,28);
-  // ---- R5: the hoard ----
+  // arena cover: a few ice-pillars to break line-of-sight and fight around in each hall
+  for(const [px,py] of [[34,64],[46,68],[36,46],[48,50],[36,28],[46,28]]) spire(px,py);
+  // ---- THE GAUNTLET: three halls, each a wave-fight. Step in and the ice-beasts come in
+  // waves, one lot after the next; clear them all and the hall's gate grinds up. ----
+  G._vaultT=0;
+  G._vaultRooms=[
+    { key:'A', gy:57, gx0:38, gx1:42, y0:58, y1:73, sx:40, sy:65, active:false, done:false, wi:-1, spawnT:0,
+      waves:[ [['wolf',3]], [['wolf',3],['polarbear',1]] ] },
+    { key:'B', gy:38, gx0:38, gx1:42, y0:40, y1:54, sx:40, sy:47, active:false, done:false, wi:-1, spawnT:0,
+      waves:[ [['wolf',4]], [['polarbear',2]], [['wolf',3],['polarbear',1]] ] },
+    { key:'C', gy:19, gx0:38, gx1:42, y0:21, y1:35, sx:40, sy:28, active:false, done:false, wi:-1, spawnT:0,
+      waves:[ [['wolf',4]], [['polarbear',2],['wolf',2]], [['polarbear',2,true]] ] },
+  ];
+  // ---- R5: the Hoarfrost Hoard (the reward past the last gate) ----
   G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
   G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
   spire(30,5); spire(58,5); spire(30,15); spire(58,15);
   G.critters=[];
-  // an already-cleared run keeps every gate open
+  // an already-cleared run keeps every gate open and skips the fights
   if(P.story && P.story.vaultDone){
-    for(const b of G.decor){ if(b.kind==='icelever' && b.gateTiles){ b.on=true;
-      for(const [x,y] of b.gateTiles){ setTile(x,y,T.ICE); setSolid(x,y,0); } } }
+    for(const r of G._vaultRooms){ r.done=true; for(let x=r.gx0;x<=r.gx1;x++){ setTile(x,r.gy,T.ICE); setSolid(x,r.gy,0); } }
   }
 }
 function spawnMobsFrostVault(){
-  // a few ice-maddened bears and wolves den in the warm dark of the hoard chambers
-  const packs=[ [FROSTVAULT_ZONES.glide,'wolf',2], [FROSTVAULT_ZONES.wards,'wolf',2], [FROSTVAULT_ZONES.hoard,'polarbear',1] ];
-  for(const [z,kind,n] of packs){
-    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
-      const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
-      if(sp) spawnMob(kind, sp[0], sp[1]); }
+  // the halls are empty until you step into each one - the ice-beasts come in waves (see updateFrostVault)
+}
+// spawn one wave of a vault hall, tagged to that hall so we can tell when it's cleared
+function startVaultWave(r, i){
+  r.wi=i; r.spawnT=G._vaultT||0;
+  for(const [kind,count,elite] of (r.waves[i]||[])){
+    for(let k=0;k<count;k++){
+      const a=Math.random()*TAU, rr=1+Math.random()*4;
+      const sp=findOpenNear(Math.round(r.sx+Math.cos(a)*rr), Math.round(r.sy+Math.sin(a)*rr), 5) || [r.sx, r.sy];
+      const m=spawnMob(kind, sp[0], sp[1], !!elite);
+      if(m){ m._vaultRoom=r.key; m.respawnT=-1; m.hx=sp[0]; m.hy=sp[1]; }
+    }
+  }
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.3); buzz&&buzz(8);
+  banner(i===0?'THE ICE STIRS':'ANOTHER WAVE', 'WAVE '+(i+1)+' OF '+r.waves.length);
+}
+function openVaultGate(r){
+  for(let x=r.gx0;x<=r.gx1;x++){ setTile(x,r.gy,T.ICE); setSolid(x,r.gy,0); }
+  invalidateScenery&&invalidateScenery();
+  shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
+  if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
+    banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
+    toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
+  } else banner('THE HALL IS CLEARED','THE GATE GRINDS UP');
+}
+// drive the vault gauntlet: activate a hall when the player steps in, then feed waves until clear
+function updateFrostVault(dt){
+  const rooms=G._vaultRooms||[]; if(!rooms.length) return;
+  G._vaultT=(G._vaultT||0)+dt;
+  for(const r of rooms){
+    if(r.done) continue;
+    if(!r.active){
+      if(!P.dead && P.x>=28 && P.x<=54 && P.y>=r.y0 && P.y<=r.y1){ r.active=true; startVaultWave(r,0); }
+      continue;
+    }
+    if(r.wi>=0 && (G._vaultT - r.spawnT)>0.5){
+      const alive=G.mobs.some(m=>!m.dead && m._vaultRoom===r.key);
+      if(!alive){ if(r.wi+1 < r.waves.length) startVaultWave(r, r.wi+1); else { r.done=true; openVaultGate(r); } }
+    }
   }
 }
 function genFrostVaultAll(){
@@ -4166,7 +4198,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE UNDERCLIMB','TIME THE WARD-LANCES ACROSS THE BRIDGES'),1200);
     setTimeout(()=>toast('<i>Vath\'s curse fires lances of violet light across the catacomb.</i> Each chamber is a black <b>pit</b> spanned by one narrow <b>bone-bridge</b>, swept by ward-lances at points along it. Watch the telegraph, then <b>move up through a lance the instant it dies and pause in the gap</b> before the next - or <b>DASH</b> (tap <b>Shift</b> / the dodge button) straight through a live one. Get blasted and it can pitch you off into the dark. Reach the far bank and the gate grinds up. <b>The curse seals the climb until you destroy the tome below.</b>',9500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
-    setTimeout(()=>toast('<i>The ice gives no purchase - once you slide, only a footing-stone will stop you.</i> Levers open the gates; the last hall wants all three wards pulled.',7500),1400); }
+    setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
+    setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
     setTimeout(()=>banner('THE UNDERMILL','THE WORKS ARE SEIZED - GET THE WATER RUNNING'),1200);
     setTimeout(()=>toast('<i>The old grinding works stand dead and dry</i>, two iron <b>cog-gates</b> jammed shut across the way up. The miller’s arms-chest holds the <b>winch-crank</b> - take it, throw the <b>sluice wheel</b> to flood the race and set the gear-train turning, then <b>time your run</b> through the cog-gates to the thing that fouls the works.',8000),1800); }

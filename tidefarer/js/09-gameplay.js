@@ -1587,6 +1587,7 @@ function updateWorld(dt){
   if(G.worldId==='eastdeep' && typeof updateEastDeep==='function') updateEastDeep(dt);
   if(G.worldId==='milldeep' && typeof updateMillDeep==='function') updateMillDeep(dt);
   if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
+  if(G.worldId==='frostvault' && typeof updateFrostVault==='function') updateFrostVault(dt);
   if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
