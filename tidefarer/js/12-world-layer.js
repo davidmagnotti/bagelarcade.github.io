@@ -1710,30 +1710,37 @@ function placeObjectsAerieDeep(){
     G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:!!br});
   for(const [cx2,cy2] of [[66,80],[84,80],[66,48],[84,48]])
     G.decor.push({kind:'crypt', x:cx2+0.5, y:cy2+0.5});
-  // ---- THE WARD-LANCES ----
-  // Vath's curse fires lances of violet light across the catacomb on a beat. Each chamber is a
-  // black PIT crossed by a single narrow bone-bridge, and the lances sweep the bridge at set
-  // points along it. Watch the telegraph, then MOVE UP through a lance the instant it dies and
-  // PAUSE in the gap before the next - a dash's roll passes through a live lance unharmed. Get
-  // caught in a lance and it blasts you (and can pitch you off into the dark). Fall and you
-  // climb back to the near bank to try the crossing again.
+  // ---- THE WARD-MAZE ----
+  // Each chamber is a black bottomless PIT (the "bone-dots") cut through by a snaking safe path -
+  // a maze you must weave. Vath's curse fires lances of violet light ACROSS each corridor of the
+  // maze on a beat: watch the telegraph and slip past a lance only while it's dark. Step into the
+  // pit OR touch a live lance and you fall to your death, waking back at the hall's mouth with a
+  // little less blood (-5 HP). Reach the far side and the gate grinds up.
   G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[];
-  const pit=(x0,x1,y0,y1,bx0,bx1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(x>=bx0&&x<=bx1) continue; /* the bridge stays safe */ G._aerieVoid.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*5)%9}); } };
-  const beam=(x,y,len,period,phase,dmg)=>{ const b={kind:'skybeam', x:x+0.5, y:y+0.5, dx:1, dy:0, len, period, phase, dmg:dmg||18, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
-  // CHAMBER 1 - THE OSSUARY: a bone-bridge over the pit, swept by three ward-lances -> the Bone Gate
-  pit(58,92, 79,94, 74,76);
-  beam(75, 91, 9, 2.5, 0.00);
-  beam(75, 87, 9, 2.5, 0.40);
-  beam(75, 83, 9, 2.5, 0.80);
-  G.decor.push({kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'});
-  G._aerieCross.push({gate:'bone', openY:79, southY:95.0});
-  // CHAMBER 2 - THE GALLERY: a longer bridge, faster lances -> the Sepulchre Gate
-  pit(58,92, 45,61, 74,76);
-  beam(75, 58, 9, 2.15, 0.20);
-  beam(75, 54, 9, 2.15, 0.60);
-  beam(75, 50, 9, 2.15, 0.00);
-  G.decor.push({kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'});
-  G._aerieCross.push({gate:'sep', openY:45, southY:63.0});
+  const beam=(x,y,dx,dy,len,period,phase)=>{ const b={kind:'skybeam', x, y, dx, dy, len, period, phase, on:false, warn:0}; G.decor.push(b); G._aerieBeams.push(b); };
+  // carve a serpentine maze into [x0..x1]x[y0..y1]: all pit except a 2-wide path that snakes up
+  // through the horizontal `legs` (south->north), with a vertical ward-lance across each leg.
+  const aerieMaze=(x0,x1,y0,y1, legs, entryX, exitX, gateObj, cross, period)=>{
+    const safe=new Set();
+    const H=(y,xa,xb)=>{ const a=Math.min(xa,xb),b=Math.max(xa,xb); for(let x=a;x<=b;x++){ safe.add(x+','+y); safe.add(x+','+(y+1)); } };
+    const V=(x,ya,yb)=>{ const a=Math.min(ya,yb),b=Math.max(ya,yb); for(let y=a;y<=b;y++){ safe.add(x+','+y); safe.add((x+1)+','+y); } };
+    const leftX=x0+2, rightX=x1-3; V(entryX, legs[0], y1); let prevEnd=entryX; const beamsAt=[];
+    for(let i=0;i<legs.length;i++){ const y=legs[i], goRight=(i%2===0), b=goRight?rightX:leftX;
+      H(y, prevEnd, b); beamsAt.push([Math.round((Math.min(prevEnd,b)+Math.max(prevEnd,b))/2), y]);
+      if(i<legs.length-1){ V(b, legs[i+1], y); prevEnd=b; } else { H(y, b, exitX); V(exitX, y0, y); } }
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; if(safe.has(x+','+y)) continue;
+      G._aerieVoid.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*5)%9}); }
+    beamsAt.forEach(([bx,y],i)=> beam(bx+0.5, y+1.0, 0,1, 2.0, period, (i*0.41)%1));   // a vertical lance across each leg
+    G.decor.push(gateObj); G._aerieCross.push(cross);
+  };
+  // CHAMBER 1 - THE OSSUARY: a 3-leg maze -> the Bone Gate
+  aerieMaze(58,92, 79,94, [92,87,82], 75, 75,
+    {kind:'beamgate', x:75, y:70, x0:73, x1:77, tiles:[[73,70],[74,70],[75,70],[76,70],[77,70]], gate:'bone', openAmt:0, open:false, done:false, label:'the Bone Gate'},
+    {gate:'bone', openY:79, southY:95.0, entryX:75}, 2.5);
+  // CHAMBER 2 - THE GALLERY: a tighter maze, faster lances -> the Sepulchre Gate
+  aerieMaze(58,92, 45,60, [58,53,48], 75, 75,
+    {kind:'beamgate', x:75, y:38, x0:73, x1:77, tiles:[[73,38],[74,38],[75,38],[76,38],[77,38]], gate:'sep', openAmt:0, open:false, done:false, label:'the Sepulchre Gate'},
+    {gate:'sep', openY:45, southY:63.0, entryX:75}, 2.1);
   // the cursed tome, on its lectern at the crypt's far wall behind the warden.
   // a already-won run (story-complete, or dev-toggled) shows it already burnt.
   G.decor.push({kind:'tome', x:75.5, y:14.5, destroyed:!!(P.story&&P.story.aerieFreed), deep:1});
@@ -1788,43 +1795,51 @@ function distToSeg(px,py, ax,ay, bx,by){
   let tt = l2? ((px-ax)*dx+(py-ay)*dy)/l2 : 0; tt=Math.max(0,Math.min(1,tt));
   const cx2=ax+tt*dx, cy2=ay+tt*dy; return Math.hypot(px-cx2, py-cy2);
 }
-// THE WARD-LANCES: violet beams fire across each bridge on a beat. Telegraph, then fire; a live
-// lance blasts you (and can knock you off into the pit). A dash passes through unharmed.
+// death in the ward-maze (a live lance or a step into the pit): wake back at the hall's mouth
+// with -5 HP and the crossing to redo.
+function aerieFall(reason){
+  const py=Math.floor(P.y);
+  const c=(G._aerieCross||[]).find(cc=>py>=cc.openY && py<cc.southY) || (G._aerieCross||[])[0];
+  if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4, reason==='beam'?'#d8b0ff':'#c8b0d8', 0.95); }
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(20);
+  burst(P.x,P.y-0.3, reason==='beam'?'#d8b0ff':'#c8b0d8', 18, 2.8);
+  shockwave(P.x,P.y, reason==='beam'?'rgba(199,123,255,0.85)':'rgba(180,160,200,0.75)', 46);
+  if(c){ P.x=(c.entryX!=null?c.entryX:75)+0.5; P.y=c.southY; }
+  P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+  if(!G._aerieFallHint){ G._aerieFallHint=1; toast(reason==='beam'
+    ? 'The ward-lance takes you and you wake at the hall\'s mouth, singed (<b>-5 HP</b>). <b>A lit lance is death</b> - weave the maze and slip across each corridor only while its lance is dark.'
+    : 'You misstep into the dark and haul yourself back to the hall\'s mouth (<b>-5 HP</b>). <b>Stay on the safe stone</b> and time the lances across each corridor.',5600); }
+}
+// THE WARD-MAZE: violet lances sweep each corridor on a beat. Touch a live lance, or step into
+// the pit, and you die and restart the hall (-5 HP). Weave the maze and time each crossing.
 function updateAerieDeep(dt){
   const t=(G._aerieT=(G._aerieT||0)+dt);
-  const safe = P.dead || (P.rollT||0)>0;
   for(const b of (G._aerieBeams||[])){
     const p=((t/b.period + b.phase)%1 + 1)%1;
     b.warn = (p>=0.55 && p<0.70)? (p-0.55)/0.15 : 0;
     b.on   = p>=0.70 && p<0.92;
-    if(b.on && !safe){
-      const d=distToSeg(P.x,P.y, b.x-b.dx*b.len, b.y-b.dy*b.len, b.x+b.dx*b.len, b.y+b.dy*b.len);
-      if(d<0.5) hurtPlayer(b.dmg, {x:b.x, y:b.y, lvl:12});
-    }
     if(b.on && Math.random()<0.5){   // sparks streaming off a live lance
       const s=rnd(-b.len,b.len); G.parts.push({x:b.x+b.dx*s, y:b.y+b.dy*s, vx:rnd(-0.4,0.4), vy:rnd(-0.6,0.2), life:rnd(0.2,0.5), color:'rgba(199,123,255,0.7)', size:rnd(1,2.4), grav:0}); }
   }
-  // ---- reaching the far bank of a pit opens that chamber's gate ----
+  // reaching the far side of a maze opens that chamber's gate
   for(const c of (G._aerieCross||[])){ const g=G.decor.find(d=>d.kind==='beamgate' && d.gate===c.gate);
     if(g && !g.done && P.y < c.openY){ g.done=true; Snd.quest&&Snd.quest(); shockwave(g.x,g.y,'rgba(199,123,255,0.8)',48);
       if(g.gate==='bone') banner('THE BONE GATE GRINDS UP','THE GALLERY LIES BEYOND');
-      else { banner('THE SEPULCHRE GATE GRINDS UP','THE WARDEN AWAITS BELOW'); toast('You reach the far bank and the Sepulchre Gate grinds up. Something vast uncoils in the crypt ahead.',5000); } } }
+      else { banner('THE SEPULCHRE GATE GRINDS UP','THE WARDEN AWAITS BELOW'); toast('You reach the far side and the Sepulchre Gate grinds up. Something vast uncoils in the crypt ahead.',5000); } } }
   // the gates ease up once their crossing is done; keep their tiles' solidity in step
   for(const g of G.decor){ if(g.kind!=='beamgate') continue;
     g.openAmt = g.done? Math.min(1,(g.openAmt||0)+dt*3) : 0;
     const openNow=g.openAmt>0.55;
     if(openNow!==g.open){ g.open=openNow; for(const [x,y] of g.tiles) setSolid(x,y, openNow?0:1); }
   }
-  // ---- the pit: blasted or stepped off the bridge and you fall, back to the near bank ----
-  if(!P.dead && (P.rollT||0)<=0 && G._aerieVoid && G._aerieVoid.has(Math.floor(P.x)+','+Math.floor(P.y))){
-    const py=Math.floor(P.y);
-    let c=(G._aerieCross||[]).find(cc=>py>=cc.openY && py<cc.southY) || (G._aerieCross||[])[0];
-    Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(20);
-    burst(P.x,P.y-0.3,'#c8b0d8',16,2.6); shockwave(P.x,P.y,'rgba(180,160,200,0.7)',40);
-    if(c){ P.x=75.0; P.y=c.southY; } P.click=null; P.moving=false; P.slideDir=null;
-    if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-    if(!G._aerieFallHint){ G._aerieFallHint=1; toast('You pitch off the bridge into the dark and haul yourself back to the near bank. <b>Move up through a lance the instant it dies, and pause in the gap before the next</b> - or dash straight through.',5200); }
-  }
+  if(P.dead) return;
+  // a live lance is lethal - no dashing through it now
+  for(const b of (G._aerieBeams||[])){ if(!b.on) continue;
+    const d=distToSeg(P.x,P.y, b.x-b.dx*b.len, b.y-b.dy*b.len, b.x+b.dx*b.len, b.y+b.dy*b.len);
+    if(d<0.5){ aerieFall('beam'); return; } }
+  // step off the safe stone into the pit and you fall (a dash won't carry you over it)
+  if(G._aerieVoid && G._aerieVoid.has(Math.floor(P.x)+','+Math.floor(P.y))){ aerieFall('pit'); return; }
 }
 /* =====================================================================
    THE FROZEN ISLE - Vath locked the strait in an unnatural winter by
@@ -4210,8 +4225,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
     setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
-    setTimeout(()=>banner('THE UNDERCLIMB','TIME THE WARD-LANCES ACROSS THE BRIDGES'),1200);
-    setTimeout(()=>toast('<i>Vath\'s curse fires lances of violet light across the catacomb.</i> Each chamber is a black <b>pit</b> spanned by one narrow <b>bone-bridge</b>, swept by ward-lances at points along it. Watch the telegraph, then <b>move up through a lance the instant it dies and pause in the gap</b> before the next - or <b>DASH</b> (tap <b>Shift</b> / the dodge button) straight through a live one. Get blasted and it can pitch you off into the dark. Reach the far bank and the gate grinds up. <b>The curse seals the climb until you destroy the tome below.</b>',9500),1800); }
+    setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
+    setTimeout(()=>toast('<i>Each chamber is a bottomless pit cut by a snaking safe path - a maze.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Step into the pit, or touch a lit lance, and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you destroy the tome below.</b>',9500),1800); }
   if(id==='frostvault' && !P.prog.vaultSeen){ P.prog.vaultSeen=1;
     setTimeout(()=>banner('THE GLACIER VAULT','THREE HALLS OF ICE-BEASTS - FIGHT YOUR WAY DOWN'),1200);
     setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and the hall\'s gate grinds up to the next. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',8500),1800); }
