@@ -99,7 +99,7 @@ const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Winds
   vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
-  maw:  {x:22, y:146, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
+  maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
   den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[12,13]},   // the boss fight
   hoard:{x:22, y:5,   r:5,  name:'The Deep Hoard',    lv:[0,0]}      // the reward alcove past the door
 };
@@ -161,8 +161,8 @@ const WORLD_DEFS = {
   milldeep:{ W:40, H:52, seed:39218, zones:MILLDEEP_ZONES, dungeon:1, dark:0.30,
     spawn:{x:19.5,y:46.5}, title:'THE UNDERMILL', sub:'THE OLD GRINDING WORKS - COG, SHAFT, AND STONE',
     gen:()=>genMillDeepAll() },
-  undermaw:{ W:44, H:154, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
-    spawn:{x:22.5,y:147.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
+  undermaw:{ W:44, H:192, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:22.5,y:185.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
     gen:()=>genUndermawAll() }
 };
 const WORLDS = {}; // cached generated worlds
@@ -2635,23 +2635,23 @@ function enterMillFromInterior(){
    ===================================================================== */
 let UNDERMAW_WALLS = [];
 const UNDERMAW_GATE = [[19,11],[20,11],[21,11],[22,11],[23,11]];   // the Hoard Door, sealed until the beast falls
-const MAW_SHOOTGATE = [[20,87],[21,87],[22,87],[23,87],[24,87]];   // the Warded Gate, sealed until the ward-eye is struck
+const MAW_SHOOTGATE = [[20,112],[21,112],[22,112],[23,112],[24,112]];   // the Warded Gate, sealed until the ward-eye is struck
 function genUndermaw(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(16,141,28,151);   // R0 THE MAW - entry landing (the way up sits here)
-  carve(20,136,24,142);   // throat
-  carve(6,115,38,136);    // R1 - floating platforms over the scar
-  carve(20,110,24,116);   // corridor 1
-  carve(6,89,38,110);     // R2 - the ward-eye (shoot to open the gate)
-  carve(20,84,24,90);     // corridor 2 (the Warded Gate sits at y=87)
-  carve(6,63,38,84);      // R3 - rotating + floating platforms
-  carve(20,58,24,64);     // corridor 3
-  carve(6,37,38,58);      // R4 - floating platforms under archer fire
-  carve(20,32,24,38);     // corridor 4 -> the den
-  carve(8,15,36,32);      // R5 THE MAW-STALKER'S DEN (the boss fight)
-  carve(19,9,23,16);      // hoard corridor (the Hoard Door sits at y=11)
-  carve(14,2,30,9);       // R6 THE DEEP HOARD - the reward alcove
+  carve(16,180,28,190);   // R0 THE MAW - entry landing (the way up sits here)
+  carve(20,174,24,181);   // throat
+  carve(6,142,38,174);    // R1 - a long black scar, crossed on scattered floating platforms
+  carve(20,136,24,143);   // corridor 1
+  carve(6,114,38,136);    // R2 - the ward-eye (shoot to open the gate)
+  carve(20,108,24,115);   // corridor 2 (the Warded Gate sits at y=112)
+  carve(6,76,38,108);     // R3 - a long black scar of scattered floating platforms
+  carve(20,70,24,77);     // corridor 3
+  carve(6,38,38,70);      // R4 - floating platforms under archer fire
+  carve(20,32,24,39);     // corridor 4 -> the den
+  carve(8,14,36,33);      // R5 THE MAW-STALKER'S DEN (the boss fight)
+  carve(19,8,23,15);      // hoard corridor (the Hoard Door sits at y=11)
+  carve(14,2,30,8);       // R6 THE DEEP HOARD - the reward alcove
   UNDERMAW_WALLS=[];
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     if(!solidAt(x,y)) continue;
@@ -2666,42 +2666,49 @@ function genUndermaw(){
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
   for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
-  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:150.5, label:'the way up'});
-  setSolid(22,150,0); setTile(22,150,T.RUIN);
+  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:188.5, label:'the way up'});
+  setSolid(22,188,0); setTile(22,188,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
   if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
     toast('A barrow-bow hangs racked by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
-  for(const [tx,ty] of [[8,146],[36,146],[8,120],[36,120],[8,94],[36,94],[8,68],[36,68],[8,42],[36,42],[10,18],[34,18],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
-  G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0;
+  G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
   const pit=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
-  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._mawWheels.push(w); };
-  const slab=(ax,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax, ay, bx:ax, by, spd, phase:phase||0, x:ax, y:ay, prevx:ax, prevy:ay, w:2, h:3}; G.decor.push(s); G._mawSlabs.push(s); };   // small platforms - a tighter hop
-  // ---- R1: FLOATING PLATFORMS (learn the drift) - two pit-bands split by a rest ledge ----
-  pit(6,38,128,131); pit(6,38,120,123);
-  slab(22,131, 127, 0.8, 0.0);       // ferry across band 1 (south ledge -> rest ledge)
-  slab(22,123, 119, 0.85, 1.6);      // ferry across band 2 (rest ledge -> north ledge)
-  G._mawCross.push({y0:115,y1:136, sx:22, sy:134});
-  // ---- R3: ROTATING + FLOATING (a spinwheel, then a ferry) ----
-  pit(6,38,76,79); pit(6,38,67,71);
-  wheel(22,77, 3.0, 1.0, Math.PI/2);  // rotating slab across band A
-  slab(22,71, 66, 0.85, 0.0);         // ferry across band B
-  G._mawCross.push({y0:63,y1:84, sx:22, sy:82});
-  // ---- R4: FLOATING under ARCHER FIRE - two ferries, archers rooted on the ledges ----
-  pit(6,38,49,53); pit(6,38,40,44);
-  slab(22,53, 48, 0.85, 0.0);         // ferry across band 1
-  slab(22,44, 39, 0.9, 1.6);          // ferry across band 2
-  G._mawCross.push({y0:37,y1:58, sx:22, sy:56});
+  // a small platform that slides only a SHORT way left-and-right
+  const slab=(cx,cy,amp,spd,phase)=>{ const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:2, h:2}; G.decor.push(s); G._mawSlabs.push(s); };
+  // scatter a navigable FIELD of small sliding platforms across a big black pit: a guaranteed
+  // zig-zag "spine" of dash-hops from the south ledge to the north, plus spread-out extra
+  // platforms (left and right) so there are several routes up.
+  const field=(nY,sY,seed)=>{
+    let prng=(seed>>>0)||1; const rng=()=>{ prng=(prng*1664525+1013904223)>>>0; return prng/4294967296; };
+    let px=22;
+    for(let y=sY-2; y>=nY+2; y-=3){
+      px=Math.max(11, Math.min(33, px + (rng()<0.5?-3:3)));                 // spine hop (<=3 tiles: dashable)
+      slab(px, y, 1.0, 0.55+rng()*0.3, rng()*6.28);                         // the spine platform (guarantees a path)
+      for(const ex of [11,18,26,33]){ if(Math.abs(ex-px)>=5 && rng()<0.5)   // extras, spread wide left and right
+        slab(Math.max(10,Math.min(34,ex)), y, 1.0, 0.55+rng()*0.3, rng()*6.28); }
+    }
+  };
+  // ---- R1: the long black scar - learn the hop ----
+  pit(6,38, 145,171); field(145,171, 5201);
+  G._mawCross.push({y0:142,y1:174, sx:22, sy:173});
+  // ---- R3: a longer, busier scar ----
+  pit(6,38, 79,105); field(79,105, 6203);
+  G._mawCross.push({y0:76,y1:108, sx:22, sy:107});
+  // ---- R4: the scar under archer fire ----
+  pit(6,38, 41,67); field(41,67, 7207);
+  G._mawCross.push({y0:38,y1:70, sx:22, sy:69});
   // ---- R2: THE WARD-EYE - shoot the mechanism to grind the Warded Gate up ----
-  for(const [px,py] of [[13,99],[31,99]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
-  G.decor.push({kind:'catgate', x:22, y:87, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
-  G.decor.push({kind:'shoottarget', x:22.5, y:90.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
+  for(const [px,py] of [[13,125],[31,125]]) if(inb(px,py)&&!solidAt(px,py)){ G.decor.push({kind:'pillarBroken', x:px+0.5, y:py+0.5, broken:0}); setSolid(px,py,1); }
+  G.decor.push({kind:'catgate', x:22, y:112, open:false, gate:'shoot', tiles:MAW_SHOOTGATE.slice(), label:'the Warded Gate'});
+  G.decor.push({kind:'shoottarget', x:22.5, y:115.5, hit:false, gate:'shoot', gateTiles:MAW_SHOOTGATE.slice(), label:'the ward-eye'});
   // ---- THE HOARD DOOR + reward ----
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
   G.critters=[];
-  // an already-cleared run stands every gate open and quiets the den (the slabs remain to re-cross)
+  // an already-cleared run stands every gate open and quiets the den (the platforms remain to re-cross)
   if(P.story && P.story.undermawDown){
     for(const [x,y] of [...UNDERMAW_GATE, ...MAW_SHOOTGATE]){ setTile(x,y,T.RUIN); setSolid(x,y,0); }
     for(const d of G.decor){ if(d.kind==='catgate') d.open=true; if(d.kind==='shoottarget') d.hit=true; }
@@ -2716,7 +2723,7 @@ function spawnMobsUndermaw(){
     b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
   // R4 skeleton archers: rooted on the ledges flanking the crossing, raining bone arrows as you cross
-  for(const [ax,ay] of [[14,38],[30,38],[9,47],[35,47]]){
+  for(const [ax,ay] of [[14,39],[30,39],[14,69],[30,69]]){
     const a=spawnMob('archer', ax, ay);
     if(a){ a.rooted=true; a.hx=ax; a.hy=ay; a.respawnT=-1; a.state='idle'; a.noAggroT=0; }
   }
@@ -2728,6 +2735,11 @@ function updateUndermaw(dt){
   for(const w of (G._mawWheels||[])) w.ang += w.spd*dt;
   updateDriftSlabs(G._mawSlabs, G._mawT);
   updateMawBats(dt);
+  // a fall is in progress: the hero tumbles down into the black, then respawns on the ledge
+  if(G._mawDrop){ G._mawDrop.t+=dt;
+    if(Math.random()<0.4) burst(G._mawDrop.x+rnd(-0.3,0.3), G._mawDrop.y+rnd(-0.2,0.2), '#1a1512', 1, 1.2);
+    if(G._mawDrop.t>=G._mawDrop.dur) mawRespawn();
+    return; }
   if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
@@ -2743,7 +2755,7 @@ function updateMawBats(dt){
     G._mawBatT=(G._mawBatT||0)-dt;
     if(G._mawBatT<=0){ G._mawBatT=4.5;
       const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
-      if(alive<4 && !P.dead && P.y>36 && P.y<138){
+      if(alive<4 && !P.dead && P.y>36 && P.y<176){
         const a=Math.random()*TAU, r=8+Math.random()*4;
         const m=spawnMob('bat', Math.round(P.x+Math.cos(a)*r), Math.round(P.y+Math.sin(a)*r));
         if(m){ m.bat=1; m.respawnT=-1; m.hx=m.x; m.hy=m.y; m.state='chase'; m.bob=Math.random()*TAU; }
@@ -2763,15 +2775,22 @@ function updateMawBats(dt){
     }
   }
 }
+// hit the black scar with no platform under you: the hero plummets (a drop animation plays in
+// drawPlayer; updateUndermaw ticks it), then wakes back on the ledge with -5 HP.
 function mawFall(ty){
+  if(G._mawDrop) return;
   const c=(G._mawCross||[]).find(cc=>ty>=cc.y0 && ty<=cc.y1) || (G._mawCross||[])[0];
   if(P.hp>1){ P.hp=Math.max(1, P.hp-5); if(typeof refreshUI==='function') refreshUI(); addFloat('-5',P.x,P.y-1.4,'#c9b48a',0.95); }
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.45); buzz&&buzz(16);
-  burst(P.x,P.y-0.3,'#6a5c48',12,2.0); shockwave(P.x,P.y,'rgba(120,105,80,0.7)',36);
-  if(c){ P.x=c.sx+0.5; P.y=c.sy+0.5; }
   P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  G._mawDrop={ t:0, dur:0.6, x:P.x, y:P.y, sx:(c?c.sx:22), sy:(c?c.sy:173) };
+}
+function mawRespawn(){
+  const d=G._mawDrop; G._mawDrop=null; if(!d) return;
+  P.x=d.sx+0.5; P.y=d.sy+0.5; P.click=null; P.moving=false; P.slideDir=null; P.rollT=0;
+  burst(P.x,P.y-0.3,'#6a5c48',12,2.0); shockwave(P.x,P.y,'rgba(120,105,80,0.7)',36);
   if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._mawFallHint){ G._mawFallHint=1; toast('You drop into the scar and haul yourself back to the ledge, battered (<b>-5 HP</b>). <b>Ride the drifting slabs across</b> - board one as it reaches your ledge, and step off when it lines up with the next.',5400); }
+  if(!G._mawFallHint){ G._mawFallHint=1; toast('You plunge into the black scar and haul yourself back to the ledge, battered (<b>-5 HP</b>). <b>Hop the small platforms</b> - they slide as you go, so time each jump.',5400); }
 }
 // strike a ward-eye with an arrow or bolt: grind its gate up for good
 function hitShootTarget(d){

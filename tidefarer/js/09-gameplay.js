@@ -951,7 +951,7 @@ function updatePlayer(dt){
   if(P.dead) return;
   // falling into the Emberdeep pit: control is frozen while the drop animation plays out
   // (updateEastDeep ticks the timer and respawns). Roll cooldown still recovers.
-  if(typeof G!=='undefined' && G._emberDrop){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
+  if(typeof G!=='undefined' && (G._emberDrop||G._mawDrop)){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
   // ZAPPED by an Underclimb ward-lance: control is frozen while the shock plays out
   // (updateAerieDeep ticks the timer and respawns). Roll cooldown still recovers.
   if(typeof G!=='undefined' && G._aerieZap){ P.moving=false; P.click=null; P.rollT=0; P.rollCd=Math.max(0,(P.rollCd||0)-dt); return; }
