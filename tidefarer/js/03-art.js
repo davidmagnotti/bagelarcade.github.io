@@ -1373,10 +1373,10 @@ function drawHumanoid(g,sx,sy,o){
         g.beginPath();
         g.moveTo(-HR*0.55,20.6);                              // left hair tip
         g.quadraticCurveTo(-HR*0.90,10.5, -HR*0.90,-1.4);     // outer edge of the left fall, tucked closer to the head
-        g.quadraticCurveTo(-HR*0.92,-8.8, -HR*0.66,-13.7);    // sweep up to the left temple
-        g.quadraticCurveTo(-HR*0.36,-17.7, 0,-17.9);          // over the crown, left half
-        g.quadraticCurveTo(HR*0.36,-17.7, HR*0.66,-13.7);     // over the crown, right half
-        g.quadraticCurveTo(HR*0.92,-8.8, HR*0.90,-1.4);       // down to the right temple
+        g.quadraticCurveTo(-HR*0.92,-8.4, -HR*0.62,-13.2);    // sweep up to the left temple
+        g.quadraticCurveTo(-HR*0.34,-15.9, 0,-16.1);          // over the crown, left half - a flatter dome that follows the skull
+        g.quadraticCurveTo(HR*0.34,-15.9, HR*0.62,-13.2);     // over the crown, right half
+        g.quadraticCurveTo(HR*0.92,-8.4, HR*0.90,-1.4);       // down to the right temple
         g.quadraticCurveTo(HR*0.90,10.5, HR*0.55,20.6);       // outer edge of the right fall to its tip
         g.quadraticCurveTo(HR*0.38,13.2, HR*0.50,2.2);        // inner edge of the right fall, up beside the jaw
         g.quadraticCurveTo(HR*0.56,-2.6, HR*0.60,-4.0);       // up to the hairline
@@ -1390,7 +1390,7 @@ function drawHumanoid(g,sx,sy,o){
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
         g.fillStyle='rgba(255,250,235,0.20)';                 // soft top-light on the crown
-        g.beginPath(); g.ellipse(-3.4,-10.8,3.7,1.8,-0.3,0,TAU); g.fill();
+        g.beginPath(); g.ellipse(-3.4,-10.2,3.7,1.7,-0.3,0,TAU); g.fill();
         g.strokeStyle=shade(hc,-12); g.lineWidth=1.1; g.lineCap='round';   // a couple of strand lines for depth
         for(const e of [-1,1]){
           g.beginPath();
