@@ -2677,7 +2677,7 @@ function placeObjectsUndermaw(){
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0;
   const pit=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
   const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._mawWheels.push(w); };
-  const slab=(ax,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax, ay, bx:ax, by, spd, phase:phase||0, x:ax, y:ay, prevx:ax, prevy:ay, w:3, h:4}; G.decor.push(s); G._mawSlabs.push(s); };
+  const slab=(ax,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax, ay, bx:ax, by, spd, phase:phase||0, x:ax, y:ay, prevx:ax, prevy:ay, w:2, h:3}; G.decor.push(s); G._mawSlabs.push(s); };   // small platforms - a tighter hop
   // ---- R1: FLOATING PLATFORMS (learn the drift) - two pit-bands split by a rest ledge ----
   pit(6,38,128,131); pit(6,38,120,123);
   slab(22,131, 127, 0.8, 0.0);       // ferry across band 1 (south ledge -> rest ledge)
@@ -2721,18 +2721,47 @@ function spawnMobsUndermaw(){
     if(a){ a.rooted=true; a.hx=ax; a.hy=ay; a.respawnT=-1; a.state='idle'; a.noAggroT=0; }
   }
 }
-// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, and drop the player back to
-// the ledge (-5 HP) if they stand over the scar with no platform beneath them.
+// drive the Undermaw's crossings: turn the spinwheels, drift the slabs, swarm the bats, and drop
+// the player back to the ledge (-5 HP) if they stand over the scar with no platform beneath them.
 function updateUndermaw(dt){
   G._mawT=(G._mawT||0)+dt;
   for(const w of (G._mawWheels||[])) w.ang += w.spd*dt;
   updateDriftSlabs(G._mawSlabs, G._mawT);
+  updateMawBats(dt);
   if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
   if(wheelCarry(G._mawWheels, dt)) return;                 // riding a rotating slab
   if(driftCarry(G._mawSlabs)) return;                      // riding a floating slab
   mawFall(ty);
+}
+// CAVE BATS: killable flyers that keep swooping in over the crossings; a bite shoves you hard
+// (off a platform, into the pit). Fly straight at you (over walls and scar alike) and can be cut
+// down like any mob. Capped, and only while the Maw-Stalker still lives.
+function updateMawBats(dt){
+  if(!(P.story && P.story.undermawDown)){
+    G._mawBatT=(G._mawBatT||0)-dt;
+    if(G._mawBatT<=0){ G._mawBatT=4.5;
+      const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
+      if(alive<4 && !P.dead && P.y>36 && P.y<138){
+        const a=Math.random()*TAU, r=8+Math.random()*4;
+        const m=spawnMob('bat', Math.round(P.x+Math.cos(a)*r), Math.round(P.y+Math.sin(a)*r));
+        if(m){ m.bat=1; m.respawnT=-1; m.hx=m.x; m.hy=m.y; m.state='chase'; m.bob=Math.random()*TAU; }
+      }
+    }
+  }
+  for(const m of (G.mobs||[])){ if(!m.bat || m.dead) continue;
+    m.bob=(m.bob||0)+dt*9;
+    const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
+    const sp=(MOBDEF.bat?MOBDEF.bat.speed:5)*(P.dead?0.4:1);
+    m.x+=dx/l*sp*dt; m.y+=dy/l*sp*dt;   // flies straight in - over walls and the scar
+    m.face=(dx<0?-1:1);
+    if(l<0.85 && !P.dead && (P.rollT||0)<=0 && P.hurtT<=0){
+      hurtPlayer(m.dmg||12, m);
+      moveEntity(P, dx/l*0.8, dy/l*0.8);   // an extra shove away from the bat - enough to knock you off a slab
+      burst(P.x,P.y-0.4,'#2a2233',10,2.2);
+    }
+  }
 }
 function mawFall(ty){
   const c=(G._mawCross||[]).find(cc=>ty>=cc.y0 && ty<=cc.y1) || (G._mawCross||[])[0];

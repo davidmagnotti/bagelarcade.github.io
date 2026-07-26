@@ -1285,6 +1285,7 @@ function updateMobs(dt){
     // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
     // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
     if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
+    if(m.bat){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom flying AI (see updateUndermaw) - still killable/damageable as a mob
     if(m.stormeye){   // fully custom AI (see updateSkyDungeon) - no generic chase/melee
       if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function' && dist(m.x,m.y,P.x,P.y)<11)
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm

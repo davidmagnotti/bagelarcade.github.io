@@ -219,6 +219,7 @@ const MOBDEF = {
   mage:{hp:200, dmg:26, speed:2.7, aggro:12, xp:260, gold:[30,55], lvl:8, name:'Vath the Emberbinder'},
   leviathan:{hp:1000, dmg:34, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
   raptor:{hp:64, dmg:24, speed:4.5, aggro:11, xp:70, gold:[0,0], lvl:12, name:'Screaming Raptor'},
+  bat:{hp:16, dmg:12, speed:5.2, aggro:14, xp:14, gold:[0,0], lvl:11, name:'Cave Bat'},   // a flying swooper - its hit shoves you (off a platform, into the pit)
   serpent:{hp:920, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},
   frostwarden:{hp:1150, dmg:36, speed:1.9, aggro:13, xp:800, gold:[0,0], lvl:13, name:'The Weeping Warden'},
   dummy:{hp:5000, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:1, name:'Practice Dummy'},

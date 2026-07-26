@@ -1537,11 +1537,10 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='bonepit'){
-    // a cell of the black pit the bridge spans - fall in and you're swept back to the bank
+    // a cell of the bottomless black pit you fall into. Pure opaque black, drawn as a FULL tile
+    // diamond (half-tile is 32x16) plus a little overlap so the cells fuse into one seamless void.
     const g=cx; g.save(); g.translate(s.x,s.y);
-    g.fillStyle='rgba(10,8,12,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
-    g.fillStyle='rgba(40,34,50,0.5)'; g.beginPath(); g.ellipse(0,-1,8,3.4,0,0,TAU); g.fill();
-    if(b.seed===0){ g.fillStyle='rgba(120,105,150,0.25)'; g.beginPath(); g.arc(0,-1,1.4,0,TAU); g.fill(); }   // a faint drifting mote
+    g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-18); g.lineTo(34,0); g.lineTo(0,18); g.lineTo(-34,0); g.closePath(); g.fill();
     g.restore(); return;
   }
   if(b.kind==='fadetile'){
@@ -2238,6 +2237,24 @@ function drawMob(m,s){
     g.fillStyle='#e8b23c'; g.beginPath(); g.moveTo(fl*6,-7); g.lineTo(fl*11,-5); g.lineTo(fl*6,-4); g.closePath(); g.fill();
     g.fillStyle='#c77bff'; g.beginPath(); g.arc(fl*4,-8,1.5,0,TAU); g.fill(); // maddened violet eye
     g.strokeStyle='#3a2c1c'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-2,6); g.lineTo(-3,10); g.moveTo(2,6); g.lineTo(3,10); g.stroke();
+    g.restore();
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='bat'){
+    const g=cx, fl=(m.face||1), t=G.time+(m.anim||0), flap=Math.sin((m.bob||0)+t*4);
+    drawShadowAt(g,s.x,s.y,5);
+    g.save(); g.translate(s.x, s.y-18+Math.sin((m.bob||0))*2);   // hovers well off the floor
+    const bc = m.hurtT>0? '#e0a0a0' : '#2a2230';
+    // wings, flapping
+    g.fillStyle=bc;
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(-11,-6-flap*7,-16,-1+flap*3); g.quadraticCurveTo(-9,0,-3,2); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(11,-6+flap*7,16,-1-flap*3); g.quadraticCurveTo(9,0,3,2); g.closePath(); g.fill();
+    // body + ears
+    g.fillStyle= m.hurtT>0? '#e8b0b0':'#3a3040'; g.beginPath(); g.ellipse(0,0,4,5,0,0,TAU); g.fill();
+    g.beginPath(); g.moveTo(-2.5,-4); g.lineTo(-3.5,-8); g.lineTo(-0.5,-5); g.closePath();
+    g.moveTo(2.5,-4); g.lineTo(3.5,-8); g.lineTo(0.5,-5); g.closePath(); g.fill();
+    // eyes
+    g.fillStyle='#ffcf4a'; g.beginPath(); g.arc(-1.6,-1,0.9,0,TAU); g.arc(1.6,-1,0.9,0,TAU); g.fill();
     g.restore();
     drawMobBars&&drawMobBars(m,s); return;
   }
