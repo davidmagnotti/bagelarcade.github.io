@@ -2708,76 +2708,87 @@ function placeObjectsReachDeep(){
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,50],[52,50],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
-  // ---- THE SURGE ----
-  // The brine rises and falls in waves on its OWN (no wheels, no valves). Cross the ossuary
-  // by hopping the raised bone-daises: dash across the open floor only while the surge is
-  // LOW, and shelter on a dais when it rises - caught in the open, the surge sweeps you back
-  // to the stair. Reach the DRAIN-PLATE on the far bank and the surge falls still and the
-  // Bone Gate rises. Pure read-the-wave timing.
-  const HALL={x0:26, x1:54, y0:46, y1:54};   // the flooding stretch spans the full width (no edge to sneak up)
-  G._surgeHall=HALL;
-  G._surgeDais=[];
-  for(const [x,y] of [[39,52],[40,52],[41,52],[39,48],[40,48],[41,48]]){ if(inb(x,y)){ G.decor.push({kind:'dais', x:x+0.5, y:y+0.5}); G._surgeDais.push([x,y]); } }
-  // dressing graves (placed before the water so their tiles are skipped)
-  for(const [gx,gy] of [[30,58],[50,58],[30,44],[50,44],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
-  // the brine that fills the hall - one cell per floor tile; its level animates with the surge
-  for(let y=HALL.y0;y<=HALL.y1;y++) for(let x=HALL.x0;x<=HALL.x1;x++){
-    if(!inb(x,y) || solidAt(x,y)) continue;
-    if(G._surgeDais.some(d=>d[0]===x && d[1]===y)) continue;
-    G.decor.push({kind:'surgewater', x:x+0.5, y:y+0.5});
-  }
-  // THE DRAIN-PLATE on the far bank: reach it and the surge stills, the Bone Gate rises
-  G.decor.push({kind:'drainplate', x:40.5, y:44.5, label:'the drain-plate'});
+  // ---- THE TRAP GAUNTLET ----
+  // The brine has long since drained - what's left is a killing corridor. Bone-hafted axes swing
+  // across the halls on a beat, arrow-slits in the walls loose bolts across the room, and spike
+  // plates snap up underfoot. Weave through the gaps (or DASH - a roll's frames pass clean through
+  // a blade), and clearing the far end of the ossuary grinds the Bone Gate up. A clip costs blood,
+  // not a restart, so keep moving. Pure read-the-hazard timing.
+  G._reachT=0; G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[]; G._reachGateOpen=false;
+  const axe=(x,y,amp,spd,phase,dmg)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:dmg||22}; G.decor.push(a); G._axes.push(a); };
+  const emitter=(x,y,dx,dy,period,phase,dmg)=>{ const e={kind:'arrowtrap', x:x+0.5, y:y+0.5, dx, dy, period, phase, t:phase*period, warn:0, dmg:dmg||14}; G.decor.push(e); G._emitters.push(e); };
+  const spikes=(x0,x1,y,spd,phase,dmg)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:dmg||16}; G.decor.push(s); G._spikes.push(s); } };
+  // dressing graves along the walls
+  for(const [gx,gy] of [[30,58],[50,58],[28,44],[52,44],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
+  // CORRIDOR A - two sweeping axes to teach the rhythm
+  axe(40, 72, 2.0, 2.4, 0);
+  axe(40, 66, 2.0, 2.4, Math.PI);
+  // THE OSSUARY - the gauntlet proper. The player climbs north (y62 -> y40) through, in order:
+  emitter(27, 58,  1, 0, 2.2, 0.00);   // an arrow-slit lane (west wall -> east)
+  spikes(32, 48, 54, 0.75, 0);         // a spike-plate strip
+  emitter(53, 51, -1, 0, 2.0, 0.30);   // an arrow-slit lane (east wall -> west)
+  axe(40, 48, 3.6, 1.9, 0.4);          // a wide swinging axe
+  emitter(27, 45,  1, 0, 2.1, 0.55);   // a last arrow-slit lane before the gate
   // R3: the warden's hoard
   G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
   G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
   G.critters=[];
-  G._surgeT=0; G._surgeLvl=0; G._surgeStopped=false; G._surgeHint=0;
-  // a cleared run (the warden is down) leaves the surge stilled and the gate open
-  if(P.story && P.story.tombBossDown){ G._surgeStopped=true;
+  G._reachHint=0;
+  // a cleared run (the warden is down) leaves the traps stilled and the gate standing open
+  if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
+    G.decor=G.decor.filter(d=>d.kind!=='axetrap' && d.kind!=='arrowtrap' && d.kind!=='spiketile' && d.kind!=='traparrow');
+    G._axes=[]; G._emitters=[]; G._arrows=[]; G._spikes=[];
     for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); } }
 }
-// the surge cycle: ~2.6s drained (safe to dash), ~2.4s flooded (shelter on a dais)
-function surgeLevel(t){
-  const P2=5.0, ph=((t%P2)/P2+1)%1;
-  if(ph<0.44) return 0;
-  if(ph<0.52) return (ph-0.44)/0.08;
-  if(ph<0.92) return 1;
-  return 1-(ph-0.92)/0.08;
+// spawn a single bolt from a wall-slit, travelling in the emitter's fixed direction
+function spawnTrapArrow(e){
+  const ar={kind:'traparrow', x:e.x+e.dx*0.6, y:e.y+e.dy*0.6, dx:e.dx, dy:e.dy, spd:9.0, life:4.0, dmg:e.dmg};
+  G.decor.push(ar); G._arrows.push(ar);
 }
-function surgeThrowback(){
-  const st=REACHDEEP_ZONES.entry;
-  if(Snd.boss) Snd.boss(); G.shake=Math.max(G.shake||0,0.6); buzz&&buzz(20);
-  burst(P.x,P.y-0.4,'#bfe0f4',18,2.6); shockwave(P.x,P.y,'rgba(120,190,235,0.8)',44);
-  P.x=st.x+0.5; P.y=st.y+3.5; P.click=null; P.moving=false; P.slideDir=null;
-  if(G.cam){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-  if(!G._surgeHint){ G._surgeHint=1; toast('The surge sweeps you back to the stair. <b>Cross only while the brine is low</b> - hop dais to dais, and wait on a dais when it rises.',5200); }
-}
-function stopSurge(){
-  if(G._surgeStopped) return;
-  G._surgeStopped=true; G._surgeLvl=0;
+function openBoneGate(){
+  if(G._reachGateOpen) return; G._reachGateOpen=true;
   for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
   invalidateScenery&&invalidateScenery();
-  Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,190,235,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
-  banner('THE DRAIN OPENS','THE SURGE FALLS AND THE BONE GATE RISES');
-  toast('You slam the drain-plate home and the brine roars away down the dark - the surge falls still, and the Bone Gate grinds up. The Drowned Vault lies open.',5200);
+  Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(200,190,170,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
+  banner('THE BONE GATE GRINDS UP','THE DROWNED VAULT LIES OPEN');
+  toast('You clear the last of the traps and the Bone Gate hauls up. The Drowned Vault - and the thing that wardens it - lie beyond.',5000);
   autoSave&&autoSave();
 }
+// drive the catacomb's traps: swing the axes, cycle the spike-plates, loose the wall-bolts, and
+// bleed the player on a clean hit (a dash's roll frames pass through everything unharmed).
 function updateReachDeep(dt){
-  if(G._surgeStopped) return;
-  G._surgeT=(G._surgeT||0)+dt;
-  G._surgeLvl=surgeLevel(G._surgeT);
-  const dp=G.decor.find(d=>d.kind==='drainplate');
-  if(dp && Math.floor(P.x)===Math.floor(dp.x) && Math.floor(P.y)===Math.floor(dp.y)){ stopSurge(); return; }
-  // caught in the open by the risen brine -> swept back to the stair (once; the throwback
-  // lands you outside the hall, so it never repeats in place)
-  if(G._surgeLvl>0.55 && !P.dead && (P.rollT||0)<=0){
-    const H=G._surgeHall;
-    if(H && P.y>=H.y0-0.4 && P.y<=H.y1+0.6 && P.x>=H.x0 && P.x<=H.x1){
-      const onDais=(G._surgeDais||[]).some(d=>d[0]===Math.floor(P.x) && d[1]===Math.floor(P.y));
-      if(!onDais) surgeThrowback();
-    }
+  const t=(G._reachT=(G._reachT||0)+dt);
+  const safe = P.dead || (P.rollT||0)>0;   // dashing (or dead) - no trap can touch you
+  const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:13}); };
+  // swinging axes
+  for(const a of (G._axes||[])){
+    a.hx = a.x + a.amp*Math.sin(t*a.spd + a.phase); a.hy = a.y;
+    if(Math.hypot(P.x-a.hx, P.y-a.hy) < a.hitR) HIT(a.dmg, a.hx, a.hy);
   }
+  // spike-plates: a short WARNING (cracks/rumble) then the spikes stab up for part of the cycle
+  for(const s of (G._spikes||[])){
+    const ph=((t*s.spd + s.phase)%1 + 1)%1;
+    s.warnP = (ph>=0.55 && ph<0.68)? (ph-0.55)/0.13 : 0;   // telegraph window
+    s.up = ph>=0.68 && ph<0.95;
+    if(s.up && Math.floor(P.x)===s.gx && Math.floor(P.y)===s.gy) HIT(s.dmg, s.x, s.y);
+  }
+  // wall-slit emitters: a brief glow, then a bolt on each period
+  for(const e of (G._emitters||[])){
+    e.t=(e.t||0)+dt; const untilFire=e.period-e.t; e.warn=(untilFire<0.35)?1:0;
+    if(e.t>=e.period){ e.t-=e.period; spawnTrapArrow(e); }
+  }
+  // bolts in flight
+  if(G._arrows && G._arrows.length){
+    let died=false;
+    for(const ar of G._arrows){ ar.x+=ar.dx*ar.spd*dt; ar.y+=ar.dy*ar.spd*dt; ar.life-=dt;
+      if(!ar.dead && Math.hypot(P.x-ar.x, P.y-ar.y)<0.55){ HIT(ar.dmg, ar.x, ar.y); ar.dead=true; }
+      if(!ar.dead && (!inb(Math.floor(ar.x),Math.floor(ar.y)) || solidAt(Math.floor(ar.x),Math.floor(ar.y)) || ar.life<=0)) ar.dead=true;
+      if(ar.dead) died=true;
+    }
+    if(died){ G._arrows=G._arrows.filter(a=>!a.dead); G.decor=G.decor.filter(d=>d.kind!=='traparrow' || !d.dead); }
+  }
+  // clearing the north end of the ossuary hauls the Bone Gate up for good
+  if(!G._reachGateOpen && P.y<=43 && P.x>=27 && P.x<=53) openBoneGate();
 }
 function spawnMobsReachDeep(){
   const Z=REACHDEEP_ZONES;
@@ -2788,7 +2799,8 @@ function spawnMobsReachDeep(){
     if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='BEAST OF THE BONE-MAZE'; w.tombboss=1; w.ach='deepwarden';
       w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; w.entrance='rise'; }
   }
-  for(const z of [Z.ossuary, Z.heart]) for(let i=0;i<2;i++){ const a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
+  // skeletons haunt the vault only - the ossuary is left to its traps
+  for(let i=0;i<3;i++){ const z=Z.heart, a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
     const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
     if(sp) spawnMob('skeleton', sp[0], sp[1]); }
 }
@@ -4145,8 +4157,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
     setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Shift</b> / the dodge button) to board a slab, ride it round, then dash off to the next slab or the far ledge. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. Some chambers have a <b>fire-lever</b> that hauls the gate open for a while - pull it, then get north through the gate before it shuts.',9000),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
-    setTimeout(()=>banner('THE DROWNED CATACOMB','READ THE SURGE - CROSS ON THE LOW WAVE'),1200);
-    setTimeout(()=>toast('<i>The brine rises and falls in waves.</i> Cross the hall by hopping the raised <b>bone-daises</b> - dash across the open floor only while the surge is <b>low</b>, and wait on a dais when it rises. Get caught in the open and it sweeps you back. Reach the <b>drain-plate</b> on the far side to still the surge and raise the gate.',9000),1800); }
+    setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
+    setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Shift</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','CROSS THE BRIDGES BEFORE THE GUST TAKES YOU'),1200);
     setTimeout(()=>toast('<i>Vath\'s wind gusts through the catacomb in waves.</i> Each chamber is a black <b>pit</b> spanned by one narrow <b>bone-bridge</b> - the gust tries to shove you off it into the dark. <b>Cross in the lulls</b>, and duck behind a <b>pillar</b> when the wind rises (a pillar just upwind shelters you). Reach the far bank and the gate grinds up.',8500),1800); }

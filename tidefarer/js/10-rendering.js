@@ -61,7 +61,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
-  surgewater:1, dais:1, drainplate:1,
+  axetrap:1, arrowtrap:1, traparrow:1, spiketile:1,
   firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, bonepit:1, fadetile:1,
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
@@ -188,7 +188,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & the platforms over them are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1315,35 +1315,51 @@ function drawDecor(b,s){
     g.fillStyle= spin?'#ffd45a':'#3a332c'; g.beginPath(); g.arc(0,0,2,0,TAU); g.fill();
     g.restore(); return;
   }
-  if(b.kind==='surgewater'){
-    // one cell of the surging brine - its depth rises and falls with G._surgeLvl, so the
-    // wave is legible at a glance: near-dry at low, deep and foaming at the crest
-    const g=cx, lvl=(typeof G!=='undefined'&&G._surgeLvl!=null)?G._surgeLvl:0; g.save(); g.translate(s.x,s.y);
-    if(lvl>0.03){
-      const a=0.18+0.62*lvl, gl=0.5+0.3*Math.sin(G.time*2+b.x*1.3+b.y);
-      g.fillStyle='rgba(22,42,56,'+a.toFixed(2)+')'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
-      g.fillStyle='rgba(90,150,180,'+(0.12*a+0.12*gl).toFixed(2)+')'; g.beginPath(); g.ellipse(0,-1,9,4,0,0,TAU); g.fill();
-      if(lvl>0.55){ g.strokeStyle='rgba(200,230,240,'+(0.25*lvl).toFixed(2)+')'; g.lineWidth=1; g.beginPath(); g.moveTo(-7,-2+Math.sin(G.time*3+b.x)); g.lineTo(0,0); g.lineTo(7,-3+Math.cos(G.time*3+b.y)); g.stroke(); }
-    } else { g.fillStyle='rgba(38,42,44,0.28)'; g.beginPath(); g.ellipse(0,0,6,3,0,0,TAU); g.fill(); }   // wet stone at the ebb
+  if(b.kind==='spiketile'){
+    // a floor spike-plate: a stone grate that rumbles (cracks flash) then stabs iron spikes up
+    const g=cx, warn=b.warnP||0, up=!!b.up; g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#2a2620'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();   // the plate
+    g.strokeStyle='#4a443a'; g.lineWidth=1; g.stroke();
+    // the four spike-slots
+    g.fillStyle='#15120e'; for(const [ox,oy] of [[-6,-1],[6,-1],[0,-4],[0,2]]){ g.beginPath(); g.ellipse(ox,oy,2,1.1,0,0,TAU); g.fill(); }
+    if(warn>0){ g.strokeStyle='rgba(255,120,60,'+(0.4+0.5*warn).toFixed(2)+')'; g.lineWidth=1.3;   // telegraph: hot cracks
+      g.beginPath(); g.moveTo(-6,0); g.lineTo(-2,-2); g.lineTo(2,1); g.lineTo(6,-1); g.stroke(); }
+    if(up){ g.fillStyle='#b9c0c8'; g.strokeStyle='#e8eef4'; g.lineWidth=1;   // iron spikes stabbed up
+      for(const [ox,oy] of [[-6,-1],[6,-1],[0,-4],[0,2]]){ g.beginPath(); g.moveTo(ox-2.4,oy); g.lineTo(ox,oy-9); g.lineTo(ox+2.4,oy); g.closePath(); g.fill(); g.stroke(); } }
     g.restore(); return;
   }
-  if(b.kind==='dais'){
-    // a raised bone-stone platform standing clear of the brine - safe footing on the surge
-    const g=cx; drawShadowAt(g,s.x,s.y,10); g.save(); g.translate(s.x,s.y);
-    g.fillStyle='#241f1a'; g.beginPath(); g.moveTo(-15,-1); g.lineTo(0,7); g.lineTo(15,-1); g.lineTo(15,-6); g.lineTo(0,2); g.lineTo(-15,-6); g.closePath(); g.fill(); // riser
-    g.fillStyle='#726858'; g.beginPath(); g.moveTo(0,-13); g.lineTo(15,-6); g.lineTo(0,1); g.lineTo(-15,-6); g.closePath(); g.fill();   // raised top
-    g.strokeStyle='#8f8676'; g.lineWidth=1; g.stroke();
-    g.fillStyle='rgba(20,16,12,0.35)'; g.beginPath(); g.ellipse(0,-6,6,2.4,0,0,TAU); g.fill();
+  if(b.kind==='arrowtrap'){
+    // an arrow-slit in the wall: a dark socket that flares just before it looses a bolt
+    const g=cx, warn=b.warn||0; g.save(); g.translate(s.x,s.y-6);
+    g.fillStyle='#1c1814'; g.beginPath(); g.ellipse(0,0,5,6,0,0,TAU); g.fill();
+    g.strokeStyle='#3e372e'; g.lineWidth=1.4; g.stroke();
+    g.fillStyle='rgba(255,120,50,'+(0.2+0.7*warn).toFixed(2)+')'; g.beginPath(); g.ellipse(0,0,2.4,3.2,0,0,TAU); g.fill();   // the ember glow before firing
     g.restore(); return;
   }
-  if(b.kind==='drainplate'){
-    // the far-bank drain-plate: reach it to still the surge; glows blue-green, lit once done
-    const g=cx, done=!!(typeof G!=='undefined'&&G._surgeStopped); g.save(); g.translate(s.x,s.y);
-    g.fillStyle= done?'#2f4a44':'#233038'; g.beginPath(); g.moveTo(0,-9); g.lineTo(15,-1); g.lineTo(0,7); g.lineTo(-15,-1); g.closePath(); g.fill();
-    g.strokeStyle= done?'#7fd0b0':'#5a8aa8'; g.lineWidth=2; g.stroke();
-    g.strokeStyle= done?'#9fe0c8':'#6a9ab8'; g.lineWidth=1.2;
-    for(let i=-2;i<=2;i++){ g.beginPath(); g.moveTo(i*4,-1-Math.abs(i)); g.lineTo(i*4,3-Math.abs(i)); g.stroke(); }   // grate bars
-    if(!done){ g.fillStyle='rgba(127,196,232,'+(0.4+0.3*Math.sin(G.time*3)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-16); }
+  if(b.kind==='traparrow'){
+    // a bolt in flight - a thin dart pointing the way it travels
+    const g=cx, ang=Math.atan2((b.dx+b.dy)*0.5, (b.dx-b.dy)); g.save(); g.translate(s.x,s.y-8); g.rotate(ang);
+    g.strokeStyle='#d8c9a8'; g.lineWidth=2; g.beginPath(); g.moveTo(-7,0); g.lineTo(6,0); g.stroke();   // shaft
+    g.fillStyle='#eef0f2'; g.beginPath(); g.moveTo(10,0); g.lineTo(5,-2.6); g.lineTo(5,2.6); g.closePath(); g.fill();   // steel head
+    g.strokeStyle='#c9b48a'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-7,0); g.lineTo(-9,-2.4); g.moveTo(-7,0); g.lineTo(-9,2.4); g.stroke();   // fletching
+    g.restore(); return;
+  }
+  if(b.kind==='axetrap'){
+    // a pendulum bone-axe: a haft hung from a high pivot, a broad blade at its swinging foot.
+    // The pivot sits above the sweep centre; the blade rides the live head position (b.hx/b.hy).
+    const g=cx;
+    const piv=worldToScreen(b.x, b.y); piv.y-=54;               // pivot up near the ceiling
+    const head=worldToScreen(b.hx!=null?b.hx:b.x, b.hy!=null?b.hy:b.y);
+    // floor shadow under the blade
+    g.fillStyle='rgba(0,0,0,0.32)'; g.beginPath(); g.ellipse(head.x, head.y+4, 9, 3.4, 0, 0, TAU); g.fill();
+    // the haft
+    g.strokeStyle='#4a3d2c'; g.lineWidth=3.2; g.beginPath(); g.moveTo(piv.x, piv.y); g.lineTo(head.x, head.y-6); g.stroke();
+    g.fillStyle='#2a231a'; g.beginPath(); g.arc(piv.x, piv.y, 3.2, 0, TAU); g.fill();   // pivot boss
+    // the blade - a steel crescent about the head
+    g.save(); g.translate(head.x, head.y-6);
+    g.fillStyle='#c9ced4'; g.strokeStyle='#eef2f6'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(-13,2); g.quadraticCurveTo(0,-14,13,2); g.quadraticCurveTo(0,10,-13,2); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='rgba(255,255,255,0.5)'; g.beginPath(); g.moveTo(-11,2); g.quadraticCurveTo(0,-9,11,2); g.quadraticCurveTo(0,4,-11,2); g.closePath(); g.fill();   // edge glint
     g.restore(); return;
   }
   if(b.kind==='skyemitter'){
