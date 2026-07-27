@@ -4258,7 +4258,7 @@ function bindVath(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.8),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
   banner('VATH IS BOUND','SEALED BY HIS OWN COMPULSION');
   if(typeof updateBossUI==='function') updateBossUI();
-  setTimeout(()=>storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
+  setTimeout(()=>storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. Your blood has caged me before - a lifetime ago, and lifetimes before that - and every seal your line ever set, I have outwaited. Delayed. Never once undone. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
     {onOk:()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head. <b style="color:var(--ember)">Speak with him.</b>',7000)}),1200);
   // credit the kill quest cleanly (death was intercepted). Delayed so the bind
   // banner is read before the QUEST COMPLETE banner lands.
