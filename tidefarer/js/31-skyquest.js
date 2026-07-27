@@ -5,6 +5,9 @@
    blows her off course. Run her rainbow road, clear six tiny sky-isles of
    their trials, and put the Storm-Eye out; the wind calms and her roost is
    hers again. Puzzle 4 wins the STORMLIGHT: your staff-bolts now stun.
+   The open stretches BETWEEN the isles are patrolled by drifting road-shades
+   (see spawnRoadShades) - the storm scattered them the length of the run, so
+   the road has to be fought through, not just dashed across.
    ===================================================================== */
 const SKY_ISLES = [
   {key:'start', x:60, y:156, r:5},
@@ -222,6 +225,58 @@ function ensureSnatcher(){
   const g=spawnMob('skygrabber', sp[0], sp[1]);
   if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=gcx; g.gcy=gcy; g.gr=gr; g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
 }
+/* ---------- roaming road-shades: patrol the open stretches between the isles ----------
+   The rainbow road used to be a quiet dash-and-cross with nothing to fight in-between.
+   These drifting sky-shades post along each open stretch and give chase as you near, so
+   you meet them one segment at a time AS YOU PROGRESS up the road. The fading bridge
+   (i2 -> i3) is left clear on purpose: that crossing is a timing puzzle, and a chasing
+   shade there would be unfair. Posts are snapped to solid road so the shades don't nest
+   in the dash-gap pits. */
+const SKY_ROAD_PATROLS = [
+  {a:'start', b:'i1', n:1},   // the first climb off the landing - one lone shade
+  {a:'i1',    b:'i2', n:2},   // the run up to the rune-tiles
+  {a:'i3',    b:'i4', n:2},   // past the snatcher's isle, on toward the storm-perch
+  {a:'i4',    b:'i5', n:2},   // between the two perches
+  {a:'i5',    b:'i6', n:2}    // the last approach to the Broken Crown
+];
+// nearest solid road tile centre to (x,y) - never an isle, never a dash-gap pit
+function skySolidRoadNear(x,y){
+  const bx=Math.round(x), by=Math.round(y);
+  for(let rad=0; rad<6; rad++){
+    for(let dy=-rad;dy<=rad;dy++) for(let dx=-rad;dx<=rad;dx++){
+      if(Math.max(Math.abs(dx),Math.abs(dy))!==rad) continue;
+      const tx=bx+dx, ty=by+dy;
+      if(!inb(tx,ty)) continue;
+      if(tileAt(tx,ty)===T.SNOW && !skyIsleTile(tx,ty) && !(G._skyPits && G._skyPits.has(tx+','+ty)))
+        return [tx+0.5, ty+0.5];
+    }
+  }
+  return [x, y];
+}
+function spawnRoadShades(){
+  for(const seg of SKY_ROAD_PATROLS){
+    const a=skyIsle(seg.a), b=skyIsle(seg.b);
+    if(!a || !b) continue;
+    const L=Math.hypot(b.x-a.x, b.y-a.y); if(L<1) continue;
+    const ux=(b.x-a.x)/L, uy=(b.y-a.y)/L;
+    const s0=a.r+2.6, s1=L-(b.r+2.6);        // the open stretch, clear of each isle's footing
+    if(s1<=s0) continue;
+    // two patrol posts at ~30% and ~70% along the stretch; each shade drifts between them
+    const pA=skySolidRoadNear(a.x+ux*(s0+(s1-s0)*0.30), a.y+uy*(s0+(s1-s0)*0.30));
+    const pB=skySolidRoadNear(a.x+ux*(s0+(s1-s0)*0.70), a.y+uy*(s0+(s1-s0)*0.70));
+    for(let i=0;i<seg.n;i++){
+      const t=(seg.n===1)?0.5:i/(seg.n-1);
+      const sx=lerp(pA[0],pB[0],t), sy=lerp(pA[1],pB[1],t);
+      const m=spawnMob('skywraith', Math.floor(sx), Math.floor(sy));
+      if(!m) continue;
+      m.roadwraith=1; m.respawnT=-1;
+      m.lvl=Math.max(9,Math.min(12,P.level));
+      m.x=sx; m.y=sy; m.hx=sx; m.hy=sy;
+      m.pax=pA[0]; m.pay=pA[1]; m.pbx=pB[0]; m.pby=pB[1];
+      m.patT=i*1.7; m.patSpd=0.16+0.05*i;     // slow, slightly desynced drift up and down the road
+    }
+  }
+}
 function spawnMobsSkyDungeon(){
   P.story=P.story||{};
   const done=!!P.story.skyDungeonDone;
@@ -249,6 +304,8 @@ function spawnMobsSkyDungeon(){
     if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE'; b.ach='stormbreaker';
       b.hp=b.maxhp=440; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
       b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; b.entrance='descend'; } }
+  // roaming road-shades between the isles - unless the road's already calm
+  if(!done) spawnRoadShades();
 }
 function genSkyDungeonAll(){
   genSkyDungeon(); bakeSolids(); placeObjectsSkyDungeon(); buildFoam();
@@ -326,6 +383,25 @@ function updateSkyDungeon(dt){
     return;
   }
   ensureSnatcher();   // wakes the cloud-snatcher the instant you cross the fading bridge
+  // ---- ROAMING ROAD-SHADES ----
+  // While a shade isn't hunting you, it drifts slowly up and down its stretch of road by
+  // easing its home-anchor between two posts; the generic idle-wander/leash then carries it
+  // along. Once it gives chase the generic AI takes over (skipped here).
+  for(const m of G.mobs){
+    if(m.dead || !m.roadwraith || m.state==='chase') continue;
+    m.patT=(m.patT||0)+dt*(m.patSpd||0.18);
+    const t=Math.sin(m.patT)*0.5+0.5;
+    m.hx=lerp(m.pax,m.pbx,t); m.hy=lerp(m.pay,m.pby,t);
+  }
+  if(!G._roadHint){
+    for(const m of G.mobs){
+      if(!m.dead && m.roadwraith && m.state==='chase' && dist(P.x,P.y,m.x,m.y)<7){
+        G._roadHint=1;
+        toast('A <b>drifting shade</b> peels off the rainbow road and comes for you. The storm scattered them the length of the run - cut through them as you climb.',4600);
+        break;
+      }
+    }
+  }
   // ---- THE FADING RAINBOW BRIDGE (i2 -> i3) ----
   if(G._skyFade && !P.story.skyG2){
     G._skyFadeT=(G._skyFadeT||0)+dt;
