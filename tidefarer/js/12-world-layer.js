@@ -2944,12 +2944,13 @@ function placeObjectsUndermaw(){
   // ---- R4: the scar under archer fire ----
   pit(6,38, 41,67); field(41,67, 7207);
   G._mawCross.push({y0:38,y1:70, sx:22, sy:69});
-  // ---- R2: THE CONVEYOR - a grinding belt of stone tiles that surface at the LEFT
-  // wall, slide steadily RIGHT across the pit, and tip off the RIGHT edge into the
-  // black (then resurface at the left and come round again). Cross by dashing tile-to-
-  // tile: the gaps are a dash wide side-to-side, and the belt drifts you east, so you
-  // must dash sideways to line back up with the north exit. Ride a tile to the right
-  // end and it falls out from under you. ----
+  // ---- R2: THE CONVEYOR - five grinding belts of stone tiles, and ADJACENT belts run
+  // OPPOSITE ways: one surfaces at the LEFT and streams RIGHT (tipping off the right edge),
+  // the next surfaces at the RIGHT and streams LEFT (tipping off the left edge), and so on.
+  // Every belt shares one speed and one tile-spacing and they start aligned, so a right-going
+  // tile and a left-going tile are never far apart - a continuous zig-zag of dashable hops
+  // (a clear path) stays open across the pit at every instant, even as the whole field slides.
+  // You still time and place each dash and dodge the bats; you just can't get locked out. ----
   buildMawConveyor();
   // ---- THE HOARD DOOR + reward ----
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
@@ -2999,9 +3000,8 @@ function spawnMobsUndermaw(){
     G._mawHordeLeft=placed;
   }
 }
-// R2 THE CONVEYOR: lay the crossing pit and its rightward-running belts of stone tiles.
-// Tiles surface at the left wall, slide right, and tip off the right edge (then loop back
-// round). Called from placeObjectsUndermaw with G._mawPits/_mawCross already initialised.
+// R2 THE CONVEYOR: lay the crossing pit and its five counter-running belts of stone tiles.
+// Called from placeObjectsUndermaw with G._mawPits/_mawCross already initialised.
 function buildMawConveyor(){
   G._mawConvey=[];
   // the crossing pit fills R2's middle, leaving a south entry ledge (y>=132) and a
@@ -3009,32 +3009,37 @@ function buildMawConveyor(){
   for(let y=117;y<=131;y++) for(let x=7;x<=37;x++) if(inb(x,y)&&!solidAt(x,y)){
     G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); }
   G._mawCross.push({y0:114,y1:136, sx:22, sy:134});   // a fall here restarts you on the south ledge
-  // five belts climbing the pit. Each surfaces n tiles at the left, streams them right at
-  // `spd`, and drops each off the right edge; the belts are phase-staggered so no two lanes
-  // line up - you dash sideways to catch the next tile, not just straight north. `gap` is the
-  // centre-to-centre spacing (tile is 2 wide, so the side-to-side hole between tiles is ~3: a
-  // dash wide). Lanes sit 3 apart, so the north hops are dashable too.
-  const lane=(ly,phase)=>{
-    const x0=8.5, x1=35.5, spd=2.0, gap=5, w=2, n=6, span=x1-x0;
+  // FIVE belts climb the pit, and adjacent belts run OPPOSITE ways (see `dir`): a rightward
+  // belt (dir +1) surfaces at x0 and tips off the right edge; a leftward belt (dir -1)
+  // surfaces at x1 and tips off the left edge. Every belt shares one speed and one tile
+  // spacing `p`, and all five start on the SAME lattice, so the nearest rightward tile and
+  // leftward tile are never more than p/2 apart in x. Lanes sit 3 rows apart (a 1-tile pit
+  // gap between belts - a dash clears it), and the tiles are 2 wide, so at every instant a
+  // continuous zig-zag of dashable hops (a guaranteed path) spans the pit even while it all
+  // slides. `p` (=4) keeps the worst hop inside a plain dash's reach.
+  const x0=9.5, x1=33.5, span=x1-x0, p=4, n=span/p, spd=2.0, w=2;
+  const lane=(ly,dir)=>{
     for(let k=0;k<n;k++){
-      const x=x0 + ((k*gap + phase) % span);
-      const t={kind:'conveytile', x, y:ly+0.5, prevx:x, prevy:ly+0.5, x0, x1, spd, w, h:2, falling:false, fallT:0};
+      const x = dir>0 ? x0 + k*p : x1 - k*p;   // rightward belts fill from the left, leftward belts from the right
+      const t={kind:'conveytile', x, y:ly+0.5, prevx:x, prevy:ly+0.5, x0, x1, dir, spd, w, h:2, falling:false, fallT:0};
       G.decor.push(t); G._mawConvey.push(t);
     }
   };
-  lane(130,0); lane(127,2.6); lane(124,1.1); lane(121,3.7); lane(118,1.9);
+  // south -> north: right, left, right, left, right (each belt opposes its neighbour)
+  lane(130,+1); lane(127,-1); lane(124,+1); lane(121,-1); lane(118,+1);
 }
-// advance the conveyor belts: slide each tile right, tip it off the right edge (a short
-// fall animation), then resurface it at the left wall to come round again.
+// advance the conveyor belts: slide each tile along its belt's direction, tip it off the
+// far edge (a short fall animation), then resurface it at the near edge to come round again.
 function updateConveyor(dt){
   for(const t of (G._mawConvey||[])){
     t.prevx=t.x; t.prevy=t.y;
     if(t.falling){
       t.fallT+=dt;
-      if(t.fallT>=0.55){ t.falling=false; t.fallT=0; t.x=t.x0; t.prevx=t.x0; }   // back up at the left; no carry-jump
+      if(t.fallT>=0.55){ t.falling=false; t.fallT=0; t.x=(t.dir>0)?t.x0:t.x1; t.prevx=t.x; }   // resurface at the near wall; no carry-jump
     } else {
-      t.x+=t.spd*dt;
-      if(t.x>=t.x1){ t.falling=true; t.fallT=0; }   // reached the right edge - it tips into the black
+      t.x += t.dir*t.spd*dt;
+      if(t.dir>0 && t.x>=t.x1){ t.falling=true; t.fallT=0; }        // rightward belt reached the right edge
+      else if(t.dir<0 && t.x<=t.x0){ t.falling=true; t.fallT=0; }   // leftward belt reached the left edge
     }
   }
 }
