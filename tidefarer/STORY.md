@@ -1,21 +1,137 @@
 # Tidefarer — Story & Mechanics Roadmap
 
-Working design notes for the arc that follows Act I. This is the reference we
-build against; it is not shipped code. Where a beat already exists in the game
-it is tagged **[built]**; new material is tagged **[new]**. Open design
-questions are collected at the end.
+Working design notes for the full arc. This is the reference we build against;
+it is not shipped code. Where a beat already exists in the game it is tagged
+**[built]**; new material is tagged **[new]**. Open design questions are
+collected at the end.
 
 ---
 
-## Where the story stands (Act I recap) — [built]
+## The three-act spine — [new, canonical]
 
-- You play the **princess**, daughter of **King Aldous** of Aldermere; your
-  **brother**, the **prince**, fights at your side.
-- **Vath the Emberbinder** stole the **Tideglass magic** from your father's
-  blood. In the throne-hall climax the King spends himself buying his
-  children's escape, and Vath rewrites the guards' memory to frame the prince.
-- Act I closes on the "six months later" crossing: the siblings sail out past
-  the charted isles to grow strong enough to come back for Vath.
+This is the governing structure. Everything below hangs off it.
+
+- **Act I — Amnesia and the fall.** You wash ashore an amnesiac castaway,
+  masked, lifting island curses by instinct. Act I **climaxes when your memory
+  returns** (your brother frees you of the mask) **and you learn your father
+  has been taken captive by Vath.** You end the act knowing who you are and how
+  much you have lost.
+- **Act II — The prophecy and the weapon.** You sail the shattered isles,
+  **discover the prophecy** of the Tidefarer, and **retrieve the magical item**
+  it names — the means to seal Vath. This is the treasure hunt: the prophecy is
+  the map, the item is the prize.
+- **Act III — The battle for the capital.** The sea to Aldermere finally opens.
+  You **fight Vath's controlled troops across the capital**, then **face Vath
+  himself** in the throne hall.
+
+> **Reconciling with the older draft.** An earlier version of these notes ended
+> Act I on the "six months later" crossing and put the Emberwick tomb reveal in
+> Act III. Under the canonical spine above, the crossing is the **Act I → II
+> bridge** (you sail out to find the means to fight back), the Emberwick tomb /
+> prophecy / item is the **heart of Act II**, and Act III is the **capital
+> assault**. The isle-spirit exploration content is the **body of Act II** —
+> the sailing you do while chasing the prophecy.
+
+---
+
+## Backstory (the true history) — [new]
+
+The load-bearing lore, roughly chronological. Most of it is **told**, not
+played — see the reveal cadence for who says what, and when.
+
+- For centuries the **royal house of Aldermere** ruled the isles in peace,
+  their bloodline blessed with the **Tideglass magic** — a power passed to each
+  generation, strong enough to protect the isles from evil and **so strong that
+  Vath's own magic cannot touch the royal blood directly.**
+- Generations ago, the great warrior queen — the **Tidefarer** — defeated Vath
+  and beat him down to a broken spirit. She meant to seal him forever, but in
+  the final moment **he turned her own sealing spell back on her**, trapping her
+  spirit on a hidden isle off Emberwick. He survived, barely, and **waited.**
+- He waited out the Tidefarer's death and longer, rebuilding strength. Then he
+  **crafted himself a vessel** — a beggar child with a feigned gift for magic —
+  and presented himself to the King, who took the prodigy in as his protégé.
+- Vath waited again: through the King's marriage, his heirs, his growing trust,
+  until age made the King **physically weak.** All the while he **seeded the
+  isles with curses** — distrust, unease, pressure — to force the King to act.
+- Vath manipulated the King into sending the **warrior daughter** and the
+  **scholar son** out to the troubled isles. He would have killed them, but the
+  bloodline's magic put them beyond his reach — so he **cursed them instead**,
+  using new magic he had researched in secret. The son he cursed with ease. The
+  daughter's quiet inner strength resisted him, so he bound her in a **mask** she
+  could never bring herself to remove, and took her memory.
+- Even amnesiac, the daughter drifted isle to isle **lifting curses by instinct
+  — acting not from memory but from obligation, from the nature of her blood.**
+- Two things protected the siblings beyond the bloodline: that resistance, and a
+  **necklace their dying mother left them, imbued with her love.** That love
+  **restored the son's memory**, and he in turn **removed the mask from his
+  sister**, freeing her.
+- Vath's power kept growing. He **overthrew the King and seized the capital**,
+  bending its soldiers to his will. His magic cannot harm the royal blood — **but
+  the people and creatures he controls can.** If he turns the whole kingdom
+  against the prince and princess, the bloodline's protection fails, the kingdom
+  falls, and the greatest force for good the isles have known dies with it.
+
+### The prophecy
+
+> **The legend of the Tidefarer.** A great maiden of the royal house, sailing
+> island to island, freeing them of a great evil — who would one day find the
+> magical item needed to seal that evil away forever.
+
+The siblings uncover it in the **catacombs of Stormreach**: a prophecy written
+by their ancestors, naming a weapon the Tidefarer forged to seal an evil. It
+sends them hunting.
+
+### The weapon (Act II climax)
+
+The hunt leads back to **Emberwick**, to **Sage Orin** — now facing death — who
+points them to an adjacent isle where the weapon is rumored, though even he
+doubts it. They find not a weapon but a **grave**: the Tidefarer's own
+headstone, lost to time. Her **spirit wakes** and tells them the true history —
+Vath's many names, and how he turned her sealing spell back on her. She begs
+them to **destroy the headstone** to free her and the **book** it guards, which
+holds the spell to seal Vath. As the blade falls, the **spirits of the royal
+family awaken and attack** — guardians set to test whoever would claim the
+weapon. Winning proves the warrior worthy.
+
+### The two gifts
+
+The book holds the spell — and it takes **two working together, a warrior and a
+mind:**
+
+- **For the brother (the scholar) — the seal.** A binding spell; his role in the
+  finale is to **seal Vath, not kill him.**
+- **For the sister (the warrior) — the combat gift.** **Slow time** (equivalently,
+  move at incredible speed): in a slowed world she strikes many times before a
+  foe can answer.
+
+> **Foundation exists:** the engine already runs a cinematic `G.slowmo`
+> (`21-exploration.js`, boss beats). The player ability is a new, costed,
+> player-triggered version — natural to build on the skills/MP systems in
+> `05-inventory-skills-quests.js`.
+
+---
+
+## Name reconciliation — [decision needed]
+
+The backstory draft and the shipped game use **two different name-sets**. Pick
+one before wiring dialogue — renaming later means chasing a lot of strings.
+**Recommendation: keep the game's invented proper nouns, and adopt the draft's
+names only for the currently-unnamed siblings.**
+
+| Backstory draft | Game / this doc today | Recommendation |
+|-----------------|-----------------------|----------------|
+| House **Kensington**, isles of **Yorkshire** | House of **Aldermere**, the **Tideglass** line | **Aldermere.** "Yorkshire" reads as real-world England and clashes with the invented register (Emberwick, Tideglass). Drop it. |
+| King **Archer** | King **Aldous** | **Aldous** (shipped in dialogue already). |
+| **Joan** (warrior daughter) | the **Princess** (unnamed) | **Joan.** Naming the sibling is an upgrade. |
+| **Jaist** (scholar son) | the **Prince** (unnamed) | **Jaist.** |
+| Queen **Regina** (ancestor who beat Vath) | the **Tidefarer**, great-grandmother | **Tidefarer** as title; **Regina** can be her name — but note *regina* is Latin for "queen," so "Queen Regina" = "Queen Queen." Make it a choice, not an accident. |
+| **Orin** on Emberwick | **Sage Orin** on Emberwick | Already match. |
+| the mother | a lost queen, drowned ~30 years gone (shipped) | Already match. |
+
+**Also settle:** the isle called **"Sunwick"** here ships as **"The Sunward
+Isle."** And the Tidefarer's generation — the draft calls Archer her
+*great-grandson* (making her the kids' great-great-grandmother), while these
+notes have said *great-grandmother*. Pick one.
 
 The world already contains the isles this arc uses:
 
@@ -28,136 +144,173 @@ The world already contains the isles this arc uses:
 | Stormreach            | `reach` — **Stormreach**, storm-coast sea stop |
 | The capital           | `crown` — **Aldermere**, the Tideglass throne |
 
-> **Naming note:** the roadmap says "Sunwick"; the game currently ships it as
-> "The Sunward Isle." Pick one before we wire dialogue — renaming later means
-> chasing a lot of strings. (Others already match: Barik, Windsurf, Stormreach.)
+---
+
+## Reveal cadence — who says what, and when — [new]
+
+The backstory is exposition-dense ("he waited, and he waited, and he waited").
+It dies if delivered in one lump. **Ration it across all three channels — book
+lore, a Vath soliloquy, and the Tidefarer's spirit — so no single moment dumps
+the whole history.**
+
+| Beat | Act | Channel | Notes |
+|------|-----|---------|-------|
+| Something is wrong with the King's advisor | I | **Ambient** — Orin's unease, "a loyal man drowned in my service," the pendant, the mask | Hooks, not answers. Explain nothing. **[partly built]** |
+| Who you are; the night of the coup; your father is Vath's captive | I climax | **Memory return** (mask off, necklace) | The *personal* history only — not Vath's deep past. **[built: mask/memory]** |
+| Vath has other names; an ancestor once beat something like him | II | **Book/scattered lore** + the **Stormreach prophecy** | The *shape* of the truth. **[seed built]** |
+| Vath has been beside the family longer than you've been alive; he curses rather than kills because he cannot touch your blood | II (mid/late) | **Vath soliloquy** | The villain gut-punch. Stop here — **do not** spend his origin. |
+| His many names, the long con, and how he turned the Tidefarer's own spell against her | II climax | **The Tidefarer's spirit** | The deepest history, from his victim's mouth — weightier than a boast. |
+| The seal, the slow-time gift, "a warrior and a mind" | II climax | **The book** | Sets up the Act III finale. |
+
+**Act I — seed only, explain nothing.** Leave Act I knowing the advisor is
+wrong and nothing more.
+
+**Act II — feel Vath before you understand him.** The isle curses/hazards are
+his manipulation made physical. Drip the shape of the truth through lore and the
+prophecy; land the confidant reveal as a soliloquy; save the origin for the
+Tidefarer.
+
+**Act III — no new history, just payoff.** The capital assault *is* the "turn
+the kingdom against them" rule made playable.
 
 ---
 
-## Act II — the shattered isles
+## Craft notes on the backstory — [new]
+
+1. **Fix the waterfall redirect — it reads as luck, not cunning.** "He kept her
+   talking until she happened to cast toward a waterfall, then ducked" makes Vath
+   *fortunate*, not brilliant. Rewrite so he **maneuvered the duel to that spot
+   on purpose.** Bonus: it gives Joan a thematic warning for the finale — *don't
+   let Vath talk* — to pay off in the last fight.
+2. **State the "can't be touched" rule explicitly — it's load-bearing.** Vath's
+   own magic and anything he *directly* controls cannot harm royal blood, but
+   people and creatures he *manipulates* can. This single rule explains why he
+   curses instead of killing, why the whole capital's soldiers are the Act III
+   threat, and why the finale is about the kingdom, not a duel. Never break it.
+3. **Make the two loopholes mirror each other.** The seam — "if he can't touch
+   them, how did he curse them?" — is answered by "new magic he researched." Lean
+   in: **the curse is his researched loophole; the Tidefarer's seal is the
+   heroes' researched loophole.** Visible symmetry.
+4. **Don't let the necklace and the book do the same job.** Both "undo Vath's
+   magic." Split their domains: the **necklace undoes the *personal* curse**
+   (memory, mask — love vs. spite); the **book/seal undoes *Vath himself*.**
+5. **The long con is backstory, not a scene.** "Beggar → protégé → confidant →
+   waits out the King" is great *told* history but deadly to *play*. Keep it in
+   the Tidefarer's mouth and Vath's gloat — narrated, not dramatized.
+
+---
+
+## Act I — amnesia and the fall
+
+**Where it stands — [built].** You play the princess (**Joan**), daughter of
+**King Aldous** of Aldermere; your brother the prince (**Jaist**) fights at your
+side. **Vath the Emberbinder** stole the **Tideglass magic** from your father's
+blood; in the throne-hall coup the King is taken and Vath rewrites the guards'
+memory to frame the prince. You wash ashore on Emberwick an amnesiac, masked,
+wearing your mother's pendant, and begin lifting curses by instinct.
+
+**Climax — [built beats, re-aimed].** Your brother restores your memory and
+frees you of the mask (the necklace's doing). Full memory returns: you remember
+the coup, and that **your father lives as Vath's prisoner.** The act ends at the
+low point — you know who you are and how much you've lost — and you sail out
+(the crossing) to find the means to fight back.
+
+---
+
+## Act II — the prophecy and the weapon (the shattered isles)
+
+The treasure hunt. The prophecy is the map; the Tidefarer's weapon is the prize.
+Sailing the shattered isles is the body of the act.
 
 ### Navigation: Stormreach is the turnstile — [new gating]
 
-After you **defeat Stormreach**, the sea opens: you may sail to **any isle
-except the capital**. Aldermere stays sealed until the endgame — you are not
-ready for Vath, and the story keeps that door shut on purpose.
+After you **defeat Stormreach**, the sea opens: you may sail to **any isle except
+the capital**. Aldermere stays sealed until Act III — you are not ready for Vath,
+and the story keeps that door shut on purpose.
 
-> **Change from today:** the Act II ferry currently runs a fixed chain
-> (Stormreach → Frozen Isle → the older isles). The new intent is to convert
-> that into free sailing once Stormreach falls, with only the capital gated.
-> Frozen Isle / Aerie / Cloudreach can stay as optional side-content that the
-> open map now surfaces.
+> **Change from today:** the ferry currently runs a fixed chain (Stormreach →
+> Frozen Isle → older isles). The new intent is free sailing once Stormreach
+> falls, with only the capital gated. Frozen Isle / Aerie / Cloudreach stay as
+> optional side-content the open map surfaces.
 
 ### The island spirits — [new]
 
-Every isle carries a wound tied to a bound or maddened **island spirit**. The
-land itself is in revolt, and each isle's spirit expresses as a distinct,
-readable environmental hazard. The through-line: Vath's theft of the Tideglass
-magic unmoored the spirits that the tide once kept in balance.
+Every isle carries a wound tied to a bound or maddened **island spirit** — Vath's
+theft of the Tideglass magic unmoored the spirits the tide once held in balance.
+Each expresses as a distinct, readable hazard:
 
-- **Windsurf — vicious winds.** Gusts strong enough to knock people off their
-  feet; being outside is dangerous. Buildings overturned; the **windmill and
-  waterwheel spin out of control.** (Fits what's already here: Millward Rise,
-  Waterwheel Row, the Undermill, and the "harbor turned deadly" lore.)
+- **Windsurf — vicious winds.** Gusts that knock people off their feet; the
+  **windmill and waterwheel spin out of control.** (Fits Millward Rise,
+  Waterwheel Row, the Undermill, the "harbor turned deadly" lore.)
 - **Barik — earthquakes.** The ground heaves at random intervals.
-- **Sunwick — the erupting volcano.** Mount Kea is erupting, blanketing the
-  isle in a drifting cloud of **ash.**
+- **Sunwick — the erupting volcano.** Mount Kea erupts, blanketing the isle in
+  drifting **ash.**
 
-**Mechanically**, each becomes a recurring world hazard plus set dressing:
-timed knock-down gusts, screen-shaking quakes that may open/close paths,
-ash that reduces visibility and chips health outdoors. Calming each spirit is
-the isle's questline payoff (and likely how new terrain/items open up — see
-below).
+**Mechanically:** timed knock-down gusts, screen-shaking quakes that open/close
+paths, ash that cuts visibility and chips health outdoors. Calming each spirit is
+the isle's questline payoff (and likely how new terrain/items open up).
 
 ### Traversal gates: new items and changed terrain — [new]
 
-Exploration widens as you go. Calming a spirit, or an item won on one isle,
-changes the terrain or gives you a new way to move — so isles you couldn't
-fully cross before open up on a return visit. (Same shape as the existing
-Stormlight and stormsail unlocks: a mid-arc prize that re-opens the map.)
+Calming a spirit, or an item won on one isle, changes terrain or gives a new way
+to move — so isles you couldn't fully cross open up on return. (Same shape as the
+existing Stormlight and stormsail unlocks.)
 
 ### Bosses & new dungeons — [new]
 
-Each isle gets a dungeon that ends in a boss — the fight that calms (or is
-tied to) its island spirit. Working intent is that the boss is the spirit's
-guardian or its maddened form, so clearing the dungeon is what quiets the
-hazard on the surface.
+Each isle gets a dungeon ending in a boss tied to its spirit — clearing it quiets
+the surface hazard.
 
-**Gating — Act II only.** These bosses and their dungeons are reachable **only
-during Act II.** They open when Act II does (Stormreach falls and the isles
-unlock) and close before the Act III finale — the same turnstile that keeps the
-capital sealed also fences the isle bosses inside Act II. Concretely: their
-dungeon mouths stay shut until Stormreach is cleared, and once the story crosses
-into the Emberwick tomb / capital endgame they are no longer enterable (the
-spirits are meant to be settled by then). Nothing here should be reachable in
-Act I, and nothing should let the player wander back into an isle boss mid-finale.
+**Gating — Act II only.** These open when Act II does (Stormreach falls) and
+close before the Act III finale — the same turnstile that seals the capital
+fences the isle bosses inside Act II. Dungeon mouths stay shut until Stormreach
+is cleared, and once the story crosses into the Emberwick tomb / capital endgame
+they are no longer enterable. Nothing here is reachable in Act I, and nothing
+lets the player wander back into an isle boss mid-finale.
 
-- **Sunwick — the Giant Crab.** A **new barrier island** just offshore holds
-  the lair; the boss is a giant crab. (Separate from the existing Emberdeep /
-  Ashwing dungeon inside Mount Kea — this is its own reef-islet dungeon. Ties
-  naturally to the "reef" already sketched at Windward Reef.)
+- **Sunwick — the Giant Crab.** A **new barrier island** offshore holds the lair
+  (separate from the Emberdeep / Ashwing dungeon in Mount Kea). Ties to the reef
+  sketched at Windward Reef.
 - **Windsurf — the Underground Temple.** A buried temple **beneath The Breakers
-  Resort.** (Separate from the existing **Undermill** beneath the windmill —
-  Windsurf ends up with two underground sites: the mill works and this temple.)
-- **Stormreach — the Barrier Reef.** A dungeon **at/below the waterline**, a
-  submerged barrier reef. (Stormreach already ships the **Drowned Catacomb**
-  under its graveyard with the Drowned Minotaur; the reef is a second,
-  distinct underwater site — decide whether it replaces or sits alongside the
-  catacomb.)
-- **Cloudreach — skipped.** Too small to carry a dungeon; leave it as the
-  optional Rainbow Road side-content it already is.
-- **Barik — TBD.** No boss/dungeon specified yet for the earthquake spirit.
-  Barik already has Stormwatch Peak, the Undermaw, and its catacombs to draw
-  on, or the quake spirit could get its own new site. Open question below.
+  Resort** (separate from the Undermill — Windsurf gets two underground sites).
+- **Stormreach — the Barrier Reef.** A dungeon **at/below the waterline**
+  (Stormreach already ships the **Drowned Catacomb** with the Drowned Minotaur —
+  decide whether the reef replaces or sits alongside it).
+- **Cloudreach — skipped.** Too small; leave it as the optional Rainbow Road.
+- **Barik — TBD.** No boss/dungeon yet for the quake spirit. Could reuse
+  Stormwatch Peak / the Undermaw / the catacombs, or get its own site.
 
-> **Underwater dungeons are a new mode.** Both Sunwick's reef-islet and
-> Stormreach's barrier reef lean on water/below-waterline traversal the engine
-> doesn't do yet — worth prototyping the "under water level" feel once before
-> committing both.
+> **Underwater dungeons are a new mode.** Both reef sites lean on
+> below-waterline traversal the engine doesn't do yet — prototype the "under
+> water level" feel once before committing both.
+
+### The prophecy and the weapon — [new]
+
+The **Stormreach catacombs** yield the prophecy → it names the Tidefarer's
+weapon → the hunt leads back to **Emberwick / Orin** → an adjacent isle → the
+Tidefarer's **grave**, her spirit, the **headstone strike**, the **royal-family
+guardian fight**, and the **book** with the two gifts. This is the Act II climax.
+See the Backstory section above for the full sequence.
+
+> Reuses the game's headstone / tomb-mouth art and the guardian-spirit / wraith
+> enemy family already in the engine.
 
 ---
 
-## Act III — Emberwick and the Tidefarer's rest
+## Act III — the battle for the capital
 
-One of the **final places before the capital** is a **hidden site on
-Emberwick** — you come home to end where you began.
+The sea to **Aldermere** finally opens.
 
-### The reveal — [new]
-
-There you learn where the **Tidefarer** rests. She was your
-**great-grandmother**, and she **fought Vath** in her own age. She wounded him
-but could not finish it: **Vath survived, and her spirit was trapped** there.
-
-She tells you she carries a **secret that can destroy Vath** — one she never
-had the means to use, because it takes **two working together: a warrior and
-one of great intellect.** That mind is your **brother.**
-
-### The test — striking the headstone — [new]
-
-She bids you **destroy her headstone** to lay her spirit to rest and free the
-prize it guards: a **book.** As your blade falls, the **spirits of the royal
-family awaken and attack** — your ancestors, set here as **guardians of the
-weapon and a test of the one who would claim it.** Winning the fight is proof
-you are the warrior the secret demands.
-
-> Reuses the game's headstone / tomb-mouth art and the guardian-spirit /
-> wraith enemy family already in the engine.
-
-### The book — two gifts — [new]
-
-Your brother reads the book and finds it holds the spells that let the two of
-you finally face Vath:
-
-- **For the brother — the seal.** A binding spell; his role in the final fight
-  is to **seal Vath** rather than kill him.
-- **For you — the combat gift.** A new ability: **slow time** (equivalently,
-  **move at incredible speed**). In a slowed world you strike many times before
-  a foe can answer.
-
-> **Foundation exists:** the engine already runs a cinematic `G.slowmo`
-> (see `21-exploration.js`, used for boss beats). The player ability is a new,
-> costed, player-triggered version of that — natural to build on the skills/MP
-> systems in `05-inventory-skills-quests.js`.
+- **Fight through the capital — [new].** Vath's magic cannot touch your blood,
+  so he throws the thing that can: **the kingdom itself.** Battle his controlled
+  soldiers and creatures across the capital. This is the "turn the whole kingdom
+  against them" rule made playable — the reason the finale is a war, not a duel.
+- **Face Vath — [new].** The two gifts converge: **Joan's slow-time** creates the
+  openings and survives his onslaught; **Jaist's seal** finishes it. He is
+  **sealed, not killed** — the Tidefarer's unfinished work, completed. Callback:
+  *don't let Vath talk* (the waterfall lesson).
+- **Free the King.** Your father, Vath's captive since Act I, is the rescue stake
+  the finale pays off. **[open: is he freed, or is his fate the final cost?]**
 
 ---
 
@@ -168,37 +321,37 @@ you finally face Vath:
 3. **Island-spirit hazards** — Windsurf winds, Barik quakes, Sunwick ash — as
    world hazards + set dressing, one isle at a time.
 4. **Isle dungeons & bosses** — one per isle, tied to its spirit. Prototype the
-   underwater mode first (it serves both Sunwick's reef-islet and Stormreach's
-   barrier reef), then Windsurf's temple, then settle Barik. The dungeon is
-   what calms each hazard from step 3.
-5. **Emberwick Tidefarer tomb** — the reveal, the headstone strike, the
-   royal-family guardian fight, and the book that grants the two gifts. This
-   ties the mechanic in (1) to the story.
+   underwater mode first, then Windsurf's temple, then settle Barik.
+5. **Emberwick Tidefarer tomb** (Act II climax) — the reveal, headstone strike,
+   guardian fight, and the book granting the two gifts. Ties mechanic (1) to
+   story.
+6. **The capital assault** (Act III) — controlled-troop encounters across
+   Aldermere and the Vath finale (slow-time + seal).
 
 ---
 
 ## Open questions
 
-- **"Sunwick" vs "The Sunward Isle"** — settle the canonical name.
-- **Free sailing vs. chain** — fully open the map after Stormreach, or keep a
-  couple of isles behind soft story gates? What exactly does "any isle but the
-  capital" include (Frozen, Aerie, Cloudreach)?
-- **Slow-time cost & feel** — MP drain, a cooldown, or a charge meter? How much
-  does time slow, and does the player also speed up, or just the world slow?
+- **Name-set** — adopt the reconciliation table above? Settle "Sunwick" vs "The
+  Sunward Isle," and the Tidefarer's exact generation.
+- **Free sailing vs. chain** — fully open the map after Stormreach, or keep soft
+  story gates? What does "any isle but the capital" include (Frozen, Aerie,
+  Cloudreach)?
+- **Slow-time cost & feel** — MP drain, cooldown, or charge meter? How much does
+  time slow, and does the player also speed up, or just the world slow?
 - **Spirit hazards — punishing or flavor?** Do quakes/gusts/ash deal damage and
   gate paths, or mostly dress the isle until you calm the spirit?
-- **Barik's dungeon & boss** — does the earthquake spirit get its own new site,
-  or reuse Stormwatch Peak / the Undermaw / the catacombs already on Barik?
-- **Stormreach's reef vs. its catacomb** — does the new barrier-reef dungeon
-  replace the existing Drowned Catacomb, or sit alongside it?
-- **Underwater traversal** — the reef dungeons want an "under water level" feel
-  the engine doesn't have yet. What does it play like — swimming, a diving
-  mechanic, drained/flooded rooms? Prototype before committing two of them.
-- **Boss = spirit, or guardian?** Is each isle boss the maddened island spirit
-  itself, or a guardian standing between you and calming it?
-- **Act II boss gating — mandatory or optional?** Must every isle boss be
-  cleared before Act III opens, or can the player enter the finale having skipped
-  some (and just lose the loot/story they'd have given)? And once cleared, do
-  the dungeons stay open to revisit within Act II or lock behind you?
-- **The brother's seal in the finale** — is he a controlled ally, a scripted
-  cutscene role, or a mechanic you protect during the Vath fight?
+- **Barik's dungeon & boss** — its own new site, or reuse Stormwatch Peak / the
+  Undermaw / the catacombs?
+- **Stormreach's reef vs. its catacomb** — does the new reef dungeon replace the
+  existing Drowned Catacomb, or sit alongside it?
+- **Underwater traversal** — swimming, a diving mechanic, drained/flooded rooms?
+  Prototype before committing two of them.
+- **Boss = spirit, or guardian?** Is each isle boss the maddened spirit itself,
+  or a guardian standing between you and calming it?
+- **Act II boss gating — mandatory or optional?** Must every isle boss fall
+  before Act III opens, or can the player enter the finale having skipped some?
+  Once cleared, do the dungeons stay open within Act II or lock behind you?
+- **The brother's seal in the finale** — a controlled ally, a scripted cutscene
+  role, or a mechanic you protect during the Vath fight?
+- **The King's fate** — freed in the finale, or is his loss the final cost?
