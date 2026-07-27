@@ -209,6 +209,11 @@ function enterHouse(b){
     F('shelf',5.9,1.3,0.7,0.3,true,'wards@tower');
     F('books',7.3,1.3,0.7,0.3,true,'enchant@tower');
     F('books',2.0,4.6,0.7,0.3,true,'weaver@tower');   // a stray primer left on the reading table
+    // the deep-history shelf, along the east wall: three tomes that seed the enemy's
+    // true nature and the Tidefarer prophecy long before either is named aloud
+    F('books',8.3,2.2,0.7,0.3,true,'manynames@tower');
+    F('shelf',8.3,3.2,0.7,0.3,true,'crownward@tower');
+    F('books',8.3,4.2,0.7,0.3,true,'tidefarer@tower');
     F('rug',4.5,4.9,0,0,false);
     // Aelin's Spire keeps a students' cot - rest here free - and after dark the
     // Weaver herself is in, working by candlelight (villagers vanish outdoors at night)

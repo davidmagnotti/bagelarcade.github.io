@@ -3261,7 +3261,10 @@ function placeObjectsReach(){
     addBuilding('lamp', GV.x-3, GV.y+2, ''); addBuilding('lamp', GV.x+3, GV.y+2, '');
     // a low rusted fence-gate framing the graveyard path
     G.decor.push({kind:'pillar', x:GV.x-2+0.5, y:GV.y+4+0.5, broken:true, loreKey:'stormreach'});
-    G.decor.push({kind:'pillar', x:GV.x+2+0.5, y:GV.y+4+0.5, broken:true, loreKey:'stormreach'}); }
+    G.decor.push({kind:'pillar', x:GV.x+2+0.5, y:GV.y+4+0.5, broken:true, loreKey:'stormreach'});
+    // the Tidefarer's verse-stone on the tomb's threshold - the Act II clue that turns
+    // the isle-by-isle curse-lifting into a hunt for the great queen's sealing weapon
+    G.decor.push({kind:'pillar', x:GV.x+0.5, y:GV.y+2+0.5, broken:false, loreKey:'prophecy@reach'}); }
   carveLine(Z.camp.x,Z.camp.y, Z.graves.x,Z.graves.y, T.PATH,0);
   // the ferry berth: Stormreach is a sea stop, so a hull always rides here
   addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
