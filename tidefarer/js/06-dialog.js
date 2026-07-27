@@ -144,7 +144,7 @@ function buildDialogContent(npc){
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
-      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, your little brother screaming, the enchanter\'s violet on the water - and your own name at last, that the sea had kept from you.</i> “You always ran AT the storm,” <i>your brother says, half a laugh and half a sob.</i> “The warrior. And I read the books and named the stars. Some pair we make.” <i>He shoulders his axe like it were a sword.</i> “No more woodpile. Take me to Father - and I\'m not letting you walk into Vath alone this time.”',
+      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, your little brother Jaist screaming, the enchanter\'s violet on the water - and your own name at last, the one the sea had kept from you. Joan.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> “The warrior. And I read the books and named the stars. Some pair we make.” <i>He shoulders his axe like it were a sword.</i> “No more woodpile. Take me to Father - and I\'m not letting you walk into Vath alone this time.”',
         {label:'To Aldermere', onOk:()=>{
           setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
         }}),1100);
@@ -167,7 +167,7 @@ function buildDialogContent(npc){
   }
   // After the unmasking, before you reach the capital: the prince is impatient to sail.
   if(npc.id==='woody' && P.story && P.story.unmasked && !P.story.act1End){
-    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s blood - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, sister.”',
+    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s blood - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, Joan.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
@@ -200,7 +200,7 @@ function buildDialogContent(npc){
       if(typeof sailEpilogue==='function') sailEpilogue();
       else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
     };
-    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. My daughter, the one the sea took first. And you-” <i>his voice fails on the prince.</i> “...my boy. Both of you. Alive.”',
+    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, the one the sea took first. And you-” <i>his voice fails on the prince.</i> “...Jaist. My boy. Both of you. Alive.”',
       [{label:'We came home, Father.', cls:'gold', fn:toCutscene}]);
     return;
   }

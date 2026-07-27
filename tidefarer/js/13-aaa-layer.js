@@ -128,10 +128,10 @@ const EPI = {
   // ease toward while it is on screen. storm 0..1 = rain/lightning; near 0..1 = island approach.
   beats: [
     { who:'', html:'<i>Six months of open water. The charted isles are long gone behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.05 },
-    { who:'The Prince', html:'“There &mdash; past the bow.” <i>He steadies the chart against the wind.</i> “That smudge on the horizon isn\'t cloud, sister. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.2, near:0.24 },
-    { who:'The Princess', html:'“Land.” <i>She squints into the wind.</i> “No gulls, though. A tempest that never breaks, sitting over one lone rock. The charts give it a single name, right at the edge &mdash; <b>Stormreach</b>.”', storm:0.42, near:0.46 },
-    { who:'The Prince', html:'<i>He looks from the chart to the dark smudge and back.</i> “This far out? Vath\'s reach shouldn\'t run anywhere near here. We\'ve sailed clean off the edge of everything he holds.”', storm:0.62, near:0.64 },
-    { who:'The Princess', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Good. Then it\'s ours, little brother. Hold her steady &mdash; whatever\'s waiting on that rock, we make landfall together.”', storm:0.86, near:0.84 },
+    { who:'Jaist', html:'“There &mdash; past the bow.” <i>He steadies the chart against the wind.</i> “That smudge on the horizon isn\'t cloud, sister. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.2, near:0.24 },
+    { who:'Joan', html:'“Land.” <i>She squints into the wind.</i> “No gulls, though. A tempest that never breaks, sitting over one lone rock. The charts give it a single name, right at the edge &mdash; <b>Stormreach</b>.”', storm:0.42, near:0.46 },
+    { who:'Jaist', html:'<i>He looks from the chart to the dark smudge and back.</i> “This far out? Vath\'s reach shouldn\'t run anywhere near here. We\'ve sailed clean off the edge of everything he holds.”', storm:0.62, near:0.64 },
+    { who:'Joan', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Good. Then it\'s ours, little brother. Hold her steady &mdash; whatever\'s waiting on that rock, we make landfall together.”', storm:0.86, near:0.84 },
     { who:'', html:'<i>The keel comes up out of the dark and grinds onto black shingle. High above the rain, a single light is burning. You have reached the last name on the map.</i>', storm:1, near:1, land:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
@@ -239,10 +239,10 @@ function placeReachHomecoming(){
   // the prince holds the strand while the princess explores - findable at any hour
   if(!G.npcs.some(n=>n.id==='brother')){
     const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x+2), Math.round(Z.y+1), 5)) || [Z.x+2, Z.y+1];
-    const b=makeNPC('brother','Your Brother, the Prince', sp[0], sp[1],
+    const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
       {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
       ["Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
-       "I'll keep a fire lit here on the strand. Find what this place is hiding, sister - nothing I'd have to write a ballad about.",
+       "I'll keep a fire lit here on the strand. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
        "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."],0.1);
     b.nightOwl=true;
     G.npcs.push(b);
@@ -398,7 +398,7 @@ const THR = {
     // The homecoming, before the storm: the King on his feet at the throne, turned to face
     // his children - joy and disbelief - a quiet beat with no enemy in the room yet.
     { who:'King Aldous', kingFace:'kids',
-      html:'“You’re home. I can’t believe it — both of you, home at last.”',
+      html:'“You’re home. Joan — Jaist — I can’t believe it. Both of you, home at last.”',
       vath:0, gold:0.14, violet:0, clash:0, flee:0, guards:0 },
     { who:'Vath', title:'THE ENCHANTER COMES',
       html:'“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”',
@@ -417,13 +417,13 @@ const THR = {
     // the prince digs in - he won't abandon the father he only just found. The King, still
     // holding Vath off, cuts him down: they can't win this, not yet. The siblings stay put
     // (flee held low) through the argument; only the princess's resolve breaks it.
-    { who:'The Prince',
+    { who:'Jaist',
       html:'“We can’t leave him!!!”',
       vath:0.78, gold:0.98, violet:0.5, clash:0.98, flee:0.08, guards:0 },
     { who:'King Aldous',
       html:'“You don’t stand a chance against him, not as you are.”',
       vath:0.8, gold:0.95, violet:0.55, clash:0.92, flee:0.08, guards:0 },
-    { who:'The Princess',
+    { who:'Joan',
       html:'“We have to go — WE HAVE TO GO.”',
       vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
     { who:'King Aldous',
