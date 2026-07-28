@@ -244,6 +244,17 @@ function loadCode(str){
     applyWorldFlags(d.flags&&d.flags[d.world]);
   }
   P.x=d.x; P.y=d.y;
+  // The Rainbow Road is a chain of tiny cloud-isles separated by open-sky GAPS you dash
+  // across - so the whole floor between isles is "fall" tiles, not solid ground. A periodic
+  // autosave easily catches the hero mid-dash over a gap; resuming at that exact tile would
+  // drop them, and the generic safety net below would fling them all the way to the far
+  // start. Snap instead to the NEAREST sky-isle to where they saved - safe footing that
+  // keeps their progress, exactly how the road's own fall-respawn bears you to an isle.
+  if(G.worldId==='skydungeon' && typeof SKY_ISLES!=='undefined'){
+    let best=null,bd=1e9;
+    for(const is of SKY_ISLES){ const dd=dist(d.x,d.y,is.x,is.y); if(dd<bd){ bd=dd; best=is; } }
+    if(best){ P.x=best.x+0.5; P.y=best.y+2.0; }
+  }
   // Safety net: whatever the world, never wake up in water or inside a wall.
   if(!inb(P.x|0,P.y|0) || !walkTile(tileAt(P.x|0,P.y|0)) || solidAt(P.x|0,P.y|0)){
     const dsp=(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
