@@ -643,7 +643,10 @@ function vathEscapes(m){
 }
 function dragonFaints(m){
   // beaten down, the binding shatters - Ashwing swoons and comes to himself
-  m.fainted=1; m.enspelled=false; m.state='idle'; m.tx=null;
+  // ensAmt drives his colour (violet at 1, his own green at 0) and takes precedence over
+  // enspelled in drawDragon, so it MUST be cleared here or he lingers fully purple after the
+  // spell breaks. Restore his health too, so the freed dragon reads as whole, not a husk.
+  m.fainted=1; m.enspelled=false; m.ensAmt=0; m.hp=m.maxhp; m.state='idle'; m.tx=null;
   // the chamber unseals: the Dragon Gate opens again now the wyrm is down
   if(G.dragonSealed){
     const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');

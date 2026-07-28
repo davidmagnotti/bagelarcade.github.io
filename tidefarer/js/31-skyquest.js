@@ -133,7 +133,7 @@ function placeObjectsSkyDungeon(){
   // travelling wave. Cross while the tiles are solid; step on a faded one and you drop
   // through the cloud, back to i2 to try again. Each band spans the full width, so there's
   // no edge to sneak along - just time your steps to the wave.
-  G._skyFade={tiles:[], speed:0.65, onFrac:0.6, entryX:76.5, entryY:112.5};
+  G._skyFade={tiles:[], speed:0.6, onFrac:0.66, entryX:76.5, entryY:112.5};
   G._skyFadeT=0;
   { const a=skyIsle('i2'), b=skyIsle('i3'), ax=a.x, ay=a.y, L=Math.hypot(b.x-ax,b.y-ay), ux=(b.x-ax)/L, uy=(b.y-ay)/L;
     for(let yy=0;yy<MAPH;yy++) for(let xx=0;xx<MAPW;xx++){
@@ -621,14 +621,14 @@ function skyBirdDialog(){
   }
   const accept=()=>{
     P.story=P.story||{}; P.story.birdQuest=1;
-    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Then follow me - up the rainbow! Six little isles, each with a trial the storm left behind. Clear them, put the Storm-Eye out, and the wind runs sweet again - sweet enough to carry us BOTH: me to my islands, and you down off this rock to the city on the water. Step onto the road when you\'re ready.',
+    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Oh, thank you! Follow me, then - up the rainbow road. Step onto it when you\'re ready, and stay close.',
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
         {label:'In a moment', ghost:true, fn:closeDialog} ]);
     if(Snd.quest) Snd.quest();
     if(typeof autoSave==='function') autoSave();
   };
-  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! I used to glide down to my favourite islands every morning - but the high wind has turned cruel and blows me clean off course before I can land. Something up there has soured it. The <b>Storm-Eye</b> - a great unblinking storm-core - roosting where the wind is born, on a rainbow road only the sky-brave can run. Set it right and the calmed sky will bear your weight too: it is the only road DOWN from the Cloudreach. Would you climb it with me?',
-    [ {label:'Lead the way', cls:'gold', fn:accept},
+  setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! The high wind has turned cruel and blows me clean off course before I can reach my little islands - and I cannot set it right on my own. <b>Will you help me?</b>',
+    [ {label:'I\'ll help', cls:'gold', fn:accept},
       {label:'Maybe later', ghost:true, fn:closeDialog} ]);
 }
 function skyBirdSpeak(){ skyBirdDialog(); }

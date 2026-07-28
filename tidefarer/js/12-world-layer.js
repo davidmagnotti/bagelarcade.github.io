@@ -3205,10 +3205,11 @@ function placeObjectsSky(){
   // is run and the sky is calmed (that grants the stormsail) - it carries you to Windsurf far below.
   G.decor.push({kind:'leappoint', x:Z.leap.x+0.5, y:Z.leap.y+0.5, name:'THE LEAP', labelY:-40});
   G.decor.push({kind:'lamp', x:Z.leap.x-2+0.5, y:Z.leap.y+0.5}); G.decor.push({kind:'lamp', x:Z.leap.x+2+0.5, y:Z.leap.y+0.5});
-  // THE WIND-LOST BIRD - her plea opens the Rainbow Road (a "sky dungeon"). She lands
-  // near the Cloudfall Landing, a little apart from Ashwing and the Cloud-Tender.
-  { const sp=findOpenNear(Z.landing.x-4, Z.landing.y-2, 5) || [Z.landing.x-4, Z.landing.y-2];
-    G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-40}); }
+  // THE WIND-LOST BIRD - her plea opens the Rainbow Road (a "sky dungeon"). She perches
+  // toward the north edge of the landing, set well apart and up from Ashwing and the
+  // Cloud-Tender so she's easy to spot (she reads small and got lost in the crowd before).
+  { const sp=findOpenNear(Z.landing.x-3, Z.landing.y-6, 5) || [Z.landing.x-3, Z.landing.y-6];
+    G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-44}); }
   G.critters=[];
 }
 function spawnSkyFolk(){
@@ -3585,7 +3586,7 @@ function askSkyDragon(){
 }
 function useLeapPoint(){
   if(!(P.story && P.story.parachute)){
-    toast('The stone shelf juts out over a drop of pure cloud - no bottom, only the far grey shine of the sea. You would need the <b>wind itself to bear you</b>, and it blows too wild yet. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will carry you down.',6200);
+    toast('You lean into the drop and the wind nearly tears you off the shelf - <b>the winds that way are deadly</b>, and you have <b>no safe way down</b>. You would need a <b>sail</b> the wild sky can\'t rip apart. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will bear you down.',6600);
     Snd.step&&Snd.step(5); return;
   }
   if(!flightLockOK()) return; closeDialog();

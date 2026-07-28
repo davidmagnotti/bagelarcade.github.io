@@ -1658,15 +1658,25 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='fadetile'){
-    // a tile of the fading rainbow bridge: bright colour when it's solid footing, a faint
-    // ghost outline while it's faded (so you can read the wave coming back)
-    const g=cx, solid=(typeof skyFadeSolid==='function')? skyFadeSolid(b) : true;
+    // a tile of the fading rainbow bridge. Three clear states so a bright tile can never
+    // drop you by surprise: SOLID (safe, bright colour), WARN (still solid footing, but
+    // flickering amber - it is about to fade, so move), and GAP (faint ghost, a fall).
+    // The SOLID/GAP split matches skyFadeSolid exactly (same phase math), so the picture
+    // and the collision never disagree.
+    const g=cx, F=(typeof G!=='undefined')?G._skyFade:null;
+    const ph = F ? ((((G._skyFadeT||0)*F.speed - b.phase)%1)+1)%1 : 0;
+    const onFrac = F ? F.onFrac : 1;
+    const solid = ph < onFrac;
+    const warn = solid && ph > onFrac-0.22;   // the last stretch of the solid window: a tell
     g.save(); g.translate(s.x,s.y);
-    if(solid){ const hue=((b.band*40)+G.time*90)%360;
+    if(solid && !warn){ const hue=((b.band*40)+G.time*90)%360;
       g.fillStyle='hsla('+(hue|0)+',90%,62%,0.92)'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
       g.fillStyle='rgba(255,255,255,0.28)'; g.beginPath(); g.moveTo(0,-7); g.lineTo(11,-1); g.lineTo(0,5); g.lineTo(-11,-1); g.closePath(); g.fill();
+    } else if(warn){ const fl=0.4+0.35*Math.abs(Math.sin(G.time*16+b.x)), hue=((b.band*40)+G.time*90)%360;
+      g.fillStyle='hsla('+(hue|0)+',65%,58%,'+(0.28*fl).toFixed(2)+')'; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.fill();
+      g.strokeStyle='rgba(255,236,170,'+(0.55*fl).toFixed(2)+')'; g.lineWidth=1.5; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.stroke();
     } else {
-      g.strokeStyle='rgba(200,210,235,0.35)'; g.lineWidth=1; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.stroke();
+      g.strokeStyle='rgba(200,210,235,0.32)'; g.lineWidth=1; g.beginPath(); g.moveTo(0,-9); g.lineTo(16,-1); g.lineTo(0,7); g.lineTo(-16,-1); g.closePath(); g.stroke();
     }
     g.restore(); return;
   }
