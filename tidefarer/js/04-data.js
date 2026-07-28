@@ -14,7 +14,7 @@ const ITEMS = {
   wardplate:{name:'Deepiron Ward', desc:'A cold slab of deep-iron. Turns aside 15% of every blow while carried, atop any armour you wear.'},
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
-  stormrune:{name:'Stormlight Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now stun foes for a heartbeat.'}
+  stormrune:{name:'Snare Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now snare a foe fast where it stands for a heartbeat.'}
 };
 const SKILLS = {
   melee:{name:'Melee', perk:'+2 dmg / lvl'},

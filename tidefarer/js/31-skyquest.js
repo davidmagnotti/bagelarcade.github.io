@@ -4,7 +4,7 @@
    her favourite islands - the Storm-Eye, a bound storm-core, has soured the high wind and
    blows her off course. Run her rainbow road, clear six tiny sky-isles of
    their trials, and put the Storm-Eye out; the wind calms and her roost is
-   hers again. Puzzle 4 wins the STORMLIGHT: your staff-bolts now stun.
+   hers again. Puzzle 4 wins THE SNARE: your staff-bolts now snare foes.
    The open stretches BETWEEN the isles are patrolled by drifting road-shades
    (see spawnRoadShades) - the storm scattered them the length of the run, so
    the road has to be fought through, not just dashed across.
@@ -133,7 +133,7 @@ function placeObjectsSkyDungeon(){
   // travelling wave. Cross while the tiles are solid; step on a faded one and you drop
   // through the cloud, back to i2 to try again. Each band spans the full width, so there's
   // no edge to sneak along - just time your steps to the wave.
-  G._skyFade={tiles:[], speed:0.6, onFrac:0.66, entryX:76.5, entryY:112.5};
+  G._skyFade={tiles:[], speed:0.48, onFrac:0.74, entryX:76.5, entryY:112.5};
   G._skyFadeT=0;
   { const a=skyIsle('i2'), b=skyIsle('i3'), ax=a.x, ay=a.y, L=Math.hypot(b.x-ax,b.y-ay), ux=(b.x-ax)/L, uy=(b.y-ay)/L;
     for(let yy=0;yy<MAPH;yy++) for(let xx=0;xx<MAPW;xx++){
@@ -416,14 +416,21 @@ function updateSkyDungeon(dt){
     // a one-time nudge on first approach
     if(!G._fadeHint && dist(P.x,P.y,76,112)<7){ G._fadeHint=1;
       toast('<b>The Rainbow Bridge fades in and out.</b> Cross while the tiles are lit - step on a faded one and you drop through the cloud. Time your steps to the wave; each band holds only a moment.',6000); }
-    // dropped through a faded tile -> back to i2 to try the crossing again
+    // dropped through a faded tile -> back to i2 to try the crossing again. A short GRACE
+    // means a tile fading out from under you doesn't drop you the instant it flickers - you
+    // get a beat to step or dash clear (paired with the amber "about to fade" warning). This
+    // is what made the crossing feel like it dropped you at random.
     if(!P.dead && (P.rollT||0)<=0){
       const f=G._skyFade.tiles.find(t=>Math.floor(t.x)===Math.floor(P.x) && Math.floor(t.y)===Math.floor(P.y));
       if(f && !skyFadeSolid(f)){
-        let hint=''; if(!G._fadeFellHint){ G._fadeFellHint=1; hint='You drop through a faded tile and the wind bears you back to the isle. <b>Follow the lit wave</b> across - don\'t linger on a tile that\'s about to fade.'; }
-        skyFallStart(G._skyFade.entryX, G._skyFade.entryY, hint);
-        return;
-      }
+        G._fadeGrace=(G._fadeGrace||0)+dt;
+        if(G._fadeGrace>0.45){
+          G._fadeGrace=0;
+          let hint=''; if(!G._fadeFellHint){ G._fadeFellHint=1; hint='You lingered too long on a fading tile and the wind bore you back to the isle. <b>Follow the lit wave</b> across - step off a tile the moment it flickers amber.'; }
+          skyFallStart(G._skyFade.entryX, G._skyFade.entryY, hint);
+          return;
+        }
+      } else { G._fadeGrace=0; }
     }
     // reached the far isle - the bridge is behind you, the road opens on
     if(dist(P.x,P.y, skyIsle('i3').x, skyIsle('i3').y) < skyIsle('i3').r-0.5){
@@ -515,16 +522,16 @@ function collectStormBead(){
   G.decor=G.decor.filter(d=>d!==b);
   P.spells=P.spells||{}; P.spells.stun=1;
   if(typeof give==='function') give('stormrune',1);
-  // Stormlight is a MID-road prize, not the finish: it arms your bolts with the stun and
+  // The Snare is a MID-road prize, not the finish: it arms your bolts with the snare and
   // opens the wind-ward on to the last isles. The road ends only when the STORM-EYE
   // itself falls on the Broken Crown (see killMob's skyfinalboss branch) - that is what
   // calms the wind, wins the stormsail, and opens The Leap.
   P.story=P.story||{}; P.story.skyG4=1;
   if(typeof openSkyGate==='function') openSkyGate('g4');
   if(Snd.magic) Snd.magic(); burst(P.x,P.y-0.5,'#c9b0ff',22,2.6);
-  banner('STORMLIGHT','YOUR BOLTS NOW STUN - PRESS ON TO THE STORM-EYE');
+  banner('THE SNARE','YOUR BOLTS NOW SNARE FOES - PRESS ON TO THE STORM-EYE');
   if(typeof autoSave==='function') autoSave();
-  storyCard('<b style="color:#c9b0ff">Stormlight sinks into your staff - your magic bolts now STUN, freezing a foe where it stands.</b><br><br><i>But the wind still howls off the crown above, and the little bird wheels north toward it - toward the great unblinking eye of the storm.</i><br><br>Cross the last wind-wards, clear the Second Perch, and put out <b style="color:#c9b0ff">THE STORM-EYE</b> on the Broken Crown. That is what calms the sky and opens <b>The Leap</b> home.',
+  storyCard('<b style="color:#c9b0ff">The snare-spark sinks into your staff - your magic bolts now SNARE, catching a foe fast where it stands.</b><br><br><i>But the wind still howls off the crown above, and the little bird wheels north toward it - toward the great unblinking eye of the storm.</i><br><br>Cross the last wind-wards, clear the Second Perch, and put out <b style="color:#c9b0ff">THE STORM-EYE</b> on the Broken Crown. That is what calms the sky and opens <b>The Leap</b> home.',
     {label:'OK'});
 }
 
@@ -575,15 +582,47 @@ function updateStormEye(dt){
    Not a fight - a violet apparition that mocks you for sparing the Sunward dragon,
    then frays apart on the wind. Fires once, deep in the run (see updateSkyDungeon). */
 function skyVathTaunt(){
-  if(Snd.boss) Snd.boss(); G.shake=0.5;
-  const ax=P.x, ay=P.y-3.6;
-  if(typeof shockwave==='function') shockwave(ax,ay,'rgba(160,110,240,0.85)',48);
-  for(let i=0;i<28;i++){ const a=Math.random()*TAU, s=rnd(1,4);
-    G.parts.push({x:ax,y:ay,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.6,life:rnd(0.7,1.6),color:'#c77bff',size:rnd(2,4),grav:-0.02}); }
-  if(typeof storyCard==='function'){
-    storyCard('<i>The rainbow dims. A knot of violet gathers on the wind ahead of you and unspools into a shape you know too well - Vath, or the ghost of him, wearing that patient half-smile.</i> <b style="color:#c9a0ff">"...Up here, of all places. You ARE a busy little tide."</b> <i>He chuckles, low and unhurried.</i> <b style="color:#c9a0ff">"You should have listened to me and slayed that wicked dragon when you had the chance. But you never do listen, do you. No matter - the wind will wear you thin where I need not lift a hand."</b> <i>The violet frays apart on the gale, and he is gone.</i>',
-      {label:'Press on'});
-  } else if(typeof banner==='function') banner('VATH','A VIOLET APPARITION MOCKS YOU');
+  if(Snd.boss) Snd.boss(); G.shake=0.4;
+  const ax=P.x, ay=P.y-3.2;
+  if(typeof shockwave==='function') shockwave(ax,ay,'rgba(160,110,240,0.85)',46);
+  for(let i=0;i<20;i++){ const a=Math.random()*TAU, s=rnd(1,3.4);
+    G.parts.push({x:ax,y:ay,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.5,life:rnd(0.6,1.4),color:'#c77bff',size:rnd(2,4),grav:-0.02}); }
+  // a FLOATING violet apparition of Vath - not a fight, a spirit you trade words with. It
+  // hangs on the wind ahead, you tap through his taunt, and then it frays apart and vanishes.
+  const ghost={kind:'vathghost', x:ax, y:ay, born:G.time};
+  G.decor.push(ghost);
+  const disperse=()=>{
+    closeDialog();
+    if(typeof shockwave==='function') shockwave(ghost.x,ghost.y,'rgba(200,170,255,0.7)',40);
+    for(let i=0;i<34;i++){ const a=Math.random()*TAU, s=rnd(1.5,5);
+      G.parts.push({x:ghost.x,y:ghost.y-0.6,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.7,life:rnd(0.7,1.7),color:Math.random()<0.5?'#c77bff':'#9a6ad0',size:rnd(2,4.5),grav:-0.03}); }
+    G.decor=G.decor.filter(d=>d!==ghost);
+    if(Snd.magic) Snd.magic();
+  };
+  P.click=null; P.moving=false;
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='Vath';
+  vathGhostPortrait();
+  const p3=()=>{ setDialog('<b style="color:#c9a0ff">"No matter. The high wind will wear you thin where I need not lift a hand."</b> <i>The violet frays apart on the gale.</i>',
+    [{label:'…', cls:'gold', fn:disperse}]); };
+  const p2=()=>{ setDialog('<b style="color:#c9a0ff">"You should have slain that wretched dragon when I bade you. But you never do listen, do you?"</b> <i>The apparition drifts a little closer, patient as a spider on the wind.</i>',
+    [{label:'I don\'t take orders from a ghost.', fn:p3}]); };
+  setDialog('<i>The rainbow dims. A knot of violet gathers on the wind ahead of you and unspools into a shape you know too well - Vath, or the ghost of him, hanging in the air with that patient half-smile.</i> <b style="color:#c9a0ff">"…Up here, of all places. You ARE a busy little tide."</b>',
+    [{label:'What do you want, Vath?', fn:p2}]);
+}
+function vathGhostPortrait(){
+  const el=document.getElementById('dportrait'); if(!el) return;
+  const pg=el.getContext('2d'); if(!pg) return;
+  pg.fillStyle='#1a1226'; pg.fillRect(0,0,72,72);
+  const rg=pg.createRadialGradient(36,32,4,36,36,42); rg.addColorStop(0,'rgba(180,130,240,0.55)'); rg.addColorStop(1,'rgba(90,60,140,0)');
+  pg.fillStyle=rg; pg.fillRect(0,0,72,72);
+  pg.save(); pg.translate(36,40);
+  pg.fillStyle='rgba(74,42,94,0.94)'; pg.beginPath(); pg.moveTo(0,-24); pg.quadraticCurveTo(-21,-16,-16,22); pg.lineTo(16,22); pg.quadraticCurveTo(21,-16,0,-24); pg.closePath(); pg.fill(); // hooded robe
+  pg.fillStyle='#2a1c3a'; pg.beginPath(); pg.ellipse(0,-6,9,11,0,0,TAU); pg.fill();   // shadowed face
+  pg.fillStyle='rgba(200,150,255,0.5)'; pg.beginPath(); pg.arc(-4,-7,3.6,0,TAU); pg.arc(4,-7,3.6,0,TAU); pg.fill();   // eye-glow
+  pg.fillStyle='#e0b0ff'; pg.beginPath(); pg.arc(-4,-7,1.8,0,TAU); pg.arc(4,-7,1.8,0,TAU); pg.fill();
+  pg.restore();
 }
 /* ---------- entering / leaving from the Cloudreach ---------- */
 function skyBirdPortrait(){

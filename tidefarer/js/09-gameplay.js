@@ -801,7 +801,7 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.skyG4=1;
     if(typeof openSkyGate==='function') openSkyGate('g4');
     Snd.magic&&Snd.magic();
-    banner('THE STORM-WRAITH FALLS','A BEAD OF STORMLIGHT DROPS');
+    banner('THE STORM-WRAITH FALLS','A SNARE-SPARK DROPS');
     // drop the bead on its isle home, not wherever a lunge left it (open sky isn't walkable)
     G.decor.push({kind:'stormbead', x:(m.hx||m.x), y:(m.hy||m.y)});
     if(typeof autoSave==='function') autoSave();

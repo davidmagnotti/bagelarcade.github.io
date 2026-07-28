@@ -56,7 +56,7 @@ function buildGroundCache(){
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
-  skygate:1, skytile:1, skybird:1, stormbead:1,
+  skygate:1, skytile:1, skybird:1, stormbead:1, vathghost:1,
   coggate:1, millgear:1, millwheel:1, sluicelever:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
@@ -1178,9 +1178,25 @@ function drawDecor(b,s){
     // tail
     g.fillStyle='#3a86c8'; g.beginPath(); g.moveTo(6,-5); g.lineTo(13,-3); g.lineTo(6,-1); g.closePath(); g.fill();
     g.restore();
-    if(b.name){ g.font='bold 10px Georgia'; g.textAlign='center';
-      g.fillStyle='rgba(0,0,0,0.55)'; g.fillText(b.name, s.x+1, s.y+(b.labelY||-40)+1);
-      g.fillStyle='#bfe0ff'; g.fillText(b.name, s.x, s.y+(b.labelY||-40)); }
+    // NOTE: the floating name is drawn by the generic b.name block at the top of drawDecor.
+    // Do not draw it again here, or the label stacks on itself into an unreadable double.
+    return;
+  }
+  if(b.kind==='vathghost'){
+    // Vath's violet apparition on the rainbow road - a floating spirit you trade words with,
+    // hanging in the air and shimmering, robe fraying to wisps at its base. Not a fight.
+    const g=cx, t=G.time, bob=Math.sin(t*1.6+b.x)*3;
+    g.save(); g.translate(s.x, s.y-30+bob); g.globalAlpha=0.85;
+    g.fillStyle='rgba(160,110,230,0.18)'; g.beginPath(); g.ellipse(0,-6,20,27,0,0,TAU); g.fill();   // spectral glow
+    g.fillStyle='rgba(90,54,120,0.92)';                                                             // robe, tapering to wisps
+    g.beginPath(); g.moveTo(0,-30); g.quadraticCurveTo(-14,-22,-11,6);
+    g.quadraticCurveTo(-6,14,-3,6+Math.sin(t*6)*2); g.quadraticCurveTo(0,16,3,6+Math.sin(t*6+1)*2);
+    g.quadraticCurveTo(6,14,11,6); g.quadraticCurveTo(14,-22,0,-30); g.closePath(); g.fill();
+    g.fillStyle='rgba(40,26,58,0.95)'; g.beginPath(); g.ellipse(0,-22,7,9,0,0,TAU); g.fill();        // hood shadow
+    const eg=0.6+0.4*Math.sin(t*3);
+    g.fillStyle='rgba(224,176,255,'+eg.toFixed(2)+')'; g.beginPath(); g.arc(-3,-23,1.5,0,TAU); g.arc(3,-23,1.5,0,TAU); g.fill();
+    g.restore();
+    if(Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.4,0.4), y:b.y-1.4, vx:rnd(-0.15,0.15), vy:-rnd(0.3,0.7), life:rnd(0.6,1.2), color:'#c77bff', size:rnd(1.5,3), grav:-0.03});
     return;
   }
   if(b.kind==='staffgate'){
