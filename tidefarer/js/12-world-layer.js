@@ -3589,13 +3589,31 @@ function useLeapPoint(){
     toast('You lean into the drop and the wind nearly tears you off the shelf - <b>the winds that way are deadly</b>, and you have <b>no safe way down</b>. You would need a <b>sail</b> the wild sky can\'t rip apart. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will bear you down.',6600);
     Snd.step&&Snd.step(5); return;
   }
-  if(!flightLockOK()) return; closeDialog();
-  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-  toast('You shake out your <b>stormsail</b>, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
-  if(Snd.boss) Snd.boss();
-  setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
-      banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
-    } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1100);
+  if(typeof dlg!=='undefined' && dlg.open) return;
+  // Confirm first: dropping to Windsurf is effectively one-way. No hull crosses its straits
+  // until its sea-beast is put down, so once you step off you're committed to that island
+  // for a good while. Warn the player and let them back out.
+  const doLeap=()=>{
+    closeDialog();
+    if(!flightLockOK()) return;
+    const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
+    toast('You shake out your <b>stormsail</b>, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
+    if(Snd.boss) Snd.boss();
+    setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
+        banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
+      } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1100);
+  };
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Leap';
+  { const pc=document.getElementById('dportrait'); if(pc){ const pg=pc.getContext('2d');
+      pg.fillStyle='#2a3a52'; pg.fillRect(0,0,72,72);
+      pg.fillStyle='rgba(235,240,250,0.92)'; pg.beginPath(); pg.ellipse(30,28,20,12,0,0,TAU); pg.ellipse(46,32,15,10,0,0,TAU); pg.fill();   // cloud
+      pg.strokeStyle='rgba(190,224,255,0.6)'; pg.lineWidth=2; pg.beginPath(); pg.moveTo(40,42); pg.lineTo(40,62); pg.stroke();              // the drop
+      pg.fillStyle='#bfe0ff'; pg.beginPath(); pg.moveTo(36,58); pg.lineTo(44,58); pg.lineTo(40,68); pg.closePath(); pg.fill(); } }
+  setDialog('<i>You stand at the lip of the shelf, the stormsail humming in your grip - and below there is nothing but cold cloud and, far down, a city bright on the water.</i> Once you drop to <b>Windsurf</b> you may be <b>stranded there a good while</b>: no hull has crossed its straits since its waters turned, so there is <b>no easy way back up</b> until you\'ve set them right. <b>Take the Leap?</b>',
+    [{label:'Take the Leap', cls:'gold', fn:doLeap},
+     {label:'Not yet', ghost:true, fn:closeDialog}]);
 }
 
 /* =====================================================================
@@ -4652,6 +4670,22 @@ function barikArrivalGreeting(){
   setDialog('<i>The ferryman makes fast to the Greyharbor pilings and claps the salt from his hands.</i> “Barik, then - and mind yourself. This is no Emberwick. Off these sheltered shores the dark brings things down off the crag, and folk with any sense are behind a bolted door by dusk.” <i>He nods up at the shuttered town.</i> “And night is already on us. Find the <b>inn</b> - the <b>Gull &amp; Anchor</b>, up past the well - and take a bed. Whatever is prowling out there will keep till morning.”',
     [{label:'I\'ll find a bed', cls:'gold', fn:closeDialog}]);
 }
+// The first time you drop out of the cloud onto Windsurf, Rell the harbormaster gapes at the
+// impossible visitor - nobody's reached this island since the wind soured its straits.
+function windArrivalGreeting(){
+  if(G.state!=='play' || (typeof dlg!=='undefined' && dlg.open)) return;
+  dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='Rell the Harbormaster';
+  const pc=document.getElementById('dportrait');
+  if(pc){ const pg=pc.getContext('2d');
+    pg.fillStyle='#141a24'; pg.fillRect(0,0,72,72);
+    pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
+    if(typeof drawHumanoid==='function') drawHumanoid(pg,0,0,{skin:'#a9784e',hair:'#2a2622',beard:'#2a2622',shirt:'#33566e',pants:'#2c3540',dir:{x:0,y:1},step:0});
+    pg.restore(); }
+  setDialog('<i>A weathered man on the docks shades his eyes at the sky, then at you, and near drops his coil of rope.</i> “…Well I\'ll be salted. Where did YOU drop from?” <i>He squints up at the cloud you fell out of, then back at you, plainly not believing it.</i> “No hull\'s crossed our straits in a season - not since the wind turned and the deep water started taking boats whole. Nobody comes to Windsurf any more. And here you are, right out of the sky.” <i>He sticks out a calloused hand.</i> “Rell. Harbormaster of a harbor with no ships. Find me at the docks when you\'ve found your feet - there\'s a thing out past the reef I\'d give my last coin to see gone.”',
+    [{label:'Glad to be down', cls:'gold', fn:closeDialog}]);
+}
 // A banker stands next to every town's inn (except Cloudreach, which has none) so
 // gold and raw goods can be vaulted anywhere. Bree already keeps Barik's ledger;
 // elsewhere we auto-place a Coinkeeper beside the building labelled "(Inn)".
@@ -4887,7 +4921,13 @@ function switchWorld(id){
     // once the strait is calm, Coralie can finally reopen the Breakers properly
     if(P.story && P.story.tideCalm && qs('breakers')!=='done' && !P.quests.breakers) P.quests.breakers='avail';
     if(P.story && P.story.tideCalm) updateWindFolkMood();
-    if(!P.prog.windSeen){ P.prog.windSeen=1; }   // arrival narration removed - let the isle speak for itself
+    if(!P.prog.windSeen){ P.prog.windSeen=1; }
+    // First drop out of the cloud (you can only reach Windsurf via The Leap): Rell greets
+    // the impossible visitor. Fires once, after the arrival fade/banner has settled.
+    if(prevWorld==='sky' && !P.prog.windGreeted){
+      P.prog.windGreeted=1;
+      setTimeout(()=>{ if(typeof windArrivalGreeting==='function') windArrivalGreeting(); }, 1200);
+    }
   }
   if(id==='aerie'){
     if(qs('roost')!=='done' && !P.quests.roost) P.quests.roost='avail';
