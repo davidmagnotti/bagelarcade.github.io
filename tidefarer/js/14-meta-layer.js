@@ -229,19 +229,21 @@ function loadCode(str){
   } else if(d.world==='reach'){     // Stormreach (boss respawn gated by P.story flags)
     switchWorld('reach');
   }
-  // Dungeons are transient (they regenerate and hold puzzle state) and were never
-  // restored here - so a save made inside one stayed on the isle and applied the
-  // dungeon's coordinates, dropping the hero in open water. Reload to the parent
-  // isle's landing instead; the dungeon can simply be re-entered.
+  // Dungeons regenerate from a fixed seed (so the layout comes back identical) but
+  // hold only transient puzzle state - so a save made inside one can be restored right
+  // back into the dungeon at the same spot, not dumped at the parent isle's landing.
+  // First rebuild the parent isle with its saved flags: switchWorld then caches that
+  // correct parent state, so the dungeon's "way up" exit returns there properly. Then
+  // descend into the dungeon itself and let the saved coordinates below resume the hero.
   const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie', reachdeep:'reach', milldeep:'wind', undermaw:'main', skydungeon:'sky'};
-  let dungeonReload=false;
   if(DUNGEON_PARENT[d.world]){
     const par=DUNGEON_PARENT[d.world];
     switchWorld(par);
     applyWorldFlags(d.flags&&d.flags[par]);
-    dungeonReload=true;   // keep the parent's spawn set by switchWorld; ignore dungeon coords
+    switchWorld(d.world);
+    applyWorldFlags(d.flags&&d.flags[d.world]);
   }
-  if(!dungeonReload){ P.x=d.x; P.y=d.y; }
+  P.x=d.x; P.y=d.y;
   // Safety net: whatever the world, never wake up in water or inside a wall.
   if(!inb(P.x|0,P.y|0) || !walkTile(tileAt(P.x|0,P.y|0)) || solidAt(P.x|0,P.y|0)){
     const dsp=(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
