@@ -154,8 +154,8 @@ function placeObjectsSkyDungeon(){
     G.decor.push({kind:'skygate', gate:g.gate, x:m.x, y:m.y, tiles, open, label:'a wind-ward'});
     for(const [x,y] of tiles){ setSolid(x,y, open?0:1); }
   }
-  // the Storm-Eye's hoard, on the last isle
-  { const s=skyIsle('i6'); G.decor.push({kind:'chest', x:s.x+0.5, y:s.y-3+0.5, sky:1, rich:11}); }
+  // (no hoard chest on the Broken Crown - beating the Storm-Eye is its own reward:
+  //  the calmed sky, the longer dash, and The Leap home.)
   // ---- FLOATING RAINBOW PLATFORMS ----
   // break each road (except the fading bridge) into rainbow platforms with open-sky GAPS you must
   // DASH across; fall between them and the wind bears you back to the isle behind you.
@@ -550,9 +550,17 @@ function updateStormEye(dt){
   const m=G.mobs.find(x=>x.stormeye && !x.dead); if(!m) return;
   const s=skyIsle('i6');
   m.float=(m.float||0)+dt;
-  // gentle hover, drifting back over its isle centre
-  const hx=s.x, hy=s.y-1, dxh=hx-m.x, dyh=hy-m.y, lh=Math.hypot(dxh,dyh);
-  if(lh>0.05) moveEntity(m, dxh*Math.min(1,dt*1.5), dyh*Math.min(1,dt*1.5));
+  // MOVE AROUND its isle instead of sitting over the centre: a slow orbit whose radius
+  // breathes in and out, so the eye prowls the Broken Crown and you have to track it. It
+  // orbits only while its shield is UP (the 'hover' beat); once it opens up (the strike
+  // window) it holds position, so the fight stays fair. It floats, so it needs no footing,
+  // but it stays within the isle so it's always reachable when the shield drops.
+  if(m.eyeState==='hover'){
+    m.orbA=(m.orbA!=null? m.orbA : rnd(0,TAU)) + dt*0.6;
+    const orbR=4.2 + 1.4*Math.sin(m.float*0.5);
+    const tx=s.x + Math.cos(m.orbA)*orbR, ty=(s.y-1) + Math.sin(m.orbA)*orbR*0.66;
+    moveEntity(m, (tx-m.x)*Math.min(1,dt*2.2), (ty-m.y)*Math.min(1,dt*2.2));
+  }
   m.eyeT=(m.eyeT||2.5)-dt;
   if(m.eyeState==='hover'){
     m.invuln=1;
