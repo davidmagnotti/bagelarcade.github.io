@@ -3144,7 +3144,15 @@ function exitUndermaw(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P.click=null;
   setTimeout(()=>{ switchWorld('main');
-    const r=P._undermawReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    let r=P._undermawReturn;
+    // No stored spot (e.g. the game was reloaded straight into the dungeon): step back
+    // out at the Undermaw's surface cave-mouth rather than the far-off town landing.
+    if(!r){
+      const cm=(G.decor||[]).find(d=>d.kind==='cavemouth');
+      if(cm){ const sp=findOpenNear(Math.round(cm.x), Math.round(cm.y)+2, 6) || [Math.round(cm.x), Math.round(cm.y)+2];
+        r={x:sp[0]+0.5, y:sp[1]+0.5}; }
+    }
+    if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 

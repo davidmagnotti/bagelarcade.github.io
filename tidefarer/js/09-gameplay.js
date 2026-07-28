@@ -3,10 +3,14 @@
    ===================================================================== */
 function moveEntity(e,dx,dy,rad,waterOK){
   rad=rad||0.28;
+  // In the Undermaw the black scar is a bottomless pit the hero crosses on platforms.
+  // Mobs have no falling logic, so left alone they wander out and float over the void.
+  // Hold every non-player entity back at the pit's edge; the player still crosses freely.
+  const mobPit = e!==P && G.worldId==='undermaw' && G._mawPits;
   let nx=e.x+dx;
-  if(!circleBlocked(nx,e.y,rad,waterOK)) e.x=nx;
+  if(!circleBlocked(nx,e.y,rad,waterOK) && !(mobPit && G._mawPits.has((nx|0)+','+(e.y|0)))) e.x=nx;
   let ny=e.y+dy;
-  if(!circleBlocked(e.x,ny,rad,waterOK)) e.y=ny;
+  if(!circleBlocked(e.x,ny,rad,waterOK) && !(mobPit && G._mawPits.has((e.x|0)+','+(ny|0)))) e.y=ny;
 }
 function unstickEntity(e, waterOK){
   // if an entity is embedded in water or a solid, snap it to the nearest open tile.

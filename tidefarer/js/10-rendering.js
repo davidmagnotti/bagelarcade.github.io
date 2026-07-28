@@ -788,6 +788,21 @@ function drawDecor(b,s){
     if(Math.random()<0.28) G.parts.push({x:b.x,y:b.y-0.6,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.7,1.4),color:Math.random()<0.5?'#ff8a44':'rgba(90,84,80,0.5)',size:rnd(1.5,3),grav:-0.1});
     g.restore(); return;
   }
+  if(b.kind==='dungeonmouth' && b.undermaw){
+    const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
+    const pulse=0.5+0.5*Math.sin(G.time*1.9);
+    // a rough stone stair cut down into the barrow-rock - earth and old stone, no ice
+    g.fillStyle='#4a4038';   // rough rock rim
+    g.beginPath(); g.moveTo(-24,7); g.lineTo(-19,-10); g.lineTo(19,-10); g.lineTo(24,7); g.closePath(); g.fill();
+    g.strokeStyle='#241d17'; g.lineWidth=2.4; g.stroke();
+    g.fillStyle='#0c0a08';   // the dark stair-throat
+    g.beginPath(); g.moveTo(-15,6); g.lineTo(-12,-7); g.lineTo(12,-7); g.lineTo(15,6); g.closePath(); g.fill();
+    g.fillStyle='#33291f';   // worn steps catching the torchlight
+    g.fillRect(-13,3,26,2.2); g.fillRect(-11,-1,22,2.0); g.fillRect(-9,-5,18,1.8);
+    g.fillStyle='rgba(120,60,180,'+(0.08+0.10*pulse)+')';   // a faint wrong glow far below, like the maw above
+    g.beginPath(); g.moveTo(-9,6); g.quadraticCurveTo(0,-4,9,6); g.closePath(); g.fill();
+    g.restore(); return;
+  }
   if(b.kind==='dungeonmouth'){
     const g=cx; drawShadowAt(g,s.x,s.y,16); g.save(); g.translate(s.x,s.y);
     const pulse=0.5+0.5*Math.sin(G.time*2.0);
