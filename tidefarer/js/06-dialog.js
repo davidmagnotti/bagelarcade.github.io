@@ -100,6 +100,15 @@ function buildDialogContent(npc){
       shopButtons(npc,[{label:'I\'ll find Orin', ghost:true, fn:closeDialog}]));
     return;
   }
+  // Fire alone is not enough: the traveler also needs the footwork Orin's tower
+  // teaches. If the staff quest is done but the scrying orb's dash has not yet been
+  // learned, Maren will not open the causeway - she sends them back up to the tower
+  // to lay hands on the orb before they take up the Hollow King.
+  if(npc.id==='maren' && qs('king')==='avail' && qs('mushrooms')==='done' && !(P.unlocked&&P.unlocked.dash)){
+    setDialog('<i>Maren stays your hand before you can speak of the crypt.</i> “Orin\'s fire, aye - but fire alone won\'t carry you through what waits down there. Did the old man not send you to his scrying orb?” <i>She frowns up the north road, toward the tower.</i> “Go back to <b>Orin\'s tower</b> and lay both hands on the <b>orb</b>. It will teach your feet to <b>dash</b> - and you\'ll want that step under you before I open the causeway. Come back when you have it.”',
+      shopButtons(npc,[{label:'Back to the tower', ghost:true, fn:closeDialog}]));
+    return;
+  }
   // The Royal Audience - a scripted scene that opens Act III. The King receives
   // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
   // and he tells the tragedy that binds Vath to the throne, then charges you.
