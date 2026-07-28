@@ -3079,33 +3079,11 @@ function updateUndermaw(dt){
   if(conveyCarry(G._mawConvey)) return;                    // riding a conveyor tile
   mawFall(ty);
 }
-// CAVE BATS: killable flyers that keep swooping in over the crossings; a bite shoves you hard
-// (off a platform, into the pit). Fly straight at you (over walls and scar alike) and can be cut
-// down like any mob. Capped, and only while the Maw-Stalker still lives.
+// CAVE BATS: removed from the Undermaw entirely - the crossings now test only footwork
+// (the slabs, wheels, conveyor, and scar), with no swooping flyers. This purges any bats
+// left over in a cached instance and never spawns new ones.
 function updateMawBats(dt){
-  if(!(P.story && P.story.undermawDown)){
-    G._mawBatT=(G._mawBatT||0)-dt;
-    if(G._mawBatT<=0){ G._mawBatT=13;
-      const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
-      if(alive<2 && !P.dead && P.y>36 && P.y<176){
-        const a=Math.random()*TAU, r=8+Math.random()*4;
-        const m=spawnMob('bat', Math.round(P.x+Math.cos(a)*r), Math.round(P.y+Math.sin(a)*r));
-        if(m){ m.bat=1; m.respawnT=-1; m.hx=m.x; m.hy=m.y; m.state='chase'; m.bob=Math.random()*TAU; }
-      }
-    }
-  }
-  for(const m of (G.mobs||[])){ if(!m.bat || m.dead) continue;
-    m.bob=(m.bob||0)+dt*9;
-    const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
-    const sp=(MOBDEF.bat?MOBDEF.bat.speed:5)*(P.dead?0.4:1);
-    m.x+=dx/l*sp*dt; m.y+=dy/l*sp*dt;   // flies straight in - over walls and the scar
-    m.face=(dx<0?-1:1);
-    if(l<0.85 && !P.dead && (P.rollT||0)<=0 && P.hurtT<=0){
-      hurtPlayer(m.dmg||12, m);
-      moveEntity(P, dx/l*0.8, dy/l*0.8);   // an extra shove away from the bat - enough to knock you off a slab
-      burst(P.x,P.y-0.4,'#2a2233',10,2.2);
-    }
-  }
+  for(const m of (G.mobs||[])){ if(m.bat && !m.dead){ m.dead=true; m.respawnT=-1; } }
 }
 // hit the black scar with no platform under you: the hero plummets (a drop animation plays in
 // drawPlayer; updateUndermaw ticks it), then wakes back on the ledge with -5 HP.
