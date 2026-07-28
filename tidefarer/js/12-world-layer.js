@@ -3085,9 +3085,9 @@ function updateUndermaw(dt){
 function updateMawBats(dt){
   if(!(P.story && P.story.undermawDown)){
     G._mawBatT=(G._mawBatT||0)-dt;
-    if(G._mawBatT<=0){ G._mawBatT=4.5;
+    if(G._mawBatT<=0){ G._mawBatT=13;
       const alive=(G.mobs||[]).filter(m=>m.bat && !m.dead).length;
-      if(alive<4 && !P.dead && P.y>36 && P.y<176){
+      if(alive<2 && !P.dead && P.y>36 && P.y<176){
         const a=Math.random()*TAU, r=8+Math.random()*4;
         const m=spawnMob('bat', Math.round(P.x+Math.cos(a)*r), Math.round(P.y+Math.sin(a)*r));
         if(m){ m.bat=1; m.respawnT=-1; m.hx=m.x; m.hy=m.y; m.state='chase'; m.bob=Math.random()*TAU; }
