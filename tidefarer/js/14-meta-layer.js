@@ -85,6 +85,9 @@ function saveCode(){
     perks:P.perks||{},perkAvail:P.perkAvail||{},
     story:P.story||{act:1,necklace:true},
     disc:P.disc||{},expl:packExpl(),flags};
+  // Remember an open conversation so exiting mid-dialogue resumes it on return
+  // (only a real NPC talk - transient stalls/shop sub-menus are not restored).
+  if(typeof dlg!=='undefined' && dlg.open && dlg.npc && dlg.npc.id) d.dnpc=dlg.npc.id;
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))));
 }
 function applyWorldFlags(f){
@@ -252,6 +255,12 @@ function loadCode(str){
   closeAllPanels();
   banner('SAVE LOADED','WELCOME BACK, HERO');
   Snd.quest();
+  // Resume a conversation left open when the app was exited: re-open the same NPC's
+  // dialogue so the player lands back in the scene they were reading, not the world.
+  if(d.dnpc && typeof openDialog==='function'){
+    const dn=(G.npcs||[]).find(n=>n.id===d.dnpc && !n.dead);
+    if(dn) setTimeout(()=>{ try{ openDialog(dn); }catch(e){} }, 60);
+  }
   return true;
 }
 

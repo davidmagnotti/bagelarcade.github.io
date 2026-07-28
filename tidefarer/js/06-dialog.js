@@ -2,12 +2,24 @@
    DIALOG SYSTEM
    ===================================================================== */
 const dlg = {open:false, npc:null};
+// After the reveal, the Woodworker is the prince in his own bright-blue wear, and
+// answers to his name. One place decides the shown look and name for both.
+function npcRoyalLook(npc){
+  if(npc && npc.id==='woody' && P.story && P.story.royalGarb)
+    return {...npc.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
+  return npc.look;
+}
+function npcDisplayName(npc){
+  if(npc && npc.id==='woody' && P.story && P.story.royalGarb) return 'Prince Jaist';
+  return npc.name;
+}
 function drawPortrait(npc){
   const c=document.getElementById('dportrait'), g=c.getContext('2d');
   g.clearRect(0,0,72,72);
   g.fillStyle='#20160c'; g.fillRect(0,0,72,72);
   g.save(); g.translate(36,66); g.scale(1.35,1.35);
-  drawHumanoid(g,0,0,{...npc.look, size:npc.look.size||1, dir:{x:0,y:1}, step:0});
+  const lk=npcRoyalLook(npc);
+  drawHumanoid(g,0,0,{...lk, size:lk.size||1, dir:{x:0,y:1}, step:0});
   g.restore();
 }
 function openDialog(npc){
@@ -16,7 +28,7 @@ function openDialog(npc){
   npc.face={x:(P.x-npc.x)/dl, y:(P.y-npc.y)/dl};
   dlg.open=true; dlg.npc=npc;
   document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent=npc.name;
+  document.getElementById('dname').textContent=npcDisplayName(npc);
   drawPortrait(npc);
   buildDialogContent(npc);
 }
@@ -79,6 +91,15 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
+  // The Hollow King is gated behind Sage Orin's fire. If the traveler comes to Maren
+  // with steel but no staff, she will not speak the causeway gate open - she sends
+  // them to Orin first. (Once his staff quest is done, the normal offer path fires,
+  // with Maren's astonishment that Orin lent it woven into the brief.)
+  if(npc.id==='maren' && qs('king')==='avail' && qs('mushrooms')!=='done'){
+    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for steel alone. Whatever crawls beneath that crypt is older than iron, and it does not fear a blade.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do what the old mage asks of you, and let him arm you with more than an edge. Come back to me when you carry his <b>fire</b> - then, and only then, will I open the causeway.”',
+      shopButtons(npc,[{label:'I\'ll find Orin', ghost:true, fn:closeDialog}]));
+    return;
+  }
   // The Royal Audience - a scripted scene that opens Act III. The King receives
   // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
   // and he tells the tragedy that binds Vath to the throne, then charges you.
@@ -137,6 +158,7 @@ function buildDialogContent(npc){
   if(npc.id==='woody' && qs('enchanter')==='active' && P.story && !P.story.unmasked){
     const p5=()=>{
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
+      P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
@@ -144,10 +166,12 @@ function buildDialogContent(npc){
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
-      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, your little brother Jaist screaming, the enchanter\'s violet on the water - and your own name at last, the one the sea had kept from you. Joan.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> “The warrior. And I read the books and named the stars. Some pair we make.” <i>He shoulders his axe like it were a sword.</i> “No more woodpile. Take me to Father - and I\'m not letting you walk into Vath alone this time.”',
+      const cardB=()=>storyCard('<i>Then the smile fades, because you both remember the rest in the same breath.</i> “Vath,” <i>you say - quietly, the way you name a wound.</i> “It was always Vath. The court enchanter, the storm, the mask - all of it, all these years, his one hand behind everything.” <i>Jaist nods, grim now.</i> “And Father is still out there, in his grip.” <i>You know what must be done: sail home to Aldermere, to the King, and end this - and there is no more hiding what you are. The salt-bleached rags fall away and you stand in your own colours at last, a deep royal magenta, your hair swept up and bound into the high ponytail you wore when you were small enough to duel the palace guard. Beside you, Jaist trades the woodpile grey for his own bright blue.</i> “No more woodpile,” <i>he says, shouldering his axe like the sword it should have been.</i> “Take me to Father. And I\'m not letting you walk into Vath alone this time.”',
         {label:'To Aldermere', onOk:()=>{
           setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
-        }}),1100);
+        }});
+      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, a woman singing, your little brother screaming - and your own name at last, the one the sea had kept from you.</i> <b>Joan.</b> <i>You say it aloud, and it fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob - and his own name surfaces alongside yours.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
+        {label:'Go on', onOk:cardB}),1100);
     };
     const p4=()=>{
       setDialog('<i>You lift your hands to the mask you have worn since the surf first spat you ashore - the one thing the sea let you keep - and for the first time since Emberwick, you take it off.</i>',

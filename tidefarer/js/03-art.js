@@ -1445,6 +1445,42 @@ function drawHumanoid(g,sx,sy,o){
       g.beginPath(); g.arc(away?0:-8.5, away?-11.5:-10.5, 3.4, 0, TAU); g.fill();
       g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
     }
+    // A bound tail gathered high at the crown, falling behind - the princess's
+    // 'traditional' look, worn once memory (and rank) return.
+    if(o.hairstyle==='ponytail'){
+      g.strokeStyle=OUT; g.lineWidth=1.2;
+      if(away){
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(-2.8,-9);
+        g.quadraticCurveTo(-5.0,3, -2.2,18);
+        g.quadraticCurveTo(0,21.5, 2.2,18);
+        g.quadraticCurveTo(5.0,3, 2.8,-9);
+        g.closePath(); g.fill(); g.stroke();
+        g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(0,-8,3.1,1.9,0,0,TAU); g.fill();
+      } else if(profile){
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(flip*-HR*0.5,-8);
+        g.quadraticCurveTo(flip*-HR*1.16,-2, flip*-HR*1.0,10);
+        g.quadraticCurveTo(flip*-HR*0.74,13, flip*-HR*0.6,9);
+        g.quadraticCurveTo(flip*-HR*0.7,-1, flip*-HR*0.34,-7);
+        g.closePath(); g.fill(); g.stroke();
+        g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(flip*-HR*0.44,-6.5,2.6,1.7,0,0,TAU); g.fill();
+      } else {
+        // front: a high gather at the crown, plus a peek of the tail past the shoulder
+        g.fillStyle=hc;
+        g.beginPath(); g.ellipse(0,-11.6,4.2,2.6,0,0,TAU); g.fill(); g.stroke();
+        g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(0,-9.7,3.0,1.7,0,0,TAU); g.fill();
+        g.fillStyle=hc;
+        g.beginPath();
+        g.moveTo(HR*0.70,-2);
+        g.quadraticCurveTo(HR*1.06,6, HR*0.82,15);
+        g.lineTo(HR*0.58,13.5);
+        g.quadraticCurveTo(HR*0.78,5, HR*0.60,-2.5);
+        g.closePath(); g.fill(); g.stroke();
+      }
+    }
     if(o.fem){
       // The front curtains are drawn above, under the crown dome. Here we only add
       // the side/back fall for the profile and rear views.

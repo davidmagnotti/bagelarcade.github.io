@@ -1909,11 +1909,18 @@ function drawDecor(b,s){
 function drawNPC(n,s){
   if(n.hidden) return;
   drawShadowAt(cx,s.x,s.y,14);
-  drawHumanoid(cx,s.x,s.y,{...n.look, size:(n.look.size||1)*1.28, dir:n.face, step:n.anim, name:n.name, ph:n.hx*0.7+n.hy*1.3});
+  // The Woodworker is the lost prince: once memory returns he sheds the woodpile
+  // rags for his own bright-blue royal wear, and his name with it.
+  let nlook=n.look, nname=n.name;
+  if(n.id==='woody' && P.story && P.story.royalGarb){
+    nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
+    nname='Prince Jaist';
+  }
+  drawHumanoid(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3});
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
-  cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(n.name, s.x+1, s.y-52*(n.look.size||1)+1);
-  cx.fillStyle='#ffe9a8'; cx.fillText(n.name, s.x, s.y-52*(n.look.size||1));
+  cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
+  cx.fillStyle='#ffe9a8'; cx.fillText(nname, s.x, s.y-52*(nlook.size||1));
   // (ambient overhead speech bubbles removed - NPC lines show only in the dialog panel)
   // quest marks
   let mark=null;
@@ -2988,6 +2995,11 @@ function drawPlayerFigure(s){
     crest:!!(P.story && P.story.necklace),  // the crest necklace, worn from wake-up
     mask: !!(P.story && P.story.masked),     // the Emberwick mask - worn until the woodworker draws it off
     hat: has('crown',1)?'crown':null};
+  // Once memory returns, the castaway becomes the princess again: her true royal
+  // wear - a deep magenta - and her hair bound up in her traditional ponytail.
+  if(P.story && P.story.royalGarb){
+    look.shirt='#a2286a'; look.pants='#5a1a3e'; look.trim='#e6c25a'; look.hairstyle='ponytail';
+  }
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;

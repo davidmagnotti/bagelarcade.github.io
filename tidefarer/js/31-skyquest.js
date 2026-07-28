@@ -383,6 +383,14 @@ function updateSkyDungeon(dt){
     return;
   }
   ensureSnatcher();   // wakes the cloud-snatcher the instant you cross the fading bridge
+  // Vath's taunt: once you're past the fading bridge and climbing toward the Storm-Perch,
+  // his violet apparition flickers over the road, chuckles, and is gone. Fires once.
+  if(!P.story.skyVathTaunt && P.story.skyG2 && !P.story.skyDungeonDone
+     && P.y < skyIsle('i3').y - 3 && !G._skyFall && !dlg.open){
+    P.story.skyVathTaunt=1;
+    skyVathTaunt();
+    return;
+  }
   // ---- ROAMING ROAD-SHADES ----
   // While a shade isn't hunting you, it drifts slowly up and down its stretch of road by
   // easing its home-anchor between two posts; the generic idle-wander/leash then carries it
@@ -563,6 +571,20 @@ function updateStormEye(dt){
   }
 }
 
+/* ---------- Vath's taunt on the rainbow road ----------
+   Not a fight - a violet apparition that mocks you for sparing the Sunward dragon,
+   then frays apart on the wind. Fires once, deep in the run (see updateSkyDungeon). */
+function skyVathTaunt(){
+  if(Snd.boss) Snd.boss(); G.shake=0.5;
+  const ax=P.x, ay=P.y-3.6;
+  if(typeof shockwave==='function') shockwave(ax,ay,'rgba(160,110,240,0.85)',48);
+  for(let i=0;i<28;i++){ const a=Math.random()*TAU, s=rnd(1,4);
+    G.parts.push({x:ax,y:ay,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.6,life:rnd(0.7,1.6),color:'#c77bff',size:rnd(2,4),grav:-0.02}); }
+  if(typeof storyCard==='function'){
+    storyCard('<i>The rainbow dims. A knot of violet gathers on the wind ahead of you and unspools into a shape you know too well - Vath, or the ghost of him, wearing that patient half-smile.</i> <b style="color:#c9a0ff">"...Up here, of all places. You ARE a busy little tide."</b> <i>He chuckles, low and unhurried.</i> <b style="color:#c9a0ff">"You should have listened to me and slayed that wicked dragon when you had the chance. But you never do listen, do you. No matter - the wind will wear you thin where I need not lift a hand."</b> <i>The violet frays apart on the gale, and he is gone.</i>',
+      {label:'Press on'});
+  } else if(typeof banner==='function') banner('VATH','A VIOLET APPARITION MOCKS YOU');
+}
 /* ---------- entering / leaving from the Cloudreach ---------- */
 function skyBirdPortrait(){
   const pg=document.getElementById('dportrait').getContext('2d');

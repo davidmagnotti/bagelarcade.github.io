@@ -1548,6 +1548,9 @@ function freeLeviathan(m){
     G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,life:rnd(0.8,1.7),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); }
   P.story.tideCalm=1; P.story.vathMet=1;
   bossReward(m);
+  // the binding does not simply vanish - it sheds a cold shard of Vath's violet magic
+  // onto the water, which you take up: a curse from Vath, and hard proof of his hand.
+  if(typeof give==='function' && !(P.inv && P.inv.vathcurse)) give('vathcurse',1);
   // the strait is safe: the ferry can finally moor at the pier (it was hidden while
   // no hull could live in the water). Add it now so it's there without a reload.
   if(G.worldId==='wind' && !G.decor.some(d=>d.kind==='boat')){
@@ -1556,7 +1559,7 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
+  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. Where it sank, a cold shard of that light does not fade; it drifts to your hand and hardens - <b style="color:#c9a0ff">Vath\'s Curse-Mark</b>, the binding itself, torn loose. <i>(+1 Vath\'s Curse-Mark)</i> On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
     {onOk:()=>{ setTimeout(()=>toast('<b style="color:var(--ember)">Sail to Aldermere, the capital</b>, and seek an audience with King Aldous - the ferry runs there now the strait is calm.',7000),700); }}),1400);
 }
 function updateWindFolkMood(){
@@ -4139,6 +4142,7 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
   log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
   doneText:"Kind hands, kind harvest. Here - three bottles, brewed slow. And drink this thimble now: my quickroot draught. Your legs will remember it when one dodge is not enough.",
   rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
+ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
@@ -4166,7 +4170,7 @@ QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:
 QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'orin', xpL:340,
   brief:"The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
   log:'Sail to Emberwick and show the pendant to Sage Orin at his tower.',
-  doneText:"...This is no ornament. It is a memory-ward - a working meant to hold a mind whole against exactly the unmaking Vath deals. Someone wove a warning into it and keyed it to YOU, that you might carry it through the fog when all else was taken. And it is calling - to something bound and sleeping, close by. To someone. The Woodworker. Go to him. Only the breaking of Vath will loose what holds him.",
+  doneText:"<i>Orin turns the medallion once in the lantern-light, and when he looks up there is no surprise in his old eyes - only a slow, knowing smile.</i> ...I wondered when you might come back here. I have wondered it since the day you washed ashore wearing this. It is no ornament, child - it is a memory-ward, a mother's love worked into metal, keyed to YOU, meant to hold a mind whole against exactly the unmaking your enemy deals. <i>He folds your fingers gently back over it.</i> Go and chat with the Woodworker, down by the green. Show him your necklace - just that, nothing more. Trust an old man: some doors open only to the right key, and you have carried it at your throat all along.",
   rw:{gold:40, mp:6, xp:{magic:260}} };
 QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
   brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and if he can only get you to take off that mask, the fog that took you both may lift at last.",
