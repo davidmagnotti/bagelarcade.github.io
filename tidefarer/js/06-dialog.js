@@ -153,6 +153,30 @@ function buildDialogContent(npc){
       [{label:'Listen', fn:p2}]);
     return;
   }
+  // First meeting with Vath the "Emberbinder": a smooth, flattering stranger who covets
+  // the dragon's fire. He charms - but the tells leak through: he greets you before you
+  // make a sound, prizes the nameless for carrying "no complications", and his gaze snags
+  // on the pendant a beat too long, something older looking out before the smile slides
+  // back. A tap-through scene that plants the suspicion before his wyrm quest is offered.
+  if(npc.id==='vath' && P.story && !P.story.vathGreet && qs('wyrm')!=='done'){
+    const p4=()=>{
+      P.story.vathGreet=1;
+      setDialog('<i>He spreads his hands, all warmth again.</i> “But here I am, running on, and you did not climb all this way for an old man’s riddles.” <i>The smile returns; it still does not reach his eyes.</i> “There is a matter on this isle that someone of your… talents could set right. And I pay - handsomely. Shall I tell you of it?”',
+        [{label:'Go on', cls:'gold', fn:()=>buildDialogContent(npc)}]);
+    };
+    const p3=()=>{
+      setDialog('<i>His gaze snags on the pendant at your throat, and for the space of a breath the warmth drains out of him - something older and hungrier looking through the charm.</i> “…That is a fine old piece you wear. Very fine. I have seen its like before - once, a long way from here.” <i>He catches himself, and the easy smile slides back into place.</i> “Forgive an old collector. Pretty things are a weakness of mine.”',
+        [{label:'…Where would that have been?', fn:()=>setDialog('“Oh - here, there. A binder wanders.” <i>He waves the question off like smoke.</i> “I never do recall the where of a thing. Only the worth of it.”',[{label:'Continue', fn:p4}])},
+         {label:'Say nothing', fn:p4}]);
+    };
+    const p2=()=>{
+      setDialog('“An Emberbinder. I bind fire to a purpose, where lesser hands only let it burn.” <i>He looks you over, unhurried, the way a jeweller weighs a stone.</i> “And you - washed up, nameless, a stranger even to your own face. How the tides do provide. I have always found the nameless make the finest company. They carry no… complications.”',
+        [{label:'What do you want?', fn:p3}]);
+    };
+    setDialog('<i>The robed stranger turns to face you before you have made a sound, as though he felt you coming up the path.</i> “Ah - there you are. I did wonder when the sea’s newest gift would wander my way.” <i>His smile is generous, practiced, and does not once touch his eyes.</i> “Vath. A binder of fire; a friend to the friendless. And you are… interesting. Yes. Quite interesting.”',
+      [{label:'Who are you?', fn:p2}]);
+    return;
+  }
   // First meeting with the Woodworker: two amnesiacs who each feel they have seen
   // the other before and cannot place it. Plants the recognition beat from hour one -
   // no spoilers, and it pays off far later (he is the lost prince). Fires once.
@@ -479,12 +503,13 @@ function shopButtons(npc,btns){
   }
   if(npc.id==='sable'){
     btns.unshift({label:'Range drill (20g \u2192 archery)', fn:()=>{
+      if(!(P.unlocked && P.unlocked.bow)){ setDialog('\u201cA range drill with no bow to draw? <i>She looks you over and shakes her head.</i> I train archers, not folk who mean to throw rocks at the target. Come back when you\u2019ve a bow on your shoulder - then the wind and I will have something to teach you.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       if(P.gold<20){ setDialog('\u201cThe wind teaches for free. I do not.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
       P.x=npc.x+1.2; P.y=npc.y+1.2; unstickEntity(P);
       TRAIN={who:'sable', stage:0, rolls:0, combo:0, _r:0, x:P.x, y:P.y,
         dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-      toast('<b>Sable\'s drill:</b> deal <b>30 damage</b> to the range dummies - a bow if you have one, anything if you don\'t.',5000); Snd.quest();
+      toast('<b>Sable\'s drill:</b> deal <b>30 damage</b> to the range dummies with your <b>bow</b>.',5000); Snd.quest();
     }});
   }
   if(npc.id==='cade'){

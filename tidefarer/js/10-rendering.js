@@ -3269,7 +3269,11 @@ function drawBigMap(){
   if(mapBase) g.drawImage(mapBase,0,0,384,384);
   const eg=EXPL[G.worldId];
   if(eg){
-    g.fillStyle='rgba(22,17,11,0.94)';
+    // Dim (don't black out) the unexplored ground. At near-opaque this read as a solid
+    // gray sheet on the huge Barik map, which you can never reveal enough of on foot -
+    // the whole chart looked broken. A lighter veil lets the coastline and land show
+    // through as a darkened map you fill in, while explored ground still reads brighter.
+    g.fillStyle='rgba(22,17,11,0.62)';
     const sc=384/MAPW;
     for(let y=0;y<MAPH;y++){
       let run=-1;
