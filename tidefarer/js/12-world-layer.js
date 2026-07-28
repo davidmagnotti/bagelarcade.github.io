@@ -2913,6 +2913,11 @@ function placeObjectsUndermaw(){
   for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:188.5, label:'the way up'});
   setSolid(22,188,0); setTile(22,188,T.RUIN);
+  // A second way out at the very top, in the Deep Hoard beyond the boss: once the
+  // Maw-Stalker is down and the Hoard Door opens, you can leave from here instead of
+  // re-running the whole gauntlet back to the entrance.
+  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:27.5, y:4.5, label:'the way up'});
+  setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
   if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
@@ -2958,6 +2963,9 @@ function placeObjectsUndermaw(){
   // ---- THE HOARD DOOR + reward ----
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
+  // A supply cache in the corridor just before the den: three Ember Tonics for the
+  // boss fight. Claimed once, then it stays taken across later descents.
+  if(!(P.story && P.story.undermawTonics)) G.decor.push({kind:'chest', x:22.5, y:37.5, mawTonics:1});
   G.critters=[];
   G._mawHordeLeft=0;   // set in spawnMobsUndermaw when the bone-guard is placed
   // an already-cleared run stands every gate open and quiets the den (the platforms remain to re-cross)
@@ -4545,6 +4553,16 @@ function openChest(b){
     banner('THE DEEPIRON WARD','+15% DEFENCE WHILE CARRIED');
     shockwave(b.x,b.y,'rgba(150,200,230,0.9)',56); burst(b.x,b.y-0.5,'#9ab0c8',18,2.6); Snd.levelup&&Snd.levelup();
     setTimeout(()=>toast('A slab of black deep-iron, cold and old, worked into a ward-plate. The <b style="color:#9ab0c8">Deepiron Ward</b> turns aside <b>15% of every blow</b> while you carry it - atop any armour you wear.',6800),400);
+    setTimeout(autoSave,300);
+    return;
+  }
+  if(b.mawTonics){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.undermawTonics=1;
+    give('potion',3);
+    banner('A CACHE OF TONICS','THREE EMBER TONICS');
+    shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',16,2.4); Snd.levelup&&Snd.levelup();
+    setTimeout(()=>toast('Three <b style="color:var(--ember)">Ember Tonics</b> stashed here for the last push - stow them for the Maw-Stalker.',5200),400);
     setTimeout(autoSave,300);
     return;
   }
