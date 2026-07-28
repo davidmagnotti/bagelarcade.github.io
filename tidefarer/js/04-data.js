@@ -154,7 +154,7 @@ const QUESTS = {
   king:{ giver:'maren', title:'The Hollow King', kind:'kill', kill:{boss:1},
     brief:'Orin gave you his staff? <i>Elder Maren\'s brow climbs near to her hairline.</i> That old hoarder hasn\'t let a soul touch it in forty years - and he hands it to a castaway he\'s known a week. …Then he sees something in you, and Orin is never a fool. So it\'s true: the Hollow King stirs beneath the crypt, who long ago traded his heart for a crown. My folk raised the warded gate on the ruined causeway a lifetime ago to seal him in, and I am the last who knows the word to open it. Say you\'ll face him and I\'ll speak it open - for you, and you alone. Take your tonics, your steel, and Orin\'s fire. Emberwick believes in you.',
     log:'Defeat the Hollow King at the crypt in the Old Ruins.',
-    doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, and the strait beyond it lies calm at last. Captain Brant can ready the ship now.',
+    doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, and the strait beyond it lies calm at last.',
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
 };
 

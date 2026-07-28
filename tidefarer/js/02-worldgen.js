@@ -255,6 +255,10 @@ function placeObjects(){
   // a ruined stone arch framing the King's ground - scenery only (noRead), so no
   // "Read" prompt competes for your attention mid-boss-fight
   G.decor.push({kind:'crypt',x:46.5,y:8.5,noRead:true});
+  // the crypt is solid stone, not a doorway - wall off its base so you can't walk
+  // through the arch. A tight block seated at the northern tip, behind where the
+  // King rises (46,10), so it blocks the mausoleum without fencing off the arena floor.
+  for(let dy=7;dy<=8;dy++) for(let dx=45;dx<=47;dx++) setSolid(dx,dy,1);
   // warning-boards hammered into the grass before the cursed ground
   for(const [wx,wy] of [[43,27],[49,28],[46,24]]){
     const sp=findOpenNear(wx,wy,2);

@@ -109,6 +109,21 @@ function buildDialogContent(npc){
       shopButtons(npc,[{label:'Back to the tower', ghost:true, fn:closeDialog}]));
     return;
   }
+  // After the Hollow King falls, the elder does more than thank you: she names the
+  // wider turmoil in the isles and asks the champion to carry that steel outward -
+  // the in-world reason to board Brant's boat and leave Emberwick. Fires once, on
+  // the first visit after the quest is done; either answer still points to the boat.
+  if(npc.id==='maren' && P.story && qs('king')==='done' && !P.story.marenCharge){
+    const toBoat=()=>{
+      P.story.marenCharge=1;
+      setDialog('<i>She grips your forearm, warrior to warrior.</i> “Then it\'s settled. <b>Captain Brant</b> is mending the Tidewalker down at the dock - help him make her seaworthy and step aboard when you\'re ready. Fair winds, Champion. Emberwick will keep a lantern lit for you.”',
+        shopButtons(npc,[{label:'To the dock', cls:'gold', fn:()=>buildDialogContent(npc)}]));
+    };
+    setDialog('<i>Elder Maren studies you a long moment, and there is more than gratitude in it.</i> “I\'ve watched a great many castaways wash up on this rock. Not one of them could have gone down into that dark and walked back out. You\'re a rare hand with a blade, traveler - a born fighter - and Emberwick is only one small stone in a wide and troubled sea.” <i>Her eyes turn to the water.</i> “The other isles are in turmoil - cursed tides, beasts on the roads, wrongs with no one left to set them right. They could use someone like you out there. Will you carry what you are beyond our shore?”',
+      [{label:'I\'ll go where I\'m needed', cls:'gold', fn:toBoat},
+       {label:'The sea can wait', ghost:true, fn:toBoat}]);
+    return;
+  }
   // The Royal Audience - a scripted scene that opens Act III. The King receives
   // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
   // and he tells the tragedy that binds Vath to the throne, then charges you.
