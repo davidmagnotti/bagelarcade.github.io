@@ -1649,9 +1649,12 @@ function updateWorld(dt){
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
-  // Aldermere is a walled, patrolled city and stays safe after dark.
+  // Aldermere is a walled, patrolled city and stays safe after dark. And NEVER in
+  // Act II: once you sail out under the Warding Veil the old night-wraiths are gone
+  // from the isles entirely (they no longer spawn, see below for dispersing strays).
   const isleCleared = P.story && P.story.bossCleared && P.story.bossCleared[G.worldId];
-  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
+  const act2 = !!(P.story && P.story.act2);
+  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
@@ -1665,8 +1668,9 @@ function updateWorld(dt){
       }
     }
   }
-  if(night<0.15){
-    // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request)
+  if(night<0.15 || act2){
+    // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request) -
+    // and in Act II any wraith still abroad from an Act I save disperses at once.
     for(const m of G.mobs) if(m.night && !m.dead){ m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',8,1.6); }
   }
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
