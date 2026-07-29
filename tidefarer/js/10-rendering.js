@@ -57,7 +57,7 @@ function buildGroundCache(){
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1, vathghost:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
@@ -1099,6 +1099,34 @@ function drawDecor(b,s){
     g.fillStyle='rgba(230,235,245,0.5)';
     g.beginPath(); g.ellipse(14+Math.sin(t*1.3)*3, 8, 12, 4, 0, 0, TAU); g.fill();
     g.beginPath(); g.ellipse(-16+Math.cos(t*1.1)*3, 10, 10, 3.5, 0, 0, TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='signalbeacon'){
+    // a tall iron signal-brazier on the Windward Bluffs. Cold until the strait is calmed;
+    // light it and it blazes gold, calling Ashwing down out of the cloud-sea.
+    const g=cx, t=G.time, lit=!!b.lit; drawShadowAt(g,s.x,s.y,14); g.save(); g.translate(s.x,s.y);
+    // stacked-stone plinth
+    g.fillStyle='#6b655c'; g.beginPath(); g.moveTo(-12,4); g.lineTo(0,10); g.lineTo(12,4); g.lineTo(12,-2); g.lineTo(0,4); g.lineTo(-12,-2); g.closePath(); g.fill();
+    g.fillStyle='#4f4a43'; g.beginPath(); g.moveTo(-12,-2); g.lineTo(0,4); g.lineTo(0,1); g.lineTo(-12,-5); g.closePath(); g.fill();
+    // three iron legs up to the bowl
+    g.strokeStyle='#2a2620'; g.lineWidth=3; g.lineCap='round';
+    g.beginPath(); g.moveTo(-7,-2); g.lineTo(-4,-24); g.moveTo(7,-2); g.lineTo(4,-24); g.moveTo(0,0); g.lineTo(0,-24); g.stroke();
+    // the fire-bowl
+    g.fillStyle='#3a352d'; g.beginPath(); g.ellipse(0,-24,11,4.5,0,0,TAU); g.fill();
+    g.fillStyle='#241f19'; g.beginPath(); g.ellipse(0,-25,8.5,3,0,0,TAU); g.fill();
+    if(lit){
+      const fl=0.6+0.4*Math.sin(t*9);
+      const gr=g.createRadialGradient(0,-30,2,0,-30,42); gr.addColorStop(0,'rgba(255,200,110,'+(0.5+0.2*fl).toFixed(2)+')'); gr.addColorStop(1,'rgba(255,150,60,0)');
+      g.fillStyle=gr; g.beginPath(); g.arc(0,-30,42,0,TAU); g.fill();
+      for(let i=0;i<3;i++){ const ph=t*7+i*2.1, h=18+6*Math.sin(ph);
+        g.fillStyle=i%2?'#ffce6a':'#ff8a3c'; g.beginPath();
+        g.moveTo(-6+i*4,-26); g.quadraticCurveTo(-3+i*4+Math.sin(ph)*3,-26-h*0.6, -4+i*4,-26-h);
+        g.quadraticCurveTo(-6+i*4,-26-h*0.5,-6+i*4,-26); g.closePath(); g.fill(); }
+    } else {
+      g.fillStyle='#5a4a34'; for(const dx of [-3,0,3]) g.fillRect(dx-1,-27,2,4);   // cold kindling
+      const pulse=0.3+0.25*Math.sin(t*2);
+      g.fillStyle='rgba(150,205,235,'+pulse.toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-40);
+    }
     g.restore(); return;
   }
   if(b.kind==='rainbow'){

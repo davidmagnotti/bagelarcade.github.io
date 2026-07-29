@@ -1427,6 +1427,12 @@ function placeObjectsWind(){
   // dragon here, and no keel crosses the cursed strait until you calm it. So until the tide is calmed
   // you are meant to be stranded: fix the strait and the ferry opens, your way out.
   if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
+  // THE SIGNAL BEACON on the Windward Bluffs - the high point of the isle. Once the strait
+  // is calmed you light it to signal Ashwing down from the cloud-sea, and he bears you up to
+  // the Cloudreach: your only road back UP off Windsurf (you came DOWN by parachute).
+  { const sp=findOpenNear(B.x, B.y-3, 8) || [B.x, B.y-3];
+    G.decor.push({kind:'signalbeacon', x:sp[0]+0.5, y:sp[1]+0.5, lit:!!(P.story&&P.story.tideCalm), name:'SIGNAL BEACON', labelY:-54});
+    setSolid(sp[0], sp[1], 1); }
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('lamp', D.x+3, D.y+1, '');
   addBuilding('lamp', M.x-6, M.y, ''); addBuilding('lamp', M.x+6, M.y, '');
@@ -1539,9 +1545,11 @@ function spawnLeviathan(){
   return lv;
 }
 function freeLeviathan(m){
-  // Beaten, the binding shatters - the beast is a victim, not a foe. It sinks
-  // calm, the strait goes glassy, and Vath's violet mark is left behind on the water.
-  m.freed=1; m.dead=true; m.respawnT=-1; m.state='idle';
+  // Beaten, the binding shatters - the beast is a victim, not a foe. It does NOT sink at
+  // once: like Ashwing when his spell breaks, it surfaces calm and UNBOUND (the violet
+  // drains from its hide) and holds there while you speak, before it finally dives.
+  m.freed=1; m.state='idle'; m.tx=null; m.hp=m.maxhp; m.surf=1; m.rooted=1; m.dead=false;
+  m.windup=0; m.swing=0; m.lunge=0; m.shootCd=1e9; m.lungeCd=1e9; m.volleyCd=1e9; m.noAggroT=1e9; m.respawnT=-1;
   Snd.boss&&Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(150,220,245,0.95)',95);
   for(let i=0;i<30;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
@@ -1559,8 +1567,33 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>storyCard('The leviathan sinks - <b>unbound</b>, not slain - and the water goes glass-flat, a slick of <b style="color:#c9a0ff">violet light</b> fading where it dove. Where it sank, a cold shard of that light does not fade; it drifts to your hand and hardens - <b style="color:#c9a0ff">Vath\'s Curse-Mark</b>, the binding itself, torn loose. <i>(+1 Vath\'s Curse-Mark)</i> On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
-    {onOk:()=>{ setTimeout(()=>toast('<b style="color:var(--ember)">Sail to Aldermere, the capital</b>, and seek an audience with King Aldous - the ferry runs there now the strait is calm.',7000),700); }}),1400);
+  setTimeout(()=>leviathanFarewell(m),1400);
+}
+// A dialogue with the CALMED leviathan - unbound, it is no monster but an ancient deep-thing,
+// and it regards you once before it dives. Mirrors the freed-dragon beat after Ashwing.
+function leviathanFarewell(m){
+  dlg.open=true; dlg.npc=null;
+  const win=document.getElementById('dialog'); if(win) win.style.display='block';
+  const nm=document.getElementById('dname'); if(nm) nm.textContent='The Leviathan, Unbound';
+  const pc=document.getElementById('dportrait');
+  if(pc){ const pg=pc.getContext('2d'), W=pc.width, H=pc.height;
+    const rg=pg.createRadialGradient(W*0.5,H*0.85,4,W*0.5,H*0.5,H*0.9);
+    rg.addColorStop(0,'#245b6b'); rg.addColorStop(1,'#0a1a22'); pg.fillStyle=rg; pg.fillRect(0,0,W,H);
+    pg.strokeStyle='rgba(127,208,224,0.55)'; pg.lineWidth=3; pg.lineCap='round';   // a serpentine coil
+    pg.beginPath(); pg.moveTo(W*0.16,H*0.8); pg.quadraticCurveTo(W*0.4,H*0.3,W*0.62,H*0.52);
+    pg.quadraticCurveTo(W*0.8,H*0.68,W*0.86,H*0.34); pg.stroke();
+    pg.fillStyle='#0a1418'; pg.beginPath(); pg.arc(W*0.7,H*0.44,6,0,TAU); pg.fill();  // the calm eye
+    pg.fillStyle='#bfe8ff'; pg.beginPath(); pg.arc(W*0.7,H*0.44,3.2,0,TAU); pg.fill(); }
+  const sink=()=>{ closeDialog();
+    if(m && !m.dead){ m.dead=true; m.respawnT=-1;
+      shockwave(m.x,m.y,'rgba(150,220,245,0.9)',80);
+      for(let i=0;i<26;i++){ const a=Math.random()*TAU, sp=rnd(1,3.6);
+        G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp+0.4,life:rnd(0.7,1.5),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); } }
+    setTimeout(()=>storyCard('Where it sank, a cold shard of that light does not fade; it drifts to your hand and hardens - <b style="color:#c9a0ff">Vath\'s Curse-Mark</b>, the binding itself, torn loose. <i>(+1 Vath\'s Curse-Mark)</i> On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
+      {onOk:()=>{ setTimeout(()=>toast('<b style="color:var(--ember)">Sail to Aldermere, the capital</b>, and seek an audience with King Aldous - the ferry runs there now the strait is calm.',7000),700); }}),900);
+  };
+  setDialog('<i>The violet drains from its hide and its vast eye clears to a deep, calm blue. No monster now - only something impossibly old, made to kill and glad to be done with it. The water goes glass-flat around it. It lowers its great head to you, once, slow as a tide turning</i> - and a sound rolls up out of the deep, less a voice than the sea itself remembering how to speak: <b style="color:#8fd8ff">“…unbound. The little land-thing broke the cold hand. Go well, breaker. The deep will know your keel and let it pass.”</b>',
+    [{label:'Let it return to the deep', cls:'gold', fn:sink}]);
 }
 function updateWindFolkMood(){
   // once the strait reopens, the town's talk turns from despair to bustle
@@ -1609,6 +1642,20 @@ function askAshwingHome(){
   // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
   // into a hidden panel - otherwise the "Fly home" menu never shows
   lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
+}
+/* The signal beacon on the Windward Bluffs. Until the strait is calmed you are stranded on
+   Windsurf by the killing tide - no wing will risk that water. Once it's calm, lighting the
+   beacon signals Ashwing down from the cloud-sea and he bears you up to the Cloudreach. */
+function signalAshwing(b){
+  if(!(P.story && P.story.tideCalm)){
+    toast('A cold signal-brazier stands ready on the bluffs. But the strait below still boils and churns - <b>no wing would risk that water</b>. Calm the tide first, then call Ashwing down.',5200);
+    Snd.step&&Snd.step(5); return;
+  }
+  if(b){ b.lit=1; invalidateScenery&&invalidateScenery(); }
+  Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.3);
+  P.story=P.story||{}; P.story.skyKnown=1;
+  toast('You touch a flame to the beacon and it ROARS up gold against the sky. Far above, something vast peels off the cloud-sea and comes wheeling down - <b>Ashwing</b>, answering the signal.',5200);
+  setTimeout(()=>{ if(typeof flyToCloudreach==='function') flyToCloudreach(); },2600);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
@@ -2613,6 +2660,7 @@ function exitFrostVault(){
    Reuses ewall walls, the catgate portcullis, and a scaled skeleton boss.
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
+const MILL_BOSS_SEAL=[[18,9],[19,9],[20,9],[21,9],[22,9]];   // the corridor mouth into the Grinding Floor; slams shut behind you when you step up to the Cog-Bound
 function genMillDeep(){
   // the flooded undercroft: an entry landing, then FOUR flooded halls climbing north, and the
   // guardian's chamber at the top with the sail. The first two halls (A,B) are COMBINATION
@@ -2650,6 +2698,11 @@ function placeObjectsMillDeep(){
   for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:98.5, label:'the way up'});  // back to the surface
   setSolid(19,98,0); setTile(19,98,T.RUIN);
+  // THE COG-GATE: a gear-driven portcullis at the mouth of the Grinding Floor. It stands open
+  // until you step up to the Cog-Bound, then slams shut (updateMillDeep) - no retreat - and
+  // grinds back up when the guardian falls (killMob). A cleared run leaves it open.
+  G._millSealed=0;
+  G.decor.push({kind:'catgate', x:20, y:9, open:true, gate:'cog', tiles:MILL_BOSS_SEAL.slice(), label:'the Cog-Gate'});
   for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // a decorative great wheel in the landing (the works are drowned, not turning)
   G.decor.push({kind:'millwheel', x:12.5, y:97.2, r:6});
@@ -2792,6 +2845,15 @@ function pullSluiceOrder(b){
 // the player on a clean hit (a dash's roll frames pass through everything unharmed).
 function updateMillDeep(dt){
   const t=(G._millT=(G._millT||0)+dt);
+  // THE COG-GATE: stepping onto the Grinding Floor with the Cog-Bound alive slams it shut behind
+  // you, so there's no backing down the halls to kite the guardian. It reopens when it falls.
+  if(!G._millSealed && !(P.story&&P.story.millDone) && P.y<=8 && P.x>=9 && P.x<=31
+     && (G.mobs||[]).some(mb=>mb.millboss && !mb.dead)){
+    G._millSealed=1; for(const [x,y] of MILL_BOSS_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=false;
+    invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
+    banner('THE COG-GATE SLAMS SHUT','NO RETREAT - FELL THE COG-BOUND');
+  }
   const safe = P.dead || (P.rollT||0)>0;
   const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:12}); };
   for(const a of (G._millAxes||[])){

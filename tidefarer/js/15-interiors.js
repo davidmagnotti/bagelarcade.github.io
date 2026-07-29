@@ -116,8 +116,21 @@ function enterHouse(b){
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     const leave = qs('kitchenrun')==='done' || (P.story&&(P.story.palaceLeave||P.story.kingTold));
     if(!leave){
-      toast('Two guards cross their halberds at the gate. “<b>None shall pass</b> without the King’s leave.”',4200);
-      Snd.step(5); return;
+      // the Tideglass gate is not a door you simply open - the guard turns you away in
+      // person: none pass but on official crown business.
+      Snd.step(5);
+      dlg.open=true; dlg.npc=null;
+      const win=document.getElementById('dialog'); if(win) win.style.display='block';
+      const nm=document.getElementById('dname'); if(nm) nm.textContent='The Palace Guard';
+      const pc=document.getElementById('dportrait');
+      if(pc){ const pg=pc.getContext('2d'), W=pc.width, H=pc.height;
+        pg.fillStyle='#1b2436'; pg.fillRect(0,0,W,H);
+        pg.strokeStyle='#c9a24e'; pg.lineWidth=3; pg.lineCap='round';   // crossed halberds
+        pg.beginPath(); pg.moveTo(W*0.28,H*0.86); pg.lineTo(W*0.72,H*0.16); pg.moveTo(W*0.72,H*0.86); pg.lineTo(W*0.28,H*0.16); pg.stroke();
+        pg.fillStyle='#d8dee8'; pg.beginPath(); pg.arc(W*0.72,H*0.17,5,0,TAU); pg.fill(); pg.beginPath(); pg.arc(W*0.28,H*0.17,5,0,TAU); pg.fill(); }
+      setDialog('<i>Two guards bring their halberds down across the gate with a single ring of steel.</i> “Hold there. The Tideglass is the King’s own house - <b>none pass but on official crown business.</b> No petitioners, no sightseers, no exceptions. Come back when the crown has sent for you, and not before.”',
+        [{label:'Step back', ghost:true, fn:closeDialog}]);
+      return;
     }
     const I=palaceInterior(0); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
     P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;

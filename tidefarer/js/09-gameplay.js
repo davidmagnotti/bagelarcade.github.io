@@ -223,6 +223,8 @@ function nearestInteract(){
       if(d<3.0 && d<bd){ bd=d; best={type:'ashwing',o:b,label:b.sky?'Fly down':'Fly home'}; } }
     if(b.kind==='leappoint'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'leap',o:b,label:(P.story&&P.story.parachute)?'Take the Leap':'The Leap'}; } }
+    if(b.kind==='signalbeacon'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.2 && d<bd){ bd=d; best={type:'signalbeacon',o:b,label:(P.story&&P.story.tideCalm)?'Signal Ashwing to the Cloudreach':'A signal beacon'}; } }
     if(b.kind==='skybird'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
     if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
@@ -296,6 +298,7 @@ function doInteract(){
   if(it.type==='tome'){ facePoint(it.o.x,it.o.y); if(typeof destroyTome==='function') destroyTome(it.o); return; }
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='ashwing'){ facePoint(it.o.x,it.o.y); if(it.o.sky) askSkyDragon(); else askAshwingHome(); return; }
+  if(it.type==='signalbeacon'){ facePoint(it.o.x,it.o.y); if(typeof signalAshwing==='function') signalAshwing(it.o); return; }
   if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
   if(it.type==='skybird'){ facePoint(it.o.x,it.o.y); if(typeof skyBirdSpeak==='function') skyBirdSpeak(); return; }
   if(it.type==='skytile'){ facePoint(it.o.x,it.o.y); if(typeof pressSkyTile==='function') pressSkyTile(it.o); return; }
@@ -832,6 +835,10 @@ function killMob(m,skill){
     if(G._millWalls && typeof applyMillWall==='function') for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     // the works fall silent: still the grind-blades and spike-grates
     G._millAxes=[]; G._millSpikes=[]; G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap');
+    // the freed gear-train grinds the Cog-Gate back up - the way out of the chamber opens
+    if(typeof MILL_BOSS_SEAL!=='undefined') for(const [x,y] of MILL_BOSS_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    { const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=true; }
+    G._millSealed=0;
     if(typeof invalidateScenery==='function') invalidateScenery();
     banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
@@ -959,6 +966,14 @@ document.getElementById('respawnBtn').onclick=()=>{
     for(const m of G.mobs){ if(m.ach==='tomewarden' && !m.dead){ m.sealed=true; m.entranceDone=false; m.introKind=null; } }
     if(typeof invalidateScenery==='function') invalidateScenery();
     G._cryptSealed=0;
+  }
+  // if you died sealed in the Grinding Floor, raise the Cog-Gate and reset so re-entering the
+  // chamber re-triggers (and re-seals) the Cog-Bound fight cleanly (the boss is healed above)
+  if(G._millSealed){
+    if(typeof MILL_BOSS_SEAL!=='undefined') for(const [x,y] of MILL_BOSS_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=true; }
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    G._millSealed=0;
   }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
@@ -1424,7 +1439,7 @@ function updateMobs(dt){
         if((m.swing||0)>0.14 && Math.random()<0.5){ // frost breath as the slam lands
           G.parts.push({x:m.x+rnd(-1.5,1.5),y:m.y-0.6,vx:rnd(-0.4,0.4),vy:-rnd(0.3,0.9),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.04}); }
       }
-      if(m.kind==='leviathan'){
+      if(m.kind==='leviathan' && !m.freed){
         // bound in the deep - it never leaves the water, but it GIVES CHASE now: it swims
         // hard after you across the light-water arena to close to slam range, still hurling
         // spouts and rearing to slam. Flee onto the breakwater and it can't follow you up.
@@ -1438,11 +1453,23 @@ function updateMobs(dt){
           const sy=m.y+dy/l*spd*dt; if(swim(m.x,sy)) m.y=sy;
         }
         m.shootCd-=dt;
-        if(m.shootCd<=0 && l>1.3 && l<14){
-          m.shootCd = m.hp<m.maxhp*0.5? 1.5 : 2.3; m.swing=0.3;
-          const spread = m.hp<m.maxhp*0.5? [-0.3,0,0.3] : [0];
+        if(m.shootCd<=0 && l>1.3 && l<16){
+          m.shootCd = m.hp<m.maxhp*0.5? 1.1 : 1.7; m.swing=0.3;
+          // aimed spouts - a tight cluster, denser and wider once wounded
+          const spread = m.hp<m.maxhp*0.5? [-0.5,-0.25,0,0.25,0.5] : [-0.2,0,0.2];
           for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
-            G.projs.push({kind:'spout',x:m.x,y:m.y-1.0,vx:Math.cos(ca)*7,vy:Math.sin(ca)*7,life:2.0,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
+            G.projs.push({kind:'spout',x:m.x,y:m.y-1.0,vx:Math.cos(ca)*7.5,vy:Math.sin(ca)*7.5,life:2.2,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
+          if(Snd.splash) Snd.splash();
+        }
+        // THE BRINE BARRAGE - a second ranged attack: it rears and hurls a sweeping FAN of
+        // spouts across the whole light-water arena, so you can never just sit and trade at range.
+        m.volleyCd=(m.volleyCd||rnd(4,6))-dt;
+        if(m.volleyCd<=0 && l<16){
+          m.volleyCd = m.hp<m.maxhp*0.5? rnd(3.2,4.4) : rnd(5,7); m.swing=0.35;
+          addFloat('BARRAGE', m.x, m.y-3.4, '#8fd8ff', 1.1); G.shake=Math.max(G.shake,0.2);
+          const base=Math.atan2(dy,dx), n=(m.hp<m.maxhp*0.5)?9:7;
+          for(let i=0;i<n;i++){ const ca=base+(i-(n-1)/2)*0.28;
+            G.projs.push({kind:'spout',x:m.x,y:m.y-1.0,vx:Math.cos(ca)*6.2,vy:Math.sin(ca)*6.2,life:2.6,dmg:Math.round(d.dmg*0.6),from:'mob'}); }
           if(Snd.splash) Snd.splash();
         }
         m.lungeCd=(m.lungeCd||3)-dt;
@@ -1519,11 +1546,11 @@ function updateProjs(dt){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
               if(p.snare && !isBossMob(m2)){ m2.snareT=p.snare; m2.windup=0;
                 burst(m2.x,m2.y-0.3,'#6fe0c8',10,2); }
-              if(p.stun){ m2.stunT=Math.max(m2.stunT||0,p.stun); m2.windup=0;
+              if(p.stun && !isBossMob(m2)){ m2.stunT=Math.max(m2.stunT||0,p.stun); m2.windup=0;
                 burst(m2.x,m2.y-0.3,'#eae0ff',8,2); } } }
             burst(p.x,p.y-0.3,p.snare?'#6fe0c8':'#ff9a3c',14,3); }
           else { damageMob(m,p.dmg,{x:p.vx/13,y:p.vy/13},p.skill);
-            if(p.stun){ m.stunT=Math.max(m.stunT||0,p.stun); m.windup=0; burst(m.x,m.y-0.3,'#eae0ff',8,2); } }
+            if(p.stun && !isBossMob(m)){ m.stunT=Math.max(m.stunT||0,p.stun); m.windup=0; burst(m.x,m.y-0.3,'#eae0ff',8,2); } }
           p.life=0; break;
         }
       }
