@@ -231,9 +231,9 @@ function _epiLandfall(){
 function placeReachHomecoming(){
   if(G.worldId!=='reach') return;
   const Z=(typeof REACH_ZONES!=='undefined' && REACH_ZONES.strand) ? REACH_ZONES.strand : {x:60,y:98};
-  // (No arrival sloop is placed on the strand any more - the isle's one hull is the ferry
-  //  that rides at the dock, so there's no beached duplicate here on Wreckstrand.)
-  // the prince holds the strand while the princess explores - findable at any hour
+  // The beached sloop is placed by placeObjectsReach and the prince by spawnReachFolk (so
+  // both persist on every visit, not just this cutscene). This stays as a safety fallback:
+  // if the brother somehow isn't on the strand, put him there. Normally it no-ops.
   if(!G.npcs.some(n=>n.id==='brother')){
     const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x+2), Math.round(Z.y+1), 5)) || [Z.x+2, Z.y+1];
     const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],

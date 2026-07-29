@@ -3436,14 +3436,16 @@ function placeObjectsReach(){
     // the isle-by-isle curse-lifting into a hunt for the great queen's sealing weapon
     G.decor.push({kind:'pillar', x:GV.x+0.5, y:GV.y+2+0.5, broken:false, loreKey:'prophecy@reach'}); }
   carveLine(Z.camp.x,Z.camp.y, Z.graves.x,Z.graves.y, T.PATH,0);
-  // the ferry berth: Stormreach is a sea stop, so a hull always rides at the water's edge off
-  // the dock - never beached on the sand. Walk out from the isle centre and drop it on the
-  // first sea tile.
-  { const ddx=Z.dock.x-60, ddy=Z.dock.y-60, dl=Math.hypot(ddx,ddy)||1; let placed=false;
-    for(let step=2; step<=20 && !placed; step++){ const tx=Math.round(Z.dock.x+ddx/dl*step), ty=Math.round(Z.dock.y+ddy/dl*step);
+  // Your sloop, beached at the Wreckstrand landing where you put in. Stormreach is a
+  // sea-stop, but the way home is the very hull you arrived in - the prince holds it here
+  // on the strand rather than a ferry off the far dock. Walk seaward from the landing and
+  // drop it on the first sea tile, so it reads as pulled up on the shingle by your brother.
+  { const sdx=Z.strand.x-60, sdy=Z.strand.y-60, sl=Math.hypot(sdx,sdy)||1; let placed=false;
+    for(let step=2; step<=18 && !placed; step++){ const tx=Math.round(Z.strand.x+sdx/sl*step), ty=Math.round(Z.strand.y+sdy/sl*step);
       if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); placed=true; } } }
-    if(!placed) addBuilding('boat', Z.dock.x, Z.dock.y+2, ''); }
-  addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, '');
+    if(!placed) addBuilding('boat', Z.strand.x, Z.strand.y+6, ''); }
+  // lamps light the landing (the old dock off east is quiet now that the boat rides here)
+  addBuilding('lamp', Z.strand.x-3, Z.strand.y-1, ''); addBuilding('lamp', Z.strand.x+3, Z.strand.y-1, '');
   // greenery + a couple of chests
   const pr=mulberry32(SEED+19);
   for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
@@ -3463,6 +3465,19 @@ function spawnReachFolk(){
     {skin:'#8f6a48',hair:'#3a352c',shirt:'#6a5a3a',pants:'#33302a'},
     ['Every hull I mend by the water, that Barrow-brute wanders down and stamps to kindling for the joy of it.',
      'Silence the brute and I’ll keep this berth sound for any ship that dares the reefs. My word on it.'],0.5));
+  // Your brother the prince holds the Wreckstrand landing and the beached sloop - the way
+  // home - while you take the isle. Set up when you first make landfall in Act II, and kept
+  // here on every visit so you always land beside him and the boat (not just the cutscene).
+  if(!G.npcs.some(n=>n.id==='brother')){
+    const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.strand.x+2), Math.round(Z.strand.y+1), 5)) || [Z.strand.x+2, Z.strand.y+1];
+    const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
+      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+      ["Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
+       "I'll keep a fire lit here on the strand. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
+       "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."],0.1);
+    b.nightOwl=true;
+    G.npcs.push(b);
+  }
 }
 function spawnMobsReach(){
   const Z=REACH_ZONES;
