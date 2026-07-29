@@ -2819,13 +2819,13 @@ function spawnMobsMillDeep(){
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); spawnMobsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
-  // the hatch stays chained until Tolen has shaped the board and sent you for the
-  // sail (boardMade), or the sail quest is already underway, or you've been here
-  // before (haveSail / surf). The sail-quest check guarantees you can never be
-  // locked out of a dungeon you've been sent to.
-  const maySeek = (P.story && (P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
+  // The windmill is ALWAYS locked - Burl's padlock. You may only enter once you
+  // hold the key Tolen hands you for shaping the board (millKey). The haveSail /
+  // surf / sail-active fallbacks keep older saves (and anyone already sent below)
+  // from ever being locked out of a dungeon they've been sent to.
+  const maySeek = (P.story && (P.story.millKey || P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
   if(!maySeek){
-    toast('A chained cellar-hatch beside the windmill, padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut - you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
+    toast('A chained cellar-hatch beside the windmill, padlocked over a stair going down into the old works. It\'s locked tight, and you\'ve no <b>key</b> - shape a board with <b>Tolen</b> and he\'ll hand you one.',4800); Snd.step&&Snd.step(5); return;
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._millReturn={x:P.x, y:P.y+1.3}; P.click=null;
@@ -2853,9 +2853,11 @@ function exitMillDungeon(){
 // dungeon. Same gate as the exterior hatch used to have. Climbing back out lands
 // you at the windmill's door in the city.
 function enterMillFromInterior(){
-  const maySeek = (P.story && (P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
+  // Same lock as the exterior hatch: the mill opens only to the key Tolen gives you
+  // for shaping the board (millKey). Fallbacks keep you from being locked out mid-quest.
+  const maySeek = (P.story && (P.story.millKey || P.story.boardMade || P.story.haveSail)) || (P.unlocked && P.unlocked.surf) || qs('sail')==='active';
   if(!maySeek){
-    toast('A heavy stone hatch is set in the mill floor - chained and padlocked over a stair going down into the old works. <b>Burl</b> keeps it shut; you\'ve no reason to go down there yet.',4800); Snd.step&&Snd.step(5); return;
+    toast('A heavy stone hatch is set in the mill floor - chained and padlocked over a stair going down into the old works. It\'s locked, and you hold no <b>key</b>; shape a board with <b>Tolen</b> and he\'ll give you one.',4800); Snd.step&&Snd.step(5); return;
   }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   const MI=WIND_ZONES.mill;
@@ -4022,7 +4024,7 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
 QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', need:{wood:6, shell:3}, xpL:240,
   brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails, and I\'ll shape you a board fit for that killing water. The sail\'s another matter - but one thing at a time.',
   log:'Bring Tolen the Whittler 6 wood and 3 spiral shells so he can shape you a windsurf board. (Chop the palms; comb the beach for shells.)',
-  doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is Nessa\'s, and it\'s locked in the old grinding works BENEATH THE WINDMILL - sealed the season the gear-train jammed. Bring it up and I\'ll step it for you.',
+  doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is Nessa\'s, and it\'s locked in the old grinding works BENEATH THE WINDMILL - Burl keeps it padlocked, and has since the gear-train jammed. But he left the key with me for just such a day. Here - take it, open the mill yourself, and bring the sail up. Then I\'ll step it for you.',
   rw:{gold:20} };
 QUESTS.sail={ giver:'burl', title:'The Sail in the Undermill', kind:'special', xpL:220,
   brief:'The stair down? Chained shut, and for good reason - the gear-train siezed a season back and the works went dead, Nessa\'s good stormsail locked in the vault behind the millstone gate. And it wasn\'t rust that stopped it. Something got FOULED in the shaft down there and won\'t lie quiet. Put the thing down, the gear-train frees, the gate grinds up - and the sail\'s yours. Mind yourself in the dark.',

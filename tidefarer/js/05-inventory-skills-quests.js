@@ -123,10 +123,11 @@ function completeQuest(id){
     banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
     setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
   if(id==='board'){ // the board is shaped, but bare - fetch Nessa's sail from the Undermill next.
-    // Tolen's own doneText already sends you beneath the windmill, so no extra popup toast:
-    // just set the next quest active and let the quest log carry it.
-    P.story=P.story||{}; P.story.boardMade=1;
-    if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; } }
+    // Tolen shapes the board AND hands over Burl's spare key: the windmill stays locked
+    // to everyone until you hold that key, so grant millKey here to open the Undermill.
+    P.story=P.story||{}; P.story.boardMade=1; P.story.millKey=1;
+    if(!P.quests.sail) { P.quests.sail='active'; P.prog.sail=0; }
+    setTimeout(()=>toast('Tolen presses a heavy iron <b style="color:var(--ember)">windmill key</b> into your hand - Burl\'s padlock is yours to open now. Nessa\'s stormsail waits below.',6000),1400); }
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
     if(!P.quests.enchanter) P.quests.enchanter='avail'; }
