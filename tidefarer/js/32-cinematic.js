@@ -137,16 +137,23 @@ function snowStrength(){
   const rain=(WX&&typeof WX.rain==='number')?WX.rain:0;
   return 0.5+0.5*Math.min(1,rain);          // always a light fall; heavier in a squall
 }
+const SNOW_PARALLAX=1;                          // 1 = flakes stay pinned to the world; <1 drifts toward screen-locked
 function drawSnow(){
   const s=snowStrength(); if(s<=0.02) return;
   const want=Math.round(s*150);
   while(_flakes.length<want) _flakes.push({x:Math.random()*VW,y:Math.random()*VH,r:0.8+Math.random()*1.8,spd:14+Math.random()*30,ph:Math.random()*TAU});
   if(_flakes.length>want) _flakes.length=want;
   cx.fillStyle='rgba(244,249,255,'+(0.72*Math.min(1,s)).toFixed(3)+')';
+  // Anchor the flake field to the world by cancelling the camera pan, then wrap
+  // each flake back onto the screen so the field is seamless as you walk. A flake
+  // stays over the same patch of ground instead of sliding along with the camera.
+  const M=4, WW=VW+2*M, HH=VH+2*M;              // wrap span (a little margin so flakes don't pop at the edges)
+  const camX=(G.cam?G.cam.x:0)*SNOW_PARALLAX, camY=(G.cam?G.cam.y:0)*SNOW_PARALLAX;
   for(const f of _flakes){
     f.y+=f.spd*_dt; f.x+=Math.sin(G.time*1.3+f.ph)*10*_dt;
     if(f.y>VH){ f.y=-4; f.x=Math.random()*VW; }
-    cx.beginPath(); cx.arc(f.x,f.y,f.r,0,TAU); cx.fill();
+    const dx=((f.x-camX+M)%WW+WW)%WW-M, dy=((f.y-camY+M)%HH+HH)%HH-M;
+    cx.beginPath(); cx.arc(dx,dy,f.r,0,TAU); cx.fill();
   }
 }
 
