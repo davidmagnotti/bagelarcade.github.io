@@ -112,6 +112,28 @@ const DROWNED_ZONES = { // THE DROWNED VAULT - the flooded harbor-vault beneath 
   gallery:{x:36, y:56, r:12, name:'The Flooded Gallery', lv:[4,6]},  // a plank causeway over deep water, flanked by drowned dead
   vault:  {x:36, y:20, r:12, name:'The Tide-Lock Vault', lv:[6,7]}   // the Drowned Minotaur + the diving-charm chest
 };
+const GALEDEEP_ZONES = { // THE GALE SPIRE - a wind-scoured shaft beneath Windsurf (grants the longer dash)
+  entry: {x:36, y:88, r:7,  name:'The Windward Stair', lv:[4,6]},
+  updraft:{x:36, y:54, r:12, name:'The Updraft Hall',  lv:[5,7]},   // gale-swept gaps you dash across
+  eye:   {x:36, y:20, r:12, name:'The Eye of the Gale', lv:[7,8]}   // the Storm-Wraith + the swiftstep chest
+};
+const EMBERGIFT_ZONES = { // THE ASHEN FORGE - a lava-worked vault under Mount Kea (grants the flame snare)
+  entry:  {x:36, y:88, r:7,  name:'The Cinder Stair',  lv:[6,8]},
+  causeway:{x:36, y:54, r:12, name:'The Lava Causeway', lv:[7,9]},  // basalt path between fire-pits
+  forge:  {x:36, y:20, r:12, name:'The Ashen Forge',   lv:[8,10]}   // the Ash-Scorpion + the flame-snare chest
+};
+const STORMTEMPLE_ZONES = { // THE STORM TEMPLE - a lightning-wracked temple on the Cloudreach (grants the double dash)
+  entry:  {x:36, y:88, r:7,  name:'The Thunderstair',  lv:[9,11]},
+  nave:   {x:36, y:54, r:12, name:'The Storm Nave',    lv:[10,12]}, // strike-lanes you double-dash between
+  sanctum:{x:36, y:20, r:12, name:'The Stormheart',    lv:[11,13]}  // the Storm-Eye + the twin-dash chest
+};
+const TIDEWARD_ZONES = { // THE TIDEWARD CRYPT - the Emberwick capstone, opened only with all four gifts
+  entry:  {x:40, y:96, r:8,  name:'The Founders\' Stair', lv:[12,14]},
+  ford:   {x:40, y:74, r:12, name:'The Sunken Ford',    lv:[12,14]},   // DIVE across
+  span:   {x:40, y:54, r:12, name:'The Broken Span',     lv:[13,15]},  // LONGER DASH the gap
+  briar:  {x:40, y:36, r:12, name:'The Emberbriar Gate', lv:[13,15]},  // FLAME SNARE the wardthorns
+  chasm:  {x:40, y:18, r:14, name:'The Tideward Vault',  lv:[14,16]}   // DOUBLE DASH the chasm -> the guardian
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -180,7 +202,19 @@ const WORLD_DEFS = {
     gen:()=>genUndermawAll() },
   barikdeep:{ W:72, H:100, seed:66413, zones:DROWNED_ZONES, dungeon:1, dark:0.30,
     spawn:{x:36.5,y:92.5}, title:'THE DROWNED VAULT', sub:'BENEATH FLOODED BARIK - DRINK-DARK HALLS AND OLD TIDE-LOCKS',
-    gen:()=>genBarikDeepAll() }
+    gen:()=>genBarikDeepAll() },
+  winddeep:{ W:72, H:100, seed:71822, zones:GALEDEEP_ZONES, dungeon:1, dark:0.26,
+    spawn:{x:36.5,y:92.5}, title:'THE GALE SPIRE', sub:'BENEATH WINDSURF - A SHAFT SCOURED BY THE MADDENED WIND',
+    gen:()=>genWindDeepAll() },
+  sunwarddeep:{ W:72, H:100, seed:83194, zones:EMBERGIFT_ZONES, dungeon:1, dark:0.30,
+    spawn:{x:36.5,y:92.5}, title:'THE ASHEN FORGE', sub:'DEEP IN MOUNT KEA - BASALT, EMBER, AND RUNNING FIRE',
+    gen:()=>genSunwardDeepAll() },
+  skydeep:{ W:72, H:100, seed:90277, zones:STORMTEMPLE_ZONES, dungeon:1, dark:0.34,
+    spawn:{x:36.5,y:92.5}, title:'THE STORM TEMPLE', sub:'ATOP THE CLOUDREACH - A TEMPLE THE LIGHTNING NEVER LEAVES',
+    gen:()=>genSkyDeepAll() },
+  embertomb:{ W:80, H:110, seed:70715, zones:TIDEWARD_ZONES, dungeon:1, dark:0.28,
+    spawn:{x:40.5,y:100.5}, title:'THE TIDEWARD CRYPT', sub:'BENEATH EMBERWICK - SEALED SINCE THE FOUNDERS, OPENED ONLY BY ALL FOUR GIFTS',
+    gen:()=>genEmberTombAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -216,6 +250,7 @@ function genIsleAll(){
   // Maren gives her charge; updateHollowSeal() lifts it at once on a save where the
   // king quest is already underway, once quest state has been restored.
   if(typeof sealHollowKing==='function') sealHollowKing();
+  placeEmberTomb();
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
   buildMapBase();
 }
@@ -926,6 +961,7 @@ function spawnMobsEast(){
 }
 function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
+  placeSunwardHazard();
   spawnEastFolk(); spawnMobsEast();
   buildMapBase(); // without this the map keeps the previous world's base image
 }
@@ -1614,6 +1650,7 @@ function updateWindFolkMood(){
 }
 function genWindAll(){
   genWind(); bakeSolids(); placeObjectsWind(); buildFoam();
+  placeWindHazard();
   spawnWindFolk(); spawnMobsWind();
   buildMapBase();
 }
@@ -2266,6 +2303,9 @@ function freeWarden(m){
 function grantVathVeil(silent){
   P.story=P.story||{}; if(P.story.vathVeil) return;
   P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1;
+  // the old islands wear their curses (and their new dungeon mouths) only once the Veil is
+  // yours - drop any cached copies so they regenerate with the curse the next time you land.
+  if(typeof WORLDS!=='undefined'){ delete WORLDS.main; delete WORLDS.east; delete WORLDS.wind; delete WORLDS.sky; delete WORLDS.isle; }
   if(silent) return;
   if(Snd.magic) Snd.magic();
   banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
@@ -3321,7 +3361,7 @@ function spawnMobsSky(){
   // The Cloudreach is a calm little perch now - no Storm Roc, no raptors. The danger
   // (and the whole journey) lives on the Wind-Lost Bird's rainbow road.
 }
-function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); spawnSkyFolk(); spawnMobsSky(); buildMapBase(); }
+function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); placeSkyHazard(); spawnSkyFolk(); spawnMobsSky(); buildMapBase(); }
 // ---------- STORMREACH ----------
 function genReach(){
   genRadialIsle(60,60,48);
@@ -4696,6 +4736,129 @@ function placeBarikFlood(){
       G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
   }
 }
+/* =====================================================================
+   THE OLD-ISLAND RETURN DUNGEONS - Windsurf, Sunward, Cloudreach. Under the
+   Warding Veil you steal home to find each old isle warped by a curse Vath let
+   fester while you were driven to the reaches; each hides a new dungeon whose
+   guardian's hoard grants a new way to move or fight. They share one generic
+   descend/ascend mechanism (a dungeonmouth carrying `deepworld`) and one boss
+   book-keeping flag (m.gateboss + m.gateDone), so the pattern stays tight.
+   ================================================================================= */
+function _dungReset(){ for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; } }
+function _dungCarve(x0,y0,x1,y1,tile){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } }
+// the shared 3-chamber vertical skeleton every return-dungeon is carved from
+function _dungVertical(floorTile){
+  _dungReset();
+  _dungCarve(28,84,44,95,floorTile);   // the entry stair
+  _dungCarve(33,66,39,84,floorTile);   // corridor up
+  _dungCarve(22,44,50,66,floorTile);   // the mid hall
+  _dungCarve(33,30,39,44,floorTile);   // corridor up
+  _dungCarve(20,8,52,30,floorTile);    // the guardian's chamber
+}
+// generic furnishing: the ascent mouth (back to `surface`), lamps, and the reward
+// chest (its ability flag passed in), placed in the guardian's chamber
+function _dungFurnish(surface, chestFlag){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:surface, exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,86],[42,86],[24,46],[48,46],[24,64],[48,64],[24,12],[48,12],[36,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  const chest={kind:'chest', x:36.5, y:12.5}; chest[chestFlag]=1; G.decor.push(chest);
+  G.critters=[];
+}
+// generic guardian + a little trash between you and it
+function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
+  for(const [zx,zy] of [[36,72],[30,54],[42,54],[36,46]]){ const sp=findOpenNear(zx,zy,4); if(sp) spawnMob(trashKind,sp[0],sp[1]); }
+  if(!(P.story && P.story[doneFlag])){
+    const sp=findOpenNear(36, 22, 7) || [36,22];
+    const b=spawnMob(bossKind, sp[0], sp[1], elite);
+    if(b){ b.boss=true; b.bigBoss=true; b.title=title; b.subtitle=sub; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone=doneFlag; b.entrance='loom'; }
+  }
+}
+// ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
+function genWindDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('wind','dashgift'); _dungBoss('wraith','skyspirit','galeDeepDone','THE GALE-WRAITH','THE MADDENED WIND GIVEN SHAPE',false); buildMapBase(); }
+// ---- SUNWARD: THE ASHEN FORGE (grants the flame snare) ----
+function genSunwardDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('east','snaregift'); _dungBoss('skeleton','scorpion','ashenForgeDone','THE ASH-SCORPION','STOKED IN MOUNT KEA\'S FIRE',true); buildMapBase(); }
+// ---- CLOUDREACH: THE STORM TEMPLE (grants the double dash) ----
+function genSkyDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('sky','dash2gift'); _dungBoss('wraith','stormeye','stormTempleDone','THE STORMHEART','THE TEMPLE\'S CAGED THUNDER',false); buildMapBase(); }
+
+// ---- THE EMBERWICK CAPSTONE: THE TIDEWARD CRYPT ----
+// Sealed since the founders, opened only when you carry all four returned-isle
+// gifts. Inside, the Sunken Ford is a genuine DIVE crossing; the deeper halls are
+// the founders' trials, ending at the Tideward Guardian and a hook toward the
+// weapon the prophecy names (see STORY.md, Act II climax).
+function genEmberTomb(){
+  _dungReset();
+  _dungCarve(32,96,48,108,T.RUIN);        // THE FOUNDERS' STAIR (entry)
+  _dungCarve(37,80,43,96,T.RUIN);         // corridor down to the ford
+  _dungCarve(24,66,56,80,T.RUIN);         // THE SUNKEN FORD chamber...
+  for(let y=68;y<=78;y++) for(let x=27;x<=53;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); }  // ...flooded: DIVE across
+  _dungCarve(37,64,43,68,T.RUIN);         // dry lip on the far side
+  _dungCarve(37,54,43,66,T.RUIN);         // corridor
+  _dungCarve(24,42,56,58,T.RUIN);         // THE BROKEN SPAN
+  _dungCarve(37,30,43,44,T.RUIN);         // corridor
+  _dungCarve(24,22,56,40,T.RUIN);         // THE EMBERBRIAR GATE
+  _dungCarve(37,14,43,24,T.RUIN);         // corridor
+  _dungCarve(20,6,60,22,T.RUIN);          // THE TIDEWARD VAULT (guardian)
+}
+function placeEmberTombObjects(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:40.5, y:104.5, deepworld:'isle', exit:1, label:'the way up'});
+  setSolid(40,104,0); setTile(40,104,T.RUIN);
+  for(const [tx,ty] of [[34,98],[46,98],[26,72],[54,72],[26,50],[54,50],[26,30],[54,30],[24,10],[56,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // the vault's headstone-chest: a store of the founders (and a hook to the weapon)
+  G.decor.push({kind:'chest', x:40.5, y:10.5, tidewardHoard:1});
+  G.critters=[];
+}
+function spawnEmberTombMobs(){
+  for(const [zx,zy] of [[40,50],[32,48],[48,48],[40,30],[32,28],[48,28]]){ const sp=findOpenNear(zx,zy,4); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  if(!(P.story && P.story.tidewardDone)){
+    const sp=findOpenNear(40, 14, 8) || [40,14];
+    const b=spawnMob('minotaur', sp[0], sp[1], true);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.entrance='loom'; }
+  }
+}
+function genEmberTombAll(){ genEmberTomb(); placeEmberTombObjects(); spawnEmberTombMobs(); buildMapBase(); }
+
+// generic descend/ascend for every `deepworld` dungeonmouth
+function useGateDungeon(b){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.slideDir=null; P.click=null;
+  if(!b.exit) P._deepReturn={x:P.x, y:P.y+1.3};
+  const ret=P._deepReturn, dest=b.deepworld;
+  setTimeout(()=>{ switchWorld(dest);
+    if(b.exit && ret){ P.x=ret.x; P.y=ret.y; if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; } }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+
+// ---- the surface curses + dungeon mouths, planted when the Veil lets you return ----
+// (kept light-touch: each plants its dungeon mouth by the isle's landing in the veil
+// phase; Barik's flooding is the fuller terrain-curse, see placeBarikFlood.)
+function _plantMouth(zone, deepworld, label, name){
+  if(!zone) return;
+  if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld===deepworld)) return;
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(zone.x+4), Math.round(zone.y+3), 12)) || null;
+  if(sp && inb(sp[0],sp[1])){
+    for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
+    G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, deepworld:deepworld, label:label, name:name});
+    G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
+  }
+}
+function placeWindHazard(){ if(P.story && P.story.vathVeil) _plantMouth(WIND_ZONES.dock, 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼'); }
+function placeSunwardHazard(){ if(P.story && P.story.vathVeil) _plantMouth(EAST_ZONES.village, 'sunwarddeep', 'the Ashen Forge', 'THE ASHEN FORGE ▼'); }
+function placeSkyHazard(){ if(P.story && P.story.vathVeil) _plantMouth(SKY_ZONES.landing, 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼'); }
+// The Emberwick capstone opens only once all four returned-isle gifts are in hand.
+function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.dashfar && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
+function placeEmberTomb(){
+  if(!haveAllFourGifts()) return;
+  if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld==='embertomb')) return;
+  const Z=(typeof ISLE_ZONES!=='undefined' && ISLE_ZONES.ruins) ? ISLE_ZONES.ruins : {x:46,y:20};
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x), Math.round(Z.y), 14)) || null;
+  if(sp && inb(sp[0],sp[1])){
+    for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
+    G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, deepworld:'embertomb', label:'the Tideward Crypt', name:'THE TIDEWARD CRYPT ▼'});
+    G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
+  }
+}
 function beginOpenChest(b){
   if(b.opened){ openChest(b); return; }
   if(P.openCh && P.openCh.b===b) return;
@@ -4713,9 +4876,55 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(120,200,230,0.9)',56); burst(b.x,b.y-0.5,'#8fd8ff',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.unlocked.dive){
       P.unlocked.dive=true; P.story.barikDeepDone=1;
+      if(typeof WORLDS!=='undefined') delete WORLDS.isle;   // may be the 4th gift - refresh the capstone mouth
       banner('THE PEARL OF THE DEEP','DIVE - CROSS THE DROWNED WATER');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the vault\'s heart, cupped in the Minotaur\'s drowned hoard, a single great <b>pearl</b> the colour of deep water. It is warm, though the vault is cold, and when you close your hand on it the flood outside stops feeling like a wall.</i> <b style="color:#8fd8ff">You learn to DIVE.</b> <i>Walk into the deep water now and you sink beneath it and swim - the drowned reaches Vath\'s flood cut off across the old islands are yours to cross at last.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('pearl',1); banner('THE TIDE-LOCK HOARD','PEARLS AND OLD COIN'); }
+    setTimeout(autoSave,300); return;
+  }
+  // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a longer dash.
+  if(b.dashgift){
+    bumpStat('chests'); P.unlocked=P.unlocked||{}; P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(180,230,255,0.9)',56); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); if(Snd.levelup) Snd.levelup();
+    if(!P.unlocked.dashfar){
+      P.unlocked.dashfar=true; P.story.galeDeepDone=1;
+      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      banner('THE SWIFTSTEP CHARM','LONGER DASH - YOUR DODGE CARRIES FARTHER');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash now carries you half-again as far.</b> <i>Windsurf can breathe again - and the wider gaps of the old islands are yours to clear.</i>'); },500);
+    } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
+    setTimeout(autoSave,300); return;
+  }
+  // SUNWARD - THE ASHEN FORGE: the Flame Snare - staff-bolts root a foe in fire.
+  if(b.snaregift){
+    bumpStat('chests'); P.spells=P.spells||{}; P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(255,140,60,0.9)',56); burst(b.x,b.y-0.5,'#ff9a3c',22,2.8); if(Snd.levelup) Snd.levelup();
+    if(!P.spells.flamesnare){
+      P.spells.flamesnare=1; P.story.ashenForgeDone=1;
+      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      banner('THE FLAME-SNARE','STAFF-BOLTS ROOT A FOE IN FIRE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your staff-hand, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your fire-staff bolts now lay a FLAME SNARE</b> - <i>every bolt roots the foe it strikes in a snare of fire, held fast where it stands. Channel it with the staff ('+((typeof isTouch!=='undefined'&&isTouch)?'the staff slot':'press 3')+').</i>'); },500);
+    } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ASHEN FORGE','EMBER-GLASS AND OLD COIN'); }
+    setTimeout(autoSave,300); return;
+  }
+  // CLOUDREACH - THE STORM TEMPLE: the Stormstep - a double dash.
+  if(b.dash2gift){
+    bumpStat('chests'); P.unlocked=P.unlocked||{}; P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(201,176,255,0.9)',56); burst(b.x,b.y-0.5,'#c9b0ff',22,2.8); if(Snd.levelup) Snd.levelup();
+    if(!P.unlocked.dash2){
+      P.unlocked.dash2=true; P.story.stormTempleDone=1;
+      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      banner('THE STORMSTEP','DOUBLE DASH - CHAIN A SECOND DODGE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Stormheart gutters out, and the caged thunder pours into your legs like a second heartbeat. The temple\'s endless lightning stills to a clean, quiet sky.</i> <b style="color:#c9b0ff">Double Dash learned!</b> <i>Dash again in the instant after the first - two darts, quick as breath - to clear the widest gaps of all.</i>'); },500);
+    } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE STORMHEART','STORM-GLASS AND OLD COIN'); }
+    setTimeout(autoSave,300); return;
+  }
+  // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the trail to the weapon.
+  if(b.tidewardHoard){
+    bumpStat('chests'); P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(240,220,150,0.9)',64); burst(b.x,b.y-0.5,'#ffe9a8',26,3); if(Snd.levelup) Snd.levelup();
+    giveGold(rndi(300,450)); give('crystal',2); give('pearl',1);
+    banner('THE TIDEWARD VAULT','THE FOUNDERS\' HOARD');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders\' vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid atop it all, a slab of tide-worn stone graven with a name and a map you half-know.</i> “The <b>Tidefarer</b>,” <i>you read, and the old prophecy your brother copied out of Stormreach\'s catacombs stirs in your memory - a weapon forged to seal an evil, hidden on an isle off Emberwick.</i> <b style="color:#ffe9a8">The trail to the weapon lies open.</b> <i>(Act II climax - to be continued.)</i>'); },500);
     setTimeout(autoSave,300); return;
   }
   // THE RIMEFISSURE'S REWARD: the hush-frost rune the Rimebound wept, cut into a warding.
@@ -5033,7 +5242,7 @@ function switchWorld(id){
   // Wave / puzzle / trap dungeons reset fresh on every visit until they are BEATEN: otherwise a
   // cached copy from an earlier descent (waves already killed, gates already open, traps sprung)
   // shows up empty on re-entry. Skip the cache and regenerate a fresh challenge until it's won.
-  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone' };
+  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone', winddeep:'galeDeepDone', sunwarddeep:'ashenForgeDone', skydeep:'stormTempleDone', embertomb:'tidewardDone' };
   const _fw=FRESH_UNTIL_WON[id];
   if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
   if(WORLDS[id]){

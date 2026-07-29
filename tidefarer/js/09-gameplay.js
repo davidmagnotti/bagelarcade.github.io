@@ -199,7 +199,7 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon': b.drowned?'drowneddungeon':'dungeon',o:b,
+      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon': b.drowned?'drowneddungeon': b.deepworld?'gatedungeon':'dungeon',o:b,
         label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
@@ -278,6 +278,7 @@ function doInteract(){
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterUndermaw(); return; }
   if(it.type==='undermawdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitUndermaw(); else enterUndermaw(); return; }
   if(it.type==='drowneddungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitBarikDeep(); else enterBarikDeep(); return; }
+  if(it.type==='gatedungeon'){ facePoint(it.o.x,it.o.y); useGateDungeon(it.o); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
   if(it.type==='milldungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitMillDungeon(); else enterMillDungeon(); return; }
@@ -513,6 +514,7 @@ function tryAttack(useMouse){
     const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
     const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:oc?magicDmg()*2:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
     if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
+    if(P.spells && P.spells.flamesnare){ bolt.snare=1.6; bolt.flame=1; }   // Sunward's Emberdeep gift: bolts root a foe in a snare of fire
     G.projs.push(bolt);
     refreshUI();
   }
@@ -830,6 +832,12 @@ function killMob(m,skill){
   // flooded halls (the Pearl of the Deep in its chest grants DIVE).
   if(m.drownedboss){
     P.story=P.story||{}; P.story.barikDeepDone=1;
+    if(typeof autoSave==='function') autoSave();
+  }
+  // The returned-isle dungeon guardians (Gale-Wraith, Ash-Scorpion, Stormheart, and the
+  // Emberwick Tideward Guardian) share one clear-flag: m.gateDone names the story flag.
+  if(m.gateboss && m.gateDone){
+    P.story=P.story||{}; P.story[m.gateDone]=1;
     if(typeof autoSave==='function') autoSave();
   }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
