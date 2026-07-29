@@ -4774,7 +4774,7 @@ function spawnMobsBarikDeep(){
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEMAW'; b.subtitle='WARDEN OF THE DROWNED VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.tidemaw=1; b.customAI=1; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='surface'; }
   }
 }
-function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); spawnMobsBarikDeep(); buildMapBase(); }
+function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); _dungWalls(); spawnMobsBarikDeep(); buildMapBase(); }
 // ---- THE TIDE RACE per-frame: drift the stones, drag a misstep under, seal the Cistern ----
 function updateBarikDeep(dt){
   if(!G._barikSlabs) return;
@@ -4905,6 +4905,23 @@ function placeBarikFlood(){
    ================================================================================= */
 function _dungReset(){ for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; } }
 function _dungCarve(x0,y0,x1,y1,tile){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } }
+// CONTAIN a dungeon with visible walls: every stone (RUIN) solid tile that borders a walkable
+// floor OR a water gap becomes a raised `ewall` block, so the carved chambers read as enclosed
+// rooms instead of open floor with invisible collision. (Same technique the Undermill/Undermaw/
+// Drowned Catacomb use.) Skips tiles already occupied by a wall-like decor (thornwall pillars,
+// gates, mouths). Call it once, after all of a dungeon's tiles+decor are placed.
+function _dungWalls(){
+  const NB=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+  const taken=new Set();
+  for(const d of (G.decor||[])) if(d.kind==='pillar'||d.kind==='catgate'||d.kind==='ewall'||d.kind==='dungeonmouth') taken.add(Math.floor(d.x)+','+Math.floor(d.y));
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
+    if(!solidAt(x,y) || tileAt(x,y)!==T.RUIN || taken.has(x+','+y)) continue;   // walls are stone only (not water gaps)
+    let border=false;
+    for(const [dx,dy] of NB){ const nx=x+dx, ny=y+dy; if(!inb(nx,ny)) continue; const nt=tileAt(nx,ny);
+      if(!solidAt(nx,ny) || nt===T.DEEP || nt===T.SHALLOW){ border=true; break; } }   // borders floor or a water gap
+    if(border) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  }
+}
 // the shared 3-chamber vertical skeleton every return-dungeon is carved from
 function _dungVertical(floorTile){
   _dungReset();
@@ -4975,7 +4992,7 @@ function spawnMobsWindDeep(){
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE SKIRL'; b.subtitle='THE MADDENED WIND GIVEN SHAPE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.skirl=1; b.customAI=1; b.gateboss=1; b.gateDone='galeDeepDone'; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='descend'; }
   }
 }
-function genWindDeepAll(){ genWindDeep(); placeObjectsWindDeep(); spawnMobsWindDeep(); buildMapBase(); }
+function genWindDeepAll(){ genWindDeep(); placeObjectsWindDeep(); _dungWalls(); spawnMobsWindDeep(); buildMapBase(); }
 // THE UPDRAFT HALL per-frame: the gale cycle (lull -> build/telegraph -> BLAST), sheltering,
 // the Eye seal, and the Skirl's AI.
 function updateWindDeep(dt){
@@ -5085,7 +5102,7 @@ function spawnMobsSunwardDeep(){
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE CINDERWROUGHT'; b.subtitle='STOKED IN MOUNT KEA\'S FIRE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.cinder=1; b.customAI=1; b.gateboss=1; b.gateDone='ashenForgeDone'; b.sealed=true; b.arena=1; b.entrance='rise'; }
   }
 }
-function genSunwardDeepAll(){ genSunwardDeep(); placeObjectsSunwardDeep(); spawnMobsSunwardDeep(); buildMapBase(); }
+function genSunwardDeepAll(){ genSunwardDeep(); placeObjectsSunwardDeep(); _dungWalls(); spawnMobsSunwardDeep(); buildMapBase(); }
 function forgeQueueErupt(x,y){ if(!inb(x,y)) return; (G._forgeErupts=G._forgeErupts||[]).push({x,y,phase:'warn',t:0,hitCd:0}); }
 function forgeTickErupts(dt){
   const list=G._forgeErupts||[];
@@ -5173,7 +5190,7 @@ function spawnMobsSkyDeep(){
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE THUNDERCALLER'; b.subtitle='THE TEMPLE\'S CAGED THUNDER'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.thunder=1; b.customAI=1; b.gateboss=1; b.gateDone='stormTempleDone'; b.sealed=true; b.arena=1; b.phase='open'; b.invuln=0; b.entrance='descend'; }
   }
 }
-function genSkyDeepAll(){ genSkyDeep(); placeObjectsSkyDeep(); spawnMobsSkyDeep(); buildMapBase(); }
+function genSkyDeepAll(){ genSkyDeep(); placeObjectsSkyDeep(); _dungWalls(); spawnMobsSkyDeep(); buildMapBase(); }
 function stormQueueStrike(x,y){ if(!inb(x,y)) return; (G._stormStrikes=G._stormStrikes||[]).push({x,y,phase:'warn',t:0}); }
 function stormTickStrikes(dt){
   const list=G._stormStrikes||[];
@@ -5284,7 +5301,7 @@ function spawnEmberTombMobs(){
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
 }
-function genEmberTombAll(){ genEmberTomb(); placeEmberTombObjects(); spawnEmberTombMobs(); buildMapBase(); }
+function genEmberTombAll(){ genEmberTomb(); placeEmberTombObjects(); _dungWalls(); spawnEmberTombMobs(); buildMapBase(); }
 function tombPlungeStart(){
   G._tombPlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-6); P.hurtT=Math.max(P.hurtT||0,0.5);
   if(typeof buzz==='function') buzz(10); shockwave(P.x,P.y,'rgba(180,190,210,0.7)',30);
