@@ -178,6 +178,37 @@ const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
 // fixed ambient darkness. Marked with `dungeon:1` on its WORLD_DEF.
 function inDungeon(id){ const d=WORLD_DEFS[id||G.worldId]; return !!(d && d.dungeon); }
+// ---- THE WAY UP: a single, identical fast-exit portal that opens where a dungeon boss falls,
+// in EVERY dungeon. Step into it to rise to the surface, mended and a level stronger. It replaces
+// the old per-kill "take the quick road out" dialogue - same object, same look, in every dungeon.
+function spawnFastExit(x,y){
+  if(!inDungeon() || !G.decor || G.decor.some(d=>d.kind==='fastexit')) return;
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(x),Math.round(y),4)) || [Math.round(x),Math.round(y)];
+  G.decor.push({kind:'fastexit', x:sp[0]+0.5, y:sp[1]+0.5, name:'THE WAY UP', labelY:-46});
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  setTimeout(()=>{ if(typeof toast==='function') toast('A shimmering <b style="color:#c9b0ff">way up</b> opens where the guardian fell. Step into it whenever you\'re ready to rise from the dungeon - <b>mended and a level stronger</b>.',6500); },1600);
+}
+// which exit each dungeon world uses to climb back to the surface
+function leaveDungeon(){
+  const EX={ eastdeep:typeof exitEmberDungeon==='function'&&exitEmberDungeon,
+    aeriedeep:typeof exitAerieDungeon==='function'&&exitAerieDungeon,
+    frostdeep:typeof exitFrostDungeon==='function'&&exitFrostDungeon,
+    frostvault:typeof exitFrostVault==='function'&&exitFrostVault,
+    milldeep:typeof exitMillDungeon==='function'&&exitMillDungeon,
+    undermaw:typeof exitUndermaw==='function'&&exitUndermaw,
+    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep };
+  const fn=EX[G.worldId];
+  if(fn){ fn(); return true; }
+  return false;
+}
+// step into THE WAY UP: full heal, ~one level, and rise to the surface
+function useFastExit(){
+  if(dlg.open) return;
+  P.hp=P.maxhp; P.mp=P.maxmp;
+  if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
+  if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
+  if(leaveDungeon()) toast('You step into the way up - whole again, and a level the wiser.',4200);
+}
 
 function addCrowsFor(){
   G.crows.length=0;
@@ -2461,6 +2492,7 @@ function freeColossus(m){
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
   bossReward(m);
   giveGold(150); give('elixir',2);
+  if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);   // THE WAY UP opens like every other dungeon
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
 }
@@ -2573,6 +2605,7 @@ function openVaultGate(r){
   invalidateScenery&&invalidateScenery();
   shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
   if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
+    if(typeof spawnFastExit==='function') spawnFastExit(P.x, P.y);   // THE WAY UP opens, same as every dungeon
     banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
     toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
   } else banner('THE HALL IS CLEARED','THE GATES GRIND UP');
@@ -3333,8 +3366,13 @@ function placeObjectsReach(){
     // the isle-by-isle curse-lifting into a hunt for the great queen's sealing weapon
     G.decor.push({kind:'pillar', x:GV.x+0.5, y:GV.y+2+0.5, broken:false, loreKey:'prophecy@reach'}); }
   carveLine(Z.camp.x,Z.camp.y, Z.graves.x,Z.graves.y, T.PATH,0);
-  // the ferry berth: Stormreach is a sea stop, so a hull always rides here
-  addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
+  // the ferry berth: Stormreach is a sea stop, so a hull always rides at the water's edge off
+  // the dock - never beached on the sand. Walk out from the isle centre and drop it on the
+  // first sea tile.
+  { const ddx=Z.dock.x-60, ddy=Z.dock.y-60, dl=Math.hypot(ddx,ddy)||1; let placed=false;
+    for(let step=2; step<=20 && !placed; step++){ const tx=Math.round(Z.dock.x+ddx/dl*step), ty=Math.round(Z.dock.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); placed=true; } } }
+    if(!placed) addBuilding('boat', Z.dock.x, Z.dock.y+2, ''); }
   addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, '');
   // greenery + a couple of chests
   const pr=mulberry32(SEED+19);
@@ -4250,7 +4288,7 @@ QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'ori
   doneText:"<i>Orin turns the medallion once in the lantern-light, and when he looks up there is no surprise in his old eyes - only a slow, knowing smile.</i> ...I wondered when you might come back here. I have wondered it since the day you washed ashore wearing this. It is no ornament, child - it is a memory-ward, a mother's love worked into metal, keyed to YOU, meant to hold a mind whole against exactly the unmaking your enemy deals. <i>He folds your fingers gently back over it.</i> Go and chat with the Woodworker, down by the green. Show him your necklace - just that, nothing more. Trust an old man: some doors open only to the right key, and you have carried it at your throat all along.",
   rw:{gold:40, mp:6, xp:{magic:260}} };
 QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
-  brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and if he can only get you to take off that mask, the fog that took you both may lift at last.",
+  brief:"Go down to the green and seek out the Woodworker. Show him the pendant - only that, nothing more - and let happen what will. I'll not spoil it by naming it; some things a soul must come to on its own. Go, child. Trust these old bones: this is a door you have carried the key to all along.",
   log:'Show the Woodworker the pendant on Emberwick, and let him see the face behind the mask.',
   doneText:'',   // resolved by the unmasking scene (buildDialogContent, woody)
   rw:{gold:200, item:{elixir:2}, xp:{melee:400, magic:400, archery:400}} };
@@ -4820,8 +4858,9 @@ function attemptSail(){
   // routes - and, once the Warding Veil is earned, the old islands (never the
   // capital). boatMenu sorts out which destinations are open.
   if(P.story && P.story.act2){ boatMenu(); return; }
-  // once the seas are calm, any boat is a ferry - pick a destination
-  if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
+  // once the seas are calm, any boat is a ferry - pick a destination (Emberwick included:
+  // by this point in the story its dock runs the full ferry like every other port)
+  if(P.story && P.story.tideCalm){ boatMenu(); return; }
   // default single-hop routing before the archipelago reopens
   sailTo(G.worldId==='east' ? 'main' : G.worldId==='isle' ? 'main' : 'isle');
 }

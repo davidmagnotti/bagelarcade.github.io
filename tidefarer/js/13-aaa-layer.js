@@ -231,11 +231,8 @@ function _epiLandfall(){
 function placeReachHomecoming(){
   if(G.worldId!=='reach') return;
   const Z=(typeof REACH_ZONES!=='undefined' && REACH_ZONES.strand) ? REACH_ZONES.strand : {x:60,y:98};
-  // the sloop they crossed on, hauled up on the shingle beside the landing
-  if(!G.decor.some(d=>d.arrivalBoat)){
-    const bt=addBuilding('boat', Math.round(Z.x-2), Math.round(Z.y+2), '');
-    if(bt) bt.arrivalBoat=1;
-  }
+  // (No arrival sloop is placed on the strand any more - the isle's one hull is the ferry
+  //  that rides at the dock, so there's no beached duplicate here on Wreckstrand.)
   // the prince holds the strand while the princess explores - findable at any hour
   if(!G.npcs.some(n=>n.id==='brother')){
     const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x+2), Math.round(Z.y+1), 5)) || [Z.x+2, Z.y+1];
@@ -489,7 +486,7 @@ const PRIN0  = _beside(3.7, 0.5), PRINF = _beside(9.4, 0.5);  // prince: beside 
 const COLUMNS=[]; for(const k of [0.6,2.6,4.6,6.6]) for(const o of [-2.6,2.6]) COLUMNS.push(_beside(k,o));
 const GUARDPOS=[-2,-1,0,1,2].map(o=>_beside(6.1,o));
 /* Real in-game appearance objects (fed to drawHumanoid, exactly as the live world does) */
-const LOOK_HERO ={hero:true,fem:true,skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',crest:true};
+const LOOK_HERO ={hero:true,fem:true,skin:'#d8a97a',hair:'#7a4526',shirt:'#a2286a',pants:'#5a1a3e',trim:'#e6c25a',hairstyle:'ponytail',crest:true};   // her royal colours - deep magenta-red, not the castaway green
 const LOOK_KING ={skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',necklace:'#c9a24e'};
 const LOOK_KSPENT={skin:'#9a9488',hair:'#c8c4ba',shirt:'#2c2836',pants:'#232030',robe:'#332b3e',trim:'#7a6a4a',beard:'#c8c4ba',beardLong:true,hat:'crown',necklace:'#6a5f45'};
 const LOOK_VATH ={skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'};
@@ -609,8 +606,12 @@ function _thrLoop(ts){
   // to a grasp as he takes the Tideglass (10), lowered once it is done (11+). (The King's own
   // hand-raise is computed but only ever drawn when he faces the camera - see _thrDraw.)
   const _i=THR.idx;
-  const kHandT = (_i>=2 && (st.kingDown||0)<0.5) ? 1 : 0;
-  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : _i===2 ? 1 : _i===10 ? 0.7 : _i>=11 ? 0 : 0.32;
+  // The King faces Vath for the whole confrontation (back-to-camera), so his cast-hands would
+  // only ever render as a mis-placed pair behind him - keep them down for good once Vath is here.
+  const kHandT = 0;
+  // Vath lifts his hands to LOOSE the beam: fully raised through the strike and the clash
+  // (beats 2-9), high again as he seizes the Tideglass (10), lowered once it's done (11+).
+  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=9) ? 1 : _i===10 ? 0.85 : 0;
   THR.kHand = e(THR.kHand, kHandT, 3.2);
   THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);

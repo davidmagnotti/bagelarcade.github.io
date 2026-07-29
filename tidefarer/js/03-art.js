@@ -1371,22 +1371,22 @@ function drawHumanoid(g,sx,sy,o){
         hgr.addColorStop(0,shade(hc,13)); hgr.addColorStop(0.52,hc); hgr.addColorStop(1,shade(hc,-7));
         g.fillStyle=hgr;
         g.beginPath();
-        g.moveTo(-HR*0.55,16.8);                              // left hair tip
-        g.quadraticCurveTo(-HR*0.90,8.4, -HR*0.90,-1.4);      // outer edge of the left fall, tucked closer to the head
-        g.quadraticCurveTo(-HR*0.92,-8.4, -HR*0.62,-13.2);    // sweep up to the left temple
+        g.moveTo(-HR*0.58,16.8);                              // left hair tip
+        g.quadraticCurveTo(-HR*0.96,8.4, -HR*0.96,-1.4);      // outer edge of the left fall, a touch wider
+        g.quadraticCurveTo(-HR*0.98,-8.4, -HR*0.64,-13.2);    // sweep up to the left temple
         g.quadraticCurveTo(-HR*0.34,-15.9, 0,-16.1);          // over the crown, left half - a flatter dome that follows the skull
-        g.quadraticCurveTo(HR*0.34,-15.9, HR*0.62,-13.2);     // over the crown, right half
-        g.quadraticCurveTo(HR*0.92,-8.4, HR*0.90,-1.4);       // down to the right temple
-        g.quadraticCurveTo(HR*0.90,8.4, HR*0.55,16.8);        // outer edge of the right fall to its tip
-        g.quadraticCurveTo(HR*0.40,11.0, HR*0.50,2.2);        // inner edge of the right fall, up beside the jaw
-        g.quadraticCurveTo(HR*0.56,-2.6, HR*0.60,-4.0);       // up to the hairline
-        g.quadraticCurveTo(5.4,-6.9, 4.8,-4.3);               // fringe: soft points across the brow, right to left
-        g.quadraticCurveTo(3.2,-6.7, 1.7,-4.0);
-        g.quadraticCurveTo(0.1,-7.1, -1.7,-4.1);
-        g.quadraticCurveTo(-3.2,-6.7, -4.8,-4.3);
-        g.quadraticCurveTo(-5.4,-6.9, -HR*0.60,-4.0);         // left end of the hairline
-        g.quadraticCurveTo(-HR*0.56,-2.6, -HR*0.50,2.2);      // down beside the left cheek
-        g.quadraticCurveTo(-HR*0.40,11.0, -HR*0.55,16.8);     // inner edge of the left fall, back to the tip
+        g.quadraticCurveTo(HR*0.34,-15.9, HR*0.64,-13.2);     // over the crown, right half
+        g.quadraticCurveTo(HR*0.98,-8.4, HR*0.96,-1.4);       // down to the right temple
+        g.quadraticCurveTo(HR*0.96,8.4, HR*0.58,16.8);        // outer edge of the right fall to its tip
+        g.quadraticCurveTo(HR*0.46,11.0, HR*0.62,2.2);        // inner edge of the right fall, tucked WIDER off the cheek so the eye reads
+        g.quadraticCurveTo(HR*0.68,-2.6, HR*0.72,-4.6);       // up to the hairline
+        g.quadraticCurveTo(5.6,-7.3, 4.9,-4.9);               // fringe: soft points across the brow, lifted a touch off the eyes
+        g.quadraticCurveTo(3.3,-7.1, 1.7,-4.7);
+        g.quadraticCurveTo(0.1,-7.5, -1.7,-4.8);
+        g.quadraticCurveTo(-3.3,-7.1, -4.9,-4.9);
+        g.quadraticCurveTo(-5.6,-7.3, -HR*0.72,-4.6);         // left end of the hairline
+        g.quadraticCurveTo(-HR*0.68,-2.6, -HR*0.62,2.2);      // down beside the left cheek, WIDER
+        g.quadraticCurveTo(-HR*0.46,11.0, -HR*0.55,16.8);     // inner edge of the left fall, back to the tip
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.8; g.stroke();
         g.fillStyle='rgba(255,250,235,0.20)';                 // soft top-light on the crown
@@ -1394,8 +1394,8 @@ function drawHumanoid(g,sx,sy,o){
         g.strokeStyle=shade(hc,-12); g.lineWidth=1.1; g.lineCap='round';   // a couple of strand lines for depth
         for(const e of [-1,1]){
           g.beginPath();
-          g.moveTo(e*HR*0.72,-9);
-          g.quadraticCurveTo(e*HR*0.78,3, e*HR*0.60,13.5);
+          g.moveTo(e*HR*0.80,-9);
+          g.quadraticCurveTo(e*HR*0.86,3, e*HR*0.70,13.5);
           g.stroke();
         }
         g.lineCap='butt';

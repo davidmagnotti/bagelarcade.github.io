@@ -57,7 +57,7 @@ function buildGroundCache(){
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, stormbead:1, vathghost:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
@@ -1099,6 +1099,24 @@ function drawDecor(b,s){
     g.fillStyle='rgba(230,235,245,0.5)';
     g.beginPath(); g.ellipse(14+Math.sin(t*1.3)*3, 8, 12, 4, 0, 0, TAU); g.fill();
     g.beginPath(); g.ellipse(-16+Math.cos(t*1.1)*3, 10, 10, 3.5, 0, 0, TAU); g.fill();
+    g.restore(); return;
+  }
+  if(b.kind==='fastexit'){
+    // THE WAY UP - the identical fast-exit portal in every dungeon: a column of violet light
+    // with rising motes and a bobbing up-arrow, so it always reads the same way.
+    const g=cx, t=G.time; g.save(); g.translate(s.x,s.y);
+    const glow=g.createRadialGradient(0,-16,2,0,-16,36); glow.addColorStop(0,'rgba(201,176,255,0.55)'); glow.addColorStop(1,'rgba(150,120,235,0)');
+    g.fillStyle=glow; g.beginPath(); g.ellipse(0,-16,20,32,0,0,TAU); g.fill();
+    // a bright swirling base ring on the floor
+    g.strokeStyle='rgba(230,220,255,0.9)'; g.lineWidth=2.4; g.beginPath(); g.ellipse(0,-1,13,5,0,0,TAU); g.stroke();
+    g.strokeStyle='rgba(180,150,240,0.7)'; g.lineWidth=1.6; g.beginPath(); g.ellipse(0,-1,8,3.2,0,0,TAU); g.stroke();
+    // rising motes
+    for(let i=0;i<6;i++){ const ph=((t*0.8)+i/6)%1, yy=-2-ph*34, xx=Math.sin((t*2+i)*1.3)*6*(1-ph*0.5);
+      g.globalAlpha=0.85*(1-ph); g.fillStyle=i%2?'#e8dcff':'#c9b0ff'; g.beginPath(); g.arc(xx,yy,2.3*(1-ph*0.4),0,TAU); g.fill(); }
+    g.globalAlpha=1;
+    // a bobbing up-arrow chevron so it clearly reads as the WAY UP
+    const ay=-24+Math.sin(t*3)*1.6; g.fillStyle='#efe6ff';
+    g.beginPath(); g.moveTo(0,ay-6); g.lineTo(-6,ay+2); g.lineTo(-2.2,ay+2); g.lineTo(-2.2,ay+8); g.lineTo(2.2,ay+8); g.lineTo(2.2,ay+2); g.lineTo(6,ay+2); g.closePath(); g.fill();
     g.restore(); return;
   }
   if(b.kind==='signalbeacon'){

@@ -225,6 +225,8 @@ function nearestInteract(){
       if(d<2.2 && d<bd){ bd=d; best={type:'leap',o:b,label:(P.story&&P.story.parachute)?'Take the Leap':'The Leap'}; } }
     if(b.kind==='signalbeacon'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'signalbeacon',o:b,label:(P.story&&P.story.tideCalm)?'Signal Ashwing to the Cloudreach':'A signal beacon'}; } }
+    if(b.kind==='fastexit'){ const d=dist(P.x,P.y,b.x,b.y);
+      if(d<2.4 && d<bd){ bd=d; best={type:'fastexit',o:b,label:'Rise - THE WAY UP'}; } }
     if(b.kind==='skybird'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
     if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);
@@ -299,6 +301,7 @@ function doInteract(){
   if(it.type==='boat'){ facePoint(it.o.x,it.o.y); attemptSail(); return; }
   if(it.type==='ashwing'){ facePoint(it.o.x,it.o.y); if(it.o.sky) askSkyDragon(); else askAshwingHome(); return; }
   if(it.type==='signalbeacon'){ facePoint(it.o.x,it.o.y); if(typeof signalAshwing==='function') signalAshwing(it.o); return; }
+  if(it.type==='fastexit'){ facePoint(it.o.x,it.o.y); if(typeof useFastExit==='function') useFastExit(); return; }
   if(it.type==='leap'){ facePoint(it.o.x,it.o.y); useLeapPoint(); return; }
   if(it.type==='skybird'){ facePoint(it.o.x,it.o.y); if(typeof skyBirdSpeak==='function') skyBirdSpeak(); return; }
   if(it.type==='skytile'){ facePoint(it.o.x,it.o.y); if(typeof pressSkyTile==='function') pressSkyTile(it.o); return; }
@@ -652,6 +655,8 @@ function dragonFaints(m){
   }
   bossReward(m);
   m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
+  // in the Emberdeep, THE WAY UP opens like every other dungeon (Ashwing's lift is still offered too)
+  if(typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
   Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
@@ -859,34 +864,12 @@ function killMob(m,skill){
     banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
     if(typeof autoSave==='function') autoSave();
   }
-  // After felling a dungeon boss, offer the quick road out - mended and a level
-  // stronger. (Overworld bosses stay put; dungeons have a clear "way up". The
-  // Undermill and Undermaw guardians are excluded: a reward still waits past the gate.)
-  if((m.boss||m.bigBoss) && !m.skyminiboss && !m.skyfinalboss && !m.millboss && !m.undermawBeast && typeof inDungeon==='function' && inDungeon()){
-    setTimeout(offerDungeonExit, 2400);
+  // After felling ANY dungeon boss, open THE WAY UP - the same fast-exit portal in every
+  // dungeon, right where the boss fell. No dialogue: step into it to rise, mended and a level
+  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent.)
+  if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
+    spawnFastExit(m.x, m.y);
   }
-}
-function offerDungeonExit(){
-  if(G.state!=='play' || P.dead || (typeof inDungeon==='function' && !inDungeon()) || dlg.open) return;
-  const exit=G.decor.find(b=>(b.kind==='dungeonmouth'||b.kind==='tunnelmouth') && (b.exit||b.up));
-  dlg.open=true; dlg.npc=null;
-  document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent='The Way Up';
-  const pg=document.getElementById('dportrait').getContext('2d');
-  pg.fillStyle='#141018'; pg.fillRect(0,0,72,72);
-  const rg=pg.createRadialGradient(36,30,4,36,30,34); rg.addColorStop(0,'#e8dcff'); rg.addColorStop(1,'rgba(140,120,200,0)');
-  pg.fillStyle=rg; pg.fillRect(0,0,72,72);
-  setDialog('The warden is down and the wards go dark. A cold updraught tugs at you - the way up stands open. <b>Take the quick road out</b>, mended and a level stronger for what you’ve done?',
-    [{label:'Rise - healed & stronger', cls:'gold', fn:()=>{
-        closeDialog();
-        P.hp=P.maxhp; P.mp=P.maxmp;
-        gainLXP(xpForP(P.level));   // ~one full level
-        if(exit){ P.x=exit.x; P.y=exit.y+0.6; P.click=null; P.moving=false;
-          G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
-        burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-        toast('Whole again, and a level the wiser. The way up is right here.',4200);
-      }},
-     {label:'Stay a while', ghost:true, fn:closeDialog}]);
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
 function stunPlayer(dur){
