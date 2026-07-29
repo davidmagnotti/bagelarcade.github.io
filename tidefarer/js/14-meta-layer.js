@@ -171,10 +171,14 @@ function loadCode(str){
   if(P.story.aerieFreed) P.story.bossCleared.aerie=1;
   if(P.story.deepDone||P.story.tideCalm) P.story.bossCleared.east=1;
   if(P.story.undermawDown||P.story.millDone) P.story.bossCleared.main=1;
-  // Act II Warding Veil catch-up: anyone who already freed the Frozen Isle's Warden
-  // in Act II has earned the Veil that reopens the old islands. Grant it silently on
-  // load (no banner mid-restore) so returning players aren't stranded in the reaches.
-  if(P.story.frostFreed && P.story.act2 && !P.story.vathVeil){ P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1; }
+  // Warding Veil catch-up: the Veil now comes from the Rimefissure's reward chest (the
+  // Rune of Hush-Frost), worked into a spell by your brother. Credit the rune to any Act II
+  // save that already cleared the Rimefissure (deepDone) but predates this flow, so they can
+  // complete the casting with Jaist on the Frozen Isle and reopen the old islands. Saves that
+  // already earned the Veil under the old rules keep it (guarded by !vathVeil).
+  if(P.story.deepDone && P.story.act2 && !P.story.vathVeil && !P.story.veilTome){
+    P.story.veilTome=1; P.inv=P.inv||{}; P.inv.veilrune=(P.inv.veilrune||0)+1;
+  }
   // The Emberwick mask rides the whole journey. Restore it for saves made before it
   // existed - unless the player has already reached the unmasking (or the old finale).
   if(P.story.masked===undefined){

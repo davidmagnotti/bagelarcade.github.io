@@ -2243,15 +2243,18 @@ function freeWarden(m){
   banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE CRUEL COLD BREAKS');
   if(qs('thaw')==='active') completeQuest('thaw');
   updateFrostFolkMood();
-  // Felling the Frozen Isle's Warden is the second link of the Act II chain: it
-  // earns the Warding Veil, which reopens the old islands (see grantVathVeil).
-  setTimeout(()=>storyCard('The violet sloughs away like rotten ice, and the Warden lifts its head - itself again. The killing cold breaks, and a clean, ordinary winter settles back over Hearthhold: the snow still falls, soft now, and the life creeps back into the ice - seals on the floes, fish beneath them. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian, and a winter we can live in. That <b>robed man</b> who twisted the cold - violet at the cuffs - did you cross him? He is not finished, I think.”',
-    {onOk:()=>{ if(P.story && P.story.act2) grantVathVeil(); }}),1400);
+  // Felling the surface Warden breaks the cruel cold - but the thing that hides you
+  // from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
+  // rune in the Rimefissure's reward chest, worked into a spell by your brother.
+  // Sigrid points the way down. (see openChest `veiltome` + the 'brother' scene.)
+  setTimeout(()=>storyCard('The violet sloughs away like rotten ice, and the Warden lifts its head - itself again. The killing cold breaks, and a clean, ordinary winter settles back over Hearthhold: the snow still falls, soft now, and the life creeps back into the ice - seals on the floes, fish beneath them. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
+    {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }}),1400);
 }
-// Beating the Frozen Isle earns the WARDING VEIL: a warding woven from the freed
-// Warden's hush-frost that hides its bearer from Vath's influence, letting you
-// steal back to the old islands (all but the capital, which Vath holds outright).
-// `silent` grants the flag with no fanfare - used by save-migration and the dev menu.
+// The WARDING VEIL: a warding woven from the freed Rimebound's hush-frost that hides its
+// bearer from Vath's eye, letting you steal back to the old islands (all but the capital,
+// which Vath holds outright). It is retrieved from the Rimefissure's reward chest (the Rune
+// of Hush-Frost) and cast by your brother Jaist in dialogue; this helper just sets the
+// flags. `silent` sets them with no fanfare - used by that scene, save-migration, dev menu.
 function grantVathVeil(silent){
   P.story=P.story||{}; if(P.story.vathVeil) return;
   P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1;
@@ -2267,9 +2270,26 @@ function updateFrostFolkMood(){
   set('bryn',['The cold\'s gone KIND again - you can breathe without it biting, and there\'s seals back on the floes. A boat\'ll work the strait-edge by morning.','Still deep in snow, thank the Warden - but it\'s OUR winter now, not his. We owe you the whole season, friend.']);
   set('sigrid',['The glacier\'s stopped bleeding that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in.']);
 }
+// Jaist sails the reaches at his sister's side and holds the way home while she takes
+// the isle - the same watch he keeps on Stormreach. On the Frozen Isle he waits by the
+// Frostferry landing, where the princess brings the hush-frost rune up from the Rimefissure
+// for him to read and cast. Only present once Act II is underway (when the Frozen Isle opens).
+function placeFrostBrother(){
+  if(!(P.story && P.story.act2)) return;
+  if(G.npcs.some(n=>n.id==='brother')) return;
+  const D=(typeof FROST_ZONES!=='undefined' && FROST_ZONES.dock) ? FROST_ZONES.dock : {x:40,y:118};
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x+3), Math.round(D.y-4), 8)) || [D.x+3, D.y-4];
+  const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
+    {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+    ["Go on - I'll hold the landing. If Hearthhold has the right of it, whatever Vath bound is down the Rimefissure, past the deep ice.",
+     "The whole strait talks of a robed man on the glacier. That's Vath, or his handiwork. Find what he hid down there, Joan - and mind the cold.",
+     "Bring me anything strange you turn up in the deep. Old script, old magic - that's my half of this fight, remember?"],0.1);
+  b.nightOwl=true;
+  G.npcs.push(b);
+}
 function genFrostAll(){
   genFrost(); bakeSolids(); placeObjectsFrost(); buildFoam();
-  spawnFrostFolk(); spawnMobsFrost();
+  spawnFrostFolk(); spawnMobsFrost(); placeFrostBrother();
   buildMapBase();
 }
 
@@ -2331,7 +2351,7 @@ function placeObjectsFrostDeep(){
   // the drift-lock lever, on the island (a bare icelever opens the Deep Gate; see pullIceLever)
   G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
   G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
-  G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1});
+  G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1, veiltome:1});   // holds the Rune of Hush-Frost - the Warding Veil your brother casts
   // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
   // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
   for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
@@ -4594,6 +4614,25 @@ function beginOpenChest(b){
 function openChest(b){
   if(b.opened){ toast('Empty - already plundered.'); return; }
   b.opened=true; b.kind='chestOpen';
+  // THE RIMEFISSURE'S REWARD: the hush-frost rune the Rimebound wept, cut into a warding.
+  // The princess cannot read the old royal script - she carries it up to her brother the
+  // scholar (see the 'brother' scene in 06-dialog.js), who works it into the WARDING VEIL.
+  if(b.veiltome){
+    bumpStat('chests');
+    P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(201,176,255,0.9)',56); burst(b.x,b.y-0.5,'#c9b0ff',20,2.7); if(Snd.magic) Snd.magic();
+    if(P.story.vathVeil){
+      // already cloaked from Vath - the rune's warding is spent through you; a keepsake and some coin
+      giveGold(rndi(120,180)); give('elixir',1);
+      banner('THE HUSH-FROST RUNE','ITS WARDING IS ALREADY WOVEN THROUGH YOU');
+      setTimeout(autoSave,300); return;
+    }
+    P.story.veilTome=1; give('veilrune',1);
+    banner('A WARDING, WEPT IN ICE','THE RUNE OF HUSH-FROST');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a single plate of ice that will not thaw - <b>the hush-frost the warden wept</b>, scored deep in the shape of a warding.</i> The marks are old royal script, the kind your father made you both learn and only <b>Jaist</b> ever loved. You cannot read a word of it. <i>But you know in your blood what it is: a spell to slip a hunter\'s eye - to go unseen, even by <b>Vath</b>.</i> <b style="color:#c9b0ff">You take the Rune of Hush-Frost.</b> <i>Carry it up out of the ice to your brother. Jaist could read this. Jaist could cast it.</i>'); },520);
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.sail){
     bumpStat('chests');
     P.story=P.story||{}; P.story.haveSail=1;
