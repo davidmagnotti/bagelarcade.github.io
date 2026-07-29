@@ -113,6 +113,7 @@ function drawBolt(){
 }
 
 /* ---------- 3. rain: far parallax layer + wet sheen + ripples --------- */
+const RAIN_PARALLAX_FAR=1;   // 1 = the far rain layer stays pinned to the world; <1 lets it drift toward screen-locked
 let _farDrops=[];
 function drawRainExtra(){
   const rain=(WX&&typeof WX.rain==='number')?WX.rain:0;
@@ -121,11 +122,15 @@ function drawRainExtra(){
   const wantFar=Math.round(rain*70);
   while(_farDrops.length<wantFar) _farDrops.push({x:Math.random()*(VW+80)-40,y:Math.random()*VH,spd:320+Math.random()*160,len:5+Math.random()*4});
   if(_farDrops.length>wantFar) _farDrops.length=wantFar;
+  // Anchor to the world like the near rain / snow: cancel the camera pan, wrap onto screen.
+  const M=22, WW=VW+2*M, HH=VH+2*M;
+  const camX=(G.cam?G.cam.x:0)*RAIN_PARALLAX_FAR, camY=(G.cam?G.cam.y:0)*RAIN_PARALLAX_FAR;
   cx.strokeStyle='rgba(170,195,235,'+(0.13*rain)+')'; cx.lineWidth=1; cx.beginPath();
   for(const d of _farDrops){
     d.y+=d.spd*_dt; d.x+=d.spd*drift*_dt;
     if(d.y>VH){ d.y=-14-Math.random()*30; d.x=Math.random()*(VW+80)-40; }
-    cx.moveTo(d.x,d.y); cx.lineTo(d.x-d.len*0.18,d.y-d.len);
+    const dx=((d.x-camX+M)%WW+WW)%WW-M, dy=((d.y-camY+M)%HH+HH)%HH-M;
+    cx.moveTo(dx,dy); cx.lineTo(dx-d.len*0.18,dy-d.len);
   }
   cx.stroke();
 }
