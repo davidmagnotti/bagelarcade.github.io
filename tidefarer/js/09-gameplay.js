@@ -833,10 +833,12 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.tombBossDown=1;
     if(typeof autoSave==='function') autoSave();
   }
-  // The Drowned Minotaur wardening Barik's Drowned Vault - felling it stills the
-  // flooded halls (the Pearl of the Deep in its chest grants DIVE).
-  if(m.drownedboss){
+  // THE TIDEMAW wardening Barik's Drowned Vault - felling it stills the flooded halls,
+  // opens the Cistern seal, and lets you take the Pearl of the Deep (grants DIVE).
+  if(m.tidemaw){
     P.story=P.story||{}; P.story.barikDeepDone=1;
+    if(typeof unsealBarikCistern==='function') unsealBarikCistern();
+    banner('THE TIDEMAW IS SLAIN','THE DROWNED VAULT FALLS STILL');
     if(typeof autoSave==='function') autoSave();
   }
   // The returned-isle dungeon guardians (Gale-Wraith, Ash-Scorpion, Stormheart, and the
@@ -1339,6 +1341,7 @@ function updateMobs(dt){
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
       m.face=(P.x<m.x?-1:1); continue; }
     if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
+    if(m.tidemaw){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom AI (updateBarikDeep -> updateTidemaw)
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
@@ -1680,6 +1683,7 @@ function updateWorld(dt){
   if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
   if(G.worldId==='frostvault' && typeof updateFrostVault==='function') updateFrostVault(dt);
   if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
+  if(G.worldId==='barikdeep' && typeof updateBarikDeep==='function') updateBarikDeep(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);

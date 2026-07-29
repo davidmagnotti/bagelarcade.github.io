@@ -2500,6 +2500,47 @@ function drawMob(m,s){
     g.restore(); g.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
+  // THE TIDEMAW - Barik's Drowned Vault guardian: a pallid anglerfish leviathan with a
+  // luring light and a maw that gapes wide on its telegraphed bite. Goes translucent while
+  // it submerges (m.invuln).
+  if(m.kind==='tidemaw'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0;
+    const open=Math.min(1,(m.windup>0?1:(m.swing>0?m.swing/0.3:0))+0.12+0.08*Math.sin(t*2)); // maw gape
+    const bob=Math.sin(m.anim*1.4)*1.6, sub=(m.invuln?0.42:1);
+    drawShadowAt(g,s.x,s.y,32);
+    g.save(); g.translate(s.x,s.y+bob*0.3); g.scale(fl,1); g.scale(2.3,2.3);
+    g.globalAlpha=sub; g.lineJoin='round';
+    const body='#255a63', bodyD='#173e46', bodyL='#3f7e86', teeth='#e9f4ee', lure='#bdf0ff', OUT='rgba(8,26,30,0.7)';
+    g.fillStyle=bodyD; g.beginPath(); g.moveTo(-18,-14); g.lineTo(-31,-25); g.lineTo(-27,-14); g.lineTo(-31,-3); g.closePath(); g.fill();  // tail fin
+    g.beginPath(); g.moveTo(-6,-30); g.lineTo(2,-43); g.lineTo(9,-28); g.closePath(); g.fill();  // dorsal fin
+    g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.ellipse(-2,-15,22,15,0,0,TAU); g.fill(); g.stroke();  // body
+    g.fillStyle=bodyL; g.beginPath(); g.ellipse(-2,-9,17,7,0,0,TAU); g.fill();  // belly
+    g.fillStyle=bodyD; g.beginPath(); g.moveTo(0,-6); g.lineTo(-6,3); g.lineTo(6,-2); g.closePath(); g.fill();  // pectoral fin
+    const jx=15, lj=open*9;   // ---- the MAW ----
+    g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(jx-8,-22); g.lineTo(jx+16,-20-open*3); g.lineTo(jx+15,-14); g.lineTo(jx-6,-14); g.closePath(); g.fill(); g.stroke();  // upper jaw
+    g.beginPath(); g.moveTo(jx-8,-14); g.lineTo(jx+15,-14); g.lineTo(jx+14,-8+lj); g.lineTo(jx-6,-8+lj*0.6); g.closePath(); g.fill(); g.stroke();  // lower jaw
+    if(open>0.25){ g.fillStyle='#0a2226'; g.beginPath(); g.moveTo(jx-6,-14); g.lineTo(jx+14,-14); g.lineTo(jx+13,-9+lj*0.8); g.lineTo(jx-5,-11+lj*0.5); g.closePath(); g.fill(); }  // dark gullet
+    g.fillStyle=teeth;
+    for(let i=0;i<5;i++){ const tx=jx-4+i*4;
+      g.beginPath(); g.moveTo(tx,-14); g.lineTo(tx+1.6,-14); g.lineTo(tx+0.8,-11.5+open*2); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(tx,-8+lj*0.7); g.lineTo(tx+1.6,-8+lj*0.7); g.lineTo(tx+0.8,-10.5+lj*0.7-open*2); g.closePath(); g.fill(); }
+    g.fillStyle='#0a1c20'; g.beginPath(); g.arc(8,-22,3.2,0,TAU); g.fill();   // eye
+    g.fillStyle=hurt?'#ffd0d0':lure; g.beginPath(); g.arc(8.6,-22.6,1.5,0,TAU); g.fill();
+    const lb=-34+Math.sin(t*2.2)*1.5;   // ---- the LURE ----
+    g.strokeStyle=bodyD; g.lineWidth=2; g.beginPath(); g.moveTo(2,-28); g.quadraticCurveTo(16,-40,20,lb); g.stroke();
+    const glow=0.55+0.35*Math.sin(t*3.4);
+    g.fillStyle='rgba(160,235,255,'+(0.35*glow*sub).toFixed(2)+')'; g.beginPath(); g.arc(20,lb,7,0,TAU); g.fill();
+    g.fillStyle=lure; g.beginPath(); g.arc(20,lb,2.6,0,TAU); g.fill();
+    g.globalAlpha=1;
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(-2,-15,24,17,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.65)'; g.fillText(nm,s.x+1,s.y-70);
+    g.fillStyle='#bdf0ff'; g.fillText(nm,s.x,s.y-71);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;

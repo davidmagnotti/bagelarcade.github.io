@@ -4703,44 +4703,136 @@ let TRAIN=null; // active training drill, if any
    Tide-Lock Vault, and take the Pearl of the Deep from its chest: the gift to
    DIVE, which opens the drowned water across the old islands.
    ================================================================================= */
+/* ---------- THE DROWNED VAULT (barikdeep) - bespoke: THE TIDE RACE + THE CISTERN ----
+   A drowned harbor-vault. You descend to the Sunken Stair, then cross THE TIDE RACE - a
+   flooded void spanned only by tumbled vault-stones that drift on the swell (DASH stone
+   to stone; miss and the undertow drags you back, -5 HP). Beyond it the Cistern seals shut
+   behind you and THE TIDEMAW surfaces - an angler-leviathan that spouts brine and submerges
+   untouchable to slam up beneath you. Fell it to open the seal and take the Pearl of the Deep.
+   ================================================================================= */
+const BARIK_SEAL=[[34,45],[35,45],[36,45],[37,45],[38,45]];   // the Cistern gate - slams shut behind you
 function genBarikDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
   const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } };
-  carve(29,84,43,95,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
-  carve(33,66,39,84,T.RUIN);            // corridor up to the gallery
-  // THE FLOODED GALLERY: a broad drowned hall - deep water wall to wall, crossed on a
-  // narrow plank causeway dead centre. (Once you can DIVE you may swim the flanks too.)
-  carve(22,44,50,66,T.RUIN); flood(22,44,50,66);
-  carve(34,44,38,66,T.PLANK);           // the plank causeway - the only dry road across
-  carve(22,44,26,48,T.RUIN); carve(46,44,50,48,T.RUIN);   // drowned side-ledges (the dead stand here)
-  carve(22,62,26,66,T.RUIN); carve(46,62,50,66,T.RUIN);
-  carve(33,30,39,44,T.RUIN);            // corridor to the vault
-  carve(20,8,52,30,T.RUIN);             // THE TIDE-LOCK VAULT - the Minotaur's chamber
+  carve(28,86,44,96,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
+  carve(34,78,38,88,T.RUIN);            // corridor up to the race
+  carve(22,72,50,78,T.RUIN);            // THE TIDE RACE - south ledge (the near shore)
+  flood(22,56,50,72);                   // ...the flooded void between the shores...
+  carve(22,50,50,56,T.RUIN);            // ...north ledge (the far shore)
+  carve(34,42,38,52,T.RUIN);            // corridor up to the Cistern
+  carve(18,8,54,42,T.RUIN);             // THE CISTERN - the Tidemaw's flooded hall
 }
 function placeObjectsBarikDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, drowned:1, exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,86],[42,86],[24,46],[48,46],[24,64],[48,64],[24,12],[48,12],[36,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // the Pearl of the Deep, in the vault past the Minotaur - grants DIVE
-  G.decor.push({kind:'chest', x:36.5, y:12.5, drowned:1, divegift:1});
+  for(const [tx,ty] of [[30,88],[42,88],[24,74],[48,74],[24,52],[48,52],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE TIDE RACE: drifting vault-stones over a flooded void ----
+  G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
+  for(let y=56;y<=72;y++) for(let x=22;x<=50;x++) if(inb(x,y) && tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
+  const raft=(cy,ax,bx,spd,phase)=>{ const mx=((ax+bx)/2)+0.5; const s={kind:'driftslab', ax:ax+0.5, ay:cy+0.5, bx:bx+0.5, by:cy+0.5, x:mx, y:cy+0.5, prevx:mx, prevy:cy+0.5, spd, phase, w:5, h:3, barikraft:1}; G.decor.push(s); G._barikSlabs.push(s); };
+  raft(69,24,40,0.50,0.0); raft(69,33,47,0.50,3.0);   // three rows of stones, two per row, phase-offset
+  raft(64,26,44,0.55,1.4); raft(64,22,38,0.55,4.4);
+  raft(59,24,40,0.50,2.2); raft(59,33,47,0.50,5.0);
+  G._barikCross={sx:36.5, sy:75.5};   // the undertow flings you back to the near shore
+  // ---- THE CISTERN: the boss seal + the reward ----
+  G._barikSealed=0;
+  G.decor.push({kind:'catgate', x:36, y:45, open:true, gate:'cistern', tiles:BARIK_SEAL.slice(), label:'the Cistern gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, drowned:1, divegift:1});   // the Pearl of the Deep - grants DIVE
   G.critters=[];
+  // an already-cleared run: the flood recedes to dry stone and the seal stands open
+  if(P.story && P.story.barikDeepDone){
+    for(const k of G._barikVoid){ const [x,y]=k.split(',').map(Number); setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    G._barikVoid=new Set(); G.decor=G.decor.filter(d=>!d.barikraft); G._barikSlabs=[];
+    for(const [x,y] of BARIK_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=true;
+  }
 }
 function spawnMobsBarikDeep(){
-  const Z=DROWNED_ZONES;
-  // the drowned dead haunt the causeway crossing
-  for(const [zx,zy] of [[36,72],[35,60],[37,52],[36,46],[33,80],[39,80]]){
-    const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]);
-  }
-  // THE DROWNED MINOTAUR wardens the Tide-Lock Vault
+  // a few drowned dead stand the near and far shores (not the crossing itself)
+  for(const [zx,zy] of [[26,74],[46,74],[26,52],[46,52]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  // THE TIDEMAW - sealed and unseen until you step into the Cistern (barikSealCheck reveals it)
   if(!(P.story && P.story.barikDeepDone)){
-    const sp=findOpenNear(Z.vault.x, Z.vault.y+2, 6) || [Z.vault.x, Z.vault.y+2];
-    const b=spawnMob('minotaur', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.title='THE DROWNED MINOTAUR'; b.subtitle='WARDEN OF THE TIDE-LOCK VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.drownedboss=1; b.entrance='loom'; }
+    const sp=findOpenNear(36, 20, 6) || [36,20];
+    const b=spawnMob('tidemaw', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEMAW'; b.subtitle='WARDEN OF THE DROWNED VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.tidemaw=1; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='surface'; }
   }
 }
 function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); spawnMobsBarikDeep(); buildMapBase(); }
+// ---- THE TIDE RACE per-frame: drift the stones, drag a misstep under, seal the Cistern ----
+function updateBarikDeep(dt){
+  if(!G._barikSlabs) return;
+  G._barikT=(G._barikT||0)+dt;
+  updateDriftSlabs(G._barikSlabs, G._barikT);
+  if(G._barikPlunge){ G._barikPlunge.t+=dt; if(G._barikPlunge.t>=G._barikPlunge.dur) barikRespawn(); }
+  else if(!P.dead && (P.rollT||0)<=0){
+    const tx=Math.floor(P.x), ty=Math.floor(P.y);
+    if(G._barikVoid.has(tx+','+ty) && !driftCarry(G._barikSlabs)) barikPlungeStart();   // over the void, not aboard a stone
+  }
+  barikSealCheck();
+  for(const m of G.mobs) if(m.tidemaw && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateTidemaw(m,dt);
+}
+function barikPlungeStart(){
+  G._barikPlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-5); P.hurtT=Math.max(P.hurtT||0,0.5);
+  if(typeof buzz==='function') buzz(10); shockwave(P.x,P.y,'rgba(120,180,220,0.85)',32);
+  for(let i=0;i<12;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y,vx:rnd(-1.2,1.2),vy:-rnd(1,2.2),life:0.6,color:Math.random()<0.5?'#bfe0f2':'#8fc0d8',size:rnd(2,4.5),grav:0.08});
+  if(Snd.noise) Snd.noise(0.14,0.05,300,0.6);
+  P.click=null; P.moving=false;
+}
+function barikRespawn(){
+  G._barikPlunge=null;
+  const c=G._barikCross||{sx:36.5,sy:75.5};
+  P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+function barikSealCheck(){
+  if(G._barikSealed || (P.story&&P.story.barikDeepDone)) return;
+  const boss=G.mobs.find(m=>m.tidemaw && !m.dead); if(!boss) return;
+  if(P.y<=41 && P.x>=18 && P.x<=54){   // stepped into the Cistern
+    G._barikSealed=1;
+    for(const [x,y] of BARIK_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=false;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    boss.sealed=false; boss.arena=1;
+    if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'surface',title:boss.title,sub:boss.subtitle});
+  }
+}
+function unsealBarikCistern(){
+  G._barikSealed=0;
+  for(const [x,y] of BARIK_SEAL) setSolid(x,y,0);
+  const cg=(G.decor||[]).find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=true;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+// THE TIDEMAW's phase AI: stalk (chase + telegraphed bite + brine spouts), and at half
+// health a single SUBMERGE (untouchable, glides under you) that ERUPTS in a slam + spout-fan.
+function updateTidemaw(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y);
+  m.face=(P.x<m.x?-1:1);
+  m.shootCd=(m.shootCd||0)-dt; m.biteCd=(m.biteCd||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5 && m.phase!=='submerge'){ m.enraged=1; m.phase='submerge'; m.pT=1.3; m.invuln=1;
+    shockwave(m.x,m.y,'rgba(120,180,220,0.8)',54); G.shake=0.5; }
+  if(m.phase==='submerge'){
+    m.pT-=dt;
+    if(pd>1.4){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m, Math.cos(a)*m.speed*1.1*dt, Math.sin(a)*m.speed*1.1*dt); }
+    if(m.pT<=0){ m.phase='stalk'; m.invuln=0; G.shake=0.7; shockwave(m.x,m.y,'rgba(150,210,235,0.9)',64);
+      if(dist(m.x,m.y,P.x,P.y)<3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*1.15), m);
+      tidemawSpout(m,true); }
+    return;
+  }
+  const spd=m.speed*(m.enraged?0.95:0.72);
+  if(pd>1.7 && !((m.stunT||0)>0) && !(m.windup>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m, Math.cos(a)*spd*dt, Math.sin(a)*spd*dt); }
+  if(m.shootCd<=0 && pd>2.6){ m.shootCd=m.enraged?1.9:2.7; tidemawSpout(m,m.enraged); }
+  if(pd<2.3 && m.biteCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.5; m.biteCd=m.enraged?1.8:2.5; }
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.windup=0; m.swing=0.3;
+    if(dist(m.x,m.y,P.x,P.y)<2.7 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m);
+    burst(m.x+m.face*1.2,m.y-0.5,'#bfe0f2',10,2.4); } }
+}
+function tidemawSpout(m, fan){
+  const base=Math.atan2(P.y-m.y,P.x-m.x), offs=fan?[-0.42,-0.21,0,0.21,0.42]:[0];
+  for(const o of offs){ const a=base+o; G.projs.push({kind:'spout', x:m.x, y:m.y-0.6, vx:Math.cos(a)*7, vy:Math.sin(a)*7, life:1.7, dmg:Math.round(m.dmg*0.6), from:'mob'}); }
+  if(Snd.magic) Snd.magic();
+}
 function enterBarikDeep(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._deepReturn={x:P.x, y:P.y+1.3}; P.slideDir=null; P.click=null;
