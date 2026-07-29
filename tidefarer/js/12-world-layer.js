@@ -4756,7 +4756,7 @@ function spawnMobsBarikDeep(){
   if(!(P.story && P.story.barikDeepDone)){
     const sp=findOpenNear(36, 20, 6) || [36,20];
     const b=spawnMob('tidemaw', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEMAW'; b.subtitle='WARDEN OF THE DROWNED VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.tidemaw=1; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='surface'; }
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEMAW'; b.subtitle='WARDEN OF THE DROWNED VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.tidemaw=1; b.customAI=1; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='surface'; }
   }
 }
 function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); spawnMobsBarikDeep(); buildMapBase(); }
@@ -4908,7 +4908,116 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
   }
 }
 // ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
-function genWindDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('wind','dashgift'); _dungBoss('wraith','skyspirit','galeDeepDone','THE GALE-WRAITH','THE MADDENED WIND GIVEN SHAPE',false); buildMapBase(); }
+/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke: THE UPDRAFT HALL ----------
+   A wind-scoured shaft. The Updraft Hall is swept by a killing gale that builds and BLASTS
+   in cycles: caught in the open when it hits, you're hurled back down the hall and flayed
+   (-HP). Wind-break pillars stand in staggered rows - shelter behind one (put a pillar
+   between you and the north) while the gale blasts, then advance in the lull. At the top the
+   Eye of the Gale seals shut and THE SKIRL forms. Its charm grants the longer dash.
+   ================================================================================= */
+const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genWindDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96);            // entry landing
+  carve(34,78,38,88);            // corridor
+  carve(20,42,52,80);            // THE UPDRAFT HALL (open floor; pillars added in placeObjects)
+  carve(34,34,38,44);            // corridor to the Eye
+  carve(18,8,54,36);             // THE EYE OF THE GALE (boss arena)
+}
+function placeObjectsWindDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE UPDRAFT HALL: staggered wind-break pillars ----
+  const pillar=(x,y)=>{ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } };
+  const rows=[[72,[28,36,44]],[64,[24,32,40,48]],[56,[28,36,44]],[48,[24,32,40,48]]];
+  for(const [ry,xs] of rows) for(const px of xs) pillar(px,ry);
+  G._windGaleT=0; G._windHall={x0:20,x1:52,y0:44,y1:78};   // where the gale bites
+  G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
+  G.critters=[];
+  if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; }
+}
+function spawnMobsWindDeep(){
+  if(!(P.story && P.story.galeDeepDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('skirl', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE SKIRL'; b.subtitle='THE MADDENED WIND GIVEN SHAPE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.skirl=1; b.customAI=1; b.gateboss=1; b.gateDone='galeDeepDone'; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='descend'; }
+  }
+}
+function genWindDeepAll(){ genWindDeep(); placeObjectsWindDeep(); spawnMobsWindDeep(); buildMapBase(); }
+// THE UPDRAFT HALL per-frame: the gale cycle (lull -> build/telegraph -> BLAST), sheltering,
+// the Eye seal, and the Skirl's AI.
+function updateWindDeep(dt){
+  if(!G._windHall) return;
+  const H=G._windHall;
+  G._windGaleT=(G._windGaleT||0)+dt;
+  const CYCLE=8.2, ph=G._windGaleT%CYCLE;
+  const building=(ph>=4.6 && ph<6.2), blasting=(ph>=6.2);
+  const inHall = P.x>=H.x0 && P.x<=H.x1 && P.y>=H.y0 && P.y<=H.y1;
+  // telegraph: wind streaks pour down from the north as the gale builds and blasts
+  if((building||blasting) && Math.random()<dt*(building?26:60)){
+    G.parts.push({x:rnd(H.x0,H.x1), y:H.y0-1, vx:rnd(-0.4,0.4), vy:rnd(7,12), life:rnd(0.5,1.0), color:blasting?'rgba(235,245,252,0.8)':'rgba(200,220,235,0.5)', size:rnd(1.5,3), grav:0});
+  }
+  if(blasting && inHall && !P.dead){
+    // sheltered if a pillar (solid) stands just north of you (between you and the gale)
+    const px=Math.floor(P.x), py=Math.floor(P.y);
+    const sheltered = solidAt(px,py-1) || solidAt(px,py-2);
+    if(!sheltered){
+      const ny=P.y + 6.5*dt;                       // hurled south (back down the hall)
+      if(!circleBlocked(P.x,ny,0.28)) P.y=ny;
+      G._windChip=(G._windChip||0)+dt;
+      if(G._windChip>0.5 && (P.rollT||0)<=0){ G._windChip=0; P.hp=Math.max(1,P.hp-3); P.hurtT=Math.max(P.hurtT||0,0.3); buzz(6); }
+    }
+  }
+  if(!blasting) G._windChip=0;
+  // Eye seal + boss
+  if(!G._windSealed && !(P.story&&P.story.galeDeepDone)){
+    const boss=G.mobs.find(m=>m.skirl && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._windSealed=1; for(const [x,y] of WIND_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'descend',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  // unseal once the Skirl is down
+  if(G._windSealed && !G._windCleared && !G.mobs.some(m=>m.skirl && !m.dead)){
+    G._windCleared=1; for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+  for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
+}
+function updateSkirl(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.shootCd=(m.shootCd||0)-dt; m.pulseCd=(m.pulseCd||0)-dt; m.biteCd=(m.biteCd||0)-dt; m.whirlCd=(m.whirlCd||3)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.45){ m.enraged=1; burst(m.x,m.y-1,'#dfeaf2',24,3.2); G.shake=0.5; }
+  if(m.phase==='whirl'){ m.pT-=dt; moveEntity(m, Math.cos(m.whirlA)*m.speed*2.1*dt, Math.sin(m.whirlA)*m.speed*2.1*dt);
+    if(dist(m.x,m.y,P.x,P.y)<1.9 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*0.8), m);
+    if(Math.random()<dt*20) burst(m.x,m.y-1,'#eaffff',3,2);
+    if(m.pT<=0) m.phase='stalk'; return; }
+  if(m.phase==='pulse'){ m.pT-=dt;
+    if(m.pT<=0){ m.phase='stalk'; G.shake=0.6; shockwave(m.x,m.y,'rgba(223,234,242,0.85)',72);
+      if(pd<5 && !P.dead){ const a=Math.atan2(P.y-m.y,P.x-m.x); const nx=P.x+Math.cos(a)*2.4, ny=P.y+Math.sin(a)*2.4;
+        if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } if((P.rollT||0)<=0) hurtPlayer(Math.round(m.dmg*0.7), m); } }
+    return; }
+  const spd=m.speed*(m.enraged?1.25:1.0);
+  if(pd>1.6 && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x)+Math.sin(G.time*3)*0.5; moveEntity(m, Math.cos(a)*spd*dt, Math.sin(a)*spd*dt); }
+  if(m.shootCd<=0 && pd>2){ m.shootCd=m.enraged?1.6:2.4; skirlBlades(m); }
+  if(m.pulseCd<=0 && pd<4.5){ m.pulseCd=m.enraged?4:6; m.phase='pulse'; m.pT=0.7; burst(m.x,m.y-1,'#eaffff',14,2); }
+  if(m.enraged && m.whirlCd<=0){ m.whirlCd=5; m.phase='whirl'; m.pT=1.1; m.whirlA=Math.atan2(P.y-m.y,P.x-m.x); return; }
+  if(pd<1.7 && m.biteCd<=0 && !P.dead){ m.biteCd=1.4; m.swing=0.3; if((P.rollT||0)<=0) hurtPlayer(m.dmg, m); }
+}
+function skirlBlades(m){ const base=Math.atan2(P.y-m.y,P.x-m.x);
+  for(const o of [-0.3,0,0.3]){ const a=base+o; G.projs.push({kind:'shard', x:m.x, y:m.y-0.8, vx:Math.cos(a)*8, vy:Math.sin(a)*8, life:1.6, dmg:Math.round(m.dmg*0.55), from:'mob'}); }
+  if(Snd.noise) Snd.noise(0.1,0.04,900,0.5);
+}
 // ---- SUNWARD: THE ASHEN FORGE (grants the flame snare) ----
 function genSunwardDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('east','snaregift'); _dungBoss('skeleton','scorpion','ashenForgeDone','THE ASH-SCORPION','STOKED IN MOUNT KEA\'S FIRE',true); buildMapBase(); }
 // ---- CLOUDREACH: THE STORM TEMPLE (grants the double dash) ----

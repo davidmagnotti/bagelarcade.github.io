@@ -2541,6 +2541,31 @@ function drawMob(m,s){
     g.fillStyle='#bdf0ff'; g.fillText(nm,s.x,s.y-71);
     drawMobBars&&drawMobBars(m,s); return;
   }
+  // THE SKIRL - Windsurf's Gale Spire guardian: the maddened wind given a shape, a
+  // spinning funnel of stacked wind-rings with a pair of pale eyes near its crown.
+  if(m.kind==='skirl'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0;
+    const spin=t*3.5, wob=Math.sin(m.anim*1.6)*2, sub=(m.invuln?0.4:0.9);
+    drawShadowAt(g,s.x,s.y,26);
+    g.save(); g.translate(s.x,s.y+wob*0.2); g.scale(fl,1); g.scale(2.2,2.2);
+    g.globalAlpha=sub;
+    for(let i=0;i<6;i++){ const yy=-6-i*7, rw=6+i*3.2, rot=spin*(1+i*0.15)+i;   // stacked funnel rings
+      g.fillStyle= i%2? 'rgba(169,196,214,0.5)' : 'rgba(223,234,242,0.55)';
+      g.beginPath(); g.ellipse(Math.cos(rot)*rw*0.25, yy, rw, rw*0.42, 0, 0, TAU); g.fill(); }
+    g.strokeStyle='rgba(255,255,255,0.5)'; g.lineWidth=1.4;   // swirling wisp streaks
+    for(let i=0;i<3;i++){ const a=spin+i/3*TAU; g.beginPath();
+      for(let k=0;k<10;k++){ const yy=-6-k*4.2, rr=(6+k*2)*0.9, xx=Math.cos(a+k*0.5)*rr; k?g.lineTo(xx,yy):g.moveTo(xx,yy); } g.stroke(); }
+    g.globalAlpha=1;
+    g.fillStyle= hurt?'#ffd0d0':'#eaffff'; g.beginPath(); g.arc(-4,-40,2.4,0,TAU); g.arc(4,-40,2.4,0,TAU); g.fill();   // eyes
+    g.fillStyle='rgba(120,200,235,0.9)'; g.beginPath(); g.arc(-4,-40,1.1,0,TAU); g.arc(4,-40,1.1,0,TAU); g.fill();
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.35)'; g.beginPath(); g.ellipse(0,-24,16,26,0,0,TAU); g.fill(); }
+    g.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.6)'; g.fillText(nm,s.x+1,s.y-72);
+    g.fillStyle='#dfeaf2'; g.fillText(nm,s.x,s.y-73);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;

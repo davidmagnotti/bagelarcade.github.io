@@ -1341,7 +1341,7 @@ function updateMobs(dt){
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
       m.face=(P.x<m.x?-1:1); continue; }
     if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
-    if(m.tidemaw){ m.face=(P.x<m.x?-1:1); continue; }   // fully custom AI (updateBarikDeep -> updateTidemaw)
+    if(m.customAI){ m.face=(P.x<m.x?-1:1); continue; }   // bespoke returned-isle bosses: driven by their dungeon's update hook
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
@@ -1684,6 +1684,10 @@ function updateWorld(dt){
   if(G.worldId==='frostvault' && typeof updateFrostVault==='function') updateFrostVault(dt);
   if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
   if(G.worldId==='barikdeep' && typeof updateBarikDeep==='function') updateBarikDeep(dt);
+  if(G.worldId==='winddeep' && typeof updateWindDeep==='function') updateWindDeep(dt);
+  if(G.worldId==='sunwarddeep' && typeof updateSunwardDeep==='function') updateSunwardDeep(dt);
+  if(G.worldId==='skydeep' && typeof updateSkyDeep==='function') updateSkyDeep(dt);
+  if(G.worldId==='embertomb' && typeof updateEmberTomb==='function') updateEmberTomb(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
