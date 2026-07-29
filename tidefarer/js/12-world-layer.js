@@ -220,6 +220,37 @@ const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
 // fixed ambient darkness. Marked with `dungeon:1` on its WORLD_DEF.
 function inDungeon(id){ const d=WORLD_DEFS[id||G.worldId]; return !!(d && d.dungeon); }
+// ---- THE WAY UP: a single, identical fast-exit portal that opens where a dungeon boss falls,
+// in EVERY dungeon. Step into it to rise to the surface, mended and a level stronger. It replaces
+// the old per-kill "take the quick road out" dialogue - same object, same look, in every dungeon.
+function spawnFastExit(x,y){
+  if(!inDungeon() || !G.decor || G.decor.some(d=>d.kind==='fastexit')) return;
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(x),Math.round(y),4)) || [Math.round(x),Math.round(y)];
+  G.decor.push({kind:'fastexit', x:sp[0]+0.5, y:sp[1]+0.5, name:'THE WAY UP', labelY:-46});
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  setTimeout(()=>{ if(typeof toast==='function') toast('A shimmering <b style="color:#c9b0ff">way up</b> opens where the guardian fell. Step into it whenever you\'re ready to rise from the dungeon - <b>mended and a level stronger</b>.',6500); },1600);
+}
+// which exit each dungeon world uses to climb back to the surface
+function leaveDungeon(){
+  const EX={ eastdeep:typeof exitEmberDungeon==='function'&&exitEmberDungeon,
+    aeriedeep:typeof exitAerieDungeon==='function'&&exitAerieDungeon,
+    frostdeep:typeof exitFrostDungeon==='function'&&exitFrostDungeon,
+    frostvault:typeof exitFrostVault==='function'&&exitFrostVault,
+    milldeep:typeof exitMillDungeon==='function'&&exitMillDungeon,
+    undermaw:typeof exitUndermaw==='function'&&exitUndermaw,
+    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep };
+  const fn=EX[G.worldId];
+  if(fn){ fn(); return true; }
+  return false;
+}
+// step into THE WAY UP: full heal, ~one level, and rise to the surface
+function useFastExit(){
+  if(dlg.open) return;
+  P.hp=P.maxhp; P.mp=P.maxmp;
+  if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
+  if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
+  if(leaveDungeon()) toast('You step into the way up - whole again, and a level the wiser.',4200);
+}
 
 function addCrowsFor(){
   G.crows.length=0;
@@ -2529,6 +2560,7 @@ function freeColossus(m){
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
   bossReward(m);
   giveGold(150); give('elixir',2);
+  if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);   // THE WAY UP opens like every other dungeon
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
 }
@@ -2597,7 +2629,9 @@ function placeObjectsFrostVault(){
       waves:[ [['wolf',6]], [['polarbear',3],['wolf',3]], [['polarbear',2,true],['wolf',4]], [['polarbear',3],['wolf',5]], [['polarbear',3,true],['wolf',4]] ] },
   ];
   // ---- R5: the Hoarfrost Hoard (the reward past the last gate) ----
-  G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
+  // the central chest holds THE TIDEFARER'S CHART - the map that explains the whole Act II
+  // hunt (the great queen's hidden grave and the sealing weapon); the side chest is gold.
+  G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, tidechart:1});
   G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
   spire(30,5); spire(58,5); spire(30,15); spire(58,15);
   G.critters=[];
@@ -2641,6 +2675,7 @@ function openVaultGate(r){
   invalidateScenery&&invalidateScenery();
   shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
   if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
+    if(typeof spawnFastExit==='function') spawnFastExit(P.x, P.y);   // THE WAY UP opens, same as every dungeon
     banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
     toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
   } else banner('THE HALL IS CLEARED','THE GATES GRIND UP');
@@ -3401,8 +3436,13 @@ function placeObjectsReach(){
     // the isle-by-isle curse-lifting into a hunt for the great queen's sealing weapon
     G.decor.push({kind:'pillar', x:GV.x+0.5, y:GV.y+2+0.5, broken:false, loreKey:'prophecy@reach'}); }
   carveLine(Z.camp.x,Z.camp.y, Z.graves.x,Z.graves.y, T.PATH,0);
-  // the ferry berth: Stormreach is a sea stop, so a hull always rides here
-  addBuilding('boat', Z.dock.x, Z.dock.y+2, '');
+  // the ferry berth: Stormreach is a sea stop, so a hull always rides at the water's edge off
+  // the dock - never beached on the sand. Walk out from the isle centre and drop it on the
+  // first sea tile.
+  { const ddx=Z.dock.x-60, ddy=Z.dock.y-60, dl=Math.hypot(ddx,ddy)||1; let placed=false;
+    for(let step=2; step<=20 && !placed; step++){ const tx=Math.round(Z.dock.x+ddx/dl*step), ty=Math.round(Z.dock.y+ddy/dl*step);
+      if(inb(tx,ty)){ const t=tileAt(tx,ty); if(t===T.SHALLOW||t===T.DEEP){ addBuilding('boat', tx, ty, ''); placed=true; } } }
+    if(!placed) addBuilding('boat', Z.dock.x, Z.dock.y+2, ''); }
   addBuilding('lamp', Z.dock.x-2, Z.dock.y+1, ''); addBuilding('lamp', Z.dock.x+2, Z.dock.y+1, '');
   // greenery + a couple of chests
   const pr=mulberry32(SEED+19);
@@ -4290,6 +4330,7 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
   rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
 ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
+ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
@@ -4319,7 +4360,7 @@ QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'ori
   doneText:"<i>Orin turns the medallion once in the lantern-light, and when he looks up there is no surprise in his old eyes - only a slow, knowing smile.</i> ...I wondered when you might come back here. I have wondered it since the day you washed ashore wearing this. It is no ornament, child - it is a memory-ward, a mother's love worked into metal, keyed to YOU, meant to hold a mind whole against exactly the unmaking your enemy deals. <i>He folds your fingers gently back over it.</i> Go and chat with the Woodworker, down by the green. Show him your necklace - just that, nothing more. Trust an old man: some doors open only to the right key, and you have carried it at your throat all along.",
   rw:{gold:40, mp:6, xp:{magic:260}} };
 QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
-  brief:"Show the Woodworker the pendant. The song he hums is the royal anthem; the star he stacks on every woodpile is the star at your throat. The ward will crack his binding - and if he can only get you to take off that mask, the fog that took you both may lift at last.",
+  brief:"Go down to the green and seek out the Woodworker. Show him the pendant - only that, nothing more - and let happen what will. I'll not spoil it by naming it; some things a soul must come to on its own. Go, child. Trust these old bones: this is a door you have carried the key to all along.",
   log:'Show the Woodworker the pendant on Emberwick, and let him see the face behind the mask.',
   doneText:'',   // resolved by the unmasking scene (buildDialogContent, woody)
   rw:{gold:200, item:{elixir:2}, xp:{melee:400, magic:400, archery:400}} };
@@ -5048,6 +5089,20 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',14,2.2); Snd.quest&&Snd.quest();
     setTimeout(autoSave,300); return;
   }
+  // THE HOARFROST HOARD'S true prize: the chart that turns the isle-by-isle curse-lifting
+  // into a HUNT - it names the great queen's hidden grave, and the sealing weapon that lies
+  // with her. This is the "why" behind the whole Act II journey, handed to you on the ice.
+  if(b.tidechart){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.tideChart=1;
+    if(!(P.inv && P.inv.tidechart)) give('tidechart',1);
+    giveGold(rndi(140,200)); if(Math.random()<0.6) give('elixir',1);
+    shockwave(b.x,b.y,'rgba(150,205,235,0.9)',58); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); Snd.levelup&&Snd.levelup();
+    banner("THE TIDEFARER'S CHART",'THE HUNT HAS A HEADING AT LAST');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Beneath the frozen coin of the Hoarfrost Hoard lies a thing worth more than all of it: a sea-chart, sealed in wax against the ice, its ink still bright after a hundred winters.</i> It marks an isle drawn on no chart you have ever seen - and upon that isle, a single grave. Beside it, a hand has inked in the old royal script: <b>HERE LIES THE TIDEFARER, AND WITH HER THE SEAL SHE FORGED.</b><br><br><i>So the drowned verse-stone told it true. The great queen who once sailed the isles free - curse by curse, exactly as you have - did not rest where the histories laid her. Her grave holds the one weapon named to bind the shadow: to bind <b>Vath</b>. This, at last, is what all the freeing has been FOR.</i><br><br>The old work is beyond you to read in full. <b style="color:var(--ember)">Carry the chart to Sage Orin on Emberwick</b> - if any living hand can place these hidden waters, it is his.', {label:'A heading at last'}); },500);
+    setTimeout(autoSave,300);
+    return;
+  }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
     if(Math.random()<0.6) give('potion',1);
@@ -5172,8 +5227,9 @@ function attemptSail(){
   // routes - and, once the Warding Veil is earned, the old islands (never the
   // capital). boatMenu sorts out which destinations are open.
   if(P.story && P.story.act2){ boatMenu(); return; }
-  // once the seas are calm, any boat is a ferry - pick a destination
-  if(P.story && P.story.tideCalm && G.worldId!=='isle'){ boatMenu(); return; }
+  // once the seas are calm, any boat is a ferry - pick a destination (Emberwick included:
+  // by this point in the story its dock runs the full ferry like every other port)
+  if(P.story && P.story.tideCalm){ boatMenu(); return; }
   // default single-hop routing before the archipelago reopens
   sailTo(G.worldId==='east' ? 'main' : G.worldId==='isle' ? 'main' : 'isle');
 }
