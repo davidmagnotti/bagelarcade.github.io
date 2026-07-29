@@ -1,16 +1,16 @@
 /* =====================================================================
    GAMEPLAY SYSTEMS
    ===================================================================== */
-function moveEntity(e,dx,dy,rad,waterOK){
+function moveEntity(e,dx,dy,rad,waterOK,diveOK){
   rad=rad||0.28;
   // In the Undermaw the black scar is a bottomless pit the hero crosses on platforms.
   // Mobs have no falling logic, so left alone they wander out and float over the void.
   // Hold every non-player entity back at the pit's edge; the player still crosses freely.
   const mobPit = e!==P && G.worldId==='undermaw' && G._mawPits;
   let nx=e.x+dx;
-  if(!circleBlocked(nx,e.y,rad,waterOK) && !(mobPit && G._mawPits.has((nx|0)+','+(e.y|0)))) e.x=nx;
+  if(!circleBlocked(nx,e.y,rad,waterOK,diveOK) && !(mobPit && G._mawPits.has((nx|0)+','+(e.y|0)))) e.x=nx;
   let ny=e.y+dy;
-  if(!circleBlocked(e.x,ny,rad,waterOK) && !(mobPit && G._mawPits.has((e.x|0)+','+(ny|0)))) e.y=ny;
+  if(!circleBlocked(e.x,ny,rad,waterOK,diveOK) && !(mobPit && G._mawPits.has((e.x|0)+','+(ny|0)))) e.y=ny;
 }
 function unstickEntity(e, waterOK){
   // if an entity is embedded in water or a solid, snap it to the nearest open tile.
@@ -38,7 +38,7 @@ function palaceBarrier(x,y){
   const rx=((x-y)-B.axm)*32, ry=((x+y)-B.aym)*16;
   return ry<=B.base && ry>=B.back && rx<=B.span && rx>=-B.span;
 }
-function circleBlocked(x,y,r,waterOK){
+function circleBlocked(x,y,r,waterOK,diveOK){
   if(palaceBarrier(x,y)) return true;
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,-r],[0,r],[-r,0],[r,0]]){
     if(palaceBarrier(x+ox,y+oy)) return true;   // radius-aware straight wall
@@ -47,6 +47,10 @@ function circleBlocked(x,y,r,waterOK){
       // the windsurf board rides only the LIGHT water near shore - shallows -
       // never the dark deep-water beyond. That keeps you close to land.
       if(waterOK && inb(tx,ty) && tileAt(tx,ty)===T.SHALLOW) continue;
+      // DIVING (Barik's drowned-vault gift): a diver crosses the deep water itself,
+      // sinking under the flood the windsurf could never ride. Both shallow and deep
+      // open up - but only over genuine water tiles, never through walls or land-solids.
+      if(diveOK && inb(tx,ty)){ const dt=tileAt(tx,ty); if(dt===T.DEEP||dt===T.SHALLOW) continue; }
       return true;
     }
   }
@@ -195,7 +199,7 @@ function nearestInteract(){
     if(b.kind==='cavemouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon':'dungeon',o:b,
+      if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon': b.drowned?'drowneddungeon':'dungeon',o:b,
         label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
@@ -273,6 +277,7 @@ function doInteract(){
   if(it.type==='lair'){ facePoint(it.o.x,it.o.y); enterLair(); return; }
   if(it.type==='cave'){ facePoint(it.o.x,it.o.y); enterUndermaw(); return; }
   if(it.type==='undermawdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitUndermaw(); else enterUndermaw(); return; }
+  if(it.type==='drowneddungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitBarikDeep(); else enterBarikDeep(); return; }
   if(it.type==='dungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitFrostDungeon(); else enterFrostDungeon(); return; }
   if(it.type==='emberdungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitEmberDungeon(); else enterEmberDungeon(); return; }
   if(it.type==='milldungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitMillDungeon(); else enterMillDungeon(); return; }
@@ -821,6 +826,12 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.tombBossDown=1;
     if(typeof autoSave==='function') autoSave();
   }
+  // The Drowned Minotaur wardening Barik's Drowned Vault - felling it stills the
+  // flooded halls (the Pearl of the Deep in its chest grants DIVE).
+  if(m.drownedboss){
+    P.story=P.story||{}; P.story.barikDeepDone=1;
+    if(typeof autoSave==='function') autoSave();
+  }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
   if(m.reachboss){
     P.story=P.story||{}; P.story.reachBossDown=1;
@@ -1039,7 +1050,7 @@ function updatePlayer(dt){
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
     const _rx=P.x, _ry=P.y, _step=P.speed*2.7*dt;
-    moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding);
+    moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding, P.unlocked&&P.unlocked.dive&&!P.riding);
     // rolled straight into a wall (or a corner) with no ground covered: end the roll
     // now so control returns at once, instead of the legs churning against the wall
     // for the rest of the animation. Sliding ALONG a wall still clears this threshold.
@@ -1136,15 +1147,23 @@ function updatePlayer(dt){
         // silently slip off the mount onto the board - no toast, by request
       }
     }
-    const onWater=tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW;
+    const curTile=tileAt(Math.floor(P.x),Math.floor(P.y));
+    const onWater=curTile<=T.SHALLOW;
     const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding;
-    const sp=P.speed*(tileAt(Math.floor(P.x),Math.floor(P.y))===T.PATH?1.12:1)
+    const canDive=P.unlocked&&P.unlocked.dive&&!P.riding;
+    // DIVING: you're submerged whenever you have the gift and stand over the deep water
+    // (where the board can't go). Swimming under is a touch slower than a surf skim.
+    P.diving = !!(canDive && curTile===T.DEEP);
+    const sp=P.speed*(curTile===T.PATH?1.12:1)
       *(P.riding? (P.unlocked&&P.unlocked.moa?2.1:1.55) :1)
-      *(onWater&&canSurf?1.8:1)
+      *(onWater&&canSurf&&!P.diving?1.8:1)
+      *(P.diving?0.82:1)
       *(has('boots',1)?1.14:1);
-    moveEntity(P, mx*sp*dt, my*sp*dt, 0.28, canSurf);
-    if(onWater&&canSurf&&Math.random()<dt*14)
+    moveEntity(P, mx*sp*dt, my*sp*dt, 0.28, canSurf, canDive);
+    if(onWater&&canSurf&&!P.diving&&Math.random()<dt*14)
       G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-mx*0.8+rnd(-0.4,0.4),vy:-my*0.8+rnd(-0.4,0.4),life:0.35,color:'#eaf6ff',size:2.4,grav:0});
+    if(P.diving&&Math.random()<dt*12)   // rising air-bubbles trail the diver
+      G.parts.push({x:P.x+rnd(-0.25,0.25),y:P.y+rnd(-0.2,0.2),vx:rnd(-0.15,0.15),vy:-rnd(0.4,0.9),life:rnd(0.4,0.9),color:'rgba(220,240,255,0.7)',size:rnd(1.5,3),grav:-0.04});
     P.dir={x:mx,y:my}; P.anim+=sp*dt*3.1; // stride matches ground covered - no foot-sliding
     P.stepT=(P.stepT||0)+dt;
     if(P.stepT>0.27){ P.stepT=0;

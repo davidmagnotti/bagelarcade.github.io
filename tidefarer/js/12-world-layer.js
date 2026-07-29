@@ -107,6 +107,11 @@ const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik
   den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[12,13]},   // the boss fight
   hoard:{x:22, y:5,   r:5,  name:'The Deep Hoard',    lv:[0,0]}      // the reward alcove past the door
 };
+const DROWNED_ZONES = { // THE DROWNED VAULT - the flooded harbor-vault beneath Barik (grants Dive)
+  entry:  {x:36, y:88, r:7,  name:'The Sunken Stair',  lv:[3,5]},
+  gallery:{x:36, y:56, r:12, name:'The Flooded Gallery', lv:[4,6]},  // a plank causeway over deep water, flanked by drowned dead
+  vault:  {x:36, y:20, r:12, name:'The Tide-Lock Vault', lv:[6,7]}   // the Drowned Minotaur + the diving-charm chest
+};
 var PALACE_BAR=null;   // continuous screen-space collision line for the palace wall (set in placeObjectsCrown)
 const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   dock:    {x:36, y:150, r:7,  name:'Kingsferry Quay', lv:[0,0]},
@@ -172,7 +177,10 @@ const WORLD_DEFS = {
     gen:()=>genMillDeepAll() },
   undermaw:{ W:44, H:192, seed:52741, zones:UNDERMAW_ZONES, dungeon:1, dark:0.34,
     spawn:{x:22.5,y:185.5}, title:'THE UNDERMAW', sub:'A SCAR IN THE BARIK HILLS - AND WHAT DENS IN IT',
-    gen:()=>genUndermawAll() }
+    gen:()=>genUndermawAll() },
+  barikdeep:{ W:72, H:100, seed:66413, zones:DROWNED_ZONES, dungeon:1, dark:0.30,
+    spawn:{x:36.5,y:92.5}, title:'THE DROWNED VAULT', sub:'BENEATH FLOODED BARIK - DRINK-DARK HALLS AND OLD TIDE-LOCKS',
+    gen:()=>genBarikDeepAll() }
 };
 const WORLDS = {}; // cached generated worlds
 // a dungeon is an underground world: no day/night cycle, no night-wraiths, its own
@@ -4021,6 +4029,7 @@ function genCrownAll(){
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
   if(P.projects && P.projects.beacon) placeBeacon();
+  placeBarikFlood();
   spawnNPCsMain(); spawnBarikFolk(); spawnBarikInn(); spawnRealmFolk(); spawnMobsMain();
   addCrowsFor();
   G.forgePos=null;
@@ -4605,6 +4614,88 @@ function buildExtraSprites(){
     g.strokeStyle='rgba(20,28,36,0.7)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(20,5); g.lineTo(33,11); g.lineTo(31,26); g.quadraticCurveTo(20,36,9,26); g.lineTo(7,11); g.closePath(); g.stroke(); });
 }
 let TRAIN=null; // active training drill, if any
+/* =====================================================================
+   THE DROWNED VAULT - the flooded harbor-vault beneath Barik. When you steal
+   home under the Warding Veil you find the old harbor drowned by Vath's curse.
+   Descend, cross the Flooded Gallery on its plank causeway (the deep water walls
+   you in until you learn to swim it), fell the Drowned Minotaur wardening the
+   Tide-Lock Vault, and take the Pearl of the Deep from its chest: the gift to
+   DIVE, which opens the drowned water across the old islands.
+   ================================================================================= */
+function genBarikDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
+  const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } };
+  carve(29,84,43,95,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
+  carve(33,66,39,84,T.RUIN);            // corridor up to the gallery
+  // THE FLOODED GALLERY: a broad drowned hall - deep water wall to wall, crossed on a
+  // narrow plank causeway dead centre. (Once you can DIVE you may swim the flanks too.)
+  carve(22,44,50,66,T.RUIN); flood(22,44,50,66);
+  carve(34,44,38,66,T.PLANK);           // the plank causeway - the only dry road across
+  carve(22,44,26,48,T.RUIN); carve(46,44,50,48,T.RUIN);   // drowned side-ledges (the dead stand here)
+  carve(22,62,26,66,T.RUIN); carve(46,62,50,66,T.RUIN);
+  carve(33,30,39,44,T.RUIN);            // corridor to the vault
+  carve(20,8,52,30,T.RUIN);             // THE TIDE-LOCK VAULT - the Minotaur's chamber
+}
+function placeObjectsBarikDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, drowned:1, exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,86],[42,86],[24,46],[48,46],[24,64],[48,64],[24,12],[48,12],[36,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // the Pearl of the Deep, in the vault past the Minotaur - grants DIVE
+  G.decor.push({kind:'chest', x:36.5, y:12.5, drowned:1, divegift:1});
+  G.critters=[];
+}
+function spawnMobsBarikDeep(){
+  const Z=DROWNED_ZONES;
+  // the drowned dead haunt the causeway crossing
+  for(const [zx,zy] of [[36,72],[35,60],[37,52],[36,46],[33,80],[39,80]]){
+    const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]);
+  }
+  // THE DROWNED MINOTAUR wardens the Tide-Lock Vault
+  if(!(P.story && P.story.barikDeepDone)){
+    const sp=findOpenNear(Z.vault.x, Z.vault.y+2, 6) || [Z.vault.x, Z.vault.y+2];
+    const b=spawnMob('minotaur', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE DROWNED MINOTAUR'; b.subtitle='WARDEN OF THE TIDE-LOCK VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.drownedboss=1; b.entrance='loom'; }
+  }
+}
+function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); spawnMobsBarikDeep(); buildMapBase(); }
+function enterBarikDeep(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P._deepReturn={x:P.x, y:P.y+1.3}; P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('barikdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+function exitBarikDeep(){
+  const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
+  P.slideDir=null; P.click=null;
+  setTimeout(()=>{ switchWorld('main');
+    const r=P._deepReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+    if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
+}
+// Barik's curse made playable: once the Warding Veil lets you steal home, the old
+// harbor lies drowned. Plant the Drowned Vault's mouth by the docks, and - once you
+// can dive - a diver's cache out on a rock the deep water keeps.
+function placeBarikFlood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const D=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.dock) ? MAIN_ZONES.dock : {x:55,y:258};
+  if(!G.decor.some(d=>d.kind==='dungeonmouth' && d.drowned)){
+    const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x+5), Math.round(D.y+4), 10)) || null;
+    if(sp && inb(sp[0],sp[1])){
+      for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
+      G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, drowned:1, label:'the Drowned Vault', name:'THE DROWNED VAULT ▼'});
+      G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
+    }
+  }
+  if(P.unlocked && P.unlocked.dive && !G.decor.some(d=>d.diverCache)){
+    let rock=null;
+    for(let rr=6; rr<=22 && !rock; rr+=2){ for(let a=0;a<16 && !rock;a++){
+      const ang=a/16*TAU, rx=Math.round(D.x+Math.cos(ang)*rr), ry=Math.round(D.y+Math.sin(ang)*rr);
+      if(inb(rx,ry) && tileAt(rx,ry)===T.DEEP) rock=[rx,ry];
+    }}
+    if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
+      G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
+  }
+}
 function beginOpenChest(b){
   if(b.opened){ openChest(b); return; }
   if(P.openCh && P.openCh.b===b) return;
@@ -4614,6 +4705,19 @@ function beginOpenChest(b){
 function openChest(b){
   if(b.opened){ toast('Empty - already plundered.'); return; }
   b.opened=true; b.kind='chestOpen';
+  // THE DROWNED VAULT'S REWARD: the Pearl of the Deep - the gift to DIVE, to cross the
+  // drowned water Vath's flood raised over the old islands.
+  if(b.divegift){
+    bumpStat('chests');
+    P.story=P.story||{}; P.unlocked=P.unlocked||{};
+    shockwave(b.x,b.y,'rgba(120,200,230,0.9)',56); burst(b.x,b.y-0.5,'#8fd8ff',22,2.8); if(Snd.levelup) Snd.levelup();
+    if(!P.unlocked.dive){
+      P.unlocked.dive=true; P.story.barikDeepDone=1;
+      banner('THE PEARL OF THE DEEP','DIVE - CROSS THE DROWNED WATER');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the vault\'s heart, cupped in the Minotaur\'s drowned hoard, a single great <b>pearl</b> the colour of deep water. It is warm, though the vault is cold, and when you close your hand on it the flood outside stops feeling like a wall.</i> <b style="color:#8fd8ff">You learn to DIVE.</b> <i>Walk into the deep water now and you sink beneath it and swim - the drowned reaches Vath\'s flood cut off across the old islands are yours to cross at last.</i>'); },500);
+    } else { giveGold(rndi(120,180)); give('pearl',1); banner('THE TIDE-LOCK HOARD','PEARLS AND OLD COIN'); }
+    setTimeout(autoSave,300); return;
+  }
   // THE RIMEFISSURE'S REWARD: the hush-frost rune the Rimebound wept, cut into a warding.
   // The princess cannot read the old royal script - she carries it up to her brother the
   // scholar (see the 'brother' scene in 06-dialog.js), who works it into the WARDING VEIL.
@@ -4929,7 +5033,7 @@ function switchWorld(id){
   // Wave / puzzle / trap dungeons reset fresh on every visit until they are BEATEN: otherwise a
   // cached copy from an earlier descent (waves already killed, gates already open, traps sprung)
   // shows up empty on re-entry. Skip the cache and regenerate a fresh challenge until it's won.
-  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown' };
+  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone' };
   const _fw=FRESH_UNTIL_WON[id];
   if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
   if(WORLDS[id]){
