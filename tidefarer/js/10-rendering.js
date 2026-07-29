@@ -2566,6 +2566,85 @@ function drawMob(m,s){
     g.fillStyle='#dfeaf2'; g.fillText(nm,s.x,s.y-73);
     drawMobBars&&drawMobBars(m,s); return;
   }
+  // THE CINDERWROUGHT - Sunward's Ashen Forge guardian: a hulking basalt golem laced with
+  // molten cracks, a glowing core, and heavy fists that rear on its telegraphed slam.
+  if(m.kind==='cinderwrought'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, wnd=(m.windup>0);
+    const glow=0.55+0.35*Math.sin(t*3)+(m.enraged?0.2:0);
+    drawShadowAt(g,s.x,s.y,34);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.5,2.5);
+    const rock='#33302f', rockD='#211f1e', rockL='#4a4644', mol='rgba(255,'+(120+Math.round(60*glow))+',40,', OUT='rgba(10,6,4,0.75)';
+    g.lineJoin='round';
+    g.fillStyle=rockD; g.fillRect(-11,-15,8,15); g.fillRect(3,-15,8,15);   // legs
+    g.fillStyle=mol+'0.9)'; g.fillRect(-10,-4,6,3); g.fillRect(4,-4,6,3);   // molten feet-cracks
+    // torso (chunky basalt)
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(-15,-16); g.lineTo(-13,-46); g.lineTo(13,-46); g.lineTo(15,-16); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=rockL; g.beginPath(); g.moveTo(-13,-44); g.lineTo(-4,-44); g.lineTo(-6,-20); g.lineTo(-13,-20); g.closePath(); g.fill();
+    // molten cracks + core
+    g.strokeStyle=mol+'0.85)'; g.lineWidth=2.2;
+    g.beginPath(); g.moveTo(-8,-40); g.lineTo(-3,-30); g.lineTo(-7,-22); g.moveTo(9,-42); g.lineTo(4,-32); g.lineTo(8,-24); g.stroke();
+    const cg=g.createRadialGradient(0,-30,1,0,-30,9); cg.addColorStop(0,mol+'1)'); cg.addColorStop(1,mol+'0)');
+    g.fillStyle=cg; g.beginPath(); g.arc(0,-30,9,0,TAU); g.fill();
+    g.fillStyle=mol+'1)'; g.beginPath(); g.arc(0,-30,3.4,0,TAU); g.fill();
+    // arms/fists (rear overhead on wind-up)
+    const ay=wnd?-52:-30;
+    g.strokeStyle=rockD; g.lineWidth=7; g.lineCap='round';
+    g.beginPath(); g.moveTo(-13,-40); g.lineTo(-20,ay); g.stroke();
+    g.beginPath(); g.moveTo(13,-40); g.lineTo(20,ay); g.stroke();
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=1.6;
+    g.beginPath(); g.arc(-20,ay,6,0,TAU); g.fill(); g.stroke(); g.beginPath(); g.arc(20,ay,6,0,TAU); g.fill(); g.stroke();
+    if(wnd){ g.fillStyle=mol+'0.9)'; g.beginPath(); g.arc(-20,ay,3,0,TAU); g.arc(20,ay,3,0,TAU); g.fill(); }
+    // head (blocky, glowing eyes)
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.moveTo(-8,-46); g.lineTo(8,-46); g.lineTo(6,-58); g.lineTo(-6,-58); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle= hurt?'#ffd0d0':(mol+'1)'); g.fillRect(-5,-54,3.5,3); g.fillRect(1.5,-54,3.5,3);
+    g.lineCap='butt';
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(0,-30,18,30,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-74);
+    g.fillStyle='#ff9a5a'; g.fillText(nm,s.x,s.y-75);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  // THE THUNDERCALLER - Cloudreach's Storm Temple herald: a robed storm-figure wreathed in a
+  // crackling cloud-mantle, forking little bolts, its shield-ring shimmering while it charges.
+  if(m.kind==='thundercaller'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, charge=(m.phase==='charge');
+    const bob=-40-Math.sin(m.anim*1.5)*3;   // hovers
+    drawShadowAt(g,s.x,s.y,24);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.3,2.3);
+    const robe='#2b3350', robeL='#454f78', mantle='rgba(180,200,240,', bolt='#eaf2ff';
+    g.globalAlpha=(m.invuln?0.9:1);
+    // storm-mantle (churning cloud ring around the shoulders)
+    for(let i=0;i<5;i++){ const a=t*0.8+i/5*TAU; g.fillStyle=mantle+(0.28+0.12*Math.sin(t*2+i)).toFixed(2)+')';
+      g.beginPath(); g.ellipse(Math.cos(a)*9,-34+Math.sin(a)*3,6,4,0,0,TAU); g.fill(); }
+    // robed body (tapering to mist)
+    g.fillStyle=robe; g.strokeStyle='rgba(10,14,28,0.7)'; g.lineWidth=1.8;
+    g.beginPath(); g.moveTo(-9,-34); g.quadraticCurveTo(-12,-6,-5,-2+bob*0+0); g.lineTo(5,-2); g.quadraticCurveTo(12,-6,9,-34); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=robeL; g.beginPath(); g.moveTo(-6,-34); g.lineTo(-2,-34); g.lineTo(-3,-8); g.lineTo(-7,-8); g.closePath(); g.fill();
+    // hood + face
+    g.fillStyle=robe; g.beginPath(); g.arc(0,-42,7,Math.PI,0); g.lineTo(6,-38); g.lineTo(-6,-38); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#0a0e1a'; g.beginPath(); g.ellipse(0,-40,4.5,5,0,0,TAU); g.fill();
+    g.fillStyle= hurt?'#ffd0d0':bolt; g.beginPath(); g.arc(-2,-41,1.3,0,TAU); g.arc(2,-41,1.3,0,TAU); g.fill();
+    // forking bolts crackling off the mantle
+    g.strokeStyle='rgba(200,225,255,'+(0.6+0.3*Math.sin(t*11)).toFixed(2)+')'; g.lineWidth=1.3; g.lineCap='round';
+    for(let i=0;i<3;i++){ const a=t*5+i*2.1; let x=Math.cos(a)*8, y=-34+Math.sin(a)*5; g.beginPath(); g.moveTo(x,y);
+      for(let k=0;k<3;k++){ x+=Math.cos(a)*3+rnd(-2,2); y+=Math.sin(a)*3+rnd(-2,2); g.lineTo(x,y);} g.stroke(); }
+    g.lineCap='butt';
+    if(charge){ const sr=0.5+0.4*Math.sin(t*9); g.strokeStyle='rgba(150,200,255,'+sr.toFixed(2)+')'; g.lineWidth=2.4;
+      g.beginPath(); g.arc(0,-30,18,0,TAU); g.stroke(); }
+    g.globalAlpha=1;
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.35)'; g.beginPath(); g.ellipse(0,-26,14,24,0,0,TAU); g.fill(); }
+    g.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-72);
+    g.fillStyle='#dfeaff'; g.fillText(nm,s.x,s.y-73);
+    if(m.invuln && !charge){ g.fillStyle='#8fd0ff'; g.font='bold 10px Georgia'; g.fillText('SHIELDED',s.x,s.y-84); }
+    else if(!m.invuln){ g.fillStyle='#ffe27a'; g.font='bold 10px Georgia'; g.fillText('VULNERABLE',s.x,s.y-84); }
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;

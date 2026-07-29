@@ -5019,9 +5019,186 @@ function skirlBlades(m){ const base=Math.atan2(P.y-m.y,P.x-m.x);
   if(Snd.noise) Snd.noise(0.1,0.04,900,0.5);
 }
 // ---- SUNWARD: THE ASHEN FORGE (grants the flame snare) ----
-function genSunwardDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('east','snaregift'); _dungBoss('skeleton','scorpion','ashenForgeDone','THE ASH-SCORPION','STOKED IN MOUNT KEA\'S FIRE',true); buildMapBase(); }
+/* ---------- SUNWARD: THE ASHEN FORGE (sunwarddeep) - bespoke: THE FORGE CAUSEWAY ----------
+   Deep in Mount Kea. The Forge Causeway is a field of lava-vents that erupt on staggered
+   timers: each glows and rumbles (telegraph), then jets a column of fire - stand on it and
+   you burn. Read the rhythm and thread across between eruptions. At the forge-heart THE
+   CINDERWROUGHT rises. Its ember grants the FLAME SNARE. ============================== */
+const SUN_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genSunwardDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96); carve(34,78,38,88);
+  carve(20,42,52,80);            // THE FORGE CAUSEWAY
+  carve(34,34,38,44);
+  carve(18,8,54,36);             // THE ASHEN FORGE (boss arena)
+}
+function placeObjectsSunwardDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'east', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE FORGE CAUSEWAY: a staggered field of erupting lava-vents ----
+  G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
+  let n=0;
+  for(let gy=72; gy>=48; gy-=6) for(let gx=24; gx<=48; gx+=6){
+    const jx=gx+((gy/6)%2? 3:0);   // stagger alternate rows
+    if(inb(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; }
+  }
+  G._sunSealed=0; G._sunCleared=(P.story&&P.story.ashenForgeDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'forge', tiles:SUN_SEAL.slice(), label:'the Forge-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, snaregift:1});   // the ember - FLAME SNARE
+  G.critters=[];
+  if(P.story && P.story.ashenForgeDone){ for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true; }
+}
+function spawnMobsSunwardDeep(){
+  if(!(P.story && P.story.ashenForgeDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('cinderwrought', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE CINDERWROUGHT'; b.subtitle='STOKED IN MOUNT KEA\'S FIRE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.cinder=1; b.customAI=1; b.gateboss=1; b.gateDone='ashenForgeDone'; b.sealed=true; b.arena=1; b.entrance='rise'; }
+  }
+}
+function genSunwardDeepAll(){ genSunwardDeep(); placeObjectsSunwardDeep(); spawnMobsSunwardDeep(); buildMapBase(); }
+function forgeQueueErupt(x,y){ if(!inb(x,y)) return; (G._forgeErupts=G._forgeErupts||[]).push({x,y,phase:'warn',t:0,hitCd:0}); }
+function forgeTickErupts(dt){
+  const list=G._forgeErupts||[];
+  for(let i=list.length-1;i>=0;i--){ const e=list[i]; e.t+=dt; e.hitCd-=dt;
+    if(e.phase==='warn'){ if(Math.random()<dt*30) G.parts.push({x:e.x+0.5+rnd(-0.3,0.3),y:e.y+0.5,vx:0,vy:-rnd(0.3,0.8),life:0.4,color:'rgba(255,150,60,0.7)',size:rnd(1.5,3),grav:-0.05});
+      if(e.t>=0.7){ e.phase='erupt'; e.t=0; if(G.shake<0.25) G.shake=0.25; } }
+    else { if(Math.random()<dt*50) G.parts.push({x:e.x+0.5+rnd(-0.4,0.4),y:e.y+0.5,vx:rnd(-0.8,0.8),vy:-rnd(2,4.5),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ff8a30':'#ffd060',size:rnd(2,4.5),grav:0.1});
+      if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<1.35 && (P.rollT||0)<=0 && !P.dead && e.hitCd<=0){ e.hitCd=0.35; hurtPlayer(13,{x:e.x+0.5,y:e.y+0.5}); }
+      if(e.t>=0.6) list.splice(i,1); }
+  }
+}
+function updateSunwardDeep(dt){
+  if(!G._forgeVents) return;
+  if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(44,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
+  for(const v of G._forgeVents){ v.nextT-=dt; if(v.nextT<=0){ v.nextT=v.period; forgeQueueErupt(v.gx,v.gy); } }
+  forgeTickErupts(dt);
+  forgeSealCheck();
+  for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
+}
+function forgeSealCheck(){
+  if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
+    const boss=G.mobs.find(m=>m.cinder && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._sunSealed=1; for(const [x,y] of SUN_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'rise',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  if(G._sunSealed && !G._sunCleared && !G.mobs.some(m=>m.cinder && !m.dead)){
+    G._sunCleared=1; for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+}
+function updateCinderwrought(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.slamCd=(m.slamCd||0)-dt; m.eruptCd=(m.eruptCd||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5){ m.enraged=1; if(G.shake<0.5) G.shake=0.5; }
+  const spd=m.speed*(m.enraged?1.25:1);
+  if(pd>1.9 && !(m.windup>0) && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*spd*dt,Math.sin(a)*spd*dt); }
+  if(pd<2.6 && m.slamCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.6; m.slamCd=m.enraged?2.4:3.4; }
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.swing=0.3; G.shake=0.7; shockwave(m.x,m.y,'rgba(255,150,60,0.9)',72);
+    if(dist(m.x,m.y,P.x,P.y)<3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m);
+    for(let k=0;k<6;k++){ const a=k/6*TAU; forgeQueueErupt(Math.round(m.x+Math.cos(a)*2.2), Math.round(m.y+Math.sin(a)*2.2)); } } }
+  if(m.eruptCd<=0 && pd>2.5){ m.eruptCd=m.enraged?2.4:3.6; forgeQueueErupt(Math.round(P.x),Math.round(P.y));
+    if(m.enraged){ forgeQueueErupt(Math.round(P.x)+1,Math.round(P.y)); forgeQueueErupt(Math.round(P.x)-1,Math.round(P.y)); } }
+}
 // ---- CLOUDREACH: THE STORM TEMPLE (grants the double dash) ----
-function genSkyDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('sky','dash2gift'); _dungBoss('wraith','stormeye','stormTempleDone','THE STORMHEART','THE TEMPLE\'S CAGED THUNDER',false); buildMapBase(); }
+/* ---------- CLOUDREACH: THE STORM TEMPLE (skydeep) - bespoke: THE STORM NAVE ----------
+   A temple the lightning never leaves. Cross THE STORM NAVE and the storm hunts you: a bolt
+   is telegraphed on the tile beneath you, then falls a beat later - so you can never stand
+   still, you must keep moving up the nave a step ahead of the strikes. At the Stormheart THE
+   THUNDERCALLER waits behind a shield it only drops for a beat after each discharge. Its charge
+   grants the DOUBLE DASH. ============================================================ */
+const STORM_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genSkyDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96); carve(34,78,38,88);
+  carve(20,42,52,80);            // THE STORM NAVE
+  carve(34,34,38,44);
+  carve(18,8,54,36);             // THE STORMHEART (boss arena)
+}
+function placeObjectsSkyDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // a couple of tall temple pillars for cover-that-isn't (lightning falls from above)
+  for(const [px,py] of [[26,66],[46,66],[26,52],[46,52]]) if(inb(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
+  G._stormNave={x0:20,x1:52,y0:44,y1:80}; G._stormStrikes=[]; G._stormT=0; G._stormHuntT=0.8;
+  G._skySealed=0; G._skyCleared=(P.story&&P.story.stormTempleDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'stormheart', tiles:STORM_SEAL.slice(), label:'the Stormheart-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dash2gift:1});   // the Stormstep - DOUBLE DASH
+  G.critters=[];
+  if(P.story && P.story.stormTempleDone){ for(const [x,y] of STORM_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true; }
+}
+function spawnMobsSkyDeep(){
+  if(!(P.story && P.story.stormTempleDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('thundercaller', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE THUNDERCALLER'; b.subtitle='THE TEMPLE\'S CAGED THUNDER'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.thunder=1; b.customAI=1; b.gateboss=1; b.gateDone='stormTempleDone'; b.sealed=true; b.arena=1; b.phase='open'; b.invuln=0; b.entrance='descend'; }
+  }
+}
+function genSkyDeepAll(){ genSkyDeep(); placeObjectsSkyDeep(); spawnMobsSkyDeep(); buildMapBase(); }
+function stormQueueStrike(x,y){ if(!inb(x,y)) return; (G._stormStrikes=G._stormStrikes||[]).push({x,y,phase:'warn',t:0}); }
+function stormTickStrikes(dt){
+  const list=G._stormStrikes||[];
+  for(let i=list.length-1;i>=0;i--){ const e=list[i]; e.t+=dt;
+    if(e.phase==='warn'){ if(Math.random()<dt*26) G.parts.push({x:e.x+0.5+rnd(-0.45,0.45),y:e.y+0.5+rnd(-0.45,0.45),vx:0,vy:0,life:0.3,color:'rgba(150,200,255,0.7)',size:rnd(1,2.5),grav:0});
+      if(e.t>=0.85){ e.phase='strike'; e.t=0; if(G.shake<0.4) G.shake=0.4; if(Snd.noise) Snd.noise(0.12,0.05,200,0.7);
+        for(let k=0;k<14;k++) G.parts.push({x:e.x+0.5+rnd(-0.3,0.3),y:e.y+0.5-k*0.3,vx:rnd(-0.3,0.3),vy:0,life:0.25,color:k%2?'#eaf2ff':'#bcd8ff',size:rnd(2,4),grav:0});
+        if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<1.4 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(16,{x:e.x+0.5,y:e.y+0.5}); } }
+    else if(e.t>=0.18) list.splice(i,1);
+  }
+}
+function updateSkyDeep(dt){
+  if(!G._stormNave) return;
+  const N=G._stormNave;
+  G._stormHuntT=(G._stormHuntT||0)-dt;
+  const inNave = P.x>=N.x0&&P.x<=N.x1&&P.y>=N.y0&&P.y<=N.y1;
+  if(G._stormHuntT<=0 && inNave){ G._stormHuntT=1.35; stormQueueStrike(Math.round(P.x),Math.round(P.y)); }
+  stormTickStrikes(dt);
+  stormSealCheck();
+  for(const m of G.mobs) if(m.thunder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateThundercaller(m,dt);
+}
+function stormSealCheck(){
+  if(!G._skySealed && !(P.story&&P.story.stormTempleDone)){
+    const boss=G.mobs.find(m=>m.thunder && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._skySealed=1; for(const [x,y] of STORM_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'descend',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  if(G._skySealed && !G._skyCleared && !G.mobs.some(m=>m.thunder && !m.dead)){
+    G._skyCleared=1; for(const [x,y] of STORM_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+}
+function updateThundercaller(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.strikeCd=(m.strikeCd||0)-dt; m.cycleT=(m.cycleT||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5){ m.enraged=1; }
+  // shield cycle: CHARGE (invulnerable) -> discharge -> OPEN (the strike window) -> repeat
+  if(m.phase==='charge'){ m.invuln=1;
+    if(m.cycleT<=0){ m.phase='open'; m.invuln=0; m.cycleT=m.enraged?2.2:2.8; if(G.shake<0.6) G.shake=0.6; shockwave(m.x,m.y,'rgba(180,215,255,0.85)',82);
+      if(pd<3.4 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*0.9), m); } }
+  else { m.invuln=0; if(m.cycleT<=0){ m.phase='charge'; m.invuln=1; m.cycleT=3.2; } }
+  if(pd>3 && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*m.speed*0.7*dt,Math.sin(a)*m.speed*0.7*dt); }
+  if(m.strikeCd<=0){ m.strikeCd=m.enraged?0.95:1.6; stormQueueStrike(Math.round(P.x),Math.round(P.y));
+    if(m.enraged) stormQueueStrike(Math.round(P.x)+Math.round(rnd(-2,2)),Math.round(P.y)+Math.round(rnd(-2,2))); }
+}
 
 // ---- THE EMBERWICK CAPSTONE: THE TIDEWARD CRYPT ----
 // Sealed since the founders, opened only when you carry all four returned-isle
