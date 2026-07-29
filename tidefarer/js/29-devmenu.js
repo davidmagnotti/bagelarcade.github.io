@@ -74,6 +74,25 @@ function clearMobs(){
   let n=0; for(const m of (G.mobs||[])){ if(!m.dead){ m.dead=true; m.respawnT=-1; n++; } }
   note('Cleared '+n+' foes on this map');
 }
+// One-tap setup for the Act II "return to the old isles" phase: put the story in Act II,
+// grant the Warding Veil AND the four returned-isle gifts (so every new dungeon + the
+// capstone is reachable and traversable), and drop the cached old isles so they regenerate
+// with their Act II curses + dungeon mouths. This is what makes revisiting an old isle via
+// the teleport buttons show the correct Act II state.
+function enterReturnPhase(){
+  P.story=P.story||{}; P.unlocked=P.unlocked||{}; P.spells=P.spells||{};
+  P.story.act=Math.max(P.story.act||1,2); P.story.act2=1;
+  P.story.vathMet=1; P.story.vathNamed=1; P.story.reachArrived=1;
+  P.story.reachBossDown=1; P.story.tombBossDown=1;                 // Stormreach cleared (opens the Frozen Isle)
+  P.story.frostFreed=1; P.story.deepDone=1; P.story.veilTome=1;    // Frozen Isle done, the rune found
+  if(typeof grantVathVeil==='function') grantVathVeil(true); else { P.story.vathVeil=1; P.spells.veil=1; }
+  // the four returned-isle gifts, so every Act II dungeon + the capstone is testable
+  P.unlocked.dash=true; P.unlocked.dive=true; P.unlocked.dashfar=true; P.unlocked.dash2=true; P.spells.flamesnare=1;
+  // refresh the old isles so their Act II dungeon mouths / flooding appear on arrival
+  if(typeof WORLDS!=='undefined'){ ['isle','main','east','wind','sky','frost'].forEach(id=>{ if(WORLDS[id]) delete WORLDS[id]; }); }
+  if(G.worldId && typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && !WORLD_DEFS[G.worldId].dungeon) regenWorld(G.worldId);
+  ui(); note('Act II return phase set: Veil + 4 gifts, old isles refreshed');
+}
 /* ---- dungeons: toggle each dungeon's WON state either way ---- */
 const DUNGEONS=[
   ['Rimefissure', 'frostdeep', 'deepDone'],       // frost boss (Rimebound) freed
@@ -83,6 +102,14 @@ const DUNGEONS=[
   ['Drowned Catacomb','reachdeep','tombBossDown'],// the Drowned Minotaur felled
   ['Undermill',   'milldeep',  'millDone'],       // the Cog-Bound felled
   ['Undermaw',    'undermaw',  'undermawDown'],   // the Maw-Stalker felled
+];
+// The Act II returned-isle dungeons (veil-gated). Same toggle/clear machinery.
+const DUNGEONS2=[
+  ['Drowned Vault (Barik)',  'barikdeep',   'barikDeepDone'],   // The Tidemaw felled -> DIVE
+  ['Gale Spire (Windsurf)',  'winddeep',    'galeDeepDone'],    // The Skirl felled -> longer dash
+  ['Ashen Forge (Sunward)',  'sunwarddeep', 'ashenForgeDone'],  // The Cinderwrought felled -> flame snare
+  ['Storm Temple (Cloud)',   'skydeep',     'stormTempleDone'], // The Thundercaller felled -> double dash
+  ['Tideward Crypt (capstone)','embertomb', 'tidewardDone'],    // The Tideward Guardian felled
 ];
 function dungWon(flag){ return !!(typeof P!=='undefined' && P && P.story && P.story[flag]); }
 function dungLabel(name,flag){ return name+': '+(dungWon(flag)?'WON ✓':'not won'); }
@@ -123,13 +150,15 @@ function clearDungeonState(){
   // 1. every dungeon back to NOT-won (setDungeon also drops its cached copy, syncs any
   //    coupled quest/surface, and rebuilds it in place if you happen to be standing in it)
   DUNGEONS.forEach(([n,id,f])=>setDungeon(id,f,false));
+  DUNGEONS2.forEach(([n,id,f])=>setDungeon(id,f,false));   // the Act II returned-isle dungeons too
   // 2. wipe the one-time intro markers so each dungeon's how-to banner plays again -
   //    a clear on-entry signal that the fresh challenge is armed
   ['vaultSeen','millSeen','deepSeen','emberSeen','tombSeen','underSeen','mawSeen'].forEach(s=>{ delete P.prog[s]; });
   // 3. drop any live wave/gate runtime (the Glacier Vault) so a re-entry re-arms from zero
   if(typeof G!=='undefined'){ delete G._vaultRooms; delete G._vaultT; }
   // 4. belt-and-braces: clear every cached dungeon world outright
-  const DIDS=['frostvault','milldeep','frostdeep','aeriedeep','eastdeep','reachdeep','undermaw','skydungeon'];
+  const DIDS=['frostvault','milldeep','frostdeep','aeriedeep','eastdeep','reachdeep','undermaw','skydungeon',
+              'barikdeep','winddeep','sunwarddeep','skydeep','embertomb'];
   if(typeof WORLDS!=='undefined') for(const id of DIDS){ if(WORLDS[id]) delete WORLDS[id]; }
   // 5. standing in a dungeon right now? rebuild it fresh this instant
   if(typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].dungeon) regenWorld(G.worldId);
@@ -148,9 +177,12 @@ function completeActive(){
 }
 function unlockAll(){
   P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.staff=P.unlocked.surf=P.unlocked.moa=true;
+  P.unlocked.dash=true;   // base footwork
+  // the four returned-isle gifts (Act II)
+  P.unlocked.dive=true; P.unlocked.dashfar=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
-  ui(); note('All weapons, board, moa & tools unlocked');
+  ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
 }
 function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.poisonT=0; ui(); note('Restored to full'); }
 function gold(n){ if(typeof giveGold==='function') giveGold(n); else P.gold=(P.gold||0)+n; ui(); note('+'+n+' gold'); }
@@ -178,11 +210,17 @@ const SECTIONS=[
     ['Cloudreach (sky)',()=>tp('sky')], ['Windsurf',()=>tp('wind')], ['Stormreach',()=>tp('reach')],
     ['Aerie',()=>tp('aerie')], ['Frozen',()=>tp('frost')], ['Aldermere (Capital)',()=>tp('crown')],
   ]],
-  ['Teleport dungeon', [
+  ['Teleport dungeon (Act I)', [
     ['Emberdeep',()=>tp('eastdeep')], ['Underclimb',()=>tp('aeriedeep')],
     ['Rimefissure (frozen)',()=>tp('frostdeep')], ['Glacier Vault',()=>tp('frostvault')],
     ['Drowned Catacomb',()=>tp('reachdeep')], ['Undermill (Windsurf)',()=>tp('milldeep')],
     ['Undermaw (Barik)',()=>tp('undermaw')], ['Rainbow Road (sky)',()=>tp('skydungeon')],
+  ]],
+  ['Teleport dungeon (Act II · returned isles)', [
+    ['Drowned Vault (Barik)',()=>tp('barikdeep')], ['Gale Spire (Windsurf)',()=>tp('winddeep')],
+    ['Ashen Forge (Sunward)',()=>tp('sunwarddeep')], ['Storm Temple (Cloudreach)',()=>tp('skydeep')],
+    ['Tideward Crypt (capstone)',()=>tp('embertomb')],
+    ['★ Set Act II return phase (Veil + 4 gifts)',()=>enterReturnPhase()],
   ]],
   ['Copy test link (share)', [
     ['Emberdeep',()=>copyDungeonLink('eastdeep')], ['Underclimb',()=>copyDungeonLink('aeriedeep')],
@@ -192,6 +230,7 @@ const SECTIONS=[
   ]],
   ['Story / Act', [
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
+    ['★ Act II return phase (Veil + 4 gifts + refresh isles)',()=>enterReturnPhase()],
     ['Reset Act I ending (replay)',()=>resetActOneEnding()],
     ['Play Act I climax (throne)',()=>{ if(typeof throneCutscene==='function') throneCutscene(); }],
     ['Play Act I epilogue (boat)',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
@@ -206,11 +245,14 @@ const SECTIONS=[
     ['Reset Aerie',()=>resetCurse('aerie')], ['Reset Frozen',()=>resetCurse('frost')],
     ['Reset ALL',()=>resetCurse('all')], ['Clear foes here',()=>clearMobs()],
   ]],
-  ['Dungeons (tap to toggle won / not)',
+  ['Dungeons Act I (tap to toggle won / not)',
     DUNGEONS.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
       .concat([ ['★ Clear ALL dungeon state', ()=>clearDungeonState()],
-                ['Reset ALL dungeons', ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
-                ['Win ALL dungeons',   ()=>{ DUNGEONS.forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
+                ['Reset ALL dungeons', ()=>{ DUNGEONS.concat(DUNGEONS2).forEach(([n,i,f])=>setDungeon(i,f,false)); note('All dungeons reset'); }],
+                ['Win ALL dungeons',   ()=>{ DUNGEONS.concat(DUNGEONS2).forEach(([n,i,f])=>setDungeon(i,f,true));  note('All dungeons won'); }] ])
+  ],
+  ['Dungeons Act II · returned isles (toggle won / not)',
+    DUNGEONS2.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
   ],
   ['Quests', [
     ['Complete active quests',()=>completeActive()],
