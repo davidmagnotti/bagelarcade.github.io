@@ -1090,6 +1090,7 @@ const Amb={
 };
 
 /* ---------- weather: passing rain, cloud shadows, far thunder ---------- */
+const RAIN_PARALLAX=1;   // 1 = rain stays pinned to the world as you walk; <1 lets it drift toward screen-locked
 const WX={
   rain:0, target:0, timer:45, drops:[], boltT:0,
   update(dt){
@@ -1133,9 +1134,17 @@ const WX={
   },
   drawRain(){
     if(this.rain<=0.02 || G.worldId==='frost') return;   // the Frozen Isle falls as snow, not rain (see drawSnow)
+    // Anchor the squall to the world: cancel the camera pan, then wrap each streak back onto
+    // the screen so the rain stays put over the ground as you walk instead of sliding with the
+    // screen - the same treatment as the frozen-isle snow. Wind drift (d.x above) is untouched.
+    const M=26, WW=VW+2*M, HH=VH+2*M;
+    const camX=(G.cam?G.cam.x:0)*RAIN_PARALLAX, camY=(G.cam?G.cam.y:0)*RAIN_PARALLAX;
     cx.strokeStyle='rgba(200,220,250,'+(0.28*this.rain)+')'; cx.lineWidth=1;
     cx.beginPath();
-    for(const d of this.drops){ cx.moveTo(d.x,d.y); cx.lineTo(d.x-d.len*0.18,d.y-d.len); }
+    for(const d of this.drops){
+      const dx=((d.x-camX+M)%WW+WW)%WW-M, dy=((d.y-camY+M)%HH+HH)%HH-M;
+      cx.moveTo(dx,dy); cx.lineTo(dx-d.len*0.18,dy-d.len);
+    }
     cx.stroke();
     cx.fillStyle='rgba(58,80,112,'+(0.13*this.rain)+')'; cx.fillRect(-20,-20,VW+40,VH+40);
   },
