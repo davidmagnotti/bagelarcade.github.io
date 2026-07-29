@@ -1546,7 +1546,7 @@ function updateProjs(dt){
     // wall-mounted eye still registers)
     if(p.from==='player'){
       let struck=false;
-      for(const d of G.decor){ if(d.kind==='shoottarget' && !d.hit && dist(p.x,p.y,d.x,d.y-0.3)<0.75){
+      for(const d of G.decor){ if(d.kind==='shoottarget' && !d.hit && !d.thornbud && dist(p.x,p.y,d.x,d.y-0.3)<0.75){
         if(typeof hitShootTarget==='function') hitShootTarget(d); p.life=0; struck=true; break; } }
       if(struck) continue;
     }

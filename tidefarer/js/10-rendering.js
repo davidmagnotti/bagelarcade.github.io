@@ -2645,6 +2645,54 @@ function drawMob(m,s){
     else if(!m.invuln){ g.fillStyle='#ffe27a'; g.font='bold 10px Georgia'; g.fillText('VULNERABLE',s.x,s.y-84); }
     drawMobBars&&drawMobBars(m,s); return;
   }
+  // THE TIDEWARD GUARDIAN - the Emberwick capstone's founders' sentinel: a tall knight of
+  // tideglass in crowned armour, a greatsword it heaves overhead on its telegraphed sweep.
+  // Its glass brightens by phase (m.wphase 1..3).
+  if(m.kind==='wardking'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, wnd=(m.windup>0);
+    const ph=m.wphase||1, glow=0.4+0.15*ph+0.15*Math.sin(t*3);
+    drawShadowAt(g,s.x,s.y,34);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.6,2.6);
+    const glass='#7fb8d8', glassD='#4d7fa0', glassL='#cfeeff', gold='#e6c878', OUT='rgba(12,28,40,0.75)';
+    g.lineJoin='round';
+    // cloak behind
+    g.fillStyle='rgba(40,70,100,0.85)'; g.beginPath(); g.moveTo(-10,-42); g.quadraticCurveTo(-20,-16,-10,-2); g.lineTo(10,-2); g.quadraticCurveTo(20,-16,10,-42); g.closePath(); g.fill();
+    g.fillStyle=glassD; g.fillRect(-10,-15,7,15); g.fillRect(3,-15,7,15);   // greaves
+    // torso (armoured, faceted)
+    g.fillStyle=glass; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(-13,-16); g.lineTo(-11,-44); g.lineTo(11,-44); g.lineTo(13,-16); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=glassL; g.beginPath(); g.moveTo(-11,-44); g.lineTo(-2,-44); g.lineTo(-4,-18); g.lineTo(-11,-18); g.closePath(); g.fill();
+    // a glowing tideglass heart on the breastplate
+    const hg=g.createRadialGradient(0,-30,1,0,-30,8); hg.addColorStop(0,'rgba(200,240,255,'+glow.toFixed(2)+')'); hg.addColorStop(1,'rgba(120,200,235,0)');
+    g.fillStyle=hg; g.beginPath(); g.arc(0,-30,8,0,TAU); g.fill();
+    g.fillStyle=gold; g.beginPath(); g.moveTo(0,-34); g.lineTo(3,-30); g.lineTo(0,-26); g.lineTo(-3,-30); g.closePath(); g.fill();
+    // pauldrons
+    g.fillStyle=glassD; g.beginPath(); g.arc(-13,-42,5,0,TAU); g.arc(13,-42,5,0,TAU); g.fill();
+    // far arm + sword arm (heaves the greatsword overhead on wind-up)
+    g.strokeStyle=glassD; g.lineWidth=5.5; g.lineCap='round';
+    g.beginPath(); g.moveTo(-12,-40); g.lineTo(-16,-20); g.stroke();
+    const sxp=wnd?-2:16, syp=wnd?-64:-30, hxp=12, hyp=-40;   // sword hand
+    g.beginPath(); g.moveTo(hxp,hyp); g.lineTo(sxp,syp); g.stroke();
+    // the greatsword
+    g.save(); g.translate(sxp,syp); g.rotate(wnd? -0.5 : 0.9);
+    g.fillStyle=gold; g.fillRect(-2,-2,4,6); g.strokeStyle=OUT; g.lineWidth=1.4; g.strokeRect(-2,-2,4,6);   // hilt
+    g.fillStyle=gold; g.fillRect(-6,-2,12,2.4);   // crossguard
+    g.fillStyle=glassL; g.strokeStyle='rgba(90,140,170,0.8)'; g.lineWidth=1.2;   // blade
+    g.beginPath(); g.moveTo(-2.4,-2); g.lineTo(2.4,-2); g.lineTo(1.2,-30); g.lineTo(0,-34); g.lineTo(-1.2,-30); g.closePath(); g.fill(); g.stroke();
+    g.restore();
+    // head + crown
+    g.fillStyle=glass; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.arc(0,-50,6,0,TAU); g.fill(); g.stroke();
+    g.fillStyle= hurt?'#ffd0d0':'#eaffff'; g.fillRect(-3.5,-52,2.6,2.4); g.fillRect(1,-52,2.6,2.4);   // eyes
+    g.fillStyle=gold; g.beginPath(); g.moveTo(-6,-55); g.lineTo(-6,-60); g.lineTo(-3,-57); g.lineTo(0,-61); g.lineTo(3,-57); g.lineTo(6,-60); g.lineTo(6,-55); g.closePath(); g.fill();   // crown
+    g.lineCap='butt';
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(0,-30,18,32,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 14px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-80);
+    g.fillStyle='#cfeeff'; g.fillText(nm,s.x,s.y-81);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;

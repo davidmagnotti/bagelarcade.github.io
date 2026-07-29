@@ -5205,38 +5205,113 @@ function updateThundercaller(m,dt){
 // gifts. Inside, the Sunken Ford is a genuine DIVE crossing; the deeper halls are
 // the founders' trials, ending at the Tideward Guardian and a hook toward the
 // weapon the prophecy names (see STORY.md, Act II climax).
+/* ---------- THE TIDEWARD CRYPT (embertomb) - the Emberwick capstone, bespoke ------------
+   Opened only with all four returned-isle gifts, and every chamber demands one of them in
+   turn: DIVE the Sunken Ford, clear the Broken Span with the LONGER DASH, burn the Emberbriar
+   with a FLAME SNARE, and cross the Sundering Chasm with the DOUBLE DASH - then face THE
+   TIDEWARD GUARDIAN, the founders' sentinel, and take the trail to the weapon.
+   ================================================================================= */
+const TOMB_THORN=[[37,29],[38,29],[39,29],[40,29],[41,29],[42,29],[43,29]];   // the Emberbriar wall
 function genEmberTomb(){
   _dungReset();
   _dungCarve(32,96,48,108,T.RUIN);        // THE FOUNDERS' STAIR (entry)
-  _dungCarve(37,80,43,96,T.RUIN);         // corridor down to the ford
-  _dungCarve(24,66,56,80,T.RUIN);         // THE SUNKEN FORD chamber...
-  for(let y=68;y<=78;y++) for(let x=27;x<=53;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); }  // ...flooded: DIVE across
-  _dungCarve(37,64,43,68,T.RUIN);         // dry lip on the far side
-  _dungCarve(37,54,43,66,T.RUIN);         // corridor
-  _dungCarve(24,42,56,58,T.RUIN);         // THE BROKEN SPAN
-  _dungCarve(37,30,43,44,T.RUIN);         // corridor
-  _dungCarve(24,22,56,40,T.RUIN);         // THE EMBERBRIAR GATE
-  _dungCarve(37,14,43,24,T.RUIN);         // corridor
-  _dungCarve(20,6,60,22,T.RUIN);          // THE TIDEWARD VAULT (guardian)
+  _dungCarve(37,88,43,96,T.RUIN);         // corridor
+  _dungCarve(28,82,52,88,T.RUIN);         // SUNKEN FORD - south lip
+  for(let y=74;y<=82;y++) for(let x=28;x<=52;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); }  // ...flooded: DIVE across
+  _dungCarve(28,68,52,74,T.RUIN);         // north lip
+  _dungCarve(37,62,43,68,T.RUIN);         // corridor
+  _dungCarve(28,56,52,62,T.RUIN);         // BROKEN SPAN - south ledge
+  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (voided in placeObjects: LONGER DASH)
+  _dungCarve(28,44,52,50,T.RUIN);         // north ledge
+  _dungCarve(37,38,43,44,T.RUIN);         // corridor
+  _dungCarve(28,30,52,38,T.RUIN);         // EMBERBRIAR chamber
+  _dungCarve(37,22,43,30,T.RUIN);         // corridor north (walled by the briar until burned)
+  _dungCarve(26,16,54,22,T.RUIN);         // SUNDERING CHASM - south ledge
+  _dungCarve(26,10,54,15,T.RUIN);         // ...the chasm floor (voided in placeObjects: DOUBLE DASH)
+  _dungCarve(20,2,60,10,T.RUIN);          // THE TIDEWARD VAULT (guardian + reward)
 }
 function placeEmberTombObjects(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:40.5, y:104.5, deepworld:'isle', exit:1, label:'the way up'});
   setSolid(40,104,0); setTile(40,104,T.RUIN);
-  for(const [tx,ty] of [[34,98],[46,98],[26,72],[54,72],[26,50],[54,50],[26,30],[54,30],[24,10],[56,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // the vault's headstone-chest: a store of the founders (and a hook to the weapon)
-  G.decor.push({kind:'chest', x:40.5, y:10.5, tidewardHoard:1});
+  for(const [tx,ty] of [[34,98],[46,98],[26,70],[54,70],[26,58],[54,58],[26,32],[54,32],[24,4],[56,4],[40,3]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G._tombVoid=new Set(); G._tombPlunge=null; G._tombCheck={x:40.5,y:90.5};
+  const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); if(((x*3+y)%3)===0) G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
+  voidRect(28,50,52,55);        // THE BROKEN SPAN gap (longer dash)
+  voidRect(26,10,54,15);        // THE SUNDERING CHASM gap (double dash)...
+  // ...but leave a small mid-island to land the first dash on, then dash again to the vault
+  for(let y=11;y<=13;y++) for(let x=38;x<=42;x++){ G._tombVoid.delete(x+','+y); setTile(x,y,T.RUIN); setSolid(x,y,0);
+    for(let i=G.decor.length-1;i>=0;i--){ const d=G.decor[i]; if(d.kind==='bonepit' && Math.floor(d.x)===x && Math.floor(d.y)===y) G.decor.splice(i,1); } }
+  // THE EMBERBRIAR: a thornwall across the north corridor, opened by a FLAME SNARE on its bud
+  G._tombThornOpen=0; G._tombThorn={x:40.5, y:34.5};
+  for(const [x,y] of TOMB_THORN){ setTile(x,y,T.RUIN); setSolid(x,y,1); G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false, thornwall:1}); }   // the barred wall
+  G.decor.push({kind:'shoottarget', x:40.5, y:34.5, thornbud:1});       // the bud you burn with a flame-snare
+  G.decor.push({kind:'chest', x:40.5, y:4.5, tidewardHoard:1});         // the founders' hoard
   G.critters=[];
+  if(P.story && P.story.tidewardDone){ tombBurnThorns(true); }           // a cleared run stands open
 }
 function spawnEmberTombMobs(){
-  for(const [zx,zy] of [[40,50],[32,48],[48,48],[40,30],[32,28],[48,28]]){ const sp=findOpenNear(zx,zy,4); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  for(const [zx,zy] of [[34,34],[46,34],[30,20],[50,20]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   if(!(P.story && P.story.tidewardDone)){
-    const sp=findOpenNear(40, 14, 8) || [40,14];
-    const b=spawnMob('minotaur', sp[0], sp[1], true);
-    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.entrance='loom'; }
+    const sp=findOpenNear(40, 6, 8) || [40,6];
+    const b=spawnMob('wardking', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
 }
 function genEmberTombAll(){ genEmberTomb(); placeEmberTombObjects(); spawnEmberTombMobs(); buildMapBase(); }
+function tombPlungeStart(){
+  G._tombPlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-6); P.hurtT=Math.max(P.hurtT||0,0.5);
+  if(typeof buzz==='function') buzz(10); shockwave(P.x,P.y,'rgba(180,190,210,0.7)',30);
+  for(let i=0;i<10;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y,vx:rnd(-1,1),vy:-rnd(1,2),life:0.6,color:'rgba(200,205,220,0.7)',size:rnd(2,4),grav:0.08});
+  P.click=null; P.moving=false;
+}
+function tombRespawn(){
+  G._tombPlunge=null; const c=G._tombCheck||{x:40.5,y:90.5};
+  P.x=c.x; P.y=c.y; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+function tombBurnThorns(silent){
+  G._tombThornOpen=1;
+  for(const [x,y] of TOMB_THORN) setSolid(x,y,0);
+  G.decor=G.decor.filter(d=>!(d.kind==='pillar'&&d.thornwall) && !(d.kind==='shoottarget'&&d.thornbud));
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(!silent){ if(G._tombThorn) shockwave(G._tombThorn.x,G._tombThorn.y,'rgba(255,150,60,0.9)',48);
+    if(G._tombThorn) burst(G._tombThorn.x,G._tombThorn.y-0.3,'#ff9a3c',20,2.8);
+    if(typeof toast==='function') toast('The flame-snare catches in the wardbriar and it curls to ash - the way north opens.',4200); }
+}
+function updateEmberTomb(dt){
+  if(!G._tombVoid) return;
+  if(G._tombPlunge){ G._tombPlunge.t+=dt; if(G._tombPlunge.t>=G._tombPlunge.dur) tombRespawn(); }
+  else if(!P.dead && (P.rollT||0)<=0){
+    const tx=Math.floor(P.x), ty=Math.floor(P.y);
+    if(G._tombVoid.has(tx+','+ty)) tombPlungeStart();
+    else if(walkTile(tileAt(tx,ty)) && tileAt(tx,ty)!==T.DEEP) G._tombCheck={x:P.x,y:P.y};   // last safe footing = the checkpoint
+  }
+  // THE EMBERBRIAR: a player flame-snare bolt near the bud burns the wall away
+  if(!G._tombThornOpen && G._tombThorn){ for(const p of (G.projs||[])){ if(p.from==='player' && p.flame && dist(p.x,p.y,G._tombThorn.x,G._tombThorn.y)<1.6){ tombBurnThorns(); break; } } }
+  // THE VAULT: the Guardian rises when you step in
+  const boss=G.mobs.find(m=>m.wardking && !m.dead);
+  if(boss && boss.sealed && P.y<=10 && P.x>=20 && P.x<=60){ boss.sealed=false; boss.arena=1;
+    if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'rise',title:boss.title,sub:boss.subtitle}); }
+  for(const m of G.mobs) if(m.wardking && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateWardKing(m,dt);
+}
+function updateWardKing(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.wphase = m.hp<m.maxhp*0.33?3 : m.hp<m.maxhp*0.66?2 : 1;
+  m.sweepCd=(m.sweepCd||0)-dt; m.shardCd=(m.shardCd||0)-dt; m.slamCd=(m.slamCd||0)-dt;
+  const spd=m.speed*(m.wphase>=3?1.2:1);
+  if(pd>1.9 && !(m.windup>0) && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*spd*dt,Math.sin(a)*spd*dt); }
+  if(pd<3 && m.sweepCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.55; m.sweepCd=m.wphase>=3?2.2:3.0; }   // telegraphed greatsword sweep
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.swing=0.35; G.shake=0.55; shockwave(m.x+m.face,m.y-0.3,'rgba(200,240,255,0.85)',56);
+    if(dist(m.x,m.y,P.x,P.y)<3.3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m); } }
+  if(m.wphase>=2 && m.shardCd<=0 && pd>2.4){ m.shardCd=2.8; wardShards(m); }   // phase 2: tideglass shard fan
+  if(m.wphase>=3 && m.slamCd<=0){ m.slamCd=8; G.shake=0.8; shockwave(m.x,m.y,'rgba(230,220,150,0.8)',82);   // phase 3: summoning slam
+    for(let k=0;k<2;k++){ const sp=findOpenNear(Math.round(m.x+rnd(-4,4)),Math.round(m.y+rnd(-3,3)),4); if(sp){ const s=spawnMob('skeleton',sp[0],sp[1]); if(s){ s.state='chase'; s.respawnT=-1; } } } }
+}
+function wardShards(m){ const base=Math.atan2(P.y-m.y,P.x-m.x);
+  for(const o of [-0.5,-0.25,0,0.25,0.5]){ const a=base+o; G.projs.push({kind:'shard', x:m.x, y:m.y-1, vx:Math.cos(a)*8, vy:Math.sin(a)*8, life:1.7, dmg:Math.round(m.dmg*0.5), from:'mob'}); }
+  if(Snd.magic) Snd.magic();
+}
 
 // generic descend/ascend for every `deepworld` dungeonmouth
 function useGateDungeon(b){
