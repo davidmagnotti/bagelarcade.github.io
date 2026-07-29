@@ -3221,9 +3221,10 @@ function buildMapBase(){
 }
 let miniT=0;
 function drawMinimap(){
-  // Cloud worlds (Cloudreach) have no chartable ground - the minimap is sealed there
-  // by design; #miniWrap is hidden too (see syncMapUI), so just skip the draw.
-  if(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud) return;
+  // Cloud worlds (no chartable ground) and dungeons (walls and floor are the same stone,
+  // so the map is just a gray box) have their minimap sealed by design; #miniWrap is hidden
+  // too (see syncMapUI/mapSealed), so just skip the draw.
+  if(typeof mapSealed==='function' ? mapSealed() : (WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud)) return;
   const c=document.getElementById('minimap'); if(!c) return;
   const g=c.getContext('2d'); if(!g) return;
   try{

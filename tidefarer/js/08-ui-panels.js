@@ -1,18 +1,25 @@
 /* =====================================================================
    UI PANELS
    ===================================================================== */
-// Up in the clouds there is no ground to chart: the minimap and the full map are
-// sealed on cloud worlds (Cloudreach), by design - it's part of being adrift in the sky.
-function mapSealed(){ return !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud); }
+// Some places can't be charted: up in the clouds there is no ground to map (Cloudreach),
+// and underground the dungeon walls and floor are one and the same stone - a map there is
+// just a gray box. The minimap and full map are sealed in both, by design.
+function mapSealed(){ const d=WORLD_DEFS[G.worldId]; return !!(d && (d.cloud || d.dungeon)); }
+// the flavor for WHY the map is sealed depends on where you are
+function mapSealedWhy(){ const d=WORLD_DEFS[G.worldId];
+  return (d && d.dungeon) ? 'Stone and shaft on every side - there\'s no charting the dark down here.'
+                          : 'The clouds hide any map - up here you steer by sight alone.'; }
+function mapSealedTip(){ const d=WORLD_DEFS[G.worldId];
+  return (d && d.dungeon) ? 'No map reads underground' : 'No map reads up here in the clouds'; }
 function syncMapUI(){
   const sealed=mapSealed();
   const mw=document.getElementById('miniWrap'); if(mw) mw.style.display=sealed?'none':'';
   const bm=document.getElementById('btnMap');
   if(bm){ bm.style.opacity=sealed?'0.4':''; bm.style.filter=sealed?'grayscale(1)':'';
-    bm.style.pointerEvents=sealed?'none':''; bm.title=sealed?'No map reads up here in the clouds':''; }
+    bm.style.pointerEvents=sealed?'none':''; bm.title=sealed?mapSealedTip():''; }
 }
 function togglePanel(id){
-  if(id==='mapPanel' && mapSealed()){ if(typeof toast==='function') toast('The clouds hide any map - up here you steer by sight alone.',2600); return; }
+  if(id==='mapPanel' && mapSealed()){ if(typeof toast==='function') toast(mapSealedWhy(),2600); return; }
   const el=document.getElementById(id);
   const open = el.style.display==='block';
   closeAllPanels();

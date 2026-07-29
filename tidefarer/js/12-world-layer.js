@@ -2773,7 +2773,7 @@ function pullSluiceOrder(b){
       toast('The last lock gives and the whole hall drains at once - a clear channel opens all the way north. <b>Cross it before you touch another valve.</b>',5000);
     } else {
       addFloat('lock '+S.idx+' / '+S.order.length, b.x, b.y-1.4, '#bfe0f4', 1.1);
-      toast('The water recedes a stretch and holds - <b>'+S.idx+' of '+S.order.length+'</b> locks thrown in order. Read the plaque for the next number.',3000);
+      toast('The water recedes a stretch and holds - <b>'+S.idx+' of '+S.order.length+'</b> locks thrown in order. The carved stele shows the next number.',3000);
     }
   } else {
     // wrong lock: the whole hall floods black again and the order resets
@@ -2785,7 +2785,7 @@ function pullSluiceOrder(b){
     G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(14); Snd.hit&&Snd.hit();
     invalidateScenery&&invalidateScenery();
     if(had>0) banner('THE LOCKS SLAM SHUT','THE ORDER BREAKS - THE HALL FLOODS BACK');
-    toast('Wrong valve - the sluices reverse with a roar and every stretch you drained floods black again. The tide-lock resets. <b>Read the carved plaque and throw the numbers in that order.</b>',4400);
+    toast('Wrong valve - the sluices reverse with a roar and every stretch you drained floods black again. The tide-lock resets. <b>The carved stele shows the order - throw the numbers just as it reads.</b>',4400);
   }
 }
 // drive the mill's grinding hazards: cycle the spike-grates and sweep the grind-blades, bleeding
