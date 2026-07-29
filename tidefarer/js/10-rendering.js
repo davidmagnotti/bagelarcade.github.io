@@ -2500,6 +2500,199 @@ function drawMob(m,s){
     g.restore(); g.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
+  // THE TIDEMAW - Barik's Drowned Vault guardian: a pallid anglerfish leviathan with a
+  // luring light and a maw that gapes wide on its telegraphed bite. Goes translucent while
+  // it submerges (m.invuln).
+  if(m.kind==='tidemaw'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0;
+    const open=Math.min(1,(m.windup>0?1:(m.swing>0?m.swing/0.3:0))+0.12+0.08*Math.sin(t*2)); // maw gape
+    const bob=Math.sin(m.anim*1.4)*1.6, sub=(m.invuln?0.42:1);
+    drawShadowAt(g,s.x,s.y,32);
+    g.save(); g.translate(s.x,s.y+bob*0.3); g.scale(fl,1); g.scale(2.3,2.3);
+    g.globalAlpha=sub; g.lineJoin='round';
+    const body='#255a63', bodyD='#173e46', bodyL='#3f7e86', teeth='#e9f4ee', lure='#bdf0ff', OUT='rgba(8,26,30,0.7)';
+    g.fillStyle=bodyD; g.beginPath(); g.moveTo(-18,-14); g.lineTo(-31,-25); g.lineTo(-27,-14); g.lineTo(-31,-3); g.closePath(); g.fill();  // tail fin
+    g.beginPath(); g.moveTo(-6,-30); g.lineTo(2,-43); g.lineTo(9,-28); g.closePath(); g.fill();  // dorsal fin
+    g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.ellipse(-2,-15,22,15,0,0,TAU); g.fill(); g.stroke();  // body
+    g.fillStyle=bodyL; g.beginPath(); g.ellipse(-2,-9,17,7,0,0,TAU); g.fill();  // belly
+    g.fillStyle=bodyD; g.beginPath(); g.moveTo(0,-6); g.lineTo(-6,3); g.lineTo(6,-2); g.closePath(); g.fill();  // pectoral fin
+    const jx=15, lj=open*9;   // ---- the MAW ----
+    g.fillStyle=body; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(jx-8,-22); g.lineTo(jx+16,-20-open*3); g.lineTo(jx+15,-14); g.lineTo(jx-6,-14); g.closePath(); g.fill(); g.stroke();  // upper jaw
+    g.beginPath(); g.moveTo(jx-8,-14); g.lineTo(jx+15,-14); g.lineTo(jx+14,-8+lj); g.lineTo(jx-6,-8+lj*0.6); g.closePath(); g.fill(); g.stroke();  // lower jaw
+    if(open>0.25){ g.fillStyle='#0a2226'; g.beginPath(); g.moveTo(jx-6,-14); g.lineTo(jx+14,-14); g.lineTo(jx+13,-9+lj*0.8); g.lineTo(jx-5,-11+lj*0.5); g.closePath(); g.fill(); }  // dark gullet
+    g.fillStyle=teeth;
+    for(let i=0;i<5;i++){ const tx=jx-4+i*4;
+      g.beginPath(); g.moveTo(tx,-14); g.lineTo(tx+1.6,-14); g.lineTo(tx+0.8,-11.5+open*2); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(tx,-8+lj*0.7); g.lineTo(tx+1.6,-8+lj*0.7); g.lineTo(tx+0.8,-10.5+lj*0.7-open*2); g.closePath(); g.fill(); }
+    g.fillStyle='#0a1c20'; g.beginPath(); g.arc(8,-22,3.2,0,TAU); g.fill();   // eye
+    g.fillStyle=hurt?'#ffd0d0':lure; g.beginPath(); g.arc(8.6,-22.6,1.5,0,TAU); g.fill();
+    const lb=-34+Math.sin(t*2.2)*1.5;   // ---- the LURE ----
+    g.strokeStyle=bodyD; g.lineWidth=2; g.beginPath(); g.moveTo(2,-28); g.quadraticCurveTo(16,-40,20,lb); g.stroke();
+    const glow=0.55+0.35*Math.sin(t*3.4);
+    g.fillStyle='rgba(160,235,255,'+(0.35*glow*sub).toFixed(2)+')'; g.beginPath(); g.arc(20,lb,7,0,TAU); g.fill();
+    g.fillStyle=lure; g.beginPath(); g.arc(20,lb,2.6,0,TAU); g.fill();
+    g.globalAlpha=1;
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(-2,-15,24,17,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.65)'; g.fillText(nm,s.x+1,s.y-70);
+    g.fillStyle='#bdf0ff'; g.fillText(nm,s.x,s.y-71);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  // THE SKIRL - Windsurf's Gale Spire guardian: the maddened wind given a shape, a
+  // spinning funnel of stacked wind-rings with a pair of pale eyes near its crown.
+  if(m.kind==='skirl'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0;
+    const spin=t*3.5, wob=Math.sin(m.anim*1.6)*2, sub=(m.invuln?0.4:0.9);
+    drawShadowAt(g,s.x,s.y,26);
+    g.save(); g.translate(s.x,s.y+wob*0.2); g.scale(fl,1); g.scale(2.2,2.2);
+    g.globalAlpha=sub;
+    for(let i=0;i<6;i++){ const yy=-6-i*7, rw=6+i*3.2, rot=spin*(1+i*0.15)+i;   // stacked funnel rings
+      g.fillStyle= i%2? 'rgba(169,196,214,0.5)' : 'rgba(223,234,242,0.55)';
+      g.beginPath(); g.ellipse(Math.cos(rot)*rw*0.25, yy, rw, rw*0.42, 0, 0, TAU); g.fill(); }
+    g.strokeStyle='rgba(255,255,255,0.5)'; g.lineWidth=1.4;   // swirling wisp streaks
+    for(let i=0;i<3;i++){ const a=spin+i/3*TAU; g.beginPath();
+      for(let k=0;k<10;k++){ const yy=-6-k*4.2, rr=(6+k*2)*0.9, xx=Math.cos(a+k*0.5)*rr; k?g.lineTo(xx,yy):g.moveTo(xx,yy); } g.stroke(); }
+    g.globalAlpha=1;
+    g.fillStyle= hurt?'#ffd0d0':'#eaffff'; g.beginPath(); g.arc(-4,-40,2.4,0,TAU); g.arc(4,-40,2.4,0,TAU); g.fill();   // eyes
+    g.fillStyle='rgba(120,200,235,0.9)'; g.beginPath(); g.arc(-4,-40,1.1,0,TAU); g.arc(4,-40,1.1,0,TAU); g.fill();
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.35)'; g.beginPath(); g.ellipse(0,-24,16,26,0,0,TAU); g.fill(); }
+    g.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.6)'; g.fillText(nm,s.x+1,s.y-72);
+    g.fillStyle='#dfeaf2'; g.fillText(nm,s.x,s.y-73);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  // THE CINDERWROUGHT - Sunward's Ashen Forge guardian: a hulking basalt golem laced with
+  // molten cracks, a glowing core, and heavy fists that rear on its telegraphed slam.
+  if(m.kind==='cinderwrought'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, wnd=(m.windup>0);
+    const glow=0.55+0.35*Math.sin(t*3)+(m.enraged?0.2:0);
+    drawShadowAt(g,s.x,s.y,34);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.5,2.5);
+    const rock='#33302f', rockD='#211f1e', rockL='#4a4644', mol='rgba(255,'+(120+Math.round(60*glow))+',40,', OUT='rgba(10,6,4,0.75)';
+    g.lineJoin='round';
+    g.fillStyle=rockD; g.fillRect(-11,-15,8,15); g.fillRect(3,-15,8,15);   // legs
+    g.fillStyle=mol+'0.9)'; g.fillRect(-10,-4,6,3); g.fillRect(4,-4,6,3);   // molten feet-cracks
+    // torso (chunky basalt)
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(-15,-16); g.lineTo(-13,-46); g.lineTo(13,-46); g.lineTo(15,-16); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=rockL; g.beginPath(); g.moveTo(-13,-44); g.lineTo(-4,-44); g.lineTo(-6,-20); g.lineTo(-13,-20); g.closePath(); g.fill();
+    // molten cracks + core
+    g.strokeStyle=mol+'0.85)'; g.lineWidth=2.2;
+    g.beginPath(); g.moveTo(-8,-40); g.lineTo(-3,-30); g.lineTo(-7,-22); g.moveTo(9,-42); g.lineTo(4,-32); g.lineTo(8,-24); g.stroke();
+    const cg=g.createRadialGradient(0,-30,1,0,-30,9); cg.addColorStop(0,mol+'1)'); cg.addColorStop(1,mol+'0)');
+    g.fillStyle=cg; g.beginPath(); g.arc(0,-30,9,0,TAU); g.fill();
+    g.fillStyle=mol+'1)'; g.beginPath(); g.arc(0,-30,3.4,0,TAU); g.fill();
+    // arms/fists (rear overhead on wind-up)
+    const ay=wnd?-52:-30;
+    g.strokeStyle=rockD; g.lineWidth=7; g.lineCap='round';
+    g.beginPath(); g.moveTo(-13,-40); g.lineTo(-20,ay); g.stroke();
+    g.beginPath(); g.moveTo(13,-40); g.lineTo(20,ay); g.stroke();
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=1.6;
+    g.beginPath(); g.arc(-20,ay,6,0,TAU); g.fill(); g.stroke(); g.beginPath(); g.arc(20,ay,6,0,TAU); g.fill(); g.stroke();
+    if(wnd){ g.fillStyle=mol+'0.9)'; g.beginPath(); g.arc(-20,ay,3,0,TAU); g.arc(20,ay,3,0,TAU); g.fill(); }
+    // head (blocky, glowing eyes)
+    g.fillStyle=rock; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.moveTo(-8,-46); g.lineTo(8,-46); g.lineTo(6,-58); g.lineTo(-6,-58); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle= hurt?'#ffd0d0':(mol+'1)'); g.fillRect(-5,-54,3.5,3); g.fillRect(1.5,-54,3.5,3);
+    g.lineCap='butt';
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(0,-30,18,30,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-74);
+    g.fillStyle='#ff9a5a'; g.fillText(nm,s.x,s.y-75);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  // THE THUNDERCALLER - Cloudreach's Storm Temple herald: a robed storm-figure wreathed in a
+  // crackling cloud-mantle, forking little bolts, its shield-ring shimmering while it charges.
+  if(m.kind==='thundercaller'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, charge=(m.phase==='charge');
+    const bob=-40-Math.sin(m.anim*1.5)*3;   // hovers
+    drawShadowAt(g,s.x,s.y,24);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.3,2.3);
+    const robe='#2b3350', robeL='#454f78', mantle='rgba(180,200,240,', bolt='#eaf2ff';
+    g.globalAlpha=(m.invuln?0.9:1);
+    // storm-mantle (churning cloud ring around the shoulders)
+    for(let i=0;i<5;i++){ const a=t*0.8+i/5*TAU; g.fillStyle=mantle+(0.28+0.12*Math.sin(t*2+i)).toFixed(2)+')';
+      g.beginPath(); g.ellipse(Math.cos(a)*9,-34+Math.sin(a)*3,6,4,0,0,TAU); g.fill(); }
+    // robed body (tapering to mist)
+    g.fillStyle=robe; g.strokeStyle='rgba(10,14,28,0.7)'; g.lineWidth=1.8;
+    g.beginPath(); g.moveTo(-9,-34); g.quadraticCurveTo(-12,-6,-5,-2+bob*0+0); g.lineTo(5,-2); g.quadraticCurveTo(12,-6,9,-34); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=robeL; g.beginPath(); g.moveTo(-6,-34); g.lineTo(-2,-34); g.lineTo(-3,-8); g.lineTo(-7,-8); g.closePath(); g.fill();
+    // hood + face
+    g.fillStyle=robe; g.beginPath(); g.arc(0,-42,7,Math.PI,0); g.lineTo(6,-38); g.lineTo(-6,-38); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#0a0e1a'; g.beginPath(); g.ellipse(0,-40,4.5,5,0,0,TAU); g.fill();
+    g.fillStyle= hurt?'#ffd0d0':bolt; g.beginPath(); g.arc(-2,-41,1.3,0,TAU); g.arc(2,-41,1.3,0,TAU); g.fill();
+    // forking bolts crackling off the mantle
+    g.strokeStyle='rgba(200,225,255,'+(0.6+0.3*Math.sin(t*11)).toFixed(2)+')'; g.lineWidth=1.3; g.lineCap='round';
+    for(let i=0;i<3;i++){ const a=t*5+i*2.1; let x=Math.cos(a)*8, y=-34+Math.sin(a)*5; g.beginPath(); g.moveTo(x,y);
+      for(let k=0;k<3;k++){ x+=Math.cos(a)*3+rnd(-2,2); y+=Math.sin(a)*3+rnd(-2,2); g.lineTo(x,y);} g.stroke(); }
+    g.lineCap='butt';
+    if(charge){ const sr=0.5+0.4*Math.sin(t*9); g.strokeStyle='rgba(150,200,255,'+sr.toFixed(2)+')'; g.lineWidth=2.4;
+      g.beginPath(); g.arc(0,-30,18,0,TAU); g.stroke(); }
+    g.globalAlpha=1;
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.35)'; g.beginPath(); g.ellipse(0,-26,14,24,0,0,TAU); g.fill(); }
+    g.restore();
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 13px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-72);
+    g.fillStyle='#dfeaff'; g.fillText(nm,s.x,s.y-73);
+    if(m.invuln && !charge){ g.fillStyle='#8fd0ff'; g.font='bold 10px Georgia'; g.fillText('SHIELDED',s.x,s.y-84); }
+    else if(!m.invuln){ g.fillStyle='#ffe27a'; g.font='bold 10px Georgia'; g.fillText('VULNERABLE',s.x,s.y-84); }
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  // THE TIDEWARD GUARDIAN - the Emberwick capstone's founders' sentinel: a tall knight of
+  // tideglass in crowned armour, a greatsword it heaves overhead on its telegraphed sweep.
+  // Its glass brightens by phase (m.wphase 1..3).
+  if(m.kind==='wardking'){
+    const g=cx, fl=(m.face||1), t=G.time, hurt=m.hurtT>0, wnd=(m.windup>0);
+    const ph=m.wphase||1, glow=0.4+0.15*ph+0.15*Math.sin(t*3);
+    drawShadowAt(g,s.x,s.y,34);
+    g.save(); g.translate(s.x,s.y); g.scale(fl,1); g.scale(2.6,2.6);
+    const glass='#7fb8d8', glassD='#4d7fa0', glassL='#cfeeff', gold='#e6c878', OUT='rgba(12,28,40,0.75)';
+    g.lineJoin='round';
+    // cloak behind
+    g.fillStyle='rgba(40,70,100,0.85)'; g.beginPath(); g.moveTo(-10,-42); g.quadraticCurveTo(-20,-16,-10,-2); g.lineTo(10,-2); g.quadraticCurveTo(20,-16,10,-42); g.closePath(); g.fill();
+    g.fillStyle=glassD; g.fillRect(-10,-15,7,15); g.fillRect(3,-15,7,15);   // greaves
+    // torso (armoured, faceted)
+    g.fillStyle=glass; g.strokeStyle=OUT; g.lineWidth=2;
+    g.beginPath(); g.moveTo(-13,-16); g.lineTo(-11,-44); g.lineTo(11,-44); g.lineTo(13,-16); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=glassL; g.beginPath(); g.moveTo(-11,-44); g.lineTo(-2,-44); g.lineTo(-4,-18); g.lineTo(-11,-18); g.closePath(); g.fill();
+    // a glowing tideglass heart on the breastplate
+    const hg=g.createRadialGradient(0,-30,1,0,-30,8); hg.addColorStop(0,'rgba(200,240,255,'+glow.toFixed(2)+')'); hg.addColorStop(1,'rgba(120,200,235,0)');
+    g.fillStyle=hg; g.beginPath(); g.arc(0,-30,8,0,TAU); g.fill();
+    g.fillStyle=gold; g.beginPath(); g.moveTo(0,-34); g.lineTo(3,-30); g.lineTo(0,-26); g.lineTo(-3,-30); g.closePath(); g.fill();
+    // pauldrons
+    g.fillStyle=glassD; g.beginPath(); g.arc(-13,-42,5,0,TAU); g.arc(13,-42,5,0,TAU); g.fill();
+    // far arm + sword arm (heaves the greatsword overhead on wind-up)
+    g.strokeStyle=glassD; g.lineWidth=5.5; g.lineCap='round';
+    g.beginPath(); g.moveTo(-12,-40); g.lineTo(-16,-20); g.stroke();
+    const sxp=wnd?-2:16, syp=wnd?-64:-30, hxp=12, hyp=-40;   // sword hand
+    g.beginPath(); g.moveTo(hxp,hyp); g.lineTo(sxp,syp); g.stroke();
+    // the greatsword
+    g.save(); g.translate(sxp,syp); g.rotate(wnd? -0.5 : 0.9);
+    g.fillStyle=gold; g.fillRect(-2,-2,4,6); g.strokeStyle=OUT; g.lineWidth=1.4; g.strokeRect(-2,-2,4,6);   // hilt
+    g.fillStyle=gold; g.fillRect(-6,-2,12,2.4);   // crossguard
+    g.fillStyle=glassL; g.strokeStyle='rgba(90,140,170,0.8)'; g.lineWidth=1.2;   // blade
+    g.beginPath(); g.moveTo(-2.4,-2); g.lineTo(2.4,-2); g.lineTo(1.2,-30); g.lineTo(0,-34); g.lineTo(-1.2,-30); g.closePath(); g.fill(); g.stroke();
+    g.restore();
+    // head + crown
+    g.fillStyle=glass; g.strokeStyle=OUT; g.lineWidth=2; g.beginPath(); g.arc(0,-50,6,0,TAU); g.fill(); g.stroke();
+    g.fillStyle= hurt?'#ffd0d0':'#eaffff'; g.fillRect(-3.5,-52,2.6,2.4); g.fillRect(1,-52,2.6,2.4);   // eyes
+    g.fillStyle=gold; g.beginPath(); g.moveTo(-6,-55); g.lineTo(-6,-60); g.lineTo(-3,-57); g.lineTo(0,-61); g.lineTo(3,-57); g.lineTo(6,-60); g.lineTo(6,-55); g.closePath(); g.fill();   // crown
+    g.lineCap='butt';
+    if(hurt){ g.fillStyle='rgba(255,150,140,0.4)'; g.beginPath(); g.ellipse(0,-30,18,32,0,0,TAU); g.fill(); }
+    g.restore(); g.lineJoin='miter';
+    const nm=m.title||m.name||MOBDEF[m.kind].name;
+    g.font='bold 14px Georgia'; g.textAlign='center';
+    g.fillStyle='rgba(0,0,0,0.7)'; g.fillText(nm,s.x+1,s.y-80);
+    g.fillStyle='#cfeeff'; g.fillText(nm,s.x,s.y-81);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='dummy'){
     drawShadowAt(cx,s.x,s.y,10);
     cx.strokeStyle='#5a4326'; cx.lineWidth=5;

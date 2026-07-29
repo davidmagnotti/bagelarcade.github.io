@@ -228,6 +228,12 @@ const MOBDEF = {
   polarbear:{hp:560, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
   icecolossus:{hp:1120, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'},   // Vath-cursed dungeon guardian - freed, not slain
   minotaur:{hp:900, dmg:34, speed:2.7, aggro:11, xp:520, gold:[40,70], lvl:14, name:'The Drowned Minotaur'},   // bull-headed brute wardening the vault past the Stormreach Ossuary
+  // -- the returned-isle dungeon guardians (bespoke bosses, Act II) --
+  tidemaw:{hp:840, dmg:30, speed:2.5, aggro:12, xp:640, gold:[0,0], lvl:7, name:'The Tidemaw'},              // Barik's Drowned Vault: an anglerfish leviathan; submerges + spouts
+  skirl:{hp:820, dmg:32, speed:3.4, aggro:13, xp:700, gold:[0,0], lvl:9, name:'The Skirl'},                 // Windsurf's Gale Spire: a wind-funnel elemental; wind-blades + a knockback gust-pulse
+  cinderwrought:{hp:1020, dmg:36, speed:1.9, aggro:11, xp:780, gold:[0,0], lvl:10, name:'The Cinderwrought'},// Sunward's Ashen Forge: a magma golem; ground-slams, fireball lobs, erupts vents
+  thundercaller:{hp:960, dmg:34, speed:2.8, aggro:14, xp:840, gold:[0,0], lvl:12, name:'The Thundercaller'}, // Cloudreach's Storm Temple: a storm-herald; hunting strikes + a charge/discharge shield
+  wardking:{hp:1600, dmg:40, speed:2.5, aggro:12, xp:1200, gold:[0,0], lvl:16, name:'The Tideward Guardian'}, // Emberwick capstone: the founders' sentinel; sweep, shard-fan, and a summoning slam across three phases
   // -- the Rainbow Road (sky-dungeon) --
   skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank

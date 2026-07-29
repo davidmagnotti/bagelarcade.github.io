@@ -4718,44 +4718,136 @@ let TRAIN=null; // active training drill, if any
    Tide-Lock Vault, and take the Pearl of the Deep from its chest: the gift to
    DIVE, which opens the drowned water across the old islands.
    ================================================================================= */
+/* ---------- THE DROWNED VAULT (barikdeep) - bespoke: THE TIDE RACE + THE CISTERN ----
+   A drowned harbor-vault. You descend to the Sunken Stair, then cross THE TIDE RACE - a
+   flooded void spanned only by tumbled vault-stones that drift on the swell (DASH stone
+   to stone; miss and the undertow drags you back, -5 HP). Beyond it the Cistern seals shut
+   behind you and THE TIDEMAW surfaces - an angler-leviathan that spouts brine and submerges
+   untouchable to slam up beneath you. Fell it to open the seal and take the Pearl of the Deep.
+   ================================================================================= */
+const BARIK_SEAL=[[34,45],[35,45],[36,45],[37,45],[38,45]];   // the Cistern gate - slams shut behind you
 function genBarikDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
   const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } };
-  carve(29,84,43,95,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
-  carve(33,66,39,84,T.RUIN);            // corridor up to the gallery
-  // THE FLOODED GALLERY: a broad drowned hall - deep water wall to wall, crossed on a
-  // narrow plank causeway dead centre. (Once you can DIVE you may swim the flanks too.)
-  carve(22,44,50,66,T.RUIN); flood(22,44,50,66);
-  carve(34,44,38,66,T.PLANK);           // the plank causeway - the only dry road across
-  carve(22,44,26,48,T.RUIN); carve(46,44,50,48,T.RUIN);   // drowned side-ledges (the dead stand here)
-  carve(22,62,26,66,T.RUIN); carve(46,62,50,66,T.RUIN);
-  carve(33,30,39,44,T.RUIN);            // corridor to the vault
-  carve(20,8,52,30,T.RUIN);             // THE TIDE-LOCK VAULT - the Minotaur's chamber
+  carve(28,86,44,96,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
+  carve(34,78,38,88,T.RUIN);            // corridor up to the race
+  carve(22,72,50,78,T.RUIN);            // THE TIDE RACE - south ledge (the near shore)
+  flood(22,56,50,72);                   // ...the flooded void between the shores...
+  carve(22,50,50,56,T.RUIN);            // ...north ledge (the far shore)
+  carve(34,42,38,52,T.RUIN);            // corridor up to the Cistern
+  carve(18,8,54,42,T.RUIN);             // THE CISTERN - the Tidemaw's flooded hall
 }
 function placeObjectsBarikDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, drowned:1, exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,86],[42,86],[24,46],[48,46],[24,64],[48,64],[24,12],[48,12],[36,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // the Pearl of the Deep, in the vault past the Minotaur - grants DIVE
-  G.decor.push({kind:'chest', x:36.5, y:12.5, drowned:1, divegift:1});
+  for(const [tx,ty] of [[30,88],[42,88],[24,74],[48,74],[24,52],[48,52],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE TIDE RACE: drifting vault-stones over a flooded void ----
+  G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
+  for(let y=56;y<=72;y++) for(let x=22;x<=50;x++) if(inb(x,y) && tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
+  const raft=(cy,ax,bx,spd,phase)=>{ const mx=((ax+bx)/2)+0.5; const s={kind:'driftslab', ax:ax+0.5, ay:cy+0.5, bx:bx+0.5, by:cy+0.5, x:mx, y:cy+0.5, prevx:mx, prevy:cy+0.5, spd, phase, w:5, h:3, barikraft:1}; G.decor.push(s); G._barikSlabs.push(s); };
+  raft(69,24,40,0.50,0.0); raft(69,33,47,0.50,3.0);   // three rows of stones, two per row, phase-offset
+  raft(64,26,44,0.55,1.4); raft(64,22,38,0.55,4.4);
+  raft(59,24,40,0.50,2.2); raft(59,33,47,0.50,5.0);
+  G._barikCross={sx:36.5, sy:75.5};   // the undertow flings you back to the near shore
+  // ---- THE CISTERN: the boss seal + the reward ----
+  G._barikSealed=0;
+  G.decor.push({kind:'catgate', x:36, y:45, open:true, gate:'cistern', tiles:BARIK_SEAL.slice(), label:'the Cistern gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, drowned:1, divegift:1});   // the Pearl of the Deep - grants DIVE
   G.critters=[];
+  // an already-cleared run: the flood recedes to dry stone and the seal stands open
+  if(P.story && P.story.barikDeepDone){
+    for(const k of G._barikVoid){ const [x,y]=k.split(',').map(Number); setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    G._barikVoid=new Set(); G.decor=G.decor.filter(d=>!d.barikraft); G._barikSlabs=[];
+    for(const [x,y] of BARIK_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=true;
+  }
 }
 function spawnMobsBarikDeep(){
-  const Z=DROWNED_ZONES;
-  // the drowned dead haunt the causeway crossing
-  for(const [zx,zy] of [[36,72],[35,60],[37,52],[36,46],[33,80],[39,80]]){
-    const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]);
-  }
-  // THE DROWNED MINOTAUR wardens the Tide-Lock Vault
+  // a few drowned dead stand the near and far shores (not the crossing itself)
+  for(const [zx,zy] of [[26,74],[46,74],[26,52],[46,52]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  // THE TIDEMAW - sealed and unseen until you step into the Cistern (barikSealCheck reveals it)
   if(!(P.story && P.story.barikDeepDone)){
-    const sp=findOpenNear(Z.vault.x, Z.vault.y+2, 6) || [Z.vault.x, Z.vault.y+2];
-    const b=spawnMob('minotaur', sp[0], sp[1]);
-    if(b){ b.boss=true; b.bigBoss=true; b.title='THE DROWNED MINOTAUR'; b.subtitle='WARDEN OF THE TIDE-LOCK VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.drownedboss=1; b.entrance='loom'; }
+    const sp=findOpenNear(36, 20, 6) || [36,20];
+    const b=spawnMob('tidemaw', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEMAW'; b.subtitle='WARDEN OF THE DROWNED VAULT'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.tidemaw=1; b.customAI=1; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='surface'; }
   }
 }
 function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); spawnMobsBarikDeep(); buildMapBase(); }
+// ---- THE TIDE RACE per-frame: drift the stones, drag a misstep under, seal the Cistern ----
+function updateBarikDeep(dt){
+  if(!G._barikSlabs) return;
+  G._barikT=(G._barikT||0)+dt;
+  updateDriftSlabs(G._barikSlabs, G._barikT);
+  if(G._barikPlunge){ G._barikPlunge.t+=dt; if(G._barikPlunge.t>=G._barikPlunge.dur) barikRespawn(); }
+  else if(!P.dead && (P.rollT||0)<=0){
+    const tx=Math.floor(P.x), ty=Math.floor(P.y);
+    if(G._barikVoid.has(tx+','+ty) && !driftCarry(G._barikSlabs)) barikPlungeStart();   // over the void, not aboard a stone
+  }
+  barikSealCheck();
+  for(const m of G.mobs) if(m.tidemaw && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateTidemaw(m,dt);
+}
+function barikPlungeStart(){
+  G._barikPlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-5); P.hurtT=Math.max(P.hurtT||0,0.5);
+  if(typeof buzz==='function') buzz(10); shockwave(P.x,P.y,'rgba(120,180,220,0.85)',32);
+  for(let i=0;i<12;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y,vx:rnd(-1.2,1.2),vy:-rnd(1,2.2),life:0.6,color:Math.random()<0.5?'#bfe0f2':'#8fc0d8',size:rnd(2,4.5),grav:0.08});
+  if(Snd.noise) Snd.noise(0.14,0.05,300,0.6);
+  P.click=null; P.moving=false;
+}
+function barikRespawn(){
+  G._barikPlunge=null;
+  const c=G._barikCross||{sx:36.5,sy:75.5};
+  P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+function barikSealCheck(){
+  if(G._barikSealed || (P.story&&P.story.barikDeepDone)) return;
+  const boss=G.mobs.find(m=>m.tidemaw && !m.dead); if(!boss) return;
+  if(P.y<=41 && P.x>=18 && P.x<=54){   // stepped into the Cistern
+    G._barikSealed=1;
+    for(const [x,y] of BARIK_SEAL) setSolid(x,y,1);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=false;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    boss.sealed=false; boss.arena=1;
+    if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'surface',title:boss.title,sub:boss.subtitle});
+  }
+}
+function unsealBarikCistern(){
+  G._barikSealed=0;
+  for(const [x,y] of BARIK_SEAL) setSolid(x,y,0);
+  const cg=(G.decor||[]).find(d=>d.kind==='catgate'&&d.gate==='cistern'); if(cg) cg.open=true;
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+// THE TIDEMAW's phase AI: stalk (chase + telegraphed bite + brine spouts), and at half
+// health a single SUBMERGE (untouchable, glides under you) that ERUPTS in a slam + spout-fan.
+function updateTidemaw(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y);
+  m.face=(P.x<m.x?-1:1);
+  m.shootCd=(m.shootCd||0)-dt; m.biteCd=(m.biteCd||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5 && m.phase!=='submerge'){ m.enraged=1; m.phase='submerge'; m.pT=1.3; m.invuln=1;
+    shockwave(m.x,m.y,'rgba(120,180,220,0.8)',54); G.shake=0.5; }
+  if(m.phase==='submerge'){
+    m.pT-=dt;
+    if(pd>1.4){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m, Math.cos(a)*m.speed*1.1*dt, Math.sin(a)*m.speed*1.1*dt); }
+    if(m.pT<=0){ m.phase='stalk'; m.invuln=0; G.shake=0.7; shockwave(m.x,m.y,'rgba(150,210,235,0.9)',64);
+      if(dist(m.x,m.y,P.x,P.y)<3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*1.15), m);
+      tidemawSpout(m,true); }
+    return;
+  }
+  const spd=m.speed*(m.enraged?0.95:0.72);
+  if(pd>1.7 && !((m.stunT||0)>0) && !(m.windup>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m, Math.cos(a)*spd*dt, Math.sin(a)*spd*dt); }
+  if(m.shootCd<=0 && pd>2.6){ m.shootCd=m.enraged?1.9:2.7; tidemawSpout(m,m.enraged); }
+  if(pd<2.3 && m.biteCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.5; m.biteCd=m.enraged?1.8:2.5; }
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.windup=0; m.swing=0.3;
+    if(dist(m.x,m.y,P.x,P.y)<2.7 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m);
+    burst(m.x+m.face*1.2,m.y-0.5,'#bfe0f2',10,2.4); } }
+}
+function tidemawSpout(m, fan){
+  const base=Math.atan2(P.y-m.y,P.x-m.x), offs=fan?[-0.42,-0.21,0,0.21,0.42]:[0];
+  for(const o of offs){ const a=base+o; G.projs.push({kind:'spout', x:m.x, y:m.y-0.6, vx:Math.cos(a)*7, vy:Math.sin(a)*7, life:1.7, dmg:Math.round(m.dmg*0.6), from:'mob'}); }
+  if(Snd.magic) Snd.magic();
+}
 function enterBarikDeep(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._deepReturn={x:P.x, y:P.y+1.3}; P.slideDir=null; P.click=null;
@@ -4831,49 +4923,410 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
   }
 }
 // ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
-function genWindDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('wind','dashgift'); _dungBoss('wraith','skyspirit','galeDeepDone','THE GALE-WRAITH','THE MADDENED WIND GIVEN SHAPE',false); buildMapBase(); }
+/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke: THE UPDRAFT HALL ----------
+   A wind-scoured shaft. The Updraft Hall is swept by a killing gale that builds and BLASTS
+   in cycles: caught in the open when it hits, you're hurled back down the hall and flayed
+   (-HP). Wind-break pillars stand in staggered rows - shelter behind one (put a pillar
+   between you and the north) while the gale blasts, then advance in the lull. At the top the
+   Eye of the Gale seals shut and THE SKIRL forms. Its charm grants the longer dash.
+   ================================================================================= */
+const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genWindDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96);            // entry landing
+  carve(34,78,38,88);            // corridor
+  carve(20,42,52,80);            // THE UPDRAFT HALL (open floor; pillars added in placeObjects)
+  carve(34,34,38,44);            // corridor to the Eye
+  carve(18,8,54,36);             // THE EYE OF THE GALE (boss arena)
+}
+function placeObjectsWindDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE UPDRAFT HALL: staggered wind-break pillars ----
+  const pillar=(x,y)=>{ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } };
+  const rows=[[72,[28,36,44]],[64,[24,32,40,48]],[56,[28,36,44]],[48,[24,32,40,48]]];
+  for(const [ry,xs] of rows) for(const px of xs) pillar(px,ry);
+  G._windGaleT=0; G._windHall={x0:20,x1:52,y0:44,y1:78};   // where the gale bites
+  G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
+  G.critters=[];
+  if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; }
+}
+function spawnMobsWindDeep(){
+  if(!(P.story && P.story.galeDeepDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('skirl', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE SKIRL'; b.subtitle='THE MADDENED WIND GIVEN SHAPE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.skirl=1; b.customAI=1; b.gateboss=1; b.gateDone='galeDeepDone'; b.sealed=true; b.arena=1; b.phase='stalk'; b.entrance='descend'; }
+  }
+}
+function genWindDeepAll(){ genWindDeep(); placeObjectsWindDeep(); spawnMobsWindDeep(); buildMapBase(); }
+// THE UPDRAFT HALL per-frame: the gale cycle (lull -> build/telegraph -> BLAST), sheltering,
+// the Eye seal, and the Skirl's AI.
+function updateWindDeep(dt){
+  if(!G._windHall) return;
+  const H=G._windHall;
+  G._windGaleT=(G._windGaleT||0)+dt;
+  const CYCLE=8.2, ph=G._windGaleT%CYCLE;
+  const building=(ph>=4.6 && ph<6.2), blasting=(ph>=6.2);
+  const inHall = P.x>=H.x0 && P.x<=H.x1 && P.y>=H.y0 && P.y<=H.y1;
+  // telegraph: wind streaks pour down from the north as the gale builds and blasts
+  if((building||blasting) && Math.random()<dt*(building?26:60)){
+    G.parts.push({x:rnd(H.x0,H.x1), y:H.y0-1, vx:rnd(-0.4,0.4), vy:rnd(7,12), life:rnd(0.5,1.0), color:blasting?'rgba(235,245,252,0.8)':'rgba(200,220,235,0.5)', size:rnd(1.5,3), grav:0});
+  }
+  if(blasting && inHall && !P.dead){
+    // sheltered if a pillar (solid) stands just north of you (between you and the gale)
+    const px=Math.floor(P.x), py=Math.floor(P.y);
+    const sheltered = solidAt(px,py-1) || solidAt(px,py-2);
+    if(!sheltered){
+      const ny=P.y + 6.5*dt;                       // hurled south (back down the hall)
+      if(!circleBlocked(P.x,ny,0.28)) P.y=ny;
+      G._windChip=(G._windChip||0)+dt;
+      if(G._windChip>0.5 && (P.rollT||0)<=0){ G._windChip=0; P.hp=Math.max(1,P.hp-3); P.hurtT=Math.max(P.hurtT||0,0.3); buzz(6); }
+    }
+  }
+  if(!blasting) G._windChip=0;
+  // Eye seal + boss
+  if(!G._windSealed && !(P.story&&P.story.galeDeepDone)){
+    const boss=G.mobs.find(m=>m.skirl && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._windSealed=1; for(const [x,y] of WIND_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'descend',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  // unseal once the Skirl is down
+  if(G._windSealed && !G._windCleared && !G.mobs.some(m=>m.skirl && !m.dead)){
+    G._windCleared=1; for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+  for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
+}
+function updateSkirl(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.shootCd=(m.shootCd||0)-dt; m.pulseCd=(m.pulseCd||0)-dt; m.biteCd=(m.biteCd||0)-dt; m.whirlCd=(m.whirlCd||3)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.45){ m.enraged=1; burst(m.x,m.y-1,'#dfeaf2',24,3.2); G.shake=0.5; }
+  if(m.phase==='whirl'){ m.pT-=dt; moveEntity(m, Math.cos(m.whirlA)*m.speed*2.1*dt, Math.sin(m.whirlA)*m.speed*2.1*dt);
+    if(dist(m.x,m.y,P.x,P.y)<1.9 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*0.8), m);
+    if(Math.random()<dt*20) burst(m.x,m.y-1,'#eaffff',3,2);
+    if(m.pT<=0) m.phase='stalk'; return; }
+  if(m.phase==='pulse'){ m.pT-=dt;
+    if(m.pT<=0){ m.phase='stalk'; G.shake=0.6; shockwave(m.x,m.y,'rgba(223,234,242,0.85)',72);
+      if(pd<5 && !P.dead){ const a=Math.atan2(P.y-m.y,P.x-m.x); const nx=P.x+Math.cos(a)*2.4, ny=P.y+Math.sin(a)*2.4;
+        if(!circleBlocked(nx,ny,0.28)){ P.x=nx; P.y=ny; } if((P.rollT||0)<=0) hurtPlayer(Math.round(m.dmg*0.7), m); } }
+    return; }
+  const spd=m.speed*(m.enraged?1.25:1.0);
+  if(pd>1.6 && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x)+Math.sin(G.time*3)*0.5; moveEntity(m, Math.cos(a)*spd*dt, Math.sin(a)*spd*dt); }
+  if(m.shootCd<=0 && pd>2){ m.shootCd=m.enraged?1.6:2.4; skirlBlades(m); }
+  if(m.pulseCd<=0 && pd<4.5){ m.pulseCd=m.enraged?4:6; m.phase='pulse'; m.pT=0.7; burst(m.x,m.y-1,'#eaffff',14,2); }
+  if(m.enraged && m.whirlCd<=0){ m.whirlCd=5; m.phase='whirl'; m.pT=1.1; m.whirlA=Math.atan2(P.y-m.y,P.x-m.x); return; }
+  if(pd<1.7 && m.biteCd<=0 && !P.dead){ m.biteCd=1.4; m.swing=0.3; if((P.rollT||0)<=0) hurtPlayer(m.dmg, m); }
+}
+function skirlBlades(m){ const base=Math.atan2(P.y-m.y,P.x-m.x);
+  for(const o of [-0.3,0,0.3]){ const a=base+o; G.projs.push({kind:'shard', x:m.x, y:m.y-0.8, vx:Math.cos(a)*8, vy:Math.sin(a)*8, life:1.6, dmg:Math.round(m.dmg*0.55), from:'mob'}); }
+  if(Snd.noise) Snd.noise(0.1,0.04,900,0.5);
+}
 // ---- SUNWARD: THE ASHEN FORGE (grants the flame snare) ----
-function genSunwardDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('east','snaregift'); _dungBoss('skeleton','scorpion','ashenForgeDone','THE ASH-SCORPION','STOKED IN MOUNT KEA\'S FIRE',true); buildMapBase(); }
+/* ---------- SUNWARD: THE ASHEN FORGE (sunwarddeep) - bespoke: THE FORGE CAUSEWAY ----------
+   Deep in Mount Kea. The Forge Causeway is a field of lava-vents that erupt on staggered
+   timers: each glows and rumbles (telegraph), then jets a column of fire - stand on it and
+   you burn. Read the rhythm and thread across between eruptions. At the forge-heart THE
+   CINDERWROUGHT rises. Its ember grants the FLAME SNARE. ============================== */
+const SUN_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genSunwardDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96); carve(34,78,38,88);
+  carve(20,42,52,80);            // THE FORGE CAUSEWAY
+  carve(34,34,38,44);
+  carve(18,8,54,36);             // THE ASHEN FORGE (boss arena)
+}
+function placeObjectsSunwardDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'east', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE FORGE CAUSEWAY: a staggered field of erupting lava-vents ----
+  G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
+  let n=0;
+  for(let gy=72; gy>=48; gy-=6) for(let gx=24; gx<=48; gx+=6){
+    const jx=gx+((gy/6)%2? 3:0);   // stagger alternate rows
+    if(inb(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; }
+  }
+  G._sunSealed=0; G._sunCleared=(P.story&&P.story.ashenForgeDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'forge', tiles:SUN_SEAL.slice(), label:'the Forge-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, snaregift:1});   // the ember - FLAME SNARE
+  G.critters=[];
+  if(P.story && P.story.ashenForgeDone){ for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true; }
+}
+function spawnMobsSunwardDeep(){
+  if(!(P.story && P.story.ashenForgeDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('cinderwrought', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE CINDERWROUGHT'; b.subtitle='STOKED IN MOUNT KEA\'S FIRE'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.cinder=1; b.customAI=1; b.gateboss=1; b.gateDone='ashenForgeDone'; b.sealed=true; b.arena=1; b.entrance='rise'; }
+  }
+}
+function genSunwardDeepAll(){ genSunwardDeep(); placeObjectsSunwardDeep(); spawnMobsSunwardDeep(); buildMapBase(); }
+function forgeQueueErupt(x,y){ if(!inb(x,y)) return; (G._forgeErupts=G._forgeErupts||[]).push({x,y,phase:'warn',t:0,hitCd:0}); }
+function forgeTickErupts(dt){
+  const list=G._forgeErupts||[];
+  for(let i=list.length-1;i>=0;i--){ const e=list[i]; e.t+=dt; e.hitCd-=dt;
+    if(e.phase==='warn'){ if(Math.random()<dt*30) G.parts.push({x:e.x+0.5+rnd(-0.3,0.3),y:e.y+0.5,vx:0,vy:-rnd(0.3,0.8),life:0.4,color:'rgba(255,150,60,0.7)',size:rnd(1.5,3),grav:-0.05});
+      if(e.t>=0.7){ e.phase='erupt'; e.t=0; if(G.shake<0.25) G.shake=0.25; } }
+    else { if(Math.random()<dt*50) G.parts.push({x:e.x+0.5+rnd(-0.4,0.4),y:e.y+0.5,vx:rnd(-0.8,0.8),vy:-rnd(2,4.5),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ff8a30':'#ffd060',size:rnd(2,4.5),grav:0.1});
+      if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<1.35 && (P.rollT||0)<=0 && !P.dead && e.hitCd<=0){ e.hitCd=0.35; hurtPlayer(13,{x:e.x+0.5,y:e.y+0.5}); }
+      if(e.t>=0.6) list.splice(i,1); }
+  }
+}
+function updateSunwardDeep(dt){
+  if(!G._forgeVents) return;
+  if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(44,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
+  for(const v of G._forgeVents){ v.nextT-=dt; if(v.nextT<=0){ v.nextT=v.period; forgeQueueErupt(v.gx,v.gy); } }
+  forgeTickErupts(dt);
+  forgeSealCheck();
+  for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
+}
+function forgeSealCheck(){
+  if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
+    const boss=G.mobs.find(m=>m.cinder && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._sunSealed=1; for(const [x,y] of SUN_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'rise',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  if(G._sunSealed && !G._sunCleared && !G.mobs.some(m=>m.cinder && !m.dead)){
+    G._sunCleared=1; for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+}
+function updateCinderwrought(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.slamCd=(m.slamCd||0)-dt; m.eruptCd=(m.eruptCd||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5){ m.enraged=1; if(G.shake<0.5) G.shake=0.5; }
+  const spd=m.speed*(m.enraged?1.25:1);
+  if(pd>1.9 && !(m.windup>0) && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*spd*dt,Math.sin(a)*spd*dt); }
+  if(pd<2.6 && m.slamCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.6; m.slamCd=m.enraged?2.4:3.4; }
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.swing=0.3; G.shake=0.7; shockwave(m.x,m.y,'rgba(255,150,60,0.9)',72);
+    if(dist(m.x,m.y,P.x,P.y)<3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m);
+    for(let k=0;k<6;k++){ const a=k/6*TAU; forgeQueueErupt(Math.round(m.x+Math.cos(a)*2.2), Math.round(m.y+Math.sin(a)*2.2)); } } }
+  if(m.eruptCd<=0 && pd>2.5){ m.eruptCd=m.enraged?2.4:3.6; forgeQueueErupt(Math.round(P.x),Math.round(P.y));
+    if(m.enraged){ forgeQueueErupt(Math.round(P.x)+1,Math.round(P.y)); forgeQueueErupt(Math.round(P.x)-1,Math.round(P.y)); } }
+}
 // ---- CLOUDREACH: THE STORM TEMPLE (grants the double dash) ----
-function genSkyDeepAll(){ _dungVertical(T.RUIN); _dungFurnish('sky','dash2gift'); _dungBoss('wraith','stormeye','stormTempleDone','THE STORMHEART','THE TEMPLE\'S CAGED THUNDER',false); buildMapBase(); }
+/* ---------- CLOUDREACH: THE STORM TEMPLE (skydeep) - bespoke: THE STORM NAVE ----------
+   A temple the lightning never leaves. Cross THE STORM NAVE and the storm hunts you: a bolt
+   is telegraphed on the tile beneath you, then falls a beat later - so you can never stand
+   still, you must keep moving up the nave a step ahead of the strikes. At the Stormheart THE
+   THUNDERCALLER waits behind a shield it only drops for a beat after each discharge. Its charge
+   grants the DOUBLE DASH. ============================================================ */
+const STORM_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
+function genSkyDeep(){
+  for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
+  const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
+  carve(28,86,44,96); carve(34,78,38,88);
+  carve(20,42,52,80);            // THE STORM NAVE
+  carve(34,34,38,44);
+  carve(18,8,54,36);             // THE STORMHEART (boss arena)
+}
+function placeObjectsSkyDeep(){
+  G.decor=G.decor||[];
+  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
+  setSolid(36,93,0); setTile(36,93,T.RUIN);
+  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // a couple of tall temple pillars for cover-that-isn't (lightning falls from above)
+  for(const [px,py] of [[26,66],[46,66],[26,52],[46,52]]) if(inb(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
+  G._stormNave={x0:20,x1:52,y0:44,y1:80}; G._stormStrikes=[]; G._stormT=0; G._stormHuntT=0.8;
+  G._skySealed=0; G._skyCleared=(P.story&&P.story.stormTempleDone)?1:0;
+  G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'stormheart', tiles:STORM_SEAL.slice(), label:'the Stormheart-gate'});
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dash2gift:1});   // the Stormstep - DOUBLE DASH
+  G.critters=[];
+  if(P.story && P.story.stormTempleDone){ for(const [x,y] of STORM_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true; }
+}
+function spawnMobsSkyDeep(){
+  if(!(P.story && P.story.stormTempleDone)){
+    const sp=findOpenNear(36, 20, 7) || [36,20];
+    const b=spawnMob('thundercaller', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE THUNDERCALLER'; b.subtitle='THE TEMPLE\'S CAGED THUNDER'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.thunder=1; b.customAI=1; b.gateboss=1; b.gateDone='stormTempleDone'; b.sealed=true; b.arena=1; b.phase='open'; b.invuln=0; b.entrance='descend'; }
+  }
+}
+function genSkyDeepAll(){ genSkyDeep(); placeObjectsSkyDeep(); spawnMobsSkyDeep(); buildMapBase(); }
+function stormQueueStrike(x,y){ if(!inb(x,y)) return; (G._stormStrikes=G._stormStrikes||[]).push({x,y,phase:'warn',t:0}); }
+function stormTickStrikes(dt){
+  const list=G._stormStrikes||[];
+  for(let i=list.length-1;i>=0;i--){ const e=list[i]; e.t+=dt;
+    if(e.phase==='warn'){ if(Math.random()<dt*26) G.parts.push({x:e.x+0.5+rnd(-0.45,0.45),y:e.y+0.5+rnd(-0.45,0.45),vx:0,vy:0,life:0.3,color:'rgba(150,200,255,0.7)',size:rnd(1,2.5),grav:0});
+      if(e.t>=0.85){ e.phase='strike'; e.t=0; if(G.shake<0.4) G.shake=0.4; if(Snd.noise) Snd.noise(0.12,0.05,200,0.7);
+        for(let k=0;k<14;k++) G.parts.push({x:e.x+0.5+rnd(-0.3,0.3),y:e.y+0.5-k*0.3,vx:rnd(-0.3,0.3),vy:0,life:0.25,color:k%2?'#eaf2ff':'#bcd8ff',size:rnd(2,4),grav:0});
+        if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<1.4 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(16,{x:e.x+0.5,y:e.y+0.5}); } }
+    else if(e.t>=0.18) list.splice(i,1);
+  }
+}
+function updateSkyDeep(dt){
+  if(!G._stormNave) return;
+  const N=G._stormNave;
+  G._stormHuntT=(G._stormHuntT||0)-dt;
+  const inNave = P.x>=N.x0&&P.x<=N.x1&&P.y>=N.y0&&P.y<=N.y1;
+  if(G._stormHuntT<=0 && inNave){ G._stormHuntT=1.35; stormQueueStrike(Math.round(P.x),Math.round(P.y)); }
+  stormTickStrikes(dt);
+  stormSealCheck();
+  for(const m of G.mobs) if(m.thunder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateThundercaller(m,dt);
+}
+function stormSealCheck(){
+  if(!G._skySealed && !(P.story&&P.story.stormTempleDone)){
+    const boss=G.mobs.find(m=>m.thunder && !m.dead);
+    if(boss && P.y<=33 && P.x>=18 && P.x<=54){
+      G._skySealed=1; for(const [x,y] of STORM_SEAL) setSolid(x,y,1);
+      const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=false;
+      if(typeof invalidateScenery==='function') invalidateScenery();
+      boss.sealed=false; boss.arena=1;
+      if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'descend',title:boss.title,sub:boss.subtitle});
+    }
+  }
+  if(G._skySealed && !G._skyCleared && !G.mobs.some(m=>m.thunder && !m.dead)){
+    G._skyCleared=1; for(const [x,y] of STORM_SEAL) setSolid(x,y,0);
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true;
+    if(typeof invalidateScenery==='function') invalidateScenery();
+  }
+}
+function updateThundercaller(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.strikeCd=(m.strikeCd||0)-dt; m.cycleT=(m.cycleT||0)-dt;
+  if(!m.enraged && m.hp<m.maxhp*0.5){ m.enraged=1; }
+  // shield cycle: CHARGE (invulnerable) -> discharge -> OPEN (the strike window) -> repeat
+  if(m.phase==='charge'){ m.invuln=1;
+    if(m.cycleT<=0){ m.phase='open'; m.invuln=0; m.cycleT=m.enraged?2.2:2.8; if(G.shake<0.6) G.shake=0.6; shockwave(m.x,m.y,'rgba(180,215,255,0.85)',82);
+      if(pd<3.4 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(Math.round(m.dmg*0.9), m); } }
+  else { m.invuln=0; if(m.cycleT<=0){ m.phase='charge'; m.invuln=1; m.cycleT=3.2; } }
+  if(pd>3 && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*m.speed*0.7*dt,Math.sin(a)*m.speed*0.7*dt); }
+  if(m.strikeCd<=0){ m.strikeCd=m.enraged?0.95:1.6; stormQueueStrike(Math.round(P.x),Math.round(P.y));
+    if(m.enraged) stormQueueStrike(Math.round(P.x)+Math.round(rnd(-2,2)),Math.round(P.y)+Math.round(rnd(-2,2))); }
+}
 
 // ---- THE EMBERWICK CAPSTONE: THE TIDEWARD CRYPT ----
 // Sealed since the founders, opened only when you carry all four returned-isle
 // gifts. Inside, the Sunken Ford is a genuine DIVE crossing; the deeper halls are
 // the founders' trials, ending at the Tideward Guardian and a hook toward the
 // weapon the prophecy names (see STORY.md, Act II climax).
+/* ---------- THE TIDEWARD CRYPT (embertomb) - the Emberwick capstone, bespoke ------------
+   Opened only with all four returned-isle gifts, and every chamber demands one of them in
+   turn: DIVE the Sunken Ford, clear the Broken Span with the LONGER DASH, burn the Emberbriar
+   with a FLAME SNARE, and cross the Sundering Chasm with the DOUBLE DASH - then face THE
+   TIDEWARD GUARDIAN, the founders' sentinel, and take the trail to the weapon.
+   ================================================================================= */
+const TOMB_THORN=[[37,29],[38,29],[39,29],[40,29],[41,29],[42,29],[43,29]];   // the Emberbriar wall
 function genEmberTomb(){
   _dungReset();
   _dungCarve(32,96,48,108,T.RUIN);        // THE FOUNDERS' STAIR (entry)
-  _dungCarve(37,80,43,96,T.RUIN);         // corridor down to the ford
-  _dungCarve(24,66,56,80,T.RUIN);         // THE SUNKEN FORD chamber...
-  for(let y=68;y<=78;y++) for(let x=27;x<=53;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); }  // ...flooded: DIVE across
-  _dungCarve(37,64,43,68,T.RUIN);         // dry lip on the far side
-  _dungCarve(37,54,43,66,T.RUIN);         // corridor
-  _dungCarve(24,42,56,58,T.RUIN);         // THE BROKEN SPAN
-  _dungCarve(37,30,43,44,T.RUIN);         // corridor
-  _dungCarve(24,22,56,40,T.RUIN);         // THE EMBERBRIAR GATE
-  _dungCarve(37,14,43,24,T.RUIN);         // corridor
-  _dungCarve(20,6,60,22,T.RUIN);          // THE TIDEWARD VAULT (guardian)
+  _dungCarve(37,88,43,96,T.RUIN);         // corridor
+  _dungCarve(28,82,52,88,T.RUIN);         // SUNKEN FORD - south lip
+  for(let y=74;y<=82;y++) for(let x=28;x<=52;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); }  // ...flooded: DIVE across
+  _dungCarve(28,68,52,74,T.RUIN);         // north lip
+  _dungCarve(37,62,43,68,T.RUIN);         // corridor
+  _dungCarve(28,56,52,62,T.RUIN);         // BROKEN SPAN - south ledge
+  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (voided in placeObjects: LONGER DASH)
+  _dungCarve(28,44,52,50,T.RUIN);         // north ledge
+  _dungCarve(37,38,43,44,T.RUIN);         // corridor
+  _dungCarve(28,30,52,38,T.RUIN);         // EMBERBRIAR chamber
+  _dungCarve(37,22,43,30,T.RUIN);         // corridor north (walled by the briar until burned)
+  _dungCarve(26,16,54,22,T.RUIN);         // SUNDERING CHASM - south ledge
+  _dungCarve(26,10,54,15,T.RUIN);         // ...the chasm floor (voided in placeObjects: DOUBLE DASH)
+  _dungCarve(20,2,60,10,T.RUIN);          // THE TIDEWARD VAULT (guardian + reward)
 }
 function placeEmberTombObjects(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:40.5, y:104.5, deepworld:'isle', exit:1, label:'the way up'});
   setSolid(40,104,0); setTile(40,104,T.RUIN);
-  for(const [tx,ty] of [[34,98],[46,98],[26,72],[54,72],[26,50],[54,50],[26,30],[54,30],[24,10],[56,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // the vault's headstone-chest: a store of the founders (and a hook to the weapon)
-  G.decor.push({kind:'chest', x:40.5, y:10.5, tidewardHoard:1});
+  for(const [tx,ty] of [[34,98],[46,98],[26,70],[54,70],[26,58],[54,58],[26,32],[54,32],[24,4],[56,4],[40,3]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  G._tombVoid=new Set(); G._tombPlunge=null; G._tombCheck={x:40.5,y:90.5};
+  const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); if(((x*3+y)%3)===0) G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
+  voidRect(28,50,52,55);        // THE BROKEN SPAN gap (longer dash)
+  voidRect(26,10,54,15);        // THE SUNDERING CHASM gap (double dash)...
+  // ...but leave a small mid-island to land the first dash on, then dash again to the vault
+  for(let y=11;y<=13;y++) for(let x=38;x<=42;x++){ G._tombVoid.delete(x+','+y); setTile(x,y,T.RUIN); setSolid(x,y,0);
+    for(let i=G.decor.length-1;i>=0;i--){ const d=G.decor[i]; if(d.kind==='bonepit' && Math.floor(d.x)===x && Math.floor(d.y)===y) G.decor.splice(i,1); } }
+  // THE EMBERBRIAR: a thornwall across the north corridor, opened by a FLAME SNARE on its bud
+  G._tombThornOpen=0; G._tombThorn={x:40.5, y:34.5};
+  for(const [x,y] of TOMB_THORN){ setTile(x,y,T.RUIN); setSolid(x,y,1); G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false, thornwall:1}); }   // the barred wall
+  G.decor.push({kind:'shoottarget', x:40.5, y:34.5, thornbud:1});       // the bud you burn with a flame-snare
+  G.decor.push({kind:'chest', x:40.5, y:4.5, tidewardHoard:1});         // the founders' hoard
   G.critters=[];
+  if(P.story && P.story.tidewardDone){ tombBurnThorns(true); }           // a cleared run stands open
 }
 function spawnEmberTombMobs(){
-  for(const [zx,zy] of [[40,50],[32,48],[48,48],[40,30],[32,28],[48,28]]){ const sp=findOpenNear(zx,zy,4); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  for(const [zx,zy] of [[34,34],[46,34],[30,20],[50,20]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   if(!(P.story && P.story.tidewardDone)){
-    const sp=findOpenNear(40, 14, 8) || [40,14];
-    const b=spawnMob('minotaur', sp[0], sp[1], true);
-    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.entrance='loom'; }
+    const sp=findOpenNear(40, 6, 8) || [40,6];
+    const b=spawnMob('wardking', sp[0], sp[1]);
+    if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
 }
 function genEmberTombAll(){ genEmberTomb(); placeEmberTombObjects(); spawnEmberTombMobs(); buildMapBase(); }
+function tombPlungeStart(){
+  G._tombPlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-6); P.hurtT=Math.max(P.hurtT||0,0.5);
+  if(typeof buzz==='function') buzz(10); shockwave(P.x,P.y,'rgba(180,190,210,0.7)',30);
+  for(let i=0;i<10;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y,vx:rnd(-1,1),vy:-rnd(1,2),life:0.6,color:'rgba(200,205,220,0.7)',size:rnd(2,4),grav:0.08});
+  P.click=null; P.moving=false;
+}
+function tombRespawn(){
+  G._tombPlunge=null; const c=G._tombCheck||{x:40.5,y:90.5};
+  P.x=c.x; P.y=c.y; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+function tombBurnThorns(silent){
+  G._tombThornOpen=1;
+  for(const [x,y] of TOMB_THORN) setSolid(x,y,0);
+  G.decor=G.decor.filter(d=>!(d.kind==='pillar'&&d.thornwall) && !(d.kind==='shoottarget'&&d.thornbud));
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(!silent){ if(G._tombThorn) shockwave(G._tombThorn.x,G._tombThorn.y,'rgba(255,150,60,0.9)',48);
+    if(G._tombThorn) burst(G._tombThorn.x,G._tombThorn.y-0.3,'#ff9a3c',20,2.8);
+    if(typeof toast==='function') toast('The flame-snare catches in the wardbriar and it curls to ash - the way north opens.',4200); }
+}
+function updateEmberTomb(dt){
+  if(!G._tombVoid) return;
+  if(G._tombPlunge){ G._tombPlunge.t+=dt; if(G._tombPlunge.t>=G._tombPlunge.dur) tombRespawn(); }
+  else if(!P.dead && (P.rollT||0)<=0){
+    const tx=Math.floor(P.x), ty=Math.floor(P.y);
+    if(G._tombVoid.has(tx+','+ty)) tombPlungeStart();
+    else if(walkTile(tileAt(tx,ty)) && tileAt(tx,ty)!==T.DEEP) G._tombCheck={x:P.x,y:P.y};   // last safe footing = the checkpoint
+  }
+  // THE EMBERBRIAR: a player flame-snare bolt near the bud burns the wall away
+  if(!G._tombThornOpen && G._tombThorn){ for(const p of (G.projs||[])){ if(p.from==='player' && p.flame && dist(p.x,p.y,G._tombThorn.x,G._tombThorn.y)<1.6){ tombBurnThorns(); break; } } }
+  // THE VAULT: the Guardian rises when you step in
+  const boss=G.mobs.find(m=>m.wardking && !m.dead);
+  if(boss && boss.sealed && P.y<=10 && P.x>=20 && P.x<=60){ boss.sealed=false; boss.arena=1;
+    if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'rise',title:boss.title,sub:boss.subtitle}); }
+  for(const m of G.mobs) if(m.wardking && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateWardKing(m,dt);
+}
+function updateWardKing(m,dt){
+  const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
+  m.wphase = m.hp<m.maxhp*0.33?3 : m.hp<m.maxhp*0.66?2 : 1;
+  m.sweepCd=(m.sweepCd||0)-dt; m.shardCd=(m.shardCd||0)-dt; m.slamCd=(m.slamCd||0)-dt;
+  const spd=m.speed*(m.wphase>=3?1.2:1);
+  if(pd>1.9 && !(m.windup>0) && !((m.stunT||0)>0)){ const a=Math.atan2(P.y-m.y,P.x-m.x); moveEntity(m,Math.cos(a)*spd*dt,Math.sin(a)*spd*dt); }
+  if(pd<3 && m.sweepCd<=0 && !(m.windup>0) && !((m.stunT||0)>0)){ m.windup=0.55; m.sweepCd=m.wphase>=3?2.2:3.0; }   // telegraphed greatsword sweep
+  if(m.windup>0){ m.windup-=dt; if(m.windup<=0){ m.swing=0.35; G.shake=0.55; shockwave(m.x+m.face,m.y-0.3,'rgba(200,240,255,0.85)',56);
+    if(dist(m.x,m.y,P.x,P.y)<3.3 && (P.rollT||0)<=0 && !P.dead) hurtPlayer(m.dmg, m); } }
+  if(m.wphase>=2 && m.shardCd<=0 && pd>2.4){ m.shardCd=2.8; wardShards(m); }   // phase 2: tideglass shard fan
+  if(m.wphase>=3 && m.slamCd<=0){ m.slamCd=8; G.shake=0.8; shockwave(m.x,m.y,'rgba(230,220,150,0.8)',82);   // phase 3: summoning slam
+    for(let k=0;k<2;k++){ const sp=findOpenNear(Math.round(m.x+rnd(-4,4)),Math.round(m.y+rnd(-3,3)),4); if(sp){ const s=spawnMob('skeleton',sp[0],sp[1]); if(s){ s.state='chase'; s.respawnT=-1; } } } }
+}
+function wardShards(m){ const base=Math.atan2(P.y-m.y,P.x-m.x);
+  for(const o of [-0.5,-0.25,0,0.25,0.5]){ const a=base+o; G.projs.push({kind:'shard', x:m.x, y:m.y-1, vx:Math.cos(a)*8, vy:Math.sin(a)*8, life:1.7, dmg:Math.round(m.dmg*0.5), from:'mob'}); }
+  if(Snd.magic) Snd.magic();
+}
 
 // generic descend/ascend for every `deepworld` dungeonmouth
 function useGateDungeon(b){

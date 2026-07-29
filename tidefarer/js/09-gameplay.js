@@ -833,10 +833,12 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.tombBossDown=1;
     if(typeof autoSave==='function') autoSave();
   }
-  // The Drowned Minotaur wardening Barik's Drowned Vault - felling it stills the
-  // flooded halls (the Pearl of the Deep in its chest grants DIVE).
-  if(m.drownedboss){
+  // THE TIDEMAW wardening Barik's Drowned Vault - felling it stills the flooded halls,
+  // opens the Cistern seal, and lets you take the Pearl of the Deep (grants DIVE).
+  if(m.tidemaw){
     P.story=P.story||{}; P.story.barikDeepDone=1;
+    if(typeof unsealBarikCistern==='function') unsealBarikCistern();
+    banner('THE TIDEMAW IS SLAIN','THE DROWNED VAULT FALLS STILL');
     if(typeof autoSave==='function') autoSave();
   }
   // The returned-isle dungeon guardians (Gale-Wraith, Ash-Scorpion, Stormheart, and the
@@ -1339,6 +1341,7 @@ function updateMobs(dt){
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
       m.face=(P.x<m.x?-1:1); continue; }
     if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
+    if(m.customAI){ m.face=(P.x<m.x?-1:1); continue; }   // bespoke returned-isle bosses: driven by their dungeon's update hook
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
     if(m.state==='idle'){
@@ -1543,7 +1546,7 @@ function updateProjs(dt){
     // wall-mounted eye still registers)
     if(p.from==='player'){
       let struck=false;
-      for(const d of G.decor){ if(d.kind==='shoottarget' && !d.hit && dist(p.x,p.y,d.x,d.y-0.3)<0.75){
+      for(const d of G.decor){ if(d.kind==='shoottarget' && !d.hit && !d.thornbud && dist(p.x,p.y,d.x,d.y-0.3)<0.75){
         if(typeof hitShootTarget==='function') hitShootTarget(d); p.life=0; struck=true; break; } }
       if(struck) continue;
     }
@@ -1649,9 +1652,12 @@ function updateWorld(dt){
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
-  // Aldermere is a walled, patrolled city and stays safe after dark.
+  // Aldermere is a walled, patrolled city and stays safe after dark. And NEVER in
+  // Act II: once you sail out under the Warding Veil the old night-wraiths are gone
+  // from the isles entirely (they no longer spawn, see below for dispersing strays).
   const isleCleared = P.story && P.story.bossCleared && P.story.bossCleared[G.worldId];
-  if(night>0.55 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
+  const act2 = !!(P.story && P.story.act2);
+  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
@@ -1665,8 +1671,9 @@ function updateWorld(dt){
       }
     }
   }
-  if(night<0.15){
-    // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request)
+  if(night<0.15 || act2){
+    // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request) -
+    // and in Act II any wraith still abroad from an Act I save disperses at once.
     for(const m of G.mobs) if(m.night && !m.dead){ m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',8,1.6); }
   }
   if(G.worldId==='aeriedeep' && typeof updateAerieDeep==='function') updateAerieDeep(dt);
@@ -1676,6 +1683,11 @@ function updateWorld(dt){
   if(G.worldId==='frostdeep' && typeof updateFrostDeep==='function') updateFrostDeep(dt);
   if(G.worldId==='frostvault' && typeof updateFrostVault==='function') updateFrostVault(dt);
   if(G.worldId==='reachdeep' && typeof updateReachDeep==='function') updateReachDeep(dt);
+  if(G.worldId==='barikdeep' && typeof updateBarikDeep==='function') updateBarikDeep(dt);
+  if(G.worldId==='winddeep' && typeof updateWindDeep==='function') updateWindDeep(dt);
+  if(G.worldId==='sunwarddeep' && typeof updateSunwardDeep==='function') updateSunwardDeep(dt);
+  if(G.worldId==='skydeep' && typeof updateSkyDeep==='function') updateSkyDeep(dt);
+  if(G.worldId==='embertomb' && typeof updateEmberTomb==='function') updateEmberTomb(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
