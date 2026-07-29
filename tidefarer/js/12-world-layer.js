@@ -2561,7 +2561,9 @@ function placeObjectsFrostVault(){
       waves:[ [['wolf',6]], [['polarbear',3],['wolf',3]], [['polarbear',2,true],['wolf',4]], [['polarbear',3],['wolf',5]], [['polarbear',3,true],['wolf',4]] ] },
   ];
   // ---- R5: the Hoarfrost Hoard (the reward past the last gate) ----
-  G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, rich:14});
+  // the central chest holds THE TIDEFARER'S CHART - the map that explains the whole Act II
+  // hunt (the great queen's hidden grave and the sealing weapon); the side chest is gold.
+  G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, tidechart:1});
   G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
   spire(30,5); spire(58,5); spire(30,15); spire(58,15);
   G.critters=[];
@@ -4259,6 +4261,7 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
   rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
 ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
+ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
 ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
@@ -4733,6 +4736,20 @@ function openChest(b){
     banner('A CACHE OF TONICS', n+' EMBER TONIC'+(n>1?'S':''));
     shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',14,2.2); Snd.quest&&Snd.quest();
     setTimeout(autoSave,300); return;
+  }
+  // THE HOARFROST HOARD'S true prize: the chart that turns the isle-by-isle curse-lifting
+  // into a HUNT - it names the great queen's hidden grave, and the sealing weapon that lies
+  // with her. This is the "why" behind the whole Act II journey, handed to you on the ice.
+  if(b.tidechart){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.tideChart=1;
+    if(!(P.inv && P.inv.tidechart)) give('tidechart',1);
+    giveGold(rndi(140,200)); if(Math.random()<0.6) give('elixir',1);
+    shockwave(b.x,b.y,'rgba(150,205,235,0.9)',58); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); Snd.levelup&&Snd.levelup();
+    banner("THE TIDEFARER'S CHART",'THE HUNT HAS A HEADING AT LAST');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Beneath the frozen coin of the Hoarfrost Hoard lies a thing worth more than all of it: a sea-chart, sealed in wax against the ice, its ink still bright after a hundred winters.</i> It marks an isle drawn on no chart you have ever seen - and upon that isle, a single grave. Beside it, a hand has inked in the old royal script: <b>HERE LIES THE TIDEFARER, AND WITH HER THE SEAL SHE FORGED.</b><br><br><i>So the drowned verse-stone told it true. The great queen who once sailed the isles free - curse by curse, exactly as you have - did not rest where the histories laid her. Her grave holds the one weapon named to bind the shadow: to bind <b>Vath</b>. This, at last, is what all the freeing has been FOR.</i><br><br>The old work is beyond you to read in full. <b style="color:var(--ember)">Carry the chart to Sage Orin on Emberwick</b> - if any living hand can place these hidden waters, it is his.', {label:'A heading at last'}); },500);
+    setTimeout(autoSave,300);
+    return;
   }
   if(b.rich){
     giveGold(rndi(b.rich*9,b.rich*16));
