@@ -1649,6 +1649,26 @@ function updateWorld(dt){
       vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.7), life:rnd(1.6,2.8),
       color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.12});
   }
+  // ---- Act II surface-curse ambience (only once the isle wears its curse) ----
+  if(P.story && P.story.vathVeil && !G.interior){
+    // SUNWARD: drifting ash blown across the whole isle while Kea erupts
+    if(G.worldId==='east' && Math.random()<dt*6){
+      G.parts.push({x:P.x+rnd(-14,14), y:P.y-rnd(4,10), vx:rnd(-0.4,0.2), vy:rnd(0.5,1.4),
+        life:rnd(2,4), color:'rgba(80,74,70,0.5)', size:rnd(1.5,3), grav:0});
+    }
+    // WINDSURF: sea-spray/mist whipped off the burst race by the gale
+    if(G.worldId==='wind' && Math.random()<dt*5){
+      G.parts.push({x:P.x+rnd(-13,13), y:P.y-rnd(2,8), vx:rnd(1,3), vy:rnd(-0.3,0.3),
+        life:rnd(0.5,1.1), color:'rgba(214,232,242,0.5)', size:rnd(1.5,3), grav:0});
+    }
+    // CLOUDREACH: a storm that won't break - occasional sky-flashes + drifting sparks
+    if(G.worldId==='sky'){
+      if(Math.random()<dt*8) G.parts.push({x:P.x+rnd(-12,12), y:P.y-rnd(2,9), vx:rnd(-0.3,0.3), vy:rnd(0.6,1.4),
+        life:rnd(0.4,0.9), color:Math.random()<0.5?'rgba(190,215,255,0.7)':'rgba(150,200,255,0.5)', size:rnd(1,2.4), grav:0});
+      if(Math.random()<dt*0.5){ G.shake=Math.max(G.shake,0.18);
+        for(let k=0;k<10;k++) G.parts.push({x:P.x+rnd(-9,9), y:P.y-9+k*0.7, vx:rnd(-0.2,0.2), vy:0, life:0.2, color:k%2?'#eaf2ff':'#bcd8ff', size:rnd(1.5,3), grav:0}); }
+    }
+  }
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -

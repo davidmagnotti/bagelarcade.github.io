@@ -4860,20 +4860,30 @@ function exitBarikDeep(){
     const r=P._deepReturn; if(r){ P.x=r.x; P.y=r.y; G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
-// Barik's curse made playable: once the Warding Veil lets you steal home, the old
-// harbor lies drowned. Plant the Drowned Vault's mouth by the docks, and - once you
-// can dive - a diver's cache out on a rock the deep water keeps.
+// BARIK's curse made visible: once the Warding Veil lets you steal home, Vath's flood has
+// drowned the low ground - the Mirefen marsh has become open water, and the Drowned Vault's
+// mouth hides in a flooded sinkhole among the reeds (not a lamp-lit hole by the dock). A
+// diver's cache waits on a rock the deep water keeps.
 function placeBarikFlood(){
   if(!(P.story && P.story.vathVeil)) return;
   const D=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.dock) ? MAIN_ZONES.dock : {x:55,y:258};
-  if(!G.decor.some(d=>d.kind==='dungeonmouth' && d.drowned)){
-    const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x+5), Math.round(D.y+4), 10)) || null;
-    if(sp && inb(sp[0],sp[1])){
-      for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
-      G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, drowned:1, label:'the Drowned Vault', name:'THE DROWNED VAULT ▼'});
-      G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
-    }
+  const M=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.meadow) ? MAIN_ZONES.meadow : {x:258,y:254,r:24};
+  // drown the Mirefen: the sodden marsh becomes a shallow lagoon with a deep heart.
+  // (integer loop bounds - a float r makes the loop step over fractional indices and no-op.)
+  const flood=(cx,cy,r,deepR)=>{ cx=Math.round(cx); cy=Math.round(cy); const R=Math.ceil(r);
+    for(let y=cy-R;y<=cy+R;y++) for(let x=cx-R;x<=cx+R;x++){ const dd=dist(x,y,cx,cy);
+      if(inb(x,y) && dd<=r && walkTile(tileAt(x,y)) && !solidAt(x,y) && tileAt(x,y)!==T.PATH && tileAt(x,y)!==T.PLANK){
+        setTile(x,y, dd<=deepR?T.DEEP:T.SHALLOW); setSolid(x,y,1); } } };
+  flood(M.x, M.y, M.r*0.55, M.r*0.28);       // the Mirefen lagoon (roads/PATH stay dry above water)
+  flood(M.x-M.r*0.45, M.y-M.r*0.25, M.r*0.3, M.r*0.12);
+  // the hidden mouth: a flooded sinkhole in the reeds at the fen's edge (dry stair + approach)
+  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(M.x-M.r*0.7), Math.round(M.y+M.r*0.3), 12)) || null;
+  if(sp && inb(sp[0],sp[1]) && !G.decor.some(d=>d.kind==='dungeonmouth' && d.drowned)){
+    setTile(sp[0],sp[1],T.PATH); setSolid(sp[0],sp[1],0);
+    setTile(sp[0],sp[1]+1,T.PATH); setSolid(sp[0],sp[1]+1,0);   // dry approach from the south
+    G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, drowned:1, label:'the Drowned Vault', name:'THE DROWNED VAULT ▼', hidden:1});
   }
+  // a diver's cache out on a drowned rock offshore of the docks (once you can dive)
   if(P.unlocked && P.unlocked.dive && !G.decor.some(d=>d.diverCache)){
     let rock=null;
     for(let rr=6; rr<=22 && !rock; rr+=2){ for(let a=0;a<16 && !rock;a++){
@@ -4883,6 +4893,7 @@ function placeBarikFlood(){
     if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
       G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
   }
+  _curseHint('barikCurseSeen','<b>Vath\'s flood has drowned Barik\'s low ground</b> - the Mirefen is open water now. Something waits in a <b>flooded sinkhole</b> among the reeds.');
 }
 /* =====================================================================
    THE OLD-ISLAND RETURN DUNGEONS - Windsurf, Sunward, Cloudreach. Under the
@@ -5339,22 +5350,75 @@ function useGateDungeon(b){
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
 }
 
-// ---- the surface curses + dungeon mouths, planted when the Veil lets you return ----
-// (kept light-touch: each plants its dungeon mouth by the isle's landing in the veil
-// phase; Barik's flooding is the fuller terrain-curse, see placeBarikFlood.)
-function _plantMouth(zone, deepworld, label, name){
-  if(!zone) return;
-  if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld===deepworld)) return;
-  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(zone.x+4), Math.round(zone.y+3), 12)) || null;
-  if(sp && inb(sp[0],sp[1])){
-    for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
-    G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, deepworld:deepworld, label:label, name:name});
-    G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
-  }
+// ---- the surface CURSES + hidden dungeon mouths, planted when the Veil lets you return ----
+// Each old isle now visibly bears the wound Vath let fester while you were driven to the
+// reaches, and each dungeon's mouth is tucked into a thematic landmark (not a lamp-lit hole
+// by the dock). All gated on P.story.vathVeil.
+
+// Place a hidden entrance at an EXACT tile: carve it dry (a stair amid the curse), with a dry
+// approach on one side so it's always reachable. No give-away lamps - the fissure art reads
+// as the anomaly. Returns false if a mouth for this dungeon already stands.
+function _curseMouthAt(x,y,approach,deepworld,label,name){
+  if(!inb(x,y)) return false;
+  if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld===deepworld)) return false;
+  setTile(x,y,T.PATH); setSolid(x,y,0);
+  const [ax,ay]=approach||[x,y+1];
+  if(inb(ax,ay)){ setTile(ax,ay,T.PATH); setSolid(ax,ay,0); }
+  G.decor.push({kind:'dungeonmouth', x:x+0.5, y:y+0.5, deepworld, label, name, hidden:1});
+  return true;
 }
-function placeWindHazard(){ if(P.story && P.story.vathVeil) _plantMouth(WIND_ZONES.dock, 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼'); }
-function placeSunwardHazard(){ if(P.story && P.story.vathVeil) _plantMouth(EAST_ZONES.village, 'sunwarddeep', 'the Ashen Forge', 'THE ASHEN FORGE ▼'); }
-function placeSkyHazard(){ if(P.story && P.story.vathVeil) _plantMouth(SKY_ZONES.landing, 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼'); }
+// a one-time hint the first time you make landfall on a cursed isle under the Veil
+function _curseHint(flag,msg){ P.prog=P.prog||{}; if(P.prog[flag]) return; P.prog[flag]=1;
+  if(typeof toast==='function') setTimeout(()=>{ try{ toast(msg,7000); }catch(e){} }, 1100); }
+
+// WINDSURF - the maddened wind spun the old waterwheel to ruin: its race burst and drowned
+// Waterwheel Row, and a shaft tore open at the foot of the wheel: the Gale Spire.
+function placeWindHazard(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const WH=(typeof WIND_ZONES!=='undefined' && WIND_ZONES.wheel) ? WIND_ZONES.wheel : {x:58,y:68};
+  const flood=(cx,cy,r)=>{ for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++){
+    if(inb(x,y) && dist(x,y,cx,cy)<=r && walkTile(tileAt(x,y)) && !solidAt(x,y)){
+      setTile(x,y, dist(x,y,cx,cy)<=r-1.4?T.DEEP:T.SHALLOW); setSolid(x,y,1); } } };
+  flood(WH.x+5, WH.y+1, 3);     // the burst race floods east of the wheel...
+  flood(WH.x+4, WH.y-3, 2);     // ...and spills to the north yard
+  // the hidden mouth at the wheel's south foot, with a dry approach from the town road (south)
+  _curseMouthAt(WH.x+2, WH.y+2, [WH.x+2, WH.y+3], 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼');
+  _curseHint('windCurseSeen','<b>Windsurf lies half-drowned</b> - the maddened wind has spun the old <b>waterwheel</b> to ruin and burst its race. Something has torn open at the wheel\'s foot.');
+}
+// SUNWARD - Mount Kea erupts unending: fresh lava creeps down the slopes and a fissure has
+// split open low on the south face - the way into the Ashen Forge.
+function placeSunwardHazard(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const V=(typeof EAST_ZONES!=='undefined' && EAST_ZONES.volcano) ? EAST_ZONES.volcano : {x:88,y:52,r:22};
+  // fresh lava flows + glowing cracks down the mid-slopes (on the RUIN massif, clear of the caldera)
+  const lavaPool=(cx,cy,r)=>{ if(!inb(cx,cy) || tileAt(cx,cy)!==T.RUIN) return;
+    G.decor.push({kind:'lava', x:cx+0.5, y:cy+0.5, r});
+    for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++) if(inb(x,y) && dist(x,y,cx,cy)<=r-0.3 && tileAt(x,y)===T.RUIN) setSolid(x,y,1); };
+  const S=mulberry32((SEED||1)+404);
+  for(let i=0;i<14;i++){ const a=S()*TAU, rr=V.r*0.45+S()*V.r*0.4;
+    lavaPool(Math.round(V.x+Math.cos(a)*rr), Math.round(V.y+Math.sin(a)*rr*0.9), 2+Math.floor(S()*2)); }
+  for(let i=0;i<26;i++){ const a=S()*TAU, rr=V.r*0.4+S()*V.r*0.55;
+    const cx=Math.round(V.x+Math.cos(a)*rr), cy=Math.round(V.y+Math.sin(a)*rr*0.9);
+    if(inb(cx,cy) && tileAt(cx,cy)===T.RUIN && !solidAt(cx,cy)) G.decor.push({kind:'lavacrack', x:cx+0.5, y:cy+0.5, seed:i, big:i%4===0}); }
+  // the hidden fissure, low on the south slope (distinct from the summit Emberthroat)
+  const fx=Math.round(V.x), fy=Math.round(V.y+V.r*0.72);
+  const sp=(typeof findOpenNear==='function' && findOpenNear(fx, fy, 8)) || [fx,fy];
+  _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'sunwarddeep', 'the Ashen Forge', 'THE ASHEN FORGE ▼');
+  _curseHint('sunCurseSeen','<b>Mount Kea burns without pause</b> - lava creeps down the slopes and ash chokes the sky. A fresh <b>fissure</b> has split the mountain\'s south face.');
+}
+// CLOUDREACH - a storm has settled over the cloud and will not break: the old standing stones
+// are lightning-struck and toppled, and one has cracked open onto the Storm Temple below.
+function placeSkyHazard(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const L=(typeof SKY_ZONES!=='undefined' && SKY_ZONES.landing) ? SKY_ZONES.landing : {x:32,y:42,r:7};
+  // scorch-mark the cloud around a couple of the ring-stones (SNOW->cloud is the ground here)
+  for(const [ox,oy] of [[5,-2],[-4,3],[2,4]]){ const cx=L.x+ox, cy=L.y+oy;
+    if(inb(cx,cy) && tileAt(cx,cy)===T.SNOW) G.decor.push({kind:'pillar', x:cx+0.5, y:cy+0.5, broken:true, stormstruck:1}); }
+  // the hidden mouth beside a shattered stone, just off the landing
+  const sp=(typeof findOpenNear==='function' && findOpenNear(L.x+4, L.y+3, 8)) || [L.x+4, L.y+3];
+  _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼');
+  _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
+}
 // The Emberwick capstone opens only once all four returned-isle gifts are in hand.
 function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.dashfar && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
 function placeEmberTomb(){
