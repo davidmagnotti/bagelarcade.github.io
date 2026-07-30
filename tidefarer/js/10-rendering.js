@@ -576,6 +576,26 @@ function drawDecor(b,s){
     cx.quadraticCurveTo(s.x+1+sw*0.5,s.y-4,s.x+2+sw,s.y-7); cx.stroke();
     return;
   }
+  if(b.kind==='snag'){
+    // a drowned tree - a dead, leaning trunk poking from the flood, bare branches, a ring
+    // of ripples where it breaks the water. Barik's flood made these everywhere.
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const sw=Math.sin(G.time*0.9+(b.ph||0))*0.9, h=b.h||18, lean=b.lean||0.5;
+    // water-ring at the base
+    g.strokeStyle='rgba(150,180,190,0.35)'; g.lineWidth=1;
+    const rp=(G.time*0.6+(b.ph||0))%1;
+    g.beginPath(); g.ellipse(0,0,3+rp*5,(3+rp*5)*0.5,0,0,TAU); g.globalAlpha=(1-rp)*0.5; g.stroke(); g.globalAlpha=1;
+    g.strokeStyle='#3a2c22'; g.lineCap='round';
+    // trunk
+    g.lineWidth=3.2; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(lean*3+sw, -h*0.55, lean*5+sw*1.4, -h); g.stroke();
+    // a few bare branches
+    g.lineWidth=1.7;
+    const bx=lean*4+sw*1.2, by=-h*0.85;
+    g.beginPath(); g.moveTo(bx*0.55,by*0.62); g.lineTo(bx*0.55-5,by*0.62-4); g.stroke();
+    g.beginPath(); g.moveTo(bx*0.75,by*0.8); g.lineTo(bx*0.75+6,by*0.8-3); g.stroke();
+    g.beginPath(); g.moveTo(bx,by); g.lineTo(bx+3,by-6); g.stroke();
+    g.restore(); return;
+  }
   if(b.kind==='flower'){
     const sw=Math.sin(G.time*1.9+b.ph)*1.8;
     cx.strokeStyle='#4f7a3a'; cx.lineWidth=1.4;

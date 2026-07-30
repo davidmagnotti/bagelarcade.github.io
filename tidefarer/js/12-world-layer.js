@@ -4870,21 +4870,50 @@ function placeBarikFlood(){
   if(!(P.story && P.story.vathVeil)) return;
   const D=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.dock) ? MAIN_ZONES.dock : {x:55,y:258};
   const M=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.meadow) ? MAIN_ZONES.meadow : {x:258,y:254,r:24};
-  // drown the Mirefen: the sodden marsh becomes a shallow lagoon with a deep heart.
-  // (integer loop bounds - a float r makes the loop step over fractional indices and no-op.)
+  const F=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.farm) ? MAIN_ZONES.farm : {x:293,y:213,r:16};
+  // VATH'S FLOOD, made total: the whole east of Barik has drowned. The Mirefen is a black
+  // lagoon, the farmsteads are a drowned lowland sea, and dead trees stand in the shallows
+  // where the fields used to be. The isle you sailed from is unrecognisable - a mirror of the
+  // Drowned Vault waiting beneath it. (Integer loop bounds; a float r no-ops the loop.)
+  const flooded=[];   // remember the new shallows so we can decorate their edges
   const flood=(cx,cy,r,deepR)=>{ cx=Math.round(cx); cy=Math.round(cy); const R=Math.ceil(r);
     for(let y=cy-R;y<=cy+R;y++) for(let x=cx-R;x<=cx+R;x++){ const dd=dist(x,y,cx,cy);
       if(inb(x,y) && dd<=r && walkTile(tileAt(x,y)) && !solidAt(x,y) && tileAt(x,y)!==T.PATH && tileAt(x,y)!==T.PLANK){
-        setTile(x,y, dd<=deepR?T.DEEP:T.SHALLOW); setSolid(x,y,1); } } };
-  flood(M.x, M.y, M.r*0.55, M.r*0.28);       // the Mirefen lagoon (roads/PATH stay dry above water)
-  flood(M.x-M.r*0.45, M.y-M.r*0.25, M.r*0.3, M.r*0.12);
-  // the hidden mouth: a flooded sinkhole in the reeds at the fen's edge (dry stair + approach)
-  const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(M.x-M.r*0.7), Math.round(M.y+M.r*0.3), 12)) || null;
+        setTile(x,y, dd<=deepR?T.DEEP:T.SHALLOW); setSolid(x,y,1);
+        if(dd>deepR && dd>r*0.7) flooded.push([x,y]); } } };
+  // the Mirefen: a huge lagoon with a drowned heart
+  flood(M.x, M.y, M.r*1.05, M.r*0.55);
+  flood(M.x-M.r*0.5, M.y-M.r*0.35, M.r*0.55, M.r*0.22);
+  // the drowned farmlands to the north - a second inland sea, joined to the fen by a channel
+  flood(F.x, F.y, F.r*1.0, F.r*0.4);
+  flood((M.x+F.x)/2, (M.y+F.y)/2, M.r*0.42, M.r*0.14);   // the channel linking them
+  // KEEP THE ISLE REACHABLE: a dry reed-causeway from the south shore up to the sinkhole,
+  // so you can still walk to the Vault before you've earned the dive.
+  const way=[];
+  for(let yy=Math.round(M.y+M.r*0.95); yy>=Math.round(M.y+M.r*0.2); yy--){
+    const xx=Math.round(M.x-M.r*0.7 + Math.sin((yy-M.y)*0.25)*2);
+    for(let ox=-1;ox<=1;ox++){ const cxx=xx+ox; if(inb(cxx,yy) && (tileAt(cxx,yy)===T.SHALLOW||tileAt(cxx,yy)===T.DEEP)){ setTile(cxx,yy,T.SOIL); setSolid(cxx,yy,0); } }
+    way.push([xx,yy]);
+  }
+  // the hidden mouth: a flooded sinkhole in the reeds at the head of the causeway
+  const head=way.length? way[way.length-1] : null;
+  const sp=head || ((typeof findOpenNear==='function' && findOpenNear(Math.round(M.x-M.r*0.7), Math.round(M.y+M.r*0.3), 12)) || null);
   if(sp && inb(sp[0],sp[1]) && !G.decor.some(d=>d.kind==='dungeonmouth' && d.drowned)){
     setTile(sp[0],sp[1],T.PATH); setSolid(sp[0],sp[1],0);
     setTile(sp[0],sp[1]+1,T.PATH); setSolid(sp[0],sp[1]+1,0);   // dry approach from the south
     G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, drowned:1, label:'the Drowned Vault', name:'THE DROWNED VAULT ▼', hidden:1});
   }
+  // decorate the drowned land: dead trees standing in the shallows, half-sunk ruins, and reeds.
+  { const RS=mulberry32(((SEED||1)+4471)>>>0);
+    const causeway=new Set(way.map(w=>w[0]+','+w[1]));
+    let placed=0;
+    for(let i=0;i<flooded.length && placed<160;i++){ const [x,y]=flooded[(i*29+7)%flooded.length];
+      if(causeway.has(x+','+y)) continue;
+      const roll=RS();
+      if(roll<0.10){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:12+RS()*10, lean:(RS()-0.5)*1.4}); placed++; }
+      else if(roll<0.14){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:true}); placed++; }
+      else if(roll<0.22){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
+    } }
   // a diver's cache out on a drowned rock offshore of the docks (once you can dive)
   if(P.unlocked && P.unlocked.dive && !G.decor.some(d=>d.diverCache)){
     let rock=null;
@@ -4895,7 +4924,7 @@ function placeBarikFlood(){
     if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
       G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
   }
-  _curseHint('barikCurseSeen','<b>Vath\'s flood has drowned Barik\'s low ground</b> - the Mirefen is open water now. Something waits in a <b>flooded sinkhole</b> among the reeds.');
+  _curseHint('barikCurseSeen','<b>Vath\'s flood has swallowed the east of Barik</b> - the Mirefen and the farmsteads are one drowned sea now, dead trees standing where the fields were. Something waits in a <b>flooded sinkhole</b> up the reed-causeway from the south shore.');
 }
 /* =====================================================================
    THE OLD-ISLAND RETURN DUNGEONS - Windsurf, Sunward, Cloudreach. Under the
@@ -5109,21 +5138,44 @@ function spawnMobsSunwardDeep(){
   }
 }
 function genSunwardDeepAll(){ genSunwardDeep(); placeObjectsSunwardDeep(); _dungWalls('forge'); spawnMobsSunwardDeep(); buildMapBase(); }
-function forgeQueueErupt(x,y){ if(!inb(x,y)) return; (G._forgeErupts=G._forgeErupts||[]).push({x,y,phase:'warn',t:0,hitCd:0}); }
+function forgeQueueErupt(x,y,big){ if(!inb(x,y)) return; (G._forgeErupts=G._forgeErupts||[]).push({x,y,phase:'warn',t:0,hitCd:0,big:big?1:0}); }
 function forgeTickErupts(dt){
   const list=G._forgeErupts||[];
   for(let i=list.length-1;i>=0;i--){ const e=list[i]; e.t+=dt; e.hitCd-=dt;
-    if(e.phase==='warn'){ if(Math.random()<dt*30) G.parts.push({x:e.x+0.5+rnd(-0.3,0.3),y:e.y+0.5,vx:0,vy:-rnd(0.3,0.8),life:0.4,color:'rgba(255,150,60,0.7)',size:rnd(1.5,3),grav:-0.05});
-      if(e.t>=0.7){ e.phase='erupt'; e.t=0; if(G.shake<0.25) G.shake=0.25; } }
-    else { if(Math.random()<dt*50) G.parts.push({x:e.x+0.5+rnd(-0.4,0.4),y:e.y+0.5,vx:rnd(-0.8,0.8),vy:-rnd(2,4.5),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ff8a30':'#ffd060',size:rnd(2,4.5),grav:0.1});
-      if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<1.35 && (P.rollT||0)<=0 && !P.dead && e.hitCd<=0){ e.hitCd=0.35; hurtPlayer(13,{x:e.x+0.5,y:e.y+0.5}); }
-      if(e.t>=0.6) list.splice(i,1); }
+    const big=e.big;
+    const warnDur=big?1.0:0.7, eruptDur=big?0.9:0.6, radius=big?2.7:1.35, dmg=big?24:13;
+    if(e.phase==='warn'){
+      // telegraph: a growing ring of embers - the bigger the spout, the wider the danger ring
+      if(Math.random()<dt*(big?70:30)){ const a=Math.random()*TAU, rr=radius*(0.5+0.5*(e.t/warnDur));
+        G.parts.push({x:e.x+0.5+Math.cos(a)*rr,y:e.y+0.5+Math.sin(a)*rr,vx:0,vy:-rnd(0.3,0.9),life:0.4,color:big?'rgba(255,110,40,0.8)':'rgba(255,150,60,0.7)',size:rnd(1.5,3.5),grav:-0.05}); }
+      if(e.t>=warnDur){ e.phase='erupt'; e.t=0; if(G.shake<(big?0.55:0.25)) G.shake=big?0.55:0.25; }
+    }
+    else {
+      // erupt: for big spouts, a tall column of lava fountains up from the vent
+      const burst=big?90:50;
+      if(Math.random()<dt*burst){ const spread=big?0.9:0.4;
+        G.parts.push({x:e.x+0.5+rnd(-spread,spread),y:e.y+0.5,vx:rnd(-0.8,0.8)*(big?1.6:1),vy:-rnd(2,big?7.5:4.5),life:rnd(0.4,big?1.3:0.9),color:Math.random()<0.5?'#ff8a30':'#ffd060',size:rnd(2,big?6:4.5),grav:0.1}); }
+      if(big && Math.random()<dt*40){ G.parts.push({x:e.x+0.5+rnd(-0.5,0.5),y:e.y+0.5,vx:0,vy:-rnd(5,9),life:rnd(0.5,1),color:'#ffe9a0',size:rnd(3,6),grav:0.05}); }
+      if(dist(P.x,P.y,e.x+0.5,e.y+0.5)<radius && (P.rollT||0)<=0 && !P.dead && e.hitCd<=0){ e.hitCd=0.35; hurtPlayer(dmg,{x:e.x+0.5,y:e.y+0.5});
+        if(big){ const a=Math.atan2(P.y-(e.y+0.5),P.x-(e.x+0.5)); moveEntity(P,Math.cos(a)*1.1,Math.sin(a)*1.1); } }
+      if(e.t>=eruptDur) list.splice(i,1);
+    }
   }
 }
 function updateSunwardDeep(dt){
   if(!G._forgeVents) return;
   if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(44,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
   for(const v of G._forgeVents){ v.nextT-=dt; if(v.nextT<=0){ v.nextT=v.period; forgeQueueErupt(v.gx,v.gy); } }
+  // random big lava spouts erupt anywhere on the causeway - safe footing is never guaranteed
+  G._bigSpoutT=(G._bigSpoutT||1.6)-dt;
+  if(G._bigSpoutT<=0){ G._bigSpoutT=rnd(1.4,2.8);
+    // bias spouts toward the player's neighbourhood on the lower causeway so movement stays tense
+    const onCauseway=P.y>=44 && P.y<=80 && P.x>=20 && P.x<=52;
+    let sx,sy;
+    if(onCauseway && Math.random()<0.6){ sx=Math.round(P.x+rnd(-4,4)); sy=Math.round(P.y+rnd(-4,4)); }
+    else { sx=Math.round(rnd(22,50)); sy=Math.round(rnd(46,78)); }
+    if(inb(sx,sy) && tileAt(sx,sy)>=T.SAND && !solidAt(sx,sy)) forgeQueueErupt(sx,sy,1);
+  }
   forgeTickErupts(dt);
   forgeSealCheck();
   for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
@@ -5399,14 +5451,28 @@ function _curseHint(flag,msg){ P.prog=P.prog||{}; if(P.prog[flag]) return; P.pro
 function placeWindHazard(){
   if(!(P.story && P.story.vathVeil)) return;
   const WH=(typeof WIND_ZONES!=='undefined' && WIND_ZONES.wheel) ? WIND_ZONES.wheel : {x:58,y:68};
-  const flood=(cx,cy,r)=>{ for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++){
-    if(inb(x,y) && dist(x,y,cx,cy)<=r && walkTile(tileAt(x,y)) && !solidAt(x,y)){
-      setTile(x,y, dist(x,y,cx,cy)<=r-1.4?T.DEEP:T.SHALLOW); setSolid(x,y,1); } } };
-  flood(WH.x+5, WH.y+1, 3);     // the burst race floods east of the wheel...
-  flood(WH.x+4, WH.y-3, 2);     // ...and spills to the north yard
+  const flooded=[];
+  const flood=(cx,cy,r)=>{ cx=Math.round(cx); cy=Math.round(cy); const R=Math.ceil(r);
+    for(let y=cy-R;y<=cy+R;y++) for(let x=cx-R;x<=cx+R;x++){ const dd=dist(x,y,cx,cy);
+      if(inb(x,y) && dd<=r && walkTile(tileAt(x,y)) && !solidAt(x,y) && tileAt(x,y)!==T.PATH){
+        setTile(x,y, dd<=r-1.6?T.DEEP:T.SHALLOW); setSolid(x,y,1);
+        if(dd>r-1.6) flooded.push([x,y]); } } };
+  // the burst race drowns the whole of Waterwheel Row - a wide brown lagoon east of the wheel
+  flood(WH.x+5, WH.y+1, 6);
+  flood(WH.x+4, WH.y-4, 4);     // ...and spills across the north yard
+  flood(WH.x+8, WH.y+4, 4);     // ...and down the mill-leat to the south-east
   // the hidden mouth at the wheel's south foot, with a dry approach from the town road (south)
   _curseMouthAt(WH.x+2, WH.y+2, [WH.x+2, WH.y+3], 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼');
-  _curseHint('windCurseSeen','<b>Windsurf lies half-drowned</b> - the maddened wind has spun the old <b>waterwheel</b> to ruin and burst its race. Something has torn open at the wheel\'s foot.');
+  // flotsam in the drowned yard: snapped mill-timbers, reeds, a toppled post
+  { const RS=mulberry32(((SEED||1)+2213)>>>0); let placed=0;
+    for(let i=0;i<flooded.length && placed<40;i++){ const [x,y]=flooded[(i*17+5)%flooded.length];
+      if(Math.abs(x-(WH.x+2))<=1 && Math.abs(y-(WH.y+2))<=2) continue;   // keep the mouth clear
+      const roll=RS();
+      if(roll<0.12){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:10+RS()*7, lean:(RS()-0.5)*1.6}); placed++; }
+      else if(roll<0.18){ G.decor.push({kind:'woodpile', x:x+0.5, y:y+0.5}); placed++; }
+      else if(roll<0.26){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
+    } }
+  _curseHint('windCurseSeen','<b>Windsurf lies half-drowned</b> - the maddened wind has spun the old <b>waterwheel</b> to ruin and burst its race, flooding all of Waterwheel Row. Something has torn open at the wheel\'s foot.');
 }
 // SUNWARD - Mount Kea erupts unending: fresh lava creeps down the slopes and a fissure has
 // split open low on the south face - the way into the Ashen Forge.
@@ -5434,9 +5500,13 @@ function placeSunwardHazard(){
 function placeSkyHazard(){
   if(!(P.story && P.story.vathVeil)) return;
   const L=(typeof SKY_ZONES!=='undefined' && SKY_ZONES.landing) ? SKY_ZONES.landing : {x:32,y:42,r:7};
-  // scorch-mark the cloud around a couple of the ring-stones (SNOW->cloud is the ground here)
-  for(const [ox,oy] of [[5,-2],[-4,3],[2,4]]){ const cx=L.x+ox, cy=L.y+oy;
-    if(inb(cx,cy) && tileAt(cx,cy)===T.SNOW) G.decor.push({kind:'pillar', x:cx+0.5, y:cy+0.5, broken:true, stormstruck:1}); }
+  // the storm has walked the whole ring: stones toppled and lightning-split right across the
+  // plateau (SNOW->cloud is the ground here). A scatter of stormstruck stones, not just three.
+  const RS=mulberry32(((SEED||1)+7717)>>>0);
+  for(let i=0;i<16;i++){ const a=(i/16)*TAU + RS()*0.4, rr=2+RS()*7;
+    const cx=Math.round(L.x+Math.cos(a)*rr), cy=Math.round(L.y+Math.sin(a)*rr*0.9);
+    if(inb(cx,cy) && tileAt(cx,cy)===T.SNOW && !solidAt(cx,cy) && !(Math.abs(cx-(L.x+4))<=1 && Math.abs(cy-(L.y+3))<=1))
+      G.decor.push({kind:'pillar', x:cx+0.5, y:cy+0.5, broken:true, stormstruck:1}); }
   // the hidden mouth beside a shattered stone, just off the landing
   const sp=(typeof findOpenNear==='function' && findOpenNear(L.x+4, L.y+3, 8)) || [L.x+4, L.y+3];
   _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼');

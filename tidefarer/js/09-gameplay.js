@@ -1661,6 +1661,11 @@ function updateWorld(dt){
       G.parts.push({x:P.x+rnd(-13,13), y:P.y-rnd(2,8), vx:rnd(1,3), vy:rnd(-0.3,0.3),
         life:rnd(0.5,1.1), color:'rgba(214,232,242,0.5)', size:rnd(1.5,3), grav:0});
     }
+    // BARIK: the flood-curse leaves a cold drizzle hanging over the drowned home shores
+    if(G.worldId==='main' && Math.random()<dt*7){
+      G.parts.push({x:P.x+rnd(-13,13), y:P.y-rnd(6,12), vx:rnd(-0.3,0.1), vy:rnd(3.5,6),
+        life:rnd(0.35,0.7), color:'rgba(170,195,210,0.4)', size:rnd(0.8,1.8), grav:0.3});
+    }
     // CLOUDREACH: a storm that won't break - occasional sky-flashes + drifting sparks
     if(G.worldId==='sky'){
       if(Math.random()<dt*8) G.parts.push({x:P.x+rnd(-12,12), y:P.y-rnd(2,9), vx:rnd(-0.3,0.3), vy:rnd(0.6,1.4),
