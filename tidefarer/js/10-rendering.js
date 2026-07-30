@@ -193,7 +193,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1749,6 +1749,14 @@ function drawDecor(b,s){
     g.fillStyle='#000'; g.beginPath(); g.moveTo(0,-18); g.lineTo(34,0); g.lineTo(0,18); g.lineTo(-34,0); g.closePath(); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='windpit'){
+    // a cell of the bottomless wind-shaft you're blown down. A cold near-black diamond (fused
+    // seamless like the bonepit) with a faint blue-grey sheen catching the updraft near the top.
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#080b12'; g.beginPath(); g.moveTo(0,-18); g.lineTo(34,0); g.lineTo(0,18); g.lineTo(-34,0); g.closePath(); g.fill();
+    g.fillStyle='rgba(150,180,205,0.06)'; g.beginPath(); g.moveTo(0,-18); g.lineTo(20,-8); g.lineTo(0,2); g.lineTo(-20,-8); g.closePath(); g.fill();
+    g.restore(); return;
+  }
   if(b.kind==='fadetile'){
     // a tile of the fading rainbow bridge. Three clear states so a bright tile can never
     // drop you by surprise: SOLID (safe, bright colour), WARN (still solid footing, but
@@ -3085,7 +3093,7 @@ function drawHorse(s){
 function drawPlayer(s){
   // plunging into the Emberdeep pit: the hero tumbles down, shrinking and fading into the dark,
   // then respawns (see eastFall / emberRespawn). Drawn in place of the normal figure.
-  {const _drop = (typeof G!=='undefined') && (G._emberDrop||G._mawDrop);
+  {const _drop = (typeof G!=='undefined') && (G._emberDrop||G._mawDrop||G._windDrop);
   if(_drop){
     const p=Math.min(1, _drop.t/_drop.dur), g=cx;
     g.save();

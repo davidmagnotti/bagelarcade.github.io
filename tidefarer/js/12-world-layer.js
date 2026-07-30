@@ -4982,20 +4982,21 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
   }
 }
 // ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
-/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke: THE UPDRAFT HALL ----------
-   A wind-scoured shaft. The Updraft Hall is swept by a killing gale that builds and BLASTS
-   in cycles: caught in the open when it hits, you're hurled back down the hall and flayed
-   (-HP). Wind-break pillars stand in staggered rows - shelter behind one (put a pillar
-   between you and the north) while the gale blasts, then advance in the lull. At the top the
-   Eye of the Gale seals shut and THE SKIRL forms. Its charm grants the longer dash.
+/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke: THE UPDRAFT SHAFT ----------
+   A wind-scoured shaft dropping into nothing. You climb it south->north across an ABYSS on
+   drifting stone platforms - dash aboard one, ride it over the void, dash to the next ledge.
+   At two points on the way up a SIDEWAYS GALE blasts across the shaft (one east, one west, on
+   staggered timing), shoving you toward the drop while you ride: hold into the wind or be
+   swept off the platform into the dark. Wide rest-islands between the bands are safe. At the
+   top the Eye of the Gale seals shut and THE SKIRL forms; its charm grants the longer dash.
    ================================================================================= */
 const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genWindDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
   carve(28,86,44,96);            // entry landing
-  carve(34,78,38,88);            // corridor
-  carve(20,42,52,80);            // THE UPDRAFT HALL (open floor; pillars added in placeObjects)
+  carve(34,78,38,88);            // corridor up
+  carve(20,44,52,80);            // THE UPDRAFT SHAFT (floor carved whole; the abyss bands are punched in placeObjects)
   carve(34,34,38,44);            // corridor to the Eye
   carve(18,8,54,36);             // THE EYE OF THE GALE (boss arena)
 }
@@ -5004,11 +5005,22 @@ function placeObjectsWindDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE UPDRAFT HALL: staggered wind-break pillars ----
-  const pillar=(x,y)=>{ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } };
-  const rows=[[72,[28,36,44]],[64,[24,32,40,48]],[56,[28,36,44]],[48,[24,32,40,48]]];
-  for(const [ry,xs] of rows) for(const px of xs) pillar(px,ry);
-  G._windGaleT=0; G._windHall={x0:20,x1:52,y0:44,y1:78};   // where the gale bites
+  // ---- THE UPDRAFT SHAFT: an abyss crossed on drifting platforms, swept by sideways gales ----
+  //  south ledge [73..80]  |  BAND1 [66..72] gale EAST  |  island1 [61..65]  |
+  //  BAND2 [55..60] gale WEST  |  island2 [51..54]  |  BAND3 [49..50] dash-leap  |  north ledge [44..48]
+  G._windChasm=new Set(); G._windSlabs=[]; G._windGusts=[]; G._windT=0; G._windDrop=null;
+  G._windStart={sx:36.5, sy:76.5};   // respawn: the south staging ledge (moves up as you reach islands)
+  // punch the void bands: every carved (non-solid) tile in the band becomes a bottomless wind-shaft cell
+  const band=(y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=20;x<=52;x++) if(inb(x,y) && !solidAt(x,y)){ G._windChasm.add(x+','+y); G.decor.push({kind:'windpit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
+  band(66,72); band(55,60); band(49,50);
+  // moving platforms across the two wide bands (the 2-row band 3 is a dash-leap, no slab)
+  const nsSlab=(cx,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax:cx, ay:ay, bx:cx, by:by, spd:spd, phase:phase||0, x:cx, y:ay, prevx:cx, prevy:ay, w:3, h:3}; G.decor.push(s); G._windSlabs.push(s); };
+  nsSlab(31, 72, 65, 0.85, 0);       // band 1 ferry (west lane)
+  nsSlab(41, 65, 72, 0.85, 1.1);     // band 1 ferry (east lane, offset - a second route)
+  nsSlab(36, 60, 54, 0.80, 0.6);     // band 2 ferry
+  // the sideways gales: two points, opposite directions, staggered timing so a lull always comes
+  G._windGusts.push({x0:20,x1:52,y0:66,y1:72, dir: 1, push:3.0, period:3.6, t:0.0});   // BAND 1 blows EAST
+  G._windGusts.push({x0:20,x1:52,y0:55,y1:60, dir:-1, push:3.0, period:4.0, t:2.0});   // BAND 2 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
   G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
@@ -5024,32 +5036,67 @@ function spawnMobsWindDeep(){
   }
 }
 function genWindDeepAll(){ genWindDeep(); placeObjectsWindDeep(); _dungWalls('gale'); spawnMobsWindDeep(); buildMapBase(); }
-// THE UPDRAFT HALL per-frame: the gale cycle (lull -> build/telegraph -> BLAST), sheltering,
-// the Eye seal, and the Skirl's AI.
+// THE UPDRAFT SHAFT per-frame: drift the platforms, blow the sideways gales, fall/respawn over
+// the abyss, hold the Eye seal, and run the Skirl.
 function updateWindDeep(dt){
-  if(!G._windHall) return;
-  const H=G._windHall;
-  G._windGaleT=(G._windGaleT||0)+dt;
-  const CYCLE=8.2, ph=G._windGaleT%CYCLE;
-  const building=(ph>=4.6 && ph<6.2), blasting=(ph>=6.2);
-  const inHall = P.x>=H.x0 && P.x<=H.x1 && P.y>=H.y0 && P.y<=H.y1;
-  // telegraph: wind streaks pour down from the north as the gale builds and blasts
-  if((building||blasting) && Math.random()<dt*(building?26:60)){
-    G.parts.push({x:rnd(H.x0,H.x1), y:H.y0-1, vx:rnd(-0.4,0.4), vy:rnd(7,12), life:rnd(0.5,1.0), color:blasting?'rgba(235,245,252,0.8)':'rgba(200,220,235,0.5)', size:rnd(1.5,3), grav:0});
-  }
-  if(blasting && inHall && !P.dead){
-    // sheltered if a pillar (solid) stands just north of you (between you and the gale)
-    const px=Math.floor(P.x), py=Math.floor(P.y);
-    const sheltered = solidAt(px,py-1) || solidAt(px,py-2);
-    if(!sheltered){
-      const ny=P.y + 6.5*dt;                       // hurled south (back down the hall)
-      if(!circleBlocked(P.x,ny,0.28)) P.y=ny;
-      G._windChip=(G._windChip||0)+dt;
-      if(G._windChip>0.5 && (P.rollT||0)<=0){ G._windChip=0; P.hp=Math.max(1,P.hp-3); P.hurtT=Math.max(P.hurtT||0,0.3); buzz(6); }
+  if(!G._windSlabs) return;
+  G._windT=(G._windT||0)+dt;
+  updateDriftSlabs(G._windSlabs, G._windT);
+  windGustPush(dt);
+  // ambient: a cold updraft hazes up out of the shaft
+  if(Math.random()<dt*16){ const by=[68,58,49][Math.floor(Math.random()*3)]+rnd(-2,2);
+    G.parts.push({x:rnd(20,52), y:by, vx:rnd(-0.3,0.3), vy:-rnd(2,4), life:rnd(0.6,1.2), color:'rgba(190,215,235,0.4)', size:rnd(1,2.4), grav:-0.05}); }
+  if(G._windDrop){ G._windDrop.t+=dt;
+    if(Math.random()<0.6) G.parts.push({x:P.x+rnd(-0.3,0.3), y:P.y+rnd(-0.2,0.6), vx:rnd(-0.4,0.4), vy:rnd(5,9), life:0.4, color:'rgba(210,230,244,0.6)', size:rnd(1.5,3), grav:0});
+    if(G._windDrop.t>=G._windDrop.dur) windRespawn();
+  } else if(!P.dead){
+    const aboard = driftCarry(G._windSlabs);   // ride the platform under you, if any
+    windCheckpoint();
+    if((P.rollT||0)<=0 && !aboard){            // grounded over the void with no platform -> the shaft takes you
+      const tx=Math.floor(P.x), ty=Math.floor(P.y);
+      if(G._windChasm.has(tx+','+ty)) windPitStart();
     }
   }
-  if(!blasting) G._windChip=0;
-  // Eye seal + boss
+  windSealCheck();
+  for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
+}
+// the sideways gales: each blasts on its own cycle (lull -> build/telegraph -> BLAST). During a
+// blast, standing in the zone shoves you along its heading - toward the drop while you cross.
+function windGustPush(dt){
+  for(const gz of (G._windGusts||[])){
+    gz.t=(gz.t||0)+dt;
+    const ph=gz.t % gz.period;
+    const building=ph>=gz.period*0.42 && ph<gz.period*0.58, blasting=ph>=gz.period*0.58;
+    if((building||blasting) && Math.random()<dt*(blasting?64:24)){
+      const sy=rnd(gz.y0, gz.y1+1);
+      G.parts.push({x: gz.dir>0? gz.x0-1 : gz.x1+1, y:sy, vx:gz.dir*rnd(8,13), vy:rnd(-0.3,0.3), life:rnd(0.5,1.1), color:blasting?'rgba(235,245,252,0.85)':'rgba(200,220,235,0.5)', size:rnd(1.5,3), grav:0});
+    }
+    if(blasting && !P.dead){
+      const inZone = P.x>=gz.x0 && P.x<=gz.x1 && P.y>=gz.y0 && P.y<=gz.y1;
+      if(inZone){ const nx=P.x + gz.dir*gz.push*dt; if(!circleBlocked(nx,P.y,0.28)) P.x=nx; }
+    }
+  }
+}
+// as you reach each safe island, bank it as the respawn point so a fall doesn't send you all the way down
+function windCheckpoint(){
+  const y=P.y;
+  if(y>=61 && y<=65) G._windStart={sx:36.5, sy:64.5};        // island 1
+  else if(y>=51 && y<=54) G._windStart={sx:36.5, sy:53.5};   // island 2
+  else if(y>=73) G._windStart={sx:36.5, sy:76.5};            // south staging ledge
+}
+function windPitStart(){
+  G._windDrop={t:0,dur:0.55}; P.hp=Math.max(1,P.hp-4); P.hurtT=Math.max(P.hurtT||0,0.5);
+  if(typeof buzz==='function') buzz(9);
+  for(let i=0;i<10;i++) G.parts.push({x:P.x+rnd(-0.3,0.3), y:P.y, vx:rnd(-0.6,0.6), vy:rnd(6,11), life:rnd(0.4,0.8), color:'rgba(220,235,246,0.7)', size:rnd(1.5,3), grav:0});
+  if(Snd.noise) Snd.noise(0.16,0.05,220,0.6);
+  P.click=null; P.moving=false;
+}
+function windRespawn(){
+  G._windDrop=null; const c=G._windStart||{sx:36.5,sy:76.5};
+  P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+function windSealCheck(){
   if(!G._windSealed && !(P.story&&P.story.galeDeepDone)){
     const boss=G.mobs.find(m=>m.skirl && !m.dead);
     if(boss && P.y<=33 && P.x>=18 && P.x<=54){
@@ -5060,13 +5107,11 @@ function updateWindDeep(dt){
       if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'descend',title:boss.title,sub:boss.subtitle});
     }
   }
-  // unseal once the Skirl is down
   if(G._windSealed && !G._windCleared && !G.mobs.some(m=>m.skirl && !m.dead)){
     G._windCleared=1; for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true;
     if(typeof invalidateScenery==='function') invalidateScenery();
   }
-  for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
 }
 function updateSkirl(m,dt){
   const pd=dist(m.x,m.y,P.x,P.y); m.face=(P.x<m.x?-1:1);
