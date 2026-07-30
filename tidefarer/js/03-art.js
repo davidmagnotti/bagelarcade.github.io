@@ -733,7 +733,6 @@ function dirOct(d){
   return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
 }
 function drawHumanoid(g,sx,sy,o){
-  try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){}
   /* =====================================================================
      MASCOT FIGURE - Mario-64 / Wind-Waker inspired redesign.
      Head is half the character. Big eyes, big boots, bouncy gait.
@@ -762,6 +761,12 @@ function drawHumanoid(g,sx,sy,o){
   const hurtF=o.hurt?1:0;
 
   g.save();
+  // Slight vividness boost for the figure. MUST be set inside this save() so the
+  // matching restore() clears it - setting ctx.filter before the save (and never
+  // resetting it) leaked the filter onto the whole scene for the rest of the
+  // frame (setTransform does not clear ctx.filter), softening/over-saturating the
+  // ground, houses and everything drawn after the first character.
+  try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){}
   g.translate(sx,sy);
   if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean);
