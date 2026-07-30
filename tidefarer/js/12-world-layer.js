@@ -4728,31 +4728,36 @@ let TRAIN=null; // active training drill, if any
 const BARIK_SEAL=[[34,45],[35,45],[36,45],[37,45],[38,45]];   // the Cistern gate - slams shut behind you
 function genBarikDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
-  const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  // the race water is a NON-SOLID gap: you DASH over it (airborne), and only fall in if you
-  // come to rest on it. (Solid water would block the dash entirely - the old bug.)
+  const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile||T.RUIN); setSolid(x,y,0); } };
+  // race water is a NON-SOLID gap: DASH over it (airborne); come to rest on it and the undertow
+  // drags you under. (Solid water would block the dash entirely - the old bug.)
   const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,0); } };
-  carve(28,86,44,96,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
-  carve(34,78,38,88,T.RUIN);            // corridor up to the race
-  carve(22,72,50,78,T.RUIN);            // THE TIDE RACE - south ledge (the near shore)
-  flood(22,56,50,72);                   // ...the open water between the shores (dash across it)...
-  for(const sy of [68,65,62,59]) carve(28,sy,44,sy+1,T.RUIN);   // dry stepping-stones (2 deep, ~3 apart) to dash between
-  carve(22,50,50,56,T.RUIN);            // ...north ledge (the far shore)
-  carve(34,42,38,52,T.RUIN);            // corridor up to the Cistern
-  carve(18,8,54,42,T.RUIN);             // THE CISTERN - the Tidemaw's flooded hall
+  carve(28,89,44,97);            // THE SUNKEN STAIR - entry landing
+  carve(34,85,38,90);            // corridor
+  // ROOM 1 - THE WEEPING HALL: a drowned antechamber; the vault's dead stand guard here
+  carve(20,73,52,85);
+  carve(34,68,38,74);            // corridor
+  // ROOM 2 - THE TIDE RACE: dash the dry stone-bridge across open water
+  carve(20,56,52,68);
+  flood(20,59,52,64);            // the race water, FULL WIDTH (no dry edge to walk around)
+  carve(28,61,44,62);            // a mid stone-bridge (2 deep) - two dash-gaps of water flank it
+  carve(34,52,38,57);            // corridor
+  // ROOM 3 - THE UNDERTOW: a last flooded gap, dead waiting on the far lip
+  carve(20,44,52,52);
+  carve(34,42,38,46);            // corridor up to the Cistern (stops NORTH of the water; gate at y45)
+  flood(20,47,52,48);            // a 2-row race, FULL WIDTH, right before the Cistern gate
+  carve(18,8,54,42);             // THE CISTERN - the Tidemaw's flooded hall
 }
 function placeObjectsBarikDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, drowned:1, exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,88],[42,88],[24,74],[48,74],[24,52],[48,52],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE TIDE RACE: dash the dry stepping-stones across the open water ----
-  // The water is a non-solid gap: dash over it (airborne) stone to stone; come to rest ON the
-  // water and the undertow drags you back to the near shore (-5 HP). The stepping-stones are
-  // carved dry ground (in genBarikDeep), so only the water tiles are the fall.
+  for(const [tx,ty] of [[24,84],[48,84],[24,66],[48,66],[24,50],[48,50],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE TIDE RACES: every DEEP tile is a non-solid gap you dash over; rest on one and the
+  // undertow drags you under (-5 HP) back to the last dry ground you stood on. ----
   G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
-  for(let y=56;y<=72;y++) for(let x=22;x<=50;x++) if(inb(x,y) && tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
-  G._barikCross={sx:36.5, sy:75.5};   // the undertow flings you back to the near shore
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++) if(tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
+  G._barikCross={sx:36.5, sy:66.5};   // default respawn (updates to the last dry ledge you reach)
   // ---- THE CISTERN: the boss seal + the reward ----
   G._barikSealed=0;
   G.decor.push({kind:'catgate', x:36, y:45, open:true, gate:'cistern', tiles:BARIK_SEAL.slice(), label:'the Cistern gate'});
@@ -4767,8 +4772,12 @@ function placeObjectsBarikDeep(){
   }
 }
 function spawnMobsBarikDeep(){
-  // a few drowned dead stand the near and far shores (not the crossing itself)
-  for(const [zx,zy] of [[26,74],[46,74],[26,52],[46,52]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  if(!(P.story && P.story.barikDeepDone)){
+    // ROOM 1 combat: drowned dead + a drowned bowman
+    for(const [zx,zy,k] of [[28,79,'skeleton'],[44,79,'skeleton'],[36,76,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 3 gauntlet: dead waiting on the far lip of the last race
+    for(const [zx,zy] of [[28,45],[44,45]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+  }
   // THE TIDEMAW - sealed and unseen until you step into the Cistern (barikSealCheck reveals it)
   if(!(P.story && P.story.barikDeepDone)){
     const sp=findOpenNear(36, 20, 6) || [36,20];
@@ -4786,6 +4795,7 @@ function updateBarikDeep(dt){
   else if(!P.dead && (P.rollT||0)<=0){
     const tx=Math.floor(P.x), ty=Math.floor(P.y);
     if(G._barikVoid.has(tx+','+ty) && !driftCarry(G._barikSlabs)) barikPlungeStart();   // over the void, not aboard a stone
+    else if(walkTile(tileAt(tx,ty))) G._barikCross={sx:tx+0.5, sy:ty+0.5};   // bank the last dry ledge as respawn
   }
   barikSealCheck();
   for(const m of G.mobs) if(m.tidemaw && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateTidemaw(m,dt);
@@ -4982,45 +4992,47 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
   }
 }
 // ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
-/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke: THE UPDRAFT SHAFT ----------
-   A wind-scoured shaft dropping into nothing. You climb it south->north across an ABYSS on
-   drifting stone platforms - dash aboard one, ride it over the void, dash to the next ledge.
-   At two points on the way up a SIDEWAYS GALE blasts across the shaft (one east, one west, on
-   staggered timing), shoving you toward the drop while you ride: hold into the wind or be
-   swept off the platform into the dark. Wide rest-islands between the bands are safe. At the
-   top the Eye of the Gale seals shut and THE SKIRL forms; its charm grants the longer dash.
-   ================================================================================= */
+/* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke ----------
+   Three chambers climb the wind-scoured spire before the Eye. THE ANTECHAMBER, where cave-bats
+   swoop out of the dark; then two ABYSS CROSSINGS - THE UPDRAFT and THE HIGH CROSSING - each a
+   bottomless wind-shaft you cross on a drifting stone platform while a SIDEWAYS GALE (east in
+   one room, west in the next, on staggered timing) shoves you toward the drop. Ride the
+   platform and hold into the wind or be swept off. At the top the Eye of the Gale seals shut
+   and THE SKIRL forms; its charm grants the longer dash. ============================== */
 const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genWindDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(28,86,44,96);            // entry landing
-  carve(34,78,38,88);            // corridor up
-  carve(20,44,52,80);            // THE UPDRAFT SHAFT (floor carved whole; the abyss bands are punched in placeObjects)
-  carve(34,34,38,44);            // corridor to the Eye
+  carve(28,88,44,96);            // ENTRY landing
+  carve(34,80,38,89);            // corridor
+  carve(20,68,52,80);            // ROOM 1 - THE ANTECHAMBER (combat; solid floor)
+  carve(34,63,38,69);            // corridor
+  carve(20,51,52,63);            // ROOM 2 - THE UPDRAFT (abyss + platform + gale EAST)
+  carve(34,45,38,52);            // corridor
+  carve(20,38,52,45);            // ROOM 3 - THE HIGH CROSSING (abyss + platform + gale WEST)
+  carve(34,34,38,39);            // boss corridor (Eye-gate at y37)
   carve(18,8,54,36);             // THE EYE OF THE GALE (boss arena)
 }
 function placeObjectsWindDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE UPDRAFT SHAFT: an abyss crossed on drifting platforms, swept by sideways gales ----
-  //  south ledge [73..80]  |  BAND1 [66..72] gale EAST  |  island1 [61..65]  |
-  //  BAND2 [55..60] gale WEST  |  island2 [51..54]  |  BAND3 [49..50] dash-leap  |  north ledge [44..48]
+  for(const [tx,ty] of [[24,78],[48,78],[22,52],[52,52],[22,40],[52,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE TWO ABYSS CROSSINGS: void bands crossed on drifting platforms, swept by gales ----
+  //  ROOM 2 [51..63]: south ledge 60-63 | BAND 54-59 gale EAST | north ledge 51-53
+  //  ROOM 3 [38..45]: south ledge 44-45 | BAND 41-43 gale WEST | north ledge 38-40
   G._windChasm=new Set(); G._windSlabs=[]; G._windGusts=[]; G._windT=0; G._windDrop=null;
-  G._windStart={sx:36.5, sy:76.5};   // respawn: the south staging ledge (moves up as you reach islands)
-  // punch the void bands: every carved (non-solid) tile in the band becomes a bottomless wind-shaft cell
+  G._windStart={sx:36.5, sy:62.5};   // respawn: room-2 south ledge (moves up as you reach each ledge)
   const band=(y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=20;x<=52;x++) if(inb(x,y) && !solidAt(x,y)){ G._windChasm.add(x+','+y); G.decor.push({kind:'windpit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
-  band(66,72); band(55,60); band(49,50);
-  // moving platforms across the two wide bands (the 2-row band 3 is a dash-leap, no slab)
+  band(54,59);   // ROOM 2 abyss
+  band(41,43);   // ROOM 3 abyss
   const nsSlab=(cx,ay,by,spd,phase)=>{ const s={kind:'driftslab', ax:cx, ay:ay, bx:cx, by:by, spd:spd, phase:phase||0, x:cx, y:ay, prevx:cx, prevy:ay, w:3, h:3}; G.decor.push(s); G._windSlabs.push(s); };
-  nsSlab(31, 72, 65, 0.85, 0);       // band 1 ferry (west lane)
-  nsSlab(41, 65, 72, 0.85, 1.1);     // band 1 ferry (east lane, offset - a second route)
-  nsSlab(36, 60, 54, 0.80, 0.6);     // band 2 ferry
-  // the sideways gales: two points, opposite directions, staggered timing so a lull always comes
-  G._windGusts.push({x0:20,x1:52,y0:66,y1:72, dir: 1, push:3.0, period:3.6, t:0.0});   // BAND 1 blows EAST
-  G._windGusts.push({x0:20,x1:52,y0:55,y1:60, dir:-1, push:3.0, period:4.0, t:2.0});   // BAND 2 blows WEST
+  nsSlab(31, 59, 54, 0.80, 0);       // ROOM 2 ferry (west lane)
+  nsSlab(41, 54, 59, 0.80, 1.1);     // ROOM 2 ferry (east lane, offset - a second route)
+  nsSlab(36, 44, 40, 0.90, 0.5);     // ROOM 3 ferry
+  // the sideways gales: opposite directions, staggered timing so a lull always comes
+  G._windGusts.push({x0:20,x1:52,y0:54,y1:59, dir: 1, push:3.0, period:3.6, t:0.0});   // ROOM 2 blows EAST
+  G._windGusts.push({x0:20,x1:52,y0:41,y1:43, dir:-1, push:3.0, period:4.0, t:2.0});   // ROOM 3 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
   G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
@@ -5029,6 +5041,10 @@ function placeObjectsWindDeep(){
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; }
 }
 function spawnMobsWindDeep(){
+  if(!(P.story && P.story.galeDeepDone)){
+    // ROOM 1 combat: a flock of cave-bats swoops the antechamber
+    for(const [zx,zy] of [[28,74],[44,74],[36,71],[36,77]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
+  }
   if(!(P.story && P.story.galeDeepDone)){
     const sp=findOpenNear(36, 20, 7) || [36,20];
     const b=spawnMob('skirl', sp[0], sp[1]);
@@ -5077,12 +5093,11 @@ function windGustPush(dt){
     }
   }
 }
-// as you reach each safe island, bank it as the respawn point so a fall doesn't send you all the way down
+// bank the last safe ledge you stood on as the respawn point (a fall drops you back one room, not to the start)
 function windCheckpoint(){
-  const y=P.y;
-  if(y>=61 && y<=65) G._windStart={sx:36.5, sy:64.5};        // island 1
-  else if(y>=51 && y<=54) G._windStart={sx:36.5, sy:53.5};   // island 2
-  else if(y>=73) G._windStart={sx:36.5, sy:76.5};            // south staging ledge
+  if((P.rollT||0)>0) return;
+  const tx=Math.floor(P.x), ty=Math.floor(P.y);
+  if(!G._windChasm.has(tx+','+ty) && walkTile(tileAt(tx,ty))) G._windStart={sx:tx+0.5, sy:ty+0.5};
 }
 function windPitStart(){
   G._windDrop={t:0,dur:0.55}; P.hp=Math.max(1,P.hp-4); P.hurtT=Math.max(P.hurtT||0,0.5);
@@ -5147,23 +5162,31 @@ const SUN_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genSunwardDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(28,86,44,96); carve(34,78,38,88);
-  carve(20,42,52,80);            // THE FORGE CAUSEWAY
-  carve(34,34,38,44);
+  carve(28,88,44,96);            // ENTRY landing
+  carve(34,80,38,89);            // corridor
+  carve(20,68,52,80);            // ROOM 1 - THE SLAG YARD (combat)
+  carve(34,63,38,69);            // corridor
+  carve(20,51,52,63);            // ROOM 2 - THE FORGE CAUSEWAY (vent field)
+  carve(34,45,38,52);            // corridor
+  carve(20,38,52,45);            // ROOM 3 - THE BELLOWS WALK (denser vents + a stoker)
+  carve(34,34,38,39);            // boss corridor (Forge-gate at y37)
   carve(18,8,54,36);             // THE ASHEN FORGE (boss arena)
 }
 function placeObjectsSunwardDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'east', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE FORGE CAUSEWAY: a staggered field of erupting lava-vents ----
+  for(const [tx,ty] of [[24,78],[48,78],[22,52],[52,52],[22,40],[52,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // ---- THE FORGE CAUSEWAY + BELLOWS WALK: staggered fields of erupting lava-vents in two rooms ----
   G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
   let n=0;
-  for(let gy=72; gy>=48; gy-=6) for(let gx=24; gx<=48; gx+=6){
-    const jx=gx+((gy/6)%2? 3:0);   // stagger alternate rows
-    if(inb(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; }
-  }
+  const ventField=(x0,y0,x1,y1,step)=>{ for(let gy=y0; gy<=y1; gy+=(step||3)) for(let gx=x0; gx<=x1; gx+=5){
+    const jx=gx+((Math.floor(gy/3)%2)? 2:0);   // stagger alternate rows
+    if(inb(jx,gy) && !solidAt(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; } } };
+  ventField(24,53,48,61,3);      // ROOM 2 - the causeway field
+  ventField(24,39,48,44,2);      // ROOM 3 - the bellows walk (rows closer together)
+  // a couple of cold-looking (non-erupting) forge-pits in the slag yard, for theming
+  for(const [px,py] of [[26,72],[46,76],[36,71]]) if(inb(px,py) && !solidAt(px,py)) G.decor.push({kind:'firepit', x:px+0.5, y:py+0.5, cold:1});
   G._sunSealed=0; G._sunCleared=(P.story&&P.story.ashenForgeDone)?1:0;
   // glowing lava-veins seamed through the forge floor (theming, on walkable stone)
   { const LS=mulberry32((SEED||1)+717);
@@ -5176,6 +5199,12 @@ function placeObjectsSunwardDeep(){
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true; }
 }
 function spawnMobsSunwardDeep(){
+  if(!(P.story && P.story.ashenForgeDone)){
+    // ROOM 1 combat: a scorpion and ash-wracked dead in the slag yard
+    for(const [zx,zy,k] of [[28,74,'scorpion'],[44,74,'skeleton'],[36,77,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 3 gauntlet: a stoker among the bellows-vents
+    { const sp=findOpenNear(36,42,4); if(sp) spawnMob('scorpion',sp[0],sp[1]); }
+  }
   if(!(P.story && P.story.ashenForgeDone)){
     const sp=findOpenNear(36, 20, 7) || [36,20];
     const b=spawnMob('cinderwrought', sp[0], sp[1]);
@@ -5209,16 +5238,16 @@ function forgeTickErupts(dt){
 }
 function updateSunwardDeep(dt){
   if(!G._forgeVents) return;
-  if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(44,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
+  if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(38,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
   for(const v of G._forgeVents){ v.nextT-=dt; if(v.nextT<=0){ v.nextT=v.period; forgeQueueErupt(v.gx,v.gy); } }
-  // random big lava spouts erupt anywhere on the causeway - safe footing is never guaranteed
+  // random big lava spouts erupt across the vent rooms - safe footing is never guaranteed
   G._bigSpoutT=(G._bigSpoutT||1.6)-dt;
   if(G._bigSpoutT<=0){ G._bigSpoutT=rnd(1.4,2.8);
-    // bias spouts toward the player's neighbourhood on the lower causeway so movement stays tense
-    const onCauseway=P.y>=44 && P.y<=80 && P.x>=20 && P.x<=52;
+    // bias spouts toward the player when they're in the causeway/bellows rooms so movement stays tense
+    const inVents=P.y>=38 && P.y<=63 && P.x>=20 && P.x<=52;
     let sx,sy;
-    if(onCauseway && Math.random()<0.6){ sx=Math.round(P.x+rnd(-4,4)); sy=Math.round(P.y+rnd(-4,4)); }
-    else { sx=Math.round(rnd(22,50)); sy=Math.round(rnd(46,78)); }
+    if(inVents && Math.random()<0.6){ sx=Math.round(P.x+rnd(-4,4)); sy=Math.round(P.y+rnd(-4,4)); }
+    else { sx=Math.round(rnd(22,50)); sy=Math.round(rnd(39,62)); }
     if(inb(sx,sy) && tileAt(sx,sy)>=T.SAND && !solidAt(sx,sy)) forgeQueueErupt(sx,sy,1);
   }
   forgeTickErupts(dt);
@@ -5266,19 +5295,25 @@ const STORM_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genSkyDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(28,86,44,96); carve(34,78,38,88);
-  carve(20,42,52,80);            // THE STORM NAVE
-  carve(34,34,38,44);
+  carve(28,88,44,96);            // ENTRY landing
+  carve(34,80,38,89);            // corridor
+  carve(20,68,52,80);            // ROOM 1 - THE NARTHEX (combat)
+  carve(34,63,38,69);            // corridor
+  carve(20,51,52,63);            // ROOM 2 - THE STORM NAVE (hunting strikes)
+  carve(34,45,38,52);            // corridor
+  carve(20,38,52,45);            // ROOM 3 - THE CHANCEL (strikes + a storm-shade)
+  carve(34,34,38,39);            // boss corridor (Stormheart-gate at y37)
   carve(18,8,54,36);             // THE STORMHEART (boss arena)
 }
 function placeObjectsSkyDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,88],[42,88],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // a couple of tall temple pillars for cover-that-isn't (lightning falls from above)
-  for(const [px,py] of [[26,66],[46,66],[26,52],[46,52]]) if(inb(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
-  G._stormNave={x0:20,x1:52,y0:44,y1:80}; G._stormStrikes=[]; G._stormT=0; G._stormHuntT=0.8;
+  for(const [tx,ty] of [[24,78],[48,78],[22,52],[52,52],[22,40],[52,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // tall temple pillars for cover-that-isn't (the lightning falls from straight above)
+  for(const [px,py] of [[26,58],[46,58],[26,42],[46,42],[30,74],[42,74]]) if(inb(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
+  // the hunting-lightning haunts THE STORM NAVE and THE CHANCEL (rooms 2 & 3); the Narthex is safe
+  G._stormNave={x0:20,x1:52,y0:38,y1:63}; G._stormStrikes=[]; G._stormT=0; G._stormHuntT=0.8;
   G._skySealed=0; G._skyCleared=(P.story&&P.story.stormTempleDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'stormheart', tiles:STORM_SEAL.slice(), label:'the Stormheart-gate'});
   G.decor.push({kind:'chest', x:36.5, y:11.5, dash2gift:1});   // the Stormstep - DOUBLE DASH
@@ -5287,6 +5322,12 @@ function placeObjectsSkyDeep(){
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true; }
 }
 function spawnMobsSkyDeep(){
+  if(!(P.story && P.story.stormTempleDone)){
+    // ROOM 1 combat: storm-shades and a barrow bowman in the narthex
+    for(const [zx,zy,k] of [[28,74,'skywraith'],[44,74,'skywraith'],[36,71,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 3: a storm-shade haunting the chancel under the strikes
+    { const sp=findOpenNear(36,42,4); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
+  }
   if(!(P.story && P.story.stormTempleDone)){
     const sp=findOpenNear(36, 20, 7) || [36,20];
     const b=spawnMob('thundercaller', sp[0], sp[1]);
