@@ -169,6 +169,26 @@ function render(){
           const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
           if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
             cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }
+          // shore-lap: a crest rolls in from open water (phase rides the depth
+          // field, so it travels shoreward) and breaks into white foam flecks
+          // as it arrives on the shallows
+          if(EL && G.wdepth){
+            const wdp=waterDepthLv(x,y);
+            if(wdp>0 && wdp<2.2){
+              const w=Math.sin(wdp*2.0 - G.time*1.5 + ((x*31+y*17)%7)*0.09);
+              if(w>0.55){
+                const aa=(w-0.55)/0.45;
+                cx.strokeStyle='rgba(238,250,252,'+(0.30*aa).toFixed(3)+')'; cx.lineWidth=1.6;
+                cx.beginPath(); cx.moveTo(sx-11,sy+1); cx.quadraticCurveTo(sx,sy-2.5,sx+11,sy+1); cx.stroke();
+                if(aa>0.75 && wdp<1.2){
+                  cx.fillStyle='rgba(255,255,255,'+(0.5*(aa-0.75)*4).toFixed(3)+')';
+                  cx.beginPath();
+                  cx.arc(sx-6,sy+1,1.3,0,TAU); cx.arc(sx+2,sy-0.5,1.1,0,TAU); cx.arc(sx+8,sy+1.4,1.2,0,TAU);
+                  cx.fill();
+                }
+              }
+            }
+          }
           if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
             const sa=0.35+0.35*Math.sin(G.time*6+x);
             cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;

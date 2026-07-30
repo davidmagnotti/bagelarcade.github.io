@@ -84,6 +84,34 @@ function buildHeight(){
       lv[i]=s/c;
     }
   }
+  // ---- water DEPTH field ----
+  // The mirror of the land ramp: distance from land INTO the sea, for the
+  // depth-graded water (bright shoals falling off into abyss) and the
+  // shore-lap wave bands. Reuses the same BFS scratch arrays.
+  const wd=new Float32Array(n);
+  dist.fill(-1); qh=0; qt=0;
+  for(let i=0;i<n;i++){ if(!_isWater(G.map[i])){ dist[i]=0; q[qt++]=i; } }
+  if(qt>0 && qt<n){
+    while(qh<qt){
+      const i=q[qh++], x=i%W, y=(i/W)|0, d=dist[i];
+      if(x+1<W){ const j=i+1; if(dist[j]<0){ dist[j]=d+1; q[qt++]=j; } }
+      if(x-1>=0){ const j=i-1; if(dist[j]<0){ dist[j]=d+1; q[qt++]=j; } }
+      if(y+1<H){ const j=i+W; if(dist[j]<0){ dist[j]=d+1; q[qt++]=j; } }
+      if(y-1>=0){ const j=i-W; if(dist[j]<0){ dist[j]=d+1; q[qt++]=j; } }
+    }
+    for(let i=0;i<n;i++) wd[i]=_isWater(G.map[i]) ? Math.min(8, dist[i]<0?8:dist[i]) : 0;
+    // one smoothing pass over water so the abyss ramp rolls instead of stepping
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const i=y*W+x; if(!_isWater(G.map[i])) continue;
+      let s=wd[i], c=1;
+      if(x+1<W && _isWater(G.map[i+1])){ s+=wd[i+1]; c++; }
+      if(x-1>=0 && _isWater(G.map[i-1])){ s+=wd[i-1]; c++; }
+      if(y+1<H && _isWater(G.map[i+W])){ s+=wd[i+W]; c++; }
+      if(y-1>=0 && _isWater(G.map[i-W])){ s+=wd[i-W]; c++; }
+      wd[i]=s/c;
+    }
+  }
+  G.wdepth=wd;
   G.height=lv; _hWorld=G.worldId; return lv;
 }
 
@@ -97,6 +125,13 @@ function heightLv(x,y){
   x|=0; y|=0;
   if(x<0||y<0||x>=MAPW||y>=MAPH||!G.height) return 0;
   return G.height[y*MAPW+x];
+}
+
+/* water DEPTH level at an integer tile (0 on land / out of bounds) */
+function waterDepthLv(x,y){
+  x|=0; y|=0;
+  if(x<0||y<0||x>=MAPW||y>=MAPH||!G.wdepth) return 0;
+  return G.wdepth[y*MAPW+x];
 }
 
 /* pixels a whole tile (x,y) is raised in the ground pass */
@@ -247,7 +282,7 @@ function elevDrawCliff(g,x,y,sx,sy){
 /* ---- per-tile grade pass: sun wash + contact shadows (AO) ----
    Static per world, drawn with the ground: in full quality it rides the live
    tile pass; in LOWFX it is baked once into the ground cache for free. */
-let _sunDia=null;
+let _sunDia=null, _abyssDia=null, _shoalDia=null;
 function _mkDia(col){
   const c=document.createElement('canvas'); c.width=TW; c.height=TH;
   const g=c.getContext('2d'); g.fillStyle=col;
@@ -267,6 +302,23 @@ function elevTileFX(g,x,y,sx,sy){
   if(!G.height) return;
   const t=G.map[y*MAPW+x], water=(t===T.DEEP||t===T.SHALLOW);
   const L=water?0:heightLv(x,y), cy=sy-L*ELEV.HSTEP, HW=TW/2, HH=TH/2;
+  // depth-graded sea: bright turquoise shoals along the shore falling off
+  // into a dark abyss offshore. Static per world - bakes free in LOWFX.
+  if(water){
+    const wd=waterDepthLv(x,y);
+    if(wd>0){
+      if(t===T.SHALLOW && wd<=1.5){
+        if(!_shoalDia) _shoalDia=_mkDia('#8fdce8');
+        g.globalAlpha=0.10; g.drawImage(_shoalDia, sx-TW/2, sy-TH/2);
+      }
+      const a=Math.min(0.34,(wd-0.8)*0.055);
+      if(a>0.01){
+        if(!_abyssDia) _abyssDia=_mkDia('#050f20');
+        g.globalAlpha=a; g.drawImage(_abyssDia, sx-TW/2, sy-TH/2);
+      }
+      g.globalAlpha=1;
+    }
+  }
   // warm sun wash on high ground - hills catch the light, fading with dusk
   if(!water && L>0.6){
     if(!_sunDia) _sunDia=_mkDia('#ffe9b8');
@@ -293,3 +345,4 @@ window.elevTileLift=elevTileLift;
 window.elevDrawCliff=elevDrawCliff;
 window.elevTileFX=elevTileFX;
 window.heightLv=heightLv;
+window.waterDepthLv=waterDepthLv;
