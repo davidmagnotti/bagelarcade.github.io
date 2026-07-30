@@ -15,7 +15,11 @@ const ITEMS = {
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   stormrune:{name:'Snare Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now snare a foe fast where it stands for a heartbeat.'},
-  veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'}
+  veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
+  tideglasshook:{name:'Tideglass Hook', desc:'A ring of founder\'s-glass on a whip of woven kelp. Loose it at an anchor-ring to haul yourself across any gap in a heartbeat. (F / the ⚓ button.)'},
+  blastcharge:{name:'Blast Charge', desc:'A clay pot of ground fire-salt. Set it down and stand clear - it cracks open fissured walls, trips distant plates, and staggers what stands near. (Q / the ✸ button.)'},
+  lodestone:{name:'Lodestone', desc:'A lump of the quake-spirit\'s heart-iron. It calls to iron: drag a lodeblock toward you, onto a plate or out of your road. (G / the ❖ button.)'},
+  tidewatch:{name:'Tidefarer\'s Slow-Time', desc:'The Tidefarer\'s gift, wound into your blood. Spend focus to slow the whole world to a crawl while you move on, untouched. (C / the ⧗ button.)'}
 };
 const SKILLS = {
   melee:{name:'Melee', perk:'+2 dmg / lvl'},

@@ -262,6 +262,14 @@ const SECTIONS=[
     ['Unlock all abilities',()=>unlockAll()], ['Boost skills',()=>maxSkills()],
     ['God mode: off',(b)=>toggleGod(b)],
   ]],
+  ['Relics (new whole-game verbs)', [
+    ['★ Sandbox: grant all 4 + spawn puzzles here',()=>{ if(typeof spawnRelicSandbox==='function') spawnRelicSandbox(); ui(); }],
+    ['Grant all 4 relics',()=>{ if(typeof grantAllRelics==='function') grantAllRelics(); ui(); }],
+    ['Grant Tideglass Hook',()=>{ if(typeof grantHook==='function') grantHook(); ui(); }],
+    ['Grant Blast Charge',()=>{ if(typeof grantBomb==='function') grantBomb(); ui(); }],
+    ['Grant Lodestone',()=>{ if(typeof grantLodestone==='function') grantLodestone(); ui(); }],
+    ['Grant Slow-Time',()=>{ if(typeof grantSlowTime==='function') grantSlowTime(); ui(); }],
+  ]],
   ['System', [
     ['Save now',()=>saveNow()], ['Reload page',()=>location.reload()],
   ]],

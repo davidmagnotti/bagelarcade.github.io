@@ -5790,6 +5790,24 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE STORMHEART','STORM-GLASS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
+  // --- the four new whole-game relic verbs (see 33-relics.js). Each gift chest
+  //     grants a permanent, actively-triggered tool in the spirit of the dash. ---
+  if(b.hookgift){ bumpStat('chests');
+    if(!(P.unlocked&&P.unlocked.hook)){ if(typeof grantHook==='function') grantHook(); }
+    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ANCHOR-HOARD','GLASS AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
+  if(b.bombgift){ bumpStat('chests');
+    if(!(P.unlocked&&P.unlocked.bomb)){ if(typeof grantBomb==='function') grantBomb(); }
+    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE POWDER-HOARD','FIRE-SALT AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
+  if(b.lodegift){ bumpStat('chests');
+    if(!(P.unlocked&&P.unlocked.lodestone)){ if(typeof grantLodestone==='function') grantLodestone(); }
+    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE IRON-HOARD','HEART-IRON AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
+  if(b.slowgift){ bumpStat('chests');
+    if(!(P.unlocked&&P.unlocked.slowtime)){ if(typeof grantSlowTime==='function') grantSlowTime(); }
+    else { giveGold(rndi(120,180)); give('pearl',1); banner('THE STILL-HOUR','A KEEPSAKE OF THE TIDEFARER'); }
+    setTimeout(autoSave,300); return; }
   // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the trail to the weapon.
   if(b.tidewardHoard){
     bumpStat('chests'); P.story=P.story||{};

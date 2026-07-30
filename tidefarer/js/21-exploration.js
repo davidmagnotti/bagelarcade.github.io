@@ -113,10 +113,14 @@ function frame(ts){
     return;
   }
   updatePlayer(dt);
-  updateNPCs(dt);
-  updateMobs(dt);
-  updateProjs(dt);
-  updateWorld(dt);
+  if(typeof updateRelics==='function') updateRelics(dt);
+  // SLOW-TIME (the Tidefarer's gift): the world drags to a crawl while the hero
+  // moves on at full dt. Only the mobs/projectiles/world clock are slowed.
+  var wdt = (P.slowT>0)? dt*0.30 : dt;
+  updateNPCs(wdt);
+  updateMobs(wdt);
+  updateProjs(wdt);
+  updateWorld(wdt);
   WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt); updateGulls(dt);
   G.flash=Math.max(0,G.flash-raw*1.6);
   // once the accept-dialog is dismissed, launch the deferred ward-gate reveal pan

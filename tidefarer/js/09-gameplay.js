@@ -902,7 +902,7 @@ function stunPlayer(dur){
   G.shake=Math.max(G.shake,0.3); buzz(30);
 }
 function hurtPlayer(dmg,src){
-  if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
+  if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || (P.hookT||0)>0 || G.victory) return;   // no dying during the victory sequence or a hook-haul
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   let _red=[0,0.15,0.30][P.armor||0];
@@ -1028,6 +1028,9 @@ function updatePlayer(dt){
     P.atkCd=Math.max(0,(P.atkCd||0)-dt);
     return;
   }
+  // TIDEGLASS HOOK: while the hook is hauling you to an anchor it owns the hero -
+  // it drives position itself (crossing any gap) and skips the normal walk step.
+  if(typeof updateHookTravel==='function' && updateHookTravel(dt)) return;
   // safety net: never leave the player wedged between water and land. A windsurfer
   // (surf unlocked) counts light shallows as valid footing, so the board isn't
   // snapped back to shore the instant it touches the water.

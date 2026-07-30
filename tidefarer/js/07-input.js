@@ -18,6 +18,11 @@ window.addEventListener('keydown',e=>{
   if(k==='4') useItem(P.quickItem||'potion');
   if(k==='r') cycleQuickItem();
   if(k==='m'){ toggleRide(); }
+  // relic verbs (see 33-relics.js): hook / bomb / lodestone / slow-time
+  if(k==='f'){ if(typeof tryHook==='function') tryHook(); }
+  if(k==='q'){ if(typeof tryBomb==='function') tryBomb(); }
+  if(k==='g'){ if(typeof tryLodestone==='function') tryLodestone(); }
+  if(k==='c'){ if(typeof trySlowTime==='function') trySlowTime(); }
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }

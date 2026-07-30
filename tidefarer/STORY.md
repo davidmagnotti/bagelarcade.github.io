@@ -256,6 +256,31 @@ Calming a spirit, or an item won on one isle, changes terrain or gives a new way
 to move — so isles you couldn't fully cross open up on return. (Same shape as the
 existing Stormlight and stormsail unlocks.)
 
+#### The relic verbs — [built: systems; open: placement]
+
+Four whole-game "verb" tools now exist in code (`js/33-relics.js`), built in the
+spirit of the dash — permanent, actively-triggered, meant to recontextualise the
+whole map rather than bump a stat. Each hangs off `P.unlocked.*` (so it saves with
+no migration) and has a reward-chest flag wired into `openChest`, so dropping one
+into a dungeon is a one-line decor placement.
+
+| Relic | Flag / chest | Key · button | Verb | Intended home (per this doc) |
+|-------|--------------|--------------|------|------------------------------|
+| **Tideglass Hook** | `hook` · `{hookgift:1}` | F · ⚓ | Haul yourself to an **anchor-ring** across any gap | Windsurf / the Skirl (wind) |
+| **Blast Charge** | `bomb` · `{bombgift:1}` | Q · ✸ | Open **cracked walls**, trip distant plates, stagger foes | Sunwick / the Cinderwrought (fire) |
+| **Lodestone** | `lodestone` · `{lodegift:1}` | G · ❖ | Drag **heart-iron lodeblocks** onto plates / out of the way | Barik / the quake spirit |
+| **Slow-Time** | `slowtime` · `{slowgift:1}` | C · ⧗ | The world crawls (mob/proj/world dt ×0.30) while you move free; drains mana | Emberwick tomb (Act II climax) — the Tidefarer's gift |
+
+New world objects they act on (drawn by `drawRelicDecor`): `anchor`, `crackwall`
+(`{tiles:[...]}`), `ironblock` (`{bx,by}`), `plate` (`{gate:[...]}`), `bomb`.
+
+**Test now:** dev menu → *Relics* → "Sandbox: grant all 4 + spawn puzzles here."
+
+**Still open (content, not code):** seed anchors / cracked walls / lodeblocks /
+plates through the isles and place the four gift chests in their dungeons — ideally
+with the objects *visible before you can use them*, so returning with a new relic
+is the reward ("isles open up on return").
+
 ### Bosses & new dungeons — [new]
 
 Each isle gets a dungeon ending in a boss tied to its spirit — clearing it quiets
