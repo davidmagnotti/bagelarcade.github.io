@@ -18,6 +18,8 @@ const GC_S=0.5;
 /* The vignette's radial gradient never changes except when the viewport
    resizes, yet it was rebuilt every single frame. Cache it, keyed by size. */
 let _vgCache=null, _vgKey='';
+/* backdrop sea/sky gradient - same idea: rebuilt only when the viewport resizes */
+let _bgGrad=null, _bgKey='';
 function gcDims(){
   const OX=(MAPH-1)*(TW/2)+TW, OY=TH;
   const W=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
@@ -48,6 +50,7 @@ function buildGroundCache(){
         if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
       }
     }
+    if(EL) elevTileFX(g,x,y,sx,sy);   // baked once: sun wash + contact shadows are free here
   }
   groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
 }
@@ -99,7 +102,14 @@ function render(){
   // the Rainbow Road's little stepping-isles gently sway (skyIsleSwingAt); skipped in
   // low-gfx, where the ground is a static blit and a sway would slide actors off it.
   const SKYSWING = !LOWFX && G.worldId==='skydungeon' && typeof skyIsleSwingAt==='function';
-  cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
+  // graded backdrop: open sea falls off into deep abyss (cloud worlds get a
+  // bright sky dome). Gradient cached by viewport size - built once, not per frame.
+  {const bgKey=VW+'x'+VH+(CLOUD?'c':'o');
+   if(_bgKey!==bgKey){ const bg=cx.createLinearGradient(0,0,0,VH);
+     if(CLOUD){ bg.addColorStop(0,'#e2f0fa'); bg.addColorStop(0.6,'#bcd6ee'); bg.addColorStop(1,'#9dc0dc'); }
+     else { bg.addColorStop(0,'#1e4467'); bg.addColorStop(0.55,'#16283e'); bg.addColorStop(1,'#0c1727'); }
+     _bgGrad=bg; _bgKey=bgKey; }
+   cx.fillStyle=_bgGrad;} cx.fillRect(0,0,VW,VH);
   // Trauma-style shake: squared falloff (a punchier decay than linear), a small
   // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
   // reads as a jolt rather than a uniform wobble. setTransform() resets fully each
@@ -179,6 +189,7 @@ function render(){
           }
         }
       }
+      if(EL) elevTileFX(cx,x,y,sx,sy);   // sun wash on hills + cliff-foot contact shadows
     }
   }
   }

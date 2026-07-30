@@ -114,18 +114,102 @@ function groundLiftAt(wx,wy){
 
 /* cliff-wall colours by terrain: [sunlit front-right, shaded front-left].
    The right (SE) face catches the low key light; the left (SW) face is in
-   shade - a single consistent sun direction that matches the cast shadows. */
+   shade - a single consistent sun direction that matches the cast shadows.
+   Grass/forest tops sit on earthen rock (the classic "green turf over brown
+   cliff" read), not green walls. */
 function _cliffCols(t){
   switch(t){
-    case T.SAND:  return ['#b8996a','#8f744a'];
-    case T.SNOW:  return ['#aec4d4','#8098ab'];
-    case T.ICE:   return ['#9fc6d8','#749eb4'];
-    case T.RUIN:  return ['#7d7466','#575046'];
-    case T.PATH:  return ['#8a7350','#63523a'];
-    case T.SOIL:  return ['#7a5b3c','#573f28'];
+    case T.SAND:  return ['#c4a476','#96794f'];
+    case T.SNOW:  return ['#b9cddd','#8ba3b6'];
+    case T.ICE:   return ['#a8cede','#7aa6bc'];
+    case T.RUIN:  return ['#847b6c','#5c554a'];
+    case T.PATH:  return ['#907956','#66553d'];
+    case T.SOIL:  return ['#7f5f40','#59422b'];
     case T.PLANK: return ['#8a6a44','#5f472c'];
-    case T.FOREST:return ['#4c5a30','#333f1e'];
-    default:      return ['#5f6a3a','#414a26'];   // grass & fallback
+    case T.FOREST:return ['#7c6750','#544437'];
+    default:      return ['#8a7258','#5e4c3a'];   // grass & fallback: earthen rock
+  }
+}
+/* turf-lip colour hanging over the cliff edge, per terrain top */
+function _lipCol(t){
+  if(t===T.GRASS) return '#4b6330';
+  if(t===T.FOREST) return '#3f5629';
+  if(t===T.SNOW||t===T.ICE) return '#dfeaf2';
+  return null;   // sand/stone tops need no turf lip
+}
+/* crease colour for HAIRLINE steps (a slightly darker take on the tile top).
+   Sub-pixel lift differences between smooth tiles leave a 1-3px seam that must
+   be filled opaquely (the sea backdrop would show through) - but filling it
+   with rock brown etched a grid over rolling grass. Match the turf instead. */
+function _creaseCol(t){
+  switch(t){
+    case T.SAND:  return '#b3925e';
+    case T.SNOW:  return '#a9bfd0';
+    case T.ICE:   return '#8fb6c8';
+    case T.RUIN:  return '#6d675c';
+    case T.PATH:  return '#7c6647';
+    case T.SOIL:  return '#6b4f34';
+    case T.PLANK: return '#77593a';
+    case T.FOREST:return '#39491f';
+    default:      return '#42582b';   // grass
+  }
+}
+/* darken a '#rrggbb' colour by factor f (0..1) */
+function _shade(hex,f){
+  const n=parseInt(hex.slice(1),16);
+  return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';
+}
+/* deterministic per-tile jitter so strata don't swim frame to frame */
+function _tHash(x,y){ return (((x*73856093)^(y*19349663))>>>0); }
+
+/* paint ONE textured cliff face: a parallelogram from top edge (x0,y0)-(x1,y1)
+   dropping (Lpx-npx) px. Gradient-lit rock, sediment strata, a turf lip with
+   its under-shadow, and a bright rim on the sunlit edge. */
+function _cliffFace(g,x,y,x0,y0,x1,y1,Lpx,npx,base,lip,rimA,crease){
+  const drop=Lpx-npx;
+  const yb0=y0+drop, yb1=y1+drop;
+  // hairline step: just seal the seam in the terrain's own tone - no rock,
+  // no texture. Real cliff treatment starts once the face is tall enough.
+  if(drop<=3){
+    g.fillStyle=crease;
+    g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.lineTo(x1,yb1); g.lineTo(x0,yb0);
+    g.closePath(); g.fill();
+    return;
+  }
+  // rock body: lit at the brow, falling into shadow at the foot
+  const gr=g.createLinearGradient(0, Math.min(y0,y1), 0, Math.max(yb0,yb1));
+  gr.addColorStop(0, base); gr.addColorStop(1, _shade(base,0.58));
+  g.fillStyle=gr;
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.lineTo(x1,yb1); g.lineTo(x0,yb0);
+  g.closePath(); g.fill();
+  if(drop>9){
+    // sediment strata: faint dark bands (with a chiselled light edge) that
+    // follow the iso slope, jittered per tile so the coast doesn't stripe
+    const n=Math.min(3,(drop/9)|0);
+    for(let k=1;k<=n;k++){
+      let off=drop*k/(n+1)+((_tHash(x*7+k,y)%5)-2);
+      off=Math.max(2,Math.min(drop-2,off));
+      g.strokeStyle='rgba(0,0,0,0.13)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(x0,y0+off); g.lineTo(x1,y1+off); g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.05)';
+      g.beginPath(); g.moveTo(x0,y0+off+1); g.lineTo(x1,y1+off+1); g.stroke();
+    }
+  }
+  // turf lip drooping over the brow, and the shadow it casts on the rock
+  if(lip && drop>4){
+    g.fillStyle=lip;
+    g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1);
+    g.lineTo(x1,y1+2.6); g.lineTo(x0,y0+2.6); g.closePath(); g.fill();
+    g.fillStyle='rgba(0,0,0,0.20)';
+    g.beginPath(); g.moveTo(x0,y0+2.6); g.lineTo(x1,y1+2.6);
+    g.lineTo(x1,y1+4.4); g.lineTo(x0,y0+4.4); g.closePath(); g.fill();
+  }
+  // rim light along the very edge - the sun catching the cliff brow.
+  // Only on REAL faces: hairline steps from the smoothed inland gradients
+  // would otherwise etch a bright grid across gently rolling ground.
+  if(drop>5){
+    g.strokeStyle='rgba(255,243,207,'+rimA+')'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x0,y0+0.5); g.lineTo(x1,y1+0.5); g.stroke();
   }
 }
 
@@ -134,29 +218,70 @@ function _cliffCols(t){
 function elevDrawCliff(g,x,y,sx,sy){
   const L=heightLv(x,y); if(L<=0.02) return;
   const Lpx=L*ELEV.HSTEP, HW=TW/2, HH=TH/2, t=G.map[y*MAPW+x];
-  const col=_cliffCols(t);
+  const col=_cliffCols(t), lip=_lipCol(t), crease=_creaseCol(t);
   const nR=heightLv(x+1,y);           // front-right neighbour (down-right in iso)
   if(nR < L-0.02){
     const npx=nR*ELEV.HSTEP;
-    g.fillStyle=col[0];
-    g.beginPath();
-    g.moveTo(sx+HW, sy - Lpx);
-    g.lineTo(sx,    sy+HH - Lpx);
-    g.lineTo(sx,    sy+HH - npx);
-    g.lineTo(sx+HW, sy - npx);
-    g.closePath(); g.fill();
+    _cliffFace(g,x,y, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, col[0], lip, 0.30, crease);
+    // wet stain where the sunlit face steps into the sea
+    const nt=tileAt(x+1,y);
+    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
+      g.fillStyle='rgba(18,30,42,0.35)';
+      g.beginPath(); g.moveTo(sx+HW,sy-npx); g.lineTo(sx,sy+HH-npx);
+      g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
+    }
   }
   const nL=heightLv(x,y+1);           // front-left neighbour (down-left in iso)
   if(nL < L-0.02){
     const npx=nL*ELEV.HSTEP;
-    g.fillStyle=col[1];
-    g.beginPath();
-    g.moveTo(sx,    sy+HH - Lpx);
-    g.lineTo(sx-HW, sy - Lpx);
-    g.lineTo(sx-HW, sy - npx);
-    g.lineTo(sx,    sy+HH - npx);
-    g.closePath(); g.fill();
+    _cliffFace(g,x,y, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, col[1], lip, 0.10, crease);
+    const nt=tileAt(x,y+1);
+    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
+      g.fillStyle='rgba(18,30,42,0.35)';
+      g.beginPath(); g.moveTo(sx,sy+HH-npx); g.lineTo(sx-HW,sy-npx);
+      g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
+    }
   }
+}
+
+/* ---- per-tile grade pass: sun wash + contact shadows (AO) ----
+   Static per world, drawn with the ground: in full quality it rides the live
+   tile pass; in LOWFX it is baked once into the ground cache for free. */
+let _sunDia=null;
+function _mkDia(col){
+  const c=document.createElement('canvas'); c.width=TW; c.height=TH;
+  const g=c.getContext('2d'); g.fillStyle=col;
+  g.beginPath(); g.moveTo(TW/2,0); g.lineTo(TW,TH/2); g.lineTo(TW/2,TH); g.lineTo(0,TH/2);
+  g.closePath(); g.fill(); return c;
+}
+function _aoBand(g,x0,y0,x1,y1,nx,ny,a){
+  // two nested translucent bands fake a soft gradient without one
+  g.fillStyle='rgba(0,0,0,'+(a*0.45).toFixed(3)+')';
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1);
+  g.lineTo(x1+nx*8,y1+ny*8); g.lineTo(x0+nx*8,y0+ny*8); g.closePath(); g.fill();
+  g.fillStyle='rgba(0,0,0,'+(a*0.55).toFixed(3)+')';
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1);
+  g.lineTo(x1+nx*4,y1+ny*4); g.lineTo(x0+nx*4,y0+ny*4); g.closePath(); g.fill();
+}
+function elevTileFX(g,x,y,sx,sy){
+  if(!G.height) return;
+  const t=G.map[y*MAPW+x], water=(t===T.DEEP||t===T.SHALLOW);
+  const L=water?0:heightLv(x,y), cy=sy-L*ELEV.HSTEP, HW=TW/2, HH=TH/2;
+  // warm sun wash on high ground - hills catch the light, fading with dusk
+  if(!water && L>0.6){
+    if(!_sunDia) _sunDia=_mkDia('#ffe9b8');
+    let a=Math.min(0.12,(L-0.6)*0.03);
+    const dT=(typeof G.dayT==='number')?G.dayT:0.25;
+    a*=(dT>=0.06&&dT<=0.44) ? (1-Math.min(1,Math.abs((dT-0.25)/0.19))*0.65) : 0.25;
+    if(a>0.01){ g.globalAlpha=a; g.drawImage(_sunDia, sx-TW/2, cy-TH/2); g.globalAlpha=1; }
+  }
+  // contact shadow where a higher back-tile's cliff wall meets this ground
+  // (works on water too - the cliff's shade pooling at its foot in the sea).
+  // Threshold at a REAL step (>0.5 level): the smoothed inland gradients sit
+  // below it, so rolling ground stays clean and only true cliffs ground-shadow.
+  const dL=heightLv(x-1,y)-L, dR=heightLv(x,y-1)-L;
+  if(dL>0.5) _aoBand(g, sx-HW,cy, sx,cy-HH, 0.894,0.447, Math.min(0.22,(dL-0.5)*0.14));
+  if(dR>0.5) _aoBand(g, sx,cy-HH, sx+HW,cy, -0.894,0.447, Math.min(0.22,(dR-0.5)*0.14));
 }
 
 // expose for other modules / the console
@@ -166,4 +291,5 @@ window.ensureHeight=ensureHeight;
 window.groundLiftAt=groundLiftAt;
 window.elevTileLift=elevTileLift;
 window.elevDrawCliff=elevDrawCliff;
+window.elevTileFX=elevTileFX;
 window.heightLv=heightLv;
