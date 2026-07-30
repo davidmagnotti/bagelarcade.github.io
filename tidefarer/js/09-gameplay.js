@@ -1042,6 +1042,8 @@ function updatePlayer(dt){
   if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
+    // a little hop through the roll (item 3): the dash leaves the ground and lands
+    P.z=Math.sin(Math.PI*(1-P.rollT/(P.rollMax||0.26)))*7;
     const _rx=P.x, _ry=P.y, _step=P.speed*2.7*dt;
     const _dvault=(G.worldId==='barikdeep');   // Tide Race water is non-solid, so the dash crosses it regardless
     moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding&&!_dvault, P.unlocked&&P.unlocked.dive&&!P.riding&&!_dvault);
@@ -1064,7 +1066,7 @@ function updatePlayer(dt){
     }
     if(Math.random()<0.6) G.parts.push({x:P.x,y:P.y,vx:-P.dir.x*0.8,vy:-P.dir.y*0.8,
       life:0.25,color:'rgba(210,200,175,0.5)',size:2.2});
-  }
+  } else if(P.z){ P.z=0; }   // grounded again once the roll ends
   let mx=0,my=0;
   if(keys['w']||keys['arrowup']) { mx-=1; my-=1; }
   if(keys['s']||keys['arrowdown']) { mx+=1; my+=1; }
@@ -1542,6 +1544,10 @@ function bossSummon(m){
 function updateProjs(dt){
   for(const p of G.projs){
     p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
+    // fake-3D arc (item 3): physical arcing shots ride a parabola in p.z. Purely
+    // visual - collisions still use the flat (x,y), so gameplay is untouched.
+    if(p.z0==null){ p.z0=p.life+dt; p.arc=(p.kind==='arrow'||p.kind==='bone'||p.kind==='shard'); }
+    if(p.arc){ const f=1-Math.max(0,p.life)/p.z0; p.z=Math.sin(Math.PI*Math.min(1,f))*(p.z0*15); }
     if(p.kind==='bolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#ffb26b',size:3,grav:0});
     if(p.kind==='snarebolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.32,color:'#6fe0c8',size:3,grav:0});
     if(p.kind==='hex'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#c77bff',size:3,grav:0});
