@@ -1173,7 +1173,11 @@ function drawLighting(night){
   g.setTransform(DPR,0,0,DPR,0,0);
   g.globalCompositeOperation='source-over';
   g.clearRect(0,0,VW,VH);
-  g.fillStyle='rgba(10,15,44,'+(night*0.58)+')';
+  // per-dungeon ambient colour: each new Act II dungeon gets its own mood-wash so they no
+  // longer all read as the same navy dark. (Falls back to the default night navy elsewhere.)
+  const DUNG_TINT={ barikdeep:[8,30,44], winddeep:[28,34,48], sunwarddeep:[42,16,9], skydeep:[14,17,42], embertomb:[16,26,44] };
+  const tc=DUNG_TINT[G.worldId]||[10,15,44];
+  g.fillStyle='rgba('+tc[0]+','+tc[1]+','+tc[2]+','+(night*0.58)+')';
   g.fillRect(0,0,VW,VH);
   g.globalCompositeOperation='destination-out';
   const punch=(x,y,r,a)=>{

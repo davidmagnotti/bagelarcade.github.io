@@ -979,19 +979,29 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='ewall'){
-    // a chunky raised block of basalt - the dungeon's real walls
+    // a chunky raised wall block - the dungeon's real walls. Palette varies by b.theme so each
+    // Act II dungeon reads distinctly (brine sea-stone, wind-scoured pale, forge basalt, storm
+    // slate, tideglass). Default = the original basalt (the older shipped dungeons).
+    const WT={
+      brine:{l:'#173036', r:'#0f2429', t:'#2b5560', sp:'rgba(10,40,44,0.5)', ridge:'rgba(130,200,205,0.45)'},
+      gale: {l:'#3b4048', r:'#2f343c', t:'#5c636e', sp:'rgba(255,255,255,0.14)', ridge:'rgba(215,228,240,0.55)'},
+      forge:{l:'#2a1a12', r:'#1e120c', t:'#43291b', sp:'rgba(0,0,0,0.2)', ridge:'rgba(255,138,60,0.5)'},
+      storm:{l:'#20263a', r:'#161b2c', t:'#39426a', sp:'rgba(10,14,30,0.5)', ridge:'rgba(150,192,255,0.5)'},
+      tide: {l:'#2f4a5e', r:'#213847', t:'#6f9db0', sp:'rgba(255,255,255,0.14)', ridge:'rgba(232,202,120,0.6)'}
+    };
+    const th=WT[b.theme]||{l:'#2f2823', r:'#241e19', t:'#48403a', sp:'rgba(0,0,0,0.16)', ridge:'rgba(122,106,92,0.5)'};
     const g=cx, H=16, v=b.s||0;
     g.save(); g.translate(s.x,s.y);
-    g.fillStyle='#2f2823';   // left face (bottom-left, toward camera)
+    g.fillStyle=th.l;   // left face (bottom-left, toward camera)
     g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
-    g.fillStyle='#241e19';   // right face (bottom-right)
+    g.fillStyle=th.r;   // right face (bottom-right)
     g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
-    g.fillStyle='#48403a';   // top face (raised diamond)
+    g.fillStyle=th.t;   // top face (raised diamond)
     g.beginPath(); g.moveTo(0,-16-H); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
-    g.fillStyle='rgba(0,0,0,0.16)';   // basalt speckle
+    g.fillStyle=th.sp;   // speckle / sheen
     g.beginPath(); g.ellipse(-7+v*3,-H-2,4,2,0,0,TAU); g.fill();
     g.beginPath(); g.ellipse(8-v*2,-H+3,3,1.6,0,0,TAU); g.fill();
-    g.strokeStyle='rgba(122,106,92,0.5)'; g.lineWidth=1;   // top ridge highlight
+    g.strokeStyle=th.ridge; g.lineWidth=1;   // top ridge highlight
     g.beginPath(); g.moveTo(-32,-H); g.lineTo(0,-16-H); g.lineTo(32,-H); g.stroke();
     g.restore(); return;
   }

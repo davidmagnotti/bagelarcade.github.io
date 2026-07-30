@@ -1669,6 +1669,20 @@ function updateWorld(dt){
         for(let k=0;k<10;k++) G.parts.push({x:P.x+rnd(-9,9), y:P.y-9+k*0.7, vx:rnd(-0.2,0.2), vy:0, life:0.2, color:k%2?'#eaf2ff':'#bcd8ff', size:rnd(1.5,3), grav:0}); }
     }
   }
+  // ---- per-dungeon ambience: each new Act II dungeon breathes its own element ----
+  const wid=G.worldId;
+  if(wid==='barikdeep'){                         // rising air-bubbles + drifting silt
+    if(Math.random()<dt*7) G.parts.push({x:P.x+rnd(-11,11), y:P.y+rnd(-6,4), vx:rnd(-0.1,0.1), vy:-rnd(0.5,1.3), life:rnd(0.8,1.8), color:'rgba(190,225,235,0.5)', size:rnd(1,2.6), grav:-0.03});
+  } else if(wid==='winddeep'){                    // wind-blown dust streaking sideways
+    if(Math.random()<dt*8) G.parts.push({x:P.x+rnd(-12,12), y:P.y-rnd(1,7), vx:rnd(2,4.5), vy:rnd(-0.2,0.2), life:rnd(0.3,0.7), color:'rgba(220,228,236,0.45)', size:rnd(1,2.2), grav:0});
+  } else if(wid==='sunwarddeep'){                 // rising embers off the forge-fire
+    if(Math.random()<dt*8) G.parts.push({x:P.x+rnd(-12,12), y:P.y+rnd(-4,4), vx:rnd(-0.3,0.3), vy:-rnd(0.8,2), life:rnd(0.7,1.6), color:Math.random()<0.5?'#ff8a30':'#ffcf60', size:rnd(1.5,3), grav:-0.08});
+  } else if(wid==='skydeep'){                      // temple sparks + a caged-thunder flicker
+    if(Math.random()<dt*7) G.parts.push({x:P.x+rnd(-12,12), y:P.y-rnd(1,8), vx:rnd(-0.4,0.4), vy:rnd(0.4,1.2), life:rnd(0.3,0.8), color:'rgba(170,205,255,0.6)', size:rnd(1,2.4), grav:0});
+    if(Math.random()<dt*0.35) for(let k=0;k<8;k++) G.parts.push({x:P.x+rnd(-8,8), y:P.y-8+k*0.7, vx:rnd(-0.2,0.2), vy:0, life:0.18, color:k%2?'#eaf2ff':'#bcd8ff', size:rnd(1.5,3), grav:0});
+  } else if(wid==='embertomb'){                    // slow gold motes drifting off the tideglass
+    if(Math.random()<dt*5) G.parts.push({x:P.x+rnd(-11,11), y:P.y+rnd(-5,3), vx:rnd(-0.15,0.15), vy:-rnd(0.2,0.7), life:rnd(1.2,2.4), color:Math.random()<0.5?'rgba(232,202,120,0.5)':'rgba(200,240,255,0.4)', size:rnd(1,2.4), grav:-0.02});
+  }
   if(night<0.2) G.fireflies.length=0;
   // night hunters: after dark the wilds send foes; dawn scatters them to mist.
   // NEVER underground (no wraiths in a dungeon) and NEVER in the royal capital -
