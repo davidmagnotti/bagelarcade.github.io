@@ -6319,7 +6319,7 @@ function tryRoll(){
   // your step: a half-again longer dash. rollT drives the whole roll - movement, footwork
   // animation and i-frames all scale together - so the dash simply reaches 1.5x as far.
   const dashReach=(P.unlocked&&P.unlocked.dashfar)?1.5:1;
-  P.rollT=0.26*dashReach; P.rollCd=1.0; buzz(9);
+  P.rollT=0.26*dashReach; P.rollMax=P.rollT; P.rollCd=1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});

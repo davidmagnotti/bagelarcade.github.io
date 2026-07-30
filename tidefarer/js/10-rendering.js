@@ -32,16 +32,20 @@ function buildGroundCache(){
   const g=c.getContext('2d');
   g.setTransform(GC_S,0,0,GC_S,0,0);
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     const t=G.map[y*MAPW+x], sx=isoX(x,y)+OX, sy=isoY(x,y)+OY;
     if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - stays transparent so the backdrop shows
+    const L = EL ? elevTileLift(x,y) : 0;
+    if(EL && L>0.02) elevDrawCliff(g,x,y,sx,sy);
     const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
-    if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2);
+    if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2-L);
     if(t!==T.SHALLOW && t!==T.DEEP){
       const mc=terrainCls(t);
       if(mc<4) for(const nb of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
         const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
-        if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+        if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
       }
     }
   }
@@ -73,12 +77,15 @@ function buildSceneryCache(){
   g.setTransform(GC_S,0,0,GC_S,0,0);
   const savedCx=cx, camX=G.cam.x, camY=G.cam.y;
   cx=g; G.cam.x=-OX; G.cam.y=-OY;
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
   try{
     const items=[];
     for(const n of G.nodes){ if(!n.dead) items.push({o:n, t:'node'}); }
     for(const b of G.decor){ if(!DYNAMIC_DECOR[b.kind]) items.push({o:b, t:'decor'}); }
     items.sort((a,b)=>(a.o.x+a.o.y)-(b.o.x+b.o.y));
     for(const it of items){ const s=worldToScreen(it.o.x,it.o.y);
+      if(EL) s.y -= groundLiftAt(it.o.x,it.o.y);
       if(it.t==='node') drawNode(it.o,s); else drawDecor(it.o,s); }
   }catch(e){}
   cx=savedCx; G.cam.x=camX; G.cam.y=camY;
@@ -112,6 +119,11 @@ function render(){
     minY=Math.min(minY,c.y); maxY=Math.max(maxY,c.y); }
   minX=Math.floor(minX)-2; maxX=Math.ceil(maxX)+2; minY=Math.floor(minY)-2; maxY=Math.ceil(maxY)+4;
 
+  // Elevation: fake-3D terrain height (surface worlds only). Lifts ground tiles,
+  // paints cliff faces, and rides actors up on the raised ground beneath them.
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
+
   // ---- ground pass ----
   if(DBG.ground){
    if(LOWFX){
@@ -130,8 +142,10 @@ function render(){
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
       let sx=s.x - 0; const sy=s.y;
       if(SKYSWING && t===T.SNOW){ const sw=skyIsleSwingAt(x,y); if(sw) sx+=sw; }   // sway the isle tiles
+      const L = EL ? elevTileLift(x,y) : 0;
+      if(EL && L>0.02) elevDrawCliff(cx,x,y,sx,sy);
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
-      cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
+      cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2-L);
       if(t===T.SHALLOW || t===T.DEEP){
         // gentle animated sheen + drifting sparkles (per-water-tile path ops -
         // one of the biggest costs on a software-rendered canvas; drop at LOWFX)
@@ -161,7 +175,7 @@ function render(){
           for(const nb of nbs){
             const nt=tileAt(x+nb[0],y+nb[1]);
             const nc=terrainCls(nt);
-            if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+            if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
           }
         }
       }
@@ -206,6 +220,7 @@ function render(){
 
   if(DBG.entities) for(const it of items){
     const o=it.o, s=worldToScreen(o.x,o.y);
+    if(EL) s.y -= groundLiftAt(o.x,o.y);   // stand on the raised terrain
     if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }   // ride the isle's sway
     switch(it.kind){
       case 'node': drawNode(o,s); break;
@@ -3317,7 +3332,11 @@ function drawPlayer(s){
     return;
   }
   if((P.rollT||0)>0 && !P.riding) drawRollFX(s);
-  drawShadowAt(cx,s.x,s.y,14);
+  // hop (item 3): shadow stays on the ground and shrinks a touch while the
+  // dash-roll is airborne; the figure lifts by P.z above it.
+  const _pz=P.z||0;
+  drawShadowAt(cx,s.x,s.y, _pz>0 ? 14*Math.max(0.55,1-_pz/26) : 14);
+  if(_pz>0) s={x:s.x, y:s.y-_pz};
   drawPlayerFigure(s);
   drawCarriedFlame(s);
 }
@@ -3413,6 +3432,12 @@ function drawPlayerFigure(s){
   }
 }
 function drawProj(p,s){
+  // airborne arc (item 3): thrown/loosed shots ride a parabola in p.z; keep a
+  // shadow on the ground that separates from the shot as it climbs.
+  if(p.z){
+    drawShadowAt(cx, s.x, s.y-2, Math.max(3, 6-p.z*0.10));
+    s={x:s.x, y:s.y - p.z};
+  }
   if(p.kind==='galewisp'){
     // a little dodge-only flier the Storm-Eye spits: a comet-wisp with flitting wings
     const g=cx, t=G.time, a=Math.atan2(p.vy, p.vx), flap=Math.sin(t*22+(p.ph||0))*3;
