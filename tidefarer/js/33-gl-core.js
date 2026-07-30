@@ -1,5 +1,5 @@
 /* =====================================================================
-   2.5D WEBGL RENDERER - Phase 0+1 (core + ground/scenery)
+   2.5D WEBGL RENDERER - Phase 0-2 (core + ground + entities)
    ---------------------------------------------------------------------
    Locked-camera GPU renderer. The camera stays at the exact current
    dimetric angle: we drive an orthographic camera in *screen-pixel space*
@@ -7,11 +7,17 @@
    the identical pixel it does in the 2D path (worldToScreen/screenToWorld
    are reused untouched - controls are unaffected).
 
-   This phase renders only the GROUND (tiles + terrain fringes, batched
-   from a texture atlas baked out of the existing procedural sprites) plus
-   the STATIC SCENERY layer (reusing the game's own scenery bake as one
-   texture). Entities, effects, lighting, interiors and cutscenes stay on
-   the intact 2D path and arrive in later phases.
+   Phase 1 GROUND: tiles + terrain fringes, batched from a texture atlas
+   baked out of the existing procedural sprites.
+   Phase 2 ENTITIES: scenery (trees/rocks/decor) and actors (player/NPCs/
+   mobs/projectiles/pickups) are each rendered to a scratch canvas by the
+   game's OWN draw fns, uploaded as textures, and blitted as billboards in
+   one painter's-sorted (x+y) pass - so actors interleave with trees. Static
+   art is cached; animated art re-renders each frame.
+
+   Still on the 2D path (later phases): particles, floating combat text,
+   fireflies, dynamic lighting, water sheen, post-FX grade, interiors,
+   cutscenes. Those overlays don't show in gl mode yet.
 
    EVERYTHING here is gated behind RENDERER==='gl'. The default is '2d', so
    with the flag off this file allocates nothing and the live game renders
@@ -133,35 +139,106 @@ void main(){
     return true;
   }
 
-  /* ---------------- scenery layer (reuse the game's own bake as one texture) ----
-     buildSceneryCache() (10-rendering.js) depth-sorts every static node/decor and
-     draws them into `sceneryCache` with the real per-object art. We upload that
-     canvas and blit it as a single quad - pixel-identical to the 2D scenery. */
-  let scnTex=null, scnKey='', scnDrawn=false;
-  function ensureScenery(){
-    if(typeof buildSceneryCache!=='function'){ scnDrawn=false; return; }
-    const key=G.worldId+':'+(G.decor?G.decor.length:0);
-    const stale = (typeof sceneryCache==='undefined' || !sceneryCache ||
-                   typeof scnWorld==='undefined' || scnWorld!==G.worldId ||
-                   (typeof scnDecorN!=='undefined' && scnDecorN!==(G.decor?G.decor.length:0)));
-    if(stale || key!==scnKey || !scnTex){
-      try{ buildSceneryCache(); }catch(e){ scnDrawn=false; return; }
-      if(typeof sceneryCache==='undefined' || !sceneryCache){ scnDrawn=false; return; }
-      scnTex = scnTex || gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, scnTex);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sceneryCache);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-      scnErr=gl.getError();
-      scnTexSize=[sceneryCache.width, sceneryCache.height, gl.getParameter(gl.MAX_TEXTURE_SIZE)];
-      scnKey=key; scnDrawn=true;
+  /* ---------------- per-object billboard system (Phase 2) ----------------
+     Every scenery node, decor, actor, projectile and pickup is drawn to a small
+     scratch 2D canvas using the game's OWN draw fns (drawNode/drawDecor/drawNPC/
+     drawMobEntity/drawPlayer/...), then uploaded as a texture and blitted as a
+     billboard quad. Static objects (scenery nodes, non-animated decor) are cached
+     by kind+variant so their art is drawn once; animated objects are re-rendered
+     each frame into a small round-robin texture pool. Depth order is the game's
+     own painter's key (x+y), so actors correctly pass in front of / behind trees. */
+
+  // canvas-space size + anchor per bucket. The draw fns place art relative to a
+  // screen point s; we render at s=(ax,ay) inside a wxh canvas, then billboard so
+  // that (ax,ay) lands on the object's real screen position.
+  const SIZE = {
+    actor: {w:160,h:172,ax:80,ay:142},   // humanoids/mobs/cat/critter + name/HP above
+    node:  {w:140,h:150,ax:70,ay:124},   // trees/rocks/bushes/mushrooms
+    decor: {w:272,h:312,ax:136,ay:260},  // houses/towers/lamps/gates/...
+    small: {w:64, h:64, ax:32,ay:44}     // projectiles / pickups
+  };
+  function bucketFor(kind){
+    if(kind==='node') return 'node';
+    if(kind==='decor'||kind==='lamp') return 'decor';
+    if(kind==='proj'||kind==='pickup') return 'small';
+    return 'actor'; // npc, mob, player, cat, critter
+  }
+
+  // one scratch canvas, reused for every render-to-texture (drawn at DPR for crispness)
+  const scratch=document.createElement('canvas');
+  let texDPR=1;
+  function renderToScratch(kind, o, spec){
+    const D=texDPR, cw=Math.ceil(spec.w*D), ch=Math.ceil(spec.h*D);
+    if(scratch.width!==cw) scratch.width=cw;
+    if(scratch.height!==ch) scratch.height=ch;
+    const g=scratch.getContext('2d');
+    g.setTransform(D,0,0,D,0,0);
+    g.clearRect(0,0,spec.w,spec.h);
+    const s={x:spec.ax, y:spec.ay};
+    const saved=cx; cx=g;                       // repoint the global ctx the draw fns use
+    try{ dispatchDraw(kind, o, s); }
+    catch(e){ /* one bad object shouldn't kill the frame */ }
+    finally{ cx=saved; }
+    return scratch;
+  }
+  // the same dispatch the 2D entity pass uses (10-rendering.js), drawing to global cx
+  function dispatchDraw(kind, o, s){
+    switch(kind){
+      case 'node': drawNode(o,s); break;
+      case 'decor': case 'lamp': drawDecor(o,s); break;
+      case 'npc': drawNPC(o,s); break;
+      case 'mob': drawMobEntity(o,s); break;
+      case 'cat': drawShadowAt(cx,s.x,s.y,9); drawCat(cx,s.x,s.y,o); break;
+      case 'critter': drawShadowAt(cx,s.x,s.y,o.kind==='crab'?7:8); drawCritter(cx,s.x,s.y,o); break;
+      case 'player': drawPlayer(s); break;
+      case 'proj': drawProj(o,s); break;
+      case 'pickup': drawPickup(o,s); break;
     }
   }
-  let scnErr=0, scnTexSize=null;
+  function uploadInto(tex, canvas){
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  }
+
+  // static-scenery texture cache, keyed by kind+variant+state; rebuilt if DPR changes
+  const staticCache=new Map();
+  let cacheDPR=1;
+  function staticKey(kind,o){
+    if(kind==='node') return 'n:'+o.kind+':'+(o.variant||0)+':'+(o.dead?1:0)+':'+(o.palm?1:0)+':'+(o.big?1:0);
+    return 'd:'+o.kind+':'+(o.variant||0);
+  }
+  function isDynamic(kind,o){
+    if(kind==='decor'||kind==='lamp') return !!(typeof DYNAMIC_DECOR!=='undefined' && DYNAMIC_DECOR[o.kind]);
+    if(kind==='node') return false;                 // scenery is static (sway frozen, like Phase 1)
+    return true;                                    // actors/projectiles/pickups animate
+  }
+  function staticTexFor(kind,o){
+    const key=staticKey(kind,o);
+    let e=staticCache.get(key);
+    if(e) return e;
+    const spec=SIZE[bucketFor(kind)];
+    renderToScratch(kind,o,spec);
+    const tex=gl.createTexture(); uploadInto(tex, scratch);
+    e={tex, ax:spec.ax, ay:spec.ay, w:spec.w, h:spec.h};
+    staticCache.set(key,e);
+    return e;
+  }
+  // round-robin pool of textures for animated objects (re-uploaded every frame)
+  const POOL_N=24; const pool=[]; let poolI=0;
+  function dynamicTexFor(kind,o){
+    const spec=SIZE[bucketFor(kind)];
+    renderToScratch(kind,o,spec);
+    let tex=pool[poolI]; if(!tex){ tex=gl.createTexture(); pool[poolI]=tex; }
+    poolI=(poolI+1)%POOL_N;
+    uploadInto(tex, scratch);
+    return {tex, ax:spec.ax, ay:spec.ay, w:spec.w, h:spec.h};
+  }
 
   /* ---------------- dynamic vertex batch ---------------- */
   let buf=new Float32Array(24*4096), n=0;   // 24 floats = one quad (6 verts * [x,y,u,v])
@@ -196,16 +273,19 @@ void main(){
      Mirrors the 2D full-detail ground loop in render() (10-rendering.js): same
      visible-range cull, same tile blit at worldToScreen-(TW/2,TH/2), same terrain
      fringe overlays. Animated water sheen is a live effect (Phase 3), omitted. */
-  const NB=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
-  function drawGround(){
-    const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  function visibleRange(){
     const corners=[screenToWorld(0,0),screenToWorld(VW,0),screenToWorld(0,VH),screenToWorld(VW,VH)];
     let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
     for(const c of corners){ minX=Math.min(minX,c.x);maxX=Math.max(maxX,c.x);
       minY=Math.min(minY,c.y);maxY=Math.max(maxY,c.y); }
-    minX=Math.floor(minX)-2; maxX=Math.ceil(maxX)+2; minY=Math.floor(minY)-2; maxY=Math.ceil(maxY)+4;
-    const y0=Math.max(0,minY), y1=Math.min(MAPH-1,maxY),
-          x0=Math.max(0,minX), x1=Math.min(MAPW-1,maxX);
+    return { minX:Math.floor(minX)-2, maxX:Math.ceil(maxX)+2,
+             minY:Math.floor(minY)-2, maxY:Math.ceil(maxY)+4 };
+  }
+  const NB=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+  function drawGround(r){
+    const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+    const y0=Math.max(0,r.minY), y1=Math.min(MAPH-1,r.maxY),
+          x0=Math.max(0,r.minX), x1=Math.min(MAPW-1,r.maxX);
     reset();
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
       const t=G.map[y*MAPW+x];
@@ -225,19 +305,41 @@ void main(){
     flush(atlasTex);
   }
 
-  function drawScenery(){
-    if(!scnDrawn || !scnTex || typeof sceneryCache==='undefined' || !sceneryCache) return;
-    const GCS=(typeof GC_S!=='undefined')?GC_S:0.5;
-    // buildSceneryCache() offsets every object by gcDims().OX/OY but (unlike
-    // buildGroundCache) never writes gcOX/gcOY, so we recompute the same origin
-    // here rather than read those (stale) globals.
-    const dims=(typeof gcDims==='function')?gcDims():{OX:0,OY:0};
-    const ox=dims.OX, oy=dims.OY;
-    const w=sceneryCache.width/GCS, h=sceneryCache.height/GCS;
-    const px=-G.cam.x-ox, py=-G.cam.y-oy;
+  /* ---------------- unified depth-sorted entity pass (Phase 2) ----------------
+     Replicates the full-detail 2D entity pass (10-rendering.js:188-221): collect
+     scenery + actors, sort by the x+y depth key, and draw each as a billboard so
+     they interleave correctly (an actor passes behind a nearer tree). Static
+     objects come from the texture cache; animated ones re-render each frame. */
+  function billboard(kind, o){
+    const e = isDynamic(kind,o) ? dynamicTexFor(kind,o) : staticTexFor(kind,o);
+    const sx=isoX(o.x,o.y)-G.cam.x, sy=isoY(o.x,o.y)-G.cam.y;
     reset();
-    quad(px, py, w, h, {u0:0,v0:0,u1:1,v1:1});
-    flush(scnTex);
+    quad(sx-e.ax, sy-e.ay, e.w, e.h, {u0:0,v0:0,u1:1,v1:1});
+    flush(e.tex);
+  }
+  const FLOOR_PLATE={firepit:1,spinwheel:1,froststream:1,icefloe:1,driftslab:1,
+    conveytile:1,bonepit:1,fadetile:1,spiketile:1,dancebtn:1};
+  function glEntityPass(minX,maxX,minY,maxY){
+    const items=[];
+    for(const nd of G.nodes){
+      if(nd.tx<minX-1||nd.tx>maxX+1||nd.ty<minY-1||nd.ty>maxY+1) continue;
+      items.push({d:nd.x+nd.y, kind:'node', o:nd});
+    }
+    for(const b of G.decor){
+      const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2;
+      if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
+      const dd=FLOOR_PLATE[b.kind]? -9990 : b.x+b.y;
+      items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b});
+    }
+    for(const nc of G.npcs){ if(nc.hidden) continue; items.push({d:nc.x+nc.y, kind:'npc', o:nc}); }
+    for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
+    if(G.cat) items.push({d:G.cat.x+G.cat.y, kind:'cat', o:G.cat});
+    if(G.critters) for(const c of G.critters) items.push({d:c.x+c.y, kind:'critter', o:c});
+    if(!P.dead) items.push({d:P.x+P.y, kind:'player', o:P});
+    for(const p of G.projs) items.push({d:p.x+p.y, kind:'proj', o:p});
+    for(const pt of G.parts){ if(pt.pickup) items.push({d:pt.x+pt.y, kind:'pickup', o:pt}); }
+    items.sort((a,b)=>a.d-b.d);
+    for(const it of items) billboard(it.kind, it.o);
   }
 
   /* ---------------- frame ---------------- */
@@ -254,12 +356,15 @@ void main(){
     if(!gl){ initGL(); }
     if(!atlasReady){ if(!buildAtlas()) return; }
     syncSize();
-    ensureScenery();
+    // texture supersample = DPR (crisp); rebuild the static cache if it changed
+    texDPR=Math.max(0.5, Math.min(DPR||1, 2));
+    if(texDPR!==cacheDPR){ staticCache.forEach(e=>gl.deleteTexture(e.tex)); staticCache.clear(); cacheDPR=texDPR; }
     const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
     if(CLOUD) gl.clearColor(0.737,0.839,0.933,1); else gl.clearColor(0.086,0.157,0.243,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    drawGround();
-    drawScenery();
+    const r=visibleRange();
+    drawGround(r);
+    glEntityPass(r.minX,r.maxX,r.minY,r.maxY);
   }
 
   /* ---------------- canvas visibility ---------------- */
@@ -293,6 +398,7 @@ void main(){
     on(){ RENDERER='gl'; glDead=false; try{SafeStore.set('tf_renderer','gl');}catch(e){} },
     off(){ RENDERER='2d'; showGL(false); try{SafeStore.set('tf_renderer','2d');}catch(e){} },
     toggle(){ RENDERER==='gl'?this.off():this.on(); },
-    _stats(){ return {renderer:RENDERER, glDead, atlasReady, scnDrawn, scnErr, scnTexSize}; }
+    _stats(){ return {renderer:RENDERER, glDead, atlasReady,
+      staticTex:staticCache.size, poolTex:pool.length, glErr:gl?gl.getError():-1}; }
   };
 })();
