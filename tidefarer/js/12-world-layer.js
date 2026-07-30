@@ -5177,16 +5177,26 @@ function placeObjectsSunwardDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'east', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,78],[48,78],[22,52],[52,52],[22,40],[52,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE FORGE CAUSEWAY + BELLOWS WALK: staggered fields of erupting lava-vents in two rooms ----
   G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
   let n=0;
   const ventField=(x0,y0,x1,y1,step)=>{ for(let gy=y0; gy<=y1; gy+=(step||3)) for(let gx=x0; gx<=x1; gx+=5){
     const jx=gx+((Math.floor(gy/3)%2)? 2:0);   // stagger alternate rows
     if(inb(jx,gy) && !solidAt(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; } } };
-  ventField(24,53,48,61,3);      // ROOM 2 - the causeway field
-  ventField(24,39,48,44,2);      // ROOM 3 - the bellows walk (rows closer together)
-  // a couple of cold-looking (non-erupting) forge-pits in the slag yard, for theming
-  for(const [px,py] of [[26,72],[46,76],[36,71]]) if(inb(px,py) && !solidAt(px,py)) G.decor.push({kind:'firepit', x:px+0.5, y:py+0.5, cold:1});
+  // ---- ROOM 2 - THE FORGE CAUSEWAY: the lava is gathered into one POOL, crossed only on a
+  // spinning basalt platform. Board it at the south rim, ride it over the lava to the north rim,
+  // and TIME your crossing so the pool's lava-spouts don't catch you on the arm. ----
+  G._forgeChasm=new Set(); G._forgeWheels=[]; G._forgePlunge=null; G._forgeStart={sx:36.5, sy:62.5};
+  const lavaPool=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && !solidAt(x,y)){ G._forgeChasm.add(x+','+y); G.decor.push({kind:'firepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9, pool:1}); } };
+  lavaPool(20,52,54,60);          // the pool spans the full room width - no dry edge to walk around
+  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.2}; G.decor.push(w); G._forgeWheels.push(w); };
+  wheel(36,57, 4, 0.6, Math.PI/2);   // the spinning platform: boards at the south rim, sweeps to the north
+  // two lava-spouts erupt from the pool on the platform's sweep-path - offset timers leave a window
+  G._forgeVents.push({gx:33, gy:55, period:3.0, nextT:0.6}); n++;
+  G._forgeVents.push({gx:33, gy:59, period:3.0, nextT:2.1}); n++;
+  // ---- ROOM 3 - THE BELLOWS WALK: a last field of erupting vents to thread on foot ----
+  ventField(24,39,48,44,2);
+  // a couple of forge-pits in the slag yard, for theming
+  for(const [px,py] of [[26,72],[46,76],[36,71]]) if(inb(px,py) && !solidAt(px,py)) G.decor.push({kind:'firepit', x:px+0.5, y:py+0.5});
   G._sunSealed=0; G._sunCleared=(P.story&&P.story.ashenForgeDone)?1:0;
   // glowing lava-veins seamed through the forge floor (theming, on walkable stone)
   { const LS=mulberry32((SEED||1)+717);
@@ -5196,7 +5206,11 @@ function placeObjectsSunwardDeep(){
   G.decor.push({kind:'chest', x:36.5, y:11.5, snaregift:1});   // the ember - FLAME SNARE
   G.critters=[];
   if(P.story && P.story.ashenForgeDone){ for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
-    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true; }
+    const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true;
+    // a cleared run: the pool cools to crossable stone and the spinning platform stills
+    for(const k of G._forgeChasm){ const [x,y]=k.split(',').map(Number); setTile(x,y,T.RUIN); setSolid(x,y,0); }
+    G._forgeChasm=new Set(); G._forgeWheels=[]; G.decor=G.decor.filter(d=>d.kind!=='spinwheel' && !d.pool);
+  }
 }
 function spawnMobsSunwardDeep(){
   if(!(P.story && P.story.ashenForgeDone)){
@@ -5239,20 +5253,43 @@ function forgeTickErupts(dt){
 function updateSunwardDeep(dt){
   if(!G._forgeVents) return;
   if(Math.random()<dt*10) G.parts.push({x:rnd(20,52),y:rnd(38,80),vx:rnd(-0.2,0.2),vy:rnd(0.4,1),life:rnd(1.5,3),color:'rgba(90,80,74,0.5)',size:rnd(1.5,3),grav:0});  // drifting ash
+  // ---- the spinning platform over the lava pool (ROOM 2) ----
+  for(const w of (G._forgeWheels||[])) w.ang += w.spd*dt;
+  if(G._forgePlunge){ G._forgePlunge.t+=dt;
+    if(Math.random()<0.6) burst(P.x+rnd(-0.3,0.3), P.y+rnd(-0.2,0.2), Math.random()<0.5?'#ff8a30':'#ffd060', 1, 1.8);
+    if(G._forgePlunge.t>=G._forgePlunge.dur) forgeRespawn();
+  } else if(!P.dead){
+    if(!wheelCarry(G._forgeWheels, dt) && (P.rollT||0)<=0){   // not riding the platform, grounded
+      const tx=Math.floor(P.x), ty=Math.floor(P.y);
+      if((G._forgeChasm||new Set()).has(tx+','+ty)) forgePlungeStart();   // stepped/swept into the lava
+      else if(walkTile(tileAt(tx,ty))) G._forgeStart={sx:tx+0.5, sy:ty+0.5};   // bank the last dry rim as respawn
+    }
+  }
   for(const v of G._forgeVents){ v.nextT-=dt; if(v.nextT<=0){ v.nextT=v.period; forgeQueueErupt(v.gx,v.gy); } }
-  // random big lava spouts erupt across the vent rooms - safe footing is never guaranteed
+  // random big lava spouts erupt across THE BELLOWS WALK (room 3) - safe footing is never guaranteed
   G._bigSpoutT=(G._bigSpoutT||1.6)-dt;
   if(G._bigSpoutT<=0){ G._bigSpoutT=rnd(1.4,2.8);
-    // bias spouts toward the player when they're in the causeway/bellows rooms so movement stays tense
-    const inVents=P.y>=38 && P.y<=63 && P.x>=20 && P.x<=52;
+    const inVents=P.y>=38 && P.y<=46 && P.x>=20 && P.x<=52;
     let sx,sy;
     if(inVents && Math.random()<0.6){ sx=Math.round(P.x+rnd(-4,4)); sy=Math.round(P.y+rnd(-4,4)); }
-    else { sx=Math.round(rnd(22,50)); sy=Math.round(rnd(39,62)); }
+    else { sx=Math.round(rnd(22,50)); sy=Math.round(rnd(39,45)); }
     if(inb(sx,sy) && tileAt(sx,sy)>=T.SAND && !solidAt(sx,sy)) forgeQueueErupt(sx,sy,1);
   }
   forgeTickErupts(dt);
   forgeSealCheck();
   for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
+}
+function forgePlungeStart(){
+  G._forgePlunge={t:0,dur:0.5}; P.hp=Math.max(1,P.hp-8); P.hurtT=Math.max(P.hurtT||0,0.6);
+  if(typeof buzz==='function') buzz(12); if(G.shake<0.4) G.shake=0.4;
+  for(let i=0;i<14;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y,vx:rnd(-1,1),vy:-rnd(1,3),life:rnd(0.4,0.9),color:Math.random()<0.5?'#ff8a30':'#ffd060',size:rnd(2,4.5),grav:0.08});
+  if(Snd.noise) Snd.noise(0.16,0.05,180,0.7);
+  P.click=null; P.moving=false;
+}
+function forgeRespawn(){
+  G._forgePlunge=null; const c=G._forgeStart||{sx:36.5,sy:62.5};
+  P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
+  if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
 }
 function forgeSealCheck(){
   if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
