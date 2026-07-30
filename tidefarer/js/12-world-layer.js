@@ -4729,11 +4729,14 @@ const BARIK_SEAL=[[34,45],[35,45],[36,45],[37,45],[38,45]];   // the Cistern gat
 function genBarikDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1,tile)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,tile); setSolid(x,y,0); } };
-  const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } };
+  // the race water is a NON-SOLID gap: you DASH over it (airborne), and only fall in if you
+  // come to rest on it. (Solid water would block the dash entirely - the old bug.)
+  const flood=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,0); } };
   carve(28,86,44,96,T.RUIN);            // THE SUNKEN STAIR - the dry entry landing
   carve(34,78,38,88,T.RUIN);            // corridor up to the race
   carve(22,72,50,78,T.RUIN);            // THE TIDE RACE - south ledge (the near shore)
-  flood(22,56,50,72);                   // ...the flooded void between the shores...
+  flood(22,56,50,72);                   // ...the open water between the shores (dash across it)...
+  for(const sy of [68,65,62,59]) carve(28,sy,44,sy+1,T.RUIN);   // dry stepping-stones (2 deep, ~3 apart) to dash between
   carve(22,50,50,56,T.RUIN);            // ...north ledge (the far shore)
   carve(34,42,38,52,T.RUIN);            // corridor up to the Cistern
   carve(18,8,54,42,T.RUIN);             // THE CISTERN - the Tidemaw's flooded hall
@@ -4743,13 +4746,12 @@ function placeObjectsBarikDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, drowned:1, exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[30,88],[42,88],[24,74],[48,74],[24,52],[48,52],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE TIDE RACE: drifting vault-stones over a flooded void ----
+  // ---- THE TIDE RACE: dash the dry stepping-stones across the open water ----
+  // The water is a non-solid gap: dash over it (airborne) stone to stone; come to rest ON the
+  // water and the undertow drags you back to the near shore (-5 HP). The stepping-stones are
+  // carved dry ground (in genBarikDeep), so only the water tiles are the fall.
   G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
   for(let y=56;y<=72;y++) for(let x=22;x<=50;x++) if(inb(x,y) && tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
-  const raft=(cy,ax,bx,spd,phase)=>{ const mx=((ax+bx)/2)+0.5; const s={kind:'driftslab', ax:ax+0.5, ay:cy+0.5, bx:bx+0.5, by:cy+0.5, x:mx, y:cy+0.5, prevx:mx, prevy:cy+0.5, spd, phase, w:5, h:3, barikraft:1}; G.decor.push(s); G._barikSlabs.push(s); };
-  raft(69,24,40,0.50,0.0); raft(69,33,47,0.50,3.0);   // three rows of stones, two per row, phase-offset
-  raft(64,26,44,0.55,1.4); raft(64,22,38,0.55,4.4);
-  raft(59,24,40,0.50,2.2); raft(59,33,47,0.50,5.0);
   G._barikCross={sx:36.5, sy:75.5};   // the undertow flings you back to the near shore
   // ---- THE CISTERN: the boss seal + the reward ----
   G._barikSealed=0;
@@ -4775,7 +4777,7 @@ function spawnMobsBarikDeep(){
   }
 }
 function genBarikDeepAll(){ genBarikDeep(); placeObjectsBarikDeep(); _dungWalls('brine'); spawnMobsBarikDeep(); buildMapBase(); }
-// ---- THE TIDE RACE per-frame: drift the stones, drag a misstep under, seal the Cistern ----
+// ---- THE TIDE RACE per-frame: drag a misstep under (fall + respawn), seal the Cistern ----
 function updateBarikDeep(dt){
   if(!G._barikSlabs) return;
   G._barikT=(G._barikT||0)+dt;
