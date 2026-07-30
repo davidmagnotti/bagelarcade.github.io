@@ -193,7 +193,7 @@ function render(){
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn'||b.kind==='dplate')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1055,6 +1055,50 @@ function drawDecor(b,s){
       g.fillText(['','I','II','III','IV','V'][b.ord]||'', 0, -2); g.textBaseline='alphabetic';
     } else if(lit){ g.fillStyle='#ffe6c0'; g.beginPath(); g.arc(0,-2,2.2,0,TAU); g.fill(); }
     if(lit && Math.random()<0.06) G.parts.push({x:b.x,y:b.y-0.1,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.5,1.1),color:'#ffb04a',size:rnd(1,2.2),grav:-0.06});
+    g.restore(); return;
+  }
+  if(b.kind==='dgate'){
+    // a stone-and-iron portcullis plugging a corridor (x0..x1). Closed = barred; open = hauled up.
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const c0=(b.x0+b.x1)/2, tiles=[]; for(let tx=b.x0;tx<=b.x1;tx++) tiles.push(tx);
+    if(b.open){
+      for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+        g.fillStyle='#3a3630'; g.fillRect(ox-18,oy-44,36,7); g.strokeStyle='#181510'; g.lineWidth=1.4; g.strokeRect(ox-18,oy-44,36,7);
+        g.fillStyle='#26221c'; for(let i=-1;i<=1;i++) g.fillRect(ox+i*11-2,oy-44,4,7); }
+      g.restore(); return;
+    }
+    drawShadowAt(g,s.x,s.y,44);
+    for(const tx of tiles){ const ox=(tx-c0)*32, oy=(tx-c0)*16;
+      g.fillStyle='#34302a'; g.fillRect(ox-18,oy-40,36,6);
+      g.strokeStyle='#151109'; g.lineWidth=1.5; g.fillStyle='#544636';
+      for(let i=-1;i<=1;i++){ g.fillRect(ox+i*11-2.5,oy-38,5,38); g.strokeRect(ox+i*11-2.5,oy-38,5,38); }
+      g.fillStyle='#3c342a'; for(let yy=-30;yy<=-4;yy+=13) g.fillRect(ox-16,oy+yy,32,3.5);
+      g.fillStyle='#6a5a48'; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(ox+i*11,oy-38); g.lineTo(ox+i*11-4,oy-32); g.lineTo(ox+i*11+4,oy-32); g.closePath(); g.fill(); }
+    }
+    g.restore(); return;
+  }
+  if(b.kind==='dlever'){
+    // a floor lever: iron post on a stone base; the handle throws right (lit) when pulled
+    const g=cx; drawShadowAt(g,s.x,s.y,10); g.save(); g.translate(s.x,s.y);
+    g.fillStyle='#3a352c'; g.beginPath(); g.moveTo(0,3); g.lineTo(9,-1); g.lineTo(0,-5); g.lineTo(-9,-1); g.closePath(); g.fill();
+    g.strokeStyle='#241f18'; g.lineWidth=2; g.beginPath(); g.moveTo(0,-3); g.lineTo(0,-15); g.stroke();
+    const on=b.on, a=on?0.7:-0.7;
+    g.save(); g.translate(0,-15); g.rotate(a);
+    g.strokeStyle='#8a7358'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); g.moveTo(0,0); g.lineTo(0,-12); g.stroke();
+    g.fillStyle= on?'#d8c46a':'#b04030'; g.beginPath(); g.arc(0,-13,3,0,TAU); g.fill();
+    g.restore();
+    if(!on){ g.fillStyle='rgba(255,236,150,'+(0.4+0.3*Math.sin(G.time*3+b.x)).toFixed(2)+')'; g.font='bold 13px Georgia'; g.textAlign='center'; g.fillText('!',0,-34); }
+    g.restore(); return;
+  }
+  if(b.kind==='dplate'){
+    // a floor pressure-plate: raised iron-rimmed stone; sinks and lights green when trodden
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    const p=b.pressed, off=p?0:2;
+    g.fillStyle= p?'#2a2c24':'#3c3e32'; g.beginPath(); g.moveTo(0,-11-off); g.lineTo(15,-2-off); g.lineTo(0,7-off); g.lineTo(-15,-2-off); g.closePath(); g.fill();
+    g.strokeStyle= p?'#c8d0a0':'#5c5e48'; g.lineWidth= p?2.2:1.6; g.stroke();
+    g.fillStyle= p?'rgba(200,215,150,0.5)':'rgba(20,22,16,0.5)';
+    g.beginPath(); g.moveTo(0,-6-off); g.lineTo(10,-2-off); g.lineTo(0,2-off); g.lineTo(-10,-2-off); g.closePath(); g.fill();
+    if(!p && Math.random()<0.02) G.parts.push({x:b.x,y:b.y-0.2,vx:0,vy:-0.3,life:0.6,color:'rgba(220,230,180,0.5)',size:1.5,grav:0});
     g.restore(); return;
   }
   if(b.kind==='firegate'){

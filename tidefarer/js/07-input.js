@@ -88,6 +88,7 @@ function pickClickTarget(wx,wy){
       if(b.ember){ b.exit? exitEmberDungeon() : enterEmberDungeon(); } else { b.exit? exitFrostDungeon() : enterFrostDungeon(); } }});
     else if(b.kind==='icelever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullIceLever(b)});
     else if(b.kind==='emberlever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullEmberLever(b)});
+    else if(b.kind==='dlever' && !b.on) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullDungLever(b)});
     else if(b.kind==='emberbutton') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pressEmberButton(b)});
     else if(b.kind==='staffgate' && !b.open) cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>dispelStaffGate(b)});
     else if(b.kind==='tombmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=> b.up? exitReachDeep() : enterReachDeep()});
