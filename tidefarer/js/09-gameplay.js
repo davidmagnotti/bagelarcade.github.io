@@ -1043,7 +1043,8 @@ function updatePlayer(dt){
   if(keys['shift']) tryRoll();
   if(P.rollT>0){
     const _rx=P.x, _ry=P.y, _step=P.speed*2.7*dt;
-    moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding, P.unlocked&&P.unlocked.dive&&!P.riding);
+    const _dvault=(G.worldId==='barikdeep');   // Tide Race water is non-solid, so the dash crosses it regardless
+    moveEntity(P, P.dir.x*_step, P.dir.y*_step, 0.28, P.unlocked&&P.unlocked.surf&&!P.riding&&!_dvault, P.unlocked&&P.unlocked.dive&&!P.riding&&!_dvault);
     // rolled straight into a wall (or a corner) with no ground covered: end the roll
     // now so control returns at once, instead of the legs churning against the wall
     // for the rest of the animation. Sliding ALONG a wall still clears this threshold.
@@ -1142,8 +1143,12 @@ function updatePlayer(dt){
     }
     const curTile=tileAt(Math.floor(P.x),Math.floor(P.y));
     const onWater=curTile<=T.SHALLOW;
-    const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding;
-    const canDive=P.unlocked&&P.unlocked.dive&&!P.riding;
+    // the Drowned Vault's Tide Race is a fall hazard, not sailing water: no board, no dive here -
+    // touch it grounded and you plunge (see updateBarikDeep). The water is non-solid, so a dash
+    // still carries you across; disabling surf/dive only stops the sail and the skim-boost.
+    const drownedVault=(G.worldId==='barikdeep');
+    const canSurf=P.unlocked&&P.unlocked.surf&&!P.riding&&!drownedVault;
+    const canDive=P.unlocked&&P.unlocked.dive&&!P.riding&&!drownedVault;
     // DIVING: you're submerged whenever you have the gift and stand over the deep water
     // (where the board can't go). Swimming under is a touch slower than a surf skim.
     P.diving = !!(canDive && curTile===T.DEEP);

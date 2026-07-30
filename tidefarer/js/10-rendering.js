@@ -3096,6 +3096,21 @@ function drawPlayer(s){
     g.restore();
     return;
   }}
+  // FALLING INTO THE TIDE RACE (Drowned Vault): touch the water off a dash and the hero drops
+  // through it, sinking and fading as a ring of spray closes over the spot, then respawns on the
+  // near shore (see barikPlungeStart / barikRespawn). Drawn in place of the figure - never the sail.
+  if(typeof G!=='undefined' && G._barikPlunge){
+    const p=Math.min(1, G._barikPlunge.t/G._barikPlunge.dur), g=cx;
+    g.save(); g.strokeStyle='rgba(190,224,242,'+(0.7*(1-p)).toFixed(2)+')'; g.lineWidth=2;   // spray ring closing over
+    g.beginPath(); g.ellipse(s.x, s.y+2, 6+p*16, (6+p*16)*0.5, 0, 0, TAU); g.stroke(); g.restore();
+    g.save();
+    g.globalAlpha=Math.max(0, 1-p*1.1);
+    const fy=s.y + p*p*30;                                    // sinks under the surface
+    g.translate(s.x, fy); const sc=1-p*0.5; g.scale(sc, sc*0.9); g.translate(-s.x, -fy);
+    drawPlayerFigure({x:s.x, y:fy});
+    g.restore();
+    return;
+  }
   // ZAPPED by an Underclimb ward-lance: the hero convulses in a cage of violet arcs, flashing
   // white, then respawns at the hall's mouth (see aerieZapStart / aerieRespawn).
   if(typeof G!=='undefined' && G._aerieZap){
@@ -3200,7 +3215,7 @@ function drawPlayer(s){
     drawPlayerFigure(s2);
     return;
   }
-  if(P.unlocked&&P.unlocked.surf&&!G.interior&&G.worldId!=='skydungeon'&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
+  if(P.unlocked&&P.unlocked.surf&&!G.interior&&G.worldId!=='skydungeon'&&G.worldId!=='barikdeep'&&tileAt(Math.floor(P.x),Math.floor(P.y))<=T.SHALLOW){
     // a WINDSURF: pale-wood board on its bow-wave, and a tall stormcloth sail
     // (Nessa's) that billows out to the heading side - drawn IN FRONT of the sailor,
     // who grips the boom. The sail dwarfs the rider, as a real windsurf rig does.
