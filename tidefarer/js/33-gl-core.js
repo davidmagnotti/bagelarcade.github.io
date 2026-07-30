@@ -36,6 +36,15 @@
   const twoDcv = document.getElementById('game');
   let gl=null, glDead=false;          // glDead: a hard failure => stay on 2D forever
 
+  /* A thin 2D overlay above the GL canvas for the bits of feedback that aren't
+     on the GPU yet but matter for play: floating combat text ("+8 gold", damage
+     numbers) and the click-to-move marker. Pointer-transparent; lives under #hud. */
+  const ovcv = document.createElement('canvas');
+  ovcv.id='gloverlay';
+  ovcv.style.cssText='position:fixed;left:0;top:0;z-index:2;pointer-events:none;display:none;';
+  glcv.insertAdjacentElement('afterend', ovcv);
+  let octx = null;
+
   /* ---------------- GL context + program ---------------- */
   const VERT = `#version 300 es
 precision highp float;
@@ -365,12 +374,47 @@ void main(){
     const r=visibleRange();
     drawGround(r);
     glEntityPass(r.minX,r.maxX,r.minY,r.maxY);
+    try{ drawOverlay(); }catch(e){}
+  }
+
+  /* ---------------- 2D feedback overlay (floats + click marker) ----------------
+     Replicates the small, stable float/marker loops from the 2D render
+     (10-rendering.js:266-291) onto a transparent canvas over the GL frame. */
+  function drawOverlay(){
+    if(ovcv.width!==glcv.width || ovcv.height!==glcv.height){ ovcv.width=glcv.width; ovcv.height=glcv.height; }
+    ovcv.style.width=glcv.style.width; ovcv.style.height=glcv.style.height;
+    ovcv.style.left=glcv.style.left; ovcv.style.top=glcv.style.top;
+    if(!octx) octx=ovcv.getContext('2d');
+    const g=octx;
+    g.setTransform(DPR,0,0,DPR,0,0);
+    g.clearRect(0,0,VW,VH);
+    // floating combat/loot text
+    if(G.floats) for(const f of G.floats){
+      const s=worldToScreen(f.x,f.y);
+      g.globalAlpha=clamp(f.life,0,1);
+      g.font='bold '+Math.round(13*(f.scale||1))+'px Verdana'; g.textAlign='center';
+      g.strokeStyle='rgba(0,0,0,0.7)'; g.lineWidth=3; g.strokeText(f.text,s.x,s.y);
+      g.fillStyle=f.color; g.fillText(f.text,s.x,s.y);
+    }
+    g.globalAlpha=1;
+    // click-to-move destination markers
+    if(P.clickFx && P.clickFx.t>0){
+      const s=worldToScreen(P.clickFx.x,P.clickFx.y), pr=1-P.clickFx.t/0.6;
+      g.globalAlpha=P.clickFx.t/0.6; g.strokeStyle='#ffd76a'; g.lineWidth=2;
+      g.beginPath(); g.ellipse(s.x,s.y,10+pr*14,(10+pr*14)*0.5,0,0,TAU); g.stroke();
+    }
+    if(P.click && P.click.type==='pos'){
+      const s=worldToScreen(P.click.x,P.click.y);
+      g.globalAlpha=0.5+0.3*Math.sin(G.time*6); g.strokeStyle='#ffd76a'; g.lineWidth=1.6;
+      g.beginPath(); g.ellipse(s.x,s.y,7,3.5,0,0,TAU); g.stroke();
+    }
+    g.globalAlpha=1;
   }
 
   /* ---------------- canvas visibility ---------------- */
   function showGL(on){
-    if(on){ if(glcv.style.display!=='block') glcv.style.display='block'; }
-    else  { if(glcv.style.display!=='none')  glcv.style.display='none'; }
+    glcv.style.display = on?'block':'none';
+    ovcv.style.display = on?'block':'none';
   }
 
   /* ---------------- install: wrap the global render() ----------------
@@ -395,10 +439,30 @@ void main(){
   /* ---------------- public toggle ---------------- */
   window.TFGL = {
     get renderer(){ return RENDERER; },
-    on(){ RENDERER='gl'; glDead=false; try{SafeStore.set('tf_renderer','gl');}catch(e){} },
-    off(){ RENDERER='2d'; showGL(false); try{SafeStore.set('tf_renderer','2d');}catch(e){} },
+    on(){ RENDERER='gl'; glDead=false; try{SafeStore.set('tf_renderer','gl');}catch(e){} syncGlBtns(); },
+    off(){ RENDERER='2d'; showGL(false); try{SafeStore.set('tf_renderer','2d');}catch(e){} syncGlBtns(); },
     toggle(){ RENDERER==='gl'?this.off():this.on(); },
     _stats(){ return {renderer:RENDERER, glDead, atlasReady,
       staticTex:staticCache.size, poolTex:pool.length, glErr:gl?gl.getError():-1}; }
   };
+
+  /* ---------------- pause-menu toggle (Display tab) ----------------
+     Wires the experimental On/Off segmented buttons and keeps them in sync with
+     the menu the same way the built-in toggles do (via syncCfgUI). All optional:
+     if the buttons aren't in the DOM this is a harmless no-op. */
+  function syncGlBtns(){
+    const on=document.getElementById('cfgGlOn'), off=document.getElementById('cfgGlOff');
+    if(on) on.classList.toggle('on', RENDERER==='gl');
+    if(off) off.classList.toggle('on', RENDERER!=='gl');
+  }
+  function wireMenu(){
+    const on=document.getElementById('cfgGlOn'), off=document.getElementById('cfgGlOff');
+    if(on) on.onclick=()=>{ window.TFGL.on(); if(typeof Snd!=='undefined'&&Snd.tone) Snd.tone(560,0.05,'sine',0.04); };
+    if(off) off.onclick=()=>{ window.TFGL.off(); if(typeof Snd!=='undefined'&&Snd.tone) Snd.tone(440,0.05,'sine',0.04); };
+    // keep our buttons refreshed whenever the pause menu re-syncs its own
+    if(typeof syncCfgUI==='function'){ const _s=syncCfgUI; window.syncCfgUI=function(){ _s(); syncGlBtns(); }; }
+    syncGlBtns();
+  }
+  if(document.readyState!=='loading') wireMenu();
+  else document.addEventListener('DOMContentLoaded', wireMenu);
 })();
