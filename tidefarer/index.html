@@ -17,6 +17,11 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<!-- 2.5D WebGL renderer surface. Sits above #game, below #hud (z-index:10), and
+     is pointer-transparent so all input still lands on #game underneath. Only
+     shown when the RENDERER flag is 'gl' (?gl=1 or the pause-menu toggle); the
+     default 2D path never touches it, so the live game is unaffected. -->
+<canvas id="glgame" style="position:fixed;left:0;top:0;z-index:1;pointer-events:none;display:none;"></canvas>
 
 <div id="hud">
   <div id="topLeft">
@@ -250,5 +255,6 @@
 <script src="js/30-perks.js?v=218"></script>
 <script src="js/31-skyquest.js?v=218"></script>
 <script src="js/32-cinematic.js?v=218"></script>
+<script src="js/33-gl-core.js?v=218"></script>
 </body>
 </html>
