@@ -262,13 +262,16 @@ const SECTIONS=[
     ['Unlock all abilities',()=>unlockAll()], ['Boost skills',()=>maxSkills()],
     ['God mode: off',(b)=>toggleGod(b)],
   ]],
-  ['Relics (new whole-game verbs)', [
-    ['★ Sandbox: grant all 4 + spawn puzzles here',()=>{ if(typeof spawnRelicSandbox==='function') spawnRelicSandbox(); ui(); }],
-    ['Grant all 4 relics',()=>{ if(typeof grantAllRelics==='function') grantAllRelics(); ui(); }],
-    ['Grant Tideglass Hook',()=>{ if(typeof grantHook==='function') grantHook(); ui(); }],
+  ['Relic verbs (bomb / lodestone)', [
+    ['★ Sandbox: grant both + spawn puzzles here',()=>{ if(typeof spawnRelicSandbox==='function') spawnRelicSandbox(); ui(); }],
     ['Grant Blast Charge',()=>{ if(typeof grantBomb==='function') grantBomb(); ui(); }],
     ['Grant Lodestone',()=>{ if(typeof grantLodestone==='function') grantLodestone(); ui(); }],
-    ['Grant Slow-Time',()=>{ if(typeof grantSlowTime==='function') grantSlowTime(); ui(); }],
+  ]],
+  ['Gathering tools & gates', [
+    ['★ Sandbox: spawn gated walls here (no tools yet)',()=>{ if(typeof spawnToolgateSandbox==='function') spawnToolgateSandbox(); ui(); }],
+    ['Grant Rivenedge Axe (tier 2)',()=>{ if(typeof grantRivenedge==='function') grantRivenedge(); ui(); }],
+    ['Grant Cragbreaker Pick (tier 2)',()=>{ if(typeof grantCragbreaker==='function') grantCragbreaker(); ui(); }],
+    ['Reset tools to iron (tier 1)',()=>{ P.tools=P.tools||{}; P.tools.axe=Math.min(P.tools.axe||0,1); P.tools.pick=Math.min(P.tools.pick||0,1); ui(); note('Tools reset to iron'); }],
   ]],
   ['System', [
     ['Save now',()=>saveNow()], ['Reload page',()=>location.reload()],

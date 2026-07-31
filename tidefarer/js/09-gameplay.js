@@ -347,6 +347,10 @@ function hitNode(n){
     P.click=null;
     return;
   }
+  // GATED MATERIAL: ironwood pines / basalt stone bounce your current tool until
+  // you carry the right tier (a dungeon-forged Rivenedge Axe / Cragbreaker Pick).
+  // gateBlocked() shows the "your tool barely marks it" feedback itself.
+  if((n.kind==='tree'||n.kind==='rock') && n.gate && typeof gateBlocked==='function' && gateBlocked(n)){ P.click=null; return; }
   if(P.kit && (n.kind==='tree' || n.kind==='rock')){
     P.gatherT=0.4; P.gatherKind = n.kind==='tree'? 'axe':'pick';
     P.swing=Math.max(P.swing||0, 0.26);
@@ -380,6 +384,9 @@ function hitNode(n){
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
   if(n.hp<=0){
+    // a gated barrier (ironwood/basalt) falls for good - it never regrows, and the
+    // way it sealed stays open. clearGateNode() handles the drop + the "way opens" beat.
+    if(n.gate){ if(typeof clearGateNode==='function') clearGateNode(n); else { n.dead=true; n.gone=true; setSolid(n.tx,n.ty,0); invalidateScenery(); } return; }
     n.dead=true; n.respawn= isTree? rnd(20,30) : rnd(26,38); invalidateScenery();
     hintOnce('regrow','The island <b>regrows</b> - felled pines and broken stone return in under a minute.');
     setSolid(n.tx,n.ty,0);
@@ -902,7 +909,7 @@ function stunPlayer(dur){
   G.shake=Math.max(G.shake,0.3); buzz(30);
 }
 function hurtPlayer(dmg,src){
-  if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || (P.hookT||0)>0 || G.victory) return;   // no dying during the victory sequence or a hook-haul
+  if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   let _red=[0,0.15,0.30][P.armor||0];
@@ -1028,9 +1035,6 @@ function updatePlayer(dt){
     P.atkCd=Math.max(0,(P.atkCd||0)-dt);
     return;
   }
-  // TIDEGLASS HOOK: while the hook is hauling you to an anchor it owns the hero -
-  // it drives position itself (crossing any gap) and skips the normal walk step.
-  if(typeof updateHookTravel==='function' && updateHookTravel(dt)) return;
   // safety net: never leave the player wedged between water and land. A windsurfer
   // (surf unlocked) counts light shallows as valid footing, so the board isn't
   // snapped back to shore the instant it touches the water.
@@ -1603,7 +1607,7 @@ function updateCritters(dt){
 function updateWorld(dt){
   // nodes respawn
   for(const n of G.nodes){
-    if(n.dead){ n.respawn-=dt;
+    if(n.dead && !n.gone){ n.respawn-=dt;   // n.gone = a felled gate barrier; never regrows
       if(n.respawn<=0 && dist(P.x,P.y,n.x,n.y)>2.5){ n.dead=false; n.hp=n.maxhp; invalidateScenery();
         if(n.kind==='tree'||n.kind==='rock') setSolid(n.tx,n.ty,1);
         burst(n.x,n.y-0.6,'#9be07f',9,1.6);

@@ -396,6 +396,8 @@ function drawNodeHp(n,s){
   cx.fillRect(s.x-w/2, s.y+top, w*frac, 4);
 }
 function drawNode(n,s){
+  // gated materials (ironwood / basalt) read at a glance by a coloured aura + tag
+  if(n.gate && !n.gone && typeof drawGateAura==='function') drawGateAura(n,s);
   if(n.kind==='tree' && n.palm){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
     drawShadowAt(cx,s.x,s.y,15);

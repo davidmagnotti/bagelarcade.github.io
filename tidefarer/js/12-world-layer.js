@@ -5790,12 +5790,8 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE STORMHEART','STORM-GLASS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
-  // --- the four new whole-game relic verbs (see 33-relics.js). Each gift chest
-  //     grants a permanent, actively-triggered tool in the spirit of the dash. ---
-  if(b.hookgift){ bumpStat('chests');
-    if(!(P.unlocked&&P.unlocked.hook)){ if(typeof grantHook==='function') grantHook(); }
-    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ANCHOR-HOARD','GLASS AND OLD COIN'); }
-    setTimeout(autoSave,300); return; }
+  // --- the two relic verbs (see 33-relics.js). Each gift chest grants a
+  //     permanent, actively-triggered tool. One-line dungeon placement. ---
   if(b.bombgift){ bumpStat('chests');
     if(!(P.unlocked&&P.unlocked.bomb)){ if(typeof grantBomb==='function') grantBomb(); }
     else { giveGold(rndi(120,180)); give('crystal',1); banner('THE POWDER-HOARD','FIRE-SALT AND OLD COIN'); }
@@ -5804,9 +5800,14 @@ function openChest(b){
     if(!(P.unlocked&&P.unlocked.lodestone)){ if(typeof grantLodestone==='function') grantLodestone(); }
     else { giveGold(rndi(120,180)); give('crystal',1); banner('THE IRON-HOARD','HEART-IRON AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
-  if(b.slowgift){ bumpStat('chests');
-    if(!(P.unlocked&&P.unlocked.slowtime)){ if(typeof grantSlowTime==='function') grantSlowTime(); }
-    else { giveGold(rndi(120,180)); give('pearl',1); banner('THE STILL-HOUR','A KEEPSAKE OF THE TIDEFARER'); }
+  // -- the tiered gathering-tool prizes (see 34-toolgates.js): a dungeon each --
+  if(b.axegift){ bumpStat('chests');
+    if((P.tools&&P.tools.axe||0)<2){ if(typeof grantRivenedge==='function') grantRivenedge(); }
+    else { giveGold(rndi(120,180)); give('hardwood',1); banner('THE WOODSMAN\'S HOARD','HEARTWOOD AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
+  if(b.pickgift){ bumpStat('chests');
+    if((P.tools&&P.tools.pick||0)<2){ if(typeof grantCragbreaker==='function') grantCragbreaker(); }
+    else { giveGold(rndi(120,180)); give('ore',2); banner('THE DELVER\'S HOARD','ORE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
   // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the trail to the weapon.
   if(b.tidewardHoard){

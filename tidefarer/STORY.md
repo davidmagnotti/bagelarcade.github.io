@@ -258,28 +258,49 @@ existing Stormlight and stormsail unlocks.)
 
 #### The relic verbs — [built: systems; open: placement]
 
-Four whole-game "verb" tools now exist in code (`js/33-relics.js`), built in the
-spirit of the dash — permanent, actively-triggered, meant to recontextualise the
-whole map rather than bump a stat. Each hangs off `P.unlocked.*` (so it saves with
-no migration) and has a reward-chest flag wired into `openChest`, so dropping one
-into a dungeon is a one-line decor placement.
+Two actively-triggered "verb" tools exist in code (`js/33-relics.js`). (An earlier
+draft also had a grapple and a slow-time, but those read as *just more dashes* and
+were cut.) Each hangs off `P.unlocked.*` (so it saves with no migration) and has a
+reward-chest flag wired into `openChest`, so dropping one into a dungeon is a
+one-line decor placement.
 
 | Relic | Flag / chest | Key · button | Verb | Intended home (per this doc) |
 |-------|--------------|--------------|------|------------------------------|
-| **Tideglass Hook** | `hook` · `{hookgift:1}` | F · ⚓ | Haul yourself to an **anchor-ring** across any gap | Windsurf / the Skirl (wind) |
 | **Blast Charge** | `bomb` · `{bombgift:1}` | Q · ✸ | Open **cracked walls**, trip distant plates, stagger foes | Sunwick / the Cinderwrought (fire) |
 | **Lodestone** | `lodestone` · `{lodegift:1}` | G · ❖ | Drag **heart-iron lodeblocks** onto plates / out of the way | Barik / the quake spirit |
-| **Slow-Time** | `slowtime` · `{slowgift:1}` | C · ⧗ | The world crawls (mob/proj/world dt ×0.30) while you move free; drains mana | Emberwick tomb (Act II climax) — the Tidefarer's gift |
 
-New world objects they act on (drawn by `drawRelicDecor`): `anchor`, `crackwall`
-(`{tiles:[...]}`), `ironblock` (`{bx,by}`), `plate` (`{gate:[...]}`), `bomb`.
+World objects they act on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...]}`),
+`ironblock` (`{bx,by}`), `plate` (`{gate:[...]}`), `bomb`. **Test:** dev menu →
+*Relic verbs* → "Sandbox: grant both + spawn puzzles here."
 
-**Test now:** dev menu → *Relics* → "Sandbox: grant all 4 + spawn puzzles here."
+#### Tiered gathering tools as Metroidvania keys — [built: systems; open: placement]
 
-**Still open (content, not code):** seed anchors / cracked walls / lodeblocks /
-plates through the isles and place the four gift chests in their dungeons — ideally
-with the objects *visible before you can use them*, so returning with a new relic
-is the reward ("isles open up on return").
+The preferred direction over more dashes: **better axe/pickaxe upgrades that cut
+special trees/rocks, gating paths you return to later** (`js/34-toolgates.js`). The
+chop/mine power formula already treats `P.tools.axe`/`P.tools.pick` as integer tiers
+(0 none · 1 iron from the forge); this adds **tier 2**, dungeon-forged, plus two
+gated materials only a tier-2 tool can cut. A gated node is an ordinary tree/rock
+with `n.gate` set — a **solid barrier that never regrows once felled** (`n.gone`), so
+cutting it opens the way for good; below your tier it just clinks and bounces.
+Colour-coded on sight so you can note it and come back.
+
+| Dungeon prize | Tier | Cuts (gated material) | Colour | Chest flag |
+|---------------|------|-----------------------|--------|------------|
+| **Rivenedge Axe** | `axe`→2 | **Ironwood** — blue-black pines | blue `#8fb3ff` | `{axegift:1}` |
+| **Cragbreaker Pick** | `pick`→2 | **Basalt** — violet stone | violet `#c79bff` | `{pickgift:1}` |
+
+The tier also **speeds all ordinary chopping/mining**, so the upgrade is a felt
+reward, not just a key. One dungeon gives the axe, another the pick — **hard gates on
+main routes** are the intended placement (with care to avoid dead-ends).
+
+**Test now:** dev menu → *Gathering tools & gates* → "Sandbox: spawn gated walls
+here," chop/mine to feel the bounce, then "Grant Rivenedge Axe / Cragbreaker Pick."
+
+**Still open (content, not code):** place the gated `addGateNode('ironwood'|'basalt',
+x,y)` walls across the isles and the two gift chests in their dungeons — visible but
+uncuttable on the first pass, so returning with the upgraded tool is the payoff.
+Persisting a felled gate across save/reload wants a per-gate story flag (same pattern
+as the dungeon-mouth state).
 
 ### Bosses & new dungeons — [new]
 
