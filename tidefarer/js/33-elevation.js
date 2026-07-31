@@ -367,7 +367,9 @@ function elevWaterTint(g,x,y,sx,sy){
   const t=G.map[y*MAPW+x];
   let r,gg,bb;
   if(t===T.SHALLOW){
-    r=120; gg=200; bb=209;                              // bright, readable shoals
+    r=86; gg=156; bb=168;                               // calm teal shoals - lighter
+                                                        // than deep (still clearly
+                                                        // "surfable"), not neon
   } else {
     const wd=_waterDepthSmooth(x,y);
     const f=Math.min(1, Math.max(0, wd-1)/6), s=f*f*(3-2*f);
