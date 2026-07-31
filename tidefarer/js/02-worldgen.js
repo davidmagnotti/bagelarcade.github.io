@@ -108,6 +108,14 @@ function genWorld(){
       if(!landNear) setTile(x,y,T.DEEP);
     }
   }
+  // A shallow (surfable) ford across the strait that separates the driftwood
+  // dock from the village: with the wind-sail you can float straight from the
+  // boat over to Elder Maren's shore instead of taking the long way round.
+  // Light water = you can ride it; laid down AFTER the shore-cleanup pass above
+  // so its mid-channel tiles aren't scrubbed back to deep.
+  for(let y=61;y<=63;y++) for(let x=34;x<=41;x++){
+    if(tileAt(x,y)===T.DEEP) setTile(x,y,T.SHALLOW);
+  }
   shapeHollowKingApproach();
 }
 

@@ -359,9 +359,20 @@ function _waterDepthSmooth(x,y){
    still read on top. Shared by the live tile pass and the LOWFX ground bake. */
 function elevWaterTint(g,x,y,sx,sy){
   if(!G.wdepth) return;
-  const wd=_waterDepthSmooth(x,y);
-  const f=Math.min(1, wd/6.5), s=f*f*(3-2*f);         // smoothstep shore->abyss
-  const r=(112-94*s)|0, gg=(196-150*s)|0, bb=(206-126*s)|0;   // (112,196,206) -> (18,46,80)
+  // Colour keys off the tile TYPE, not just depth, because the type carries
+  // gameplay meaning: the windsurf board rides only SHALLOW water. So SHALLOW
+  // reads distinctly LIGHT (surfable), DEEP reads darker - a clear "you can
+  // float here / you can't" cue - while DEEP still grades smoothly into the
+  // abyss offshore so open sea isn't a flat slab.
+  const t=G.map[y*MAPW+x];
+  let r,gg,bb;
+  if(t===T.SHALLOW){
+    r=120; gg=200; bb=209;                              // bright, readable shoals
+  } else {
+    const wd=_waterDepthSmooth(x,y);
+    const f=Math.min(1, Math.max(0, wd-1)/6), s=f*f*(3-2*f);
+    r=(48-32*s)|0; gg=(98-56*s)|0; bb=(132-54*s)|0;     // (48,98,132) -> (16,42,78)
+  }
   const HW=TW/2, HH=TH/2, col='rgb('+r+','+gg+','+bb+')';
   g.fillStyle=col;
   g.beginPath(); g.moveTo(sx,sy-HH); g.lineTo(sx+HW,sy); g.lineTo(sx,sy+HH); g.lineTo(sx-HW,sy); g.closePath();
