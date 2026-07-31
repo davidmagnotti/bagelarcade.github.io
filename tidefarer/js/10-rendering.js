@@ -4,8 +4,18 @@
 function worldToScreen(wx,wy){ return { x: isoX(wx,wy)-G.cam.x, y: isoY(wx,wy)-G.cam.y }; }
 function screenToWorld(sx,sy){
   sx-=LB.x; sy-=LB.y;   // undo Performance Mode letterbox offset
-  const ox=sx+G.cam.x, oy=sy+G.cam.y;
-  return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 };
+  const inv=(yy)=>{ const ox=sx+G.cam.x, oy=yy+G.cam.y;
+    return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 }; };
+  let w=inv(sy);
+  // Height-aware refinement: raised terrain is DRAWN shifted up by its lift,
+  // so a click on tall ground under the flat inverse lands short. Re-invert
+  // against the lift at the current guess; converges in a few steps because
+  // the height field is smooth. (Also widens the top-edge cull correctly -
+  // without it, tall tiles lifted into view at the screen top could pop in.)
+  if(typeof elevActive==='function' && elevActive() && G.height){
+    for(let k=0;k<3;k++) w=inv(sy + groundLiftAt(w.x,w.y));
+  }
+  return w;
 }
 
 /* ---- pre-baked ground (low-gfx) ----
@@ -306,6 +316,33 @@ function render(){
       cx.beginPath(); cx.arc(s.x,s.y-14,1.8,0,TAU); cx.fill();
       cx.globalAlpha=a*night*0.3;
       cx.beginPath(); cx.arc(s.x,s.y-14,5,0,TAU); cx.fill();
+      cx.globalAlpha=1;
+    }
+  }
+  // drifting pollen motes & tumbling leaves over grass and forest by day -
+  // stateless (position derived from time), so they cost no particle budget.
+  // Fireflies own the night; these fade out as dusk falls.
+  if(!LOWFX && fxOn('particles') && night<0.6){
+    const spanX=(maxX-minX)||1, spanY=(maxY-minY)||1;
+    for(let i=0;i<14;i++){
+      const hs=((i*2654435761)>>>0)%100000/100000;
+      const wob=Math.sin(G.time*(0.8+hs)+i*2.1);
+      const wx=minX+(((hs*977+G.time*(0.18+hs*0.2))%1)+1)%1*spanX;
+      const wy=minY+(((hs*541+G.time*(0.13+hs*0.14)+0.37)%1)+1)%1*spanY;
+      const t=tileAt(wx|0,wy|0);
+      if(t!==T.GRASS && t!==T.FOREST) continue;
+      const s=worldToScreen(wx,wy);
+      if(EL) s.y-=groundLiftAt(wx,wy);
+      const sy=s.y-12-wob*4;
+      cx.globalAlpha=(0.3+0.3*Math.abs(wob))*(1-night/0.6);
+      if(i%3===0){
+        cx.fillStyle='rgba(150,180,90,0.9)';
+        cx.save(); cx.translate(s.x,sy); cx.rotate(G.time*1.2+i);
+        cx.fillRect(-2.4,-1.4,4.8,2.8); cx.restore();
+      } else {
+        cx.fillStyle='#f4eebc';
+        cx.beginPath(); cx.arc(s.x,sy,1.5,0,TAU); cx.fill();
+      }
       cx.globalAlpha=1;
     }
   }

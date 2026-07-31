@@ -325,6 +325,15 @@ function buildSprites(){
       g.fillStyle='#e8eef6';
       for(let i=0;i<3;i++){ const px=18+r()*28, py=h-36+r()*14;
         g.fillRect(px,py,2.6,2.6); g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(px,py,1.2,1.2); g.fillStyle='#e8eef6'; }
+      // chipped edge catching the light along the sunlit facets
+      g.strokeStyle='rgba(255,255,255,0.20)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(14,h-30); g.lineTo(26,h-42); g.lineTo(38,h-38); g.stroke();
+      // scattered pebbles seat the boulder into the ground
+      for(let i=0;i<3;i++){ const px=10+r()*46, py=h-12+r()*3;
+        g.fillStyle='#6f6f76';
+        g.beginPath(); g.ellipse(px,py,2.2+r()*1.6,1.5+r(),0,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.25)';
+        g.beginPath(); g.ellipse(px-0.6,py-0.7,1,0.6,0,0,TAU); g.fill(); }
     }));
   }
   SPR.rockLow = makeCanvas(70,56,(g,w,h)=>{
@@ -371,6 +380,7 @@ function buildSprites(){
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
     g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
     g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
+    towerDress(g,w,h,[92,136]);
   });
   // A twice-as-tall tower - NOT a stretched one. Same shaft width, stone-course
   // spacing, window size, roof and door as SPR.tower; the shaft just runs much
@@ -397,6 +407,7 @@ function buildSprites(){
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
     g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
     g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
+    {const wins=[]; for(let wy=92; wy<h-60; wy+=44) wins.push(wy); towerDress(g,w,h,wins);}
   });
   SPR.well = makeCanvas(70,80,(g,w,h)=>{
     g.fillStyle='#7d7d85'; g.beginPath(); g.ellipse(w/2,h-18,22,12,0,0,TAU); g.fill();
@@ -738,6 +749,52 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     g.moveTo(chX-6*scale, roofY+3*scale); g.lineTo(chX+6*scale, roofY+7*scale);
     g.stroke();
   }
+}
+/* tower dressing, shared by SPR.tower and SPR.towerTall: staggered stone
+   joints, weathered stone tints, shingled cone, sunlit roof rim, framed
+   windows with sills, and ivy climbing the base. wins = window y positions. */
+function towerDress(g,w,h,wins){
+  const cxp=w/2, r=mulberry32(77);
+  // staggered joints between the stone courses (skip the doorway region)
+  g.strokeStyle='rgba(0,0,0,0.10)'; g.lineWidth=1.2;
+  g.beginPath();
+  let row=0;
+  for(let yy=70; yy<h-46; yy+=16, row++){
+    for(let x=cxp-26+8+(row%2)*8; x<cxp+26-3; x+=16){
+      if(yy>h-88 && Math.abs(x-cxp)<16) continue;
+      g.moveTo(x,yy); g.lineTo(x,yy+16);
+    }
+  }
+  g.stroke();
+  // weathered stones: a few blocks tinted lighter/darker
+  for(let i=0;i<10;i++){
+    const yy=70+((r()*((h-116)/16))|0)*16, xx=cxp-26+4+r()*40;
+    if(yy>h-88 && Math.abs(xx-cxp)<20) continue;
+    g.fillStyle=r()<0.5?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+    g.fillRect(xx,yy+2,10+r()*6,12);
+  }
+  // shingle courses on the conical roof
+  g.strokeStyle='rgba(0,0,0,0.18)'; g.lineWidth=1.1;
+  for(let yy=16; yy<62; yy+=9){
+    const hw=34*(yy-6)/58;
+    g.beginPath(); g.moveTo(cxp-hw,yy); g.quadraticCurveTo(cxp,yy+3.5,cxp+hw,yy); g.stroke();
+  }
+  // the sun catches the right roof edge
+  g.strokeStyle='rgba(255,240,200,0.30)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(cxp+34,64); g.lineTo(cxp,6); g.stroke();
+  // window frames, glass glints and sills
+  for(const wy of wins){
+    g.strokeStyle='#5b4a33'; g.lineWidth=1.5; g.strokeRect(cxp-6,wy-1,12,16);
+    g.fillStyle='rgba(255,255,255,0.35)'; g.fillRect(cxp-4,wy+1,3,5);
+    g.fillStyle='#9a8f80'; g.fillRect(cxp-7,wy+15,14,2.5);
+  }
+  // ivy climbing from the base, clear of the doorway
+  const ivy=(bx,by,n,col)=>{ g.fillStyle=col;
+    for(let i=0;i<n;i++){ g.beginPath();
+      g.ellipse(bx+r()*8-4, by-i*7-r()*4, 4.5-i*0.4, 3.2-i*0.25, r()*TAU, 0, TAU); g.fill(); } };
+  ivy(cxp-22,h-26,6,'rgba(74,110,54,0.85)');
+  ivy(cxp-21,h-30,4,'rgba(96,138,66,0.7)');
+  ivy(cxp+22,h-28,4,'rgba(74,110,54,0.8)');
 }
 function shade(hex,amt){
   const n=parseInt(hex.slice(1),16);
