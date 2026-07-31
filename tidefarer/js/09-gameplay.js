@@ -397,7 +397,7 @@ function hitNode(n){
       const amt=1+Math.floor(P.skills.mining.lvl/2); give('stone',Math.min(amt,3)); addXP('mining',9);
       if(Math.random() < 0.22 + P.tools.pick*0.3 + P.skills.mining.lvl*0.04){
         give('ore',1); addFloat('+1 iron ore',n.x,n.y-2,'#c9ced6',1.1);
-        hintOnce('ore','<b>Iron ore!</b> Take it to Bram - two ore and a stick of wood smelt into an iron bar.');
+        hintOnce('ore','<b>Iron ore!</b> The isle\'s smiths and shipwrights are always wanting it - Captain Brant needs it for the Tidewalker\'s fittings.');
       }
       const nearVein = (ZONES.ruins && dist(n.x,n.y,ZONES.ruins.x,ZONES.ruins.y)<13) ||
         (ZONES.highlands && dist(n.x,n.y,ZONES.highlands.x,ZONES.highlands.y)<13) ||

@@ -4431,9 +4431,9 @@ QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', ne
   log:'Bring Doran the Factor 6 grilled fish and 4 fresh bread for the Bazaar stores.',
   doneText:'Counted and crated - the stalls will bless your name by morning. Here is the crown\'s rate, and a little over for the legs it cost you.',
   rw:{gold:90, item:{potion:2}, xp:{fishing:120, farming:120}} };
-QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{bar:4, hardwood:2}, xpL:220,
-  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Four good iron bars and two lengths of hardwood for the hafts, and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
-  log:'Bring Captain Halvard 4 iron bars and 2 hardwood for the Garrison armoury.',
+QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{ore:8, hardwood:2}, xpL:220,
+  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
+  log:'Bring Captain Halvard 8 iron ore and 2 hardwood for the Garrison armoury.',
   doneText:'Good steel, well chosen. The Watch stands the sounder for it - and so does the King who sleeps behind our wall. Take a soldier\'s thanks, and a soldier\'s coin.',
   rw:{gold:100, item:{elixir:1, potion:2}, xp:{melee:200, mining:120}} };
 
