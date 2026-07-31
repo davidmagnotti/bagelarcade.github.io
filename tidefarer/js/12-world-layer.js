@@ -238,18 +238,26 @@ function leaveDungeon(){
     frostvault:typeof exitFrostVault==='function'&&exitFrostVault,
     milldeep:typeof exitMillDungeon==='function'&&exitMillDungeon,
     undermaw:typeof exitUndermaw==='function'&&exitUndermaw,
-    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep };
+    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep,
+    barikdeep:typeof exitBarikDeep==='function'&&exitBarikDeep };
   const fn=EX[G.worldId];
   if(fn){ fn(); return true; }
+  // the returned-isle gate dungeons (winddeep, sunwarddeep, skydeep, embertomb) climb out
+  // through their own `deepworld` way-up mouth
+  const gm=(G.decor||[]).find(d=>d.kind==='dungeonmouth' && d.exit && d.deepworld);
+  if(gm && typeof useGateDungeon==='function'){ useGateDungeon(gm); return true; }
   return false;
 }
-// step into THE WAY UP: full heal, ~one level, and rise to the surface
+// step into THE WAY UP: full heal, ~one level, and rise to the surface. Only reward the climb if
+// we can actually leave from here - otherwise a missing exit mapping would let the reward be
+// farmed over and over without ever rising.
 function useFastExit(){
   if(dlg.open) return;
+  if(!leaveDungeon()){ if(typeof toast==='function') toast('There is no way up from here.',3000); return; }
   P.hp=P.maxhp; P.mp=P.maxmp;
   if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
   if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-  if(leaveDungeon()) toast('You step into the way up - whole again, and a level the wiser.',4200);
+  toast('You step into the way up - whole again, and a level the wiser.',4200);
 }
 
 function addCrowsFor(){
