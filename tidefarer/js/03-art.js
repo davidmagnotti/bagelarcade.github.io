@@ -167,15 +167,30 @@ function buildSprites(){
       g.strokeStyle='#5c3d22'; g.lineWidth=4; g.lineCap='round';
       g.beginPath(); g.moveTo(w/2,h-36); g.quadraticCurveTo(w/2-12,h-44,w/2-18,h-50);
       g.moveTo(w/2,h-40); g.quadraticCurveTo(w/2+10,h-48,w/2+16,h-54); g.stroke();
-      // canopy: gradient-lit clusters, dark to light, dappled leaves
+      // canopy: lumpy organic leaf-clouds - a scalloped silhouette instead of
+      // plain circles, then gradient-lit bodies and sun-side highlight clumps
       const blobs = v===2 ? [[0,-52,26],[-16,-40,20],[16,-42,21],[0,-32,24]]
                           : [[0,-58,24],[-18,-44,19],[18,-46,20],[-6,-34,22],[10,-32,20]];
-      for(const [bx,by,br] of blobs){ g.fillStyle=c3;
-        g.beginPath(); g.arc(w/2+bx,h+by+4,br,0,TAU); g.fill(); }
+      const lump=(bx,by,br,squash)=>{   // one lumpy leaf-cloud path (deterministic per r())
+        const NP=11, pts=[];
+        for(let i=0;i<NP;i++){ const a=i/NP*TAU, rr=br*(0.86+r()*0.26);
+          pts.push([w/2+bx+Math.cos(a)*rr, h+by+Math.sin(a)*rr*(squash||0.95)]); }
+        g.beginPath();
+        g.moveTo((pts[0][0]+pts[NP-1][0])/2,(pts[0][1]+pts[NP-1][1])/2);
+        for(let i=0;i<NP;i++){ const p=pts[i], q=pts[(i+1)%NP];
+          g.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2); }
+        g.closePath();
+      };
+      for(const [bx,by,br] of blobs){ g.fillStyle=c3; lump(bx,by+3,br+2); g.fill(); }
       for(const [bx,by,br] of blobs){
         const gr=g.createRadialGradient(w/2+bx-br*0.35,h+by-br*0.4,br*0.15,w/2+bx,h+by,br);
         gr.addColorStop(0,c2); gr.addColorStop(0.55,c1); gr.addColorStop(1,c3);
-        g.fillStyle=gr; g.beginPath(); g.arc(w/2+bx,h+by,br,0,TAU); g.fill();
+        g.fillStyle=gr; lump(bx,by,br); g.fill();
+      }
+      // sun-side clumps: pale lobes on the light side give the crown volume
+      for(const [bx,by,br] of blobs){
+        g.fillStyle='rgba(255,250,225,0.14)';
+        lump(bx-br*0.28, by-br*0.34, br*0.55, 0.9); g.fill();
       }
       // leaf dapple
       for(let i=0;i<60;i++){
@@ -184,6 +199,13 @@ function buildSprites(){
         const px=w/2+b[0]+Math.cos(a)*d, py=h+b[1]+Math.sin(a)*d*0.9;
         g.fillStyle= r()<0.55? 'rgba(255,255,235,'+(0.05+r()*0.10)+')' : 'rgba(10,25,10,'+(0.08+r()*0.10)+')';
         g.beginPath(); g.ellipse(px,py,1.6+r()*1.6,1+r(), r()*TAU,0,TAU); g.fill();
+      }
+      // a scatter of ripe fruit on the mid-green variant
+      if(v===1) for(let i=0;i<7;i++){
+        const b=blobs[(i*3)%blobs.length], a=r()*TAU, d=(0.3+r()*0.55)*b[2];
+        const fx=w/2+b[0]+Math.cos(a)*d, fy=h+b[1]+Math.sin(a)*d*0.9;
+        g.fillStyle='#d8604a'; g.beginPath(); g.arc(fx,fy,1.8,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.55)'; g.beginPath(); g.arc(fx-0.6,fy-0.6,0.6,0,TAU); g.fill();
       }
       // sky-side crown highlight + soft under-shadow
       g.fillStyle='rgba(255,250,220,0.10)';
@@ -617,19 +639,33 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   // ridge cap catches the light
   g.strokeStyle='rgba(255,240,210,0.28)'; g.lineWidth=1.6;
   g.beginPath(); g.moveTo(bx-1.5,byBase-bh-29*scale); g.lineTo(bx-1.5,byBase-bh+16*scale); g.stroke();
-  // shingle courses on both roof planes
+  // shingle courses on both roof planes: scalloped rows read as individual
+  // shingles instead of flat pencil lines, with a paler edge under each row
   const apX=bx, apY=byBase-bh-30*scale, frX=bx, frY=byBase-bh+18*scale;
   const eL={x:bx-bw/2-10*scale,y:byBase-bh}, eR={x:bx+bw/2+10*scale,y:byBase-bh};
-  g.lineWidth=1.3;
-  for(const t of [0.3,0.55,0.78]){
-    g.strokeStyle='rgba(0,0,0,0.16)';
-    g.beginPath();
-    g.moveTo(eL.x+(apX-eL.x)*t, eL.y+(apY-eL.y)*t);
-    g.lineTo(frX, frY+(apY-frY)*t);
-    g.moveTo(eR.x+(apX-eR.x)*t, eR.y+(apY-eR.y)*t);
-    g.lineTo(frX, frY+(apY-frY)*t);
-    g.stroke();
-  }
+  const shingleRows=(E)=>{
+    for(let t=0.14;t<0.92;t+=0.13){
+      const x1=E.x+(apX-E.x)*t, y1=E.y+(apY-E.y)*t;
+      const x2=frX, y2=frY+(apY-frY)*t;
+      const n=Math.max(3,(Math.hypot(x2-x1,y2-y1)/7)|0);
+      g.strokeStyle='rgba(0,0,0,0.20)'; g.lineWidth=1.1;
+      g.beginPath();
+      for(let i=0;i<n;i++){ const u0=i/n, u1=(i+1)/n;
+        const sx0=x1+(x2-x1)*u0, sy0=y1+(y2-y1)*u0;
+        const sx1=x1+(x2-x1)*u1, sy1=y1+(y2-y1)*u1;
+        if(i===0) g.moveTo(sx0,sy0);
+        g.quadraticCurveTo((sx0+sx1)/2,(sy0+sy1)/2+2.2*scale, sx1,sy1);
+      }
+      g.stroke();
+      g.strokeStyle='rgba(255,240,210,0.07)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(x1,y1+1.3); g.lineTo(x2,y2+1.3); g.stroke();
+    }
+  };
+  shingleRows(eL); shingleRows(eR);
+  // fascia: the eave edges catch the light
+  g.strokeStyle='rgba(255,240,210,0.22)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(eL.x,eL.y); g.lineTo(frX,frY);
+  g.moveTo(eR.x,eR.y); g.lineTo(frX,frY); g.stroke();
   // eave shadow grounds the roof onto the walls
   const topL=(x)=> byBase-bh + (x-(bx-bw/2))*dk;
   const topR=(x)=> byBase-bh+18*scale - (x-bx)*dk;
@@ -671,6 +707,21 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     x=bx+bw/2*fx; g.moveTo(x,gyR(x)-5*scale); g.lineTo(x,gyR(x));
   }
   g.stroke();
+  // plaster mottling: faint weathered blotches so the wall planes read as
+  // material instead of flat fills (deterministic, baked once)
+  {const pr=mulberry32(31);
+   for(let i=0;i<6;i++){
+     const x=bx-bw/2+8*scale+pr()*(bw/2-16*scale);
+     const yTop=topL(x)+8*scale, yBot=gyL(x)-8*scale;
+     if(yBot>yTop){ g.fillStyle=pr()<0.5?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+       g.beginPath(); g.ellipse(x, yTop+pr()*(yBot-yTop), (4+pr()*7)*scale, (3+pr()*5)*scale, pr()*TAU, 0, TAU); g.fill(); }
+   }
+   for(let i=0;i<6;i++){
+     const x=bx+8*scale+pr()*(bw/2-16*scale);
+     const yTop=topR(x)+8*scale, yBot=gyR(x)-8*scale;
+     if(yBot>yTop){ g.fillStyle=pr()<0.5?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.06)';
+       g.beginPath(); g.ellipse(x, yTop+pr()*(yBot-yTop), (4+pr()*7)*scale, (3+pr()*5)*scale, pr()*TAU, 0, TAU); g.fill(); }
+   }}
   // chimney, seated THROUGH the right roof plane
   if(chim){
     const ct=0.45, chX=bx+(bw/2+10*scale)*ct, roofY=apY+((byBase-bh)-apY)*ct;
