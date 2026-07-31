@@ -89,8 +89,20 @@ function buildTiles(){
     TILE_SPR[t]=[];
     for(let v=0;v<4;v++){
       TILE_SPR[t].push(makeCanvas(TW,TH+8,(g)=>{
-        const [c1,c2]=specs[t];
-        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = (v%2)?c1:c2; g.fill();
+        const [c1,c2]=specs[t]; const tn=+t;
+        // NATURAL open ground (grass, forest, sand, snow, ice): the old
+        // two-tone-by-variant fill + per-diamond south-edge stroke etched a
+        // hard tile GRID across otherwise continuous terrain. Fill these with a
+        // single base tone (variety comes from the mottling/flecks/tufts below,
+        // seeded per variant) and skip the edge stroke, so neighbouring tiles
+        // merge seamlessly. Elevation cliffs now carry the real depth; wet and
+        // built surfaces (water, path, soil, plank, ruin) keep the old edging.
+        const NATURAL = (tn===T.GRASS||tn===T.FOREST||tn===T.SAND||tn===T.SNOW||tn===T.ICE);
+        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = NATURAL ? c1 : ((v%2)?c1:c2); g.fill();
+        // Over-cover the diamond's own anti-aliased rim with the base tone, so
+        // when two natural tiles abut, their opaque fills overlap by ~0.6px
+        // instead of leaving a faint AA hairline (the last trace of the grid).
+        if(NATURAL){ g.strokeStyle=c1; g.lineWidth=1.3; g.lineJoin='round'; g.stroke(); }
         // gritty texture: mottled blotches + dense flecks
         const r=mulberry32(t*97+v*13+5);
         g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
@@ -133,9 +145,12 @@ function buildTiles(){
             g.fillStyle='rgba(255,255,255,0.08)'; g.fillRect(px-1,py-1.4,1.4,0.8); }
         }
         g.restore();
-        // edge shading (fake depth on south edges)
-        g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
-        g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        // edge shading (fake depth on south edges) - only on wet/built tiles;
+        // on natural ground this single stroke was the visible tile-grid seam.
+        if(!NATURAL){
+          g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
+          g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        }
       }));
     }
   }
