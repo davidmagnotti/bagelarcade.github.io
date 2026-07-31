@@ -272,7 +272,7 @@ function placeObjects(){
   addBuilding('tower', 56,33, 'Orin\'s tower').tall=true;   // Orin's tower stands twice as tall on Emberwick
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
-  addBuilding('house2', 39,57, 'The Ember Hearth (Inn)');
+  addBuilding('house2', 41,57, 'The Ember Hearth (Inn)');   // pulled inland: at x=39 its wide sprite sat out over the strait
   addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
   addBuilding('lamp', 54,56,''); addBuilding('lamp', 56,54,'');   // the lantern trail on out to Bram's forge
