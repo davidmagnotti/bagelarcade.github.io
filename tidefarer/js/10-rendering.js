@@ -53,6 +53,7 @@ function buildGroundCache(){
     if(EL && L>0.02) elevDrawCliff(g,x,y,sx,sy);
     const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
     if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2-L);
+    if(EL && (t===T.SHALLOW||t===T.DEEP) && typeof elevWaterTint==='function') elevWaterTint(g,x,y,sx,sy);
     if(t!==T.SHALLOW && t!==T.DEEP){
       const mc=terrainCls(t);
       if(mc<4) for(const nb of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
@@ -167,15 +168,18 @@ function render(){
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
       cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2-L);
       if(t===T.SHALLOW || t===T.DEEP){
+        // solid depth-graded colour first (under the animated sheen/waves) so
+        // the sea reads as one smooth surface, not a quilt of diamond tiles
+        if(EL && typeof elevWaterTint==='function') elevWaterTint(cx,x,y,sx,sy);
         // gentle animated sheen + drifting sparkles (per-water-tile path ops -
         // one of the biggest costs on a software-rendered canvas; drop at LOWFX)
         if(!LOWFX){
           const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
           if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
             cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
-          // deeper water reads darker/greener; a caustic ribbon crawls the surface
-          if(t===T.DEEP){ cx.fillStyle='rgba(6,20,40,0.16)';
-            cx.beginPath(); cx.ellipse(sx, sy+3, 15, 6, 0, 0, TAU); cx.fill(); }
+          // (the old per-DEEP-tile dark ellipse was removed: it stamped one blob
+          //  on every tile = a regular grid. Depth darkening is now the smooth
+          //  overlapping blobs in elevTileFX/js-33.)
           const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
           if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
             cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }
@@ -220,6 +224,19 @@ function render(){
         }
       }
       if(EL) elevTileFX(cx,x,y,sx,sy);   // sun wash on hills + cliff-foot contact shadows
+      // Coastline bleed: the beach (and grassy banks) raggedly overhang the
+      // waterline instead of stopping at a crisp diamond edge, so the shore
+      // reads as an organic, rounded coast rather than a stair-step of tiles.
+      // Drawn last, on top of the depth grade, using the same wavy fringe
+      // sprites the land pass uses. Sand + grass only (their fringe colours are
+      // right); other shores keep their edge. (!LOWFX - the baked path is flat.)
+      if(!LOWFX && (t===T.SHALLOW || t===T.DEEP)){
+        const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+        for(const nb of nbs){
+          const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
+          if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+        }
+      }
     }
   }
   }

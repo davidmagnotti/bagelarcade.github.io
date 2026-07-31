@@ -68,7 +68,10 @@ function buildHeight(){
     base=base*base*(3-2*base);                       // smoothstep ramp from the coast
     const nz = hN ? (0.5 + 0.7*hN(x/W, y/H)) : 1;    // ~0.5..1.2 rolling hills
     let h = base*MAX*nz;
-    if(t===T.SAND) h*=0.35;                          // beaches stay low
+    if(t===T.SAND) h*=0.05;                          // beaches lie ~flush with the sea
+                                                     // (a lifted beach put a little
+                                                     // cliff at every shore tile - the
+                                                     // stair-stepped coastline)
     else if(t===T.PLANK) h*=0.2;                     // docks/boards barely rise
     lv[i]=Math.max(0, Math.min(MAX, h));
   }
@@ -100,7 +103,11 @@ function buildHeight(){
       if(y-1>=0){ const j=i-W; if(dist[j]<0){ dist[j]=d+1; q[qt++]=j; } }
     }
     for(let i=0;i<n;i++) wd[i]=_isWater(G.map[i]) ? Math.min(8, dist[i]<0?8:dist[i]) : 0;
-    // one smoothing pass over water so the abyss ramp rolls instead of stepping
+    // Several smoothing passes over water so the depth ramp rolls out across
+    // many tiles instead of stepping tile-to-tile. The depth colour is opaque
+    // per tile, so a gentle field = a smooth shore->abyss gradient with no
+    // visible diamond banding in the transition.
+    for(let pass=0; pass<10; pass++)
     for(let y=0;y<H;y++) for(let x=0;x<W;x++){
       const i=y*W+x; if(!_isWater(G.map[i])) continue;
       let s=wd[i], c=1;
@@ -108,6 +115,12 @@ function buildHeight(){
       if(x-1>=0 && _isWater(G.map[i-1])){ s+=wd[i-1]; c++; }
       if(y+1<H && _isWater(G.map[i+W])){ s+=wd[i+W]; c++; }
       if(y-1>=0 && _isWater(G.map[i-W])){ s+=wd[i-W]; c++; }
+      // diagonals too, so the field blurs isotropically (the sea grades in every
+      // direction, not just along the axes) - a wider, gentler shore->abyss ramp
+      if(x+1<W&&y+1<H && _isWater(G.map[i+W+1])){ s+=wd[i+W+1]; c++; }
+      if(x-1>=0&&y+1<H && _isWater(G.map[i+W-1])){ s+=wd[i+W-1]; c++; }
+      if(x+1<W&&y-1>=0 && _isWater(G.map[i-W+1])){ s+=wd[i-W+1]; c++; }
+      if(x-1>=0&&y-1>=0 && _isWater(G.map[i-W-1])){ s+=wd[i-W-1]; c++; }
       wd[i]=s/c;
     }
   }
@@ -194,6 +207,32 @@ function _shade(hex,f){
   const n=parseInt(hex.slice(1),16);
   return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';
 }
+/* the tile TOP tone (matches PAL in js/03-art.js) - used to fold gentle inland
+   steps in the ground's own colour instead of exposing a rock cliff face */
+function _topCol(t){
+  switch(t){
+    case T.SAND:  return '#c8b482';
+    case T.SNOW:  return '#e9eef6';
+    case T.ICE:   return '#b7d6e8';
+    case T.RUIN:  return '#6f6a63';
+    case T.PATH:  return '#9a7d51';
+    case T.SOIL:  return '#61411f';
+    case T.PLANK: return '#7d5834';
+    case T.FOREST:return '#3e6030';
+    default:      return '#5b8544';   // grass
+  }
+}
+/* Fill a gentle inland step as a soft fold in the ground's own tone (no rock,
+   no turf lip, no cast shadow) so a rolling slope reads as rolling ground - not
+   a stack of little terraces. Only the coast (a WATER neighbour) still gets the
+   dramatic textured cliff from _cliffFace. */
+function _softFace(g,x0,y0,x1,y1,Lpx,npx,fill){
+  const drop=Lpx-npx; if(drop<=0.4) return;
+  const yb0=y0+drop, yb1=y1+drop;
+  g.fillStyle=fill;
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.lineTo(x1,yb1); g.lineTo(x0,yb0);
+  g.closePath(); g.fill();
+}
 /* deterministic per-tile jitter so strata don't swim frame to frame */
 function _tHash(x,y){ return (((x*73856093)^(y*19349663))>>>0); }
 
@@ -253,28 +292,42 @@ function _cliffFace(g,x,y,x0,y0,x1,y1,Lpx,npx,base,lip,rimA,crease){
 function elevDrawCliff(g,x,y,sx,sy){
   const L=heightLv(x,y); if(L<=0.02) return;
   const Lpx=L*ELEV.HSTEP, HW=TW/2, HH=TH/2, t=G.map[y*MAPW+x];
-  const col=_cliffCols(t), lip=_lipCol(t), crease=_creaseCol(t);
+  const col=_cliffCols(t), lip=_lipCol(t), crease=_creaseCol(t), top=_topCol(t);
   const nR=heightLv(x+1,y);           // front-right neighbour (down-right in iso)
   if(nR < L-0.02){
     const npx=nR*ELEV.HSTEP;
-    _cliffFace(g,x,y, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, col[0], lip, 0.30, crease);
-    // wet stain where the sunlit face steps into the sea
-    const nt=tileAt(x+1,y);
-    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
-      g.fillStyle='rgba(18,30,42,0.35)';
-      g.beginPath(); g.moveTo(sx+HW,sy-npx); g.lineTo(sx,sy+HH-npx);
-      g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
+    const nt=tileAt(x+1,y), wet=(nt===T.DEEP||nt===T.SHALLOW);
+    if(wet){
+      // the coast: a real, textured cliff dropping into the sea
+      _cliffFace(g,x,y, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, col[0], lip, 0.30, crease);
+      if(Lpx-npx>4){   // wet stain where the sunlit face steps into the water
+        g.fillStyle='rgba(18,30,42,0.35)';
+        g.beginPath(); g.moveTo(sx+HW,sy-npx); g.lineTo(sx,sy+HH-npx);
+        g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
+      }
+    } else {
+      // inland: a gentle fold in the ground's own tone (sunlit SE face). Shade
+      // scales with the DROP so the tiny sub-tile steps of a rolling slope stay
+      // near-invisible (no terrace lines) and only a real inland roll picks up a
+      // whisper of volume.
+      _softFace(g, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, _shade(top, 1-Math.min(0.012,(Lpx-npx)*0.004)));
     }
   }
   const nL=heightLv(x,y+1);           // front-left neighbour (down-left in iso)
   if(nL < L-0.02){
     const npx=nL*ELEV.HSTEP;
-    _cliffFace(g,x,y, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, col[1], lip, 0.10, crease);
-    const nt=tileAt(x,y+1);
-    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
-      g.fillStyle='rgba(18,30,42,0.35)';
-      g.beginPath(); g.moveTo(sx,sy+HH-npx); g.lineTo(sx-HW,sy-npx);
-      g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
+    const nt=tileAt(x,y+1), wet=(nt===T.DEEP||nt===T.SHALLOW);
+    if(wet){
+      _cliffFace(g,x,y, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, col[1], lip, 0.10, crease);
+      if(Lpx-npx>4){
+        g.fillStyle='rgba(18,30,42,0.35)';
+        g.beginPath(); g.moveTo(sx,sy+HH-npx); g.lineTo(sx-HW,sy-npx);
+        g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
+      }
+    } else {
+      // inland: the shaded SW face - a touch darker than the SE for soft volume,
+      // but likewise drop-scaled so gentle steps don't etch a diagonal line.
+      _softFace(g, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, _shade(top, 1-Math.min(0.045,(Lpx-npx)*0.009)));
     }
   }
 }
@@ -282,12 +335,49 @@ function elevDrawCliff(g,x,y,sx,sy){
 /* ---- per-tile grade pass: sun wash + contact shadows (AO) ----
    Static per world, drawn with the ground: in full quality it rides the live
    tile pass; in LOWFX it is baked once into the ground cache for free. */
-let _sunDia=null, _abyssDia=null, _shoalDia=null;
+let _sunDia=null;
 function _mkDia(col){
   const c=document.createElement('canvas'); c.width=TW; c.height=TH;
   const g=c.getContext('2d'); g.fillStyle=col;
   g.beginPath(); g.moveTo(TW/2,0); g.lineTo(TW,TH/2); g.lineTo(TW/2,TH); g.lineTo(0,TH/2);
   g.closePath(); g.fill(); return c;
+}
+/* this water tile's depth averaged with its water neighbours - a continuous
+   ramp for the depth colour, instead of the raw per-tile step */
+function _waterDepthSmooth(x,y){
+  let s=waterDepthLv(x,y), c=1;
+  const add=(nx,ny)=>{ const d=waterDepthLv(nx,ny); if(d>0){ s+=d; c++; } };
+  add(x+1,y); add(x-1,y); add(x,y+1); add(x,y-1);
+  return s/c;
+}
+/* Paint a water tile a SOLID depth-driven colour: bright turquoise in the
+   shoals grading to a dark abyss offshore. Because the depth is neighbour-
+   smoothed and the fill is OPAQUE (not a translucent stamp), adjacent tiles
+   differ only slightly and abut cleanly - the sea grades smoothly with no
+   per-tile quilt and no diamond seams (the over-cover stroke seals the AA rim,
+   exactly as the land tiles do). Drawn UNDER the animated sheen/waves, so those
+   still read on top. Shared by the live tile pass and the LOWFX ground bake. */
+function elevWaterTint(g,x,y,sx,sy){
+  if(!G.wdepth) return;
+  // Colour keys off the tile TYPE, not just depth, because the type carries
+  // gameplay meaning: the windsurf board rides only SHALLOW water. So SHALLOW
+  // reads distinctly LIGHT (surfable), DEEP reads darker - a clear "you can
+  // float here / you can't" cue - while DEEP still grades smoothly into the
+  // abyss offshore so open sea isn't a flat slab.
+  const t=G.map[y*MAPW+x];
+  let r,gg,bb;
+  if(t===T.SHALLOW){
+    r=120; gg=200; bb=209;                              // bright, readable shoals
+  } else {
+    const wd=_waterDepthSmooth(x,y);
+    const f=Math.min(1, Math.max(0, wd-1)/6), s=f*f*(3-2*f);
+    r=(48-32*s)|0; gg=(98-56*s)|0; bb=(132-54*s)|0;     // (48,98,132) -> (16,42,78)
+  }
+  const HW=TW/2, HH=TH/2, col='rgb('+r+','+gg+','+bb+')';
+  g.fillStyle=col;
+  g.beginPath(); g.moveTo(sx,sy-HH); g.lineTo(sx+HW,sy); g.lineTo(sx,sy+HH); g.lineTo(sx-HW,sy); g.closePath();
+  g.fill();
+  g.strokeStyle=col; g.lineWidth=1.3; g.lineJoin='round'; g.stroke();
 }
 function _aoBand(g,x0,y0,x1,y1,nx,ny,a){
   // two nested translucent bands fake a soft gradient without one
@@ -302,23 +392,8 @@ function elevTileFX(g,x,y,sx,sy){
   if(!G.height) return;
   const t=G.map[y*MAPW+x], water=(t===T.DEEP||t===T.SHALLOW);
   const L=water?0:heightLv(x,y), cy=sy-L*ELEV.HSTEP, HW=TW/2, HH=TH/2;
-  // depth-graded sea: bright turquoise shoals along the shore falling off
-  // into a dark abyss offshore. Static per world - bakes free in LOWFX.
-  if(water){
-    const wd=waterDepthLv(x,y);
-    if(wd>0){
-      if(t===T.SHALLOW && wd<=1.5){
-        if(!_shoalDia) _shoalDia=_mkDia('#8fdce8');
-        g.globalAlpha=0.10; g.drawImage(_shoalDia, sx-TW/2, sy-TH/2);
-      }
-      const a=Math.min(0.34,(wd-0.8)*0.055);
-      if(a>0.01){
-        if(!_abyssDia) _abyssDia=_mkDia('#050f20');
-        g.globalAlpha=a; g.drawImage(_abyssDia, sx-TW/2, sy-TH/2);
-      }
-      g.globalAlpha=1;
-    }
-  }
+  // (the depth-graded sea now lives in elevWaterTint, drawn earlier so the
+  //  animated sheen/waves sit on top of it.)
   // warm sun wash on high ground - hills catch the light, fading with dusk
   if(!water && L>0.6){
     if(!_sunDia) _sunDia=_mkDia('#ffe9b8');
@@ -331,9 +406,12 @@ function elevTileFX(g,x,y,sx,sy){
   // (works on water too - the cliff's shade pooling at its foot in the sea).
   // Threshold at a REAL step (>0.5 level): the smoothed inland gradients sit
   // below it, so rolling ground stays clean and only true cliffs ground-shadow.
+  // Threshold at a REAL cliff step (>1.3 level): gentle inland slopes (which now
+  // fold in the ground's own tone) must NOT ground-shadow, or the contact bands
+  // stack back into terrace lines. Only true cliffs pool shade at their foot.
   const dL=heightLv(x-1,y)-L, dR=heightLv(x,y-1)-L;
-  if(dL>0.5) _aoBand(g, sx-HW,cy, sx,cy-HH, 0.894,0.447, Math.min(0.22,(dL-0.5)*0.14));
-  if(dR>0.5) _aoBand(g, sx,cy-HH, sx+HW,cy, -0.894,0.447, Math.min(0.22,(dR-0.5)*0.14));
+  if(dL>1.3) _aoBand(g, sx-HW,cy, sx,cy-HH, 0.894,0.447, Math.min(0.22,(dL-1.3)*0.16));
+  if(dR>1.3) _aoBand(g, sx,cy-HH, sx+HW,cy, -0.894,0.447, Math.min(0.22,(dR-1.3)*0.16));
 }
 
 // expose for other modules / the console
@@ -344,5 +422,6 @@ window.groundLiftAt=groundLiftAt;
 window.elevTileLift=elevTileLift;
 window.elevDrawCliff=elevDrawCliff;
 window.elevTileFX=elevTileFX;
+window.elevWaterTint=elevWaterTint;
 window.heightLv=heightLv;
 window.waterDepthLv=waterDepthLv;

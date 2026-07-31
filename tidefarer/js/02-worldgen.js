@@ -110,6 +110,14 @@ function genWorld(){
       if(!landNear) setTile(x,y,T.DEEP);
     }
   }
+  // A shallow (surfable) ford across the strait that separates the driftwood
+  // dock from the village: with the wind-sail you can float straight from the
+  // boat over to Elder Maren's shore instead of taking the long way round.
+  // Light water = you can ride it; laid down AFTER the shore-cleanup pass above
+  // so its mid-channel tiles aren't scrubbed back to deep.
+  for(let y=61;y<=63;y++) for(let x=34;x<=41;x++){
+    if(tileAt(x,y)===T.DEEP) setTile(x,y,T.SHALLOW);
+  }
   shapeHollowKingApproach();
 }
 
@@ -274,7 +282,7 @@ function placeObjects(){
   addBuilding('tower', 56,33, 'Orin\'s tower').tall=true;   // Orin's tower stands twice as tall on Emberwick
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
-  addBuilding('house2', 39,57, 'The Ember Hearth (Inn)');
+  addBuilding('house2', 41,57, 'The Ember Hearth (Inn)');   // pulled inland: at x=39 its wide sprite sat out over the strait
   addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
   addBuilding('lamp', 54,56,''); addBuilding('lamp', 56,54,'');   // the lantern trail on out to Bram's forge

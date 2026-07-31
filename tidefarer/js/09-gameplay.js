@@ -1301,6 +1301,28 @@ function updateNPCs(dt){
       else n.tx=null;
     }
   }
+  // Personal space: villagers ease apart so they never pile onto one tile - inn
+  // yards and market crowds read as a spread of people, not a heap. Gentle and
+  // collision-aware (they still mill and walk), tethered to home so the nudge
+  // can never slowly walk anyone off their post, and frozen mid-conversation so
+  // the person you're speaking to holds still.
+  if(!dlg.open){
+    const SEP=1.5, SEPV=0.85;
+    for(const n of G.npcs){
+      if(n.hidden || n.throne) continue;
+      let px=0, py=0, near=0;
+      for(const m of G.npcs){
+        if(m===n || m.hidden || m.throne) continue;
+        const dx=n.x-m.x, dy=n.y-m.y, d2=dx*dx+dy*dy;
+        if(d2>0.0001 && d2<SEP*SEP){ const d=Math.sqrt(d2), w=(SEP-d)/SEP; px+=dx/d*w; py+=dy/d*w; near++; }
+      }
+      if(near){
+        const l=Math.hypot(px,py)||1; moveEntity(n,(px/l)*SEPV*dt,(py/l)*SEPV*dt);
+        if(n.hx!=null){ const hd=Math.hypot(n.x-n.hx,n.y-n.hy), lim=(n.wander||0)+1.6;
+          if(hd>lim){ n.x=n.hx+(n.x-n.hx)/hd*lim; n.y=n.hy+(n.y-n.hy)/hd*lim; } }
+      }
+    }
+  }
   updateCritters(dt);
   // Pip
   const c=G.cat; if(!c) return;

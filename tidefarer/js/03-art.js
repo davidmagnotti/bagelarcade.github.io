@@ -89,20 +89,44 @@ function buildTiles(){
     TILE_SPR[t]=[];
     for(let v=0;v<4;v++){
       TILE_SPR[t].push(makeCanvas(TW,TH+8,(g)=>{
-        const [c1,c2]=specs[t];
-        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = (v%2)?c1:c2; g.fill();
-        // gritty texture: mottled blotches + dense flecks
+        const [c1,c2]=specs[t]; const tn=+t;
+        // NATURAL open ground (grass, forest, sand, snow, ice): the old
+        // two-tone-by-variant fill + per-diamond south-edge stroke etched a
+        // hard tile GRID across otherwise continuous terrain. Fill these with a
+        // single base tone (variety comes from the mottling/flecks/tufts below,
+        // seeded per variant) and skip the edge stroke, so neighbouring tiles
+        // merge seamlessly. Elevation cliffs now carry the real depth; wet and
+        // built surfaces (water, path, soil, plank, ruin) keep the old edging.
+        const NATURAL = (tn===T.GRASS||tn===T.FOREST||tn===T.SAND||tn===T.SNOW||tn===T.ICE);
+        const WATER = (tn===T.DEEP || tn===T.SHALLOW);
+        // Water joins the seamless set too: the sea should read as ONE surface.
+        // Both water types share a single base tone - the entire shore->abyss
+        // gradient is painted on top by the smooth overlapping depth blobs
+        // (js/33-elevation), so there's no hard shallow/deep colour step and no
+        // grid of two-tone diamonds. Animated sheen/caustics live in the ground pass.
+        const SEAMLESS = NATURAL || WATER;
+        const base = WATER ? '#33708f' : (SEAMLESS ? c1 : ((v%2)?c1:c2));
+        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = base; g.fill();
+        // Over-cover the diamond's own anti-aliased rim with the base tone, so
+        // when two seamless tiles abut, their opaque fills overlap by ~0.6px
+        // instead of leaving a faint AA hairline (the last trace of the grid).
+        if(SEAMLESS){ g.strokeStyle=base; g.lineWidth=1.3; g.lineJoin='round'; g.stroke(); }
+        // gritty texture: mottled blotches + dense flecks. Skipped on water -
+        // per-tile speckle just re-prints a faint grid on the sea; the water gets
+        // its life from the animated sheen/caustics/waves in the ground pass.
         const r=mulberry32(t*97+v*13+5);
         g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
-        for(let i=0;i<3;i++){ // uneven mottling
-          const px=r()*TW, py=r()*TH, pr=5+r()*9;
-          g.fillStyle= r()<0.5 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.04)';
-          g.beginPath(); g.ellipse(px,py,pr,pr*0.5,0,0,TAU); g.fill();
-        }
-        for(let i=0;i<24;i++){
-          const px=r()*TW, py=r()*TH;
-          g.fillStyle= r()<0.55 ? 'rgba(0,0,0,'+(0.05+r()*0.07)+')' : 'rgba(255,255,255,'+(0.03+r()*0.05)+')';
-          g.fillRect(px,py, 1+r()*3, 1+r()*1.5);
+        if(!WATER){
+          for(let i=0;i<3;i++){ // uneven mottling
+            const px=r()*TW, py=r()*TH, pr=5+r()*9;
+            g.fillStyle= r()<0.5 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.04)';
+            g.beginPath(); g.ellipse(px,py,pr,pr*0.5,0,0,TAU); g.fill();
+          }
+          for(let i=0;i<24;i++){
+            const px=r()*TW, py=r()*TH;
+            g.fillStyle= r()<0.55 ? 'rgba(0,0,0,'+(0.05+r()*0.07)+')' : 'rgba(255,255,255,'+(0.03+r()*0.05)+')';
+            g.fillRect(px,py, 1+r()*3, 1+r()*1.5);
+          }
         }
         if(+t===T.GRASS||+t===T.FOREST){ // mixed live + dead grass tufts
           g.lineWidth=1;
@@ -133,9 +157,12 @@ function buildTiles(){
             g.fillStyle='rgba(255,255,255,0.08)'; g.fillRect(px-1,py-1.4,1.4,0.8); }
         }
         g.restore();
-        // edge shading (fake depth on south edges)
-        g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
-        g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        // edge shading (fake depth on south edges) - only on built tiles now;
+        // on natural ground AND water this single stroke was a visible tile seam.
+        if(!SEAMLESS){
+          g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
+          g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        }
       }));
     }
   }
