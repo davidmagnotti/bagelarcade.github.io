@@ -4759,10 +4759,10 @@ function placeObjectsBarikDeep(){
   G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++) if(tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
   G._barikCross={sx:36.5, sy:76.5};   // default respawn (updates to the last dry ledge you reach)
-  // ---- THE LOCKS: a sluice-lever in room 1 raises gate A; a ward-plate in room 3 raises gate B ----
-  dungGate('barA', 78, 34, 38, 'The sluice-lever throws - the barred gate grinds up into the vault roof.');
+  // ---- THE LOCKS: clearing room 1 of its drowned dead raises gate A (no lever - the fight is
+  // the key); a ward-plate in room 3 raises gate B. ----
+  dungGate('barA', 78, 34, 38, 'The last of the drowned dead falls - the barred gate grinds up into the vault roof.');
   dungGate('barB', 60, 34, 38, 'The ward-plate sinks - the inner gate hauls open.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'barA', on:false, label:'a sluice-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:64.5, gate:'barB', pressed:false, label:'a ward-plate'});
   // ---- THE CISTERN: the boss seal + the reward ----
   G._barikSealed=0;
@@ -4780,8 +4780,8 @@ function placeObjectsBarikDeep(){
 }
 function spawnMobsBarikDeep(){
   if(!(P.story && P.story.barikDeepDone)){
-    // ROOM 1 combat: drowned dead + a bowman, guarding the sluice-lever
-    for(const [zx,zy,k] of [[28,83,'skeleton'],[42,84,'skeleton'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: drowned dead + a bowman - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'skeleton'],[42,84,'skeleton'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='barA'; mm.respawnT=-1; } } }
     // ROOM 3: dead guarding the ward-plate
     for(const [zx,zy] of [[28,65],[44,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
     // ROOM 5: a last stand of the dead before the Cistern
@@ -4807,6 +4807,7 @@ function updateBarikDeep(dt){
     else if(walkTile(tileAt(tx,ty))) G._barikCross={sx:tx+0.5, sy:ty+0.5};   // bank the last dry ledge as respawn
   }
   dungPlateCheck();
+  dungRoom1Check('barA');
   barikSealCheck();
   for(const m of G.mobs) if(m.tidemaw && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateTidemaw(m,dt);
 }
@@ -5066,10 +5067,10 @@ function placeObjectsWindDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE LOCKS: a vane-lever in room 1 raises gate A; a vane-plate in room 3 raises gate B ----
-  dungGate('winA', 78, 34, 38, 'The vane-lever swings home - the gate hauls up on a howl of wind.');
+  // ---- THE LOCKS: clearing room 1 of its cave-bats raises gate A (no lever - the fight is the
+  // key); a vane-plate in room 3 raises gate B. ----
+  dungGate('winA', 78, 34, 38, 'The last bat drops - the gate hauls up on a howl of wind.');
   dungGate('winB', 58, 34, 38, 'The vane-plate drops - the inner gate grinds wide.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'winA', on:false, label:'a vane-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'winB', pressed:false, label:'a vane-plate'});
   // ---- THE TWO ABYSS CROSSINGS: void bands crossed on drifting platforms, swept by gales ----
   //  ROOM 2 [70..77]: south ledge 76-77 | BAND 72-75 gale EAST | north ledge 70-71
@@ -5095,8 +5096,8 @@ function placeObjectsWindDeep(){
 }
 function spawnMobsWindDeep(){
   if(!(P.story && P.story.galeDeepDone)){
-    // ROOM 1 combat: a flock of cave-bats guarding the vane-lever
-    for(const [zx,zy] of [[28,83],[44,83],[36,82],[30,84]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
+    // ROOM 1 combat: a flock of cave-bats - fell them all to raise gate A
+    for(const [zx,zy] of [[28,83],[44,83],[36,82],[30,84]]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob('bat',sp[0],sp[1]); if(mm){ mm.room1gate='winA'; mm.respawnT=-1; } } }
     // ROOM 3: bats swarming the vane-plate
     for(const [zx,zy] of [[28,64],[44,64],[36,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
     // ROOM 5: a last swarm on the Eye step
@@ -5131,6 +5132,7 @@ function updateWindDeep(dt){
     }
   }
   dungPlateCheck();
+  dungRoom1Check('winA');
   windSealCheck();
   for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
 }
@@ -5249,7 +5251,6 @@ function placeObjectsSunwardDeep(){
   dungGate('sunA', 78, 34, 38, 'The last of the yard\'s guardians falls - the iron gate hauls up in a gust of heat.');
   dungGate('sunB', 58, 34, 38, 'The heat-plate glows and sinks - the inner gate grinds open.');
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'sunB', pressed:false, label:'a heat-plate'});
-  G._sunRoom1Open=0;
   // ---- ROOM 2 - THE FORGE CAUSEWAY: the lava is gathered into one POOL, crossed only on a
   // spinning basalt platform. Board it at the south rim, ride it over the lava to the north rim,
   // and TIME your crossing so the pool's lava-spouts don't catch you on the arm. ----
@@ -5284,7 +5285,7 @@ function placeObjectsSunwardDeep(){
 function spawnMobsSunwardDeep(){
   if(!(P.story && P.story.ashenForgeDone)){
     // ROOM 1 combat: a scorpion and ash-wracked dead guarding the way up - fell them all to raise gate A
-    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.sunRoom1=1; mm.respawnT=-1; } } }
+    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='sunA'; mm.respawnT=-1; } } }
     // ROOM 3: a stoker guarding the heat-plate
     for(const [zx,zy,k] of [[28,64,'skeleton'],[44,64,'scorpion']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // ROOM 5: a last stand on the clinker stair
@@ -5348,7 +5349,7 @@ function updateSunwardDeep(dt){
   }
   forgeTickErupts(dt);
   dungPlateCheck();
-  sunRoom1Check();
+  dungRoom1Check('sunA');
   forgeSealCheck();
   for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
 }
@@ -5364,13 +5365,13 @@ function forgeRespawn(){
   P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
   if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
 }
-// THE SLAG YARD lock: once every room-1 guardian is dead, gate A hauls up. Fail-safe: if none
-// spawned (a cleared run, or no open tile), the gate simply opens so the way is never barred.
-function sunRoom1Check(){
-  if(G._sunRoom1Open) return;
-  const g=G.decor.find(d=>d.kind==='dgate' && d.gate==='sunA');
-  if(!g || g.open){ G._sunRoom1Open=1; return; }
-  if(!G.mobs.some(m=>m.sunRoom1 && !m.dead)){ G._sunRoom1Open=1; dungOpenGate('sunA'); }
+// A room-1 combat lock: once every guardian tagged for `gate` is dead, that gate hauls up - the
+// fight is the key, no lever. Fail-safe: if none are present (a cleared run, or no open spawn
+// tile), the gate simply opens so the way is never barred.
+function dungRoom1Check(gate){
+  const g=G.decor.find(d=>d.kind==='dgate' && d.gate===gate);
+  if(!g || g.open) return;
+  if(!G.mobs.some(m=>m.room1gate===gate && !m.dead)) dungOpenGate(gate);
 }
 function forgeSealCheck(){
   if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
@@ -5432,10 +5433,10 @@ function placeObjectsSkyDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE LOCKS: a bell-lever in room 1 raises gate A; a rune-plate in room 3 raises gate B ----
-  dungGate('skyA', 78, 34, 38, 'The bell-lever tolls once - the temple gate rises on a peal of thunder.');
+  // ---- THE LOCKS: clearing room 1 of its storm-shades raises gate A (no lever - the fight is
+  // the key); a rune-plate in room 3 raises gate B. ----
+  dungGate('skyA', 78, 34, 38, 'The last storm-shade scatters - the temple gate rises on a peal of thunder.');
   dungGate('skyB', 58, 34, 38, 'The rune-plate lights and sinks - the inner gate swings wide.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'skyA', on:false, label:'a bell-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'skyB', pressed:false, label:'a rune-plate'});
   // tall temple pillars for cover-that-isn't (the lightning falls from straight above)
   for(const [px,py] of [[26,73],[46,73],[26,52],[46,52],[30,55],[42,55]]) if(inb(px,py) && !solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
@@ -5451,8 +5452,8 @@ function placeObjectsSkyDeep(){
 }
 function spawnMobsSkyDeep(){
   if(!(P.story && P.story.stormTempleDone)){
-    // ROOM 1 combat: storm-shades and a bowman guarding the bell-lever
-    for(const [zx,zy,k] of [[28,83,'skywraith'],[42,84,'skywraith'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: storm-shades and a bowman - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'skywraith'],[42,84,'skywraith'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='skyA'; mm.respawnT=-1; } } }
     // ROOM 3: storm-shades guarding the rune-plate
     for(const [zx,zy] of [[28,64],[44,64]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
     // ROOM 5: a last stand on the sanctuary step
@@ -5483,6 +5484,7 @@ function updateSkyDeep(dt){
   if(G._stormHuntT<=0 && inNave){ G._stormHuntT=1.35; stormQueueStrike(Math.round(P.x),Math.round(P.y)); }
   stormTickStrikes(dt);
   dungPlateCheck();
+  dungRoom1Check('skyA');
   stormSealCheck();
   for(const m of G.mobs) if(m.thunder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateThundercaller(m,dt);
 }
