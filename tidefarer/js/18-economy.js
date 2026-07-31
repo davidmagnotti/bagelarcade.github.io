@@ -3,8 +3,8 @@
    ===================================================================== */
 P.tools=P.tools||{axe:0,pick:0}; P.armor=P.armor||0; P.armorOwn=Math.max(P.armorOwn||0,P.armor||0);
 ITEMS.hardwood={name:'Hardwood', desc:'Dense heartwood from the old forest pines.'};
-ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Bram can smelt it.'};
-ITEMS.bar={name:'Iron Bar', desc:'Smelted and anvil-ready.'};
+ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Shipwrights and smiths pay well for it.'};
+ITEMS.bar={name:'Iron Bar', desc:'A stamped bar of old iron - a curio now, but it still sells dear.'};
 ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.'};
 ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune - sells dearly."};
 ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25};
@@ -13,7 +13,7 @@ ITEMS.stew={name:'Hearth Stew', desc:'Restores 45 HP. A whole meal in a bowl.', 
 ITEMS.roast={name:'Roast Boar', desc:'Restores 42 HP. Rich, dark, and dripping.', use:'heal', heal:42};
 ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
 ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
-ACH.mastersmith={t:'Master Smith',d:'Forge the steel sword.'};
+ACH.mastersmith={t:'Master Smith',d:'Wield the steel sword.'};
 ACH.loremaster={t:'Loremaster',d:'Read every text and stone on both islands.'};
 ACH.ironclad={t:'Ironclad',d:'Wear the steel plate.'};
 ACH.delver={t:'Delver',d:'Claim the heart of the Undermaw.'};   // awarded at the cave chest (20-lore) - was never registered, so the award silently no-op'd
@@ -24,47 +24,12 @@ function costText(need){ return Object.keys(need).map(k=>need[k]+' '+ITEMS[k].na
 function canPay(need){ for(const k in need) if(!has(k,need[k])) return false; return true; }
 function pay(need){ for(const k in need) take(k,need[k]); }
 
-/* ---------- Bram: smelting & smithing ---------- */
-function craftMenu(npc){
-  const recipes=[
-    {id:'bar', label:'Smelt Iron Bar', need:{ore:2,wood:1},
-      out:()=>{ give('bar',1); toast('The bloom cools into a clean <b>iron bar</b>.'); },
-      owned:()=>false},
-    {id:'axe', label:'Iron Axe - +1 chop power, finds more hardwood', need:{bar:2,hardwood:2},
-      out:()=>{ P.tools.axe=1; banner('IRON AXE FORGED','TREES WILL FEAR YOU'); },
-      owned:()=>P.tools.axe>0},
-    {id:'pick', label:'Iron Pickaxe - +1 mining power, finds more ore', need:{bar:2,hardwood:2},
-      out:()=>{ P.tools.pick=1; banner('IRON PICKAXE FORGED','THE STONE GIVES UP ITS SECRETS'); },
-      owned:()=>P.tools.pick>0},
-    {id:'iarm', label:'Iron Armor - blocks 15% of damage', need:{bar:3,hardwood:2},
-      out:()=>{ P.armor=Math.max(P.armor,1); P.armorOwn=Math.max(P.armorOwn||0,1);
-        banner('IRON ARMOR FITTED','15% OF EVERY BLOW TURNED ASIDE'); },
-      owned:()=>(P.armorOwn||0)>=1},
-    {id:'parm', label:'Steel Plate - blocks 30%, crowned with a helm', need:{bar:5,crystal:1},
-      out:()=>{ P.armor=2; P.armorOwn=2; award('ironclad'); banner('STEEL PLATE FORGED','30% OF EVERY BLOW TURNED ASIDE'); },
-      owned:()=>P.armor>=2, req:()=>P.armor>=1,
-      reqMsg:"“Plate hangs on iron. Let me fit the iron armor first.”"},
-    {id:'steel', label:'Steel Sword - +4 damage', need:{bar:4,hardwood:3},
-      out:()=>{ P.swordTier=2; buildHotbar(); award('mastersmith'); banner('STEEL SWORD FORGED','+4 DAMAGE'); },
-      owned:()=>P.swordTier>=2, req:()=>P.swordTier>=1,
-      reqMsg:"“Steel builds on iron. Finish my iron-sword commission first.”"}
-  ];
-  const btns=[];
-  for(const r of recipes){
-    if(r.owned()) continue;
-    btns.push({label:r.label+'<br><span style="font-size:10px;color:var(--parch-dim)">'+costText(r.need)+'</span>',
-      fn:()=>{
-        if(r.req && !r.req()){ setDialog(r.reqMsg, [{label:'Back',fn:()=>craftMenu(npc)}]); return; }
-        if(!canPay(r.need)){ setDialog('“Short on materials. I need '+costText(r.need)+'.”',
-          [{label:'Back',fn:()=>craftMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]); return; }
-        pay(r.need); r.out(); Snd.mine(); setTimeout(autoSave,300);
-        craftMenu(npc);
-      }});
-  }
-  if(!btns.length) btns.push({label:'Nothing left to forge - you have it all', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
-  btns.push({label: npc?'Back':'Step away', ghost:true, fn:()=> npc? buildDialogContent(npc) : closeDialog()});
-  setDialog('“The anvil\'s hot. What are we making?”<br><span style="font-size:10px;color:var(--parch-dim)">Ore comes from rock - a pickaxe helps. Hardwood hides in the old forest pines.</span>', btns);
-}
+/* ---------- Bram: the forge bench has been retired ----------
+   The tutorial smith no longer runs a crafting menu. Weapons, armor and tool
+   upgrades are earned through the isle's quests, its foes, and the crossing kit;
+   the iron the quests and projects call for is now raw ore, mined directly, so
+   nothing depends on a smelting bench any more. Iron bars survive only as a rare
+   curio you can sell. (craftMenu removed.) */
 
 /* ---------- Maren: trade goods for gold ---------- */
 function sellMenu(npc){

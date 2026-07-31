@@ -7,7 +7,7 @@ let ZONES = {
   cove:   {x:82, y:24, r:6, name:"Smuggler's Cove"},
   orchard:{x:72, y:74, r:6, name:'Old Orchard'},
   village:{x:48,y:58,r:9,  name:'Emberwick Village'},
-  farm:   {x:60,y:63,r:5,  name:'Willa\'s Farm'},
+  farm:   {x:61,y:69,r:5,  name:'Willa\'s Farm'},
   dock:   {x:31,y:62,r:5,  name:'Driftwood Dock'},
   tower:  {x:57,y:35,r:4,  name:'Orin\'s Tower'},
   ruins:  {x:46,y:20,r:9,  name:'Old Ruins'},
@@ -93,10 +93,12 @@ function genWorld(){
   carveLine(V.x+3,V.y-2, ZONES.meadow.x-3,ZONES.meadow.y, T.PATH,0);
   carveLine(V.x,V.y-3, ZONES.tower.x,ZONES.tower.y+2, T.PATH,0);
   carveLine(ZONES.tower.x,ZONES.tower.y-2, ZONES.ruins.x,ZONES.ruins.y+6, T.PATH,0);
-  // farm soil plots (3 x 3 grid of plots with walking gaps)
+  // farm soil plots (two rows of plots, south of Willa's barn, with walking gaps).
+  // Kept aligned under the barn's new southern berth (see placeObjects), so the whole
+  // farm reads as one steading well clear of Bram's forge up the lane.
   G.plots = [];
   for(let py=0;py<2;py++) for(let px=0;px<4;px++){
-    const x = 58+px, y = 62+py*2;
+    const x = 59+px, y = 68+py*2;
     setTile(x,y,T.SOIL);
     G.plots.push({x, y, stage:0, t:0}); // stage 0 empty, 1..3 growing, 4 ready
   }
@@ -268,7 +270,7 @@ function placeObjects(){
   addBuilding('house', 44,54, 'Maren\'s cottage').closedMsg='<b>Maren\'s cottage</b> is dark, but for one candle. “Come back at a decent hour, castaway,” the Elder calls, not unkindly.';
   addBuilding('forge', 58,55, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
   addBuilding('house2',44,61, 'Fisher row');
-  addBuilding('barn',  62,60, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
+  addBuilding('barn',  63,66, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
   addBuilding('tower', 56,33, 'Orin\'s tower').tall=true;   // Orin's tower stands twice as tall on Emberwick
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
@@ -276,7 +278,7 @@ function placeObjects(){
   addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
   addBuilding('lamp', 54,56,''); addBuilding('lamp', 56,54,'');   // the lantern trail on out to Bram's forge
-  addBuilding('lamp', 30,62,''); addBuilding('lamp', 59,62,'');
+  addBuilding('lamp', 30,62,''); addBuilding('lamp', 60,64,'');   // the second lamp lights the lane down to Willa's farm
   // hidden loot caches for explorers
   for(const spot of [[72,38],[26,44],[57,72]]){
     const sp=findOpenNear(spot[0],spot[1],4);

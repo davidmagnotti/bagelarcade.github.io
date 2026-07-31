@@ -51,8 +51,8 @@ for(const k in SKILLS) P.skills[k]={lvl:1,xp:0};
 /* ---------- quests ---------- */
 const QUESTS = {
   welcome:{ giver:'maren', title:'Welcome Ashore', kind:'talk', talkTo:'bram',
-    brief:'New boots on old sand - welcome, traveler. Two of us could use a hand: our smith <b>Bram</b> at the forge east of the well, and <b>Willa</b> at the farm just past him. Start with Bram - he\'ll set you right - then go see what Willa needs.',
-    log:'Speak with Bram at the forge, east of the well - and meet Willa at the farm just past him.',
+    brief:'New boots on old sand - welcome, traveler. Two of us could use a hand: our smith <b>Bram</b> at the forge east of the well, and <b>Willa</b> at the farm down the lane south of his forge. Start with Bram - he\'ll set you right - then go see what Willa needs.',
+    log:'Speak with Bram at the forge, east of the well - and meet Willa at the farm down the lane to the south.',
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, item:{potion:1}, xp:{melee:30}}, unlocks:['kit','fish','harvest','cat','shells','springs'] },
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
@@ -66,9 +66,9 @@ const QUESTS = {
     log:'Gather 12 wood for the hull, then return to Captain Brant at the dock.',
     doneText:'Aye, that\'s proper timber! *hammers* - there, she\'s watertight. Step aboard at the dock whenever you\'re ready and we\'ll cross to Greyharbor.',
     rw:{gold:30, item:{bread:2}, xp:{woodcut:180}} },
-  fittings:{ giver:'brant', title:'Iron Fittings', kind:'gather', need:{bar:4},
-    brief:'A hull without iron is a coffin with sails. Four iron bars - Bram smelts them, two ore and a wood apiece. Nails, brackets, and a new anchor chain.',
-    log:'Bring 4 iron bars (Bram smelts each from 2 ore + 1 wood).',
+  fittings:{ giver:'brant', title:'Iron Fittings', kind:'gather', need:{ore:8},
+    brief:'A hull without iron is a coffin with sails. Bring me eight lumps of iron ore - nails, brackets, and a new anchor chain, and I\'ll strike every one on my own little anvil. The north road\'s outcrops are thick with it.',
+    log:'Mine 8 iron ore for the Tidewalker\'s fittings, then return to Captain Brant.',
     doneText:'Good iron, well struck. She\'s watertight - now to fill her hold.',
     rw:{gold:25, item:{potion:2}, xp:{mining:150}}, unlocks:['provisions'] },
   provisions:{ giver:'brant', title:'Provisions for the Voyage', kind:'gather', need:{bread:4, cookedfish:4, potion:2},
@@ -83,10 +83,10 @@ const QUESTS = {
     rw:{gold:50, item:{boots:1}, xp:{melee:120, archery:120, magic:120}} },
   // - village side work -
   masterwork:{ giver:'bram', title:'The Smith\'s Masterwork', kind:'gather', need:{ore:5, crystal:2, hardwood:2},
-    brief:'Before you leave this isle I mean to forge something worth remembering. Five ore, two ember crystals, two hardwood for the charcoal. Do this and I\'ll start you a stock of bars, free.',
+    brief:'Before you leave this isle I mean to strike something worth remembering. Five ore, two ember crystals, two hardwood for the charcoal. Do this and I\'ll see you leave with something worth the carrying.',
     log:'Bring Bram 5 iron ore, 2 ember crystals, and 2 hardwood.',
-    doneText:'Look at that heat! Take these bars - first fruits of the masterwork. The rest becomes something the mainland will hear about.',
-    rw:{gold:20, item:{bar:2}, xp:{mining:200}} },
+    doneText:'Look at that heat! Take this - a tonic of my own tempering, and worth more than its weight. The rest becomes something the mainland will hear about.',
+    rw:{gold:40, item:{elixir:1}, xp:{mining:200}} },
   wolffold:{ giver:'willa', title:'Wolves at the Fold', kind:'kill', kill:{wolf:6},
     brief:'Six sets of tracks around the fold this morning. SIX. The cove pack\'s grown bold since the cold snap. Thin them before I lose a single lamb.',
     log:'Hunt 6 wolves (the pine cove to the northeast, and the deep forest).',
@@ -181,11 +181,11 @@ function spawnNPCs(){
       ["A bed, a hearth, and no questions past dark. Ten gold.",
        "Night's for wolves and worries. Neither gets past my door."],0.7);
       inn.nightOwl=true; return inn; })(),
-    makeNPC('willa','Willa the Farmer',60,60,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
+    makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
-    makeNPC('nia','Nia',49.5,60.5,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long'},
+    makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long'},
       ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0),
     // The Woodworker - the most forgettable soul on the island. (He is more than
     // that; the clues are planted from hour one and pay off far, far later.)
