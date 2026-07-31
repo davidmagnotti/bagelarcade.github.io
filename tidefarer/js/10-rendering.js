@@ -173,9 +173,9 @@ function render(){
           const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
           if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
             cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
-          // deeper water reads darker/greener; a caustic ribbon crawls the surface
-          if(t===T.DEEP){ cx.fillStyle='rgba(6,20,40,0.16)';
-            cx.beginPath(); cx.ellipse(sx, sy+3, 15, 6, 0, 0, TAU); cx.fill(); }
+          // (the old per-DEEP-tile dark ellipse was removed: it stamped one blob
+          //  on every tile = a regular grid. Depth darkening is now the smooth
+          //  overlapping blobs in elevTileFX/js-33.)
           const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
           if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
             cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }

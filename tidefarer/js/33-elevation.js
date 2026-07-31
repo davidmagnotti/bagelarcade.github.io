@@ -322,12 +322,38 @@ function elevDrawCliff(g,x,y,sx,sy){
 /* ---- per-tile grade pass: sun wash + contact shadows (AO) ----
    Static per world, drawn with the ground: in full quality it rides the live
    tile pass; in LOWFX it is baked once into the ground cache for free. */
-let _sunDia=null, _abyssDia=null, _shoalDia=null;
+let _sunDia=null, _abyssBlob=null, _shoalBlob=null;
 function _mkDia(col){
   const c=document.createElement('canvas'); c.width=TW; c.height=TH;
   const g=c.getContext('2d'); g.fillStyle=col;
   g.beginPath(); g.moveTo(TW/2,0); g.lineTo(TW,TH/2); g.lineTo(TW/2,TH); g.lineTo(0,TH/2);
   g.closePath(); g.fill(); return c;
+}
+/* A soft, feathered radial stamp ~1.6 tiles across. Drawn per water tile at a
+   depth-driven alpha and flattened to the iso plane, these OVERLAP their
+   neighbours - so the shoal->abyss darkening reads as one smooth gradient
+   instead of a mosaic of flat diamond tiles. */
+function _mkBlob(r,g,b){
+  const S=Math.round(TW*1.8), c=document.createElement('canvas'); c.width=S; c.height=S;
+  const gg=c.getContext('2d');
+  const grd=gg.createRadialGradient(S/2,S/2,S*0.06, S/2,S/2,S*0.5);
+  grd.addColorStop(0,'rgba('+r+','+g+','+b+',1)');
+  grd.addColorStop(0.6,'rgba('+r+','+g+','+b+',0.5)');
+  grd.addColorStop(1,'rgba('+r+','+g+','+b+',0)');
+  gg.fillStyle=grd; gg.fillRect(0,0,S,S);
+  return c;
+}
+function _drawBlob(g,blob,sx,sy){
+  const w=blob.width, h=blob.height;
+  g.save(); g.translate(sx,sy); g.scale(1,0.5); g.drawImage(blob,-w/2,-h/2); g.restore();
+}
+/* this water tile's depth averaged with its water neighbours - a continuous
+   ramp for the depth stamp, instead of the raw per-tile step */
+function _waterDepthSmooth(x,y){
+  let s=waterDepthLv(x,y), c=1;
+  const add=(nx,ny)=>{ const d=waterDepthLv(nx,ny); if(d>0){ s+=d; c++; } };
+  add(x+1,y); add(x-1,y); add(x,y+1); add(x,y-1);
+  return s/c;
 }
 function _aoBand(g,x0,y0,x1,y1,nx,ny,a){
   // two nested translucent bands fake a soft gradient without one
@@ -345,16 +371,21 @@ function elevTileFX(g,x,y,sx,sy){
   // depth-graded sea: bright turquoise shoals along the shore falling off
   // into a dark abyss offshore. Static per world - bakes free in LOWFX.
   if(water){
-    const wd=waterDepthLv(x,y);
+    // Use a BILINEAR depth (smoothed across the four tile corners) so the alpha
+    // itself no longer jumps tile-to-tile, then stamp it with the overlapping
+    // feathered blobs above - between them the sea grades smoothly instead of
+    // reading as squares.
+    const wd=_waterDepthSmooth(x,y);
     if(wd>0){
-      if(t===T.SHALLOW && wd<=1.5){
-        if(!_shoalDia) _shoalDia=_mkDia('#8fdce8');
-        g.globalAlpha=0.10; g.drawImage(_shoalDia, sx-TW/2, sy-TH/2);
+      if(wd<2.4){   // bright turquoise shoals near shore, fading with depth
+        if(!_shoalBlob) _shoalBlob=_mkBlob(150,224,236);
+        const sa=0.22*Math.max(0,(2.4-wd)/2.4);
+        if(sa>0.005){ g.globalAlpha=sa; _drawBlob(g,_shoalBlob,sx,sy); }
       }
-      const a=Math.min(0.34,(wd-0.8)*0.055);
+      const a=Math.min(0.46,(wd-0.5)*0.05);   // darkening into the abyss offshore
       if(a>0.01){
-        if(!_abyssDia) _abyssDia=_mkDia('#050f20');
-        g.globalAlpha=a; g.drawImage(_abyssDia, sx-TW/2, sy-TH/2);
+        if(!_abyssBlob) _abyssBlob=_mkBlob(6,16,30);
+        g.globalAlpha=a; _drawBlob(g,_abyssBlob,sx,sy);
       }
       g.globalAlpha=1;
     }
