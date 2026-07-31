@@ -194,6 +194,32 @@ function _shade(hex,f){
   const n=parseInt(hex.slice(1),16);
   return 'rgb('+(((n>>16)&255)*f|0)+','+(((n>>8)&255)*f|0)+','+((n&255)*f|0)+')';
 }
+/* the tile TOP tone (matches PAL in js/03-art.js) - used to fold gentle inland
+   steps in the ground's own colour instead of exposing a rock cliff face */
+function _topCol(t){
+  switch(t){
+    case T.SAND:  return '#c8b482';
+    case T.SNOW:  return '#e9eef6';
+    case T.ICE:   return '#b7d6e8';
+    case T.RUIN:  return '#6f6a63';
+    case T.PATH:  return '#9a7d51';
+    case T.SOIL:  return '#61411f';
+    case T.PLANK: return '#7d5834';
+    case T.FOREST:return '#3e6030';
+    default:      return '#5b8544';   // grass
+  }
+}
+/* Fill a gentle inland step as a soft fold in the ground's own tone (no rock,
+   no turf lip, no cast shadow) so a rolling slope reads as rolling ground - not
+   a stack of little terraces. Only the coast (a WATER neighbour) still gets the
+   dramatic textured cliff from _cliffFace. */
+function _softFace(g,x0,y0,x1,y1,Lpx,npx,fill){
+  const drop=Lpx-npx; if(drop<=0.4) return;
+  const yb0=y0+drop, yb1=y1+drop;
+  g.fillStyle=fill;
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.lineTo(x1,yb1); g.lineTo(x0,yb0);
+  g.closePath(); g.fill();
+}
 /* deterministic per-tile jitter so strata don't swim frame to frame */
 function _tHash(x,y){ return (((x*73856093)^(y*19349663))>>>0); }
 
@@ -253,28 +279,38 @@ function _cliffFace(g,x,y,x0,y0,x1,y1,Lpx,npx,base,lip,rimA,crease){
 function elevDrawCliff(g,x,y,sx,sy){
   const L=heightLv(x,y); if(L<=0.02) return;
   const Lpx=L*ELEV.HSTEP, HW=TW/2, HH=TH/2, t=G.map[y*MAPW+x];
-  const col=_cliffCols(t), lip=_lipCol(t), crease=_creaseCol(t);
+  const col=_cliffCols(t), lip=_lipCol(t), crease=_creaseCol(t), top=_topCol(t);
   const nR=heightLv(x+1,y);           // front-right neighbour (down-right in iso)
   if(nR < L-0.02){
     const npx=nR*ELEV.HSTEP;
-    _cliffFace(g,x,y, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, col[0], lip, 0.30, crease);
-    // wet stain where the sunlit face steps into the sea
-    const nt=tileAt(x+1,y);
-    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
-      g.fillStyle='rgba(18,30,42,0.35)';
-      g.beginPath(); g.moveTo(sx+HW,sy-npx); g.lineTo(sx,sy+HH-npx);
-      g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
+    const nt=tileAt(x+1,y), wet=(nt===T.DEEP||nt===T.SHALLOW);
+    if(wet){
+      // the coast: a real, textured cliff dropping into the sea
+      _cliffFace(g,x,y, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, col[0], lip, 0.30, crease);
+      if(Lpx-npx>4){   // wet stain where the sunlit face steps into the water
+        g.fillStyle='rgba(18,30,42,0.35)';
+        g.beginPath(); g.moveTo(sx+HW,sy-npx); g.lineTo(sx,sy+HH-npx);
+        g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
+      }
+    } else {
+      // inland: a gentle fold in the ground's own tone (sunlit SE face)
+      _softFace(g, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, _shade(top,0.97));
     }
   }
   const nL=heightLv(x,y+1);           // front-left neighbour (down-left in iso)
   if(nL < L-0.02){
     const npx=nL*ELEV.HSTEP;
-    _cliffFace(g,x,y, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, col[1], lip, 0.10, crease);
-    const nt=tileAt(x,y+1);
-    if((nt===T.DEEP||nt===T.SHALLOW) && Lpx-npx>4){
-      g.fillStyle='rgba(18,30,42,0.35)';
-      g.beginPath(); g.moveTo(sx,sy+HH-npx); g.lineTo(sx-HW,sy-npx);
-      g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
+    const nt=tileAt(x,y+1), wet=(nt===T.DEEP||nt===T.SHALLOW);
+    if(wet){
+      _cliffFace(g,x,y, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, col[1], lip, 0.10, crease);
+      if(Lpx-npx>4){
+        g.fillStyle='rgba(18,30,42,0.35)';
+        g.beginPath(); g.moveTo(sx,sy+HH-npx); g.lineTo(sx-HW,sy-npx);
+        g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
+      }
+    } else {
+      // inland: the shaded SW face of the fold, a touch darker for soft volume
+      _softFace(g, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, _shade(top,0.85));
     }
   }
 }
@@ -331,9 +367,12 @@ function elevTileFX(g,x,y,sx,sy){
   // (works on water too - the cliff's shade pooling at its foot in the sea).
   // Threshold at a REAL step (>0.5 level): the smoothed inland gradients sit
   // below it, so rolling ground stays clean and only true cliffs ground-shadow.
+  // Threshold at a REAL cliff step (>1.3 level): gentle inland slopes (which now
+  // fold in the ground's own tone) must NOT ground-shadow, or the contact bands
+  // stack back into terrace lines. Only true cliffs pool shade at their foot.
   const dL=heightLv(x-1,y)-L, dR=heightLv(x,y-1)-L;
-  if(dL>0.5) _aoBand(g, sx-HW,cy, sx,cy-HH, 0.894,0.447, Math.min(0.22,(dL-0.5)*0.14));
-  if(dR>0.5) _aoBand(g, sx,cy-HH, sx+HW,cy, -0.894,0.447, Math.min(0.22,(dR-0.5)*0.14));
+  if(dL>1.3) _aoBand(g, sx-HW,cy, sx,cy-HH, 0.894,0.447, Math.min(0.22,(dL-1.3)*0.16));
+  if(dR>1.3) _aoBand(g, sx,cy-HH, sx+HW,cy, -0.894,0.447, Math.min(0.22,(dR-1.3)*0.16));
 }
 
 // expose for other modules / the console
