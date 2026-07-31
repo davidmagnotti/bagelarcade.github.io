@@ -5740,6 +5740,9 @@ function beginOpenChest(b){
 function openChest(b){
   if(b.opened){ toast('Empty - already plundered.'); return; }
   b.opened=true; b.kind='chestOpen';
+  // tool-gate content persistence: any chest carrying a stable tgid records itself
+  // opened, so it is not re-placed when the world regenerates on reload (35-toolgate-content.js)
+  if(b.tgid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[b.tgid]=1; }
   // THE DROWNED VAULT'S REWARD: the Pearl of the Deep - the gift to DIVE, to cross the
   // drowned water Vath's flood raised over the old islands.
   if(b.divegift){
@@ -5937,6 +5940,17 @@ function openChest(b){
     if(Math.random()<0.3) give('elixir',1);
     banner('A CACHE OF TONICS', n+' EMBER TONIC'+(n>1?'S':''));
     shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',14,2.2); Snd.quest&&Snd.quest();
+    setTimeout(autoSave,300); return;
+  }
+  // TOOL-GATE SIDE-CACHE: the reward walled behind an ironwood/basalt gate (35-toolgate-content.js)
+  if(b.tgcache){
+    const L=b.tgcache;
+    if(L==='charm'){ give('charm',1); giveGold(rndi(40,70)); banner('AN OLD EMBER CHARM','+3 DAMAGE TO EVERY ATTACK'); }
+    else if(L==='trove'){ giveGold(rndi(180,260)); give('crystal',2); give('pearl',1); banner('A HIDDEN TROVE','COIN, CRYSTAL, AND A PEARL'); }
+    else if(L==='materials'){ give('hardwood',3); give('ore',3); give('bar',2); giveGold(rndi(30,60)); banner("A DELVER'S STASH",'HEARTWOOD, ORE, AND IRON BARS'); }
+    else if(L==='elixirs'){ give('elixir',3); giveGold(rndi(30,60)); banner("A HEALER'S CACHE",'THREE ELIXIRS'); }
+    else { giveGold(rndi(60,120)); give('potion',2); banner('A HIDDEN CACHE','COIN AND TONICS'); }
+    shockwave(b.x,b.y,'rgba(240,220,150,0.85)',48); burst(b.x,b.y-0.5,'#ffe9a8',18,2.6); Snd.levelup&&Snd.levelup();
     setTimeout(autoSave,300); return;
   }
   // THE HOARFROST HOARD'S true prize: the chart that turns the isle-by-isle curse-lifting
@@ -6163,6 +6177,9 @@ function switchWorld(id){
     G.nodes=[]; G.decor=[]; G.plots=[]; G.npcs=[]; G.mobs=[]; G.foam=[]; G.crows=[];
     G.decals=[]; G.cat=null; G.critters=[]; G.forgePos=null;
     def.gen();
+    // seed the tiered-tool gates & side-caches for this freshly-generated world,
+    // skipping any already felled/looted (persisted in P.story.tg). See 35-toolgate-content.js
+    if(typeof placeToolgates==='function') placeToolgates(id);
   }
   G.worldId=id;
   if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once

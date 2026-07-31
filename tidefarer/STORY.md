@@ -296,11 +296,29 @@ main routes** are the intended placement (with care to avoid dead-ends).
 **Test now:** dev menu → *Gathering tools & gates* → "Sandbox: spawn gated walls
 here," chop/mine to feel the bounce, then "Grant Rivenedge Axe / Cragbreaker Pick."
 
-**Still open (content, not code):** place the gated `addGateNode('ironwood'|'basalt',
-x,y)` walls across the isles and the two gift chests in their dungeons — visible but
-uncuttable on the first pass, so returning with the upgraded tool is the payoff.
-Persisting a felled gate across save/reload wants a per-gate story flag (same pattern
-as the dungeon-mouth state).
+#### Placed in the world — [built] (`js/35-toolgate-content.js`)
+
+`placeToolgates(id)` runs from `switchWorld` on each fresh world-gen and seeds:
+
+- **Gated side-caches with item rewards.** A gate walls off a **natural enclosed
+  pocket** (a peninsula/nook, proven small & content-free by a flood-fill so gating
+  it can *never* soft-lock), or, failing that, a **carved dead-end alcove**. A reward
+  chest sits inside (`tgcache` loot: an Ember Charm, a trove, a materials stash, three
+  elixirs…). Configured on **Barik, Sunward, Windsurf** (and Emberwick/Stormreach/
+  Frozen where geography allows) — **7+ caches** in a typical seed. Verified by a
+  reachability audit: every chest is unreachable while its gate stands and reachable
+  once it's cut, and only the small pockets are ever sealed.
+- **The two tools**, in fitting dungeons: `{axegift}` in the **Undermaw** (Barik),
+  `{pickgift}` in the **Emberdeep** (Mount Kea).
+
+**Persistence:** a felled gate (`n.gid`) and a looted cache (`b.tgid`) record into
+`P.story.tg`, which saves with `P.story`; on reload the world regen's and
+`placeToolgates` skips anything already felled/looted, so opened caches stay open and
+taken tools stay taken.
+
+**Still open:** truly *mandatory* hard gates on a critical path (as opposed to gated
+side-pockets) — those want a per-site, human reachability pass so the unlocking tool
+is always obtainable first; left as authored content.
 
 ### Bosses & new dungeons — [new]
 

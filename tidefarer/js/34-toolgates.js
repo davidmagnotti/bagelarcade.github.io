@@ -58,6 +58,8 @@ function gateBlocked(n){
 function clearGateNode(n){
   var cfg=GATES[n.gate]||{};
   n.dead=true; n.gone=true; setSolid(n.tx,n.ty,0);
+  // persist: a placed gate (n.gid) stays felled across save/reload (35-toolgate-content.js)
+  if(n.gid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[n.gid]=1; }
   if(typeof invalidateScenery==='function') invalidateScenery();
   shockwave(n.x,n.y,cfg.glow||'rgba(200,200,200,0.8)',40);
   burst(n.x,n.y-(cfg.kind==='rock'?0.5:1.4), cfg.spark||'#ccc', 18, 2.6);
