@@ -118,13 +118,17 @@ function genWorld(){
   for(let y=61;y<=63;y++) for(let x=34;x<=41;x++){
     if(tileAt(x,y)===T.DEEP) setTile(x,y,T.SHALLOW);
   }
-  // A second shallow lane runs SOUTH off the driftwood beach, out across the
-  // open water to a lonely islet - reachable only by floating it on the wind-
-  // sail. There's a cache waiting on it (the chest is placed in placeObjects).
-  for(let y=82;y<=87;y++) for(let x=25;x<=27;x++){ if(tileAt(x,y)===T.DEEP) setTile(x,y,T.SHALLOW); }
-  carveDisc(26,88,4,T.SHALLOW,false);   // shoals ringing the islet
-  carveDisc(26,88,3,T.SAND,false);      // its pale beach
-  carveDisc(26,88,2,T.GRASS,false);     // a scrap of green to stand on
+  // A long shallow lane runs far SOUTH off the driftwood beach, out across the
+  // open sea to a lonely islet - reachable only by floating it on the wind-sail.
+  // A gentle reef-curve (not a dead-straight canal) with a sandbar stepping-
+  // stone partway, leading to a cache (the chest is placed in placeObjects).
+  for(let y=82;y<=100;y++){
+    const cx0 = 26 + Math.round(2.4*Math.sin((y-82)*0.32));   // gentle S-curve
+    for(let dx=-1;dx<=1;dx++){ const x=cx0+dx; if(inb(x,y) && tileAt(x,y)===T.DEEP) setTile(x,y,T.SHALLOW); }
+  }
+  carveDisc(26,101,5,T.SHALLOW,false);  // broad shoals ringing the remote islet
+  carveDisc(26,101,3,T.SAND,false);     // its pale beach
+  carveDisc(26,101,2,T.GRASS,false);    // a scrap of green to stand on
   shapeHollowKingApproach();
 }
 
@@ -224,12 +228,13 @@ function placeObjects(){
   // beach, that you can only reach by floating the shallow lane to it on the
   // wind-sail. A prize for the player who spots the light water and follows it.
   {
-    const ix=26, iy=88;
+    const ix=26, iy=101;
     G.nodes = G.nodes.filter(n=>dist(n.x,n.y,ix,iy)>2.4);   // keep the tiny islet clear
-    G.decor.push({kind:'chest', x:ix+0.5, y:iy+0.3, opened:false, rich:24});
+    G.decor.push({kind:'chest', x:ix+0.5, y:iy+0.3, opened:false, rich:28});
     setSolid(ix, iy, 1);
-    G.decor.push({kind:'tuft',   x:ix-1.2, y:iy+0.9, ph:0.7});
-    G.decor.push({kind:'flower', x:ix+1.3, y:iy-0.7, ph:2.1, c:'#ffd76a'});
+    G.decor.push({kind:'stump',  x:ix-1.3, y:iy-1.0});
+    G.decor.push({kind:'tuft',   x:ix-1.1, y:iy+1.0, ph:0.7});
+    G.decor.push({kind:'flower', x:ix+1.3, y:iy-0.6, ph:2.1, c:'#ffd76a'});
   }
   // smuggler's cove: an abandoned camp - wolves keep it now
   const cv2=ZONES.cove;
