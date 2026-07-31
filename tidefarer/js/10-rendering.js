@@ -225,6 +225,10 @@ function render(){
   }
   if(fxOn('foam')) drawFoam(minX,maxX,minY,maxY);
   if(fxOn('decals')) drawDecals(minX,maxX,minY,maxY);
+  // ground-plane atmosphere: daytime hearth light cast on the grass, building
+  // contact AO, and terrain break-up scatter - drawn UNDER the actors that
+  // stand on them. (Defined in js/34-atmosphere.js; full-detail worlds only.)
+  if(typeof atmoGround==='function') atmoGround(minX,maxX,minY,maxY,EL);
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
