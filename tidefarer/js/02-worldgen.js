@@ -294,14 +294,26 @@ function findOpenNear(x,y,rad){
 function addBuilding(kind,x,y,label){
   const b={kind,x:x+0.5,y:y+0.5,label};
   G.decor.push(b);
-  // Footprints are [width,depth]. The sprites are ~2.7 tiles wide and centred on
-  // the base tile, but a [2,2] block only covered the west + base columns, leaving
-  // the EAST half of the house with no collision (you could walk in through that
-  // side). Widen the broad residential sprites to a symmetric 3-wide base so the
-  // whole visible base is solid; the front (south) row stays open so the door is
-  // still reachable.
-  const fp = {house:[3,2],house2:[3,2],igloo:[3,2],forge:[3,2],barn:[3,2],tower:[2,2],castle:[6,3],hut:[2,2],volcano:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0],resort:[6,4],windmill:[3,3],waterwheel:[4,3],fruitstand:[1,1],stall:[1,1],bazaar:[1,1]}[kind]||[0,0];
-  for(let dy=0;dy<fp[1];dy++) for(let dx=0;dx<fp[0];dx++) setSolid(Math.floor(x)+dx-Math.floor(fp[0]/2), Math.floor(y)+dy-Math.floor(fp[1]/2), 1);
+  // Footprints are [width,depth] in tiles. How the block is SEATED on the anchor
+  // depends on the sprite (see nwSeated below): the pitched-roof houses seat their
+  // front corner on the anchor, everything else seats centred. The front (south)
+  // row is always left open so the door stays reachable.
+  const fp = {house:[2,2],house2:[2,2],igloo:[3,2],forge:[2,2],barn:[3,3],tower:[2,2],castle:[6,3],hut:[2,2],volcano:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0],resort:[6,4],windmill:[3,3],waterwheel:[4,3],fruitstand:[1,1],stall:[1,1],bazaar:[1,1]}[kind]||[0,0];
+  const fx=Math.floor(x), fy=Math.floor(y);
+  // The pitched-roof sprites (house/house2/forge/barn) are drawn as iso boxes
+  // whose FRONT (south-east) corner seats on the anchor tile and whose bulk
+  // rises to the north-west. Their old footprint was centred on the anchor, so
+  // the solid tiles sat a tile east/south of the drawn walls - that mismatch is
+  // exactly the "invisible wall out front" and "walk in through the back" the
+  // collision suffered. Anchor those footprints at the front corner and grow
+  // them NW instead, so the solids line up with what you see. Everything else
+  // (towers, the keep, round huts...) keeps its base centred on the anchor.
+  const nwSeated = (kind==='house'||kind==='house2'||kind==='forge'||kind==='barn');
+  for(let dy=0;dy<fp[1];dy++) for(let dx=0;dx<fp[0];dx++){
+    const tx = nwSeated ? fx-(fp[0]-1)+dx : fx+dx-Math.floor(fp[0]/2);
+    const ty = nwSeated ? fy-(fp[1]-1)+dy : fy+dy-Math.floor(fp[1]/2);
+    setSolid(tx, ty, 1);
+  }
   return b;
 }
 function bakeSolids(){

@@ -462,9 +462,10 @@ function placeObjectsMain(){
   addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
   G.decor.push({kind:'pillar',x:CK.x-4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x-5,CK.y-2,1);
   G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
-  // Aelin's Spire - the magic tower
+  // Aelin's Spire - the magic tower. It stands twice as tall (like Orin's tower on
+  // Emberwick) so the realm's magician gets a proper spire, not a stubby one.
   const SP=ZONES.spire;
-  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave");
+  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;
   addBuilding('lamp',SP.x-2,SP.y+2,'');
   // the archery range, on Greyharbor's edge
   addBuilding('house', V.x+9,V.y+7,"Rook's Range");

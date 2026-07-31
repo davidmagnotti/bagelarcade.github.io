@@ -110,6 +110,29 @@ function cookSpeak(){
   setDialog('“The kitchen never sleeps, love. Thirty years I’ve fed a court of three and a garrison of two hundred - and not once has anyone finished their greens.”',
     [{label:'Farewell', ghost:true, fn:closeDialog}]);
 }
+// A locked door speaks up: instead of a toast that fades on its own, a locked
+// door now opens a small dialog the player must dismiss with OK - so it never
+// slips past unread when clicking "Enter" appears to do nothing.
+function lockedDoorDialog(msg, name){
+  P.click=null;
+  dlg.open=true; dlg.npc=null;
+  const win=document.getElementById('dialog'); if(win) win.style.display='block';
+  const nm=document.getElementById('dname'); if(nm) nm.textContent=name||'The door is locked';
+  const pc=document.getElementById('dportrait');
+  if(pc){ const pg=pc.getContext('2d'), W=pc.width, H=pc.height;
+    // a simple brass padlock on a dark ground
+    pg.fillStyle='#1b1611'; pg.fillRect(0,0,W,H);
+    pg.strokeStyle='#c9a24e'; pg.lineWidth=4; pg.lineCap='round';
+    pg.beginPath(); pg.arc(W/2,H*0.40,W*0.15,Math.PI,0); pg.stroke();          // shackle
+    pg.fillStyle='#c9a24e';
+    if(pg.roundRect){ pg.beginPath(); pg.roundRect(W/2-W*0.20,H*0.40,W*0.40,H*0.34,4); pg.fill(); }
+    else pg.fillRect(W/2-W*0.20,H*0.40,W*0.40,H*0.34);
+    pg.fillStyle='#1b1611'; pg.beginPath(); pg.arc(W/2,H*0.55,3.5,0,TAU); pg.fill();
+    pg.fillRect(W/2-2,H*0.55,4,H*0.11);                                          // keyhole
+  }
+  if(typeof Snd!=='undefined' && Snd.step) Snd.step(5);
+  setDialog(msg, [{label:'OK', ghost:true, fn:closeDialog}], true);
+}
 function enterHouse(b){
   if(G.interior) return;
   if(b.grand){ // the Aldermere palace GATE - guarded; you need the King's leave
@@ -140,8 +163,8 @@ function enterHouse(b){
   if(b.kitchen){ // the palace kitchen - its own door and room, round the west side
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     if(qs('kitchenrun')!=='active' && qs('kitchenrun')!=='done' && !(P.story&&P.story.palaceLeave)){
-      toast('The kitchen door is barred - crown’s tradesfolk only. “Bring me Odo’s crate and I’ll open up,” calls a voice within, over the clatter of pans.',4600);
-      Snd.step(5); return;
+      lockedDoorDialog('The kitchen door is barred - crown’s tradesfolk only. “Bring me Odo’s crate and I’ll open up,” calls a voice within, over the clatter of pans.','The kitchen door is barred');
+      return;
     }
     const I=kitchenInterior(); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
     P.click=null; P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
@@ -152,20 +175,20 @@ function enterHouse(b){
   // blue-cap quest). Only then does he open it - and the scrying orb inside is
   // what teaches the dash, so the tower is the deliberate next step after the staff.
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('orin') && qs('mushrooms')!=='done'){
-    toast('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>',4200);
-    Snd.step(5); return;
+    lockedDoorDialog('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>','The tower door is warded');
+    return;
   }
   // Aelin's Spire is a school, not a lobby: the door only knows students. Train
   // with her on the range at least once and it opens (the scrying orb within - the
   // "Attune" - then gives its one-time boon, as every tower orb does).
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire') && !(P.prog && P.prog.spireTrainedEver)){
-    toast('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”',4600);
-    Snd.step(5); return;
+    lockedDoorDialog('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”','The Spire door is sealed');
+    return;
   }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
   // the Mint...). b.locked keeps the old Vael war-tent default.
-  if(b.lockMsg){ toast(b.lockMsg,3800); Snd.step(5); return; }
-  if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
+  if(b.lockMsg){ lockedDoorDialog(b.lockMsg,'The door is locked'); return; }
+  if(b.locked){ lockedDoorDialog('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.','The war-tent is barred'); return; }
   // you always dismount at the door - no riding indoors
   if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
   const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
@@ -185,10 +208,10 @@ function enterHouse(b){
       return;
     }
     // b.closedMsg: a custom "shut for the night" line for this door; else a generic one
-    toast(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
+    lockedDoorDialog(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
       '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
-      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)],3600);
-    Snd.step(5); return;
+      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)],'The door is locked for the night');
+    return;
   }
   const kinds={
     house:{line:'Dried herbs hang from every beam. It smells of thyme and woodsmoke.'},
@@ -634,11 +657,30 @@ function drawFurniture(f,s){
         cx.fillStyle='#7fd4ff'; cx.beginPath(); cx.arc(s.x,s.y-24,6,0,TAU); cx.fill();
         cx.fillStyle='#dff4ff'; cx.beginPath(); cx.arc(s.x-2,s.y-26,2,0,TAU); cx.fill(); }
       break;
-    case 'books': case 'shelf':
-      iBox(s,1.6,0.55,22,'#4a3322','#3a2818','#332214');
-      for(let i=0;i<5;i++){ cx.fillStyle=['#8f4a3a','#3e6f8f','#5a4472','#4f6032','#8a6d30'][i];
-        cx.fillRect(s.x-16+i*7,s.y-20,5,12); }
+    case 'books': case 'shelf': {
+      const bw=1.6, bd=0.55, bh=22;
+      iBox(s,bw,bd,bh,'#4a3322','#3a2818','#332214');
+      // Stand the books ALONG the shelf's angled front-top edge so their bases
+      // follow the iso slope, instead of sitting on a flat screen line (which
+      // read as books floating off a tilted shelf). Each spine is a little
+      // upright slab whose foot rides the same edge the shelf top does.
+      const edge=(dxw)=>({x:s.x+(dxw-bd/2)*(TW/2), y:s.y+(dxw+bd/2)*(TH/2)-bh});
+      const cols=['#8f4a3a','#3e6f8f','#5a4472','#4f6032','#8a6d30','#7a5a8a'];
+      const n=6;
+      for(let i=0;i<n;i++){
+        const t0=(-bw/2)+bw*(i+0.10)/n, t1=(-bw/2)+bw*(i+0.90)/n;
+        const p0=edge(t0), p1=edge(t1);
+        const hgt=13+((i*7)%4);   // a little height variation along the row
+        cx.fillStyle=cols[i%cols.length];
+        cx.beginPath();
+        cx.moveTo(p0.x,p0.y); cx.lineTo(p1.x,p1.y);
+        cx.lineTo(p1.x,p1.y-hgt); cx.lineTo(p0.x,p0.y-hgt); cx.closePath(); cx.fill();
+        // a warm highlight along each spine's top edge
+        cx.strokeStyle='rgba(255,240,210,0.16)'; cx.lineWidth=1;
+        cx.beginPath(); cx.moveTo(p0.x,p0.y-hgt); cx.lineTo(p1.x,p1.y-hgt); cx.stroke();
+      }
       break;
+    }
     case 'rug':
       cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5); cx.rotate(0);
       cx.fillStyle='rgba(143,74,58,0.85)'; cx.beginPath(); cx.arc(0,0,34,0,TAU); cx.fill();
