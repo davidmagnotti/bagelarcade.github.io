@@ -5244,11 +5244,12 @@ function placeObjectsSunwardDeep(){
   const ventField=(x0,y0,x1,y1,step)=>{ for(let gy=y0; gy<=y1; gy+=(step||3)) for(let gx=x0; gx<=x1; gx+=5){
     const jx=gx+((Math.floor(gy/3)%2)? 2:0);   // stagger alternate rows
     if(inb(jx,gy) && !solidAt(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; } } };
-  // ---- THE LOCKS: a bellows-lever in room 1 raises gate A; a heat-plate in room 3 raises gate B ----
-  dungGate('sunA', 78, 34, 38, 'The bellows-lever drops - the iron gate hauls up in a gust of heat.');
+  // ---- THE LOCKS: clearing THE SLAG YARD (room 1) of its guardians raises gate A;
+  // a heat-plate in room 3 raises gate B. (No lever - the fight is the key.) ----
+  dungGate('sunA', 78, 34, 38, 'The last of the yard\'s guardians falls - the iron gate hauls up in a gust of heat.');
   dungGate('sunB', 58, 34, 38, 'The heat-plate glows and sinks - the inner gate grinds open.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'sunA', on:false, label:'a bellows-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'sunB', pressed:false, label:'a heat-plate'});
+  G._sunRoom1Open=0;
   // ---- ROOM 2 - THE FORGE CAUSEWAY: the lava is gathered into one POOL, crossed only on a
   // spinning basalt platform. Board it at the south rim, ride it over the lava to the north rim,
   // and TIME your crossing so the pool's lava-spouts don't catch you on the arm. ----
@@ -5282,8 +5283,8 @@ function placeObjectsSunwardDeep(){
 }
 function spawnMobsSunwardDeep(){
   if(!(P.story && P.story.ashenForgeDone)){
-    // ROOM 1 combat: a scorpion and ash-wracked dead guarding the bellows-lever
-    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: a scorpion and ash-wracked dead guarding the way up - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.sunRoom1=1; mm.respawnT=-1; } } }
     // ROOM 3: a stoker guarding the heat-plate
     for(const [zx,zy,k] of [[28,64,'skeleton'],[44,64,'scorpion']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // ROOM 5: a last stand on the clinker stair
@@ -5347,6 +5348,7 @@ function updateSunwardDeep(dt){
   }
   forgeTickErupts(dt);
   dungPlateCheck();
+  sunRoom1Check();
   forgeSealCheck();
   for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
 }
@@ -5361,6 +5363,14 @@ function forgeRespawn(){
   G._forgePlunge=null; const c=G._forgeStart||{sx:36.5,sy:62.5};
   P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
   if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+// THE SLAG YARD lock: once every room-1 guardian is dead, gate A hauls up. Fail-safe: if none
+// spawned (a cleared run, or no open tile), the gate simply opens so the way is never barred.
+function sunRoom1Check(){
+  if(G._sunRoom1Open) return;
+  const g=G.decor.find(d=>d.kind==='dgate' && d.gate==='sunA');
+  if(!g || g.open){ G._sunRoom1Open=1; return; }
+  if(!G.mobs.some(m=>m.sunRoom1 && !m.dead)){ G._sunRoom1Open=1; dungOpenGate('sunA'); }
 }
 function forgeSealCheck(){
   if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
