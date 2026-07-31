@@ -189,7 +189,22 @@ function spawnNPCs(){
       ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0),
     // The Woodworker - the most forgettable soul on the island. (He is more than
     // that; the clues are planted from hour one and pay off far, far later.)
-    (()=>{ const w=makeNPC('woody','The Woodworker',57.5,50.5,
+    // Once he remembers he is Prince Jaist (royalGarb), he has left the woodpile for
+    // good: he holds the way home down at the boat, watching the water - no more
+    // humming his logs into a five-point star. On every Act II return to Emberwick you
+    // land beside him and the boat, the same watch he keeps on the other returned isles.
+    (()=>{
+      if(P.story && P.story.royalGarb){
+        const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
+        const j=makeNPC('woody','The Woodworker', sp[0], sp[1],
+          {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short'},
+          ["Go on and see to the old rock - I'll keep the boat and our way home, same as ever.",
+           "Vath's curses have had free run of these islands while we were gone. Undo what you can, Joan; I'll hold the tideline here.",
+           "Strange, standing on Emberwick and knowing at last it's mine to leave. I'll be right here by the water when you're ready to sail."],0);
+        j.nightOwl=true; j.face={x:-1,y:0};   // watching the water, holding the landing - no woodpile, no humming
+        return j;
+      }
+      const w=makeNPC('woody','The Woodworker',57.5,50.5,
       {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short'},
       ['Nice day for it. Every day is a nice day for it, really.',
        'I carve little boats, mostly. For someone. I forget who - but they will turn up.',

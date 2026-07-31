@@ -82,6 +82,11 @@ function clearMobs(){
 function enterReturnPhase(){
   P.story=P.story||{}; P.unlocked=P.unlocked||{}; P.spells=P.spells||{};
   P.story.act=Math.max(P.story.act||1,2); P.story.act2=1;
+  // Act I is closed by the time Act II opens: the mask is off, the prince is remembered,
+  // and the throne fell. Set those so the return phase is coherent (Jaist reads as Prince
+  // Jaist and holds the boat on Emberwick, not the woodpile).
+  P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
+  P.story.royalGarb=1; P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1; P.story.framed=1;
   P.story.vathMet=1; P.story.vathNamed=1; P.story.reachArrived=1;
   P.story.reachBossDown=1; P.story.tombBossDown=1;                 // Stormreach cleared (opens the Frozen Isle)
   P.story.frostFreed=1; P.story.deepDone=1; P.story.veilTome=1;    // Frozen Isle done, the rune found
