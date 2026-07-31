@@ -293,8 +293,11 @@ function elevDrawCliff(g,x,y,sx,sy){
         g.lineTo(sx,sy+HH-npx-3.5); g.lineTo(sx+HW,sy-npx-3.5); g.closePath(); g.fill();
       }
     } else {
-      // inland: a gentle fold in the ground's own tone (sunlit SE face)
-      _softFace(g, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, _shade(top,0.97));
+      // inland: a gentle fold in the ground's own tone (sunlit SE face). Shade
+      // scales with the DROP so the tiny sub-tile steps of a rolling slope stay
+      // near-invisible (no terrace lines) and only a real inland roll picks up a
+      // whisper of volume.
+      _softFace(g, sx+HW,sy-Lpx, sx,sy+HH-Lpx, Lpx,npx, _shade(top, 1-Math.min(0.012,(Lpx-npx)*0.004)));
     }
   }
   const nL=heightLv(x,y+1);           // front-left neighbour (down-left in iso)
@@ -309,8 +312,9 @@ function elevDrawCliff(g,x,y,sx,sy){
         g.lineTo(sx-HW,sy-npx-3.5); g.lineTo(sx,sy+HH-npx-3.5); g.closePath(); g.fill();
       }
     } else {
-      // inland: the shaded SW face of the fold, a touch darker for soft volume
-      _softFace(g, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, _shade(top,0.85));
+      // inland: the shaded SW face - a touch darker than the SE for soft volume,
+      // but likewise drop-scaled so gentle steps don't etch a diagonal line.
+      _softFace(g, sx,sy+HH-Lpx, sx-HW,sy-Lpx, Lpx,npx, _shade(top, 1-Math.min(0.045,(Lpx-npx)*0.009)));
     }
   }
 }
