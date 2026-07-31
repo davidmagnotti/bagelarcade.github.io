@@ -140,7 +140,7 @@ function enterHouse(b){
   if(b.kitchen){ // the palace kitchen - its own door and room, round the west side
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     if(qs('kitchenrun')!=='active' && qs('kitchenrun')!=='done' && !(P.story&&P.story.palaceLeave)){
-      toast('The kitchen door is barred - crown’s tradesfolk only. “Bring me Odo’s crate and I’ll open up,” calls a voice within, over the clatter of pans.',4600);
+      blockMsg('The kitchen door is barred - crown’s tradesfolk only. “Bring me Odo’s crate and I’ll open up,” calls a voice within, over the clatter of pans.');
       Snd.step(5); return;
     }
     const I=kitchenInterior(); I.ret={x:P.x,y:P.y+0.3}; G.interior=I;
@@ -152,20 +152,20 @@ function enterHouse(b){
   // blue-cap quest). Only then does he open it - and the scrying orb inside is
   // what teaches the dash, so the tower is the deliberate next step after the staff.
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('orin') && qs('mushrooms')!=='done'){
-    toast('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>',4200);
+    blockMsg('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>');
     Snd.step(5); return;
   }
   // Aelin's Spire is a school, not a lobby: the door only knows students. Train
   // with her on the range at least once and it opens (the scrying orb within - the
   // "Attune" - then gives its one-time boon, as every tower orb does).
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire') && !(P.prog && P.prog.spireTrainedEver)){
-    toast('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”',4600);
+    blockMsg('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”');
     Snd.step(5); return;
   }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
   // the Mint...). b.locked keeps the old Vael war-tent default.
-  if(b.lockMsg){ toast(b.lockMsg,3800); Snd.step(5); return; }
-  if(b.locked){ toast('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.',3400); Snd.step(5); return; }
+  if(b.lockMsg){ blockMsg(b.lockMsg); Snd.step(5); return; }
+  if(b.locked){ blockMsg('The <b>Vael war-tent</b> is barred from within - the Castellan’s ground, and no friend of Barik walks in unbidden.'); Snd.step(5); return; }
   // you always dismount at the door - no riding indoors
   if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
   const nightL=nightAmount(); const lblL=String(b.label||'').toLowerCase();
@@ -180,14 +180,14 @@ function enterHouse(b){
       give('bread',1);
       const fadeH=document.getElementById('fadeOv'); fadeH.style.opacity=1; Snd.tone(200,0.5,'sine',0.04,-60);
       setTimeout(()=>{ G.dayT=0.09; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0; refreshUI(); autoSave();
-        toast('You knock. \u201cStorm-late, are you? Come in, the hearth is yours till dawn.\u201d They wake you with <b>bread</b> at first light.',5200);
+        blockMsg('You knock. \u201cStorm-late, are you? Come in, the hearth is yours till dawn.\u201d They wake you with <b>bread</b> at first light.');
         setTimeout(()=>{ fadeH.style.opacity=0; },120); },750);
       return;
     }
     // b.closedMsg: a custom "shut for the night" line for this door; else a generic one
-    toast(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
+    blockMsg(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
       '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
-      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)],3600);
+      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)]);
     Snd.step(5); return;
   }
   const kinds={

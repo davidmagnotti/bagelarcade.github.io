@@ -252,6 +252,11 @@ function nearestInteract(){
 
 function doInteract(){
   if(G.state!=='play') return;
+  // a blocker / story card is up - the interact key just dismisses it (so keyboard
+  // players can clear "it's locked" and friends without reaching for the mouse)
+  const sov=document.getElementById('storyOv');
+  if(sov && sov.style.display!=='none'){ const sb=document.getElementById('storyBtn'); if(sb) sb.click(); return; }
+  if(G.paused) return;   // paused via the menu: interact does nothing
   if(G.interior){
     if(dlg.open){ closeDialog(); return; }
     const hs=interiorHotspot();
@@ -260,15 +265,16 @@ function doInteract(){
     if(hs && (!nearExit || dist(P.x,P.y,hs.f.x,hs.f.y)<dist(P.x,P.y,ex.x,ex.y))){
       useHotspot(hs); return;
     }
-    if(nearExit) exitHouse();
+    if(nearExit){ exitHouse(); return; }
+    blockMsg('Nothing to use here. Step onto the <b>doorway</b> to head back outside.');
     return;
   }
   if(dlg.open){ closeDialog(); return; }
   const it=nearestInteract();
-  if(!it) return;
+  if(!it){ noActionMsg(); return; }
   if(it.type==='lore'){ facePoint(it.o.x,it.o.y); readLore(it.key); return; }
   if(it.type==='well'){
-    if(P.wellCd>0){ toast('The well needs '+Math.ceil(P.wellCd)+'s to refill.'); return; }
+    if(P.wellCd>0){ blockMsg('The well needs <b>'+Math.ceil(P.wellCd)+'s</b> to refill before you can drink again.'); return; }
     P.hp=P.maxhp; P.mp=P.maxmp; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
@@ -286,7 +292,7 @@ function doInteract(){
   if(it.type==='milldungeon'){ facePoint(it.o.x,it.o.y); if(it.o.exit) exitMillDungeon(); else enterMillDungeon(); return; }
   if(it.type==='vaultdungeon'){ facePoint(it.o.x,it.o.y);
     if(it.o.exit){ exitFrostVault(); return; }
-    if(!(P.story&&P.story.iceBearDown)){ toast('The <b>Hoarfrost Bear</b>’s den, rank with old kills - and something vast still breathes in the dark of it. Drive the beast off before you go down.',4600); Snd.step&&Snd.step(5); return; }
+    if(!(P.story&&P.story.iceBearDown)){ blockMsg('The <b>Hoarfrost Bear</b>’s den, rank with old kills - and something vast still breathes in the dark of it. Drive the beast off before you go down.'); Snd.step&&Snd.step(5); return; }
     enterFrostVault(); return; }
   if(it.type==='lever'){ facePoint(it.o.x,it.o.y); pullIceLever(it.o); return; }
   if(it.type==='emberlever'){ facePoint(it.o.x,it.o.y); pullEmberLever(it.o); return; }
@@ -295,7 +301,7 @@ function doInteract(){
   if(it.type==='icebrazier'){ facePoint(it.o.x,it.o.y);
     if(it.o.lit){ G._flameT=(typeof FLAME_MAX!=='undefined'?FLAME_MAX:8); burst(P.x,P.y-1.2,'#ffce7a',10,1.8); Snd.pickup&&Snd.pickup();
       addFloat('torch lit',P.x,P.y-1.8,'#ffd07a',1.0); }
-    else toast('The brazier is crusted over with ice. Thaw it with a <b>lit torch</b> to wake its fire.',3400);
+    else blockMsg('The brazier is crusted over with ice. Thaw it with a <b>lit torch</b> to wake its fire.');
     return; }
   if(it.type==='emberbutton'){ facePoint(it.o.x,it.o.y); pressEmberButton(it.o); return; }
   if(it.type==='staffgate'){ facePoint(it.o.x,it.o.y); dispelStaffGate(it.o); return; }
@@ -325,6 +331,19 @@ function doInteract(){
   }
   if(it.type==='node') hitNode(it.o);
   if(it.type==='plot') usePlot(it.o);
+}
+const BUILDING_KINDS={house:1,house2:1,igloo:1,forge:1,barn:1,tower:1,castle:1,hut:1,resort:1,windmill:1,waterwheel:1};
+// The interact button found nothing in reach. Rather than fail silently, word the
+// blocker in-world - if a building is close by, the player almost certainly meant
+// its door, so point them at it; otherwise a plain "nothing here" line.
+function noActionMsg(){
+  let bld=null, bd=4.2;
+  for(const b of G.decor){
+    if(!BUILDING_KINDS[b.kind]) continue;
+    const d=dist(P.x,P.y,b.x,b.y); if(d<bd){ bd=d; bld=b; }
+  }
+  if(bld){ blockMsg('You can’t get in from here. <b>Step right up to the door</b> and try again.'); Snd.step&&Snd.step(5); return; }
+  blockMsg('There’s nothing here to use.');
 }
 function facePoint(x,y){ const dx=x-P.x, dy=y-P.y, l=Math.hypot(dx,dy)||1; P.dir={x:dx/l,y:dy/l}; }
 function warpTo(b){ // step through a tunnel to its far end (same world), with a fade
@@ -453,7 +472,7 @@ function tryAttack(useMouse){
   if(!P.unlocked[P.weapon==='melee'?'melee':P.weapon]){
     P._noWpnT=P._noWpnT||0;
     if(G.time>P._noWpnT){ P._noWpnT=G.time+2.5;
-      toast('Bare hands won\'t do - <b>Bram\'s forge</b> can arm you. (Quest: <b>Iron in the Fire</b>)'); }
+      blockMsg('Bare hands won\'t do - <b>Bram\'s forge</b> can arm you. (Quest: <b>Iron in the Fire</b>)'); }
     return;
   }
   // if a gatherable is closer than any mob and we're in melee, gather instead (mobile friendliness)

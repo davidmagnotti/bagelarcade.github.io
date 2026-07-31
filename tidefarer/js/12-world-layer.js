@@ -6039,17 +6039,17 @@ function attemptSail(){
   if(sailing) return;
   if(G.worldId==='isle'){
     if(qs('king')!=='done'){
-      toast('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4800);
+      blockMsg('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>');
       return;
     }
     if(qs('wreck')!=='done'){
-      toast('Captain Brant thumps the cracked hull. <b>"She won\'t swim till she\'s patched - bring me twelve wood and I\'ll mend her."</b> Speak with him here at the dock.',5800);
+      blockMsg('Captain Brant thumps the cracked hull. <b>"She won\'t swim till she\'s patched - bring me twelve wood and I\'ll mend her."</b> Speak with him here at the dock.');
       return;
     }
   }
   // Windsurf is walled off by the killing tide until you calm the strait.
   if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){
-    toast('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.',5200);
+    blockMsg('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.');
     return;
   }
   // Stormreach is only reachable by sea, so its berth is always a ferry. But in
@@ -6059,7 +6059,7 @@ function attemptSail(){
   // link of the Act II chain that unlocks the Frozen Isle (see boatMenu).
   if(G.worldId==='reach'){
     if(P.story && P.story.act2 && !P.story.reachBossDown){
-      toast('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>',5800);
+      blockMsg('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>');
       return;
     }
     boatMenu(); return;

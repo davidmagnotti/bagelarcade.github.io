@@ -260,6 +260,17 @@ function storyCard(html, opts){
     if(opts.onOk) opts.onOk();
   };
 }
+// A "you can't do that / nothing happened" blocker the player must dismiss with a
+// click, so no action on the interact or attack button ever fails silently (a
+// locked door, an empty patch of ground, no weapon in hand...). Reuses the
+// story-card overlay - it dims the scene, pauses the world and waits for a press -
+// but with a plain OK button. If a card is already up, the blocker is dropped so
+// we never stack two overlays or clobber a genuine story beat.
+function blockMsg(html){
+  const ov=document.getElementById('storyOv');
+  if(ov && ov.style.display!=='none') return;
+  storyCard(html,{label:'OK'});
+}
 function addFloat(text,x,y,color,scale=1){
   G.floats.push({text,x,y,vy:-0.9,life:1.3,color:color||'#fff',scale});
 }
