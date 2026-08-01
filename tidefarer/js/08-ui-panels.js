@@ -404,18 +404,8 @@ function updateQuestUI(){
 function refreshUI(){
   document.getElementById('hpFill').style.width=(P.hp/P.maxhp*100)+'%';
   document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
-  // the old mana bar is repurposed as the QUIVER gauge - shown only once the bow
-  // is earned, filling toward the 20-arrow cap
-  const mpBar=document.getElementById('mpBar');
-  if(mpBar){
-    if(P.unlocked && P.unlocked.bow){
-      mpBar.style.display='block';
-      const af=document.getElementById('mpFill');
-      af.style.width=((P.arrows||0)/(P.maxArrows||20)*100)+'%';
-      af.style.background='linear-gradient(90deg,#7a4a1e,#d9a441)';
-      document.getElementById('mpLbl').textContent=Math.floor(P.arrows||0)+' / '+(P.maxArrows||20)+' arrows';
-    } else { mpBar.style.display='none'; }
-  }
+  // The quiver gauge that used to sit under the HP bar is gone - the arrow count lives
+  // on the bow hotbar item (its .cnt badge, kept in step just below) and nowhere else.
   // keep the bow hotbar badge in step without a full rebuild
   const bowSlot=document.getElementById('hot_bow');
   if(bowSlot){ const c=bowSlot.querySelector('.cnt'); if(c) c.textContent=Math.floor(P.arrows||0); }

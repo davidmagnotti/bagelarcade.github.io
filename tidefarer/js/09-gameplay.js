@@ -504,6 +504,16 @@ function tryAttack(useMouse){
   P.dir={...aim};
   P.lastCombat=G.time;
   if(P.weapon==='melee'){
+    // no room to swing a blade from the saddle - dismount to fight with the sword. The
+    // bow is fine from horseback (this guard is melee-only), so a mounted rider can still
+    // loose arrows but can't sword-fight while riding Kiko or Chestnut.
+    if(P.riding){
+      P._rideSwordT=P._rideSwordT||0;
+      if(G.time>P._rideSwordT){ P._rideSwordT=G.time+2.5;
+        blockMsg('No room to swing a sword from the saddle - <b>dismount</b> to fight with the blade. (Arrows loose fine from horseback.)'); }
+      P.atkCd=0.25; P.combo=0;
+      return;
+    }
     P.atkCd=0.42; P.swing=0.3; Snd.hit();
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
