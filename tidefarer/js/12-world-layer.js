@@ -221,14 +221,14 @@ const WORLDS = {}; // cached generated worlds
 // fixed ambient darkness. Marked with `dungeon:1` on its WORLD_DEF.
 function inDungeon(id){ const d=WORLD_DEFS[id||G.worldId]; return !!(d && d.dungeon); }
 // ---- THE WAY UP: a single, identical fast-exit portal that opens where a dungeon boss falls,
-// in EVERY dungeon. Step into it to rise to the surface, mended and a level stronger. It replaces
+// in EVERY dungeon. Step into it to rise to the surface, mended and whole. It replaces
 // the old per-kill "take the quick road out" dialogue - same object, same look, in every dungeon.
 function spawnFastExit(x,y){
   if(!inDungeon() || !G.decor || G.decor.some(d=>d.kind==='fastexit')) return;
   const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(x),Math.round(y),4)) || [Math.round(x),Math.round(y)];
   G.decor.push({kind:'fastexit', x:sp[0]+0.5, y:sp[1]+0.5, name:'CLIMB OUT', labelY:-46});
   if(typeof invalidateScenery==='function') invalidateScenery();
-  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down and the prize is yours - a <b style="color:#c9b0ff">way out</b> opens where it fell. Take what it guarded, then step in to <b>climb out</b> of the dungeon, <b>mended and a level stronger</b>.',6500); },1600);
+  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down and the prize is yours - a <b style="color:#c9b0ff">way out</b> opens where it fell. Take what it guarded, then step in to <b>climb out</b> of the dungeon, <b>mended and whole</b>.',6500); },1600);
 }
 // which exit each dungeon world uses to climb back to the surface
 function leaveDungeon(){
@@ -248,16 +248,15 @@ function leaveDungeon(){
   if(gm && typeof useGateDungeon==='function'){ useGateDungeon(gm); return true; }
   return false;
 }
-// step into THE WAY UP: full heal, ~one level, and rise to the surface. Only reward the climb if
-// we can actually leave from here - otherwise a missing exit mapping would let the reward be
-// farmed over and over without ever rising.
+// step into THE WAY UP: full heal and rise to the surface. Only let the climb through if we can
+// actually leave from here - otherwise a missing exit mapping would strand you in the dungeon.
+// The climb-out mends you but grants NO XP; levels are earned in the dungeon, not for leaving it.
 function useFastExit(){
   if(dlg.open) return;
   if(!leaveDungeon()){ if(typeof toast==='function') toast('There is no way up from here.',3000); return; }
   P.hp=P.maxhp; P.mp=P.maxmp;
-  if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
   if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-  toast('You climb out of the dungeon - whole again, and a level the wiser.',4200);
+  toast('You climb out of the dungeon - whole again.',4200);
 }
 
 // ---- THE REWARD ROOM: the way every dungeon SHOULD pay off - not a portal dropped where the
@@ -291,7 +290,7 @@ function openRewardRoom(){
   if(typeof invalidateScenery==='function') invalidateScenery();
   if(typeof Snd!=='undefined' && Snd.quest) Snd.quest(); G.shake=Math.max(G.shake||0,0.45);
   if(typeof shockwave==='function') shockwave(g.x+0.5, g.y+0.5, 'rgba(201,176,255,0.9)', 50);
-  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down. Behind it, a sealed vault grinds open - <b style="color:#c9b0ff">the prize it warded and the way up</b> stand within. Take what it guarded, then step in to <b>climb out</b>, <b>mended and a level stronger</b>.',6500); },1200);
+  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down. Behind it, a sealed vault grinds open - <b style="color:#c9b0ff">the prize it warded and the way up</b> stand within. Take what it guarded, then step in to <b>climb out</b>, <b>mended and whole</b>.',6500); },1200);
   return true;
 }
 
@@ -3182,7 +3181,7 @@ function placeObjectsUndermaw(){
   // A second way out at the very top, in the Deep Hoard beyond the boss: once the
   // Maw-Stalker is down and the Hoard Door opens, you can leave from here instead of
   // re-running the whole gauntlet back to the entrance.
-  // the climb-out IN the Deep Hoard (heal + a level, like every dungeon's reward-room exit),
+  // the climb-out IN the Deep Hoard (a full heal, like every dungeon's reward-room exit),
   // behind the Hoard Door so you only reach it once the Maw-Stalker falls
   G.decor.push({kind:'fastexit', x:27.5, y:4.5, name:'CLIMB OUT', labelY:-46});
   setSolid(27,4,0); setTile(27,4,T.RUIN);
