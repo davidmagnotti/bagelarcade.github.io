@@ -15,7 +15,7 @@ const ITEMS = {
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
-  veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
+  veilrune:{name:'Hush-Frost Spellbook', desc:'A spell book of the old royal line, its pages hush-frost that will not thaw, scored in a royal script only a scholar could read. The Rimebound was set to guard it. Carry it to your brother.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
   cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},

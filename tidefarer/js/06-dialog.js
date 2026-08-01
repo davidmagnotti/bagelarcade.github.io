@@ -375,39 +375,44 @@ function buildDialogContent(npc){
        {label:'Hold - not yet', ghost:true, fn:closeDialog}]);
     return;
   }
-  // === THE WARDING VEIL: the brother casts the hush-frost rune =============
-  // The princess brings the Rune of Hush-Frost up from the Rimefissure; Jaist, the
-  // scholar, reads the old royal script and works it into the warding that hides them
-  // both from Vath's eye. Setting the veil is what reopens the sea-roads to the old
-  // islands (boatMenu reads P.story.vathVeil). "A warrior and a mind" - she found it,
-  // he casts it.
+  // === THE WARDING VEIL: the brother reads the hush-frost spellbook ==========
+  // The princess brings the Hush-Frost Spellbook up from the Rimefissure; Jaist, the
+  // scholar, reads the old royal script and casts the warding that hides them both from
+  // Vath's eye - shown as its own overlay cutscene (veilCastCutscene, 39-more-cutscenes.js).
+  // Casting the veil is what reopens the sea-roads to the old islands (boatMenu reads
+  // P.story.vathVeil). "A warrior and a mind" - she found it, he casts it. The book also
+  // carries other secrets - abilities the old line hid across the isles - which seeds the
+  // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
+    const homeCard=()=>storyCard('<b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s eye slides past you now.</b> <i>The sea-roads home are open again - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>.</i> “Not the capital,” <i>Jaist warns, thumbing to the next frost-page.</i> “His gaze never leaves the throne he stole.” <i>He reads on, and his eyes catch fire the way they used to over a hard passage.</i> “Sister - this book is more than a hiding-spell. The old line wrote whole workings into it, hidden away isle by isle. Gifts. <b>Powers.</b> Somewhere in these pages may be the very thing that lets us stop </i>hiding<i> from Vath and </i><b style="color:#ffd76a">fight</b><i> him. Go - pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
+        {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
     const cast=()=>{
       closeDialog();
       if(typeof take==='function') take('veilrune',1);
       if(typeof grantVathVeil==='function') grantVathVeil(true);   // sets vathVeil + spells.veil, silently
       else { P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1; }
-      if(Snd.magic) Snd.magic();
-      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.9)',64);
-      if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',26,3);
-      G.slowmo=Math.max(G.slowmo||0,1.1);
-      banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
-      const card2=()=>storyCard('<b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s eye slides past you now.</b> <i>The sea-roads home are open again - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>.</i> “Not the capital,” <i>Jaist warns.</i> “His gaze never leaves the throne he stole. But everywhere else his curses have festered while we were chased out to the reaches - and now we can walk back in unseen and pull his hooks out, one isle at a time. Go, sister. I\'ll mind the boat.”',
-        {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
-      setTimeout(()=>storyCard('<i>Jaist closes his eyes and speaks the old words the way he used to read to you when the sea was loud - low, sure, unhurried. The frost-rune lifts from his palm, breaks into a fine violet snow, and settles over you and sinks in: cold, then gone.</i> “There,” <i>he breathes, and opens his eyes.</i> “It\'s a scholar\'s trick, not a warrior\'s - it won\'t stop a blade, mind. But Vath hunts by his witch-sight, and to that you\'re a blank stretch of open sea now. He won\'t see you coming.”',
-        {label:'Go on', onOk:card2}),700);
+      // the casting plays as its own overlay cutscene; the home/next-steps card follows it.
+      if(typeof veilCastCutscene==='function') veilCastCutscene(homeCard);
+      else {
+        if(Snd.magic) Snd.magic();
+        if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.9)',64);
+        if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',26,3);
+        G.slowmo=Math.max(G.slowmo||0,1.1);
+        banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
+        setTimeout(homeCard,700);
+      }
     };
     const p2=()=>{
-      setDialog('<i>He turns the plate of ice to the lamplight, lips moving over the script.</i> “Hush-frost, wept from a warden Vath enslaved - and someone cut it into a warding. Do you know what this IS, Joan? It\'s the spell to go unseen by him. To hide.” <i>He almost laughs.</i> “Trust the deep ice to keep the one thing that could save us. Hold still and let me read it onto you properly - this is the one kind of fight I was ever built for.”',
+      setDialog('<i>He turns the frost-pages to the lamplight, lips moving over the script.</i> “Hush-frost, wept from a warden Vath enslaved - and someone read a warding into it. Do you know what this IS, Joan? It\'s the spell to go unseen by him. To hide.” <i>He riffles deeper and stops, breath caught.</i> “And it doesn\'t end there - there\'s more written past it than I can take in at a glance. Trust the deep ice to keep the one book that could save us. Hold still and let me read the veil onto you properly - this is the one kind of fight I was ever built for.”',
         [{label:'Cast it, brother', cls:'gold', fn:cast}]);
     };
-    setDialog('<i>You lay the rune-scored plate of ice in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Where did you - this is old script. Grandmother\'s hand, or near enough.” <i>His scholar\'s eyes are already devouring it.</i>',
+    setDialog('<i>You lay the ice-bound spellbook in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Where did you - this is old script. Grandmother\'s hand, or near enough.” <i>His scholar\'s eyes are already devouring the page.</i>',
       [{label:'It was in the deep ice, past the Rimebound', fn:p2}]);
     return;
   }
   // After the Veil is cast: the brother holds the Frozen landing and points you home.
   if(npc.id==='brother' && P.story && P.story.vathVeil){
-    setDialog('<i>Jaist keeps a weather-eye on the strait and the moored boat.</i> “The Veil holds - I can feel it holding. His curses have had free run of the old islands while we were gone; there\'s no telling what\'s festered. Sail back and undo them, one at a time. I\'ll keep the way home - same as ever.”',
+    setDialog('<i>Jaist keeps a weather-eye on the strait and the moored boat, the frost-book open across his knee.</i> “The Veil holds - I can feel it holding. His curses have had free run of the old islands while we were gone; there\'s no telling what\'s festered. Sail back and undo them, one at a time - I\'ll keep the way home, same as ever, and keep reading. There are powers written in here yet, sister. If any of them can turn Vath, I\'ll find it.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
