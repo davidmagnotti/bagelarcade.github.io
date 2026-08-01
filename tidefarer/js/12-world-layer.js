@@ -916,7 +916,10 @@ function dragonLairSpeak(){
       '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
       [{label:'Continue', fn:()=> lairDialog('Vath',
         'A voice pours from the walls, and the air turns cold and violet: “Sentiment. Sleep, wyrm - or kill for me.” <i>Ashwing swings his great head toward you, fighting it - and losing. He is between you and the only way out.</i>',
-        [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
+        [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse();
+        // the enthrall now plays as a full animated cutscene (the violet takes him); it hands
+        // straight to the fight (awakenDragon(true), already bound) on its final beat
+        if(typeof dragonEnthrallCutscene==='function') dragonEnthrallCutscene(); else awakenDragon(); }}])}])}]);
 }
 function lairDialog(name,text,btns){
   dlg.open=true; dlg.npc=null;
@@ -929,17 +932,28 @@ function lairDialog(name,text,btns){
     try{ drawDragon(pg,0,0,{face:1,enspelled:false,anim:1,hurtT:0}); }catch(e){} pg.restore(); }
   setDialog(text,btns);
 }
-function awakenDragon(){
+function awakenDragon(alreadyBound){
   if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)) return; // one Ashwing at a time
   const C = G.worldId==='eastdeep' ? EASTDEEP_ZONES.rest : (ZONES.caldera||EAST_ZONES.caldera);
   const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
         || findOpenNear(Math.round(C.x), Math.round(C.y+ (G.worldId==='eastdeep'?4:7)), 8) || [C.x, C.y+4];
   const dr=spawnMob('dragon', sp[0], sp[1]);
-  // spawn him as HIMSELF (natural green) - the violet takeover is now SHOWN by the
-  // 'enthrall' entrance (ensAmt washes the colour across him), not narrated in a card
-  if(dr){ dr.bigBoss=true; dr.enspelled=false; dr.ensAmt=0; dr.ach='dragonsworn'; dr.state='idle'; dr.noAggroT=0;
+  if(dr){ dr.bigBoss=true; dr.ach='dragonsworn'; dr.noAggroT=0;
     dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr;
-    dr.entrance='enthrall'; dr.entranceTitle='ASHWING, ENTHRALLED'; dr.entranceSub='BREAK THE SPELL - DO NOT LET HIM FALL TO IT'; }
+    if(alreadyBound){
+      // the overlay enthrall cutscene already SHOWED the violet take him - so he wakes
+      // already bound and turns on you at once; skip the on-canvas 'enthrall' entrance
+      // (which would replay the same beat) and land the fight-banner here instead
+      dr.enspelled=true; dr.ensAmt=1; dr.entranceDone=true; dr.state='chase';
+      if(typeof banner==='function') banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
+      Snd.boss&&Snd.boss(); G.slowmo=Math.max(G.slowmo||0,0.8);
+    } else {
+      // fallback path (no cutscene): spawn him as HIMSELF (natural green) and let the
+      // 'enthrall' entrance wash the violet across him, then hand to the fight
+      dr.enspelled=false; dr.ensAmt=0; dr.state='idle';
+      dr.entrance='enthrall'; dr.entranceTitle='ASHWING, ENTHRALLED'; dr.entranceSub='BREAK THE SPELL - DO NOT LET HIM FALL TO IT';
+    }
+  }
   P.metDragon=1;
   // seal the chamber: the Dragon Gate flares shut behind you - no way out (and no
   // boar in) until the wyrm is down. Only the Emberdeep has the firegate to close.

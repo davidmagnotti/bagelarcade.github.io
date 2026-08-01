@@ -13,7 +13,7 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=245">
+<link rel="stylesheet" href="styles.css?v=249">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -221,45 +221,59 @@
   </div>
 </div>
 
-<script src="js/01-core.js?v=245"></script>
-<script src="js/01b-gpu-probe.js?v=245"></script>
-<script src="js/02-worldgen.js?v=245"></script>
-<script src="js/03-art.js?v=245"></script>
-<script src="js/04-data.js?v=245"></script>
-<script src="js/05-inventory-skills-quests.js?v=245"></script>
-<script src="js/06-dialog.js?v=245"></script>
-<script src="js/07-input.js?v=245"></script>
-<script src="js/08-ui-panels.js?v=245"></script>
-<script src="js/09-gameplay.js?v=245"></script>
-<script src="js/10-rendering.js?v=245"></script>
-<script src="js/11-main-loop.js?v=245"></script>
-<script src="js/12-world-layer.js?v=245"></script>
-<script src="js/13-aaa-layer.js?v=245"></script>
-<script src="js/14-meta-layer.js?v=245"></script>
-<script src="js/15-interiors.js?v=245"></script>
-<script src="js/16-autosave.js?v=245"></script>
-<script src="js/17-pause-menu.js?v=245"></script>
-<script src="js/18-economy.js?v=245"></script>
-<script src="js/19-purpose.js?v=245"></script>
-<script src="js/20-lore.js?v=245"></script>
-<script src="js/21-exploration.js?v=245"></script>
-<script src="js/22-definitive-edition.js?v=245"></script>
-<script src="js/23-pause-affordance.js?v=245"></script>
-<script src="js/24-perf.js?v=245"></script>
-<script src="js/25-debug.js?v=245"></script>
-<script src="js/26-bench.js?v=245"></script>
-<script src="js/27-perfmode.js?v=245"></script>
-<script src="js/28-fxpanel.js?v=245"></script>
-<script src="js/29-devmenu.js?v=245"></script>
-<script src="js/30-perks.js?v=245"></script>
-<script src="js/31-skyquest.js?v=245"></script>
-<script src="js/32-cinematic.js?v=245"></script>
-<script src="js/33-elevation.js?v=245"></script>
-<script src="js/34-atmosphere.js?v=245"></script>
-<script src="js/33-relics.js?v=245"></script>
-<script src="js/34-toolgates.js?v=245"></script>
-<script src="js/35-toolgate-content.js?v=245"></script>
-<script src="js/36-trinkets.js?v=245"></script>
-<script src="js/37-dungeon-hideaways.js?v=245"></script>
+<!-- Ashwing bookends: the enthrall (Vath's violet takes the dragon, before the fight)
+     and the freeing (the spell shatters, after he is beaten). One shared overlay -
+     the two beats never play at once. See js/35-dragon-cutscenes.js -->
+<div class="overlay" id="dgOv" style="display:none;">
+  <canvas id="dgCv"></canvas>
+  <div class="epiTitle" id="dgTitle"><h1 id="dgTitleT"></h1></div>
+  <div class="epiSub" id="dgSub">
+    <p class="who" id="dgWho"></p>
+    <p class="line" id="dgLine"></p>
+    <span class="tap" id="dgTap">click to continue &rsaquo;</span>
+  </div>
+</div>
+
+<script src="js/01-core.js?v=249"></script>
+<script src="js/01b-gpu-probe.js?v=249"></script>
+<script src="js/02-worldgen.js?v=249"></script>
+<script src="js/03-art.js?v=249"></script>
+<script src="js/04-data.js?v=249"></script>
+<script src="js/05-inventory-skills-quests.js?v=249"></script>
+<script src="js/06-dialog.js?v=249"></script>
+<script src="js/07-input.js?v=249"></script>
+<script src="js/08-ui-panels.js?v=249"></script>
+<script src="js/09-gameplay.js?v=249"></script>
+<script src="js/10-rendering.js?v=249"></script>
+<script src="js/11-main-loop.js?v=249"></script>
+<script src="js/12-world-layer.js?v=249"></script>
+<script src="js/13-aaa-layer.js?v=249"></script>
+<script src="js/14-meta-layer.js?v=249"></script>
+<script src="js/15-interiors.js?v=249"></script>
+<script src="js/16-autosave.js?v=249"></script>
+<script src="js/17-pause-menu.js?v=249"></script>
+<script src="js/18-economy.js?v=249"></script>
+<script src="js/19-purpose.js?v=249"></script>
+<script src="js/20-lore.js?v=249"></script>
+<script src="js/21-exploration.js?v=249"></script>
+<script src="js/22-definitive-edition.js?v=249"></script>
+<script src="js/23-pause-affordance.js?v=249"></script>
+<script src="js/24-perf.js?v=249"></script>
+<script src="js/25-debug.js?v=249"></script>
+<script src="js/26-bench.js?v=249"></script>
+<script src="js/27-perfmode.js?v=249"></script>
+<script src="js/28-fxpanel.js?v=249"></script>
+<script src="js/29-devmenu.js?v=249"></script>
+<script src="js/30-perks.js?v=249"></script>
+<script src="js/31-skyquest.js?v=249"></script>
+<script src="js/32-cinematic.js?v=249"></script>
+<script src="js/33-elevation.js?v=249"></script>
+<script src="js/34-atmosphere.js?v=249"></script>
+<script src="js/35-dragon-cutscenes.js?v=249"></script>
+<script src="js/33-relics.js?v=249"></script>
+<script src="js/34-toolgates.js?v=249"></script>
+<script src="js/35-toolgate-content.js?v=249"></script>
+<script src="js/36-trinkets.js?v=249"></script>
+<script src="js/37-dungeon-hideaways.js?v=249"></script>
 </body>
 </html>
