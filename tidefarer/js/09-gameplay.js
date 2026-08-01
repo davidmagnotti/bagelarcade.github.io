@@ -354,21 +354,17 @@ function warpTo(b){ // step through a tunnel to its far end (same world), with a
 /* ---- gathering ---- */
 function hitNode(n){
   facePoint(n.x,n.y);
-  if((n.kind==='tree' || n.kind==='rock') && !P.kit){
-    P._toolT=P._toolT||0;
-    if(G.time>P._toolT){ P._toolT=G.time+2.5;
-      toastErr(n.kind==='tree'
-        ? 'Bark tears at bare palms - you need an <b>axe</b>. <b>Bram</b> at the forge keeps spares.'
-        : 'Stone laughs at fists - you need a <b>pick</b>. <b>Bram</b> at the forge keeps spares.',4200);
-    }
-    P.click=null;
-    return;
-  }
   // GATED MATERIAL: ironwood pines / basalt stone bounce your current tool until
   // you carry the right tier (a dungeon-forged Rivenedge Axe / Cragbreaker Pick).
   // gateBlocked() shows the "your tool barely marks it" feedback itself.
   if((n.kind==='tree'||n.kind==='rock') && n.gate && typeof gateBlocked==='function' && gateBlocked(n)){ P.click=null; return; }
-  if(P.kit && (n.kind==='tree' || n.kind==='rock')){
+  if(n.kind==='tree' || n.kind==='rock'){
+    // No proper tool - bare hands, or just a sword? You can still hack at it, but it's
+    // stupid weak (see the power formula below): a slow chip that takes many times as
+    // long. A real axe/pick from Bram's forge fells wood and stone far faster.
+    if(!P.kit) hintOnce('needtool', n.kind==='tree'
+      ? 'You hack at the trunk with what you have - it barely marks. A proper <b>axe</b> from <b>Bram</b>\'s forge would make short work of it.'
+      : 'You scrape at the stone with what you have - it barely chips. A proper <b>pick</b> from <b>Bram</b>\'s forge would split it far faster.');
     P.gatherT=0.4; P.gatherKind = n.kind==='tree'? 'axe':'pick';
     P.swing=Math.max(P.swing||0, 0.26);
   }
@@ -395,8 +391,12 @@ function hitNode(n){
   }
   const isTree=n.kind==='tree';
   P.swing=0.28; P.anim+=0.5;
-  const power = 1 + Math.floor((isTree? P.skills.woodcut.lvl : P.skills.mining.lvl)/3)
-              + (isTree? P.tools.axe : P.tools.pick);
+  // Woodcutting & mining no longer level - chop/mine speed is fixed for the whole game,
+  // set entirely by the tool. A basic iron axe/pick (tier 1) fells a tree or stone in a
+  // handful of swings; a dungeon-forged one (tier 2) bites far deeper. With no proper tool
+  // at all - bare hands, or a sword - it's stupid weak: a slow chip many times as long.
+  const tier = isTree ? (P.tools.axe||0) : (P.tools.pick||0);
+  const power = tier>=2 ? 5 : tier>=1 ? 2 : 0.34;
   n.hp-=power;
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
@@ -408,18 +408,18 @@ function hitNode(n){
     hintOnce('regrow','The island <b>regrows</b> - felled pines and broken stone return in under a minute.');
     setSolid(n.tx,n.ty,0);
     if(isTree){
-      const amt=2+Math.floor(P.skills.woodcut.lvl/2); give('wood',Math.min(amt,4)); addXP('woodcut',8);
+      const amt=2+(P.tools.axe>=2?2:0); give('wood',Math.min(amt,4));
       if(n.palm && Math.random()<0.35){ give('coconut',1); addFloat('+1 coconut',n.x,n.y-1.6,'#e8d8a8',1.0); }
       const windfall=Math.random();
       if(windfall<0.16){ give('apple',1); addFloat('+1 apple',n.x,n.y-1.6,'#e0708a',1.0); }
       else if(windfall<0.24){ give('mushroom',1); addFloat('+1 mushroom',n.x,n.y-1.6,'#d8b0c8',1.0); }
-      if(n.big && Math.random() < 0.45 + P.tools.axe*0.3 + P.skills.woodcut.lvl*0.03){
+      if(n.big && Math.random() < 0.45 + P.tools.axe*0.3){
         give('hardwood',1); addFloat('+1 hardwood',n.x,n.y-2.2,'#c9a24e',1.1);
         hintOnce('hardwood','<b>Hardwood!</b> Old forest pines hide dense heartwood - Bram forges tools and steel with it.');
       }
     } else {
-      const amt=1+Math.floor(P.skills.mining.lvl/2); give('stone',Math.min(amt,3)); addXP('mining',9);
-      if(Math.random() < 0.22 + P.tools.pick*0.3 + P.skills.mining.lvl*0.04){
+      const amt=1+(P.tools.pick>=2?1:0); give('stone',Math.min(amt,3));
+      if(Math.random() < 0.22 + P.tools.pick*0.3){
         give('ore',1); addFloat('+1 iron ore',n.x,n.y-2,'#c9ced6',1.1);
         hintOnce('ore','<b>Iron ore!</b> The isle\'s smiths and shipwrights are always wanting it - Captain Brant needs it for the Tidewalker\'s fittings.');
       }

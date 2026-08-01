@@ -37,7 +37,6 @@ function buildProject(id,npc){
   if(id==='beacon' && G.worldId==='main') placeBeacon();
   banner('PROJECT COMPLETE', PROJECTS[id].name.toUpperCase());
   shockwave(P.x,P.y,'rgba(255,215,106,0.9)',50);
-  addXP('woodcut',60); addXP('mining',60);
   Snd.levelup(); setTimeout(autoSave,300);
   setDialog('“'+PROJECTS[id].done+'”', [{label:'Continue',fn:()=>projectsMenu(npc)}]);
 }
@@ -78,7 +77,7 @@ const CONTRACTS=[
 function contractMenu(npc){
   const c=CONTRACTS[P.contract%CONTRACTS.length];
   setDialog('<b style="color:var(--ember)">Supply contract</b><br>“'+c.line+'”<br>'+
-    '<span style="font-size:11px;color:var(--parch-dim)">Deliver '+costText(c.need)+' → <b style="color:#ffd76a">'+c.gold+'g</b> + '+c.xp+' '+SKILLS[c.skill].name+' XP</span>',
+    '<span style="font-size:11px;color:var(--parch-dim)">Deliver '+costText(c.need)+' → <b style="color:#ffd76a">'+c.gold+'g</b>'+(SKILLS[c.skill]?' + '+c.xp+' '+SKILLS[c.skill].name+' XP':'')+'</span>',
     [{label:'Deliver', fn:()=>{
         if(!canPay(c.need)){
           setDialog('“Short of the order. It\'ll keep - the island regrows fast.”',
