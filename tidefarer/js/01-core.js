@@ -68,7 +68,7 @@ function makeNoise(seed, gridN){
 
 /* ---------------- tiny synth audio ---------------- */
 const Snd = {
-  ctx:null, on:true,
+  ctx:null, on:(()=>{ try{ return SafeStore.get('tf_mute')!=='1'; }catch(e){ return true; } })(),
   init(){ if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ this.on=false; } } if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
   tone(freq, dur, type, vol, slide){
     if(!this.on || !this.ctx) return;

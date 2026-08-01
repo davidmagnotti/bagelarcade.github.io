@@ -45,7 +45,9 @@ document.getElementById('qsearch').oninput=()=>refreshQuestLog();
 document.getElementById('btnSkills').onclick=()=>togglePanel('skillPanel');
 document.getElementById('btnMap').onclick=()=>togglePanel('mapPanel');
 document.getElementById('miniWrap').onclick=()=>togglePanel('mapPanel');
-document.getElementById('btnSound').onclick=function(){ Snd.init(); Snd.on=!Snd.on; this.style.opacity=Snd.on?1:0.45; };
+document.getElementById('btnSound').onclick=function(){ Snd.init(); Snd.on=!Snd.on; this.style.opacity=Snd.on?1:0.45; try{ SafeStore.set('tf_mute', Snd.on?'0':'1'); }catch(e){} };
+/* reflect the remembered mute choice on the button at load */
+document.getElementById('btnSound').style.opacity=Snd.on?1:0.45;
 
 /* hotbar */
 const HOT = [
