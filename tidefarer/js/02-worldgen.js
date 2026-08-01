@@ -13,7 +13,7 @@ let ZONES = {
   ruins:  {x:46,y:20,r:9,  name:'Old Ruins'},
   meadow: {x:69,y:49,r:7,  name:'Slime Meadow'},
   forest: {x:33,y:38,r:9,  name:'Whisperwood'},
-  grove:  {x:89,y:50,r:6,  name:"Rask's Grove"}
+  grove:  {x:96,y:50,r:6,  name:"Rask's Grove"}
 };
 
 /* The Hollow King's arena, at the isle's cold northern tip. The ruins reach
@@ -93,11 +93,11 @@ function genWorld(){
   // drills newcomers. Trees auto-scatter onto the FOREST tiles (see placeObjects). ---
   {
     const GX=ZONES.grove.x, GY=ZONES.grove.y;
-    carveDisc(GX,GY,11,T.SHALLOW,false);   // shoals
-    carveDisc(GX,GY,10,T.SAND,false);      // a pale beach ringing the new cape
+    carveDisc(GX,GY,12,T.SHALLOW,false);   // shoals
+    carveDisc(GX,GY,11,T.SAND,false);      // a pale beach ringing the new cape
     for(let x=74;x<=GX;x++) for(let y=GY-3;y<=GY+3;y++) if(inb(x,y)) setTile(x,y,T.GRASS);  // a land bridge from the meadow's east edge
-    carveDisc(GX,GY,7,T.FOREST,false);     // the woods
-    carveDisc(GX,GY,2.6,T.GRASS,false);    // the training clearing at its heart
+    carveDisc(GX,GY,8,T.FOREST,false);     // the woods, thick all the way around
+    carveDisc(GX,GY,3.8,T.GRASS,false);    // a broad OPEN training clearing at its heart (kept tree-free by blockedZone)
   }
   // paths
   const V=ZONES.village;
@@ -197,6 +197,8 @@ function shapeHollowKingApproach(){
 function blockedZone(x,y){
   for(const k in ZONES){ const z=ZONES[k];
     if((k==='village'||k==='farm'||k==='dock'||k==='tower'||k==='meadow'||k==='ruins') && dist(x,y,z.x,z.y)<z.r) return true; }
+  // keep Rask's training clearing OPEN - no trees inside it, though the woods ring it
+  if(ZONES.grove && dist(x,y,ZONES.grove.x,ZONES.grove.y) < 4.4) return true;
   return false;
 }
 function addNode(kind,x,y){

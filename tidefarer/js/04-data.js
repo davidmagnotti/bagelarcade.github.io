@@ -68,9 +68,9 @@ const QUESTS = {
     doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Now, a blade\'s only half of it - anyone can swing. Go east, past the meadow, and find old <b>Rask</b>. Bladesworn, before he came to keep the quiet out there. He\'ll teach you to TURN a strike aside - the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you.',
     rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['bladeoath'] },
   bladeoath:{ giver:'rask', title:'The Turning of the Blade', kind:'special',
-    brief:'So Bram sent me another one with a new sword and no idea what to do when it\'s the OTHER fellow swinging. Sit down. A dash carries you out of a blow you can see coming - but you won\'t always get the room, and some strikes come faster than feet. For those you PARRY: brace the blade, meet the strike, and turn it. Do it clean and an arrow flies back the way it came and a swordsman\'s left staggered on his own missed swing. Take up your steel. I\'ll show you the turning.',
+    brief:'So Bram sent me another one with a new sword and no idea what to do when it\'s the OTHER fellow swinging. Anyone can hack away - the trade is knowing what to do when the blow comes back at YOU. You PARRY: watch the strike, and meet it with your own edge at the very instant it lands. Time it true and you turn the blow - an arrow flies back the way it came, a swordsman\'s left staggered on his own missed swing. No trick to it but timing. Take up your steel and come at my blade - turn it three times and it\'s yours.',
     log:'Learn to parry from Rask, in his grove at the island\'s far east - past the Slime Meadow.',
-    doneText:'There it is - you felt that, the whole blow just… gone, turned off your edge. That\'s the turning. Time it late, right as the strike arrives, not early. Now you\'re fit to go down into that crypt. Off to Maren.',
+    doneText:'There it is - you felt that, the whole blow just… gone, turned off your edge. That\'s the turning. Watch for the strike and meet it LATE, right as it lands, not early. Now you\'re fit to go down into that crypt. Off to Maren.',
     rw:{gold:10, xp:{melee:120}}, unlocks:['king'] },
   // - Captain Brant's shipwright chain -
   wreck:{ giver:'brant', title:'The Wrecked Tidewalker', kind:'gather', need:{wood:12},
@@ -200,7 +200,7 @@ function spawnNPCs(){
     (()=>{ const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
       const sp=(typeof findOpenNear==='function' && findOpenNear(g.x,g.y,5)) || [g.x,g.y];
       return makeNPC('rask','Rask the Bladesworn',sp[0],sp[1],{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',size:1.06,build:{w:0.94,head:0.88}},
-      ['A blade that only knows how to swing knows half its trade.','The dash is for the blow you see. The parry is for the one you don\'t.','I turned strikes on three isles before this one. My feet are tired; my hands still remember.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3); })(),
+      ['A blade that only knows how to swing knows half its trade.','A parry is only a strike with perfect timing - meet their blade with yours.','I turned strikes on three isles before this one. My hands still remember every one.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3); })(),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long',build:{w:0.9,head:1.16}},
@@ -296,9 +296,10 @@ function spawnMob(kind,x,y,elite){
   G.mobs.push(m); return m;
 }
 function spawnMobs(){
-  // the meadow slimes - the eastern few were cleared out when Rask took the grove
-  // beyond them for his training ground; these keep to the mid- and west meadow now
-  const slimeSpots=[[66,47],[68,52],[67,44]];
+  // the meadow slimes - pushed out to the FAR-EAST meadow, well clear of Bram's forge
+  // and just north of the grove path, so they leash long before they'd follow you out
+  // to Rask's clearing beyond them
+  const slimeSpots=[[73,45],[75,44],[74,46]];
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }

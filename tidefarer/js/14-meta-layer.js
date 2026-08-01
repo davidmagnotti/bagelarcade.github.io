@@ -161,7 +161,11 @@ function loadCode(str){
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   // dash is now a taught ability (mage-tower orb). Grandfather any save past the
   // opening minutes so no returning player ever loses their footwork.
-  if(!P.unlocked.dash && (P.unlocked.bow||P.unlocked.staff||P.swordTier>0||(d.lv||1)>1||(d.world&&d.world!=='isle'))) P.unlocked.dash=true;
+  // Grandfather the dash onto OLD saves only - ones that have already left the
+  // tutorial isle (so pre-rework players aren't stranded without it). On Emberwick
+  // itself the dash is properly taught by Orin, and having a sword or a level is NOT
+  // enough to grant it - otherwise every new player gets it the moment they're armed.
+  if(!P.unlocked.dash && d.world && d.world!=='isle') P.unlocked.dash=true;
   // the quiver: give the bow its 20-shaft ammo on any save that predates it
   P.maxArrows = d.maxArrows || P.maxArrows || 20;
   P.arrows = (typeof d.arrows==='number') ? d.arrows : P.maxArrows;

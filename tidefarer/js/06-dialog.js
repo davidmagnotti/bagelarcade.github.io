@@ -447,12 +447,11 @@ function buildDialogContent(npc){
   // If the newcomer arrives with no blade yet, he sends them to Bram to be armed first.
   if(npc.id==='rask' && !(P.unlocked&&P.unlocked.parry) && qs('bladeoath')!=='done'){
     if(qs('bladeoath')==='avail' || qs('bladeoath')==='active'){
+      const drilling = !!P.parryDrill;
       setDialog('<b style="color:var(--ember)">'+QUESTS.bladeoath.title+'</b><br>“'+QUESTS.bladeoath.brief+'”',
-        shopButtons(npc,[{label:'Show me the turning', cls:'gold', fn:()=>{
-            P.quests.bladeoath='active'; P.prog.bladeoath=0;   // make sure it's underway
+        shopButtons(npc,[{label: drilling?'Ready - come at me':'Take up your blade - drill me', cls:'gold', fn:()=>{
             closeDialog();
-            unlockParry();                                     // teach the guard (its own popup)
-            if(qs('bladeoath')==='active' && questReady('bladeoath')) completeQuest('bladeoath');   // reward + unlock the King
+            if(typeof beginParryDrill==='function') beginParryDrill();   // the hands-on lesson: parry 3 telegraphed strikes
           }},
           {label:'Maybe later', ghost:true, fn:closeDialog}]));
       return;

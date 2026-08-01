@@ -3588,23 +3588,14 @@ function drawPlayerFigure(s){
     cx.closePath(); cx.fill();
     cx.restore(); cx.globalAlpha=1;
   }
-  // parry guard: a bright braced arc held in front while the guard is up, and a
-  // sharp ring on a clean parry. Drawn in the same iso-facing frame as the slash.
-  if((P.parryT||0)>0 || (P.parrySuccess||0)>0){
+  // clean-parry flash: a sharp fading ring on a successful turn. (No held-guard arc
+  // now - the parry rides your swing, so a bright arc on every attack would be noise.)
+  if((P.parrySuccess||0)>0){
     const a0=Math.atan2((P.dir.x+P.dir.y)*(TH/2),(P.dir.x-P.dir.y)*(TW/2));
-    const hold=(P.parryT||0)>0 ? (P.parryT/(P.parryMax||0.34)) : 0;
     const flash=(P.parrySuccess||0)/0.22;
     cx.save(); cx.translate(s.x,s.y-16); cx.rotate(a0); cx.scale(1,0.6);
-    // the held guard - a thin gold shield-arc
-    if(hold>0){
-      cx.globalAlpha=0.5+0.4*hold; cx.strokeStyle='rgba(255,226,140,0.9)'; cx.lineWidth=3.5;
-      cx.beginPath(); cx.arc(0,0,26,-0.85,0.85); cx.stroke();
-    }
-    // the clean-parry burst - a wider, fading ring of sparks
-    if(flash>0){
-      cx.globalAlpha=flash; cx.strokeStyle='rgba(255,244,200,'+flash.toFixed(2)+')'; cx.lineWidth=2+3*flash;
-      cx.beginPath(); cx.arc(0,0,20+34*(1-flash),-1.1,1.1); cx.stroke();
-    }
+    cx.globalAlpha=flash; cx.strokeStyle='rgba(255,244,200,'+flash.toFixed(2)+')'; cx.lineWidth=2+3*flash;
+    cx.beginPath(); cx.arc(0,0,20+34*(1-flash),-1.1,1.1); cx.stroke();
     cx.restore(); cx.globalAlpha=1;
   }
   if(P.fishing){
@@ -3694,6 +3685,21 @@ function drawPickup(pt,s){
 
 /* interact prompt + quest direction */
 function drawMarkers(){
+  // Rask's parry drill: telegraph his practice strike over his head - a red ! that
+  // swells as the blow nears, so the student learns to read the tell and time the turn.
+  if(P.parryDrill){
+    const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
+    if(rask && (rask.drillWarn||0)>0){
+      const w=rask.drillWarn, grow=1-w;                 // 0 at the start of the wind, 1 at the strike
+      const rs=worldToScreen(rask.x,rask.y);
+      cx.save(); cx.textAlign='center';
+      cx.globalAlpha=0.55+0.45*grow;
+      cx.font='bold '+Math.round(16+16*grow)+'px Georgia';
+      cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=4;
+      cx.strokeText('!', rs.x, rs.y-58); cx.fillStyle='#ff5a4a'; cx.fillText('!', rs.x, rs.y-58);
+      cx.restore();
+    }
+  }
   const it=nearestInteract();
   const ib=document.getElementById('interactBtn');
   if(it){

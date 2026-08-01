@@ -54,10 +54,6 @@ const HOT = [
   {id:'potion', icon:'potion', key:'4', wpn:false}
 ];
 function buildHotbar(){
-  // the parry touch-button rides alongside the dodge button, but only once Rask
-  // has taught the guard (it starts hidden, like the mount button)
-  const pb=document.getElementById('parryBtn');
-  if(pb) pb.style.display = (P.unlocked && P.unlocked.parry) ? 'flex' : 'none';
   const hb=document.getElementById('hotbar'); hb.innerHTML='';
   HOT.forEach(h=>{
     // a weapon you don't own yet stays hidden entirely (no grayed placeholder) -

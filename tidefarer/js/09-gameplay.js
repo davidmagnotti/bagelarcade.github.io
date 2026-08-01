@@ -529,6 +529,10 @@ function tryAttack(useMouse){
       return;
     }
     P.atkCd=0.42; P.swing=0.3; Snd.hit();
+    // PARRY is a matter of TIMING now: a swing opens a brief guard window, so a blow
+    // or arrow that lands in that window (from the front) is turned aside. Strike as
+    // the enemy's blow arrives to parry it. (Also active during Rask's drill.)
+    if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=0.22; P.parryMax=0.22; }
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
     // Cleaver perk (melee L5): the finisher sweeps a wide, deep arc instead of a lunge
@@ -617,7 +621,7 @@ function unlockParry(msg){
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the guard button (⛨)':'Press F (or right-click)')+' to brace your sword - time it as a blow or arrow reaches you to turn it aside. A parried arrow flies back; a parried striker is left staggered.';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> There\'s no separate button - it\'s all in the <b>timing</b>. <b>Attack the instant an enemy\'s blow lands</b> and you turn it aside instead of taking it: a parried arrow flies back, and a parried striker is left staggered wide open. Watch for the red <b style="color:#ff5a4a">!</b> - that\'s your moment.';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -642,20 +646,52 @@ function onParry(sx,sy){
   Snd.crit&&Snd.crit(); buzz(14);
   return true;
 }
-function tryParry(){
-  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
-  if(!(P.unlocked && P.unlocked.parry)){
-    toastErr('You have not learned to <b>parry</b> yet - seek <b>Rask</b>, the blade-master on the isle\'s east side.'); return;
+/* Rask's parry lesson - a hands-on DRILL, not a lecture. He slashes at you with a
+   practice blade; watch for the red !, and ATTACK on the strike to turn it. Land 3
+   clean parries and the guard is yours. Timed-attack parry is enabled for the drill
+   even before it's formally learned (see tryAttack). */
+function beginParryDrill(){
+  const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(!rask) return;
+  if(qs('bladeoath')!=='active'){ P.quests.bladeoath='active'; P.prog.bladeoath=0; }
+  P.parryDrill={count:0, need:3, phase:'rest', t:0.9};
+  rask.drillWarn=0;
+  if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s blade - three times');
+  toast('Watch Rask\'s blade. When it flashes red <b style="color:#ff5a4a">!</b> and comes down, <b>attack at that instant</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap ⚔':'Space / click')+') to turn it. <b>Parry 3.</b>',7000);
+}
+function updateParryDrill(dt){
+  const D=P.parryDrill; if(!D) return;
+  const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
+  if(!rask || P.dead || G.interior){ if(rask) rask.drillWarn=0; P.parryDrill=null; return; }
+  // Rask keeps his eyes on the student
+  { const dx=P.x-rask.x, dy=P.y-rask.y, l=Math.hypot(dx,dy)||1; rask.face={x:dx/l,y:dy/l}; }
+  D.t-=dt;
+  if(D.phase==='rest'){
+    rask.drillWarn=0;
+    if(D.t<=0){ D.phase='wind'; D.t=0.7; rask.drillWarn=0.001; }
+  } else if(D.phase==='wind'){
+    rask.drillWarn=Math.max(0.001, D.t/0.7);   // the telegraph fills 1 -> 0
+    if(D.t<=0){
+      rask.drillWarn=0; rask.swing=0.3;         // the blade comes down
+      const near = dist(P.x,P.y,rask.x,rask.y) < 3.8;
+      if((P.parryT||0)>0 && near){              // a swing was timed to the strike
+        D.count++;
+        onParry(rask.x,rask.y);
+        addFloat('PARRY  '+D.count+' / '+D.need, P.x, P.y-2.7, '#ffe08a', 1.45);
+        if(D.count>=D.need){ finishParryDrill(); return; }
+        D.phase='rest'; D.t=rnd(0.65,1.05);
+      } else {                                   // missed the window - harmless, try again
+        addFloat(near?'too slow - watch the blade':'stay close and watch the blade', P.x, P.y-2.3, '#ffd0a0', 1.05);
+        Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.12);
+        D.phase='rest'; D.t=rnd(0.75,1.15);
+      }
+    }
   }
-  if((P.parryT||0)>0 || (P.parryCd||0)>0) return;
-  // face the nearest threat so a tapped guard covers the obvious attacker (mirrors tryAttack's auto-aim)
-  let bx=null,by=null,bd=6;
-  for(const m of G.mobs){ if(m.dead||m.sealed) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bx=m.x;by=m.y;} }
-  for(const p of G.projs){ if(p.from==='player') continue; const d=dist(P.x,P.y,p.x,p.y); if(d<bd){bd=d;bx=p.x;by=p.y;} }
-  if(bx!=null){ const l=Math.hypot(bx-P.x,by-P.y)||1; P.dir={x:(bx-P.x)/l,y:(by-P.y)/l}; }
-  P.parryT=0.34; P.parryMax=P.parryT; P.parryCd=0.75; P.moving=false; P.click=null;
-  Snd.hit&&Snd.hit(); buzz(7);
-  burst(P.x+P.dir.x*0.9,P.y+P.dir.y*0.9-0.4,'#ffe6a0',6,1.4);
+}
+function finishParryDrill(){
+  const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(rask) rask.drillWarn=0;
+  P.parryDrill=null;
+  unlockParry();
+  if(qs('bladeoath')==='active' && questReady('bladeoath')) completeQuest('bladeoath');
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
@@ -671,6 +707,16 @@ function drawMobBars(m,s){
     cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=2.6;
     cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
     cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
+  }
+  // PARRY TELL: a red ! flashes over a foe in its wind-up - the moment to time your
+  // attack and turn the blow. Bright and pulsing so it reads at a glance.
+  if(!m.dead && (m.windup||0)>0 && dist(P.x,P.y,m.x,m.y)<11){
+    const top3= m.bigBoss? -108 : m.kind==='dragon'? -134 : m.kind==='scorpion'? -42 : -66;
+    const pulse=0.72+0.28*Math.sin(G.time*22);
+    cx.save(); cx.globalAlpha=pulse; cx.font='bold 20px Georgia'; cx.textAlign='center';
+    cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=3.5;
+    cx.strokeText('!', s.x, s.y+top3); cx.fillStyle='#ff5a4a'; cx.fillText('!', s.x, s.y+top3);
+    cx.restore();
   }
 }
 function damageMob(m,dmg,knock,skill){
@@ -1251,10 +1297,11 @@ function updatePlayer(dt){
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
-  // parry (the braced guard): the active window and its recovery, plus the clean-parry flash
-  P.parryT=Math.max(0,(P.parryT||0)-dt); P.parryCd=Math.max(0,(P.parryCd||0)-dt);
+  // parry timers: the short guard window a swing opens, and the clean-parry flash.
+  // No movement freeze now - the parry rides your attack, so you keep your footing.
+  P.parryT=Math.max(0,(P.parryT||0)-dt);
   P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
-  if((P.parryT||0)>0){ P.moving=false; P.click=null; }   // committed stance - braced, not walking
+  if(P.parryDrill) updateParryDrill(dt);
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands
     P.z=Math.sin(Math.PI*(1-P.rollT/(P.rollMax||0.26)))*7;
