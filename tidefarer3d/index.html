@@ -202,13 +202,20 @@ function paintSky(top,low){ const p=skyGeo.attributes.position, col=skyGeo.attri
   for(let i=0;i<p.count;i++){ const t=clamp((p.getY(i)/900)*0.5+0.5,0,1); c.copy(low).lerp(top,Math.pow(t,0.8)); col.setXYZ(i,c.r,c.g,c.b);} col.needsUpdate=true; }
 
 // lights
-const sun=new THREE.DirectionalLight(0xffe1b0,1.55); sun.castShadow=true;
+// Warm KEY light — one committed, low golden-hour / firelight sun (its capped
+// low angle is set in updateDay). Strong and warm so the whole lit side of the
+// world reads as firelight, casting long, committed shadows.
+const sun=new THREE.DirectionalLight(0xffdca8,1.7); sun.castShadow=true;
 sun.shadow.mapSize.set(isMobile?1024:2048,isMobile?1024:2048);
 { const s=sun.shadow.camera; s.near=10; s.far=520; s.left=-180; s.right=180; s.top=180; s.bottom=-180; }
 sun.shadow.bias=-0.0005; sun.shadow.normalBias=1.1; sun.shadow.radius=isMobile?3:8;
 scene.add(sun); scene.add(sun.target);
-const hemi=new THREE.HemisphereLight(0xcbdcec,0x6a6038,1.0); scene.add(hemi);
-const amb=new THREE.AmbientLight(0xfff2dc,0.18); scene.add(amb);
+// COOL fill — a tideglass-blue sky over a warm-brown ground bounce: shade skews
+// sea-blue while undersides keep a little hearth warmth. Never neutral grey.
+const hemi=new THREE.HemisphereLight(0x8fb6e0,0x5a4632,0.9); scene.add(hemi);
+// cool blue ambient fill — lifts cast shadows so they never crush to black,
+// tinted tideglass rather than a flat neutral lift.
+const amb=new THREE.AmbientLight(0x9ab8dc,0.22); scene.add(amb);
 const moon=new THREE.DirectionalLight(0x9fb6e0,0.0); moon.position.set(40,60,-30); scene.add(moon);
 
 const fxc=new EffectComposer(renderer); fxc.setPixelRatio(DPR); fxc.setSize(innerWidth,innerHeight);
@@ -776,9 +783,14 @@ function updateDay(dt){ dayT=(dayT+dt/DAYLEN)%1;
   const kd=(started&&hollowKing&&hollowKing.dead<=0)?Math.hypot(P.x-hollowKing.g.position.x,P.z-hollowKing.g.position.z):999;
   const dreadT=kd<44?clamp(1-(kd-12)/32,0,1):0;
   dread+=(dreadT-dread)*Math.min(1,dt*1.6);
-  sun.position.set(Math.cos(ang)*130, Math.max(8,sunH*150), 60); sun.target.position.set(0,0,0);
-  sun.intensity=lerp(0.05,1.75,up)*(1-dread*0.4); const warm=new THREE.Color().setHSL(0.09,0.5,0.6).lerp(new THREE.Color(0xffe6c0),up); sun.color.copy(warm);
-  hemi.intensity=lerp(0.35,1.05,up)*(1-dread*0.2); amb.intensity=lerp(0.10,0.20,up); moon.intensity=night*0.35+dread*0.25; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
+  // Keep the sun LOW — a raking golden-hour/firelight angle, never straight
+  // overhead — so every form throws a long, committed shadow and catches a warm
+  // rim. Height is capped hard (sunH*70) and it's pushed well out on Z.
+  const shY=Math.max(10, sunH*70);
+  sun.position.set(Math.cos(ang)*150, shY, 82); sun.target.position.set(0,0,0);
+  sun.intensity=lerp(0.05,1.95,up)*(1-dread*0.4); const warm=new THREE.Color().setHSL(0.07,0.62,0.55).lerp(new THREE.Color(0xffdca0),up); sun.color.copy(warm);
+  // fill stays low so the warm key dominates and shadows deepen (cool, not black)
+  hemi.intensity=lerp(0.30,0.82,up)*(1-dread*0.2); amb.intensity=lerp(0.12,0.20,up); moon.intensity=night*0.35+dread*0.25; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
   // sky — a clear blue day (bluer top, pale-blue horizon), warm only at dawn/dusk
   const daytop=new THREE.Color(0x4f97dd), daylow=new THREE.Color(0xd4ecf7), nighttop=new THREE.Color(0x18213e), nightlow=new THREE.Color(0x39344f), dusk=new THREE.Color(0xff9a5a);
   const top=nighttop.clone().lerp(daytop,up), low=nightlow.clone().lerp(daylow,up).lerp(dusk, clamp((1-up)*(1-night)*1.6,0,0.55));
