@@ -99,8 +99,8 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
   entry: {x:20, y:95, r:6,  name:'The Millstair',         lv:[0,0]},
-  works: {x:20, y:4,  r:6,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian + the stormsail
-  vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
+  works: {x:20, y:6,  r:5,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian (boss arena, y4-8)
+  vault: {x:20, y:2,  r:4,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail + the way up (behind the gate)
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
   maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
@@ -2824,6 +2824,7 @@ function exitFrostVault(){
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 const MILL_BOSS_SEAL=[[18,9],[19,9],[20,9],[21,9],[22,9]];   // the corridor mouth into the Grinding Floor; slams shut behind you when you step up to the Cog-Bound
+const MILL_VAULT_SEAL=[[19,3],[20,3],[21,3]];                // the inner millstone gate into the sail-vault; grinds up when the Cog-Bound falls
 function genMillDeep(){
   // the flooded undercroft: an entry landing, then FOUR flooded halls climbing north, and the
   // guardian's chamber at the top with the sail. The first two halls (A,B) are COMBINATION
@@ -2833,7 +2834,10 @@ function genMillDeep(){
   // as a WALL (ewall decor) so the rooms read clearly - no invisible collision.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian + the stormsail
+  carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian below, the sail-vault above
+  // split it: a REWARD VAULT (y1-2, the sail + the way up) behind an inner millstone gate at
+  // y3, and the BOSS ARENA (y4-8) below. The gate opens only when the Cog-Bound falls.
+  for(let x=9;x<=31;x++){ if(x>=19 && x<=21) continue; setTile(x,3,T.RUIN); setSolid(x,3,1); }
   carve(18,8,22,11);    // corridor -> Hall D
   carve(7,11,33,28);    // TIDE-LOCK HALL D - the five-lock sequence (deepest, hardest)
   carve(18,28,22,31);   // corridor -> Hall C
@@ -2866,12 +2870,18 @@ function placeObjectsMillDeep(){
   // grinds back up when the guardian falls (killMob). A cleared run leaves it open.
   G._millSealed=0;
   G.decor.push({kind:'catgate', x:20, y:9, open:true, gate:'cog', tiles:MILL_BOSS_SEAL.slice(), label:'the Cog-Gate'});
-  for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE SAIL-VAULT GATE: the inner millstone gate (y3) into the reward vault above the arena.
+  // Sealed until the Cog-Bound falls (killMob), then it grinds up and the sail + the way out
+  // stand right there.
+  { const vopen=!!(P.story && P.story.millDone); const vt=MILL_VAULT_SEAL.slice();
+    G.decor.push({kind:'catgate', x:20, y:3, open:vopen, gate:'millvault', tiles:vt, label:'the sail-vault gate'});
+    for(const [x,y] of vt) setSolid(x,y, vopen?0:1); }
+  for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,1],[28,1]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // a decorative great wheel in the landing (the works are drowned, not turning)
   G.decor.push({kind:'millwheel', x:12.5, y:97.2, r:6});
-  // THE MILLER'S ARMS-CHEST: his old hunting bow + the winch-crank that frees the seized
-  // sluice valves. You cannot work a valve until you've taken the crank.
-  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, bow:1});
+  // THE MILLER'S ARMS-CHEST: the winch-crank that frees the seized sluice valves. You cannot
+  // work a valve until you've taken it. (The bow lives on the Cloudreach now, not here.)
+  if(!(P.story && P.story.millCrankTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, crank:1});
   // ---- THE FLOODED HALLS. Each hall is barred by four WATER-WALLS, every doorway flooded shut by
   // default (you cannot get through). Sluice valves sit at each hall's mouth. There are TWO kinds:
   //   * COMBINATION halls (A,B): each valve is coupled to TWO doorways - throwing it drains one pair
@@ -2883,7 +2893,10 @@ function placeObjectsMillDeep(){
   //     and the locks slam shut. ----
   G._millWalls=[];
   const wwall=(hall, id, y, doorX0, doorX1)=>{
-    for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }   // the whole row floods, blocking
+    for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1);
+      // a raised churning water-curtain over every flooded tile, so the barrier reads as a WALL of
+      // water (not a calm pool you might jump). The render hides itself where a doorway has drained.
+      G.decor.push({kind:'millwater', x:x+0.5, y:y+0.5, gx:x, gy:y}); } }
     const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
   };
   const valve=(hall, vx, vy, flips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, flips, label:'a sluice valve'}); };
@@ -2895,20 +2908,13 @@ function placeObjectsMillDeep(){
   // HALL B (y51-68): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
   wwall('B','b1', 66, 20,24); wwall('B','b2', 63, 9,13); wwall('B','b3', 60, 20,24); wwall('B','b4', 57, 9,13);
   valve('B', 11,67, ['b2','b3']); valve('B', 20,67, ['b1','b2']); valve('B', 29,67, ['b3','b4']);
-  // HALL C (y31-48): the first TIDE-LOCK. Four walls; four numbered valves. Carved order: 2,4,1,3.
+  // HALL C (y31-48): four water-walls, one valve per wall. Throw each valve to drain its own
+  // stretch - any order (the old carved-order tide-lock is gone). Drain all four to cross.
   wwall('C','c1', 46, 20,24); wwall('C','c2', 43, 9,13); wwall('C','c3', 40, 26,30); wwall('C','c4', 37, 15,19);
-  ovalve('C', 9,47, 3); ovalve('C', 15,47, 1); ovalve('C', 25,47, 4); ovalve('C', 31,47, 2);
-  plaque('C', 20,49, [2,4,1,3]);
-  // HALL D (y11-28): the deepest TIDE-LOCK. Five walls; SIX numbered valves (one a decoy). Carved
-  // order: 4,1,5,2,6 - the valve numbered 3 is never called, and throwing it slams the locks shut.
+  valve('C', 9,47, ['c1']); valve('C', 15,47, ['c2']); valve('C', 25,47, ['c3']); valve('C', 31,47, ['c4']);
+  // HALL D (y11-28): five water-walls, one valve per wall - same simple drain, any order.
   wwall('D','d1', 26, 20,24); wwall('D','d2', 23, 9,13); wwall('D','d3', 20, 26,30); wwall('D','d4', 17, 15,19); wwall('D','d5', 14, 9,13);
-  ovalve('D', 8,27, 5); ovalve('D', 12,27, 2); ovalve('D', 17,27, 6); ovalve('D', 22,27, 1); ovalve('D', 27,27, 4); ovalve('D', 31,27, 3);
-  plaque('D', 20,29, [4,1,5,2,6]);
-  // the two tide-lock sequences: which valve-number opens the next wall northward, in order
-  G._millSeq={
-    C:{ order:[2,4,1,3],   gates:['c1','c2','c3','c4'],           idx:0 },
-    D:{ order:[4,1,5,2,6], gates:['d1','d2','d3','d4','d5'],       idx:0 }
-  };
+  valve('D', 8,27, ['d1']); valve('D', 13,27, ['d2']); valve('D', 18,27, ['d3']); valve('D', 23,27, ['d4']); valve('D', 28,27, ['d5']);
   // ---- THE GRINDING HAZARDS ----
   // the drowned works still turn where the shaft never fully seized: rusted spike-grates snap up
   // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
@@ -2926,13 +2932,17 @@ function placeObjectsMillDeep(){
   // Hall D (tide-lock) - the meat-grinder: grates and three blades over the deepest locks
   mspikes(12,22,25, 0.95, 0.0); mspikes(20,28,21, 0.95, 0.5); mspikes(10,18,15, 0.95, 0.25);
   maxe(20,24, 3.0, 2.4, 0.0); maxe(20,18, 3.0, 2.5, 0.5); maxe(13,21, 2.2, 2.6, 0.3);
-  // THE STORMSAIL, in the guardian's chamber at the top
-  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
+  // THE STORMSAIL + THE WAY UP, in the reward vault above the arena (behind the sail-vault gate,
+  // so you only reach them once the Cog-Bound falls and the gate grinds up). The exit is right here.
+  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:24.5, y:1.5, sail:1});
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:15.5, y:1.5, label:'the way up'});
+  setSolid(15,1,0); setTile(15,1,T.RUIN);
   G.critters=[];
-  // a cleared run leaves every hall drained (the mazes are solved) and the works stilled
+  // a cleared run leaves every hall drained (the mazes are solved), the works stilled, and the
+  // sail-vault gate standing open
   if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     for(const d of G.decor) if(d.kind==='sluicelever') d.on=true;
-    if(G._millSeq) for(const k in G._millSeq) G._millSeq[k].idx=G._millSeq[k].order.length;
+    for(const [x,y] of MILL_VAULT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap'); G._millSpikes=[]; G._millAxes=[]; }
 }
 // drain (walkable) or flood (blocking water) a water-wall's doorway to match its valve
@@ -2941,16 +2951,15 @@ function applyMillWall(w){
     if(w.on){ setTile(x,w.y,T.RUIN); setSolid(x,w.y,0); }
     else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
-// THE SLUICE VALVES. Combination valves (flips) are coupled to TWO doorways - throwing one flips
-// both. Tide-lock valves (order) must be thrown in the one carved order (see pullSluiceOrder). All
+// THE SLUICE VALVES. Halls A/B couple each valve to TWO doorways (a small combination puzzle);
+// halls C/D give each valve its own single doorway (just throw them all - no order to read). All
 // are seized until you take the winch-crank from the miller's arms-chest.
 function pullSluiceLever(b){
-  if(!b.order && !b.flips) return;   // the mill's only valves are the water-sluices
-  if(!(P.story && P.story.millBowTaken)){
+  if(!b.flips) return;   // the mill's only valves are the water-sluices
+  if(!(P.story && P.story.millCrankTaken)){
     toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
     Snd.step&&Snd.step(5); return;
   }
-  if(b.order) return pullSluiceOrder(b);   // the deeper tide-locks read the carved order
   b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
   for(const id of b.flips){ const w=(G._millWalls||[]).find(x=>x.id===id); if(!w) continue;
     w.on=!w.on; applyMillWall(w);
@@ -2966,56 +2975,21 @@ function pullSluiceLever(b){
     toast('The coupled sluices shift - some stretches drain as others flood over. <b>'+openN+' of '+hw.length+'</b> walls stand open. Find the combination that opens them all at once.',3600);
   }
 }
-// THE TIDE-LOCKS (halls C & D): the water only falls if the numbered valves are thrown in the one
-// carved order shown on the hall's plaque. Each correct valve drains the next wall northward; ANY
-// wrong valve reverses the sluices, floods every drained stretch back, and resets the sequence.
-function pullSluiceOrder(b){
-  const S=G._millSeq && G._millSeq[b.hall]; if(!S) return;
-  const gateWall=id=>(G._millWalls||[]).find(w=>w.id===id);
-  if(S.idx>=S.order.length){ b.on=true; return; }   // already open - nothing left to throw
-  const expected=S.order[S.idx];
-  if(b.pips===expected){
-    // the right lock, in the right place: drain the next wall northward and hold it
-    b.on=true;
-    const w=gateWall(S.gates[S.idx]);
-    if(w){ w.on=true; applyMillWall(w);
-      for(let i=0;i<12;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.6,2.4);
-        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.4, life:rnd(0.4,1.1), color:'#bfe0f4', size:rnd(1.5,3), grav:0.05}); } }
-    S.idx++;
-    Snd.quest&&Snd.quest(); buzz&&buzz(7); shockwave(b.x,b.y,'rgba(150,205,235,0.85)',44);
-    invalidateScenery&&invalidateScenery();
-    if(S.idx>=S.order.length){
-      G.shake=Math.max(G.shake||0,0.5); banner('THE TIDE-LOCK OPENS','THE WATER FALLS - THE WAY NORTH IS CLEAR');
-      toast('The last lock gives and the whole hall drains at once - a clear channel opens all the way north. <b>Cross it before you touch another valve.</b>',5000);
-    } else {
-      addFloat('lock '+S.idx+' / '+S.order.length, b.x, b.y-1.4, '#bfe0f4', 1.1);
-      toast('The water recedes a stretch and holds - <b>'+S.idx+' of '+S.order.length+'</b> locks thrown in order. The carved stele shows the next number.',3000);
-    }
-  } else {
-    // wrong lock: the whole hall floods black again and the order resets
-    const had=S.idx; S.idx=0;
-    for(const gid of S.gates){ const w=gateWall(gid); if(w && w.on){ w.on=false; applyMillWall(w);
-      for(let i=0;i<7;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.5,1.8);
-        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.2, life:rnd(0.3,0.9), color:'#5a7a92', size:rnd(1.5,3), grav:0.04}); } } }
-    for(const v of (G.decor||[])) if(v.kind==='sluicelever' && v.order && v.hall===b.hall) v.on=false;
-    G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(14); Snd.hit&&Snd.hit();
-    invalidateScenery&&invalidateScenery();
-    if(had>0) banner('THE LOCKS SLAM SHUT','THE ORDER BREAKS - THE HALL FLOODS BACK');
-    toast('Wrong valve - the sluices reverse with a roar and every stretch you drained floods black again. The tide-lock resets. <b>The carved stele shows the order - throw the numbers just as it reads.</b>',4400);
-  }
-}
+// (The old carved-ORDER tide-lock - pullSluiceOrder + the millplaque steles - was cut. Halls C/D
+//  are plain per-valve drains now; every sluice runs through pullSluiceLever above.)
 // drive the mill's grinding hazards: cycle the spike-grates and sweep the grind-blades, bleeding
 // the player on a clean hit (a dash's roll frames pass through everything unharmed).
 function updateMillDeep(dt){
   const t=(G._millT=(G._millT||0)+dt);
-  // THE COG-GATE: stepping onto the Grinding Floor with the Cog-Bound alive slams it shut behind
-  // you, so there's no backing down the halls to kite the guardian. It reopens when it falls.
-  if(!G._millSealed && !(P.story&&P.story.millDone) && P.y<=8 && P.x>=9 && P.x<=31
-     && (G.mobs||[]).some(mb=>mb.millboss && !mb.dead)){
+  // THE COG-GATE: stepping onto the Grinding Floor RAISES the Cog-Bound out of the works and
+  // slams the gate shut behind you - the guardian is not there until you commit. No backing down
+  // the halls to kite it; the gate reopens only when it falls.
+  if(!G._millSealed && !(P.story&&P.story.millDone) && P.y>=4 && P.y<=8 && P.x>=9 && P.x<=31){
+    if(typeof spawnCogBound==='function') spawnCogBound();
     G._millSealed=1; for(const [x,y] of MILL_BOSS_SEAL) setSolid(x,y,1);
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
-    banner('THE COG-GATE SLAMS SHUT','NO RETREAT - FELL THE COG-BOUND');
+    banner('THE COG-BOUND RISES','THE COG-GATE SLAMS SHUT - NO RETREAT');
   }
   const safe = P.dead || (P.rollT||0)>0;
   const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:12}); };
@@ -3034,13 +3008,19 @@ function updateMillDeep(dt){
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
 // millstone gate up. A single mini-boss - the whole reason the dungeon exists.
 function spawnMobsMillDeep(){
-  if(P.story && P.story.millDone) return;   // already felled - the works turn free
+  // The Cog-Bound no longer stands waiting - it rises only when you step onto the Grinding Floor
+  // and the Cog-Gate slams shut behind you (see spawnCogBound, called from updateMillDeep).
+}
+function spawnCogBound(){
+  if(P.story && P.story.millDone) return;
+  if((G.mobs||[]).some(mb=>mb.millboss)) return;   // one at a time
   const Z=MILLDEEP_ZONES.works;
-  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 6) || [Z.x, Z.y];
+  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 5) || [Z.x, Z.y];
   const b=spawnMob('skeleton', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
     b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
-    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
+    b.hx=sp[0]; b.hy=sp[1]; b.state='chase'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
+  return b;
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); spawnMobsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
@@ -5967,25 +5947,16 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
-  if(b.bow){
+  if(b.crank){
     bumpStat('chests');
-    P.story=P.story||{}; P.story.millBowTaken=1;
-    // the crank stowed with the bow is what frees the seized sluice wheel - the water
-    // itself waits on you throwing it (see pullSluiceLever)
+    P.story=P.story||{}; P.story.millCrankTaken=1;
+    // the winch-crank frees the seized sluice valves - the water waits on you throwing them
+    // (see pullSluiceLever). (The old miller's bow is gone - the bow lives on the Cloudreach now.)
     shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
-    if(!(P.unlocked && P.unlocked.bow)){
-      P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
-      if(typeof buildHotbar==='function') buildHotbar();
-      Snd.levelup&&Snd.levelup();
-      banner("THE MILLER'S BOW",'A RANGED ARM - AND THE WINCH-CRANK');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and, laid beside them, the heavy <b>winch-crank</b> that fits the seized sluice wheel down on the landing.<br><br><b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. Now <b>work the sluice</b> to flood the race and wake the works.', {label:'OK'});
-        else toast('The miller’s arms-chest gives up a good yew <b>bow</b>, a quiver of shafts, and the <b>winch-crank</b> for the sluice. <b style="color:var(--ember)">Bow unlocked!</b>',7400); },400);
-    } else {
-      giveGold(30); give('potion',1);
-      Snd.quest&&Snd.quest();
-      banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
-      setTimeout(()=>toast('You’ve a bow of your own already, so the spare goes to the pack with a few coins and a tonic - but the heavy <b>winch-crank</b> stowed with it is what you came for. Now <b>work the sluice wheel</b> on the landing to flood the race and wake the works.',6600),400);
-    }
+    Snd.quest&&Snd.quest();
+    banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The miller’s arms-chest gives up the heavy <b>winch-crank</b> that fits the seized sluice valves throughout the works.</i> Now <b>work the sluices</b> to drain the flooded halls and climb to the guardian at the top.', {label:'OK'});
+      else toast('The miller’s arms-chest gives up the <b>winch-crank</b> for the sluices. Now <b>work the valves</b> to drain the flooded halls.',6600); },400);
     setTimeout(autoSave,300);
     return;
   }

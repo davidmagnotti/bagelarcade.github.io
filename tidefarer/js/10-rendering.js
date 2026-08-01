@@ -81,7 +81,7 @@ function buildGroundCache(){
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, vathghost:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1, millwater:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
@@ -1150,6 +1150,23 @@ function drawDecor(b,s){
     g.beginPath(); g.ellipse(8-v*2,-H+3,3,1.6,0,0,TAU); g.fill();
     g.strokeStyle=th.ridge; g.lineWidth=1;   // top ridge highlight
     g.beginPath(); g.moveTo(-32,-H); g.lineTo(0,-16-H); g.lineTo(32,-H); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='millwater'){
+    // a raised churning water-curtain - only where the water still stands (a drained doorway is
+    // flat floor, so we draw nothing there). Reads clearly as an impassable wall of water.
+    if(!(inb(b.gx,b.gy) && tileAt(b.gx,b.gy)===T.DEEP && solidAt(b.gx,b.gy))) return;
+    const g=cx, t=G.time, H=12; g.save(); g.translate(s.x,s.y);
+    const bob=Math.sin(t*3 + b.gx*0.8 + b.gy*0.6)*1.4;
+    g.fillStyle='rgba(26,70,98,0.92)';   // left face
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(18,54,78,0.92)';   // right face
+    g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(48,116,156,0.95)';   // top (choppy crest)
+    g.beginPath(); g.moveTo(0,-16-H+bob); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.strokeStyle='rgba(190,228,246,0.5)'; g.lineWidth=1.3;   // bright churn along the crest
+    g.beginPath(); g.moveTo(-30,-H-1); g.quadraticCurveTo(-14,-16-H+bob,0,-14-H+bob); g.quadraticCurveTo(14,-16-H-bob,30,-H-1); g.stroke();
+    if(Math.random()<0.03) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.8), life:rnd(0.3,0.7), color:'rgba(205,232,246,0.7)', size:rnd(1,2), grav:0.04});
     g.restore(); return;
   }
   if(b.kind==='emberbutton'){

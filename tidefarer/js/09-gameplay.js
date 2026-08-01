@@ -209,7 +209,7 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.order? 'Throw lock valve '+b.pips : (b.on?'Sluice (open)':'Turn the sluice valve')}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:(b.on?'Sluice (open)':'Turn the sluice valve')}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
@@ -913,12 +913,15 @@ function killMob(m,skill){
     if(G._millWalls && typeof applyMillWall==='function') for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     // the works fall silent: still the grind-blades and spike-grates
     G._millAxes=[]; G._millSpikes=[]; G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap');
-    // the freed gear-train grinds the Cog-Gate back up - the way out of the chamber opens
+    // the freed gear-train grinds BOTH gates up: the Cog-Gate behind you (so you're not trapped)
+    // and the inner sail-vault gate ahead - the sail and the way up stand right there.
     if(typeof MILL_BOSS_SEAL!=='undefined') for(const [x,y] of MILL_BOSS_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    if(typeof MILL_VAULT_SEAL!=='undefined') for(const [x,y] of MILL_VAULT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     { const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=true; }
+    { const vg=G.decor.find(d=>d.kind==='catgate' && d.gate==='millvault'); if(vg) vg.open=true; }
     G._millSealed=0;
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
+    banner('THE COG-BOUND FALLS','THE VAULT GRINDS OPEN - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
   }
   // THE BONE-YARD (Undermaw R1): the second room's horde. Each fallen skeleton stays
@@ -939,8 +942,9 @@ function killMob(m,skill){
   }
   // After felling ANY dungeon boss, open THE WAY UP - the same fast-exit portal in every
   // dungeon, right where the boss fell. No dialogue: step into it to rise, mended and a level
-  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent.)
-  if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
+  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent; the
+  // Undermill's Cog-Bound has no drop - its sail-vault opens with the exit already inside it.)
+  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
     spawnFastExit(m.x, m.y);
   }
   // the four tier-2 tool prizes are BOSS DROPS - one per dungeon (see 37-dungeon-hideaways.js)
