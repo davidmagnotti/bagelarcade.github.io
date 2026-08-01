@@ -320,6 +320,33 @@ taken tools stay taken.
 side-pockets) — those want a per-site, human reachability pass so the unlocking tool
 is always obtainable first; left as authored content.
 
+#### A distinct item in every dungeon — [built] (`js/36-trinkets.js`)
+
+Each dungeon now drops its own new keepsake — a passive trinket with one clear, themed
+effect plugged into the existing stat formulas via `trinketBonus(stat)`. Placed as a
+`{itemgift:<key>}` bonus chest near the entrance by `placeDungeonItems(id)` (same
+switchWorld hook + `P.story.tg` persistence as the tool-gate content), so it does not
+disturb the dungeon's signature reward or boss.
+
+| Dungeon | Trinket | Effect |
+|---------|---------|--------|
+| Undermaw | **Rivenedge Axe** | (tool — fells ironwood; faster chopping) |
+| Emberdeep | **Cragbreaker Pick** | (tool — breaks basalt; faster mining) |
+| Underclimb | **Skytalon Charm** | +8% critical chance |
+| Rimefissure | **Rimeheart Pendant** | −3 damage from every blow |
+| Glacier Vault | **Bearhide Cloak** | +25 max health |
+| Drowned Catacomb | **Drowned Pearl** | +20 max mana |
+| Undermill | **Gearwright Gloves** | +2 gathering power |
+| Drowned Vault | **Tidesteel Band** | +5 melee damage |
+| Gale Spire | **Galestride Boots** | +12% move speed |
+| Ashen Forge | **Cinderforged Ring** | +6 magic damage |
+| Storm Temple | **Stormcore Shard** | +3 damage, all attacks |
+| Tideward Crypt | **Founders' Signet** | +4 all damage, +15 max HP |
+| Rainbow Road | **Prism Lens** | +6 archery damage (best-effort — procedural world) |
+
+Effects hook `meleeDmg`/`bowDmg`/`magicDmg` (05), the crit roll, the hurt-reduction, the
+gather power, and the walk speed (09); `+max-hp`/`+max-mana` kinds apply once on pickup.
+
 ### Bosses & new dungeons — [new]
 
 Each isle gets a dungeon ending in a boss tied to its spirit — clearing it quiets

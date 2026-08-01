@@ -5953,6 +5953,16 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(240,220,150,0.85)',48); burst(b.x,b.y-0.5,'#ffe9a8',18,2.6); Snd.levelup&&Snd.levelup();
     setTimeout(autoSave,300); return;
   }
+  // DUNGEON TRINKET: each dungeon's own new keepsake (see 36-trinkets.js)
+  if(b.itemgift){
+    if(typeof grantTrinket==='function' && !(P.inv && P.inv[b.itemgift]) && grantTrinket(b.itemgift)){
+      shockwave(b.x,b.y,'rgba(240,220,150,0.85)',52); burst(b.x,b.y-0.5,'#ffe9a8',20,2.8);
+    } else {
+      giveGold(rndi(80,140)); give('crystal',1);
+      banner('A PICKED-OVER CACHE','COIN AND CRYSTAL'); Snd.quest&&Snd.quest();
+    }
+    setTimeout(autoSave,300); return;
+  }
   // THE HOARFROST HOARD'S true prize: the chart that turns the isle-by-isle curse-lifting
   // into a HUNT - it names the great queen's hidden grave, and the sealing weapon that lies
   // with her. This is the "why" behind the whole Act II journey, handed to you on the ice.
@@ -6180,6 +6190,7 @@ function switchWorld(id){
     // seed the tiered-tool gates & side-caches for this freshly-generated world,
     // skipping any already felled/looted (persisted in P.story.tg). See 35-toolgate-content.js
     if(typeof placeToolgates==='function') placeToolgates(id);
+    if(typeof placeDungeonItems==='function') placeDungeonItems(id);
   }
   G.worldId=id;
   if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once
