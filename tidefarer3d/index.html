@@ -224,13 +224,26 @@ const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), isMob
 fxc.addPass(new OutputPass());
 // Grade pulls saturation BELOW 1 (kills full-sat stock colour, the Roblox tell)
 // and warms the whole frame toward parchment — never the punchy uSat>1 look.
-const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.05},uSat:{value:0.96},uLift:{value:0.02},uNight:{value:0.0},uDread:{value:0.0}},
+const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.05},uSat:{value:0.96},uLift:{value:0.02},uNight:{value:0.0},uDread:{value:0.0},uPaper:{value:0.032},uGrain:{value:0.05},uAspect:{value:innerWidth/innerHeight},uTime:{value:0.0}},
   vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight,uDread;varying vec2 v;
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight,uDread,uPaper,uGrain,uAspect,uTime;varying vec2 v;
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
     void main(){ vec3 c=texture2D(tDiffuse,v).rgb; c=c*(1.0-0.10*c); c=mix(vec3(uLift),c,1.0-uLift);
       c+=vec3(uWarm,uWarm*0.35,-uWarm*0.5); float l=dot(c,vec3(.299,.587,.114)); c=mix(vec3(l),c,uSat);
-      c=mix(c, vec3(l)*vec3(0.55,0.68,1.05), uNight*0.5);          // cool the night
+      // cool ALL shadows toward tideglass (#243642), soft-light style — the 2D
+      // drawGritGrade lays this over the whole frame; heaviest in the darks.
+      float sh=1.0-smoothstep(0.0,0.55,l);
+      c=mix(c, c*vec3(0.82,0.92,1.06), sh*0.30);
+      c=mix(c, vec3(l)*vec3(0.55,0.68,1.05), uNight*0.5);          // deepen the night cool
       c=mix(c, vec3(l)*0.82, uDread*0.7);                          // the King's pall: desaturate + darken
+      // faint paper/canvas tooth — a hand-drawn surface, fixed to screen like ink
+      vec2 pv=v*vec2(uAspect,1.0);
+      float fib=(sin(pv.x*760.0)*0.5+0.5)*(sin(pv.y*720.0+1.7)*0.5+0.5);
+      float mottle=hash(floor(pv*90.0))-0.5;
+      c*=1.0+((fib-0.5)*0.6+mottle*0.7)*uPaper;
+      // film grain — animated, jittered per frame (subtle overlay, 2D-style)
+      float g=hash(v*vec2(uAspect,1.0)*vec2(1024.0,1024.0)+fract(uTime)*57.0)-0.5;
+      c+=g*uGrain*0.5;
       vec2 d=v-0.5; float vg=smoothstep(0.9,0.2,dot(d,d)*uVig); c*=mix(0.7,1.0,vg);
       gl_FragColor=vec4(clamp(c,0.,1.),1.);}` };
 const gradePass=new ShaderPass(Grade); fxc.addPass(gradePass);
@@ -797,7 +810,7 @@ function updateDay(dt){ dayT=(dayT+dt/DAYLEN)%1;
   top.lerp(GRAY,dread*0.9); low.lerp(GRAYLOW,dread*0.9);            // gray out under the King
   paintSky(top,low);
   fog.color.copy(low).lerp(new THREE.Color(0xcfe2ee),0.35).lerp(GRAY,dread*0.7); sky.material.needsUpdate=true;
-  Grade.uniforms.uNight.value=night; Grade.uniforms.uDread.value=dread;
+  gradePass.uniforms.uNight.value=night; gradePass.uniforms.uDread.value=dread;   // ShaderPass clones uniforms — drive the live copy
   const hr=Math.floor(((dayT*24)+6)%24); document.getElementById('clock').textContent=(hr<12?(hr===0?12:hr)+' AM':(hr===12?12:hr-12)+' PM');
   motes.material.opacity=lerp(0.15,0.5,up); motes.material.color.setHex(night>0.3?0x9fd0ff:0xfff0c0);
 }
@@ -839,6 +852,7 @@ function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta()
   // water ripple
   if(waterSeg>1){ const p=water.geometry.attributes.position; for(let i=0;i<p.count;i++){ const x=waterBase[i*3],z=waterBase[i*3+2]; p.array[i*3+1]=Math.sin(x*0.05+time*1.1)*0.3+Math.cos(z*0.06+time*0.9)*0.28; } p.needsUpdate=true; }
   else water.position.y=SEA_Y-0.15+Math.sin(time*1.2)*0.06;
+  gradePass.uniforms.uTime.value=time;   // drive animated film grain
   fxc.render();
   fpsN++; fpsT+=dt; if(fpsT>=0.5){ fpsEl.textContent=Math.round(fpsN/fpsT)+' fps'; fpsN=0;fpsT=0; }
 }
@@ -914,7 +928,7 @@ function step(dt,time){
   mmT-=dt; if(mmT<=0){ drawMini(); mmT=0.12; }
   checkZone();
 }
-addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); fxc.setSize(innerWidth,innerHeight); });
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); fxc.setSize(innerWidth,innerHeight); gradePass.uniforms.uAspect.value=innerWidth/innerHeight; });
 tick();
 </script>
 </body>
