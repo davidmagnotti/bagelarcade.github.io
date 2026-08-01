@@ -112,7 +112,7 @@ const DROWNED_ZONES = { // THE DROWNED VAULT - the flooded harbor-vault beneath 
   gallery:{x:36, y:56, r:12, name:'The Flooded Gallery', lv:[4,6]},  // a plank causeway over deep water, flanked by drowned dead
   vault:  {x:36, y:20, r:12, name:'The Tide-Lock Vault', lv:[6,7]}   // the Drowned Minotaur + the diving-charm chest
 };
-const GALEDEEP_ZONES = { // THE GALE SPIRE - a wind-scoured shaft beneath Windsurf (grants the longer dash)
+const GALEDEEP_ZONES = { // THE GALE SPIRE - a wind-scoured shaft beneath Windsurf (grants the Swiftstep charm (quicker dash))
   entry: {x:36, y:88, r:7,  name:'The Windward Stair', lv:[4,6]},
   updraft:{x:36, y:54, r:12, name:'The Updraft Hall',  lv:[5,7]},   // gale-swept gaps you dash across
   eye:   {x:36, y:20, r:12, name:'The Eye of the Gale', lv:[7,8]}   // the Storm-Wraith + the swiftstep chest
@@ -130,7 +130,7 @@ const STORMTEMPLE_ZONES = { // THE STORM TEMPLE - a lightning-wracked temple on 
 const TIDEWARD_ZONES = { // THE TIDEWARD CRYPT - the Emberwick capstone, opened only with all four gifts
   entry:  {x:40, y:96, r:8,  name:'The Founders\' Stair', lv:[12,14]},
   ford:   {x:40, y:74, r:12, name:'The Sunken Ford',    lv:[12,14]},   // DIVE across
-  span:   {x:40, y:54, r:12, name:'The Broken Span',     lv:[13,15]},  // LONGER DASH the gap
+  span:   {x:40, y:54, r:12, name:'The Broken Span',     lv:[13,15]},  // a 2-tile gap the base dash clears
   briar:  {x:40, y:36, r:12, name:'The Emberbriar Gate', lv:[13,15]},  // FLAME SNARE the wardthorns
   chasm:  {x:40, y:18, r:14, name:'The Tideward Vault',  lv:[14,16]}   // DOUBLE DASH the chasm -> the guardian
 };
@@ -5080,14 +5080,14 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
     if(b){ b.boss=true; b.bigBoss=true; b.title=title; b.subtitle=sub; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone=doneFlag; b.entrance='loom'; }
   }
 }
-// ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
+// ---- WINDSURF: THE GALE SPIRE (grants the Swiftstep charm (quicker dash)) ----
 /* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke ----------
    Three chambers climb the wind-scoured spire before the Eye. THE ANTECHAMBER, where cave-bats
    swoop out of the dark; then two ABYSS CROSSINGS - THE UPDRAFT and THE HIGH CROSSING - each a
    bottomless wind-shaft you cross on a drifting stone platform while a SIDEWAYS GALE (east in
    one room, west in the next, on staggered timing) shoves you toward the drop. Ride the
    platform and hold into the wind or be swept off. At the top the Eye of the Gale seals shut
-   and THE SKIRL forms; its charm grants the longer dash. ============================== */
+   and THE SKIRL forms; its charm grants the Swiftstep boon (a quicker dash). ============================== */
 const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genWindDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -5133,7 +5133,7 @@ function placeObjectsWindDeep(){
   G._windGusts.push({x0:20,x1:52,y0:51,y1:54, dir:-1, push:3.0, period:4.0, t:2.0});   // ROOM 4 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - QUICKER DASH (faster recovery)
   G.critters=[];
   if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; dungOpenAllGates(true); }
@@ -5569,9 +5569,10 @@ function updateThundercaller(m,dt){
 // the founders' trials, ending at the Tideward Guardian and a hook toward the
 // weapon the prophecy names (see STORY.md, Act II climax).
 /* ---------- THE TIDEWARD CRYPT (embertomb) - the Emberwick capstone, bespoke ------------
-   Opened only with all four returned-isle gifts, and every chamber demands one of them in
-   turn: DIVE the Sunken Ford, clear the Broken Span with the LONGER DASH, burn the Emberbriar
-   with a FLAME SNARE, and cross the Sundering Chasm with the DOUBLE DASH - then face THE
+   Opened only with all four returned-isle gifts (DIVE, the SWIFTSTEP charm, the FLAME SNARE,
+   and the DOUBLE DASH). DIVE the Sunken Ford, hop the Broken Span (a 2-tile gap the base dash
+   clears now), burn the Emberbriar with a FLAME SNARE, and cross the Sundering Chasm with the
+   DOUBLE DASH - then face THE
    TIDEWARD GUARDIAN, the founders' sentinel, and take the trail to the weapon.
    ================================================================================= */
 const TOMB_THORN=[[37,29],[38,29],[39,29],[40,29],[41,29],[42,29],[43,29]];   // the Emberbriar wall
@@ -5584,7 +5585,7 @@ function genEmberTomb(){
   _dungCarve(28,68,52,74,T.RUIN);         // north lip
   _dungCarve(37,62,43,68,T.RUIN);         // corridor
   _dungCarve(28,56,52,62,T.RUIN);         // BROKEN SPAN - south ledge
-  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (voided in placeObjects: LONGER DASH)
+  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (a 2-tile band is voided in placeObjects - base dash clears it)
   _dungCarve(28,44,52,50,T.RUIN);         // north ledge
   _dungCarve(37,38,43,44,T.RUIN);         // corridor
   _dungCarve(28,30,52,38,T.RUIN);         // EMBERBRIAR chamber
@@ -5600,7 +5601,7 @@ function placeEmberTombObjects(){
   for(const [tx,ty] of [[34,98],[46,98],[26,70],[54,70],[26,58],[54,58],[26,32],[54,32],[24,4],[56,4],[40,3]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   G._tombVoid=new Set(); G._tombPlunge=null; G._tombCheck={x:40.5,y:90.5};
   const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); if(((x*3+y)%3)===0) G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
-  voidRect(28,50,52,55);        // THE BROKEN SPAN gap (longer dash)
+  voidRect(28,52,52,53);        // THE BROKEN SPAN gap - a 2-tile void the base dash clears (the old longer-dash requirement is gone)
   voidRect(26,10,54,15);        // THE SUNDERING CHASM gap (double dash)...
   // ...but leave a small mid-island to land the first dash on, then dash again to the vault
   for(let y=11;y<=13;y++) for(let x=38;x<=42;x++){ G._tombVoid.delete(x+','+y); setTile(x,y,T.RUIN); setSolid(x,y,0);
@@ -5775,7 +5776,7 @@ function placeSkyHazard(){
   _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
 }
 // The Emberwick capstone opens only once all four returned-isle gifts are in hand.
-function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.dashfar && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
+function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.swiftstep && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
 function placeEmberTomb(){
   if(!haveAllFourGifts()) return;
   if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld==='embertomb')) return;
@@ -5843,15 +5844,15 @@ function openChest(b){
     setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The crown kept an old chart, inked on stormcloth - every wind-road the great dragon once flew, laid out isle to isle.</i> <b style="color:#c9b0ff">You take the Cloud-Chart.</b> <i>The bird waits at the vault\'s edge to bear you down to the Cloudreach. Show the chart to <b>Ashwing</b> at the landing, and - now the high wind is tamed - he will fly you on to <b>Windsurf</b>, back to the Cloudreach, or to the <b>Sunward Isle</b>.</i>'); },500);
     setTimeout(autoSave,300); return;
   }
-  // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a longer dash.
+  // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a QUICKER dash (faster recovery, not longer).
   if(b.dashgift){
     bumpStat('chests'); P.unlocked=P.unlocked||{}; P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(180,230,255,0.9)',56); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); if(Snd.levelup) Snd.levelup();
-    if(!P.unlocked.dashfar){
-      P.unlocked.dashfar=true; P.story.galeDeepDone=1;
+    if(!P.unlocked.swiftstep){
+      P.unlocked.swiftstep=true; P.story.galeDeepDone=1;
       if(typeof WORLDS!=='undefined') delete WORLDS.isle;
-      banner('THE SWIFTSTEP CHARM','LONGER DASH - YOUR DODGE CARRIES FARTHER');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash now carries you half-again as far.</b> <i>Windsurf can breathe again - and the wider gaps of the old islands are yours to clear.</i>'); },500);
+      banner('THE SWIFTSTEP CHARM','QUICKER DASH - YOUR DODGE RECOVERS FASTER');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash recovers half again as fast</b> - <i>you can roll again far sooner. Windsurf can breathe again.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
     setTimeout(autoSave,300); return;
   }
@@ -6432,11 +6433,10 @@ function tryRoll(){
     if(!(P.unlocked&&P.unlocked.dash2) || P.dashChain) return;
     P.dashChain=1;
   } else P.dashChain=0;
-  // the Rainbow Road's prize (P.unlocked.dashfar) keeps the calmed sky's lightness in
-  // your step: a half-again longer dash. rollT drives the whole roll - movement, footwork
-  // animation and i-frames all scale together - so the dash simply reaches 1.5x as far.
-  const dashReach=(P.unlocked&&P.unlocked.dashfar)?1.5:1;
-  P.rollT=0.26*dashReach; P.rollMax=P.rollT; P.rollCd=1.0; buzz(9);
+  // the Gale Spire's Swiftstep charm (P.unlocked.swiftstep) quickens your FOOTING, not your
+  // reach: the dash recovers faster, so you can roll again sooner. The reach itself is fixed
+  // (no more half-again dash), so no gap anywhere depends on it.
+  P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?0.62:1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});
