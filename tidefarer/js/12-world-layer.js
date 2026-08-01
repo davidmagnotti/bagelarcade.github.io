@@ -1463,12 +1463,13 @@ function pressEmberButton(b){
     toast('Wrong rune! The ward flares and a <b>barrow archer</b> claws up out of the ash. The runes go dark - begin again from <b>I</b>.',4200);
   }
 }
-/* THE EMBER WARD: an arcane fence across the hoard's doorway. Blades and arrows
-   pass through it uselessly - ONLY a fire staff unmakes it. */
+/* THE EMBER WARD: an arcane fence across the hoard's doorway. The working feeds on
+   a caster's own fire - so a plain steel edge, carrying none, cuts its threads
+   where a spell would only be swallowed. A braced sword-strike unmakes it. */
 function dispelStaffGate(b){
   if(!b || b.open) return;
-  if(!(P.unlocked && P.unlocked.staff)){
-    toast('An <b>arcane ember-ward</b> hums across the way - no blade or arrow so much as marks it. Only a <b style="color:var(--ember)">fire staff</b> could unmake a working like this.',4800);
+  if(!(P.unlocked && P.unlocked.melee)){
+    toast('An <b>arcane ember-ward</b> hums across the way. It drinks any fire thrown at it - but it has no answer for cold steel. You will want a <b style="color:var(--ember)">sword</b> in hand.',4800);
     Snd.step&&Snd.step(5); return;
   }
   b.open=true;
@@ -2402,8 +2403,17 @@ function freeWarden(m){
   // from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
   // rune in the Rimefissure's reward chest, worked into a spell by your brother.
   // Sigrid points the way down. (see openChest `veiltome` + the 'brother' scene.)
-  setTimeout(()=>storyCard('The violet sloughs away like rotten ice, and the Warden lifts its head - itself again. The killing cold breaks, and a clean, ordinary winter settles back over Hearthhold: the snow still falls, soft now, and the life creeps back into the ice - seals on the floes, fish beneath them. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
-    {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }}),1400);
+  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js) - the same
+  // freed-victim bookend the Leviathan got: the violet sloughs off, the Warden weeps clean
+  // meltwater, a soft winter returns, and Vath is glimpsed on the glacier road. When it ends,
+  // Sigrid's pointer card (the trail down to the Rimefissure) follows. Falls back to the old
+  // story-card if the overlay layer is absent.
+  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
+    {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }});
+  setTimeout(()=>{
+    if(typeof wardenFreedCutscene==='function') wardenFreedCutscene(m, sigridCard);
+    else sigridCard();
+  },1400);
 }
 // The WARDING VEIL: a warding woven from the freed Rimebound's hush-frost that hides its
 // bearer from Vath's eye, letting you steal back to the old islands (all but the capital,
@@ -2515,9 +2525,12 @@ function placeObjectsFrostDeep(){
   buildRewardRoom({ x0:30, x1:58, wallY:16, gx0:40, gx1:42, floorT:T.ICE,
     chest:{kind:'chest', x:36.5, y:14.5, deep:1, veiltome:1}, exitX:52, exitY:14,
     cleared:!!(P.story && P.story.deepDone) });
-  // frostdeep has no ewall wall-faces (its arena is ringed by void, not stone), so dress the
-  // partition as a visible wall of ice-spires - the tiles are already solid from buildRewardRoom
-  for(let x=30;x<=58;x++){ if(x>=40 && x<=42) continue; G.decor.push({kind:'icespire', x:x+0.5, y:16.5}); }
+  // frostdeep has no ewall wall-faces of its own (its arena is ringed by void, not stone), so dress
+  // the reward-room partition with explicit ewall blocks - a chunky raised wall that reads clearly as
+  // a barrier (cold 'brine' palette to sit right in the ice). The tiles are already solid.
+  for(let x=30;x<=58;x++){ if(x>=40 && x<=42) continue; G.decor.push({kind:'ewall', x:x+0.5, y:16.5, s:((x*7+208)%5), theme:'brine'}); }
+  // lamps flanking the gate, on the boss side, so the sealed vault door reads clearly during the fight
+  for(const [lx,ly] of [[38,17],[44,17]]) if(inb(lx,ly)) G.decor.push({kind:'lamp', x:lx+0.5, y:ly+0.5});
   // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
   // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
   for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
@@ -2649,7 +2662,15 @@ function freeColossus(m){
   giveGold(150); give('elixir',2);
   if(typeof openRewardRoom==='function') openRewardRoom();   // the sealed vault at the arena's back grinds open - prize + climb-out within
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
-  setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
+  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the violet
+  // bleeds out of the great ice-whale and it settles calm into the melt, then sinks. It
+  // carries the "Vath is one island ahead" beat the old story-card held, so the card is
+  // dropped (as the Leviathan's "Where it sank..." card was) - the old card stays only as a
+  // fallback if the overlay layer is missing.
+  setTimeout(()=>{
+    if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(m, ()=>{ if(typeof autoSave==='function') autoSave(); });
+    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>');
+  },1400);
 }
 
 /* =====================================================================
@@ -3159,8 +3180,8 @@ function placeObjectsUndermaw(){
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.staff=true;
-    toast('An old ember-staff leans by the maw - you can loose <b>bolts</b> here (press <b>3</b> / the staff slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  if(!(P.unlocked && P.unlocked.bow)){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
+    toast('An old hunting <b>bow</b> and a full quiver lean by the maw - loose <b>arrows</b> here (press <b>2</b> / the bow slot). Twenty hard-hitting shafts, and they trickle back.',4600); if(typeof buildHotbar==='function') buildHotbar(); if(typeof refreshUI==='function') refreshUI(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -4392,10 +4413,10 @@ QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'sprin
   log:'Discover the Ember Springs in the isle\'s western hills.',
   doneText:"You FOUND them. Warm as a kettle, she used to say. Go soak whenever the island bites you - and take this for an old woman's peace of mind.",
   rw:{gold:30, item:{potion:1}, xp:{farming:80, fishing:80}} };
-QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{wolf:3},
-  brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
-  log:'Slay 3 wolves at Smuggler\'s Cove and claim the camp.',
-  doneText:"Three pelts' worth of quiet. The cove's yours, friend - crack that chest open and think of me.",
+QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{slime:3},
+  brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a nest of slimes has oozed in and claimed it. Squash three of them and the cove's yours to pick clean.",
+  log:'Squash 3 slimes at Smuggler\'s Cove and claim the camp.',
+  doneText:"Three less to ooze about. The cove's yours, friend - crack that chest open and think of me.",
   rw:{gold:35, item:{crystal:1}, xp:{melee:120, archery:120}} };
 QUESTS.orchard={ giver:'willa', title:'Applewood', kind:'gather', need:{apple:5},
   brief:"The old orchard south-east still fruits - nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
@@ -5670,8 +5691,9 @@ function placeEmberTombObjects(){
   G.decor.push({kind:'shoottarget', x:40.5, y:34.5, thornbud:1});       // the bud you burn with a flame-snare
   // THE REWARD ROOM: wall off the top of the Tideward Vault - the founders' hoard + the climb-out
   // stand within, sealed until the Tideward Guardian falls (killMob -> openRewardRoom).
-  buildRewardRoom({ x0:20, x1:60, wallY:5, gx0:38, gx1:42, floorT:T.RUIN,
-    chest:{kind:'chest', x:34.5, y:3.5, tidewardHoard:1}, exitX:46, exitY:3,
+  // a shallow reward vault (y2-3) so the Tideward Guardian keeps the deeper half of the hall (y5-10)
+  buildRewardRoom({ x0:20, x1:60, wallY:4, gx0:38, gx1:42, floorT:T.RUIN,
+    chest:{kind:'chest', x:34.5, y:2.5, tidewardHoard:1}, exitX:46, exitY:2,
     cleared:!!(P.story && P.story.tidewardDone) });
   G.critters=[];
   if(P.story && P.story.tidewardDone){ tombBurnThorns(true); }           // a cleared run stands open
@@ -5679,7 +5701,7 @@ function placeEmberTombObjects(){
 function spawnEmberTombMobs(){
   for(const [zx,zy] of [[34,34],[46,34],[30,20],[50,20]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   if(!(P.story && P.story.tidewardDone)){
-    const sp=findOpenNear(40, 8, 6) || [40,8];   // below the reward-room wall (y5) so the guardian rises in its arena
+    const sp=findOpenNear(40, 8, 6) || [40,8];   // below the reward-room wall (y4) so the guardian rises in its deeper arena (y5-10)
     const b=spawnMob('wardking', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
@@ -5884,11 +5906,12 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
     P.unlocked=P.unlocked||{};
     if(!P.unlocked.bow){
-      P.unlocked.bow=true;
+      P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
       if(typeof buildHotbar==='function') buildHotbar();
+      if(typeof refreshUI==='function') refreshUI();
       Snd.levelup&&Snd.levelup();
       banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> refills slowly, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
         else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
     } else {
       giveGold(30); give('potion',1); Snd.quest&&Snd.quest();
@@ -5918,15 +5941,15 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
     setTimeout(autoSave,300); return;
   }
-  // SUNWARD - THE ASHEN FORGE: the Flame Snare - staff-bolts root a foe in fire.
+  // SUNWARD - THE ASHEN FORGE: the Flame Snare - fire-fletched arrows root a foe.
   if(b.snaregift){
     bumpStat('chests'); P.spells=P.spells||{}; P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(255,140,60,0.9)',56); burst(b.x,b.y-0.5,'#ff9a3c',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.spells.flamesnare){
       P.spells.flamesnare=1; P.story.ashenForgeDone=1;
       if(typeof WORLDS!=='undefined') delete WORLDS.isle;
-      banner('THE FLAME-SNARE','STAFF-BOLTS ROOT A FOE IN FIRE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your staff-hand, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your fire-staff bolts now lay a FLAME SNARE</b> - <i>every bolt roots the foe it strikes in a snare of fire, held fast where it stands. Channel it with the staff ('+((typeof isTouch!=='undefined'&&isTouch)?'the staff slot':'press 3')+').</i>'); },500);
+      banner('THE FLAME-SNARE','FIRE-FLETCHED ARROWS ROOT A FOE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your quiver, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your arrows now lay a FLAME SNARE</b> - <i>every shaft roots the foe it strikes in a snare of fire, held fast where it stands. Loose it with the bow ('+((typeof isTouch!=='undefined'&&isTouch)?'the bow slot':'press 2')+').</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ASHEN FORGE','EMBER-GLASS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
@@ -6352,13 +6375,14 @@ function switchWorld(id){
     if(P.earlySail && !P.earlyKit){
       P.earlyKit=1;
       P.kit=true;
-      P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.staff=true;
+      P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.parry=true; P.unlocked.dash=true;
+      P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
       P.swordTier=Math.max(P.swordTier||0,2);
       P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
       giveQuiet('potion',3); giveQuiet('bread',2); P.gold+=50;
       buildHotbar(); refreshUI();
       setTimeout(()=>{
-        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
+        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, plate, tools, tonics, and fifty gold press into your arms - and a word from old Rask on how to turn a blade aside. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
         Snd.quest(); autoSave();
       }, 1400);
     }

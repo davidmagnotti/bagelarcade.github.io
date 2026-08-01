@@ -78,7 +78,7 @@ function saveCode(){
   flags[G.worldId]=worldFlagsFrom(G.mobs,G.decor);
   for(const id in WORLDS){ if(id!==G.worldId) flags[id]=worldFlagsFrom(WORLDS[id].mobs,WORLDS[id].decor); }
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
-    gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),maxmp:P.maxmp,
+    gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),maxmp:P.maxmp,arrows:Math.floor(P.arrows||0),maxArrows:P.maxArrows||20,
     inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
     unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,rr:P.resortRoom?1:0,
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
@@ -162,6 +162,9 @@ function loadCode(str){
   // dash is now a taught ability (mage-tower orb). Grandfather any save past the
   // opening minutes so no returning player ever loses their footwork.
   if(!P.unlocked.dash && (P.unlocked.bow||P.unlocked.staff||P.swordTier>0||(d.lv||1)>1||(d.world&&d.world!=='isle'))) P.unlocked.dash=true;
+  // the quiver: give the bow its 20-shaft ammo on any save that predates it
+  P.maxArrows = d.maxArrows || P.maxArrows || 20;
+  P.arrows = (typeof d.arrows==='number') ? d.arrows : P.maxArrows;
   P.kit = !!d.kit || P.swordTier>0 || qs('kit')==='done' || qs('sharpen')==='done';
   P.earlySail=!!d.es; P.earlyKit=!!d.ek;
   if(typeof d.dyt==='number') G.dayT=d.dyt;
@@ -334,7 +337,7 @@ function pollGamepad(){
     if(edge(2)) doInteract();
     if(edge(3)) useItem(P.quickItem||'potion');
     if(edge(4)||edge(5)){
-      const order=['melee','bow','staff'].filter(w=> w==='melee'||P.unlocked[w]);
+      const order=['melee','bow'].filter(w=> w==='melee'||P.unlocked[w]);
       let i=order.indexOf(P.weapon); if(i<0) i=0;
       i=(i+(edge(5)?1:order.length-1))%order.length;
       selectWeapon(order[i]);

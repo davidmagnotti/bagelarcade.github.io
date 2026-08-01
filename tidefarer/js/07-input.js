@@ -14,7 +14,7 @@ window.addEventListener('keydown',e=>{
   if(k===' '){ e.preventDefault(); input.attack=true; }
   if(k==='1') selectWeapon('melee');
   if(k==='2') selectWeapon('bow');
-  if(k==='3') selectWeapon('staff');
+  if(k==='f') tryParry();
   if(k==='4') useItem(P.quickItem||'potion');
   if(k==='r') cycleQuickItem();
   if(k==='m'){ toggleRide(); }
@@ -49,6 +49,8 @@ cv.addEventListener('mousedown',e=>{ if(G.state!=='play') return;
   }
 });
 window.addEventListener('mouseup',()=> input.mouseDown=false);
+// right-click raises the guard (parry) - a natural "defend" button alongside the left-click strike
+cv.addEventListener('contextmenu',e=>{ e.preventDefault(); if(G.state==='play' && !dlg.open) tryParry(); });
 
 function pickClickTarget(wx,wy){
   let best=null, bd=1.1;
