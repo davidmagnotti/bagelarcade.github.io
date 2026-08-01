@@ -333,11 +333,18 @@ function buildDialogContent(npc){
       [{label:'You should tell him yes', cls:'gold', fn:sc2}]);
     return;
   }
-  // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
-  // warns of the thing fouling the seized works below.
-  if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
-    setDialog('<i>Burl lowers his voice, nodding at the mill behind him.</i> “Tolen sent you for the sail - Nessa\'s finest, locked in the vault since the gear-train seized. Go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped the works. There\'s a <b>thing</b> fouled in the shaft, and it don\'t like company. Put it down and the sail\'s yours. Go armed.”',
+  // Nessa the sailmaker owns the sail quest - once Tolen sends you to her, she warns
+  // of the thing fouling the seized works below the windmill where her sail is locked.
+  if(npc.id==='nessa' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
+    setDialog('<i>Nessa sets down her needle and nods toward the windmill on the rise.</i> “My sail\'s down in the old works, behind the millstone gate - go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped those works. There\'s a <b>thing</b> fouled in the shaft, and it don\'t like company. Put it down and bring my sail up, and I\'ll step it to your board. Go armed.”',
       shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
+    return;
+  }
+  // Burl the millwright is just flavor now - he padlocked the works, but the sail (and
+  // its quest) are Nessa's. He still grumbles about what's down there.
+  if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
+    setDialog('<i>Burl thumbs toward the mill behind him.</i> “Nessa send you down for her sail? Aye, I chained that stair myself when the gear-train seized - and I\'d not have done it for rust. Something\'s FOULED in the shaft down there. Mind yourself, and mind my millstones.”',
+      shopButtons(npc,[{label:'I\'ll be careful',ghost:true,fn:closeDialog}]));
     return;
   }
   // Rell won't send you at the Leviathan until you have a windsurf - the beast
