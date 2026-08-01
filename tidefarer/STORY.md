@@ -284,6 +284,39 @@ lets the player wander back into an isle boss mid-finale.
 > below-waterline traversal the engine doesn't do yet — prototype the "under
 > water level" feel once before committing both.
 
+### Ashwing, the Enthralled — the Sunward dragon bookends — [built]
+
+The Sunward Isle's climax is **Ashwing**, an old fire-wyrm who has warmed
+Mount Kea's waters "since your grandmothers were girls." He is no monster —
+only old, and kind, and tired — until **Vath seizes him** and turns him on
+you, between you and the only way out. Beaten, he does not die: **you break
+the chain instead of running him through**, and he is freed, grateful, and
+becomes your lift up to the **Cloudreach**. He is a load-bearing proof of the
+canonical rule (Backstory / craft note #2): *Vath cannot touch royal blood
+directly, so he throws the creatures he controls at you.* Ashwing is that rule
+made a boss.
+
+The two turns are **matched animated cutscenes** (full-overlay, own rAF loop,
+in the exact mold of the Act I throne-hall scene — `js/35-dragon-cutscenes.js`,
+rendering the game's own `drawDragon` art with its `ensAmt` violet wash):
+
+- **The enthrall — before the fight.** From `dragonLairSpeak` ("Stand and
+  fight"): Vath's violet pours in from the dark, Ashwing rears against it and
+  loses, an eye opens in the stone, and he turns on you (**ASHWING,
+  ENTHRALLED**). Hands straight to the fight (`awakenDragon(true)`, already
+  bound — the chamber's Dragon Gate seals behind you).
+- **The freeing — after the fight.** From `dragonFaints` (he faints, never
+  falls): you hold the blade, drive your will into the binding, and the violet
+  **shatters** — his own green floods back (**ASHWING, FREED**). Hands off to
+  his offer of a lift to the Cloudreach.
+
+> **The reusable bookend.** The freed-victim shape (enthralled → beaten →
+> freed, "a victim, not a foe") is shared by the **Leviathan**, the **Weeping
+> Warden**, and the **Rimebound** (all `enthrall`-entrance bosses that already
+> run the lightweight on-canvas wash + a story-card freeing). If the Ashwing
+> pair reads well, the same overlay-cutscene template is the natural upgrade
+> for those three.
+
 ### The prophecy and the weapon — [new]
 
 The **Stormreach catacombs** yield the prophecy → it names the Tidefarer's

@@ -700,8 +700,15 @@ function dragonFaints(m){
       [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); disperseDragon(); if(typeof askDragonFlight==='function') askDragonFlight(); }},
        {label:'Not just yet', ghost:true, fn:()=>{ closeDialog(); disperseDragon(); }}]);
   };
-  setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
-    {onOk:offerLift}),1200);
+  // the freeing plays as a full animated cutscene (the violet shatters, his green
+  // floods back), then hands off to Ashwing's offer of a lift up to the Cloudreach.
+  // Fall through to the old story-card if the cutscene layer isn't loaded.
+  if(typeof dragonFreedCutscene==='function'){
+    setTimeout(()=>dragonFreedCutscene(offerLift), 700);
+  } else {
+    setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
+      {onOk:offerLift}),1200);
+  }
   if(qs('wyrm')==='active') completeQuest('wyrm');
   if(typeof startMageHunt==='function') startMageHunt();
 }
