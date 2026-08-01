@@ -115,7 +115,7 @@ function sleepInBed(own){
   fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
   setTimeout(()=>{
     G.dayT=0.02; // dawn
-    P.hp=P.maxhp; P.mp=P.maxmp;
+    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20;   // a night's rest also restrings the quiver
     G.fireflies.length=0;
     if(own && G.interior) P.bind={w:G.worldId, x:G.interior.ret.x, y:G.interior.ret.y};
     refreshUI(); setTimeout(autoSave,300);
@@ -169,7 +169,7 @@ function resortSuiteSleep(){
   const fade=document.getElementById('fadeOv'), I=G.interior;
   fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
   setTimeout(()=>{
-    G.dayT=0.02; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0;
+    G.dayT=0.02; P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; G.fireflies.length=0;
     if(I&&I.ret) P.bind={w:G.worldId, x:I.ret.x, y:I.ret.y};
     refreshUI(); setTimeout(autoSave,300);
     toast('You sink into <b>your suite\'s</b> canopy bed, the sea breathing beyond the shutters. Dawn finds you <b>fully mended</b> - and the Breakers will keep you if you fall.',4200);

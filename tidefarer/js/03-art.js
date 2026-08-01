@@ -2193,10 +2193,13 @@ function iconCanvas(kind,sz=40){
         g.fillStyle='#e05648'; g.beginPath(); g.arc(0,4,7.4,0,TAU); g.fill();
         g.fillStyle='#8a6238'; g.fillRect(-4,-14,8,4);
         g.fillStyle='rgba(255,255,255,0.7)'; g.beginPath(); g.arc(-3,0,2,0,TAU); g.fill(); break;
-      case 'manapot': g.fillStyle='rgba(230,240,255,0.5)'; g.beginPath(); g.arc(0,3,9,0,TAU); g.fill(); g.fillRect(-3,-12,6,10);
-        g.fillStyle='#3f7fe0'; g.beginPath(); g.arc(0,4,7.4,0,TAU); g.fill();
-        g.fillStyle='#8a6238'; g.fillRect(-4,-14,8,4);
-        g.fillStyle='rgba(200,230,255,0.85)'; g.beginPath(); g.arc(-3,0,2,0,TAU); g.fill(); break;
+      case 'manapot': // a tied bundle of arrows (the Quiver Bundle)
+        g.strokeStyle='#8a6238'; g.lineWidth=2; g.lineCap='round';
+        for(let ai=-1;ai<=1;ai++){ const ox=ai*4.5;
+          g.strokeStyle='#c9a06a'; g.lineWidth=1.8; g.beginPath(); g.moveTo(ox,-13); g.lineTo(ox,11); g.stroke();      // shaft
+          g.fillStyle='#c0c4cc'; g.beginPath(); g.moveTo(ox,-15); g.lineTo(ox-2.2,-11); g.lineTo(ox+2.2,-11); g.closePath(); g.fill();  // steel head
+          g.strokeStyle='#d95a48'; g.lineWidth=1.4; g.beginPath(); g.moveTo(ox,8); g.lineTo(ox-2.4,11); g.moveTo(ox,8); g.lineTo(ox+2.4,11); g.stroke(); } // fletching
+        g.strokeStyle='#7a5a2a'; g.lineWidth=2.4; g.beginPath(); g.moveTo(-7,2); g.lineTo(7,2); g.stroke(); break;   // the binding cord
       case 'gold': g.fillStyle='#c98f1e'; g.beginPath(); g.arc(0,1.5,10,0,TAU); g.fill();
         g.fillStyle='#ffd76a'; g.beginPath(); g.arc(0,0,10,0,TAU); g.fill();
         g.fillStyle='#c98f1e'; g.font='bold 12px Georgia'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('E',0,1); break;

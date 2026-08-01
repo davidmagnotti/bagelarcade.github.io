@@ -217,7 +217,7 @@ function nearestInteract(){
     if(b.kind==='emberbutton'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'emberbutton',o:b,label:b.set?'Rune (lit)':'Press rune'}; } }
     if(b.kind==='staffgate' && !b.open){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.0 && d<bd){ bd=d; best={type:'staffgate',o:b,label:(P.unlocked&&P.unlocked.staff)?'Break the ward':'Arcane ward'}; } }
+      if(d<2.0 && d<bd){ bd=d; best={type:'staffgate',o:b,label:(P.unlocked&&P.unlocked.melee)?'Cut the ward':'Arcane ward'}; } }
     if(b.kind==='tombmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type:'tomb',o:b,label:b.up?'Climb out':'Enter the catacomb'}; } }
     if(b.kind==='dragonrest'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -276,7 +276,7 @@ function doInteract(){
   if(it.type==='lore'){ facePoint(it.o.x,it.o.y); readLore(it.key); return; }
   if(it.type==='well'){
     if(P.wellCd>0){ blockMsg('The well needs <b>'+Math.ceil(P.wellCd)+'s</b> to refill before you can drink again.'); return; }
-    P.hp=P.maxhp; P.mp=P.maxmp; P.wellCd=90;
+    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
     return;
@@ -534,9 +534,15 @@ function tryAttack(useMouse){
       }
     } else { P.combo=0; }
   } else if(P.weapon==='bow'){
+    // the quiver: a spent bow can't loose. Shafts trickle back over time (see updatePlayer)
+    if((P.arrows||0) < 1){ toastErr('<b>Your quiver is empty.</b> Arrows return as you catch your breath - or wade in with the sword.'); P.atkCd=0.28; return; }
+    P.arrows=Math.max(0,(P.arrows||0)-1);
     // Quickdraw perk (archery L5): markedly faster nocking
     P.atkCd=(P.perks&&P.perks.quickdraw)?0.43:0.62; P.swing=0.2; Snd.bow();
-    G.projs.push({kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'});
+    const arrow={kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'};
+    if(P.spells && P.spells.flamesnare){ arrow.snare=1.6; arrow.flame=1; }   // the Ashen Forge gift: fire-fletched arrows root what they strike
+    G.projs.push(arrow);
+    refreshUI();
   } else if(P.weapon==='staff'){
     if(P.mp<8){ toastErr('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
@@ -555,7 +561,7 @@ function gainLXP(n){
   addFloat('+'+n+' XP', P.x, P.y-2.6, '#c9b0ff');
   while(P.xpL>=xpForP(P.level) && P.level<20){
     P.xpL-=xpForP(P.level); P.level++;
-    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp;
+    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20;   // level-up tops the quiver too
     burst(P.x,P.y-0.5,'#c9b0ff',20); Snd.levelup();
     shockwave(P.x,P.y,'rgba(201,176,255,0.9)',46);
     banner('LEVEL '+P.level, 'Barik takes your measure - and steps back.');
@@ -576,6 +582,56 @@ function unlockDash(msg){
   // a click-to-dismiss popup (not a passing toast) so the lesson can't be missed
   if(typeof storyCard==='function') storyCard(dashMsg, {label:'OK'});
   else toast(dashMsg, 4600);
+}
+/* PARRY - a TRAINED, timed defence taught by the isle's blade-master (Rask). A
+   brief braced stance: any blow or shot that lands from the front while it holds
+   is turned aside - melee attackers are staggered, and arrows/bolts are batted
+   back the way they came. It is the sword's answer to a ranged or telegraphed
+   attack, where the dash is the answer to an unavoidable one. */
+function unlockParry(msg){
+  P.unlocked=P.unlocked||{};
+  if(P.unlocked.parry) return;
+  P.unlocked.parry=true;
+  Snd.quest&&Snd.quest();
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the guard button (⛨)':'Press F (or right-click)')+' to brace your sword - time it as a blow or arrow reaches you to turn it aside. A parried arrow flies back; a parried striker is left staggered.';
+  if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
+  else toast(parryMsg, 5200);
+  if(typeof questReadySweep==='function') questReadySweep();
+  if(typeof updateQuestUI==='function') updateQuestUI();
+  if(typeof autoSave==='function') autoSave();
+}
+// Is (sx,sy) inside the arc the raised guard covers - i.e. roughly in front of
+// the way the player faces? Used to decide whether a blow can be parried.
+function parryCovers(sx,sy){
+  const dx=sx-P.x, dy=sy-P.y, l=Math.hypot(dx,dy)||1;
+  return (P.dir.x*dx + P.dir.y*dy)/l > 0.15;   // ~±80 degrees of front
+}
+// A blow/shot was turned: the flash, the sound, and the little window of
+// follow-up grace. Returns true so callers can early-out of taking damage.
+function onParry(sx,sy){
+  P.parrySuccess=0.22; P.parryT=Math.min(P.parryT||0,0.06);   // the guard is spent on a clean parry
+  P.lastCombat=G.time;
+  const mx=(P.x+sx)/2, my=(P.y+sy)/2;
+  addFloat('PARRY!', P.x, P.y-2.1, '#ffe08a', 1.3);
+  shockwave(mx,my,'rgba(255,235,170,0.95)',30); burst(mx,my-0.3,'#fff2c0',14,2.6);
+  G.hitStop=Math.max(G.hitStop||0,0.07); G.shake=Math.max(G.shake||0,0.18);
+  Snd.crit&&Snd.crit(); buzz(14);
+  return true;
+}
+function tryParry(){
+  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
+  if(!(P.unlocked && P.unlocked.parry)){
+    toastErr('You have not learned to <b>parry</b> yet - seek <b>Rask</b>, the blade-master on the isle\'s east side.'); return;
+  }
+  if((P.parryT||0)>0 || (P.parryCd||0)>0) return;
+  // face the nearest threat so a tapped guard covers the obvious attacker (mirrors tryAttack's auto-aim)
+  let bx=null,by=null,bd=6;
+  for(const m of G.mobs){ if(m.dead||m.sealed) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bx=m.x;by=m.y;} }
+  for(const p of G.projs){ if(p.from==='player') continue; const d=dist(P.x,P.y,p.x,p.y); if(d<bd){bd=d;bx=p.x;by=p.y;} }
+  if(bx!=null){ const l=Math.hypot(bx-P.x,by-P.y)||1; P.dir={x:(bx-P.x)/l,y:(by-P.y)/l}; }
+  P.parryT=0.34; P.parryMax=P.parryT; P.parryCd=0.75; P.moving=false; P.click=null;
+  Snd.hit&&Snd.hit(); buzz(7);
+  burst(P.x+P.dir.x*0.9,P.y+P.dir.y*0.9-0.4,'#ffe6a0',6,1.4);
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
@@ -627,6 +683,11 @@ function damageMob(m,dmg,knock,skill){
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
   const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0);
   if(Math.random()<critCh){ dmg=Math.round(dmg*1.6); crit=true; }
+  // RIPOSTE: a perfectly-timed dodge (see tryRoll) empowers the very next blow that lands -
+  // a guaranteed, heavy crit. Consumed on use, so it rewards reading the telegraph.
+  if(P.empower){ dmg=Math.round(dmg*1.8); crit=true; P.empower=0; P.empowerT=0;
+    addFloat('RIPOSTE!', m.x, m.y-2.7, '#bfe8ff', 1.5); if(Snd.crit) Snd.crit();
+    shockwave(m.x,m.y,'rgba(191,232,255,0.9)',30); G.hitStop=Math.max(G.hitStop,0.1); }
   // Executioner perk (melee L5): heavy bonus versus badly-wounded foes
   if(skill==='melee' && P.perks && P.perks.executioner && m.maxhp && m.hp/m.maxhp < 0.30) dmg=Math.round(dmg*1.5);
   const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
@@ -646,10 +707,23 @@ function damageMob(m,dmg,knock,skill){
     }
   }
   m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
+  // POISE / STAGGER: sustained blows break a foe's footing for a brief opening. Marquee
+  // bosses and scripted-AI foes keep their footing (their phases drive the fight instead).
+  if(!m.boss && !m.bigBoss && !m.customAI && !m.stormeye && !m.bat && (m.stunT||0)<=0 && (m.poiseCd||0)<=0){
+    m.poise=(m.poise||0)+dmg;
+    if(m.poise >= Math.max(20,(m.maxhp||30)*0.7)){
+      m.poise=0; m.poiseCd=2.0; m.stunT=Math.max(m.stunT||0,0.4); m.windup=0; m.lunge=0;
+      addFloat('STAGGER!', m.x, m.y-2.5, '#ffe6a0', 1.2);
+      burst(m.x,m.y-0.4,'#ffe6a0',10,2); if(Snd.crit) Snd.crit();
+      G.hitStop=Math.max(G.hitStop,0.08);
+      if(knock) moveEntity(m, knock.x*0.6, knock.y*0.6);
+    }
+  }
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(backstab) addFloat('BACKSTAB!', m.x, m.y-2.4, '#ff9a5a', 1.2);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
   if(skill==='melee') G.hitStop=Math.max(G.hitStop, crit?0.09:0.045);
+  else G.hitStop=Math.max(G.hitStop, crit?0.06:0.03);   // bow/staff hits used to feel flat - give them a beat of chunk too
   burst(m.x,m.y-0.5, m.kind==='slime'?'#7fca6a': m.kind==='wolf'?'#8a8d96':'#eceee6', 6, 2);
   // ranged hits chain a combo too - melee builds it in the swing code, but bow
   // and staff never did, so the archery/magic training drills (which ask for a
@@ -780,6 +854,17 @@ function killMob(m,skill){
     toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
+  // dropped shafts - archers carry quivers, barrow-bones and raiders shed a few, and
+  // a hard boss is a good resupply. Only worth dropping once you've a bow to catch them.
+  if(P.unlocked && P.unlocked.bow && !m.bigBoss){
+    let na=0;
+    if(m.kind==='archer') na=rndi(4,8);
+    else if(m.kind==='skeleton'||m.kind==='raider'||m.kind==='brigand'||m.kind==='raptor') na=rndi(2,4);
+    else if(m.boss) na=rndi(4,8);
+    else if(Math.random()<0.30) na=rndi(1,2);
+    if(m.elite) na*=2;
+    if(na>0) G.parts.push({x:m.x-0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'arrows',n:na,size:9,color:''});
+  }
   if(m.kind==='alpha'){
     Snd.boss(); G.shake=0.8; G.slowmo=1.0;
     shockwave(m.x,m.y,'rgba(255,140,110,0.9)',70);
@@ -970,6 +1055,21 @@ function stunPlayer(dur){
 }
 function hurtPlayer(dmg,src){
   if(P.hurtT>0 || P.dead || (P.rollT||0)>0 || G.victory) return;   // no dying during the victory sequence
+  // PARRY: a braced guard turns a telegraphed melee blow. Only a real striker
+  // (a mob, with a position) can be parried this way - hazards, poison and falls
+  // pass a plain source and cut straight through the guard. Projectiles are turned
+  // separately, in updateProjs (they get batted back). Marquee bosses (bigBoss)
+  // hit too hard to fully turn - a parry only softens their blow, never negates it.
+  if((P.parryT||0)>0 && src && src.kind && src.x!=null && parryCovers(src.x,src.y)){
+    if(src.bigBoss){ dmg*=0.35; onParry(src.x,src.y); }   // chip through - can't be fully turned
+    else {
+      onParry(src.x,src.y);
+      src.stunT=Math.max(src.stunT||0,1.1); src.windup=0; src.swing=0;   // left wide open
+      const kx=src.x-P.x, ky=src.y-P.y, kl=Math.hypot(kx,ky)||1;
+      if(!src.boss) moveEntity(src, kx/kl*0.6, ky/kl*0.6);   // shoved back off the failed swing
+      return;
+    }
+  }
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   let _red=[0,0.15,0.30][P.armor||0];
@@ -1108,6 +1208,10 @@ function updatePlayer(dt){
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(P.rollCd<=0) P.dashChain=0;
   if(keys['shift']) tryRoll();
+  // parry (the braced guard): the active window and its recovery, plus the clean-parry flash
+  P.parryT=Math.max(0,(P.parryT||0)-dt); P.parryCd=Math.max(0,(P.parryCd||0)-dt);
+  P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
+  if((P.parryT||0)>0){ P.moving=false; P.click=null; }   // committed stance - braced, not walking
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands
     P.z=Math.sin(Math.PI*(1-P.rollT/(P.rollMax||0.26)))*7;
@@ -1248,6 +1352,8 @@ function updatePlayer(dt){
   P.swing=Math.max(0,P.swing-dt);
   P.gatherT=Math.max(0,(P.gatherT||0)-dt);
   P.hurtT=Math.max(0,P.hurtT-dt);
+  P.healCd=Math.max(0,(P.healCd||0)-dt);   // draughts share a short cooldown - no chugging mid-swing
+  if((P.empowerT||0)>0){ P.empowerT-=dt; if(P.empowerT<=0){ P.empowerT=0; P.empower=0; } } // a riposte window that lapses if unused
   if(P.cheerT) P.cheerT=Math.max(0,P.cheerT-dt);
   if(input.attack || (input.mouseDown && !isTouch)) tryAttack(input.mouseDown);
   // scorpion venom: damage over time, never lethal, times out on its own
@@ -1308,6 +1414,13 @@ function updatePlayer(dt){
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
+  // the quiver slowly refills toward its cap (~1 shaft every 1.7s) so the bow is a
+  // rationed burst weapon, never a permanent dead-end
+  if((P.arrows||0) < (P.maxArrows||20)){
+    const before=Math.floor(P.arrows||0);
+    P.arrows=Math.min(P.maxArrows||20, (P.arrows||0)+dt*0.6);
+    if(Math.floor(P.arrows) !== before) refreshUI();
+  }
   if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
   // fishing timer
   if(P.fishing){
@@ -1318,9 +1431,16 @@ function updatePlayer(dt){
   // pickups & hint zones
   for(const pt of G.parts){
     if(pt.pickup && dist(P.x,P.y,pt.x,pt.y)<0.7){
-      if(pt.pickup==='gold') giveGold(pt.n);
-      else { P.hp=Math.min(P.maxhp,P.hp+pt.n); addFloat('+'+pt.n+' HP',P.x,P.y-1.4,'#7fe07f'); Snd.pickup(); refreshUI(); }
-      pt.life=0;
+      if(pt.pickup==='gold'){ giveGold(pt.n); pt.life=0; }
+      else if(pt.pickup==='arrows'){
+        // gather dropped shafts into the quiver. If it's full (or you've no bow
+        // yet) leave them lying so nothing is wasted - grab them once there's room.
+        if(P.unlocked && P.unlocked.bow && (P.arrows||0) < (P.maxArrows||20)){
+          P.arrows=Math.min(P.maxArrows||20,(P.arrows||0)+pt.n);
+          addFloat('+'+pt.n+' arrows',P.x,P.y-1.4,'#d9a441'); Snd.pickup(); refreshUI(); pt.life=0;
+        }
+      }
+      else { P.hp=Math.min(P.maxhp,P.hp+pt.n); addFloat('+'+pt.n+' HP',P.x,P.y-1.4,'#7fe07f'); Snd.pickup(); refreshUI(); pt.life=0; }
     }
   }
   if(ZONES.springs){
@@ -1409,6 +1529,14 @@ function updateNPCs(dt){
   }
 }
 
+/* ---- combat-feel overhaul ----
+   Trash-mob fights used to be one identical "walk up, wind up, poke" for every
+   melee kind. These two rosters give the common foes real behaviour:
+   - LUNGERS close the gap in a fast telegraphed dash you must read and dodge.
+   - HEAVIES telegraph a slower, bigger blow and are then rooted in a recovery
+     window - the reward for baiting it out is a free punish. */
+const LUNGERS={wolf:1,raptor:1,boar:1,brigand:1,raider:1,wraith:1};
+const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -1428,6 +1556,10 @@ function updateMobs(dt){
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
+    m.recover=Math.max(0,(m.recover||0)-dt);          // a heavy's post-swing punish window
+    // POISE: staggers reset it and lock it out for a beat so nothing gets perma-stunned
+    m.poiseCd=Math.max(0,(m.poiseCd||0)-dt);
+    if((m.poiseCd||0)<=0) m.poise=Math.max(0,(m.poise||0)-dt*6);
     // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
     // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
     if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
@@ -1469,8 +1601,11 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
+      // archetypes only reshape ordinary foes - boss variants of these kinds keep their scripted fight
+      const heavy = HEAVIES[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
+      const lunger = LUNGERS[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       // stormlight-stunned foes freeze where they stand - no advance and (below) no attack
-      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0)){
+      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
@@ -1488,15 +1623,30 @@ function updateMobs(dt){
         } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
-      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0)){
-        m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
+      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+        // HEAVIES telegraph slower and hit harder; everyone else keeps the old snappy poke
+        m.windup = m.elite?0.26 : m.boss?0.42 : (heavy?0.52:0.34);
         m.hitCd= m.boss?1.1:1.25;
       }
       if(m.windup>0){
         m.windup-=dt;
         if(m.windup<=0){
           m.windup=0; m.swing=0.3;
-          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(d.dmg, m);
+          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(heavy?Math.round(d.dmg*1.25):d.dmg, m);
+          if(heavy) m.recover=0.8;   // rooted after the big swing - punish it
+        }
+      }
+      // LUNGER archetype: a fast telegraphed dash that closes the gap - dodge it or reposition
+      if(lunger && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+        m.lungeCd=(m.lungeCd||rnd(2.5,4.5))-dt;
+        if(m.lungeCd<=0 && (m.lunge||0)<=0 && l>2.0 && l<6.5){
+          m.lungeCd=rnd(3,5); m.lunge=0.38; m.face=dx<0?-1:1;
+          addFloat('LUNGE!', m.x, m.y-2.2, '#ffcf8a', 1.0);
+          if(Snd.noise) Snd.noise(0.20,0.06,300,0.5);
+        }
+        if((m.lunge||0)>0){ m.lunge-=dt;
+          moveEntity(m, dx/l*d.speed*2.4*dt, dy/l*d.speed*2.4*dt);
+          if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.28,color:'rgba(200,190,160,0.5)',size:2.4});
         }
       }
       if(m.kind==='archer'){
@@ -1683,7 +1833,16 @@ function updateProjs(dt){
         }
       }
     } else {
-      if(!P.dead && dist(p.x,p.y,P.x,P.y-0.3)<0.55){ hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }
+      if(!P.dead && dist(p.x,p.y,P.x,P.y-0.3)<0.55){
+        // PARRY: brace the guard as a shot arrives and it is batted back the way
+        // it came - now a PLAYER projectile that bites whatever loosed it.
+        if((P.parryT||0)>0 && !p.parried && parryCovers(p.x,p.y)){
+          p.parried=1; p.from='player'; p.skill='melee';
+          p.vx=-p.vx; p.vy=-p.vy; p.life=Math.max(p.life,1.0);
+          p.dmg=Math.round((p.dmg||6)*1.5)+meleeDmg();   // a turned shot hits hard
+          onParry(p.x,p.y);
+        } else { hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }
+      }
     }
   }
   G.projs=G.projs.filter(p=>p.life>0);

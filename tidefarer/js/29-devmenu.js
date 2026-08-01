@@ -204,15 +204,15 @@ function completeActive(){
   ui(); note('Completed '+n+' active quest(s)');
 }
 function unlockAll(){
-  P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.staff=P.unlocked.surf=P.unlocked.moa=true;
-  P.unlocked.dash=true;   // base footwork
+  P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.surf=P.unlocked.moa=true;
+  P.unlocked.dash=true; P.unlocked.parry=true;   // base footwork + the guard
   // the four returned-isle gifts (Act II)
   P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
   ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
 }
-function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.poisonT=0; ui(); note('Restored to full'); }
+function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.poisonT=0; ui(); note('Restored to full'); }
 function gold(n){ if(typeof giveGold==='function') giveGold(n); else P.gold=(P.gold||0)+n; ui(); note('+'+n+' gold'); }
 function xp(n){ if(typeof gainLXP==='function') gainLXP(n); ui(); note('+'+n+' level XP'); }
 function maxSkills(){ for(const s in (P.skills||{})){ if(typeof addXP==='function') addXP(s, 9999); } ui(); note('Skills boosted'); }

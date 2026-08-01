@@ -51,10 +51,13 @@ document.getElementById('btnSound').onclick=function(){ Snd.init(); Snd.on=!Snd.
 const HOT = [
   {id:'melee', icon:'sword', key:'1', wpn:true},
   {id:'bow', icon:'bow', key:'2', wpn:true},
-  {id:'staff', icon:'staff', key:'3', wpn:true},
   {id:'potion', icon:'potion', key:'4', wpn:false}
 ];
 function buildHotbar(){
+  // the parry touch-button rides alongside the dodge button, but only once Rask
+  // has taught the guard (it starts hidden, like the mount button)
+  const pb=document.getElementById('parryBtn');
+  if(pb) pb.style.display = (P.unlocked && P.unlocked.parry) ? 'flex' : 'none';
   const hb=document.getElementById('hotbar'); hb.innerHTML='';
   HOT.forEach(h=>{
     // a weapon you don't own yet stays hidden entirely (no grayed placeholder) -
@@ -79,6 +82,10 @@ function buildHotbar(){
       sw.onclick=cyc;
       if(sw.addEventListener) sw.addEventListener('touchstart',cyc,{passive:false});
       s.appendChild(sw);
+    }
+    // the bow shows its quiver count, like a stack of consumables
+    if(h.id==='bow'){
+      const c=document.createElement('div'); c.className='cnt'; c.textContent=Math.floor(P.arrows||0); s.appendChild(c);
     }
     const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem(P.quickItem||'potion'); };
     s.onclick=act;
@@ -113,14 +120,24 @@ function useItem(item){
   const def=ITEMS[item];
   if(def.use==='heal'){
     if(P.hp>=P.maxhp){ toastErr('You\'re already at full health.'); return; }
+    if((P.healCd||0)>0){ toastErr('Steady - you need a moment before the next draught. ('+Math.ceil(P.healCd)+'s)'); return; }
     take(item,1); P.hp=Math.min(P.maxhp,P.hp+def.heal);
+    P.healCd=4.5;   // draughts no longer stack instantly - a real cost to mid-fight healing
+    if(typeof refreshUI==='function') refreshUI();
     addFloat('+'+def.heal+' HP',P.x,P.y-1.4,'#7fe07f'); burst(P.x,P.y-0.6,'#e05648',8); Snd.pickup();
     buildHotbar(); refreshInvPanel();
   }
-  else if(def.use==='mana'){
-    if(P.mp>=P.maxmp){ toastErr('Your mana is already full.'); return; }
-    take(item,1); P.mp=Math.min(P.maxmp,P.mp+def.mana);
-    addFloat('+'+def.mana+' MP',P.x,P.y-1.4,'#7fb0ff'); burst(P.x,P.y-0.6,'#3f7fe0',8); Snd.pickup();
+  else if(def.use==='arrows'){
+    if(!(P.unlocked&&P.unlocked.bow)){ toastErr('You\'ve no bow to fill a quiver for - not yet.'); return; }
+    if((P.arrows||0)>=(P.maxArrows||20)){ toastErr('Your quiver is already full.'); return; }
+    take(item,1); P.arrows=Math.min(P.maxArrows||20,(P.arrows||0)+def.arrows);
+    addFloat('+'+def.arrows+' arrows',P.x,P.y-1.4,'#d9a441'); burst(P.x,P.y-0.6,'#b9873f',8); Snd.pickup();
+    buildHotbar(); refreshInvPanel(); refreshUI();
+  }
+  else if(def.use==='mana'){   // legacy: any lingering mana item just tops the quiver instead
+    if(!(P.unlocked&&P.unlocked.bow) || (P.arrows||0)>=(P.maxArrows||20)){ toastErr('Nothing to restore.'); return; }
+    take(item,1); P.arrows=Math.min(P.maxArrows||20,(P.arrows||0)+12);
+    addFloat('+12 arrows',P.x,P.y-1.4,'#d9a441'); Snd.pickup();
     buildHotbar(); refreshInvPanel(); refreshUI();
   }
 }
@@ -251,7 +268,7 @@ function refreshInvPanel(){
       '<div style="font-weight:bold;">'+it.name+' \u00d7'+P.inv[k]+'</div>'+
       '<div style="font-size:12px;color:var(--parch-dim);margin:3px 0 8px;">'+it.desc+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-    if(canUse)  act+='<button class="btn gold" id="invUseBtn" style="padding:8px 14px;" onclick="useItem(INV_SEL);refreshInvPanel();">'+(it.use==='heal'?'Eat / Drink (+'+it.heal+' HP)':it.use==='mana'?'Drink (+'+it.mana+' MP)':'Use')+'</button>';
+    if(canUse)  act+='<button class="btn gold" id="invUseBtn" style="padding:8px 14px;" onclick="useItem(INV_SEL);refreshInvPanel();">'+(it.use==='heal'?'Eat / Drink (+'+it.heal+' HP)':it.use==='arrows'?'Refill quiver (+'+it.arrows+')':it.use==='mana'?'Refill quiver (+12)':'Use')+'</button>';
     if(canQuick) act+='<button class="btn" id="invQuickBtn" style="padding:8px 14px;" onclick="P.quickItem=INV_SEL;buildHotbar();refreshUI();refreshInvPanel();toast(\'Quick slot: <b>\'+ITEMS[INV_SEL].name+\'</b>\');">\u21c4 Set Quick Slot</button>';
     act+='<button class="btn ghost" style="padding:8px 12px;" onclick="INV_SEL=null;refreshInvPanel();">Close</button>';
     act+='</div></div>';
@@ -270,6 +287,7 @@ function refreshSkillsPanel(){
   const rows=document.getElementById('skillRows'); rows.innerHTML='';
   const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
   for(const k in SKILLS){
+    if(k==='magic') continue;   // magic is gone from the player's kit - the sword and (later) the bow are the arts now
     const sk=P.skills[k];
     const maxed=sk.lvl>=cap;
     const need=xpForLevel(sk.lvl);
@@ -290,7 +308,7 @@ function refreshQuestLog(){
   const box=document.getElementById('qlog'); box.innerHTML='';
   const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
   const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue;
@@ -338,7 +356,7 @@ function questProgressText(id){
   if(id==='sail') return (P.story&&P.story.haveSail)? 'Stormsail recovered - see Rell' : (P.story&&P.story.millDone)? 'Take the sail from the vault' : 'Defeat the guardian in the Undermill';
   return '';
 }
-const ISLE_IDS=['kit','mushrooms','harvest','fish','cat','king','wreck'];
+const ISLE_IDS=['kit','bladeoath','mushrooms','harvest','fish','cat','king','wreck'];
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 // Brant's ship repair only opens once the Hollow King is felled and the strait calms.
 const UNLOCK_AFTER={ wreck:['king'],
@@ -370,7 +388,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};
@@ -386,8 +404,21 @@ function updateQuestUI(){
 function refreshUI(){
   document.getElementById('hpFill').style.width=(P.hp/P.maxhp*100)+'%';
   document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
-  document.getElementById('mpFill').style.width=(P.mp/P.maxmp*100)+'%';
-  document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
+  // the old mana bar is repurposed as the QUIVER gauge - shown only once the bow
+  // is earned, filling toward the 20-arrow cap
+  const mpBar=document.getElementById('mpBar');
+  if(mpBar){
+    if(P.unlocked && P.unlocked.bow){
+      mpBar.style.display='block';
+      const af=document.getElementById('mpFill');
+      af.style.width=((P.arrows||0)/(P.maxArrows||20)*100)+'%';
+      af.style.background='linear-gradient(90deg,#7a4a1e,#d9a441)';
+      document.getElementById('mpLbl').textContent=Math.floor(P.arrows||0)+' / '+(P.maxArrows||20)+' arrows';
+    } else { mpBar.style.display='none'; }
+  }
+  // keep the bow hotbar badge in step without a full rebuild
+  const bowSlot=document.getElementById('hot_bow');
+  if(bowSlot){ const c=bowSlot.querySelector('.cnt'); if(c) c.textContent=Math.floor(P.arrows||0); }
   document.getElementById('goldTxt').textContent=P.gold;
   const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv[P.quickItem||'potion']||0;
