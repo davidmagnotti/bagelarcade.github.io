@@ -352,10 +352,12 @@ function dgShatter(cx,x,y,s,t){
 }
 
 /* ---------- public entry points (called from the dragon flow in 09/12) ---------- */
-function dragonEnthrallCutscene(){
-  dgPlay('enthrall', DG_ENTHRALL, {ens:0, violet:0.12, fire:1}, function(){
-    // hand straight to the fight: he wakes already bound, so the on-canvas 'enthrall'
-    // entrance doesn't replay the beat we just showed
+function dragonEnthrallCutscene(onDone){
+  // By default it hands straight to the fight (he wakes already bound, so the on-canvas
+  // 'enthrall' entrance doesn't replay the beat we just showed). A caller may pass its own
+  // onDone to override that hand-off - the dev-menu preview passes a no-op so playing the
+  // scene doesn't actually awaken a dragon.
+  dgPlay('enthrall', DG_ENTHRALL, {ens:0, violet:0.12, fire:1}, onDone || function(){
     if(typeof awakenDragon==='function') awakenDragon(true);
   });
 }
