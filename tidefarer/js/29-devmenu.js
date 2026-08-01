@@ -37,6 +37,27 @@ function resetActOneEnding(){
   if(P.quests) P.quests.homecoming='active';                      // re-offer the homecoming so it can complete again
   ui(); note('Act I ending reset - talk to the King, or use the Play entries');
 }
+// Play any animated overlay cutscene on demand. The freeing/ending scenes take an onDone
+// continuation; we pass a harmless toast so a dev preview has no side effects (no dragon
+// awoken, no leviathan sunk). The throne/epilogue scenes bake their hand-off into the scene
+// itself (they close Act I / make landfall as they end) - previewing them will advance that
+// state, so play those on a throwaway save.
+function playCutscene(kind){
+  const done=label=>()=>{ try{ toast('(dev) '+label+' ended',2500); }catch(e){} };
+  switch(kind){
+    case 'mask':           if(typeof maskRevealCutscene==='function')     maskRevealCutscene(done('mask reveal')); break;
+    case 'throne':         if(typeof throneCutscene==='function')         throneCutscene(); break;
+    case 'epilogue':       if(typeof sailEpilogue==='function')           sailEpilogue(); break;
+    case 'dragonEnthrall': if(typeof dragonEnthrallCutscene==='function') dragonEnthrallCutscene(done('Ashwing enthralled')); break;
+    case 'dragonFreed':    if(typeof dragonFreedCutscene==='function')    dragonFreedCutscene(done('Ashwing freed')); break;
+    case 'leviathan':      if(typeof leviathanFreedCutscene==='function') leviathanFreedCutscene(null, done('Leviathan freed')); break;
+    case 'warden':         if(typeof wardenFreedCutscene==='function')    wardenFreedCutscene(null, done('Weeping Warden freed')); break;
+    case 'rimebound':      if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(null, done('Rimebound freed')); break;
+    case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
+    default: return;
+  }
+  note('Playing cutscene: '+kind);
+}
 function freeCurse(which){
   P.story=P.story||{}; P.story.vathMet=1; P.story.vathNamed=1;
   const done=q=>{ if(QUESTS&&QUESTS[q]) P.quests[q]='done'; };
@@ -237,9 +258,21 @@ const SECTIONS=[
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
     ['★ Act II return phase (Veil + 4 gifts + refresh isles)',()=>enterReturnPhase()],
     ['Reset Act I ending (replay)',()=>resetActOneEnding()],
-    ['Play mask reveal (memory flood)',()=>{ if(typeof maskRevealCutscene==='function') maskRevealCutscene(()=>toast('(dev) mask-reveal cutscene ended',3000)); }],
-    ['Play Act I climax (throne)',()=>{ if(typeof throneCutscene==='function') throneCutscene(); }],
-    ['Play Act I epilogue (boat)',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
+  ]],
+  // Every animated overlay cutscene, playable on demand from anywhere - they pause the
+  // world, draw their own full-frame scene, and hand back when done. The freeing/ending
+  // scenes are given a harmless no-op continuation here so previewing them has no side
+  // effects (no dragon awoken, no leviathan sunk, no act advanced).
+  ['Cutscenes (play any)', [
+    ['Mask reveal - memory flood (Act I)',()=>playCutscene('mask')],
+    ['Act I climax - throne hall',()=>playCutscene('throne')],
+    ['Act I epilogue - the sea crossing',()=>playCutscene('epilogue')],
+    ['Ashwing ENTHRALLED (dragon bound)',()=>playCutscene('dragonEnthrall')],
+    ['Ashwing FREED (dragon)',()=>playCutscene('dragonFreed')],
+    ['Leviathan UNBOUND (freed)',()=>playCutscene('leviathan')],
+    ['Weeping Warden FREED (frost)',()=>playCutscene('warden')],
+    ['Rimebound FREED (deep ice)',()=>playCutscene('rimebound')],
+    ['Storm-Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)
