@@ -299,7 +299,7 @@ function spawnMobs(){
   // the meadow slimes - pushed out to the FAR-EAST meadow, well clear of Bram's forge
   // and just north of the grove path, so they leash long before they'd follow you out
   // to Rask's clearing beyond them
-  const slimeSpots=[[73,45],[75,44],[74,46]];
+  const slimeSpots=[[73,45],[75,44],[74,46],[72,47],[76,45],[73,43]];
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
