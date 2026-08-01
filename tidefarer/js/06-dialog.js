@@ -204,13 +204,15 @@ function buildDialogContent(npc){
   // both. Brother and sister, the scholar and the warrior, remember at once. This
   // is the emotional climax of Act I, and it takes the mask off for good.
   if(npc.id==='woody' && qs('enchanter')==='active' && P.story && !P.story.unmasked){
-    const p5=()=>{
+    // The reunion payoff, run once the animated memory-flood cutscene has played
+    // (or immediately, if the overlay layer is missing): set the story state, drop
+    // the banner, and play the sibling cards.
+    const afterReveal=()=>{
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
-      closeDialog();
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
@@ -218,8 +220,18 @@ function buildDialogContent(npc){
         {label:'To Aldermere', onOk:()=>{
           setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
         }});
-      setTimeout(()=>storyCard('<i>The mask comes away, and thirty years of fog goes with it. You remember the deck pitching in the dark, a woman singing, your little brother screaming - and your own name at last, the one the sea had kept from you.</i> <b>Joan.</b> <i>You say it aloud, and it fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob - and his own name surfaces alongside yours.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
-        {label:'Go on', onOk:cardB}),1100);
+      // The visual flood has just played the memories and the names; this card is the
+      // quiet landing after it - her speaking the name aloud, and the brother's banter.
+      setTimeout(()=>storyCard('<i>For a long moment you can only stand inside it - the flood, and the thirty still years on the far side of it. Then, quietly, you say aloud the name the sea kept from you.</i> <b>Joan.</b> <i>It fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
+        {label:'Go on', onOk:cardB}),700);
+    };
+    const p5=()=>{
+      closeDialog();
+      // the animated memory-flood: the mask lifts and shatters, the amnesia fog tears
+      // loose, and it all comes back - the boat, Vath's curse, the wicked mask, and the
+      // names JOAN and JAIST. Falls straight through to the reunion if the layer is absent.
+      if(typeof maskRevealCutscene==='function') maskRevealCutscene(afterReveal);
+      else afterReveal();
     };
     const p4=()=>{
       setDialog('<i>You lift your hands to the mask you have worn since the surf first spat you ashore - the one thing the sea let you keep - and for the first time since Emberwick, you take it off.</i>',
