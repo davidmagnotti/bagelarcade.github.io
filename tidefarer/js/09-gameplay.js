@@ -662,8 +662,9 @@ function updateParryDrill(dt){
   const D=P.parryDrill; if(!D) return;
   const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
   if(!rask || P.dead || G.interior){ if(rask) rask.drillWarn=0; P.parryDrill=null; return; }
-  // Rask keeps his eyes on the student
+  // Rask keeps his eyes on the student, and his practice slash plays out (decays)
   { const dx=P.x-rask.x, dy=P.y-rask.y, l=Math.hypot(dx,dy)||1; rask.face={x:dx/l,y:dy/l}; }
+  if((rask.swing||0)>0) rask.swing=Math.max(0,(rask.swing||0)-dt);
   D.t-=dt;
   if(D.phase==='rest'){
     rask.drillWarn=0;
@@ -688,7 +689,7 @@ function updateParryDrill(dt){
   }
 }
 function finishParryDrill(){
-  const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(rask) rask.drillWarn=0;
+  const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(rask){ rask.drillWarn=0; rask.swing=0; }
   P.parryDrill=null;
   unlockParry();
   if(qs('bladeoath')==='active' && questReady('bladeoath')) completeQuest('bladeoath');

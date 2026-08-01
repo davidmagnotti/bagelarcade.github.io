@@ -199,7 +199,7 @@ function spawnNPCs(){
     // grove at the island's FAR EAST. Bram sends new blades out here to learn the parry.
     (()=>{ const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
       const sp=(typeof findOpenNear==='function' && findOpenNear(g.x,g.y,5)) || [g.x,g.y];
-      return makeNPC('rask','Rask the Bladesworn',sp[0],sp[1],{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',size:1.06,build:{w:0.94,head:0.88}},
+      return makeNPC('rask','Rask the Bladesworn',sp[0],sp[1],{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',weapon:'sword',wtier:2,size:1.06,build:{w:0.94,head:0.88}},
       ['A blade that only knows how to swing knows half its trade.','A parry is only a strike with perfect timing - meet their blade with yours.','I turned strikes on three isles before this one. My hands still remember every one.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3); })(),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),

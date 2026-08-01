@@ -2312,7 +2312,9 @@ function drawNPC(n,s){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
     nname='Prince Jaist';
   }
-  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
+  // n.swing lets an NPC animate a weapon strike (Rask's practice slash in the parry
+  // drill); a live swing bypasses the sprite cache so the blade actually moves.
+  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
