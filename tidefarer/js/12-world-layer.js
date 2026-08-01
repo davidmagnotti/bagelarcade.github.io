@@ -3160,8 +3160,8 @@ function placeObjectsUndermaw(){
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && P.unlocked.bow)){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
-    toast('An old hunting <b>bow</b> and a quiver lean by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  if(!(P.unlocked && P.unlocked.bow)){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
+    toast('An old hunting <b>bow</b> and a full quiver lean by the maw - loose <b>arrows</b> here (press <b>2</b> / the bow slot). Twenty hard-hitting shafts, and they trickle back.',4600); if(typeof buildHotbar==='function') buildHotbar(); if(typeof refreshUI==='function') refreshUI(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -5885,11 +5885,12 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
     P.unlocked=P.unlocked||{};
     if(!P.unlocked.bow){
-      P.unlocked.bow=true;
+      P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
       if(typeof buildHotbar==='function') buildHotbar();
+      if(typeof refreshUI==='function') refreshUI();
       Snd.levelup&&Snd.levelup();
       banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> refills slowly, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
         else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
     } else {
       giveGold(30); give('potion',1); Snd.quest&&Snd.quest();
@@ -6354,6 +6355,7 @@ function switchWorld(id){
       P.earlyKit=1;
       P.kit=true;
       P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.parry=true; P.unlocked.dash=true;
+      P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
       P.swordTier=Math.max(P.swordTier||0,2);
       P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
       giveQuiet('potion',3); giveQuiet('bread',2); P.gold+=50;

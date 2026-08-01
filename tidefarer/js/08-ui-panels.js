@@ -83,6 +83,10 @@ function buildHotbar(){
       if(sw.addEventListener) sw.addEventListener('touchstart',cyc,{passive:false});
       s.appendChild(sw);
     }
+    // the bow shows its quiver count, like a stack of consumables
+    if(h.id==='bow'){
+      const c=document.createElement('div'); c.className='cnt'; c.textContent=Math.floor(P.arrows||0); s.appendChild(c);
+    }
     const act=()=>{ Snd.init(); if(h.wpn) selectWeapon(h.id); else useItem(P.quickItem||'potion'); };
     s.onclick=act;
     if(s.addEventListener) s.addEventListener('touchstart',(e)=>{
@@ -390,8 +394,21 @@ function updateQuestUI(){
 function refreshUI(){
   document.getElementById('hpFill').style.width=(P.hp/P.maxhp*100)+'%';
   document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
-  document.getElementById('mpFill').style.width=(P.mp/P.maxmp*100)+'%';
-  document.getElementById('mpLbl').textContent=Math.ceil(P.mp)+' mana';
+  // the old mana bar is repurposed as the QUIVER gauge - shown only once the bow
+  // is earned, filling toward the 20-arrow cap
+  const mpBar=document.getElementById('mpBar');
+  if(mpBar){
+    if(P.unlocked && P.unlocked.bow){
+      mpBar.style.display='block';
+      const af=document.getElementById('mpFill');
+      af.style.width=((P.arrows||0)/(P.maxArrows||20)*100)+'%';
+      af.style.background='linear-gradient(90deg,#7a4a1e,#d9a441)';
+      document.getElementById('mpLbl').textContent=Math.floor(P.arrows||0)+' / '+(P.maxArrows||20)+' arrows';
+    } else { mpBar.style.display='none'; }
+  }
+  // keep the bow hotbar badge in step without a full rebuild
+  const bowSlot=document.getElementById('hot_bow');
+  if(bowSlot){ const c=bowSlot.querySelector('.cnt'); if(c) c.textContent=Math.floor(P.arrows||0); }
   document.getElementById('goldTxt').textContent=P.gold;
   const pl=document.getElementById('plvlTxt'); if(pl) pl.textContent='Lv '+(P.level||1);
   const hp=document.getElementById('hot_potion'); if(hp) hp.querySelector('.cnt').textContent=P.inv[P.quickItem||'potion']||0;

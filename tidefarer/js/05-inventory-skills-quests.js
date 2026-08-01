@@ -34,7 +34,9 @@ function addXP(skill,amt){
   refreshSkillsPanel();
 }
 function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
-function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
+// The bow is now a hard-hitting, rationed weapon (a quiver of 20 that trickles
+// back) - so each shaft bites far deeper than the old free-fire bow did.
+function bowDmg(){ return 28 + P.skills.archery.lvl*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0); }
 function magicDmg(){ return 8 + ((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
@@ -100,9 +102,9 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon - tap the sword slot to wield it.'); }
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
-  if(rw.bow){ P.unlocked.bow=true; buildHotbar();
-    if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range.', {label:'OK'});
-    else toast('<b style="color:var(--ember)">Bow unlocked!</b> Press 2 or tap the bow slot.'); }
+  if(rw.bow){ P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; buildHotbar(); refreshUI();
+    if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range. Each shaft hits <b>hard</b> - but your <b>quiver holds 20</b>, and refills slowly, so pick your shots.', {label:'OK'});
+    else toast('<b style="color:var(--ember)">Bow unlocked!</b> 20 hard-hitting arrows - press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
     // the dash is NOT taught here: earning the staff opens Orin's tower, and the
     // scrying orb inside is what teaches the dash (see enterHouse + the orb boon).

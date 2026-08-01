@@ -36,6 +36,7 @@ const MAX_SKILL_LVL = 100;   // every skill climbs to a shared mastery cap of 10
 const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,
   hp:100, maxhp:100, mp:30, maxmp:30,
+  arrows:20, maxArrows:20, // the quiver: a hard-hitting bow, rationed to 20 shafts that slowly refill
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
   level:1, xpL:0, bank:0, vault:{}, quickItem:'potion', bind:null, horse:0, riding:0, home:0, homeUp:{},

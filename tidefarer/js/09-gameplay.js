@@ -534,11 +534,15 @@ function tryAttack(useMouse){
       }
     } else { P.combo=0; }
   } else if(P.weapon==='bow'){
+    // the quiver: a spent bow can't loose. Shafts trickle back over time (see updatePlayer)
+    if((P.arrows||0) < 1){ toastErr('<b>Your quiver is empty.</b> Arrows return as you catch your breath - or wade in with the sword.'); P.atkCd=0.28; return; }
+    P.arrows=Math.max(0,(P.arrows||0)-1);
     // Quickdraw perk (archery L5): markedly faster nocking
     P.atkCd=(P.perks&&P.perks.quickdraw)?0.43:0.62; P.swing=0.2; Snd.bow();
     const arrow={kind:'arrow',x:P.x,y:P.y-0.4,vx:aim.x*13,vy:aim.y*13,life:1.1,dmg:bowDmg(),from:'player',skill:'archery'};
     if(P.spells && P.spells.flamesnare){ arrow.snare=1.6; arrow.flame=1; }   // the Ashen Forge gift: fire-fletched arrows root what they strike
     G.projs.push(arrow);
+    refreshUI();
   } else if(P.weapon==='staff'){
     if(P.mp<8){ toastErr('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
     P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
@@ -1371,6 +1375,13 @@ function updatePlayer(dt){
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
+  // the quiver slowly refills toward its cap (~1 shaft every 1.7s) so the bow is a
+  // rationed burst weapon, never a permanent dead-end
+  if((P.arrows||0) < (P.maxArrows||20)){
+    const before=Math.floor(P.arrows||0);
+    P.arrows=Math.min(P.maxArrows||20, (P.arrows||0)+dt*0.6);
+    if(Math.floor(P.arrows) !== before) refreshUI();
+  }
   if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
   // fishing timer
   if(P.fishing){
