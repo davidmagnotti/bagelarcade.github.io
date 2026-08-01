@@ -276,7 +276,7 @@ function doInteract(){
   if(it.type==='lore'){ facePoint(it.o.x,it.o.y); readLore(it.key); return; }
   if(it.type==='well'){
     if(P.wellCd>0){ blockMsg('The well needs <b>'+Math.ceil(P.wellCd)+'s</b> to refill before you can drink again.'); return; }
-    P.hp=P.maxhp; P.mp=P.maxmp; P.wellCd=90;
+    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
     return;
@@ -561,7 +561,7 @@ function gainLXP(n){
   addFloat('+'+n+' XP', P.x, P.y-2.6, '#c9b0ff');
   while(P.xpL>=xpForP(P.level) && P.level<20){
     P.xpL-=xpForP(P.level); P.level++;
-    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp;
+    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20;   // level-up tops the quiver too
     burst(P.x,P.y-0.5,'#c9b0ff',20); Snd.levelup();
     shockwave(P.x,P.y,'rgba(201,176,255,0.9)',46);
     banner('LEVEL '+P.level, 'Barik takes your measure - and steps back.');

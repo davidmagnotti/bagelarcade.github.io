@@ -189,7 +189,7 @@ function unlockAll(){
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
   ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
 }
-function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.poisonT=0; ui(); note('Restored to full'); }
+function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.poisonT=0; ui(); note('Restored to full'); }
 function gold(n){ if(typeof giveGold==='function') giveGold(n); else P.gold=(P.gold||0)+n; ui(); note('+'+n+' gold'); }
 function xp(n){ if(typeof gainLXP==='function') gainLXP(n); ui(); note('+'+n+' level XP'); }
 function maxSkills(){ for(const s in (P.skills||{})){ if(typeof addXP==='function') addXP(s, 9999); } ui(); note('Skills boosted'); }

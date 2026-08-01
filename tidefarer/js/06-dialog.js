@@ -532,10 +532,10 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
       [{item:'potion',price:30},{item:'elixir',price:70}])});
   }
-  // The Cloud-Tender keeps a little sky-stall at the landing - bottled mana for the
-  // spellwork the Rainbow Road demands, and a few fire-tonics besides.
+  // The Cloud-Tender keeps a little sky-stall at the landing - sheaves of arrows for
+  // the Rainbow Road's long shots, and a few fire-tonics besides.
   if(npc.id==='wisp'){
-    btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
+    btns.unshift({label:'Buy sky-goods…', fn:()=>vendorShop(npc,'Straight shafts and healing off the cloud-tops, friend - a bundle for your quiver, red for your hurts. The high road drinks both.',
       [{item:'manapot',price:10},{item:'potion',price:30}])});
   }
   // Pia runs a food stall on Trade Row - fresh fish off the boats and island-grown fare.
