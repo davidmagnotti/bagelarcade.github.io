@@ -163,9 +163,11 @@ function nearestInteract(){
     }
   }
   for(const b of G.decor){
-    if(b.kind==='pillar'){
+    // only pillars carrying an intentional lore note are readable now; plain ruin
+    // pillars (the crypt/ruins dressing) are scenery, with no generic "Read" text
+    if(b.kind==='pillar' && b.loreKey){
       const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')),o:b,label:'Read'}; }
+      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey,o:b,label:'Read'}; }
     }
     if(b.kind==='crypt' && !b.noRead){
       const d=dist(P.x,P.y,b.x,b.y+1);
@@ -703,8 +705,15 @@ function dragonFaints(m){
       [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); disperseDragon(); if(typeof askDragonFlight==='function') askDragonFlight(); }},
        {label:'Not just yet', ghost:true, fn:()=>{ closeDialog(); disperseDragon(); }}]);
   };
-  setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
-    {onOk:offerLift}),1200);
+  // the freeing plays as a full animated cutscene (the violet shatters, his green
+  // floods back), then hands off to Ashwing's offer of a lift up to the Cloudreach.
+  // Fall through to the old story-card if the cutscene layer isn't loaded.
+  if(typeof dragonFreedCutscene==='function'){
+    setTimeout(()=>dragonFreedCutscene(offerLift), 700);
+  } else {
+    setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
+      {onOk:offerLift}),1200);
+  }
   if(qs('wyrm')==='active') completeQuest('wyrm');
   if(typeof startMageHunt==='function') startMageHunt();
 }
@@ -769,7 +778,7 @@ function killMob(m,skill){
     // the isle's victory screen
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
-    banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
+    banner('THE HOLLOW KING FALLS','THE CURSE BREAKS - THE STRAIT LIES OPEN');
     dropHollowFire();   // the seal breaks with him
     // his risen court crumbles with him FOR GOOD: clear every skeleton on the isle -
     // alive or merely waiting to respawn - so the northern spit stays quiet, and drop

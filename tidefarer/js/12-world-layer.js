@@ -449,13 +449,14 @@ function placeObjectsMain(){
     if(walkTile(tileAt(x,y))&&!solidAt(x,y)){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:br()<0.7}); setSolid(x,y,1); } }
   // Greyharbor, port town of Barik
   const V=ZONES.village;
-  addBuilding('house', V.x-3,V.y-2,"Harbor house");
-  addBuilding('house2',V.x+3,V.y-3,"Warden's post");
-  addBuilding('barn',  V.x+4,V.y+3,'Trade hall');
-  addBuilding('house', V.x-5,V.y+3,"Sela's Provisions");
-  addBuilding('house2',V.x+7,V.y,"Ivo's Herbary");
-  addBuilding('house2',V.x-2,V.y+5,'The Gull & Anchor (Inn)');
-  addBuilding('lamp',V.x-0.5,V.y+6,'');
+  // Greyharbor's core, spread a touch wider so the town doesn't feel cramped
+  addBuilding('house', V.x-4.2,V.y-2.8,"Harbor house");
+  addBuilding('house2',V.x+4.2,V.y-4.2,"Warden's post");
+  addBuilding('barn',  V.x+5.6,V.y+4.2,'Trade hall');
+  addBuilding('house', V.x-7,V.y+4.2,"Sela's Provisions");
+  addBuilding('house2',V.x+9.8,V.y,"Ivo's Herbary");
+  addBuilding('house2',V.x-2.8,V.y+7,'The Gull & Anchor (Inn)');
+  addBuilding('lamp',V.x-0.7,V.y+8.4,'');
   const FZ=ZONES.farm;
   addBuilding('barn', FZ.x+4,FZ.y-4,"Hedda's barn");
   addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse').closedMsg='The <b>Farmhouse</b> is dark - early to bed, early to the fields. A dog barks once, then thinks better of it.';
@@ -472,7 +473,7 @@ function placeObjectsMain(){
   G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
   // Aelin's Spire - the magic tower
   const SP=ZONES.spire;
-  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave");
+  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
   addBuilding('lamp',SP.x-2,SP.y+2,'');
   // the archery range, on Greyharbor's edge
   addBuilding('house', V.x+9,V.y+7,"Rook's Range");
@@ -499,7 +500,7 @@ function placeObjectsMain(){
   addBuilding('lamp',330,244,'');
   addBuilding('boat',338.5,249.5,'');
   // Thimble & Thread, Greyharbor's clothier
-  addBuilding('house',V.x-7,V.y-1,'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”';
+  addBuilding('house',V.x-9.8,V.y-1.4,'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”';
   // a hermit hides in the deep pines - chop through the ring to find him
   { const HX=ZONES.forest.x+9, HY=ZONES.forest.y-7;
     carveDisc(HX,HY,4,T.FOREST,false);
@@ -512,7 +513,7 @@ function placeObjectsMain(){
   G.decor.push({kind:'pillar',x:VM.x-3.5,y:VM.y+2.5,broken:true}); setSolid(VM.x-4,VM.y+2,1);
   G.decor.push({kind:'pillar',x:MZ.x-1.5,y:MZ.y+0.5,broken:true}); setSolid(MZ.x-2,MZ.y,1);
   G.decor.push({kind:'pillar',x:MZ.x+2.5,y:MZ.y+1.5,broken:false}); setSolid(MZ.x+2,MZ.y+1,1);
-  addBuilding('lamp',V.x-1,V.y-1,''); addBuilding('lamp',V.x+2,V.y+1,'');
+  addBuilding('lamp',V.x-1.4,V.y-1.4,''); addBuilding('lamp',V.x+2.8,V.y+1.4,'');
   addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y-1,''); addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y+2,'');
   addBuilding('boat', ZONES.dock.x-5.5,ZONES.dock.y+0.5,'');
   // the relic chest on Stormwatch Peak
@@ -528,7 +529,7 @@ function placeObjectsMain(){
 }
 function spawnNPCsMain(){
   const V=ZONES.village;
-  G.npcs.push(makeNPC('kell','Warden Kell', V.x+2.5,V.y-1,
+  G.npcs.push(makeNPC('kell','Warden Kell', V.x+3.5,V.y-1.4,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a3f52',pants:'#2f2b33',hat:'hood',pauldrons:true,trim:'#8a8f9a',cloak:'#3a3542',armor:1},
     ["Mind the roads, stranger. The wilds here don't forgive.",
      "Elites wear a crimson ring. You'll know them when they charge."],1.5));
@@ -548,11 +549,11 @@ function spawnNPCsMain(){
 }
 function spawnBarikFolk(){
   const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
-  G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-4.5,V.y+1.5,
+  G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-6.3,V.y+2.1,
     {skin:'#d3a377',hair:'#3c2f22',shirt:'#7a4a36',pants:'#4a3a2c',apron:'#c9b48e',hairstyle:'bun'},
     ["Bread, fish, and no questions - Greyharbor's finest counter.",
      "The farmsteads east keep us fed. Mostly."],1.2));
-  G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x+6.5,V.y+1.8,
+  G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x+9.1,V.y+2.5,
     {skin:'#c9a884',hair:'#5a6a4a',shirt:'#46603c',pants:'#35402c',robe:'#3f5a3a',trim:'#9ab87a'},
     ["Everything on Barik either heals you or bites you. I sell the first kind.",
      "Bluecaps, tonics, tidebalm. The wilds provide - I just bottle it."],1.0));
@@ -607,7 +608,7 @@ function spawnRealmFolk(){
     {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',quiver:true},
     ["Breathe out, loose, and never apologize to the target.",
      "Twenty gold buys a hundred arrows' worth of lessons."],0.8));
-  G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-6.5,V.y+0.2,
+  G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-9,V.y-0.6,
     {skin:'#c9a081',hair:'#2c2030',shirt:'#5e3a6a',pants:'#3a2c44',hairstyle:'long'},
     ['Silk holds a memory of every hand that touches it.',
      'My whole shipment, taken on the north road. The pines have thieves in them now.'],0.5));
@@ -916,7 +917,10 @@ function dragonLairSpeak(){
       '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
       [{label:'Continue', fn:()=> lairDialog('Vath',
         'A voice pours from the walls, and the air turns cold and violet: “Sentiment. Sleep, wyrm - or kill for me.” <i>Ashwing swings his great head toward you, fighting it - and losing. He is between you and the only way out.</i>',
-        [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse(); awakenDragon(); }}])}])}]);
+        [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse();
+        // the enthrall now plays as a full animated cutscene (the violet takes him); it hands
+        // straight to the fight (awakenDragon(true), already bound) on its final beat
+        if(typeof dragonEnthrallCutscene==='function') dragonEnthrallCutscene(); else awakenDragon(); }}])}])}]);
 }
 function lairDialog(name,text,btns){
   dlg.open=true; dlg.npc=null;
@@ -929,17 +933,28 @@ function lairDialog(name,text,btns){
     try{ drawDragon(pg,0,0,{face:1,enspelled:false,anim:1,hurtT:0}); }catch(e){} pg.restore(); }
   setDialog(text,btns);
 }
-function awakenDragon(){
+function awakenDragon(alreadyBound){
   if(G.mobs && G.mobs.some(m=>m.kind==='dragon' && !m.dead)) return; // one Ashwing at a time
   const C = G.worldId==='eastdeep' ? EASTDEEP_ZONES.rest : (ZONES.caldera||EAST_ZONES.caldera);
   const sp=findOpenNear(Math.round(P.x), Math.round(P.y+3), 7)
         || findOpenNear(Math.round(C.x), Math.round(C.y+ (G.worldId==='eastdeep'?4:7)), 8) || [C.x, C.y+4];
   const dr=spawnMob('dragon', sp[0], sp[1]);
-  // spawn him as HIMSELF (natural green) - the violet takeover is now SHOWN by the
-  // 'enthrall' entrance (ensAmt washes the colour across him), not narrated in a card
-  if(dr){ dr.bigBoss=true; dr.enspelled=false; dr.ensAmt=0; dr.ach='dragonsworn'; dr.state='idle'; dr.noAggroT=0;
+  if(dr){ dr.bigBoss=true; dr.ach='dragonsworn'; dr.noAggroT=0;
     dr.respawnT=-1; dr.hx=sp[0]; dr.hy=sp[1]; G.dragonMob=dr;
-    dr.entrance='enthrall'; dr.entranceTitle='ASHWING, ENTHRALLED'; dr.entranceSub='BREAK THE SPELL - DO NOT LET HIM FALL TO IT'; }
+    if(alreadyBound){
+      // the overlay enthrall cutscene already SHOWED the violet take him - so he wakes
+      // already bound and turns on you at once; skip the on-canvas 'enthrall' entrance
+      // (which would replay the same beat) and land the fight-banner here instead
+      dr.enspelled=true; dr.ensAmt=1; dr.entranceDone=true; dr.state='chase';
+      if(typeof banner==='function') banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
+      Snd.boss&&Snd.boss(); G.slowmo=Math.max(G.slowmo||0,0.8);
+    } else {
+      // fallback path (no cutscene): spawn him as HIMSELF (natural green) and let the
+      // 'enthrall' entrance wash the violet across him, then hand to the fight
+      dr.enspelled=false; dr.ensAmt=0; dr.state='idle';
+      dr.entrance='enthrall'; dr.entranceTitle='ASHWING, ENTHRALLED'; dr.entranceSub='BREAK THE SPELL - DO NOT LET HIM FALL TO IT';
+    }
+  }
   P.metDragon=1;
   // seal the chamber: the Dragon Gate flares shut behind you - no way out (and no
   // boar in) until the wyrm is down. Only the Emberdeep has the firegate to close.

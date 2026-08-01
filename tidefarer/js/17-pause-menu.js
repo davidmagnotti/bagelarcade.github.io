@@ -33,7 +33,16 @@ function togglePause(force){
   if(G.state!=='play') return;
   G.paused = force!==undefined? force : !G.paused;
   document.getElementById('pausePanel').style.display = G.paused? 'flex':'none';
-  if(G.paused){ closeAllPanels(); closeDialog(); buildPauseStats(); syncCfgUI(); autoSave(); }
+  const d=document.getElementById('dialog');
+  if(G.paused){
+    closeAllPanels(); buildPauseStats(); syncCfgUI(); autoSave();
+    // Preserve an open conversation: tuck it behind the pause menu rather than
+    // calling closeDialog() (which drops you out of the talk). It returns on resume.
+    if(typeof dlg!=='undefined' && dlg.open && d) d.style.display='none';
+  } else {
+    // resuming - bring a still-open conversation back up where you left it
+    if(typeof dlg!=='undefined' && dlg.open && d) d.style.display='block';
+  }
 }
 /* #pausePanel is styled as a full-screen overlay (position:fixed;inset:0) but
    was nested inside #titleOv, which is display:none during play - so a hidden

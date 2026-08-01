@@ -96,7 +96,7 @@ function buildDialogContent(npc){
   // them to Orin first. (Once his staff quest is done, the normal offer path fires,
   // with Maren's astonishment that Orin lent it woven into the brief.)
   if(npc.id==='maren' && qs('king')==='avail' && qs('mushrooms')!=='done'){
-    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for steel alone. Whatever crawls beneath that crypt is older than iron, and it does not fear a blade.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do what the old mage asks of you, and let him arm you with more than an edge. Come back to me when you carry his <b>fire</b> - then, and only then, will I open the causeway.”',
+    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for steel alone. Whatever crawls beneath that crypt is older than iron, and it does not fear a blade. It is his waking that cursed the strait - his spite reaches out into the water and drags down any hull that dares the crossing. Put him down and the sea loosens its grip; Emberwick can sail again.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do what the old mage asks of you, and let him arm you with more than an edge. Come back to me when you carry his <b>fire</b> - then, and only then, will I open the causeway.”',
       shopButtons(npc,[{label:'I\'ll find Orin', ghost:true, fn:closeDialog}]));
     return;
   }
@@ -116,7 +116,7 @@ function buildDialogContent(npc){
   if(npc.id==='maren' && P.story && qs('king')==='done' && !P.story.marenCharge){
     const toBoat=()=>{
       P.story.marenCharge=1;
-      setDialog('<i>She grips your forearm, warrior to warrior.</i> “Then it\'s settled. <b>Captain Brant</b> is mending the Tidewalker down at the dock - help him make her seaworthy and step aboard when you\'re ready. Fair winds, Champion. Emberwick will keep a lantern lit for you.”',
+      setDialog('<i>She grips your forearm, warrior to warrior.</i> “Then it\'s settled. The strait runs calm again now his curse is broken - the crossing is finally yours to make. <b>Captain Brant</b> is mending the Tidewalker down at the dock; help him make her seaworthy and step aboard when you\'re ready. Fair winds, Champion. Emberwick will keep a lantern lit for you.”',
         shopButtons(npc,[{label:'To the dock', cls:'gold', fn:()=>buildDialogContent(npc)}]));
     };
     setDialog('<i>Elder Maren studies you a long moment, and there is more than gratitude in it.</i> “I\'ve watched a great many castaways wash up on this rock. Not one of them could have gone down into that dark and walked back out. You\'re a rare hand with a blade, traveler - a born fighter - and Emberwick is only one small stone in a wide and troubled sea.” <i>Her eyes turn to the water.</i> “The other isles are in turmoil - cursed tides, beasts on the roads, wrongs with no one left to set them right. They could use someone like you out there. Will you carry what you are beyond our shore?”',
@@ -490,8 +490,8 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Village projects…', fn:()=>projectsMenu(npc)});
     btns.unshift({label:'Supply contract…', fn:()=>contractMenu(npc)});
     btns.unshift({label:'Sell goods…', fn:()=>sellMenu(npc)});
-    btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
-      if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
+    btns.unshift({label:'Buy Ember Tonic (30g)', fn:()=>{
+      if(P.gold>=30){ P.gold-=30; giveQuiet('potion',1); Snd.coin(); refreshUI();
         setDialog('“Sip it slow - or don\'t, if something\'s biting you.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
       else setDialog('“Coin first, tonic after. Island rules.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
@@ -500,17 +500,17 @@ function shopButtons(npc,btns){
   // Herbary, and Thimble & Thread (Mira the clothier).
   if(npc.id==='sela'){
     btns.unshift({label:'Buy provisions…', fn:()=>vendorShop(npc,'Provisions for the road - fresh bread, grilled fish, an apple, a tonic for the bad days. What\'ll it be?',
-      [{item:'bread',price:5},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'potion',price:8}])});
+      [{item:'bread',price:5},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'potion',price:30}])});
   }
   if(npc.id==='ivo'){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
-      [{item:'potion',price:8},{item:'elixir',price:24}])});
+      [{item:'potion',price:30},{item:'elixir',price:70}])});
   }
   // The Cloud-Tender keeps a little sky-stall at the landing - bottled mana for the
   // spellwork the Rainbow Road demands, and a few fire-tonics besides.
   if(npc.id==='wisp'){
     btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
-      [{item:'manapot',price:10},{item:'potion',price:8}])});
+      [{item:'manapot',price:10},{item:'potion',price:30}])});
   }
   if(npc.id==='mira'){
     // her silk was stolen on the north road - she has none to sell until it's recovered
@@ -620,11 +620,17 @@ function shopButtons(npc,btns){
         setDialog('“You\'ve had my lesson, and the weave keeps it - there\'s nothing more I can drill into you here. Go and practice what you know. And if you haven\'t yet - step inside; the orb has a gift for a student who\'s earned it.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
       const f=aelinFee();
       if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
-      P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
-      TRAIN={who:'aelin', stage:0, rolls:0, combo:0, casts:0, _r:0, x:P.x, y:P.y,
-        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-      toast('<b>Aelin\'s lesson:</b> attune your staff (<b>press 3</b>) and cast <b>5 bolts</b> at the practice dummy. No footwork - just clean casting.',5600); Snd.quest();
+      // she gives the lesson aloud first - a click-to-continue brief - then the drill begins
+      const beginLesson=()=>{
+        P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
+        P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
+        TRAIN={who:'aelin', stage:0, rolls:0, combo:0, casts:0, _r:0, x:P.x, y:P.y,
+          dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
+        toast('<b>Aelin\'s lesson:</b> strike the dummy with <b>5 bolts</b>. Attune your staff with <b>3</b>.',5000); Snd.quest();
+      };
+      setDialog('<i>Aelin sets a practice dummy at the heart of the ring and steps clear.</i> “Here is the whole of today\'s lesson: attune your staff - <b>press 3</b> - and strike that dummy with <b>five clean bolts</b>. No footwork, no flourish - just the weave, loosed true, five times over. Ready your staff, and begin when you are.”',
+        [{label:'Begin the lesson ('+f+'g)', cls:'gold', fn:beginLesson},
+         {label:'Not yet', ghost:true, fn:closeDialog}]);
     };
     const trained = P.prog && P.prog.spireTrainedEver;
     btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
@@ -716,8 +722,8 @@ function shopButtons(npc,btns){
     }});
   }
   if(npc.id==='ivo'){
-    btns.unshift({label:'Buy Ember Tonic (8g)', fn:()=>{
-      if(P.gold>=8){ P.gold-=8; giveQuiet('potion',1); Snd.coin(); refreshUI();
+    btns.unshift({label:'Buy Ember Tonic (30g)', fn:()=>{
+      if(P.gold>=30){ P.gold-=30; giveQuiet('potion',1); Snd.coin(); refreshUI();
         setDialog('“Brewed bitter so you remember to stay alive.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); }
       else setDialog('“Eight gold. Healing\'s cheap; herbs aren\'t.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});

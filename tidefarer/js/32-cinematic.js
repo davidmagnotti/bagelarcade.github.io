@@ -84,7 +84,10 @@ let _bolt=null, _boltLife=0;
 function makeBolt(){
   const x0=VW*(0.15+Math.random()*0.7);
   const pts=[[x0,-12]]; let x=x0, y=-12;
-  const segs=8+((Math.random()*4)|0), step=VH*0.62/segs;
+  // strike DOWN to a ground point (50-82% down the screen) so the bolt lands
+  // instead of fizzling out mid-air
+  const reach=VH*(0.5+Math.random()*0.32);
+  const segs=8+((Math.random()*4)|0), step=(reach+12)/segs;
   for(let i=0;i<segs;i++){ y+=step*(0.7+Math.random()*0.6); x+=(Math.random()-0.5)*VW*0.10; pts.push([x,y]); }
   const branches=[];
   for(let b=0;b<2;b++){ if(Math.random()<0.6){
@@ -93,7 +96,10 @@ function makeBolt(){
     for(let k=0;k<3;k++){ bx+=(Math.random()-0.3)*VW*0.09; by+=step*(0.5+Math.random()*0.5); br.push([bx,by]); }
     branches.push(br);
   }}
-  return {pts,branches};
+  // remember where it hit, and where the camera was when it struck, so the bolt
+  // can be pinned to that spot in the WORLD as the camera pans (see drawBolt)
+  const tip=pts[pts.length-1];
+  return {pts, branches, hitX:tip[0], hitY:tip[1], cam:{x:(G.cam?G.cam.x:0), y:(G.cam?G.cam.y:0)}};
 }
 function strokePoly(pl,w){ cx.beginPath(); cx.moveTo(pl[0][0],pl[0][1]); for(let i=1;i<pl.length;i++) cx.lineTo(pl[i][0],pl[i][1]); cx.lineWidth=w; cx.stroke(); }
 function drawBolt(){
@@ -104,7 +110,16 @@ function drawBolt(){
   if(!_bolt) return;
   _boltLife=L/0.5;
   const a=Math.max(0,Math.min(1,_boltLife));
-  cx.save(); cx.lineCap='round'; cx.lineJoin='round'; cx.globalCompositeOperation='lighter';
+  // Pin the bolt to the WORLD, not the screen: shift it by how far the camera has
+  // panned since it struck, so it stays over the same ground and slides off-screen
+  // as you move - instead of gliding along locked to the camera.
+  const ox=-((G.cam?G.cam.x:0)-_bolt.cam.x), oy=-((G.cam?G.cam.y:0)-_bolt.cam.y);
+  cx.save(); cx.translate(ox,oy);
+  cx.lineCap='round'; cx.lineJoin='round'; cx.globalCompositeOperation='lighter';
+  // a bright flash where the bolt lands, so the strike reads as a hit
+  const r=72*a, g=cx.createRadialGradient(_bolt.hitX,_bolt.hitY,2,_bolt.hitX,_bolt.hitY,r);
+  g.addColorStop(0,'rgba(220,235,255,'+(0.55*a)+')'); g.addColorStop(1,'rgba(180,205,255,0)');
+  cx.fillStyle=g; cx.beginPath(); cx.arc(_bolt.hitX,_bolt.hitY,r,0,TAU); cx.fill();
   cx.strokeStyle='rgba(150,180,255,'+(0.30*a)+')'; strokePoly(_bolt.pts,7);
   for(const br of _bolt.branches){ cx.strokeStyle='rgba(140,170,250,'+(0.20*a)+')'; strokePoly(br,4); }
   cx.strokeStyle='rgba(240,246,255,'+(0.85*a)+')'; strokePoly(_bolt.pts,2);
