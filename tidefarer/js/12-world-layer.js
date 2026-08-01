@@ -1679,33 +1679,24 @@ function freeLeviathan(m){
   banner('THE TIDE GOES CALM','THE STRAIT IS OPEN - BOATS MAY CROSS AGAIN');
   if(qs('tide')==='active') completeQuest('tide');
   updateWindFolkMood();
-  setTimeout(()=>leviathanFarewell(m),1400);
+  // The freeing is now a full-overlay cutscene (js/38-leviathan-cutscene.js), the sea-mirror
+  // of the Ashwing FREED bookend: the beast's thanks AND the reveal that Vath was here - a
+  // robed man on the breakwater, violet at his wrists - play as one scene. When it ends, the
+  // calmed beast finally dives.
+  setTimeout(()=>{
+    if(typeof leviathanFreedCutscene==='function') leviathanFreedCutscene(m, ()=>sinkLeviathan(m));
+    else sinkLeviathan(m);
+  },1400);
 }
-// A dialogue with the CALMED leviathan - unbound, it is no monster but an ancient deep-thing,
-// and it regards you once before it dives. Mirrors the freed-dragon beat after Ashwing.
-function leviathanFarewell(m){
-  dlg.open=true; dlg.npc=null;
-  const win=document.getElementById('dialog'); if(win) win.style.display='block';
-  const nm=document.getElementById('dname'); if(nm) nm.textContent='The Leviathan, Unbound';
-  const pc=document.getElementById('dportrait');
-  if(pc){ const pg=pc.getContext('2d'), W=pc.width, H=pc.height;
-    const rg=pg.createRadialGradient(W*0.5,H*0.85,4,W*0.5,H*0.5,H*0.9);
-    rg.addColorStop(0,'#245b6b'); rg.addColorStop(1,'#0a1a22'); pg.fillStyle=rg; pg.fillRect(0,0,W,H);
-    pg.strokeStyle='rgba(127,208,224,0.55)'; pg.lineWidth=3; pg.lineCap='round';   // a serpentine coil
-    pg.beginPath(); pg.moveTo(W*0.16,H*0.8); pg.quadraticCurveTo(W*0.4,H*0.3,W*0.62,H*0.52);
-    pg.quadraticCurveTo(W*0.8,H*0.68,W*0.86,H*0.34); pg.stroke();
-    pg.fillStyle='#0a1418'; pg.beginPath(); pg.arc(W*0.7,H*0.44,6,0,TAU); pg.fill();  // the calm eye
-    pg.fillStyle='#bfe8ff'; pg.beginPath(); pg.arc(W*0.7,H*0.44,3.2,0,TAU); pg.fill(); }
-  const sink=()=>{ closeDialog();
-    if(m && !m.dead){ m.dead=true; m.respawnT=-1;
-      shockwave(m.x,m.y,'rgba(150,220,245,0.9)',80);
-      for(let i=0;i<26;i++){ const a=Math.random()*TAU, sp=rnd(1,3.6);
-        G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp+0.4,life:rnd(0.7,1.5),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); } }
-    setTimeout(()=>storyCard('Where it sank, a cold shard of that light does not fade; it drifts to your hand and hardens - <b style="color:#c9a0ff">Vath\'s Curse-Mark</b>, the binding itself, torn loose. <i>(+1 Vath\'s Curse-Mark)</i> On the pier, <b>Rell</b> grips your arm. “First calm water in a season.” Then, quieter: “A <b>robed man</b> was here before the beast came. Violet at his cuffs, asking after the old deep-magics. You know the sort?” <i>He nods out at the open water.</i> “Word like this belongs with the crown. The ferry runs to <b>Aldermere</b> now - take it, and get this to <b>King Aldous</b> himself.”',
-      {onOk:()=>{ setTimeout(()=>toast('<b style="color:var(--ember)">Sail to Aldermere, the capital</b>, and seek an audience with King Aldous - the ferry runs there now the strait is calm.',7000),700); }}),900);
-  };
-  setDialog('<i>The violet drains from its hide and its vast eye clears to a deep, calm blue. No monster now - only something impossibly old, made to kill and glad to be done with it. The water goes glass-flat around it. It lowers its great head to you, once, slow as a tide turning</i> - and a sound rolls up out of the deep, less a voice than the sea itself remembering how to speak: <b style="color:#8fd8ff">“…unbound. The little land-thing broke the cold hand. Go well, breaker. The deep will know your keel and let it pass.”</b>',
-    [{label:'Let it return to the deep', cls:'gold', fn:sink}]);
+// The calmed, unbound beast finally slips back under - a shockwave and a scatter of cold spray
+// as the water closes over it. Called when the freeing cutscene ends (or straight away if the
+// overlay is missing). The Curse-Mark and the tide-calm state are already granted in
+// freeLeviathan; the Vath reveal now lives inside the cutscene, not a story-card afterward.
+function sinkLeviathan(m){
+  if(m && !m.dead){ m.dead=true; m.respawnT=-1;
+    shockwave(m.x,m.y,'rgba(150,220,245,0.9)',80);
+    for(let i=0;i<26;i++){ const a=Math.random()*TAU, sp=rnd(1,3.6);
+      G.parts.push({x:m.x,y:m.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp+0.4,life:rnd(0.7,1.5),color:Math.random()<0.5?'#bfe8ff':'#8fd0e0',size:rnd(2,5),grav:0.05}); } }
 }
 function updateWindFolkMood(){
   // once the strait reopens, the town's talk turns from despair to bustle
@@ -4403,7 +4394,7 @@ QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:
 QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'orin', xpL:340,
   brief:"The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
   log:'Sail to Emberwick and show the pendant to Sage Orin at his tower.',
-  doneText:"<i>Orin turns the medallion once in the lantern-light, and when he looks up there is no surprise in his old eyes - only a slow, knowing smile.</i> ...I wondered when you might come back here. I have wondered it since the day you washed ashore wearing this. It is no ornament, child - it is a memory-ward, a mother's love worked into metal, keyed to YOU, meant to hold a mind whole against exactly the unmaking your enemy deals. <i>He folds your fingers gently back over it.</i> Go and chat with the Woodworker, down by the green. Show him your necklace - just that, nothing more. Trust an old man: some doors open only to the right key, and you have carried it at your throat all along.",
+  doneText:"<i>Orin turns the medallion once in the lantern-light, and when he looks up there is no surprise in his old eyes - only a slow, knowing smile.</i> ...I wondered when you might come back here. I have wondered it since the day you washed ashore wearing this. It is no ornament, child - it is a memory-ward, a mother's love worked into metal, keyed to YOU, meant to hold a mind whole against exactly the unmaking your enemy deals. <i>He folds your fingers gently back over it, then reaches into the clutter of his desk and draws out a rolled sea-chart, its wax seal long broken.</i> And one thing more - a gift, and a burden with it. This is a chart to an isle that lies off the edge of every map I own: <b>Stormreach</b> - a lone rock under a storm that never breaks, far past anywhere Vath's hand can reach. <i>He presses it into your palm and holds your gaze until you meet it.</i> Promise me this. When you have gone home and stood before the King - whatever passes in that hall - you sail for Stormreach next. Trust these old bones: that storm-locked rock is where your road runs after this, though I cannot yet say why. <i>He straightens, the moment passing.</i> Now - go and chat with the Woodworker, down by the green. Show him your necklace, just that, nothing more. Some doors open only to the right key, and you have carried it at your throat all along.",
   rw:{gold:40, mp:6, xp:{magic:260}} };
 QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
   brief:"Go down to the green and seek out the Woodworker. Show him the pendant - only that, nothing more - and let happen what will. I'll not spoil it by naming it; some things a soul must come to on its own. Go, child. Trust these old bones: this is a door you have carried the key to all along.",
