@@ -836,6 +836,17 @@ function killMob(m,skill){
     toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }
   if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
+  // dropped shafts - archers carry quivers, barrow-bones and raiders shed a few, and
+  // a hard boss is a good resupply. Only worth dropping once you've a bow to catch them.
+  if(P.unlocked && P.unlocked.bow && !m.bigBoss){
+    let na=0;
+    if(m.kind==='archer') na=rndi(4,8);
+    else if(m.kind==='skeleton'||m.kind==='raider'||m.kind==='brigand'||m.kind==='raptor') na=rndi(2,4);
+    else if(m.boss) na=rndi(4,8);
+    else if(Math.random()<0.30) na=rndi(1,2);
+    if(m.elite) na*=2;
+    if(na>0) G.parts.push({x:m.x-0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'arrows',n:na,size:9,color:''});
+  }
   if(m.kind==='alpha'){
     Snd.boss(); G.shake=0.8; G.slowmo=1.0;
     shockwave(m.x,m.y,'rgba(255,140,110,0.9)',70);
@@ -1400,9 +1411,16 @@ function updatePlayer(dt){
   // pickups & hint zones
   for(const pt of G.parts){
     if(pt.pickup && dist(P.x,P.y,pt.x,pt.y)<0.7){
-      if(pt.pickup==='gold') giveGold(pt.n);
-      else { P.hp=Math.min(P.maxhp,P.hp+pt.n); addFloat('+'+pt.n+' HP',P.x,P.y-1.4,'#7fe07f'); Snd.pickup(); refreshUI(); }
-      pt.life=0;
+      if(pt.pickup==='gold'){ giveGold(pt.n); pt.life=0; }
+      else if(pt.pickup==='arrows'){
+        // gather dropped shafts into the quiver. If it's full (or you've no bow
+        // yet) leave them lying so nothing is wasted - grab them once there's room.
+        if(P.unlocked && P.unlocked.bow && (P.arrows||0) < (P.maxArrows||20)){
+          P.arrows=Math.min(P.maxArrows||20,(P.arrows||0)+pt.n);
+          addFloat('+'+pt.n+' arrows',P.x,P.y-1.4,'#d9a441'); Snd.pickup(); refreshUI(); pt.life=0;
+        }
+      }
+      else { P.hp=Math.min(P.maxhp,P.hp+pt.n); addFloat('+'+pt.n+' HP',P.x,P.y-1.4,'#7fe07f'); Snd.pickup(); refreshUI(); pt.life=0; }
     }
   }
   if(ZONES.springs){

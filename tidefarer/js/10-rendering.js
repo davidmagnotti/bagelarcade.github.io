@@ -3666,7 +3666,7 @@ function drawProj(p,s){
 }
 function drawPickup(pt,s){
   const bob=Math.sin(G.time*4+pt.x)*3;
-  const ic= pt.pickup==='gold'? ICONS.gold : ICONS.heart;
+  const ic= pt.pickup==='gold'? ICONS.gold : pt.pickup==='arrows'? ICONS.manapot : ICONS.heart;
   cx.drawImage(ic, s.x-10, s.y-14+bob, 20,20);
   if(pt.life<4) { cx.globalAlpha=1; if(Math.sin(G.time*10)>0) cx.globalAlpha=0.4; cx.globalAlpha=1; }
 }
