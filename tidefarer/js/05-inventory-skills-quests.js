@@ -31,10 +31,9 @@ function addXP(skill,amt){
   if(typeof checkPerkMilestone==='function') checkPerkMilestone(skill);
   refreshSkillsPanel();
 }
-function trinket(s){ return (typeof trinketBonus==='function') ? trinketBonus(s) : 0; }   // dungeon-trinket bonuses (36-trinkets.js)
-function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0) + trinket('melee') + trinket('dmg'); }
-function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + trinket('archery') + trinket('dmg'); }
-function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + trinket('magic') + trinket('dmg'); }
+function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
+function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
+function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
 function qs(id){ return P.quests[id]; }

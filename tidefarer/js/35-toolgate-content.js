@@ -233,8 +233,7 @@ function placeToolgates(id){
       var used=[];
       for(var i=0;i<caches.length;i++) placeCache(caches[i], zones, used);
     }
-    var tc=TG_TOOLCHEST[id];
-    if(tc) placeToolChest(id, tc);
+    // (the tier-2 tools are now BOSS PRIZES - see awardDungeonTool in 37-dungeon-hideaways.js)
     if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){ try{ console.warn('placeToolgates failed', e); }catch(_){ } }
 }

@@ -183,7 +183,6 @@ function placeIronRoom(id, loot, spawn, used){
 
 function placeDungeonHideaways(id){
   try{
-    placeRelicChest(id);
     var sp=spawnOf(id); var used=[];
     if(CRACK_VAULTS[id]) placeCrackVault(id, CRACK_VAULTS[id], sp, used);
     if(IRON_ROOMS[id])  placeIronRoom(id, IRON_ROOMS[id], sp, used);
@@ -191,7 +190,30 @@ function placeDungeonHideaways(id){
   }catch(e){ try{ console.warn('placeDungeonHideaways failed', e); }catch(_){ } }
 }
 
+/* ---- the four tier-2 tools are BOSS PRIZES: one per dungeon, dropped when the
+        dungeon's marquee boss falls (hooked from killMob in 09-gameplay.js).
+        Each has its "use it here" example already in the world:
+          Rivenedge Axe   (Undermaw / Maw-Stalker)   -> ironwood gates (isles)
+          Cragbreaker Pick(Emberdeep / Ashwing)       -> basalt gates (isles)
+          Blast Charge    (Ashen Forge / Cinderwrought)-> crackwall vaults (isles)
+          Lodestone       (Undermill / Cog-Bound)     -> lodestone plate rooms (isles)
+---- */
+var BOSS_TOOL={
+  undermaw:    {grant:'grantRivenedge',  have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
+  eastdeep:    {grant:'grantCragbreaker', have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
+  sunwarddeep: {grant:'grantBomb',        have:function(){return !!(P.unlocked&&P.unlocked.bomb);},      is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
+  milldeep:    {grant:'grantLodestone',   have:function(){return !!(P.unlocked&&P.unlocked.lodestone);}, is:function(m){return !!m.millboss;}}
+};
+function awardDungeonTool(m){
+  try{
+    var t=BOSS_TOOL[G.worldId]; if(!t || !m || !t.is(m) || t.have()) return;
+    // let the boss's own fall beat play first, then reveal the prize
+    setTimeout(function(){ try{ var fn=window[t.grant]; if(typeof fn==='function'){ fn(); if(typeof autoSave==='function') autoSave(); } }catch(e){} }, 1500);
+  }catch(e){}
+}
+
 window.placeDungeonHideaways=placeDungeonHideaways;
 window.deepDungeonSpot=deepDungeonSpot;
+window.awardDungeonTool=awardDungeonTool;
 
 })();

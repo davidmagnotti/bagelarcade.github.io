@@ -274,8 +274,9 @@ World objects they act on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...
 *Relic verbs* → "Sandbox: grant both + spawn puzzles here."
 
 **Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The two verbs are now
-*earnable*: a `{bombgift}` chest in the **Ashen Forge**, a `{lodegift}` chest in the
-**Undermaw**. And they hide real loot out on the isles (dungeon interiors are too
+*earnable* as **boss prizes** (see "The four tools are BOSS PRIZES" below): Blast Charge
+off the **Ashen Forge** boss, Lodestone off the **Undermill** boss. And they hide real
+loot out on the isles (dungeon interiors are too
 densely connected for sealable nooks): **crackwall vaults** (a flood-fill-verified nook
 walled by a fissured wall a Blast Charge opens — Barik, Sunward, Stormreach, Windsurf)
 and **lodestone plate rooms** (the nook's neck sealed by a plate-gate; a pressure plate
@@ -332,32 +333,23 @@ taken tools stay taken.
 side-pockets) — those want a per-site, human reachability pass so the unlocking tool
 is always obtainable first; left as authored content.
 
-#### A distinct item in every dungeon — [built] (`js/36-trinkets.js`)
+#### The four tools are BOSS PRIZES — [built] (`awardDungeonTool`, `js/37-dungeon-hideaways.js`)
 
-Each dungeon now drops its own new keepsake — a passive trinket with one clear, themed
-effect plugged into the existing stat formulas via `trinketBonus(stat)`. Placed as a
-`{itemgift:<key>}` bonus chest near the entrance by `placeDungeonItems(id)` (same
-switchWorld hook + `P.story.tg` persistence as the tool-gate content), so it does not
-disturb the dungeon's signature reward or boss.
+One usable prize per dungeon, dropped when the dungeon's marquee boss falls (hooked from
+`killMob`), each with its "use it here" example already in the world. (An earlier draft
+scattered these — plus a set of passive stat-trinkets — into chests; the trinkets are cut
+and the tools are now earned off the boss, one per dungeon.)
 
-| Dungeon | Trinket | Effect |
-|---------|---------|--------|
-| Undermaw | **Rivenedge Axe** | (tool — fells ironwood; faster chopping) |
-| Emberdeep | **Cragbreaker Pick** | (tool — breaks basalt; faster mining) |
-| Underclimb | **Skytalon Charm** | +8% critical chance |
-| Rimefissure | **Rimeheart Pendant** | −3 damage from every blow |
-| Glacier Vault | **Bearhide Cloak** | +25 max health |
-| Drowned Catacomb | **Drowned Pearl** | +20 max mana |
-| Undermill | **Gearwright Gloves** | +2 gathering power |
-| Drowned Vault | **Tidesteel Band** | +5 melee damage |
-| Gale Spire | **Galestride Boots** | +12% move speed |
-| Ashen Forge | **Cinderforged Ring** | +6 magic damage |
-| Storm Temple | **Stormcore Shard** | +3 damage, all attacks |
-| Tideward Crypt | **Founders' Signet** | +4 all damage, +15 max HP |
-| Rainbow Road | **Prism Lens** | +6 archery damage (best-effort — procedural world) |
+| Dungeon | Boss | Prize | Where you use it |
+|---------|------|-------|------------------|
+| **Undermaw** (Barik) | Maw-Stalker | **Rivenedge Axe** (axe→2) | fells **ironwood** gates (isles) |
+| **Emberdeep** (Mount Kea) | Ashwing | **Cragbreaker Pick** (pick→2) | breaks **basalt** gates (isles) |
+| **Ashen Forge** (Sunward) | Cinderwrought | **Blast Charge** | opens **crackwall** vaults (isles) |
+| **Undermill** (Windsurf) | Cog-Bound | **Lodestone** | solves **plate** rooms (isles) |
 
-Effects hook `meleeDmg`/`bowDmg`/`magicDmg` (05), the crit roll, the hurt-reduction, the
-gather power, and the walk speed (09); `+max-hp`/`+max-mana` kinds apply once on pickup.
+`awardDungeonTool(m)` matches the dungeon + its boss, then (after the boss's own fall beat)
+calls the existing grant fn — so nothing is placed as a loose chest and no dungeon carries
+more than one of these. The tools also speed ordinary chopping/mining/etc. as before.
 
 ### Bosses & new dungeons — [new]
 

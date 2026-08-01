@@ -394,8 +394,7 @@ function hitNode(n){
   const isTree=n.kind==='tree';
   P.swing=0.28; P.anim+=0.5;
   const power = 1 + Math.floor((isTree? P.skills.woodcut.lvl : P.skills.mining.lvl)/3)
-              + (isTree? P.tools.axe : P.tools.pick)
-              + (typeof trinketBonus==='function'?trinketBonus('gather'):0);   // Gearwright Gloves
+              + (isTree? P.tools.axe : P.tools.pick);
   n.hp-=power;
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
@@ -612,8 +611,7 @@ function damageMob(m,dmg,knock,skill){
   }
   let crit=false;
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
-  const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0)
-    + (typeof trinketBonus==='function'?trinketBonus('crit'):0);   // Skytalon Charm
+  const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0);
   if(Math.random()<critCh){ dmg=Math.round(dmg*1.6); crit=true; }
   // Executioner perk (melee L5): heavy bonus versus badly-wounded foes
   if(skill==='melee' && P.perks && P.perks.executioner && m.maxhp && m.hp/m.maxhp < 0.30) dmg=Math.round(dmg*1.5);
@@ -915,6 +913,8 @@ function killMob(m,skill){
   if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
     spawnFastExit(m.x, m.y);
   }
+  // the four tier-2 tool prizes are BOSS DROPS - one per dungeon (see 37-dungeon-hideaways.js)
+  if(typeof awardDungeonTool==='function') awardDungeonTool(m);
 }
 function buzz(ms){ if(CFG.shake && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
 function stunPlayer(dur){
@@ -933,7 +933,6 @@ function hurtPlayer(dmg,src){
   if(typeof has==='function' && has('wardplate',1)) _red=Math.min(0.65, _red+0.15);   // the Deepiron Ward stacks atop worn armour
   dmg=Math.max(1, Math.round(dmg*(1-_red)));
   if(has('wardstone',1)) dmg=Math.max(1, dmg-2);   // the Warden's Wardstone turns aside a sliver of every blow
-  if(typeof trinketBonus==='function'){ const _fd=trinketBonus('flatdef'); if(_fd) dmg=Math.max(1, dmg-_fd); }   // Rimeheart Pendant
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
@@ -1183,8 +1182,7 @@ function updatePlayer(dt){
       *(P.riding? (P.unlocked&&P.unlocked.moa?2.1:1.55) :1)
       *(onWater&&canSurf&&!P.diving?1.8:1)
       *(P.diving?0.82:1)
-      *(has('boots',1)?1.14:1)
-      *(1+(typeof trinketBonus==='function'?trinketBonus('speed'):0));   // Galestride Boots
+      *(has('boots',1)?1.14:1);
     moveEntity(P, mx*sp*dt, my*sp*dt, 0.28, canSurf, canDive);
     if(onWater&&canSurf&&!P.diving&&Math.random()<dt*14)
       G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(0,0.3),vx:-mx*0.8+rnd(-0.4,0.4),vy:-my*0.8+rnd(-0.4,0.4),life:0.35,color:'#eaf6ff',size:2.4,grav:0});
