@@ -59,7 +59,10 @@ let acc=0, cnt=0, prev=0, cooldownUntil=0;
 
 function apply(){
   RQ=TIERS[tier].rq;
-  LOWFX=TIERS[tier].low || PERF;   // Performance Mode always strips to low-gfx
+  // Feed the tier's low-gfx state into the shared LOWFX derivation so the
+  // player's Fast-graphics choice (js/01-core refreshLOWFX) isn't clobbered.
+  TIER_LOW=TIERS[tier].low;
+  if(typeof refreshLOWFX==='function') refreshLOWFX(); else LOWFX=TIER_LOW||PERF;
   if(typeof resize==='function') resize();
 }
 apply();
