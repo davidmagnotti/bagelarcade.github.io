@@ -698,8 +698,8 @@ function dragonFaints(m){
   }
   bossReward(m);
   m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
-  // in the Emberdeep, THE WAY UP opens like every other dungeon (Ashwing's lift is still offered too)
-  if(typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
+  // no "way out" drop here: the freed Ashwing personally bears you up (the lift below), and the
+  // far-south ember mouth remains - the Emberdeep's exit is the dragon, not a portal at his feet
   Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
@@ -939,12 +939,14 @@ function killMob(m,skill){
     banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
     if(typeof autoSave==='function') autoSave();
   }
-  // After felling ANY dungeon boss, open THE WAY UP - the same fast-exit portal in every
-  // dungeon, right where the boss fell. No dialogue: step into it to rise, mended and a level
-  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent; the
-  // Undermill's Cog-Bound has no drop - its sail-vault opens with the exit already inside it.)
-  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
-    spawnFastExit(m.x, m.y);
+  // After felling ANY dungeon boss, open the way up. Dungeons that carry a REWARD ROOM (a
+  // `gate:'reward'` catgate) grind that room open instead - the prize + the climb-out stand in a
+  // sealed chamber the guardian was warding, not a portal dropped where it fell. Dungeons not yet
+  // on that pattern fall back to the old fast-exit drop. (Overworld bosses stay put; the Undermill
+  // opens its own sail-vault via m.millboss.)
+  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon()){
+    if(typeof hasRewardRoom==='function' && hasRewardRoom()){ if(typeof openRewardRoom==='function') openRewardRoom(); }
+    else if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
   }
   // the four tier-2 tool prizes are BOSS DROPS - one per dungeon (see 37-dungeon-hideaways.js)
   if(typeof awardDungeonTool==='function') awardDungeonTool(m);

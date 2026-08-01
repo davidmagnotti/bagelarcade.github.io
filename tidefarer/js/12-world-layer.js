@@ -260,6 +260,41 @@ function useFastExit(){
   toast('You climb out of the dungeon - whole again, and a level the wiser.',4200);
 }
 
+// ---- THE REWARD ROOM: the way every dungeon SHOULD pay off - not a portal dropped where the
+// boss falls, but a separate chamber the guardian was warding, with the dungeon's prize in a
+// chest and the climb-out inside it. Generalizes the Undermill's sail-vault to every dungeon.
+// A dungeon that carries a `gate:'reward'` catgate uses this pattern; killMob opens it on the
+// boss's death (see openRewardRoom) instead of dropping THE WAY UP.
+function hasRewardRoom(){ return !!(G.decor && G.decor.some(d=>d.kind==='catgate' && (d.gate==='reward' || d.reward))); }
+// Wall off a reward room at the top of a boss arena: a stone partition row across [x0..x1] at
+// wallY with a gated gap [gx0..gx1], then the prize chest + a climb-out placed inside the room
+// (above the wall). The gap is a `gate:'reward'` catgate, sealed until the boss falls.
+//   sealInGen: the partition row was already laid in the dungeon's gen (so its wall-face pass
+//   enclosed the room) - skip re-laying it here and only add the gate/contents.
+function buildRewardRoom(o){
+  const wallT=(typeof T!=='undefined' && T.RUIN!=null)?T.RUIN:0, floorT=(o.floorT!=null)?o.floorT:wallT;
+  const gap=[]; for(let x=o.gx0;x<=o.gx1;x++) gap.push([x,o.wallY]);
+  if(!o.sealInGen){ for(let x=o.x0;x<=o.x1;x++){ setTile(x,o.wallY,wallT); setSolid(x,o.wallY,1); } }
+  G.decor.push({kind:'catgate', x:(o.gx0+o.gx1)/2, y:o.wallY, open:!!o.cleared, gate:'reward',
+    tiles:gap.slice(), openTile:floorT, label:o.label||'the vault gate'});
+  for(const [x,y] of gap){ setSolid(x,y, o.cleared?0:1); if(o.cleared) setTile(x,y,floorT); }
+  if(o.chest && !o.chestTaken) G.decor.push(o.chest);
+  G.decor.push({kind:'fastexit', x:o.exitX+0.5, y:o.exitY+0.5, name:'CLIMB OUT', labelY:-46});
+}
+// Grind the reward-room gate up when the guardian falls: unseal the gap so the prize + climb-out
+// stand open, right where the boss was warding them.
+function openRewardRoom(){
+  const g=(G.decor||[]).find(d=>d.kind==='catgate' && (d.gate==='reward' || d.reward));
+  if(!g || g.open) return false;   // a dungeon that opens its own reward gate (e.g. the Undermaw Hoard Door) is already handled
+  g.open=true;
+  for(const [x,y] of (g.tiles||[])){ setSolid(x,y,0); setTile(x,y, g.openTile!=null?g.openTile:T.RUIN); }
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(typeof Snd!=='undefined' && Snd.quest) Snd.quest(); G.shake=Math.max(G.shake||0,0.45);
+  if(typeof shockwave==='function') shockwave(g.x+0.5, g.y+0.5, 'rgba(201,176,255,0.9)', 50);
+  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down. Behind it, a sealed vault grinds open - <b style="color:#c9b0ff">the prize it warded and the way up</b> stand within. Take what it guarded, then step in to <b>climb out</b>, <b>mended and a level stronger</b>.',6500); },1200);
+  return true;
+}
+
 function addCrowsFor(){
   G.crows.length=0;
   for(let i=0;i<5;i++) G.crows.push({cx:ZONES.ruins.x,cy:ZONES.ruins.y,r:rnd(2.5,6),h:rnd(90,140),
@@ -1969,6 +2004,9 @@ function genAerieDeep(){
   carve(58,42,92,64);     // THE GALLERY OF SIGILS - ordered-plate chamber
   carve(73,32,77,44);     // corridor C (the Sepulchre Gate sits at y=38)
   carve(52,10,98,32);     // THE WARDEN'S CRYPT - boss chamber
+  // wall off a REWARD ROOM across the top of the crypt (y10-12); the gap (x73-77) is left as floor
+  // so the wall-face pass below excludes it - a catgate seals it in placeObjects until the warden falls
+  for(let x=52;x<=98;x++){ if(x>=73 && x<=77) continue; setTile(x,13,T.RUIN); setSolid(x,13,1); }
   // record the visible wall faces (stone bordering the carved floor) BEFORE the gates
   // go solid, so a raised gate never leaves a phantom wall block behind
   AERIE_WALLS=[];
@@ -2088,8 +2126,11 @@ function placeObjectsAerieDeep(){
   // rise (and the fight) begins only once you're inside, with no way back out until it falls.
   G._cryptSealed=0;
   G.decor.push({kind:'catgate', x:75, y:32, open:true, gate:'crypt', tiles:AERIE_CRYPT_SEAL.slice(), label:'the Sepulchre Seal'});
-  // a warden's hoard, once the deed is done
-  G.decor.push({kind:'chest', x:58.5, y:14.5, deep:1});
+  // THE REWARD ROOM: the warden's hoard + the climb-out, walled off across the top of the crypt
+  // (partition laid in genAerieDeep), sealed until the Tome-Warden falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:52, x1:98, wallY:13, gx0:73, gx1:77, floorT:T.RUIN, sealInGen:true,
+    chest:{kind:'chest', x:58.5, y:11.5, deep:1}, exitX:90, exitY:11,
+    cleared:!!(P.story && P.story.aerieFreed) });
   G.critters=[];
   // a cleared run leaves the gates open and the pits floored over (no crossing to redo)
   if(P.story && P.story.aerieFreed){
@@ -2468,7 +2509,15 @@ function placeObjectsFrostDeep(){
   // the drift-lock lever, on the island (a bare icelever opens the Deep Gate; see pullIceLever)
   G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
   G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
-  G.decor.push({kind:'chest', x:44.5, y:16.5, deep:1, veiltome:1});   // holds the Rune of Hush-Frost - the Warding Veil your brother casts
+  // THE REWARD ROOM: wall off the back of the Frozen Heart (inside the spiked ring) - the Rune of
+  // Hush-Frost (the Warding Veil) + the climb-out wait within, sealed until the Rimebound is freed
+  // (freeColossus -> openRewardRoom). floor is ICE.
+  buildRewardRoom({ x0:30, x1:58, wallY:16, gx0:40, gx1:42, floorT:T.ICE,
+    chest:{kind:'chest', x:36.5, y:14.5, deep:1, veiltome:1}, exitX:52, exitY:14,
+    cleared:!!(P.story && P.story.deepDone) });
+  // frostdeep has no ewall wall-faces (its arena is ringed by void, not stone), so dress the
+  // partition as a visible wall of ice-spires - the tiles are already solid from buildRewardRoom
+  for(let x=30;x<=58;x++){ if(x>=40 && x<=42) continue; G.decor.push({kind:'icespire', x:x+0.5, y:16.5}); }
   // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
   // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
   for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
@@ -2598,7 +2647,7 @@ function freeColossus(m){
   if(P.story){ P.story.deepDone=1; P.story.vathMet=1; }
   bossReward(m);
   giveGold(150); give('elixir',2);
-  if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);   // THE WAY UP opens like every other dungeon
+  if(typeof openRewardRoom==='function') openRewardRoom();   // the sealed vault at the arena's back grinds open - prize + climb-out within
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
 }
@@ -2671,6 +2720,9 @@ function placeObjectsFrostVault(){
   // hunt (the great queen's hidden grave and the sealing weapon); the side chest is gold.
   G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, tidechart:1});
   G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
+  // THE WAY UP stands here IN the hoard - not dropped where a boss fell. You clear the last hall,
+  // the gate grinds up, and the prize + the climb-out are waiting in the vault beyond.
+  G.decor.push({kind:'fastexit', x:50.5, y:10.5, name:'CLIMB OUT', labelY:-46});
   spire(30,5); spire(58,5); spire(30,15); spire(58,15);
   G.critters=[];
   // an already-cleared run keeps every gate open and skips the fights
@@ -2713,7 +2765,7 @@ function openVaultGate(r){
   invalidateScenery&&invalidateScenery();
   shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
   if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
-    if(typeof spawnFastExit==='function') spawnFastExit(P.x, P.y);   // THE WAY UP opens, same as every dungeon
+    // the climb-out already waits inside the Hoard (placeObjectsFrostVault) - no portal dropped here
     banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
     toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
   } else banner('THE HALL IS CLEARED','THE GATES GRIND UP');
@@ -3101,7 +3153,9 @@ function placeObjectsUndermaw(){
   // A second way out at the very top, in the Deep Hoard beyond the boss: once the
   // Maw-Stalker is down and the Hoard Door opens, you can leave from here instead of
   // re-running the whole gauntlet back to the entrance.
-  G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:27.5, y:4.5, label:'the way up'});
+  // the climb-out IN the Deep Hoard (heal + a level, like every dungeon's reward-room exit),
+  // behind the Hoard Door so you only reach it once the Maw-Stalker falls
+  G.decor.push({kind:'fastexit', x:27.5, y:4.5, name:'CLIMB OUT', labelY:-46});
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
@@ -3146,7 +3200,9 @@ function placeObjectsUndermaw(){
   // You still time and place each dash and dodge the bats; you just can't get locked out. ----
   buildMawConveyor();
   // ---- THE HOARD DOOR + reward ----
-  G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
+  // reward:1 marks the Deep Hoard as this dungeon's reward room, so killMob opens it here (it
+  // already does, via the m.undermawBeast handler) and never drops a "way out" at the boss instead
+  G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', reward:1, tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
   if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
   // A supply cache in the corridor just before the den: three Ember Tonics for the
   // boss fight. Claimed once, then it stays taken across later descents.
@@ -3563,6 +3619,9 @@ function genReachDeep(){
   carve(26,40,54,62);   // R2 THE OSSUARY - the three dance-chambers
   carve(38,34,42,42);   // corridor B (the sealed gate at y37)
   carve(28,6,52,34);    // R3 THE DROWNED VAULT - warden + hoard
+  // wall off a REWARD ROOM across the top of the vault (y6-12); the gap (x38-42) is left as floor
+  // so the wall-face pass below excludes it - a catgate seals it until the warden falls
+  for(let x=28;x<=52;x++){ if(x>=38 && x<=42) continue; setTile(x,13,T.RUIN); setSolid(x,13,1); }
   // the two internal ward-walls that split the Ossuary into three chambers: solid stone
   // across the room, save the 3-wide central doorway each ward-gate seals (see setupReachDance)
   for(const gy of [54,47]) for(let x=RDANCE.x0;x<=RDANCE.x1;x++){
@@ -3594,9 +3653,12 @@ function placeObjectsReachDeep(){
   setupReachDance();
   // dressing graves in the far corners of the chambers (clear of the stones + their lanes)
   for(const [gx,gy] of [[29,56],[51,56],[29,43],[51,43],[30,26],[50,26],[34,12],[46,12]]) grave(gx,gy);
-  // R3: the warden's hoard, beyond the Bone Gate
-  G.decor.push({kind:'chest', x:40.5, y:11.5, deep:1, rich:12});
-  G.decor.push({kind:'chest', x:31.5, y:14.5, deep:1, rich:7});
+  // THE REWARD ROOM: the warden's hoard + the climb-out, walled off across the top of the vault
+  // (partition laid in genReachDeep), sealed until the Drowned Minotaur falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:28, x1:52, wallY:13, gx0:38, gx1:42, floorT:T.RUIN, sealInGen:true,
+    chest:{kind:'chest', x:34.5, y:9.5, deep:1, rich:12}, exitX:46, exitY:9,
+    cleared:!!(P.story && P.story.tombBossDown) });
+  G.decor.push({kind:'chest', x:31.5, y:16.5, deep:1, rich:7});   // a bonus hoard chest, down in the vault
   G.critters=[];
   // a cleared run (the warden is down) tears the dance down and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
@@ -4789,7 +4851,11 @@ function placeObjectsBarikDeep(){
   // ---- THE CISTERN: the boss seal + the reward ----
   G._barikSealed=0;
   G.decor.push({kind:'catgate', x:36, y:45, open:true, gate:'cistern', tiles:BARIK_SEAL.slice(), label:'the Cistern gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, drowned:1, divegift:1});   // the Pearl of the Deep - grants DIVE
+  // THE REWARD ROOM: the Pearl of the Deep (grants DIVE) + the climb-out stand in a vault walled
+  // off the top of the Cistern, sealed until the Tidemaw falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:18, x1:54, wallY:13, gx0:35, gx1:37, floorT:T.RUIN,
+    chest:{kind:'chest', x:32.5, y:10.5, drowned:1, divegift:1}, exitX:40, exitY:10,
+    cleared:!!(P.story && P.story.barikDeepDone) });
   G.critters=[];
   // an already-cleared run: the flood recedes to dry stone, the gates and seal stand open
   if(P.story && P.story.barikDeepDone){
@@ -4988,7 +5054,8 @@ function _dungWalls(theme){
   const NB=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
   const taken=new Set();
   for(const d of (G.decor||[])){
-    if(d.kind==='pillar'||d.kind==='catgate'||d.kind==='ewall'||d.kind==='dungeonmouth') taken.add(Math.floor(d.x)+','+Math.floor(d.y));
+    if(d.kind==='catgate' && d.tiles){ for(const [tx,ty] of d.tiles) taken.add(tx+','+ty); }   // a gate's gap tiles are never walls
+    else if(d.kind==='pillar'||d.kind==='catgate'||d.kind==='ewall'||d.kind==='dungeonmouth') taken.add(Math.floor(d.x)+','+Math.floor(d.y));
     else if(d.kind==='dgate'){ for(let x=d.x0;x<=d.x1;x++) taken.add(x+','+d.gy); }   // a closed gate's solid tiles aren't walls
   }
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
@@ -5111,7 +5178,12 @@ function placeObjectsWindDeep(){
   G._windGusts.push({x0:20,x1:52,y0:51,y1:54, dir:-1, push:3.0, period:4.0, t:2.0});   // ROOM 4 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - QUICKER DASH (faster recovery)
+  // THE REWARD ROOM: wall off the top of the Eye and stand the Swiftstep charm (QUICKER DASH) +
+  // the climb-out inside it, sealed until the Skirl falls (killMob -> openRewardRoom). No portal
+  // dropped where the boss dies - the prize was always in the chamber it warded.
+  buildRewardRoom({ x0:18, x1:54, wallY:13, gx0:35, gx1:37, floorT:T.RUIN,
+    chest:{kind:'chest', x:32.5, y:10.5, dashgift:1}, exitX:40, exitY:10,
+    cleared:!!(P.story && P.story.galeDeepDone) });
   G.critters=[];
   if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; dungOpenAllGates(true); }
@@ -5294,7 +5366,11 @@ function placeObjectsSunwardDeep(){
     for(let i=0;i<16;i++){ const gx=18+Math.floor(LS()*36), gy=10+Math.floor(LS()*70);
       if(inb(gx,gy) && tileAt(gx,gy)===T.RUIN && !solidAt(gx,gy)) G.decor.push({kind:'lavacrack', x:gx+0.5, y:gy+0.5, seed:i, big:i%5===0}); } }
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'forge', tiles:SUN_SEAL.slice(), label:'the Forge-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, snaregift:1});   // the ember - FLAME SNARE
+  // THE REWARD ROOM: the Flame Snare + the climb-out stand in a vault walled off the top of the
+  // forge, sealed until the Cinderwrought falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:18, x1:54, wallY:13, gx0:35, gx1:37, floorT:T.RUIN,
+    chest:{kind:'chest', x:32.5, y:10.5, snaregift:1}, exitX:40, exitY:10,
+    cleared:!!(P.story && P.story.ashenForgeDone) });
   G.critters=[];
   if(P.story && P.story.ashenForgeDone){ for(const [x,y] of SUN_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='forge'); if(cg) cg.open=true;
@@ -5467,7 +5543,11 @@ function placeObjectsSkyDeep(){
   G._stormStrikes=[]; G._stormT=0; G._stormHuntT=0.8;
   G._skySealed=0; G._skyCleared=(P.story&&P.story.stormTempleDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'stormheart', tiles:STORM_SEAL.slice(), label:'the Stormheart-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, dash2gift:1});   // the Stormstep - DOUBLE DASH
+  // THE REWARD ROOM: the Stormstep (double dash) + the climb-out stand in a vault walled off the
+  // top of the temple, sealed until the Thundercaller falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:18, x1:54, wallY:13, gx0:35, gx1:37, floorT:T.RUIN,
+    chest:{kind:'chest', x:32.5, y:10.5, dash2gift:1}, exitX:40, exitY:10,
+    cleared:!!(P.story && P.story.stormTempleDone) });
   G.critters=[];
   if(P.story && P.story.stormTempleDone){ for(const [x,y] of STORM_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='stormheart'); if(cg) cg.open=true; dungOpenAllGates(true); }
@@ -5588,14 +5668,18 @@ function placeEmberTombObjects(){
   G._tombThornOpen=0; G._tombThorn={x:40.5, y:34.5};
   for(const [x,y] of TOMB_THORN){ setTile(x,y,T.RUIN); setSolid(x,y,1); G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false, thornwall:1}); }   // the barred wall
   G.decor.push({kind:'shoottarget', x:40.5, y:34.5, thornbud:1});       // the bud you burn with a flame-snare
-  G.decor.push({kind:'chest', x:40.5, y:4.5, tidewardHoard:1});         // the founders' hoard
+  // THE REWARD ROOM: wall off the top of the Tideward Vault - the founders' hoard + the climb-out
+  // stand within, sealed until the Tideward Guardian falls (killMob -> openRewardRoom).
+  buildRewardRoom({ x0:20, x1:60, wallY:5, gx0:38, gx1:42, floorT:T.RUIN,
+    chest:{kind:'chest', x:34.5, y:3.5, tidewardHoard:1}, exitX:46, exitY:3,
+    cleared:!!(P.story && P.story.tidewardDone) });
   G.critters=[];
   if(P.story && P.story.tidewardDone){ tombBurnThorns(true); }           // a cleared run stands open
 }
 function spawnEmberTombMobs(){
   for(const [zx,zy] of [[34,34],[46,34],[30,20],[50,20]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   if(!(P.story && P.story.tidewardDone)){
-    const sp=findOpenNear(40, 6, 8) || [40,6];
+    const sp=findOpenNear(40, 8, 6) || [40,8];   // below the reward-room wall (y5) so the guardian rises in its arena
     const b=spawnMob('wardking', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
