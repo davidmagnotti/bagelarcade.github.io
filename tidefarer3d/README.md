@@ -10,6 +10,30 @@ foundation the remaining islands and the 2D game's deep systems (full quest
 graph, dialog trees, economy, cutscenes, the other 8 worlds and their dungeons)
 would be ported into region by region — that remains a large ongoing effort.
 
+## Emberwick coverage (audit vs. the 2D game)
+
+**In the 3D slice now:**
+- All **11 named landmarks** as terrain clearings: Village, Willa's Farm,
+  Driftwood Dock, Orin's Tower, the Old Ruins, Slime Meadow, Whisperwood,
+  Rask's Grove, Ember Springs, Smuggler's Cove, Old Orchard.
+- All **11 isle NPCs**, each with real lines: Elder Maren, Bram the Smith,
+  Willa the Farmer, Rask the Bladesworn, **Sage Orin** (wizard), **Captain
+  Brant**, **Finn the Fisher**, **Perrin the Innkeep**, **Nia**, **the
+  Woodworker** — plus **Pip the cat**.
+- Buildings: cottages, the well, Orin's Tower, the forge, and the **Gull &
+  Anchor** inn.
+- Enemies: **slimes**, **wolves**, **skeletons**, and the **Hollow King** boss
+  (crowned, with a ghostlight aura) at the ruins — his dread grays the sky as
+  you approach and lifts as you leave.
+- The **sword quest** chain (Maren → Bram → chop/mine → forge).
+
+**Not yet ported (the ongoing systems work):** building interiors, the full
+quest graph and turn-ins (Rask's parry drill, Willa's kill/feast quests, Orin's
+gravelord/skeleton hunts, Brant's ship-repair *set-sail* line, Nia's cat/shell
+quests), fishing/cooking/farming/smithing economy, fog-of-war + fast travel,
+and the other 8 islands and their dungeons. Those remain the large remaining
+effort — this island is the populated, playable template they'd follow.
+
 ## What plays today
 
 - **One cohesive procedural island** with real elevation and biomes — beach,

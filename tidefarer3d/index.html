@@ -33,7 +33,7 @@
     border-radius:7px;padding:7px 14px;font-size:12px;max-width:80vw;opacity:0;transition:opacity .4s;color:#e9dcbb;}
   #toast b{color:var(--ember);}
 
-  #mini{position:absolute;right:12px;top:12px;width:132px;height:132px;border-radius:50%;
+  #mini{position:absolute;right:12px;top:12px;left:auto;bottom:auto;width:132px;height:132px;border-radius:50%;
     border:2px solid var(--walnut2);box-shadow:0 4px 16px rgba(0,0,0,.5);background:rgba(10,16,24,.5);}
   #clock{position:absolute;right:12px;top:150px;width:132px;text-align:center;font-size:10px;letter-spacing:2px;opacity:.65;text-shadow:0 1px 2px #000;}
   #fps{position:absolute;right:12px;bottom:10px;font-size:11px;opacity:.45;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000;}
@@ -212,12 +212,13 @@ const fxc=new EffectComposer(renderer); fxc.setPixelRatio(DPR); fxc.setSize(inne
 fxc.addPass(new RenderPass(scene,camera));
 const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), isMobile?0.42:0.55, 0.6, 0.75); fxc.addPass(bloom);
 fxc.addPass(new OutputPass());
-const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.04},uSat:{value:1.12},uLift:{value:0.015},uNight:{value:0.0}},
+const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.03},uSat:{value:1.14},uLift:{value:0.015},uNight:{value:0.0},uDread:{value:0.0}},
   vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight;varying vec2 v;
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight,uDread;varying vec2 v;
     void main(){ vec3 c=texture2D(tDiffuse,v).rgb; c=c*(1.0-0.10*c); c=mix(vec3(uLift),c,1.0-uLift);
       c+=vec3(uWarm,uWarm*0.35,-uWarm*0.5); float l=dot(c,vec3(.299,.587,.114)); c=mix(vec3(l),c,uSat);
       c=mix(c, vec3(l)*vec3(0.55,0.68,1.05), uNight*0.5);          // cool the night
+      c=mix(c, vec3(l)*0.82, uDread*0.7);                          // the King's pall: desaturate + darken
       vec2 d=v-0.5; float vg=smoothstep(0.9,0.2,dot(d,d)*uVig); c*=mix(0.7,1.0,vg);
       gl_FragColor=vec4(clamp(c,0.,1.),1.);}` };
 const gradePass=new ShaderPass(Grade); fxc.addPass(gradePass);
@@ -388,23 +389,30 @@ function maskedHead(skin,hair){
   return {group:g,eyes};
 }
 
-// humanoid figure (player=masked princess, NPCs, Rask)
-function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false}={}){
+// humanoid figure (player=masked princess, NPCs, Rask). hat: 'wizard'|'straw';
+// beard: colour; rod: a fisher's pole; size: overall scale.
+function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false,hat=null,beard=null,rod=false,size=1}={}){
   const g=new THREE.Group(); const rig={};
   g.add(pos(toon(box(1.5,1.9,.9),tunic,{outline:0.04}),0,2.4,0));
   g.add(pos(toon(box(1.6,.4,1),boot,{outline:0}),0,1.6,0));
   if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
     const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl); }  // castaway cloak, not the ember cape
   else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
-    g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
+    if(hat!=='wizard') g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
     g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
+    // eyes so NPCs aren't faceless
+    for(const ex of[-.28,.28]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.1,8,8),new THREE.MeshBasicMaterial({color:0x201810})),ex,3.9,0.66));
+    if(beard){ const bd=toon(new THREE.SphereGeometry(.5,12,10),beard,{outline:0.04}); bd.scale.set(1,1.25,0.7); bd.position.set(0,3.35,0.42); g.add(bd); }
+    if(hat==='wizard'){ g.add(pos(toon(cyl(1.0,1.08,.16,12),tunicDk,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.02,.7,1.9,12),tunicDk,{outline:0.04,flat:true}),0,5.2,0)); }
+    else if(hat==='straw'){ g.add(pos(toon(cyl(.95,1.12,.1,12),0xb8965a,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.5,.85,.42,12),0xcaa860,{outline:0.03,flat:true}),0,4.45,0)); }
     if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
   rig.arm=new THREE.Group(); rig.arm.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),0,-.7,0)); rig.arm.position.set(1.05,3.1,0); g.add(rig.arm);
   if(sword){ const sw=new THREE.Group(); sw.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); sw.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); rig.arm.add(sw); rig.sword=sw; }
+  if(rod){ const rd=pos(toon(box(.08,4.4,.08),COL.timber,{outline:0}),1.5,4.2,.6); rd.rotation.z=-0.4; g.add(rd); }
   g.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),-1.05,2.4,0));
   rig.legL=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
   rig.legR=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
-  g.userData.rig=rig; return g;
+  g.scale.setScalar(size); g.userData.rig=rig; return g;
 }
 
 // text sprite (labels + damage numbers)
@@ -471,8 +479,66 @@ addNPC(zc.farm.x+2,zc.farm.z+1,'Willa',[
  "Six slime-trails round the fold this morning. SIX. They spook the flock something awful.",
  "Squash a few in the meadow and I'll see you right."],{tunic:0x7c5a3a,tunicDk:0x53381f,scarf:0xc79a5e,hair:0x8a5a2a,cape:false});
 addNPC(zc.grove.x,zc.grove.z,'Rask',[
- "Blade up. Off these shores the dark brings worse than slimes.",
- "Parry on the flash and even a wolf gives ground."],{tunic:0x4a5a6a,tunicDk:0x30404e,scarf:0xe05648,hair:0x2a2622,sword:true});
+ "A blade that only knows how to swing knows half its trade.",
+ "A parry is only a strike with perfect timing — meet their blade with yours.",
+ "Late. Always parry LATE — meet the strike, don't reach for it."],{tunic:0x3a4048,tunicDk:0x33342e,scarf:0xe05648,hair:0x8f8a80,beard:0x8f8a80,sword:true,size:1.06});
+// Sage Orin — the isle's wizard, at his tower
+addNPC(zc.tower.x+4,zc.tower.z+4,'Sage Orin',[
+ "Magic is just patience, pronounced quickly.",
+ "The ruins hum at dusk. Listen, but don't answer.",
+ "Mana returns with calm breath. Stop flailing."],{tunic:0x33415e,tunicDk:0x2c3852,scarf:0x3a4a6f,hair:0xcfcfd6,hat:'wizard',beard:0xcfcfd6,cape:false,size:1.05,id:'orin'});
+// Captain Brant — his wrecked ship, the Tidewalker, is moored at the dock
+addNPC(zc.dock.x+5,zc.dock.z+3,'Captain Brant',[
+ "The Tidewalker's taken worse. Not much worse, mind.",
+ "A captain without a ship is just a man who stares at the sea.",
+ "Greyharbor, cross the strait — finest port this side of anywhere. If we can ever sail again."],{tunic:0x2e4a5e,tunicDk:0x274052,scarf:0x274052,hair:0x8a8578,beard:0x8a8578,size:1.04,id:'brant'});
+// Finn the Fisher — down by the water
+addNPC(zc.dock.x-3,zc.dock.z-4,'Finn the Fisher',[
+ "Fish bite best where the water ripples.",
+ "Salt cures fish and moods alike.",
+ "Used to be a ship a week put in here. Now nobody arrives. Nobody leaves. Strange tide."],{tunic:0x3e6f8f,tunicDk:0x2e5470,scarf:0x5a4632,hair:0xc98f1e,hat:'straw',beard:0xa8791c,rod:true,cape:false,id:'finn'});
+// Perrin the Innkeep — by the Gull & Anchor
+addNPC(zc.village.x-7,zc.village.z-12,'Perrin the Innkeep',[
+ "A bed, a hearth, and no questions past dark. Ten gold.",
+ "Night's for wolves and worries. Neither gets past my door."],{tunic:0x7a5a3a,tunicDk:0x4a3a2c,scarf:0xc9b48e,hair:0x6a5038,beard:0x6a5038,cape:false,id:'perrin'});
+// Nia — a curious village child
+addNPC(zc.village.x+2,zc.village.z-3,'Nia',[
+ "Pip can catch moths RIGHT out of the air.",
+ "I'm not allowed past the meadow. Yet.",
+ "Did you know slimes bounce? I know everything."],{tunic:0xc96f8a,tunicDk:0x9a4f68,scarf:0xc96f8a,hair:0x2c2018,cape:false,size:0.72,id:'nia'});
+// The Woodworker — the most forgettable soul on the island (and far more than that)
+addNPC(zc.village.x+12,zc.village.z-6,'The Woodworker',[
+ "I carve little boats, mostly. For someone. I forget who — but they'll turn up.",
+ "Woke here one morning, the wood needed chopping, so I chopped. Been happy since.",
+ "That tune in my head? No idea the name. My hands seem to, though."],{tunic:0x6a5a44,tunicDk:0x4a3f30,scarf:0x6a5a44,hair:0x7a5a3a,cape:false,id:'woody'});
+
+// Pip the cat — Nia's, prowling the north
+function catCritter(x,z){ const g=new THREE.Group(); const c=0xd98a4a;
+  g.add(pos(toon(box(1.0,.55,.5),c,{outline:0.04}),0,.7,0));
+  g.add(pos(toon(new THREE.SphereGeometry(.36,10,8),c,{outline:0.04}),.6,1.0,0));
+  for(const ez of[-.15,.15]) g.add(pos(toon(cyl(.02,.14,.22,4),c,{outline:0}),.75,1.35,ez));
+  for(const ex of[-.1,.1]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.05,6,6),new THREE.MeshBasicMaterial({color:0x203010})),.9+0,1.05,ex));
+  g.add(pos(rotZ(toon(cyl(.06,.02,.9,5),c,{outline:0}),.8),-.6,1.0,0));   // tail
+  for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(box(.14,.5,.14),c,{outline:0}),lx,.25,lz));
+  ground(g,.7); onGround(g,x,z); g.userData.face=Math.random()*7; return g; }
+const pip=catCritter(zc.springs.x+3, zc.springs.z-4);
+
+// The Gull & Anchor inn (a bigger hall + a hanging sign) near Perrin
+function inn(x,z){ const g=new THREE.Group();
+  g.add(pos(toon(box(9,1.0,7),COL.stoneDk,{outline:0.02}),0,.5,0));
+  g.add(pos(toon(box(8.4,4.6,6.4),COL.plaster,{outline:0.028}),0,3.3,0));
+  for(const sx of[-3.9,3.9])for(const sz of[-3.0,3.0])g.add(pos(toon(box(.5,4.8,.5),COL.timber,{outline:0}),sx,3.3,sz));
+  g.add(pos(rotY(toon(cyl(.02,6.6,3.4,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,7.4,0));
+  g.add(pos(toon(box(1.7,3.0,.3),COL.timberDk,{outline:0.02}),0,2.0,3.25));
+  for(const wx of[-2.6,2.6]){ g.add(pos(new THREE.Mesh(box(1.2,1.3,.15),glowMat(COL.windowGlow)),wx,3.4,3.22)); }
+  g.add(pos(toon(box(1.2,3.2,1.2),COL.stoneDk,{outline:0.03}),3.0,8.0,-1.8));
+  // hanging sign
+  const post=pos(toon(box(.3,4.2,.3),COL.timber,{outline:0.03}),5.0,2.1,3.4); g.add(post);
+  const arm=pos(toon(box(2.2,.2,.2),COL.timber,{outline:0}),4.0,4.0,3.4); g.add(arm);
+  g.add(pos(toon(box(2.0,1.3,.14),COL.walnut||0x5a3d28,{outline:0.03}),3.1,3.1,3.4));
+  const sign=textSprite('Gull & Anchor','#ffdca0',30); sign.scale.set(3.4,0.9,1); sign.position.set(3.1,3.1,3.55); g.add(sign);
+  ground(g,5.4); onGround(g,x,z); return g; }
+inn(zc.village.x-9,zc.village.z-13);
 
 // ============================================================
 //  ENEMIES
@@ -491,7 +557,25 @@ function spawnWolf(x,z){ const g=new THREE.Group();
 for(let i=0;i<6;i++){ const a=Math.random()*7,r=Math.random()*10; spawnSlime(zc.meadow.x+Math.cos(a)*r,zc.meadow.z+Math.sin(a)*r); }
 for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*8; spawnSlime(zc.springs.x+Math.cos(a)*r,zc.springs.z+Math.sin(a)*r); }
 for(let i=0;i<4;i++){ const a=Math.random()*7,r=Math.random()*12; spawnWolf(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r); }
-for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*10; spawnWolf(zc.ruins.x+Math.cos(a)*r,zc.ruins.z+Math.sin(a)*r); }
+// The Old Ruins: the Hollow King's hollow guard — skeletons, and the crowned King himself.
+function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4; const g=new THREE.Group();
+  const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(box(.28*s,1.6*s,.28*s),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
+  g.add(pos(toon(box(1.0*s,.4*s,.5*s),bone,{outline:0.03}),0,1.7*s,0));
+  const rib=pos(toon(box(1.1*s,1.4*s,.7*s),bone,{outline:0.03}),0,2.6*s,0); g.add(rib);
+  for(let i=0;i<3;i++) g.add(pos(toon(box(1.16*s,.1*s,.75*s),dk,{outline:0}),0,(2.15+i*0.42)*s,0.02));
+  g.add(pos(toon(new THREE.SphereGeometry(.55*s,12,10),bone,{outline:0.04}),0,3.7*s,0));
+  for(const ex of[-0.22,0.22]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.13*s,8,8),new THREE.MeshBasicMaterial({color:boss?0x8fffcf:0x120c08,toneMapped:!boss})),ex*s,3.72*s,0.42*s));
+  g.add(pos(toon(box(.5*s,.18*s,.4*s),dk,{outline:0}),0,3.4*s,0.34*s));  // jaw
+  const armR=new THREE.Group(); armR.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),0,-.6*s,0)); armR.position.set(.78*s,3.1*s,0); g.add(armR);
+  armR.add(pos(toon(box(.15*s,1.9*s,.15*s),0x9a9384,{outline:0.03}),0,-1.7*s,0));   // rusty blade
+  g.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),-.78*s,2.5*s,0));
+  if(boss){ g.add(pos(toon(cyl(.52*s,.58*s,.42*s,7),0xd9b24a,{outline:0.04,emissive:0x6a4a00}),0,4.25*s,0));   // crown
+    const aura=new THREE.PointLight(0x8fffc0,12,30,2); aura.position.y=3*s; g.add(aura); rib.material.emissive=new THREE.Color(0x0f3324); }
+  ground(g,1.4*s); onGround(g,x,z);
+  enemies.push({g,body:rib,legs,kind:'skeleton',boss:!!boss,hp:boss?600:120,max:boss?600:120,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:boss?4.6:4.0,dmg:boss?26:13,reach:boss?4.0:3.0,face:0}); return enemies[enemies.length-1]; }
+for(let i=0;i<4;i++){ const a=Math.random()*7,r=6+Math.random()*10; spawnSkeleton(zc.ruins.x+Math.cos(a)*r,zc.ruins.z+Math.sin(a)*r,false); }
+const hollowKing=spawnSkeleton(zc.ruins.x, zc.ruins.z-4, true);   // the crowned King, at the cold heart of the ruins
+let kingSeen=false;
 
 // particles: pollen motes (day) + fireflies (dusk), hit sparks
 const motes=(()=>{ const N=isMobile?120:220; const geo=new THREE.BufferGeometry(); const pos=new Float32Array(N*3); const base=[];
@@ -663,22 +747,29 @@ function hurtPlayer(dmg){ if(P.inv>0||P.dead>0)return; P.hp-=dmg; P.inv=0.8; dmg
 // day cycle
 let dayT=0.22; // 0..1; 0.25 == solar noon
 const DAYLEN=220; // seconds per full day
+let dread=0;      // 0..1 — the Hollow King's pall; grays the sky as you close on him
+const GRAY=new THREE.Color(0x8b9198), GRAYLOW=new THREE.Color(0xaeb2b4);
 function updateDay(dt){ dayT=(dayT+dt/DAYLEN)%1;
   const ang=dayT*Math.PI*2; const sunH=Math.sin(ang); // peaks at dayT=0.25 (noon)
   const up=clamp(sunH,0,1), night=clamp(-sunH,0,1);
+  // the King's dread: ramps up the closer you get to the living crowned King
+  const kd=(started&&hollowKing&&hollowKing.dead<=0)?Math.hypot(P.x-hollowKing.g.position.x,P.z-hollowKing.g.position.z):999;
+  const dreadT=kd<44?clamp(1-(kd-12)/32,0,1):0;
+  dread+=(dreadT-dread)*Math.min(1,dt*1.6);
   sun.position.set(Math.cos(ang)*130, Math.max(8,sunH*150), 60); sun.target.position.set(0,0,0);
-  sun.intensity=lerp(0.05,1.7,up); const warm=new THREE.Color().setHSL(0.09,0.5,0.6).lerp(new THREE.Color(0xffe1b0),up); sun.color.copy(warm);
-  hemi.intensity=lerp(0.35,1.0,up); amb.intensity=lerp(0.10,0.18,up); moon.intensity=night*0.35; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
-  // sky
-  const daytop=new THREE.Color(0x7fb2d6), daylow=new THREE.Color(0xf3ddb6), nighttop=new THREE.Color(0x1a2440), nightlow=new THREE.Color(0x3a3350), dusk=new THREE.Color(0xff9a5a);
-  const top=nighttop.clone().lerp(daytop,up), low=nightlow.clone().lerp(daylow,up).lerp(dusk, clamp((1-up)*(1-night)*1.6,0,0.6));
-  paintSky(top,low); fog.color.copy(low).lerp(new THREE.Color(0xdfd0ab),0.4); sky.material.needsUpdate=true;
-  Grade.uniforms.uNight.value=night;
-  // clock label
+  sun.intensity=lerp(0.05,1.75,up)*(1-dread*0.4); const warm=new THREE.Color().setHSL(0.09,0.5,0.6).lerp(new THREE.Color(0xffe6c0),up); sun.color.copy(warm);
+  hemi.intensity=lerp(0.35,1.05,up)*(1-dread*0.2); amb.intensity=lerp(0.10,0.20,up); moon.intensity=night*0.35+dread*0.25; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
+  // sky — a clear blue day (bluer top, pale-blue horizon), warm only at dawn/dusk
+  const daytop=new THREE.Color(0x4f97dd), daylow=new THREE.Color(0xd4ecf7), nighttop=new THREE.Color(0x18213e), nightlow=new THREE.Color(0x39344f), dusk=new THREE.Color(0xff9a5a);
+  const top=nighttop.clone().lerp(daytop,up), low=nightlow.clone().lerp(daylow,up).lerp(dusk, clamp((1-up)*(1-night)*1.6,0,0.55));
+  top.lerp(GRAY,dread*0.9); low.lerp(GRAYLOW,dread*0.9);            // gray out under the King
+  paintSky(top,low);
+  fog.color.copy(low).lerp(new THREE.Color(0xcfe2ee),0.35).lerp(GRAY,dread*0.7); sky.material.needsUpdate=true;
+  Grade.uniforms.uNight.value=night; Grade.uniforms.uDread.value=dread;
   const hr=Math.floor(((dayT*24)+6)%24); document.getElementById('clock').textContent=(hr<12?(hr===0?12:hr)+' AM':(hr===12?12:hr-12)+' PM');
   motes.material.opacity=lerp(0.15,0.5,up); motes.material.color.setHex(night>0.3?0x9fd0ff:0xfff0c0);
 }
-paintSky(new THREE.Color(0x7fb2d6),new THREE.Color(0xf3ddb6));
+paintSky(new THREE.Color(0x4f97dd),new THREE.Color(0xd4ecf7));
 
 // ============================================================
 //  LOOP
@@ -758,7 +849,7 @@ function step(dt,time){
     e.cd=Math.max(0,e.cd-dt); if(e.hurt>0)e.hurt-=dt;
     if(e.kind==='slime'){ e.phase+=dt*0.0; const t=time*5+e.home.x; const sq=1+Math.sin(t)*0.16; e.body.scale.set(1/Math.sqrt(sq),sq,1/Math.sqrt(sq)); e.g.position.y+=Math.max(0,Math.sin(t))*0.4;
       const fy=Math.atan2(dx,dz); if(e.state==='chase') e.g.rotation.y+=(fy-e.g.rotation.y)*Math.min(1,dt*6); }
-    else { e.g.rotation.y+=(e.face-e.g.rotation.y)*Math.min(1,dt*8); if(e.legs){ const tr=Math.sin(time*12+e.home.x)*(e.state==='chase'?0.7:0.25); e.legs[0].rotation.x=tr; e.legs[3].rotation.x=tr; e.legs[1].rotation.x=-tr; e.legs[2].rotation.x=-tr; } }
+    else { e.g.rotation.y+=(e.face-e.g.rotation.y)*Math.min(1,dt*8); if(e.legs){ const tr=Math.sin(time*12+e.home.x)*(e.state==='chase'?0.7:0.25); e.legs.forEach((l,i)=>l.rotation.x=(i%2?-tr:tr)); } }
     if(e.hurt>0) e.body.material.emissive.setRGB(0.4,0.1,0.1); else e.body.material.emissive.setRGB(0,0,0);
   }
 
@@ -773,6 +864,8 @@ function step(dt,time){
 
   // foliage sway, lamps, beacons
   for(const f of foliage) f.rotation.z=Math.sin(time*1.2+f.position.x)*0.035;
+  pip.rotation.y=Math.sin(time*0.7+pip.userData.face)*0.5; pip.position.y=heightAt(pip.position.x,pip.position.z)+Math.abs(Math.sin(time*2.4))*0.12;
+  if(!kingSeen && hollowKing && hollowKing.dead<=0 && Math.hypot(P.x-hollowKing.g.position.x,P.z-hollowKing.g.position.z)<26){ kingSeen=true; banner('THE HOLLOW KING','LORD OF THE OLD RUINS'); }
   for(const lf of lampFlames){ const fl=1+Math.sin(time*11+lf.ph)*0.18; lf.fl.scale.setScalar(fl); lf.l.intensity=(9+Math.sin(time*9+lf.ph)*2)*(0.4+Grade.uniforms.uNight.value*1.2); }
   for(const b of beacons){ b.material.color.setHex(0xffcf87); }
 
