@@ -109,8 +109,18 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, conveytile:1, shoottarget:1, bonepit:1, fadetile:1,
   dancebtn:1, danceghost:1,
   skyemitter:1, skyprism:1, skyward:1};
-let scnDecorN=-1;
+let scnDecorN=-1, scnLiveSig=-1;
+// Signature of the nodes NOT baked into the static scenery cache: any that are
+// dead or partly harvested (hp<maxhp). It changes the instant you start or stop
+// chopping/mining something, which forces the cache to rebuild without that node
+// so it can be drawn live (with its health bar + cracks) instead.
+function _sceneryLiveSig(){
+  let sig=0, i=0;
+  for(const n of G.nodes){ i++; if(n.dead || (n.maxhp && n.hp<n.maxhp)) sig=(sig + i*131)>>>0; }
+  return sig;
+}
 function buildSceneryCache(){
+  scnLiveSig=_sceneryLiveSig();
   GC_S=gcScale();
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;
@@ -122,7 +132,9 @@ function buildSceneryCache(){
   if(EL) ensureHeight();
   try{
     const items=[];
-    for(const n of G.nodes){ if(!n.dead) items.push({o:n, t:'node'}); }
+    // Bake only intact nodes; damaged/harvested ones are drawn live (below) so
+    // their depleting health bar and cracks actually update as you work them.
+    for(const n of G.nodes){ if(!n.dead && !(n.maxhp && n.hp<n.maxhp)) items.push({o:n, t:'node'}); }
     for(const b of G.decor){ if(!DYNAMIC_DECOR[b.kind]) items.push({o:b, t:'decor'}); }
     items.sort((a,b)=>(a.o.x+a.o.y)-(b.o.x+b.o.y));
     for(const it of items){ const s=worldToScreen(it.o.x,it.o.y);
@@ -180,9 +192,20 @@ function render(){
     if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       groundCache.width/GC_S, groundCache.height/GC_S);
     // baked scenery (trees/rocks/bushes + static decor) behind the live entities
-    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length) buildSceneryCache();
+    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length || scnLiveSig!==_sceneryLiveSig()) buildSceneryCache();
     if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       sceneryCache.width/GC_S, sceneryCache.height/GC_S);
+    // Damaged/harvested nodes are held OUT of the static bake, so draw them live
+    // here (behind the actors) - this restores the health bar, cracks and lean
+    // that a chopped tree / mined rock shows while you work it. Only the node(s)
+    // actually being harvested qualify, so it's a handful of draws at most.
+    for(const n of G.nodes){
+      if(n.dead || !(n.maxhp && n.hp<n.maxhp)) continue;
+      const s=worldToScreen(n.x,n.y);
+      if(s.x<-60||s.x>VW+60||s.y<-80||s.y>VH+80) continue;
+      if(EL) s.y -= groundLiftAt(n.x,n.y);
+      drawNode(n,s);
+    }
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -321,6 +344,36 @@ function render(){
       case 'player': drawPlayer(s); break;
       case 'proj': drawProj(o,s); break;
       case 'pickup': drawPickup(o,s); break;
+    }
+  }
+
+  // ---- low-gfx occlusion fix ----
+  // The baked scenery blit sits BEHIND every actor, so in Fast graphics the
+  // player would always draw in front of houses and trees. Re-draw the static
+  // scenery that is in FRONT of the player (greater iso-depth) and close enough
+  // to overlap, live on top - restoring "walk behind the tree/house". Only a
+  // handful of nearby objects qualify, so it stays cheap. (Damaged nodes are
+  // already drawn live elsewhere; dynamic decor is in the depth pass above.)
+  if(LOWFX && DBG.entities && !P.dead){
+    const pd=P.x+P.y, occ=[];
+    for(const n of G.nodes){
+      if(n.dead || (n.maxhp && n.hp<n.maxhp)) continue;
+      if(n.x+n.y<=pd) continue;
+      if(Math.abs(n.x-P.x)>8 || Math.abs(n.y-P.y)>8) continue;
+      occ.push({d:n.x+n.y, o:n, node:true});
+    }
+    for(const b of G.decor){
+      if(DYNAMIC_DECOR[b.kind]) continue;
+      if(b.x+b.y<=pd) continue;
+      const rad=b.grand?30:(b.kind==='tower'&&b.tall)?14:10;
+      if(Math.abs(b.x-P.x)>rad || Math.abs(b.y-P.y)>rad) continue;
+      occ.push({d:b.x+b.y, o:b, node:false});
+    }
+    occ.sort((a,b)=>a.d-b.d);
+    for(const it of occ){ const o=it.o, s=worldToScreen(o.x,o.y);
+      if(EL) s.y -= groundLiftAt(o.x,o.y);
+      if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }
+      if(it.node) drawNode(o,s); else drawDecor(o,s);
     }
   }
 
@@ -2241,7 +2294,7 @@ function drawNPC(n,s){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
     nname='Prince Jaist';
   }
-  drawHumanoid(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3});
+  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
