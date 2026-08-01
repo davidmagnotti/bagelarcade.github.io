@@ -867,6 +867,74 @@ function dirOct(d){
   if(!d) return 1;
   return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
 }
+
+/* =====================================================================
+   NPC SPRITE CACHE
+   drawHumanoid is a ~900-line procedural figure (gradients + dozens of path
+   ops). Redrawing every townsperson every frame is the dominant character cost
+   - it's why full-detail crawled with a crowd on screen. But an NPC's LOOK is
+   stable and it only cycles through a handful of facings + gait frames, so bake
+   each (facing, gait-frame) ONCE to an offscreen and blit it thereafter.
+
+   The cache lives on the NPC entity (holder._humSpr), so it frees with the
+   entity and needs no global LRU. Sprites are baked at full gradient quality,
+   so Fast graphics gets pretty characters for the price of a drawImage. Dynamic
+   figures (the player: weapon swings, hurt flashes, changing expression) are
+   NOT cached - callers draw those with drawHumanoid directly.
+
+   Local bounding box of the figure (pre-size units, generous margins for hats/
+   crowns/pauldrons). Verified against the live renderer so nothing clips. */
+const _HB = { x0:-30, y0:-64, x1:30, y1:16 };
+function _humGaitKey(o){
+  const step=o.step||0;
+  const moving = Math.abs(step)>0.0001 && o.step!==undefined && o.step!==0;
+  // idle => single frame; walking => 8 phase bins across the sin() gait cycle
+  return moving ? ('w'+((((Math.round(step/(TAU/8)))%8)+8)%8)) : 'i';
+}
+function _humSig(o){
+  // Everything that changes the baked PIXELS (not the pose). If any of it changes
+  // - e.g. the woodworker sheds his rags for royal wear - the entity's cache is
+  // dropped and rebuilt. Cheap string; built only on a miss / signature change.
+  return [o.skin,o.hair,o.hc,o.beard,o.shirt,o.robe,o.pants,o.trim,o.apron,
+          o.armor,o.hat,o.hairstyle,o.crest?1:0,o.mask?1:0,o.rune?1:0,o.quiver?1:0,
+          o.fem?1:0,o.hero?1:0,o.expr,o.size,o.name,
+          o.build?(o.build.w+','+o.build.head+','+o.build.stoop):''].join('|');
+}
+function _bakeHumanoid(o){
+  const s=(o.size||1);
+  const dpr=Math.max(1, Math.min(2, (typeof DPR!=='undefined'?DPR:1)));
+  const w=Math.ceil((_HB.x1-_HB.x0)*s*dpr), h=Math.ceil((_HB.y1-_HB.y0)*s*dpr);
+  if(w<2||h<2||w>2048||h>2048) return null;      // guard against absurd sizes
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  const g=cv.getContext('2d');
+  // Draw at device scale (dpr); drawHumanoid applies its own size(s) on top, so
+  // pass the origin in pre-size local units: figure (0,0) => (-HB.x0*s,-HB.y0*s).
+  g.setTransform(dpr,0,0,dpr,0,0);
+  try{ drawHumanoid(g, -_HB.x0*s, -_HB.y0*s, Object.assign({}, o, {_bake:1})); }
+  catch(e){ return null; }
+  return cv;
+}
+function drawHumanoidCached(g, sx, sy, o, holder){
+  // No holder (or an odd state we shouldn't freeze) -> just draw live.
+  if(!holder || o.hurt || o.ride || o.swing){ drawHumanoid(g,sx,sy,o); return; }
+  const sig=_humSig(o);
+  if(holder._humSig!==sig){ holder._humSig=sig; holder._humSpr={}; holder._humN=0; }
+  const key=_humGaitKey(o);
+  let spr=holder._humSpr[key];
+  if(spr===undefined){
+    // Soft cap so a pathological churn can't grow unbounded (8 dirs * ~9 frames).
+    if(holder._humN>=80){ holder._humSpr={}; holder._humN=0; }
+    spr=_bakeHumanoid(o); holder._humSpr[key]=spr; holder._humN++;
+  }
+  if(spr){
+    const s=(o.size||1);
+    g.drawImage(spr, sx + _HB.x0*s, sy + _HB.y0*s,
+                (_HB.x1-_HB.x0)*s, (_HB.y1-_HB.y0)*s);
+  } else {
+    drawHumanoid(g,sx,sy,o);            // bake failed -> live fallback
+  }
+}
+
 function drawHumanoid(g,sx,sy,o){
   /* =====================================================================
      MASCOT FIGURE - Mario-64 / Wind-Waker inspired redesign.
@@ -891,7 +959,11 @@ function drawHumanoid(g,sx,sy,o){
   // mounted: the mount's own bob (added to the draw position by the caller) carries
   // the vertical motion, so the figure itself stays rigid - no separate idle breath
   // to fight it. On foot: bounce on the stride, or a gentle idle breath.
-  const bounce= o.ride? 0 : (walking? Math.abs(sw1)*2.2*s : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s);
+  // _bake (sprite-cache render): idle breath is time-based, so freeze it to a
+  // neutral pose - otherwise each NPC bakes at a different bob height and they'd
+  // stand at slightly different levels. Walking bounce is deterministic (from the
+  // gait phase), so it bakes consistently and is kept.
+  const bounce= o.ride? 0 : (walking? Math.abs(sw1)*2.2*s : (o._bake? 0 : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s));
   const lean=walking? sw1*0.03 : 0;
   const hurtF=o.hurt?1:0;
   // ---- build: per-character proportion, the axis that makes the cast read as
@@ -910,7 +982,7 @@ function drawHumanoid(g,sx,sy,o){
   // dominant cost that pinned a Surface at ~15fps). The look change is tiny; the
   // shaded bodies below carry the depth on their own.
   g.translate(sx,sy);
-  if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
+  if(hurtF && !o._bake){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean);
   g.scale(s,s);
   g.scale(1,0.93); // seen from the isometric camera above - slight vertical foreshorten
@@ -939,10 +1011,9 @@ function drawHumanoid(g,sx,sy,o){
   /* ---------------- stubby legs & big boots ---------------- */
   const bootC='#5a3d28', bootD='#3e2a1c';
   const drawBoot=(botD)=>{
-    if(LOWFX){ g.fillStyle=bootC; }
-    else{ const btg=g.createLinearGradient(0,-1.2,0,3.4);
-      btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10)); g.fillStyle=btg; }
-    g.lineWidth=1.7;
+    const btg=g.createLinearGradient(0,-1.2,0,3.4);
+    btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
+    g.fillStyle=btg; g.lineWidth=1.7;
     g.beginPath(); g.roundRect(-3.6,-1.2,7.2,4.6,2.1); g.fill(); g.stroke();
     g.fillStyle='rgba(255,245,225,0.25)'; // gloss
     g.beginPath(); g.ellipse(-1.2,0,1.5,0.75,-0.3,0,TAU); g.fill();
@@ -1044,9 +1115,9 @@ function drawHumanoid(g,sx,sy,o){
   g.save(); if(bwF!==1) g.scale(bwF,1);   // body girth: the torso, belt, apron & armour widen together
   if(o.robe){
     const hem=Math.sin(step||G.time*1.6)*1.2;
-    if(LOWFX){ g.fillStyle=o.robe; }
-    else{ const rg2=g.createLinearGradient(0,-27,0,0);
-      rg2.addColorStop(0,shade(o.robe,10)); rg2.addColorStop(0.6,o.robe); rg2.addColorStop(1,shade(o.robe,-12)); g.fillStyle=rg2; }
+    const rg2=g.createLinearGradient(0,-27,0,0);
+    rg2.addColorStop(0,shade(o.robe,10)); rg2.addColorStop(0.6,o.robe); rg2.addColorStop(1,shade(o.robe,-12));
+    g.fillStyle=rg2;
     g.beginPath();
     g.moveTo(-7.5,-24+B);
     g.quadraticCurveTo(-11,-10, -9.5+hem,-0.5);
@@ -1063,9 +1134,9 @@ function drawHumanoid(g,sx,sy,o){
       g.beginPath(); g.arc(0,-16+B,2.4,0,TAU); g.fill();
     }
   } else {
-    if(LOWFX){ g.fillStyle=shirt; }
-    else{ const bg2=g.createLinearGradient(0,-26,0,-6);
-      bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11)); g.fillStyle=bg2; }
+    const bg2=g.createLinearGradient(0,-26,0,-6);
+    bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11));
+    g.fillStyle=bg2;
     g.beginPath();
     g.moveTo(-8.2,-23.5+B);
     g.quadraticCurveTo(-10.4,-15.5, -8.6,-7.5);
@@ -1117,9 +1188,9 @@ function drawHumanoid(g,sx,sy,o){
     }
     if((o.armor|0)>=1){
       const a2=(o.armor|0)>=2;
-      if(LOWFX){ g.fillStyle='#aab1bd'; }
-      else{ const pg=g.createLinearGradient(-8,-24,8,-8);
-        pg.addColorStop(0,'#cdd3dd'); pg.addColorStop(1,'#848b97'); g.fillStyle=pg; }
+      const pg=g.createLinearGradient(-8,-24,8,-8);
+      pg.addColorStop(0,'#cdd3dd'); pg.addColorStop(1,'#848b97');
+      g.fillStyle=pg;
       g.beginPath();
       g.moveTo(-7.6,-23+B);
       g.quadraticCurveTo(-9.4,-15.5, -7.8,-9.5);
@@ -1233,9 +1304,9 @@ function drawHumanoid(g,sx,sy,o){
   if(walking) g.rotate(sw1*0.035);
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
   // ball with soft top-light - round, not flat
-  if(LOWFX){ g.fillStyle=skin; }
-  else{ const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
-    hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9)); g.fillStyle=hg; }
+  const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
+  hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
+  g.fillStyle=hg;
   g.beginPath(); // wide cranium narrowing through the cheeks to a soft chin
   g.ellipse(0,-1.5,HR,HRY*0.92,0,Math.PI,0);
   g.quadraticCurveTo(HR*0.90,6.8, HR*0.42,11.2);
@@ -1251,9 +1322,9 @@ function drawHumanoid(g,sx,sy,o){
         g.fillStyle='rgba(255,255,255,0.16)';
         g.beginPath(); g.ellipse(-3.5,-4,4.5,3.2,-0.4,0,TAU); g.fill();
       } else {
-        if(LOWFX){ g.fillStyle=hc; }
-        else{ const hgb=g.createLinearGradient(0,-13,0,9);
-          hgb.addColorStop(0,shade(hc,12)); hgb.addColorStop(1,shade(hc,-6)); g.fillStyle=hgb; }
+        const hgb=g.createLinearGradient(0,-13,0,9);
+        hgb.addColorStop(0,shade(hc,12)); hgb.addColorStop(1,shade(hc,-6));
+        g.fillStyle=hgb;
         g.beginPath();
         g.ellipse(0,-1.2,HR*0.98,HRY*0.95,0,Math.PI,0);
         g.lineTo(HR*0.95,4.5);

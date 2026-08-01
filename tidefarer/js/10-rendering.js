@@ -109,8 +109,18 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   firepit:1, firelever:1, spinwheel:1, froststream:1, icefloe:1, driftslab:1, conveytile:1, shoottarget:1, bonepit:1, fadetile:1,
   dancebtn:1, danceghost:1,
   skyemitter:1, skyprism:1, skyward:1};
-let scnDecorN=-1;
+let scnDecorN=-1, scnLiveSig=-1;
+// Signature of the nodes NOT baked into the static scenery cache: any that are
+// dead or partly harvested (hp<maxhp). It changes the instant you start or stop
+// chopping/mining something, which forces the cache to rebuild without that node
+// so it can be drawn live (with its health bar + cracks) instead.
+function _sceneryLiveSig(){
+  let sig=0, i=0;
+  for(const n of G.nodes){ i++; if(n.dead || (n.maxhp && n.hp<n.maxhp)) sig=(sig + i*131)>>>0; }
+  return sig;
+}
 function buildSceneryCache(){
+  scnLiveSig=_sceneryLiveSig();
   GC_S=gcScale();
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;
@@ -122,7 +132,9 @@ function buildSceneryCache(){
   if(EL) ensureHeight();
   try{
     const items=[];
-    for(const n of G.nodes){ if(!n.dead) items.push({o:n, t:'node'}); }
+    // Bake only intact nodes; damaged/harvested ones are drawn live (below) so
+    // their depleting health bar and cracks actually update as you work them.
+    for(const n of G.nodes){ if(!n.dead && !(n.maxhp && n.hp<n.maxhp)) items.push({o:n, t:'node'}); }
     for(const b of G.decor){ if(!DYNAMIC_DECOR[b.kind]) items.push({o:b, t:'decor'}); }
     items.sort((a,b)=>(a.o.x+a.o.y)-(b.o.x+b.o.y));
     for(const it of items){ const s=worldToScreen(it.o.x,it.o.y);
@@ -180,9 +192,20 @@ function render(){
     if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       groundCache.width/GC_S, groundCache.height/GC_S);
     // baked scenery (trees/rocks/bushes + static decor) behind the live entities
-    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length) buildSceneryCache();
+    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length || scnLiveSig!==_sceneryLiveSig()) buildSceneryCache();
     if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       sceneryCache.width/GC_S, sceneryCache.height/GC_S);
+    // Damaged/harvested nodes are held OUT of the static bake, so draw them live
+    // here (behind the actors) - this restores the health bar, cracks and lean
+    // that a chopped tree / mined rock shows while you work it. Only the node(s)
+    // actually being harvested qualify, so it's a handful of draws at most.
+    for(const n of G.nodes){
+      if(n.dead || !(n.maxhp && n.hp<n.maxhp)) continue;
+      const s=worldToScreen(n.x,n.y);
+      if(s.x<-60||s.x>VW+60||s.y<-80||s.y>VH+80) continue;
+      if(EL) s.y -= groundLiftAt(n.x,n.y);
+      drawNode(n,s);
+    }
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -321,6 +344,54 @@ function render(){
       case 'player': drawPlayer(s); break;
       case 'proj': drawProj(o,s); break;
       case 'pickup': drawPickup(o,s); break;
+    }
+  }
+
+  // ---- low-gfx occlusion fix ----
+  // The baked scenery blit sits BEHIND every actor, so in Fast graphics the
+  // player would always draw in front of houses and trees. A plain depth test
+  // is wrong for big multi-tile buildings (a single anchor depth can't say when
+  // the player is under a wide roof), so test in SCREEN space using each object's
+  // real sprite box: if the player's feet fall inside a nearby object's sprite
+  // AND above its base line, the player is behind it - redraw it live on top.
+  // (Feet below the base line = the player is in front, e.g. at the doorway, so
+  // it's left behind them.) Only a handful of nearby objects qualify: cheap.
+  if(LOWFX && DBG.entities && !P.dead){
+    const pf=worldToScreen(P.x,P.y);
+    const pfy=pf.y - (EL? groundLiftAt(P.x,P.y):0);
+    const occ=[];
+    // trees / rocks (~1 tile, procedural) - estimated box
+    for(const n of G.nodes){
+      if(n.dead || (n.maxhp && n.hp<n.maxhp)) continue;
+      if(Math.abs(n.x-P.x)>9 || Math.abs(n.y-P.y)>9) continue;
+      const s=worldToScreen(n.x,n.y), sy=s.y-(EL?groundLiftAt(n.x,n.y):0);
+      if(pf.x<s.x-20 || pf.x>s.x+20 || pfy>sy+4 || pfy<sy-54) continue;
+      occ.push({d:n.x+n.y, o:n, node:true, sx:s.x, sy});
+    }
+    // buildings / static decor - exact sprite box (mirrors drawDecor's blit math)
+    for(const b of G.decor){
+      if(DYNAMIC_DECOR[b.kind]) continue;
+      if(Math.abs(b.x-P.x)>32 || Math.abs(b.y-P.y)>32) continue;
+      let W=64,H=64;
+      try{
+        const S=(b.kind==='bazaar')? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
+              :(b.kind==='tower'&&b.tall)? SPR.towerTall
+              : SPR[b.kind==='pillar'?(b.broken?'pillarBroken':'pillar'):b.kind];
+        if(S){ const BS=b.kind==='castle'?(b.grand?0.9:0.4)
+              :(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16
+              : b.kind==='resort'?1.28:1;
+          W=S.width*BS; H=S.height*BS; }
+      }catch(e){}
+      const s=worldToScreen(b.x,b.y), sy=s.y-(EL?groundLiftAt(b.x,b.y):0);
+      if(pf.x<s.x-W/2 || pf.x>s.x+W/2) continue;   // outside the sprite width
+      if(pfy>sy+6) continue;                        // player in front of the base
+      if(pfy<sy-H+10) continue;                     // player above the roofline
+      occ.push({d:b.x+b.y, o:b, node:false, sx:s.x, sy});
+    }
+    occ.sort((a,b)=>a.d-b.d);
+    for(const it of occ){ const s={x:it.sx, y:it.sy};
+      if(SKYSWING){ const sw=skyIsleSwingAt(it.o.x,it.o.y); if(sw) s.x+=sw; }
+      if(it.node) drawNode(it.o,s); else drawDecor(it.o,s);
     }
   }
 
@@ -2241,7 +2312,7 @@ function drawNPC(n,s){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
     nname='Prince Jaist';
   }
-  drawHumanoid(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3});
+  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
   // name
   cx.font='10px Verdana'; cx.textAlign='center';
   cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
