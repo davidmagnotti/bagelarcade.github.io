@@ -77,6 +77,10 @@ function acceptQuest(id){
   if(id==='thaw' && typeof spawnFrostWarden==='function'){ // the warden waits on the glacier
     spawnFrostWarden();
     setTimeout(()=>toast('Up on the Weeping Glacier, something huge and pale grinds to its feet, wrapped in <b style="color:#c9a0ff">violet frost</b>. Climb the ice road when you are ready.',6000),700); }
+  if(id==='wyrm'){ // Vath presses the ember-key on you - the Emberthroat is locked; without his errand you cannot even enter
+    P.story=P.story||{}; P.story.emberKey=1;
+    addFloat('+ Ember-Key', P.x,P.y-1.4,'#ffb060');
+    setTimeout(()=>toast('<i>Vath turns a heavy, heat-warm key into your palm.</i> <b style="color:var(--ember)">You take the Ember-Key.</b> The Emberthroat at the caldera\'s foot is barred to all but its bearer - climb Mount Kea and let yourself in.',6400),700); }
   Snd.quest(); toast('<b style="color:var(--ember)">Quest accepted:</b> '+QUESTS[id].title);
   updateQuestUI();
 }

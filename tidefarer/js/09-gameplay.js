@@ -198,7 +198,7 @@ function nearestInteract(){
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon': b.drowned?'drowneddungeon': b.deepworld?'gatedungeon':'dungeon',o:b,
-        label: b.exit?'Climb out':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
+        label: b.exit?'Climb out':(b.ember && !(P.story&&(P.story.emberKey||P.story.emberDone||qs('wyrm')==='done')))?'Locked - Ember-Key needed':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -692,6 +692,9 @@ function dragonFaints(m){
   shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
   P.eastDragonFought=1; P.eastDragonFreed=1; G.dragonMob=null;
+  // drop the cached Sunward overworld so climbing back out regenerates it with the
+  // freed Ashwing basking by the volcano (see spawnEastFolk's dragonrest placement)
+  if(typeof WORLDS!=='undefined') delete WORLDS.east;
   if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
   // Ashwing lingers right where he fell, freed and grateful - he does not fly off on
   // his own; he stays at your side and offers the lift up to the Cloudreach at once.

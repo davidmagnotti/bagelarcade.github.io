@@ -920,6 +920,19 @@ function drawDecor(b,s){
     g.fillStyle='rgba(255,224,140,'+(0.5*pulse)+')';
     g.beginPath(); g.moveTo(-5,5); g.quadraticCurveTo(0,-9,5,5); g.closePath(); g.fill();
     if(Math.random()<0.28) G.parts.push({x:b.x,y:b.y-0.6,vx:rnd(-0.2,0.2),vy:-rnd(0.4,1.1),life:rnd(0.7,1.4),color:Math.random()<0.5?'#ff8a44':'rgba(90,84,80,0.5)',size:rnd(1.5,3),grav:-0.1});
+    // a heavy iron grate + padlock barring the throat until Vath's Ember-Key is in hand
+    if(!b.exit && !(P.story && (P.story.emberKey || P.story.emberDone || qs('wyrm')==='done'))){
+      g.strokeStyle='#1a1410'; g.lineWidth=3.2;
+      for(const bx of [-9,-3,3,9]){ g.beginPath(); g.moveTo(bx,5); g.lineTo(bx*0.55,-17); g.stroke(); }
+      g.lineWidth=3; g.beginPath(); g.moveTo(-13,-2); g.lineTo(13,-2); g.moveTo(-11,-10); g.lineTo(11,-10); g.stroke();
+      g.strokeStyle='#3a2c24'; g.lineWidth=1.2;
+      for(const bx of [-9,-3,3,9]){ g.beginPath(); g.moveTo(bx-0.7,5); g.lineTo(bx*0.55-0.7,-17); g.stroke(); }
+      // the padlock body, glowing faintly with bound heat
+      g.fillStyle='#2a2018'; g.strokeStyle='#0f0b08'; g.lineWidth=1.4;
+      g.beginPath(); g.arc(0,-8,3.4,Math.PI,0); g.stroke();
+      g.beginPath(); g.roundRect?g.roundRect(-4.5,-6,9,8,1.6):g.rect(-4.5,-6,9,8); g.fill(); g.stroke();
+      g.fillStyle='rgba(255,150,60,'+(0.5+0.4*pulse)+')'; g.beginPath(); g.arc(0,-2,1.2,0,TAU); g.fill();
+    }
     g.restore(); return;
   }
   if(b.kind==='dungeonmouth' && b.undermaw){

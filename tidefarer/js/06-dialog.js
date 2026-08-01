@@ -166,14 +166,14 @@ function buildDialogContent(npc){
     };
     const p3=()=>{
       setDialog('<i>His gaze snags on the pendant at your throat, and for the space of a breath the warmth drains out of him - something older and hungrier looking through the charm.</i> “…That is a fine old piece you wear. Very fine. I have seen its like before - once, a long way from here.” <i>He catches himself, and the easy smile slides back into place.</i> “Forgive an old collector. Pretty things are a weakness of mine.”',
-        [{label:'…Where would that have been?', fn:()=>setDialog('“Oh - here, there. A binder wanders.” <i>He waves the question off like smoke.</i> “I never do recall the where of a thing. Only the worth of it.”',[{label:'Continue', fn:p4}])},
+        [{label:'…Where would that have been?', fn:()=>setDialog('“Oh - here, there. A wanderer wanders.” <i>He waves the question off like smoke.</i> “I never do recall the where of a thing. Only the worth of it.”',[{label:'Continue', fn:p4}])},
          {label:'Say nothing', fn:p4}]);
     };
     const p2=()=>{
-      setDialog('“An Emberbinder. I bind fire to a purpose, where lesser hands only let it burn.” <i>He looks you over, unhurried, the way a jeweller weighs a stone.</i> “And you - washed up, nameless, a stranger even to your own face. How the tides do provide. I have always found the nameless make the finest company. They carry no… complications.”',
+      setDialog('“A wanderer. I go where the roads and the tides carry me, and I make myself useful where I land.” <i>He looks you over, unhurried, the way a jeweller weighs a stone.</i> “And you - washed up, nameless, a stranger even to your own face. How the tides do provide. I have always found the nameless make the finest company. They carry no… complications.”',
         [{label:'What do you want?', fn:p3}]);
     };
-    setDialog('<i>The robed stranger turns to face you before you have made a sound, as though he felt you coming up the path.</i> “Ah - there you are. I did wonder when the sea’s newest gift would wander my way.” <i>His smile is generous, practiced, and does not once touch his eyes.</i> “Vath. A binder of fire; a friend to the friendless. And you are… interesting. Yes. Quite interesting.”',
+    setDialog('<i>The robed stranger turns to face you before you have made a sound, as though he felt you coming up the path.</i> “Ah - there you are. I did wonder when the sea’s newest gift would wander my way.” <i>His smile is generous, practiced, and does not once touch his eyes.</i> “Vath. A wanderer, and a friend to the friendless. And you are… interesting. Yes. Quite interesting.”',
       [{label:'Who are you?', fn:p2}]);
     return;
   }

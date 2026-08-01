@@ -839,6 +839,15 @@ function placeObjectsEast(){
 }
 function spawnEastFolk(){
   const V=EAST_ZONES.village, D=EAST_ZONES.dock;
+  // once Ashwing is freed he comes up out of the throat to bask on the warm ash-shelf
+  // beside the caldera - friendly, dozing in the open, ready to talk and to fly you up
+  // to the Cloudreach (dragonrest's tap runs dragonLairSpeak, which offers the flight).
+  if(qs('wyrm')==='done' || (P.story && P.story.emberDone) || P.eastDragonFreed){
+    const C=EAST_ZONES.caldera;
+    const ds=findOpenNear(Math.round(C.x+6), Math.round(C.y+C.r+4), 8)
+          || findOpenNear(Math.round(C.x), Math.round(C.y+C.r+5), 12) || [C.x+6, C.y+C.r+4];
+    G.decor.push({kind:'dragonrest', x:ds[0]+0.5, y:ds[1]+0.5});
+  }
   G.npcs.push((()=>{ const c2=makeNPC('corvoE','Captain Corvo', D.x+1.5,D.y+1.2,
     {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
     ['Wren has not taken the ribbon off since we landed.',
@@ -880,11 +889,14 @@ function spawnEastFolk(){
   // He stands well NORTH of the village clearing, alone out in the wild grass toward
   // the mountain - set apart from the warm hearths on purpose. Wander is 0 so he holds
   // eerily still, a robed figure watching from the treeline: something off about him.
-  if(qs('wyrm')!=='done')
-    G.npcs.push(makeNPC('vath','Vath the Emberbinder', V.x-9,V.y-10.5,
+  if(qs('wyrm')!=='done'){
+    const vth=makeNPC('vath','Vath the Wanderer', V.x-9,V.y-10.5,
       {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'},
       ['The mountain\'s heat is... wasted, on a sleeping beast.',
-       'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0));
+       'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0);
+    vth.nightOwl=true;   // a wanderer keeps no one's hours - he lingers by the treeline day and night
+    G.npcs.push(vth);
+  }
 }
 /* The caldera set-piece: told the wyrm is evil, you climb Mount Kea and step
    INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
@@ -1145,9 +1157,10 @@ function placeObjectsEastDeep(){
   // north end - board it as it swings to the last isle, ride it round, and dash off to the far
   // ledge when it lines up. Miss any hop and you drop into the pit (climb out singed, -5 HP).
   chasm(28,52,50,61);
+  // an evenly-stepped zigzag: each hop is the same short dash (dx2, dy3), centred on the room
   isle(40,59);   // first isle - one dash off the south ledge
   isle(38,56);   // second - a short dash up-left
-  isle(42,53);   // third - dash up-right; the turning slab waits just north of it
+  isle(40,53);   // third - back to centre; the turning slab waits just north of it
   wheel(40,50, 2.3, 0.85, -Math.PI/2, 'ga');   // the ROTATING isle: hop on at the third isle, ride it, hop off north
   G._eastCross.push({gate:'ga', cy0:50, cy1:61, farY:48, startY:62.5});
   // ============ R5 THE BAT ROOST: a wide field of stationary isles, crossed under bat assault ====
@@ -1155,10 +1168,11 @@ function placeObjectsEastDeep(){
   // pour out of the offscreen tunnels east and west and dive at you - a bite SHOVES you hard,
   // enough to knock you off an isle into the pit. Cut them down or weave through and press north.
   chasm(25,55,26,41);
-  // the guaranteed north-bound spine (each hop is dashable)...
-  isle(40,39); isle(38,36); isle(41,33); isle(37,30); isle(42,28);
-  // ...and a scatter of extra isles (a multitude - wider routes, and room to dodge the bats)
-  isle(30,38); isle(50,38); isle(30,33); isle(50,32); isle(46,40); isle(33,28); isle(48,27); isle(45,30);
+  // the guaranteed north-bound spine - an even zigzag, every hop the same dash (dx2, dy3)
+  isle(40,39); isle(38,36); isle(40,33); isle(38,30); isle(40,27);
+  // ...and evenly-placed flanking isles: symmetric left/right pairs stepped up the room
+  // (a multitude - wider routes, and room to dodge the bats), no longer bunched to one side
+  isle(32,36); isle(48,36); isle(32,33); isle(48,33); isle(32,30); isle(48,30); isle(34,27); isle(46,27);
   G._eastCross.push({gate:'gb', cy0:26, cy1:41, farY:24, startY:43.5});
   // the Dragon Gate (Gate 3) - the boss-arena seal at the Bat Roost's north doorway. Starts OPEN;
   // it slams shut when you rouse Ashwing, then reopens when he's freed.
@@ -1350,6 +1364,12 @@ function genEastDeepAll(){
   genEastDeep(); placeObjectsEastDeep(); spawnMobsEastDeep(); buildMapBase();
 }
 function enterEmberDungeon(){
+  // the Emberthroat is sealed with a heavy ember-lock; only Vath's key opens it, and
+  // you only get the key by taking his errand - so the dungeon cannot be run cold.
+  if(!(P.story && (P.story.emberKey || P.story.emberDone || qs('wyrm')==='done'))){
+    toast('A heavy <b style="color:var(--ember)">ember-lock</b> seals the throat of the mountain - no blade or shoulder will shift it. <i>The robed wanderer down in the village spoke of a key.</i>',5200);
+    Snd.step&&Snd.step(5); return;
+  }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._emberReturn={x:P.x, y:P.y+1.3}; P.click=null;
   setTimeout(()=>{ switchWorld('eastdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
@@ -4279,13 +4299,13 @@ QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill'
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
-  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. An Emberbinder pays well for a dead dragon.',
+  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. A wanderer pays well for a dead dragon - I have coin, and reasons of my own.',
   log:'Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
 QUESTS.vhunt={ giver:'moli', title:'The Enchanter in the Grove', kind:'kill', kill:{mage:1}, xpL:300,
   brief:'That robed one - Vath, he calls himself - was never a friend to Kohana, eh. Drive him from the grove before he binds another soul, then come and sit, and we will call it square.',
-  log:'Confront Vath the Emberbinder in the palm grove and drive him off.',
+  log:'Confront Vath the enchanter in the palm grove and drive him off.',
   doneText:'Slipped you like water through a fist, did he? Aye - his kind always does. But you had him on his knees, and the isle breathes easier for it. He will surface again somewhere; when he does, you will be ready. Take this, with Kohana\'s thanks.',
   rw:{gold:180, item:{potion:2}, xp:{melee:300, archery:300, magic:300}} };
 QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:6}, xpL:200,

@@ -29,7 +29,7 @@ const ACH={
   brutebane:{t:'Brute-Bane',d:'Put the Barrow Brute back in its barrow.'},
   deepwarden:{t:'Maze-Breaker',d:'Put down the Drowned Minotaur in the Stormreach catacomb.'},
   stormbreaker:{t:'Storm-Breaker',d:'Close the Storm-Eye and calm the high wind.'},
-  enchantersbane:{t:"The Enchanter's Bane",d:'Bind Vath the Emberbinder for good.'}
+  enchantersbane:{t:"The Enchanter's Bane",d:'Bind Vath the enchanter for good.'}
 };
 function award(id){
   if(!ACH[id] || P.ach[id]) return;
