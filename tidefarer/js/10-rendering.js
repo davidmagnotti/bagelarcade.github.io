@@ -191,13 +191,10 @@ function render(){
     if(!groundCache || gcWorld!==G.worldId) buildGroundCache();
     if(groundCache) cx.drawImage(groundCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       groundCache.width/GC_S, groundCache.height/GC_S);
-    // baked scenery (trees/rocks/bushes + static decor) behind the live entities
-    if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length || scnLiveSig!==_sceneryLiveSig()) buildSceneryCache();
-    if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
-      sceneryCache.width/GC_S, sceneryCache.height/GC_S);
-    // (Nearby + damaged nodes and nearby buildings are drawn LIVE in the
-    //  depth-sorted object pass below, so they occlude the player correctly and
-    //  show harvest damage; only far, static scenery lives in the blit above.)
+    // Only the GROUND is blitted (the big perf win - thousands of tiles -> one
+    // drawImage). Scenery - trees, rocks and buildings, all cheap sprite blits -
+    // is drawn LIVE in the depth-sorted object pass, so every actor (player,
+    // enemies, chests, pickups) occludes and is occluded correctly.
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -304,26 +301,15 @@ function render(){
 
   // ---- object/entity pass (depth sorted) ----
   const items=[];
-  // Nodes: full detail depth-sorts them all. Low-gfx keeps the far, intact ones
-  // in the baked blit, but draws NEARBY nodes and any DAMAGED node live here so
-  // they sort correctly against the player (walk-behind occlusion) and show
-  // harvest damage/health while you chop or mine them.
+  // Nodes are depth-sorted with every actor in BOTH modes now (they draw as
+  // cheap sprite blits), so occlusion is correct - no separate scenery bake.
   for(const n of G.nodes){
     if(n.tx<minX-1||n.tx>maxX+1||n.ty<minY-1||n.ty>maxY+1) continue;
-    if(LOWFX){
-      if(n.dead) continue;
-      const damaged = n.maxhp && n.hp<n.maxhp;
-      if(!damaged && (Math.abs(n.x-P.x)>5 || Math.abs(n.y-P.y)>5)) continue;
-    }
     items.push({d:n.x+n.y, kind:'node', o:n});
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
-    if(LOWFX && !DYNAMIC_DECOR[b.kind]){
-      // far static decor stays in the baked blit; draw NEARBY buildings live so
-      // they depth-sort against the player and occlude correctly (walk-behind).
-      const nr=b.grand?22:(b.kind==='house'||b.kind==='house2'||b.kind==='barn'||b.kind==='forge'||b.kind==='igloo'||(b.kind==='tower'&&b.tall)||b.kind==='resort')?13:8;
-      if(Math.abs(b.x-P.x)>nr || Math.abs(b.y-P.y)>nr) continue;
-    }
+    // (static decor is a cheap drawImage blit, so it's drawn live + depth-sorted
+    //  in both modes now - no separate scenery bake, so occlusion is correct.)
     const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn'||b.kind==='dplate')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
