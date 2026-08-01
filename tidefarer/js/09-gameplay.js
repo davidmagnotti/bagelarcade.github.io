@@ -608,6 +608,15 @@ function damageMob(m,dmg,knock,skill){
     } else if(Math.random()<0.5) addFloat('!',m.x,m.y-2.1,'#bfe8ff');
     return;
   }
+  // THE STORM-EYE answers only to the bow - blade and staff-bolt scatter off it. (Its shield
+  // still gates WHEN even an arrow can land: only while it's discharged, above.)
+  if(m.stormeye && skill!=='archery'){
+    m.hurtT=0.1;
+    if(Math.random()<0.35) addFloat('BOW ONLY', m.x, m.y-2.2, '#bfe8ff');
+    if(!P._eyeBowHint){ P._eyeBowHint=1;
+      toast('Blade and bolt scatter off the Storm-Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
+    return;
+  }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
@@ -842,19 +851,34 @@ function killMob(m,skill){
   }
   // (The Storm-Wraith mini-boss on the Rainbow Road was cut - the fourth isle is a quiet
   //  waypoint now, so there is no mid-road boss kill to handle here.)
-  // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind, and the
-  // calmed sky is what bears you DOWN off the Cloudreach: it grants the stormsail and
-  // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
+  // THE STORM-EYE (Rainbow Road final boss) - felling it stills the high wind and unknots the
+  // crown-ward to the vault beyond, where the Cloud-Chart waits. No stormsail, no Leap: you
+  // carry the chart to Ashwing, who bears you between the isles (see askSkyDragon).
   if(m.skyfinalboss){
-    P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.parachute=1;
-    // the reward at the end of the rainbow road: the calmed sky's lightness stays in your
-    // step, and your dash now carries you half-again as far (see tryRoll's dashReach).
-    P.unlocked=P.unlocked||{}; P.unlocked.dashfar=true;
+    P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.skyEyeDone=1;
     Snd.boss&&Snd.boss();
-    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - YOUR DASH REACHES FARTHER');
+    // open the crown-ward to the Crown-Vault, and reopen the arena seal now the fight is won
+    if(typeof openSkyGate==='function') openSkyGate('gEye');
+    const g5=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='g5');
+    if(g5 && !g5.open){ g5.open=true; for(const [x,y] of (g5.tiles||[])) setSolid(x,y,0); }
+    P.hp=P.maxhp; P.mp=P.maxmp;
+    if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND FALLS STILL');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the settled sky keeps its lightness in your step: your <b style="color:#c9b0ff">dash now carries you half-again as far</b>. The little bird loops back and lays a great kite of stitched stormcloth at your feet too: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
-      {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind falls still and the rainbow runs quiet at last. <i>North of the Broken Crown a ward of light unknots, and a small vault opens onto the cloud - something the crown kept, waiting there for you.</i> <b style="color:#c9b0ff">Take what it kept, then carry it down to Ashwing.</b>',
+      {label:'OK'}), 1400);
+  }
+  // THE WIND SPIRIT on the Cloudreach - felling it lifts the ward on the Gale-Shrine, so you
+  // can take the bow (the one arm that can strike the Storm-Eye up on the rainbow road).
+  if(m.windspirit){
+    P.story=P.story||{}; P.story.skyWindSpiritDown=1;
+    const g=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='windward');
+    if(g && !g.open){ g.open=true; for(const [x,y] of (g.tiles||[])) setSolid(x,y,0);
+      shockwave(g.x,g.y,'rgba(200,230,255,0.9)',44); }
+    Snd.boss&&Snd.boss();
+    banner('THE WIND SPIRIT FALLS','THE SHRINE-WARD LIFTS');
+    toast('The wind spirit unravels into still air, and the ward on the little shrine winks out. <b>Something waits in the chest within.</b>',5200);
+    if(typeof autoSave==='function') autoSave();
   }
   // The Drowned Minotaur dens in the Stormreach catacomb
   if(m.tombboss){

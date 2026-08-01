@@ -18,7 +18,12 @@ const SKY_ISLES = [
   {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more storm bats
   {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
 ];
+// THE CROWN-VAULT: a small still room north of the Broken Crown, walled off until the
+// Storm-Eye falls. Holds the Cloud-Chart and the bird that bears you down. Kept OUT of
+// SKY_ISLES on purpose so the platformize/sway passes never touch it (it's a solid room).
+const SKY_VAULT = {x:60, y:12, r:4};
 function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
+function skyVaultTile(x,y){ return dist(x,y, SKY_VAULT.x, SKY_VAULT.y) <= SKY_VAULT.r+0.4; }
 /* ---------- gentle side-to-side sway for the little stepping-isles ----------
    The small isles you hop across drift left and right on the high wind - one slow,
    one brisk, alternating up the road. The landing (start), the quiet fourth perch
@@ -78,10 +83,13 @@ function genSkyDungeon(){
   for(let i=0;i<MAPW*MAPH;i++) G.map[i]=T.DEEP;   // open sky (transparent backdrop)
   for(const s of SKY_ISLES) carveDisc(s.x,s.y,s.r,T.SNOW,false);
   for(let i=0;i<SKY_ISLES.length-1;i++) skyRoadCarve(SKY_ISLES[i].x,SKY_ISLES[i].y,SKY_ISLES[i+1].x,SKY_ISLES[i+1].y);
-  // the rainbow itself - a band of colour laid over every road tile (islands stay cloud-white)
+  // the Crown-Vault north of the Broken Crown, and a short solid corridor up to it
+  carveDisc(SKY_VAULT.x, SKY_VAULT.y, SKY_VAULT.r, T.SNOW, false);
+  skyRoadCarve(skyIsle('i6').x, skyIsle('i6').y-5, SKY_VAULT.x, SKY_VAULT.y+3);
+  // the rainbow itself - a band of colour laid over every road tile (islands + the vault stay cloud-white)
   const pr=mulberry32(SEED+7);
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
-    if(tileAt(x,y)===T.SNOW && !skyIsleTile(x,y)){
+    if(tileAt(x,y)===T.SNOW && !skyIsleTile(x,y) && !skyVaultTile(x,y)){
       G.decor.push({kind:'rainbow', x:x+0.5, y:y+0.5, hue:((x*11+y*23)%360), sh:pr()*TAU});
     }
   }
@@ -150,12 +158,29 @@ function placeObjectsSkyDungeon(){
   // the gated bridges (g2 is the fading bridge above, so it has no solid ward)
   for(const g of SKY_GATES){
     if(g.gate==='g2') continue;
-    const m=skyGateMid(g), tiles=skyGatePlugTiles(g), open=!!P.story[g.flag];
+    const m=skyGateMid(g), tiles=skyGatePlugTiles(g);
+    let open=!!P.story[g.flag];
+    // g5 (i5 -> i6) doubles as the Storm-Eye ARENA SEAL: once you step onto the Broken
+    // Crown it slams shut behind you and holds while the fight is on; it reopens only
+    // after the Storm-Eye falls (so you can come back for the chart if you left early).
+    if(g.gate==='g5' && P.story.skyEyeSealed && !P.story.skyEyeDone) open=false;
     G.decor.push({kind:'skygate', gate:g.gate, x:m.x, y:m.y, tiles, open, label:'a wind-ward'});
     for(const [x,y] of tiles){ setSolid(x,y, open?0:1); }
   }
-  // (no hoard chest on the Broken Crown - beating the Storm-Eye is its own reward:
-  //  the calmed sky, the longer dash, and The Leap home.)
+  // THE CROWN-WARD: the ward between the Broken Crown and the Crown-Vault beyond. Sealed
+  // until the Storm-Eye is put out (see killMob's skyfinalboss branch, which opens 'gEye').
+  { const gx=SKY_VAULT.x, gy=19, tiles=[];
+    for(let x=gx-2;x<=gx+2;x++) for(let y=gy-1;y<=gy+1;y++){
+      if(inb(x,y) && tileAt(x,y)===T.SNOW && !skyVaultTile(x,y)) tiles.push([x,y]); }
+    const open=!!(P.story && P.story.skyEyeDone);
+    G.decor.push({kind:'skygate', gate:'gEye', x:gx, y:gy, tiles, open, label:'the crown-ward'});
+    for(const [x,y] of tiles) setSolid(x,y, open?0:1);
+  }
+  // THE CROWN-VAULT: the Cloud-Chart the crown kept, and the wind-lost bird waiting to bear
+  // you down. Both sit beyond the crown-ward, so they're walled off until the Storm-Eye falls.
+  if(!(P.story && P.story.skyMapTaken))
+    G.decor.push({kind:'chest', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-0.5, skymap:1});
+  G.decor.push({kind:'skybird', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-2.0, up:1, name:'THE WIND-LOST BIRD', labelY:-46});
   // ---- FLOATING RAINBOW PLATFORMS ----
   // break each road (except the fading bridge) into rainbow platforms with open-sky GAPS you must
   // DASH across; fall between them and the wind bears you back to the isle behind you.
@@ -365,11 +390,25 @@ function skyFallRespawn(){
   if(z.hint) toast(z.hint,5600);
 }
 
+/* ---------- the high wind: a steady sideways gale down the rainbow road that shoves you
+   off your line (and off the narrow platforms) until the Storm-Eye is put out. ---------- */
+function skyWindPush(dt){
+  if(G.worldId!=='skydungeon' || P.dead || dlg.open || G._skyFall) return;
+  if(P.story && (P.story.skyEyeDone || P.story.skyDungeonDone)) return;   // the sky is calm once the eye is out
+  const gust = 0.8 + 0.7*Math.max(0, Math.sin((G.time||0)*0.6));          // a pulsing gale
+  const dir = 1;                                                         // blows steadily east, across the road
+  const nx = P.x + dir*gust*dt;
+  if(typeof circleBlocked==='function'){ if(!circleBlocked(nx, P.y, 0.28)) P.x=nx; } else { P.x=nx; }
+  // sideways wind-streaks so the gale reads on screen
+  if(Math.random() < dt*34){ const sy=P.y-6+Math.random()*12;
+    G.parts.push({x:P.x-8, y:sy, vx:dir*rnd(7,12), vy:rnd(-0.3,0.3), life:rnd(0.5,1.0), color:'rgba(210,225,245,0.55)', size:rnd(1.2,2.6), grav:0}); }
+}
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
   // a fall in progress plays out (control frozen), then bears you back to the target isle
   if(G._skyFall){ G._skyFall.t+=dt; if(G._skyFall.t>=G._skyFall.dur) skyFallRespawn(); return; }
+  skyWindPush(dt);   // the high wind shoves you sideways down the road - stills once the Storm-Eye is out
   // fall between the floating rainbow platforms -> the wind bears you back to the isle behind you
   if(G._skyPits && G._skyPits.size && !P.dead && (P.rollT||0)<=0 && G._skyPits.has(Math.floor(P.x)+','+Math.floor(P.y))){
     let best=null,bd=1e9;
@@ -460,6 +499,19 @@ function updateSkyDungeon(dt){
       P.story.skyG4=1; openSkyGate('g4');
       banner('THE WINDWARD PERCH','THE WIND-WARD PARTS');
       if(typeof autoSave==='function') autoSave();
+    }
+  }
+  // THE BROKEN CROWN ARENA SEAL: stepping onto i6 while the Storm-Eye lives slams the wind-ward
+  // (g5) shut behind you and holds it - no retreat until the eye is out. It reopens on the kill.
+  if(!P.story.skyEyeSealed && !P.story.skyEyeDone && !P.story.skyDungeonDone){
+    const s6=skyIsle('i6');
+    if(s6 && dist(P.x,P.y,s6.x,s6.y) < s6.r-1.2 && G.mobs.some(m=>m.stormeye && !m.dead)){
+      P.story.skyEyeSealed=1;
+      const g=G.decor.find(d=>d.kind==='skygate' && d.gate==='g5');
+      if(g){ g.open=false; for(const [x,y] of (g.tiles||[])) setSolid(x,y,1);
+        shockwave(g.x,g.y,'rgba(190,170,255,0.9)',44); }
+      G.shake=0.4; if(Snd.boss) Snd.boss();
+      toast('The wind-ward slams shut behind you - the <b>Broken Crown</b> is sealed. <b style="color:#bfe8ff">Put out the Storm-Eye.</b>',4600);
     }
   }
   // P3 - the cloud-snatcher: leashed to its isle, and a touch throws you back to the landing
@@ -636,13 +688,27 @@ function skyBirdDialog(){
         {label:'Farewell', ghost:true, fn:closeDialog} ]);
     return;
   }
-  const accept=()=>{
-    P.story=P.story||{}; P.story.birdQuest=1;
-    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> Oh, thank you! Follow me, then - up the rainbow road. Step onto it when you\'re ready, and stay close.',
+  const haveBow = !!(P.unlocked && P.unlocked.bow);
+  // The Storm-Eye up on the road can ONLY be struck by the bow - so the bird will not fly you
+  // up until you carry one. She sends you to the wind spirit at the north shrine to win it.
+  const needBowLine = '<i>The bird tilts her head at your hands.</i> But not yet - not empty-handed! The thing that soured the wind, the <b>Storm-Eye</b>, turns aside blade and spell alike; only a <b>true arrow</b> will bite it. A <b>wind spirit</b> haunts the little shrine to the <b>north</b> - put it down and take the <b>bow</b> it guards. Come back with a bow in hand, and we\'ll run the rainbow road together.';
+  const offerRoad=()=>{
+    setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> You carry a bow - good! Follow me, then, up the rainbow road. Step onto it when you\'re ready, and stay close.',
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
         {label:'In a moment', ghost:true, fn:closeDialog} ]);
+  };
+  // already signed on, just coming and going: prompt for the bow, or offer the road
+  if(P.story && P.story.birdQuest){
+    if(haveBow) offerRoad();
+    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:closeDialog}]);
+    return;
+  }
+  const accept=()=>{
+    P.story=P.story||{}; P.story.birdQuest=1;
     if(Snd.quest) Snd.quest();
     if(typeof autoSave==='function') autoSave();
+    if(haveBow) offerRoad();
+    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:closeDialog}]);
   };
   setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! The high wind has turned cruel and blows me clean off course before I can reach my little islands - and I cannot set it right on my own. <b>Will you help me?</b>',
     [ {label:'I\'ll help', cls:'gold', fn:accept},

@@ -913,9 +913,13 @@ function dragonLairSpeak(){
     return;
   }
   if(qs('wyrm')==='done' || P.eastDragonFreed){
-    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds. A rock that floats in the cloud-sea, where the <b>Storm Roc</b> roosts and the whole archipelago lies spread out below like a map. My wings do not fear the height. Say the word and I will carry you up.”',
-      [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }},
-       {label:'Rest a while', ghost:true, fn:closeDialog}]);
+    const haveChart = !!(P.story && P.story.skyMapTaken);
+    const fbtns=[{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }}];
+    if(haveChart) fbtns.push({label:'Fly me on to Windsurf', fn:()=>{ closeDialog();
+      flyToWorld('wind','Ashwing springs from the fire-shelf and climbs - the Sunward Isle falls away, and far off Windsurf rises bright on the water ahead.'); }});
+    fbtns.push({label:'Rest a while', ghost:true, fn:closeDialog});
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds, and the whole archipelago spread below like a map. My wings do not fear the height. Say where, and I will carry you.”',
+      fbtns);
     return;
   }
   if(qs('wyrm')!=='active'){
@@ -1777,7 +1781,17 @@ function signalAshwing(b){
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.3);
   P.story=P.story||{}; P.story.skyKnown=1;
   toast('You touch a flame to the beacon and it ROARS up gold against the sky. Far above, something vast peels off the cloud-sea and comes wheeling down - <b>Ashwing</b>, answering the signal.',5200);
-  setTimeout(()=>{ if(typeof flyToCloudreach==='function') flyToCloudreach(); },2600);
+  setTimeout(()=>{ askWindsurfFlight(); },2600);
+}
+// Where to, from Windsurf? Ashwing always bears you up to the Cloudreach; with the Cloud-Chart
+// in hand he'll also fly you on to the Sunward Isle - the three isles the chart maps.
+function askWindsurfFlight(){
+  const haveChart = !!(P.story && P.story.skyMapTaken);
+  const btns=[ {label:'Fly up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }} ];
+  if(haveChart) btns.push({label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
+    flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - Windsurf falls away behind, and the Sunward Isle swells green out of the sea ahead.'); }});
+  btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  lairDialog('Ashwing','<i>Ashwing settles on the bluff, wings spread against the wind, and rumbles low - where to?</i>', btns);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
@@ -3133,8 +3147,8 @@ function placeObjectsUndermaw(){
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
-    toast('A barrow-bow hangs racked by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.staff=true;
+    toast('An old ember-staff leans by the maw - you can loose <b>bolts</b> here (press <b>3</b> / the staff slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -3403,6 +3417,7 @@ function genSky(){
   const Z=SKY_ZONES;
   carveDisc(Z.landing.x,Z.landing.y,Z.landing.r,T.SNOW,false);
   carveDisc(Z.leap.x,Z.leap.y,Z.leap.r,T.SNOW,false);
+  carveDisc(32,16,5,T.SNOW,false);   // the Gale-Shrine (the wind spirit + the bow) at the north
 }
 function placeObjectsSky(){
   const Z=SKY_ZONES;
@@ -3423,6 +3438,20 @@ function placeObjectsSky(){
   // Cloud-Tender so she's easy to spot (she reads small and got lost in the crowd before).
   { const sp=findOpenNear(Z.landing.x-3, Z.landing.y-6, 5) || [Z.landing.x-3, Z.landing.y-6];
     G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-44}); }
+  // THE GALE-SHRINE: a little stone-ringed shrine at the north where a WIND SPIRIT guards a
+  // chest. Beat the spirit and the wind-ward across the throat lifts (see killMob's windspirit
+  // branch), and the chest gives up the BOW - the one arm that can strike the Storm-Eye.
+  { const cx0=32, cy0=15;
+    const walls=[[31,13],[32,13],[33,13],[30,14],[30,15],[30,16],[34,14],[34,15],[34,16],[30,17],[34,17]];
+    for(const [x,y] of walls){ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } }
+    // the bow-chest, boxed inside the ring
+    if(!(P.story && P.story.skyBowTaken)) G.decor.push({kind:'chest', x:cx0+0.5, y:cy0+0.5, skybow:1});
+    // the wind-ward across the southern throat - open once the spirit is down
+    const tiles=[[31,17],[32,17],[33,17]];
+    const wopen=!!(P.story && P.story.skyWindSpiritDown);
+    G.decor.push({kind:'skygate', gate:'windward', x:32, y:17, tiles, open:wopen, label:'a wind-ward'});
+    for(const [x,y] of tiles) setSolid(x,y, wopen?0:1);
+  }
   G.critters=[];
 }
 function spawnSkyFolk(){
@@ -3430,8 +3459,8 @@ function spawnSkyFolk(){
   G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.landing.x-2.5, Z.landing.y+2.5,
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
     ['Few climb Ashwing’s wing this high. Fewer still leave - the wind up here is soured, and a soured sky suffers no guests.',
-     'There is a shelf on the west edge - The Leap. Step off it and you fall forever… unless the wind itself will bear you. It will not, the way it blows now.',
-     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Calm the wind and it will carry you DOWN from The Leap to <b>Windsurf</b>, bright on the water below - there is no other road off this rock.'],0.4));
+     'There\'s a wind <b>spirit</b> haunting the shrine to the north - it guards an old <b>bow</b>. Mind it if you mean to run the road: the Storm-Eye up there laughs at steel, and only an arrow will reach it.',
+     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Bring the chart down from the crown, and <b>Ashwing</b> will bear you on to <b>Windsurf</b>, bright on the water below.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
@@ -3439,8 +3468,15 @@ function spawnSkyFolk(){
      'If the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
 }
 function spawnMobsSky(){
-  // The Cloudreach is a calm little perch now - no Storm Roc, no raptors. The danger
-  // (and the whole journey) lives on the Wind-Lost Bird's rainbow road.
+  // THE WIND SPIRIT guards the Gale-Shrine at the north until it's put down. Beat it (with
+  // blade or bolt - you've no bow yet) and the ward on the shrine lifts, giving up the bow.
+  if(!(P.story && P.story.skyWindSpiritDown)){
+    const sp=findOpenNear(32, 21, 4) || [32,21];
+    const m=spawnMob('stormwraith', sp[0], sp[1]);
+    if(m){ m.boss=true; m.bigBoss=true; m.windspirit=1; m.bscale=1.7; m.title='THE WIND SPIRIT';
+      m.hp=m.maxhp=360; m.dmg=20; m.lvl=Math.max(9,Math.min(12,P.level||10)); m.hx=m.x; m.hy=m.y;
+      m.respawnT=-1; m.entrance='descend'; }
+  }
 }
 function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); placeSkyHazard(); spawnSkyFolk(); spawnMobsSky(); buildMapBase(); }
 // ---------- STORMREACH ----------
@@ -3796,12 +3832,12 @@ function flyToCloudreach(){
   flyToWorld('sky');
 }
 function askSkyDragon(){
-  // Ashwing on the Cloudreach carries you back DOWN off the rock. Once the Rainbow
-  // Road is run (the stormsail is yours) he can also bear you forward to Windsurf,
-  // so "Fly down" always has somewhere to go.
-  const runRoad = !!(P.story && (P.story.parachute || P.story.skyDungeonDone));
+  // Ashwing on the Cloudreach is your ride between the isles. He always bears you back to
+  // the Sunward Isle; once you carry the CLOUD-CHART down from the Broken Crown (and the high
+  // wind is tamed), he'll also fly you on to Windsurf - the three isles the chart maps.
+  const haveChart = !!(P.story && P.story.skyMapTaken);
   const btns=[];
-  if(runRoad) btns.push({label:'Fly down to Windsurf', cls:'gold', fn:()=>{ closeDialog();
+  if(haveChart) btns.push({label:'Fly on to Windsurf', cls:'gold', fn:()=>{ closeDialog();
     if(!flightLockOK()) return;
     const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
     toast('Ashwing tips off the cloud-shelf and pours down through the cold cloud - an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6000);
@@ -3810,43 +3846,25 @@ function askSkyDragon(){
         banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
       } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1000);
   }});
-  btns.push({label:'Fly back to the Sunward Isle', cls: runRoad?undefined:'gold', fn:()=>{ closeDialog();
+  btns.push({label:'Fly back to the Sunward Isle', cls: haveChart?undefined:'gold', fn:()=>{ closeDialog();
     flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  const line = haveChart
+    ? '<i>Ashwing dips his great head to the Cloud-Chart and rumbles low, tracing a wing-tip along its inked wind-roads. He knows every one - Windsurf, the Cloudreach, the Sunward Isle - and will bear you to any of them, now the high wind lies still.</i>'
+    : '<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down to the Sunward Isle whenever the height gets into your knees. (Run the rainbow road and bring back the crown\'s chart, and he\'ll fly you on to Windsurf too.)</i>';
   // open the dialog window itself (dlg.open + display + portrait) via lairDialog - calling
   // setDialog alone only fills a HIDDEN panel, so the menu never appeared and "Fly down" read as dead
-  lairDialog('Ashwing','<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
+  lairDialog('Ashwing', line, btns);
 }
+// The Leap is now just a scenic overlook - there is no stormsail. Travel between the isles
+// is Ashwing's work, unlocked by the Cloud-Chart. The shelf points you to him.
 function useLeapPoint(){
-  if(!(P.story && P.story.parachute)){
-    toast('You lean into the drop and the wind nearly tears you off the shelf - <b>the winds that way are deadly</b>, and you have <b>no safe way down</b>. You would need a <b>sail</b> the wild sky can\'t rip apart. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will bear you down.',6600);
-    Snd.step&&Snd.step(5); return;
+  if(!(P.story && P.story.skyMapTaken)){
+    toast('You lean over the shelf-lip - nothing below but cold cloud and, far down, a city bright on the water. <b>It is far too far to jump.</b> Run the <b>Wind-Lost Bird</b>\'s rainbow road, put out the Storm-Eye, and bring the <b>Cloud-Chart</b> back to <b>Ashwing</b> at the landing - he\'ll bear you down.',6600);
+  } else {
+    toast('The high wind is tamed, but it is still a long drop. <b>Ashwing</b> waits at the landing - show him the <b>Cloud-Chart</b> and he\'ll fly you down to Windsurf, on to the Sunward Isle, or back up here whenever you like.',6000);
   }
-  if(typeof dlg!=='undefined' && dlg.open) return;
-  // Confirm first: dropping to Windsurf is effectively one-way. No hull crosses its straits
-  // until its sea-beast is put down, so once you step off you're committed to that island
-  // for a good while. Warn the player and let them back out.
-  const doLeap=()=>{
-    closeDialog();
-    if(!flightLockOK()) return;
-    const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-    toast('You shake out your <b>stormsail</b>, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
-    if(Snd.boss) Snd.boss();
-    setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
-        banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
-      } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1100);
-  };
-  dlg.open=true; dlg.npc=null;
-  document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent='The Leap';
-  { const pc=document.getElementById('dportrait'); if(pc){ const pg=pc.getContext('2d');
-      pg.fillStyle='#2a3a52'; pg.fillRect(0,0,72,72);
-      pg.fillStyle='rgba(235,240,250,0.92)'; pg.beginPath(); pg.ellipse(30,28,20,12,0,0,TAU); pg.ellipse(46,32,15,10,0,0,TAU); pg.fill();   // cloud
-      pg.strokeStyle='rgba(190,224,255,0.6)'; pg.lineWidth=2; pg.beginPath(); pg.moveTo(40,42); pg.lineTo(40,62); pg.stroke();              // the drop
-      pg.fillStyle='#bfe0ff'; pg.beginPath(); pg.moveTo(36,58); pg.lineTo(44,58); pg.lineTo(40,68); pg.closePath(); pg.fill(); } }
-  setDialog('<i>You stand at the lip of the shelf, the stormsail humming in your grip - and below there is nothing but cold cloud and, far down, a city bright on the water.</i> Once you drop to <b>Windsurf</b> you may be <b>stranded there a good while</b>: no hull has crossed its straits since its waters turned, so there is <b>no easy way back up</b> until you\'ve set them right. <b>Take the Leap?</b>',
-    [{label:'Take the Leap', cls:'gold', fn:doLeap},
-     {label:'Not yet', ghost:true, fn:closeDialog}]);
+  Snd.step&&Snd.step(5);
 }
 
 /* =====================================================================
@@ -5813,6 +5831,36 @@ function openChest(b){
       banner('THE PEARL OF THE DEEP','DIVE - CROSS THE DROWNED WATER');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the vault\'s heart, cupped in the Minotaur\'s drowned hoard, a single great <b>pearl</b> the colour of deep water. It is warm, though the vault is cold, and when you close your hand on it the flood outside stops feeling like a wall.</i> <b style="color:#8fd8ff">You learn to DIVE.</b> <i>Walk into the deep water now and you sink beneath it and swim - the drowned reaches Vath\'s flood cut off across the old islands are yours to cross at last.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('pearl',1); banner('THE TIDE-LOCK HOARD','PEARLS AND OLD COIN'); }
+    setTimeout(autoSave,300); return;
+  }
+  // THE GALE-SHRINE (Cloudreach): the bow - moved here from the old world, and the ONLY arm
+  // that can strike the Storm-Eye up on the rainbow road. A genuine surprise behind the spirit.
+  if(b.skybow){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.skyBowTaken=1;
+    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
+    P.unlocked=P.unlocked||{};
+    if(!P.unlocked.bow){
+      P.unlocked.bow=true;
+      if(typeof buildHotbar==='function') buildHotbar();
+      Snd.levelup&&Snd.levelup();
+      banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+        else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
+    } else {
+      giveGold(30); give('potion',1); Snd.quest&&Snd.quest();
+      banner('THE SHRINE OPENS','A QUIVER AND A TONIC');
+      setTimeout(()=>toast('You carry a bow already - the shrine\'s spare goes to the pack with a tonic and a few coins. (Its long shafts are the one thing the <b>Storm-Eye</b> will feel.)',6000),400);
+    }
+    setTimeout(autoSave,300); return;
+  }
+  // THE BROKEN CROWN: the Cloud-Chart - the map you carry to Ashwing to be borne between isles.
+  if(b.skymap){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.skyMapTaken=1; give('skymap',1);
+    shockwave(b.x,b.y,'rgba(200,225,255,0.9)',52); burst(b.x,b.y-0.5,'#dce8ff',18,2.6); Snd.levelup&&Snd.levelup();
+    banner('THE CLOUD-CHART','A MAP OF THE WIND-ROADS');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The crown kept an old chart, inked on stormcloth - every wind-road the great dragon once flew, laid out isle to isle.</i> <b style="color:#c9b0ff">You take the Cloud-Chart.</b> <i>The bird waits at the vault\'s edge to bear you down to the Cloudreach. Show the chart to <b>Ashwing</b> at the landing, and - now the high wind is tamed - he will fly you on to <b>Windsurf</b>, back to the Cloudreach, or to the <b>Sunward Isle</b>.</i>'); },500);
     setTimeout(autoSave,300); return;
   }
   // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a longer dash.
