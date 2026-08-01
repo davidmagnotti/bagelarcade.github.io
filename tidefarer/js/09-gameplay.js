@@ -166,12 +166,7 @@ function nearestInteract(){
     }
   }
   for(const b of G.decor){
-    // only pillars carrying an intentional lore note are readable now; plain ruin
-    // pillars (the crypt/ruins dressing) are scenery, with no generic "Read" text
-    if(b.kind==='pillar' && b.loreKey){
-      const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey,o:b,label:'Read'}; }
-    }
+    // pillars are scenery only - no readable poles anywhere in the world
     if(b.kind==='crypt' && !b.noRead){
       const d=dist(P.x,P.y,b.x,b.y+1);
       if(d<2.2 && d<bd){ bd=d; best={type:'lore',key:'crypt',o:b,label:'Read'}; }
