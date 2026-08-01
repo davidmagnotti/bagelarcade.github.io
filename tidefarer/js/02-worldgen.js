@@ -104,7 +104,7 @@ function genWorld(){
   carveLine(V.x,V.y, ZONES.dock.x+1,62, T.PATH,0);
   carveLine(V.x+2,V.y+1, ZONES.farm.x-1,ZONES.farm.y-1, T.PATH,0);
   carveLine(V.x+3,V.y-2, ZONES.meadow.x-3,ZONES.meadow.y, T.PATH,0);
-  carveLine(ZONES.meadow.x+3,ZONES.meadow.y, ZONES.grove.x-3,ZONES.grove.y, T.PATH,0);   // on east, past the meadow, to Rask's Grove
+  carveLine(ZONES.meadow.x+3,ZONES.meadow.y, ZONES.grove.x,ZONES.grove.y, T.PATH,1);   // a broad dirt path east, past the meadow, right into Rask's clearing
   carveLine(V.x,V.y-3, ZONES.tower.x,ZONES.tower.y+2, T.PATH,0);
   carveLine(ZONES.tower.x,ZONES.tower.y-2, ZONES.ruins.x,ZONES.ruins.y+6, T.PATH,0);
   // farm soil plots (two rows of plots, south of Willa's barn, with walking gaps).
@@ -221,6 +221,10 @@ function placeObjects(){
     const t = tileAt(x,y);
     if(t!==T.GRASS && t!==T.FOREST) continue;
     if(blockedZone(x,y)) continue;
+    // never wall a dirt path: keep trees off any tile touching a PATH tile, so a
+    // path threading the woods (e.g. into Rask's grove) always reads as a clear lane
+    if(tileAt(x+1,y)===T.PATH||tileAt(x-1,y)===T.PATH||tileAt(x,y+1)===T.PATH||tileAt(x,y-1)===T.PATH||
+       tileAt(x+1,y+1)===T.PATH||tileAt(x-1,y-1)===T.PATH||tileAt(x+1,y-1)===T.PATH||tileAt(x-1,y+1)===T.PATH) continue;
     const p = (t===T.FOREST)?0.20:0.045;
     if(r()<p) addNode('tree',x,y);
   }

@@ -303,9 +303,8 @@ function spawnMobs(){
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
-  // Rask's training ground: a couple of practice dummies in the far-east grove clearing
-  { const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
-    for(const [x,y] of [[g.x-2,g.y-1],[g.x+2,g.y+1]]){ const s=findOpenNear(x,y,3); if(s) spawnMob('dummy',s[0],s[1]); } }
+  // (no practice dummies in the grove - the auto-aim kept snapping the player's swing
+  // onto them; Rask's live drill is the training now)
   // a lone wolf pair still dens in the Whisperwood to the west, prowling the shade
   // where the bluecaps grow - a little teeth to watch for while you gather for Orin.
   const wolfSpots=[[29,37],[36,42]];

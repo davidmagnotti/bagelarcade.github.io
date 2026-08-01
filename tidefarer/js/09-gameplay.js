@@ -1673,6 +1673,11 @@ function updateNPCs(dt){
      window - the reward for baiting it out is a free punish. */
 const LUNGERS={wolf:1,raptor:1,boar:1,brigand:1,raider:1,wraith:1};
 const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
+// Foes bound to Emberwick's gray ruins - the Hollow King's bone-guard, and every
+// skeleton / the gravelord up at the barrow - never leave the ruin-stone.
+function ruinsBound(m){ return !!(m.hollowGuard || (G.worldId==='isle' && (m.kind==='skeleton'||m.kind==='gravelord'))); }
+const ISLE_SKELE_CAP=6;   // keep the barrow from filling with an endless bone-heap if you ignore them
+function liveIsleSkeletons(){ let n=0; for(const x of G.mobs) if(x.kind==='skeleton' && !x.dead) n++; return n; }
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -1680,7 +1685,9 @@ function updateMobs(dt){
     if(m.sealed) continue;                 // walled behind the ward-gate - inert until it opens
     if(m.dead){
       if(m.respawnT>0){ m.respawnT-=dt;
-        if(m.respawnT<=0 && dist(P.x,P.y,m.hx,m.hy)>10){ m.dead=false; m.hp=m.maxhp; m.x=m.hx; m.y=m.hy; m.state='idle'; }
+        // hold a skeleton's respawn while the barrow is already crowded - no bone-heap
+        if(m.respawnT<=0 && m.kind==='skeleton' && G.worldId==='isle' && liveIsleSkeletons()>=ISLE_SKELE_CAP){ m.respawnT=6; }
+        else if(m.respawnT<=0 && dist(P.x,P.y,m.hx,m.hy)>10){ m.dead=false; m.hp=m.maxhp; m.x=m.hx; m.y=m.hy; m.state='idle'; }
         else if(m.respawnT<=0) m.respawnT=5;
       }
       continue;
@@ -1691,6 +1698,12 @@ function updateMobs(dt){
     if(dlg.open){ m.windup=0; m.swing=0; continue; }
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
+    // ruins containment: track the last ruin-stone tile a bound foe stood on, and snap
+    // it back if anything (a knockback, a stray step) put it out on the grass
+    if(ruinsBound(m)){
+      if(tileAt(m.x|0,m.y|0)===T.RUIN){ m._rx=m.x; m._ry=m.y; }
+      else if(m._rx!=null){ m.x=m._rx; m.y=m._ry; m.tx=null; }
+    }
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
     m.recover=Math.max(0,(m.recover||0)-dt);          // a heavy's post-swing punish window
     // POISE: staggers reset it and lock it out for a beat so nothing gets perma-stunned
@@ -1750,10 +1763,10 @@ function updateMobs(dt){
         } else {
           moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
         }
-        // the Hollow King's bone-guard never leave the gray ruins: a step that would
-        // carry a guard off the ruin-stone (onto the grass approach) is snapped back,
-        // so they hold the barrow and never chase you out onto the meadow
-        if(m.hollowGuard && tileAt(m.x|0, m.y|0)!==T.RUIN){ m.x=ox2; m.y=oy2; }
+        // ruins-bound foes never leave the gray ruins: a step that would carry one off
+        // the ruin-stone (onto the grass approach) is reverted at once, so they hold the
+        // barrow and never chase you out onto the meadow
+        if(ruinsBound(m) && tileAt(m.x|0, m.y|0)!==T.RUIN){ m.x=ox2; m.y=oy2; }
         if(Math.hypot(m.x-ox2,m.y-oy2) < d.speed*dt*0.2){
           // no progress: flip the shoulder and commit to the slide
           m.detour = -(m.detour||(((m.x*7+m.y*13)|0)%2? 1:-1));
@@ -1933,9 +1946,12 @@ function updateMobs(dt){
   }
 }
 function bossSummon(m){
+  // never conjure past the barrow's cap - the King only tops the ranks back up
+  const room = ISLE_SKELE_CAP - liveIsleSkeletons();
+  if(room<=0) return;
   toast('<b style="color:#78dca0">“Rise, my court!”</b>');
-  for(let i=0;i<2;i++){ const s=spawnMob('skeleton', m.x+rnd(-2,2), m.y+rnd(1,2.5));
-    s.state='chase'; s.respawnT=-1; burst(s.x,s.y-0.4,'#78dca0',12); }
+  for(let i=0;i<Math.min(2,room);i++){ const s=spawnMob('skeleton', m.x+rnd(-2,2), m.y+rnd(1,2.5));
+    if(s){ s.state='chase'; s.respawnT=-1; s.hollowGuard=true; s.hx=s.x; s.hy=s.y; burst(s.x,s.y-0.4,'#78dca0',12); } }
   Snd.magic();
 }
 
@@ -1976,11 +1992,11 @@ function updateProjs(dt){
           p.life=0; break;
         }
       }
-    } else {
-      if(!P.dead && dist(p.x,p.y,P.x,P.y-0.3)<0.55){
-        // PARRY: brace the guard as a shot arrives and it is batted back the way
-        // it came - now a PLAYER projectile that bites whatever loosed it.
-        if((P.parryT||0)>0 && !p.parried && parryCovers(p.x,p.y)){
+    } else if(!P.dead){
+      const dP=dist(p.x,p.y,P.x,P.y-0.3);
+      // Parry catches a shot from farther out than a bare hit lands, so a
+      // well-timed swing bats the bone away before it ever reaches the body.
+      if((P.parryT||0)>0 && !p.parried && dP<1.05 && parryCovers(p.x,p.y)){
           p.parried=1; p.from='player'; p.skill='melee';
           // bat it back INTO the nearest foe (usually whoever threw it) so a parried
           // bone reliably bites the King, not just the empty air he stepped out of
@@ -1991,8 +2007,7 @@ function updateProjs(dt){
           p.life=Math.max(p.life,1.3);
           p.dmg=Math.round((p.dmg||6)*1.5)+meleeDmg();   // a turned shot hits hard
           onParry(p.x,p.y);
-        } else { hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }
-      }
+        } else if(dP<0.55){ hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }
     }
   }
   G.projs=G.projs.filter(p=>p.life>0);
