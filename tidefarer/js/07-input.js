@@ -85,7 +85,7 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='cavemouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.2,range:2.0,go:()=>enterUndermaw()});
     else if(b.kind==='lairmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>enterLair()});
     else if(b.kind==='dungeonmouth') cand.push({type:'inter',x:b.x,y:b.y,r:1.3,range:2.1,go:()=>{
-      if(b.vault){ if(b.exit){ exitFrostVault(); } else if(!(P.story&&P.story.iceBearDown)){ toast('The <b>Hoarfrost Bear</b>’s den, rank with old kills - drive the beast off before you go down.',4600); Snd.step&&Snd.step(5); } else { enterFrostVault(); } return; }
+      if(b.vault){ if(b.exit){ exitFrostVault(); } else if(!(P.story&&P.story.iceBearDown)){ blockMsg('The <b>Hoarfrost Bear</b>’s den, rank with old kills - drive the beast off before you go down.'); Snd.step&&Snd.step(5); } else { enterFrostVault(); } return; }
       if(b.mill){ b.exit? exitMillDungeon() : enterMillDungeon(); return; }
       if(b.undermaw){ b.exit? exitUndermaw() : enterUndermaw(); return; }
       if(b.ember){ b.exit? exitEmberDungeon() : enterEmberDungeon(); } else { b.exit? exitFrostDungeon() : enterFrostDungeon(); } }});

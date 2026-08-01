@@ -4,7 +4,7 @@
 P.projects=P.projects||{}; P.contract=P.contract||0; P.wellCd=0;
 
 const PROJECTS={
-  well:  {name:'Mend the Old Well', need:{stone:8, bar:2}, where:'maren',
+  well:  {name:'Mend the Old Well', need:{stone:8, ore:4}, where:'maren',
     perk:'Drink at the village well: full heal, every 90s.',
     done:'“Sweetest water on the isle, flowing again. Drink deep whenever you pass.”'},
   crane: {name:'Raise the Dock Crane', need:{wood:12, hardwood:4}, where:'maren',
@@ -13,7 +13,7 @@ const PROJECTS={
   lanes: {name:'Light the Lanes', need:{wood:10, stone:6}, where:'maren',
     perk:'New lanterns warm the village paths at night.',
     done:'“Look at them glow. No one stumbles home in the dark now - that\'s your doing.”'},
-  beacon:{name:'Raise the Harbor Beacon', need:{bar:6, hardwood:8}, where:'kell',
+  beacon:{name:'Raise the Harbor Beacon', need:{ore:12, hardwood:8}, where:'kell',
     perk:'Trade routes open: everything sells for +15%.',
     done:'“Ships already turning toward the light. Greyharbor trades again - prices are up, friend.”'}
 };

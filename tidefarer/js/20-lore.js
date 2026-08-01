@@ -201,7 +201,7 @@ function interiorHotspot(){
   const I=G.interior; if(!I) return null;
   let best=null, bestD=1e9;
   for(const f of I.furn){
-    let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Smith', orb:'Attune',
+    let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Anvil', orb:'Attune',
       books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
@@ -254,7 +254,7 @@ function useHotspot(h){
   else if(f.type==='millcellar'){ if(typeof enterMillFromInterior==='function') enterMillFromInterior(); }
   else if(f.type==='frontdesk'){ resortDesk(); }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
-  else if(f.type==='anvil') openStation('The Anvil', craftMenu);
+  else if(f.type==='anvil') toast(['A smith’s anvil, scarred by a thousand strikes. The iron-work here is the smith’s trade, not yours to take up.','Bram’s anvil, still warm. Your own gear is won out on the isle, not hammered out here.'][rndi(0,1)],3600);
   else if(f.type==='orb'){
     // A mage-tower's scrying orb is now a ONE-TIME BOON per tower: it pours its
     // stored focus into you for a whole free level, instead of the old

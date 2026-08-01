@@ -126,11 +126,12 @@ function useItem(item){
 }
 function equipArmor(t){
   if(t>(P.armorOwn||0)){
-    toast(t===1? 'Bram forges <b>Iron Armor</b> from 3 bars + 2 hardwood.' : 'Bram\'s <b>Steel Plate</b> needs 5 bars + an ember crystal.');
+    toast(t===1? 'You have not earned <b>Iron Armor</b> yet.' : 'You have not earned <b>Steel Plate</b> yet.');
     return;
   }
   if((P.armor||0)===t) return;
   P.armor=t; Snd.pickup();
+  if(t===2 && typeof award==='function') award('ironclad');   // "Wear the steel plate" - earned however the plate was won, now the forge is gone
   toast('<b style="color:#ffd76a">Equipped:</b> '+(t===0?'Traveler\'s Clothes':t===1?'Iron Armor':'Steel Plate'));
   refreshInvPanel();
 }
@@ -141,7 +142,8 @@ function weaponMeta(id){
   return {name:'Fists', icon:'sword', dmg:2};
 }
 function equipWeapon(id){
-  if(!P.unlocked[id]){ toast('That weapon isn’t yours yet - see Bram’s forge or Sable’s range.'); return; }
+  if(!P.unlocked[id]){ toast('That weapon isn’t yours yet - earn it through the isle’s tasks, or Sable’s range for a bow.'); return; }
+  if(id==='melee' && (P.swordTier||0)>=2 && typeof award==='function') award('mastersmith');   // "Wield the steel sword" - re-anchored off the retired forge
   P.weapon=id; buildHotbar(); Snd.pickup();
   toast('<b style="color:#ffd76a">Wielding:</b> '+weaponMeta(id).name);
   refreshInvPanel();
@@ -181,7 +183,7 @@ function refreshInvPanel(){
     eq+='<div style="text-align:center;">'+
       '<div class="islot" style="opacity:.45;"><canvas width="40" height="40" data-eqicon="sword"></canvas></div>'+
       '<div style="font-size:10px;color:var(--parch-dim);max-width:64px;margin-top:2px;">Unarmed</div></div>'+
-      '<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Bram\u2019s forge will arm you.</div>';
+      '<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Lend the islanders a hand - they\u2019ll see you armed.</div>';
   }
   eq+='</div>';
   // -- armor row --
@@ -202,7 +204,7 @@ function refreshInvPanel(){
     });
     eq+='</div></div>';
   } else if(own===0){
-    eq+='<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Bram\u2019s forge sells iron for your ribs.</div>';
+    eq+='<div style="font-size:11px;color:var(--parch-dim);align-self:center;">Armor is earned - see the island\u2019s troubles through.</div>';
   }
   eq+='</div>';
   // -- passive charms / relics (always-on bonuses) --
@@ -216,7 +218,7 @@ function refreshInvPanel(){
   if(has('crown',1)) tr.push('Hollow Crown <span style="color:#9be07f">+25 HP</span>');
   if(tr.length) eq+='<div style="font-size:11px;color:var(--parch-dim);margin-bottom:6px;">'+
     '<b style="color:#9a917f;letter-spacing:1px;">CHARMS </b>'+tr.join(' \u00b7 ')+'</div>';
-  eq+='<div style="font-size:11px;color:var(--parch-dim);border-top:1px solid #3a2c1c;padding-top:7px;margin-bottom:2px;">Forge stronger swords, armor &amp; tools at <b>Bram\u2019s forge</b>.</div>';
+  eq+='<div style="font-size:11px;color:var(--parch-dim);border-top:1px solid #3a2c1c;padding-top:7px;margin-bottom:2px;">Stronger weapons, armor &amp; tools are won from the isle\u2019s quests and its fiercest foes.</div>';
   eq+='</div>';
   grid.insertAdjacentHTML('beforeend',eq);
   grid.querySelectorAll('canvas[data-eqicon]').forEach(cv2=>{

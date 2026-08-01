@@ -89,20 +89,44 @@ function buildTiles(){
     TILE_SPR[t]=[];
     for(let v=0;v<4;v++){
       TILE_SPR[t].push(makeCanvas(TW,TH+8,(g)=>{
-        const [c1,c2]=specs[t];
-        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = (v%2)?c1:c2; g.fill();
-        // gritty texture: mottled blotches + dense flecks
+        const [c1,c2]=specs[t]; const tn=+t;
+        // NATURAL open ground (grass, forest, sand, snow, ice): the old
+        // two-tone-by-variant fill + per-diamond south-edge stroke etched a
+        // hard tile GRID across otherwise continuous terrain. Fill these with a
+        // single base tone (variety comes from the mottling/flecks/tufts below,
+        // seeded per variant) and skip the edge stroke, so neighbouring tiles
+        // merge seamlessly. Elevation cliffs now carry the real depth; wet and
+        // built surfaces (water, path, soil, plank, ruin) keep the old edging.
+        const NATURAL = (tn===T.GRASS||tn===T.FOREST||tn===T.SAND||tn===T.SNOW||tn===T.ICE);
+        const WATER = (tn===T.DEEP || tn===T.SHALLOW);
+        // Water joins the seamless set too: the sea should read as ONE surface.
+        // Both water types share a single base tone - the entire shore->abyss
+        // gradient is painted on top by the smooth overlapping depth blobs
+        // (js/33-elevation), so there's no hard shallow/deep colour step and no
+        // grid of two-tone diamonds. Animated sheen/caustics live in the ground pass.
+        const SEAMLESS = NATURAL || WATER;
+        const base = WATER ? '#33708f' : (SEAMLESS ? c1 : ((v%2)?c1:c2));
+        diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = base; g.fill();
+        // Over-cover the diamond's own anti-aliased rim with the base tone, so
+        // when two seamless tiles abut, their opaque fills overlap by ~0.6px
+        // instead of leaving a faint AA hairline (the last trace of the grid).
+        if(SEAMLESS){ g.strokeStyle=base; g.lineWidth=1.3; g.lineJoin='round'; g.stroke(); }
+        // gritty texture: mottled blotches + dense flecks. Skipped on water -
+        // per-tile speckle just re-prints a faint grid on the sea; the water gets
+        // its life from the animated sheen/caustics/waves in the ground pass.
         const r=mulberry32(t*97+v*13+5);
         g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
-        for(let i=0;i<3;i++){ // uneven mottling
-          const px=r()*TW, py=r()*TH, pr=5+r()*9;
-          g.fillStyle= r()<0.5 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.04)';
-          g.beginPath(); g.ellipse(px,py,pr,pr*0.5,0,0,TAU); g.fill();
-        }
-        for(let i=0;i<24;i++){
-          const px=r()*TW, py=r()*TH;
-          g.fillStyle= r()<0.55 ? 'rgba(0,0,0,'+(0.05+r()*0.07)+')' : 'rgba(255,255,255,'+(0.03+r()*0.05)+')';
-          g.fillRect(px,py, 1+r()*3, 1+r()*1.5);
+        if(!WATER){
+          for(let i=0;i<3;i++){ // uneven mottling
+            const px=r()*TW, py=r()*TH, pr=5+r()*9;
+            g.fillStyle= r()<0.5 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.04)';
+            g.beginPath(); g.ellipse(px,py,pr,pr*0.5,0,0,TAU); g.fill();
+          }
+          for(let i=0;i<24;i++){
+            const px=r()*TW, py=r()*TH;
+            g.fillStyle= r()<0.55 ? 'rgba(0,0,0,'+(0.05+r()*0.07)+')' : 'rgba(255,255,255,'+(0.03+r()*0.05)+')';
+            g.fillRect(px,py, 1+r()*3, 1+r()*1.5);
+          }
         }
         if(+t===T.GRASS||+t===T.FOREST){ // mixed live + dead grass tufts
           g.lineWidth=1;
@@ -133,9 +157,12 @@ function buildTiles(){
             g.fillStyle='rgba(255,255,255,0.08)'; g.fillRect(px-1,py-1.4,1.4,0.8); }
         }
         g.restore();
-        // edge shading (fake depth on south edges)
-        g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
-        g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        // edge shading (fake depth on south edges) - only on built tiles now;
+        // on natural ground AND water this single stroke was a visible tile seam.
+        if(!SEAMLESS){
+          g.strokeStyle='rgba(0,0,0,0.16)'; g.lineWidth=1;
+          g.beginPath(); g.moveTo(TW/2,TH); g.lineTo(TW,TH/2); g.stroke();
+        }
       }));
     }
   }
@@ -167,15 +194,30 @@ function buildSprites(){
       g.strokeStyle='#5c3d22'; g.lineWidth=4; g.lineCap='round';
       g.beginPath(); g.moveTo(w/2,h-36); g.quadraticCurveTo(w/2-12,h-44,w/2-18,h-50);
       g.moveTo(w/2,h-40); g.quadraticCurveTo(w/2+10,h-48,w/2+16,h-54); g.stroke();
-      // canopy: gradient-lit clusters, dark to light, dappled leaves
+      // canopy: lumpy organic leaf-clouds - a scalloped silhouette instead of
+      // plain circles, then gradient-lit bodies and sun-side highlight clumps
       const blobs = v===2 ? [[0,-52,26],[-16,-40,20],[16,-42,21],[0,-32,24]]
                           : [[0,-58,24],[-18,-44,19],[18,-46,20],[-6,-34,22],[10,-32,20]];
-      for(const [bx,by,br] of blobs){ g.fillStyle=c3;
-        g.beginPath(); g.arc(w/2+bx,h+by+4,br,0,TAU); g.fill(); }
+      const lump=(bx,by,br,squash)=>{   // one lumpy leaf-cloud path (deterministic per r())
+        const NP=11, pts=[];
+        for(let i=0;i<NP;i++){ const a=i/NP*TAU, rr=br*(0.86+r()*0.26);
+          pts.push([w/2+bx+Math.cos(a)*rr, h+by+Math.sin(a)*rr*(squash||0.95)]); }
+        g.beginPath();
+        g.moveTo((pts[0][0]+pts[NP-1][0])/2,(pts[0][1]+pts[NP-1][1])/2);
+        for(let i=0;i<NP;i++){ const p=pts[i], q=pts[(i+1)%NP];
+          g.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2); }
+        g.closePath();
+      };
+      for(const [bx,by,br] of blobs){ g.fillStyle=c3; lump(bx,by+3,br+2); g.fill(); }
       for(const [bx,by,br] of blobs){
         const gr=g.createRadialGradient(w/2+bx-br*0.35,h+by-br*0.4,br*0.15,w/2+bx,h+by,br);
         gr.addColorStop(0,c2); gr.addColorStop(0.55,c1); gr.addColorStop(1,c3);
-        g.fillStyle=gr; g.beginPath(); g.arc(w/2+bx,h+by,br,0,TAU); g.fill();
+        g.fillStyle=gr; lump(bx,by,br); g.fill();
+      }
+      // sun-side clumps: pale lobes on the light side give the crown volume
+      for(const [bx,by,br] of blobs){
+        g.fillStyle='rgba(255,250,225,0.14)';
+        lump(bx-br*0.28, by-br*0.34, br*0.55, 0.9); g.fill();
       }
       // leaf dapple
       for(let i=0;i<60;i++){
@@ -184,6 +226,13 @@ function buildSprites(){
         const px=w/2+b[0]+Math.cos(a)*d, py=h+b[1]+Math.sin(a)*d*0.9;
         g.fillStyle= r()<0.55? 'rgba(255,255,235,'+(0.05+r()*0.10)+')' : 'rgba(10,25,10,'+(0.08+r()*0.10)+')';
         g.beginPath(); g.ellipse(px,py,1.6+r()*1.6,1+r(), r()*TAU,0,TAU); g.fill();
+      }
+      // a scatter of ripe fruit on the mid-green variant
+      if(v===1) for(let i=0;i<7;i++){
+        const b=blobs[(i*3)%blobs.length], a=r()*TAU, d=(0.3+r()*0.55)*b[2];
+        const fx=w/2+b[0]+Math.cos(a)*d, fy=h+b[1]+Math.sin(a)*d*0.9;
+        g.fillStyle='#d8604a'; g.beginPath(); g.arc(fx,fy,1.8,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.55)'; g.beginPath(); g.arc(fx-0.6,fy-0.6,0.6,0,TAU); g.fill();
       }
       // sky-side crown highlight + soft under-shadow
       g.fillStyle='rgba(255,250,220,0.10)';
@@ -303,6 +352,15 @@ function buildSprites(){
       g.fillStyle='#e8eef6';
       for(let i=0;i<3;i++){ const px=18+r()*28, py=h-36+r()*14;
         g.fillRect(px,py,2.6,2.6); g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(px,py,1.2,1.2); g.fillStyle='#e8eef6'; }
+      // chipped edge catching the light along the sunlit facets
+      g.strokeStyle='rgba(255,255,255,0.20)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(14,h-30); g.lineTo(26,h-42); g.lineTo(38,h-38); g.stroke();
+      // scattered pebbles seat the boulder into the ground
+      for(let i=0;i<3;i++){ const px=10+r()*46, py=h-12+r()*3;
+        g.fillStyle='#6f6f76';
+        g.beginPath(); g.ellipse(px,py,2.2+r()*1.6,1.5+r(),0,0,TAU); g.fill();
+        g.fillStyle='rgba(255,255,255,0.25)';
+        g.beginPath(); g.ellipse(px-0.6,py-0.7,1,0.6,0,0,TAU); g.fill(); }
     }));
   }
   SPR.rockLow = makeCanvas(70,56,(g,w,h)=>{
@@ -349,6 +407,7 @@ function buildSprites(){
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
     g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
     g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
+    towerDress(g,w,h,[92,136]);
   });
   // A twice-as-tall tower - NOT a stretched one. Same shaft width, stone-course
   // spacing, window size, roof and door as SPR.tower; the shaft just runs much
@@ -375,6 +434,7 @@ function buildSprites(){
     g.strokeStyle='rgba(20,12,6,0.55)'; g.lineWidth=1.4;
     g.beginPath(); g.moveTo(w/2,h-57); g.lineTo(w/2,h-25); g.stroke();                 // plank seam
     g.fillStyle='#d8b25a'; g.beginPath(); g.arc(w/2+6,h-42,1.7,0,TAU); g.fill();       // handle
+    {const wins=[]; for(let wy=92; wy<h-60; wy+=44) wins.push(wy); towerDress(g,w,h,wins);}
   });
   SPR.well = makeCanvas(70,80,(g,w,h)=>{
     g.fillStyle='#7d7d85'; g.beginPath(); g.ellipse(w/2,h-18,22,12,0,0,TAU); g.fill();
@@ -617,19 +677,33 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   // ridge cap catches the light
   g.strokeStyle='rgba(255,240,210,0.28)'; g.lineWidth=1.6;
   g.beginPath(); g.moveTo(bx-1.5,byBase-bh-29*scale); g.lineTo(bx-1.5,byBase-bh+16*scale); g.stroke();
-  // shingle courses on both roof planes
+  // shingle courses on both roof planes: scalloped rows read as individual
+  // shingles instead of flat pencil lines, with a paler edge under each row
   const apX=bx, apY=byBase-bh-30*scale, frX=bx, frY=byBase-bh+18*scale;
   const eL={x:bx-bw/2-10*scale,y:byBase-bh}, eR={x:bx+bw/2+10*scale,y:byBase-bh};
-  g.lineWidth=1.3;
-  for(const t of [0.3,0.55,0.78]){
-    g.strokeStyle='rgba(0,0,0,0.16)';
-    g.beginPath();
-    g.moveTo(eL.x+(apX-eL.x)*t, eL.y+(apY-eL.y)*t);
-    g.lineTo(frX, frY+(apY-frY)*t);
-    g.moveTo(eR.x+(apX-eR.x)*t, eR.y+(apY-eR.y)*t);
-    g.lineTo(frX, frY+(apY-frY)*t);
-    g.stroke();
-  }
+  const shingleRows=(E)=>{
+    for(let t=0.14;t<0.92;t+=0.13){
+      const x1=E.x+(apX-E.x)*t, y1=E.y+(apY-E.y)*t;
+      const x2=frX, y2=frY+(apY-frY)*t;
+      const n=Math.max(3,(Math.hypot(x2-x1,y2-y1)/7)|0);
+      g.strokeStyle='rgba(0,0,0,0.20)'; g.lineWidth=1.1;
+      g.beginPath();
+      for(let i=0;i<n;i++){ const u0=i/n, u1=(i+1)/n;
+        const sx0=x1+(x2-x1)*u0, sy0=y1+(y2-y1)*u0;
+        const sx1=x1+(x2-x1)*u1, sy1=y1+(y2-y1)*u1;
+        if(i===0) g.moveTo(sx0,sy0);
+        g.quadraticCurveTo((sx0+sx1)/2,(sy0+sy1)/2+2.2*scale, sx1,sy1);
+      }
+      g.stroke();
+      g.strokeStyle='rgba(255,240,210,0.07)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(x1,y1+1.3); g.lineTo(x2,y2+1.3); g.stroke();
+    }
+  };
+  shingleRows(eL); shingleRows(eR);
+  // fascia: the eave edges catch the light
+  g.strokeStyle='rgba(255,240,210,0.22)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(eL.x,eL.y); g.lineTo(frX,frY);
+  g.moveTo(eR.x,eR.y); g.lineTo(frX,frY); g.stroke();
   // eave shadow grounds the roof onto the walls
   const topL=(x)=> byBase-bh + (x-(bx-bw/2))*dk;
   const topR=(x)=> byBase-bh+18*scale - (x-bx)*dk;
@@ -671,6 +745,21 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     x=bx+bw/2*fx; g.moveTo(x,gyR(x)-5*scale); g.lineTo(x,gyR(x));
   }
   g.stroke();
+  // plaster mottling: faint weathered blotches so the wall planes read as
+  // material instead of flat fills (deterministic, baked once)
+  {const pr=mulberry32(31);
+   for(let i=0;i<6;i++){
+     const x=bx-bw/2+8*scale+pr()*(bw/2-16*scale);
+     const yTop=topL(x)+8*scale, yBot=gyL(x)-8*scale;
+     if(yBot>yTop){ g.fillStyle=pr()<0.5?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+       g.beginPath(); g.ellipse(x, yTop+pr()*(yBot-yTop), (4+pr()*7)*scale, (3+pr()*5)*scale, pr()*TAU, 0, TAU); g.fill(); }
+   }
+   for(let i=0;i<6;i++){
+     const x=bx+8*scale+pr()*(bw/2-16*scale);
+     const yTop=topR(x)+8*scale, yBot=gyR(x)-8*scale;
+     if(yBot>yTop){ g.fillStyle=pr()<0.5?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.06)';
+       g.beginPath(); g.ellipse(x, yTop+pr()*(yBot-yTop), (4+pr()*7)*scale, (3+pr()*5)*scale, pr()*TAU, 0, TAU); g.fill(); }
+   }}
   // chimney, seated THROUGH the right roof plane
   if(chim){
     const ct=0.45, chX=bx+(bw/2+10*scale)*ct, roofY=apY+((byBase-bh)-apY)*ct;
@@ -687,6 +776,52 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     g.moveTo(chX-6*scale, roofY+3*scale); g.lineTo(chX+6*scale, roofY+7*scale);
     g.stroke();
   }
+}
+/* tower dressing, shared by SPR.tower and SPR.towerTall: staggered stone
+   joints, weathered stone tints, shingled cone, sunlit roof rim, framed
+   windows with sills, and ivy climbing the base. wins = window y positions. */
+function towerDress(g,w,h,wins){
+  const cxp=w/2, r=mulberry32(77);
+  // staggered joints between the stone courses (skip the doorway region)
+  g.strokeStyle='rgba(0,0,0,0.10)'; g.lineWidth=1.2;
+  g.beginPath();
+  let row=0;
+  for(let yy=70; yy<h-46; yy+=16, row++){
+    for(let x=cxp-26+8+(row%2)*8; x<cxp+26-3; x+=16){
+      if(yy>h-88 && Math.abs(x-cxp)<16) continue;
+      g.moveTo(x,yy); g.lineTo(x,yy+16);
+    }
+  }
+  g.stroke();
+  // weathered stones: a few blocks tinted lighter/darker
+  for(let i=0;i<10;i++){
+    const yy=70+((r()*((h-116)/16))|0)*16, xx=cxp-26+4+r()*40;
+    if(yy>h-88 && Math.abs(xx-cxp)<20) continue;
+    g.fillStyle=r()<0.5?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+    g.fillRect(xx,yy+2,10+r()*6,12);
+  }
+  // shingle courses on the conical roof
+  g.strokeStyle='rgba(0,0,0,0.18)'; g.lineWidth=1.1;
+  for(let yy=16; yy<62; yy+=9){
+    const hw=34*(yy-6)/58;
+    g.beginPath(); g.moveTo(cxp-hw,yy); g.quadraticCurveTo(cxp,yy+3.5,cxp+hw,yy); g.stroke();
+  }
+  // the sun catches the right roof edge
+  g.strokeStyle='rgba(255,240,200,0.30)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(cxp+34,64); g.lineTo(cxp,6); g.stroke();
+  // window frames, glass glints and sills
+  for(const wy of wins){
+    g.strokeStyle='#5b4a33'; g.lineWidth=1.5; g.strokeRect(cxp-6,wy-1,12,16);
+    g.fillStyle='rgba(255,255,255,0.35)'; g.fillRect(cxp-4,wy+1,3,5);
+    g.fillStyle='#9a8f80'; g.fillRect(cxp-7,wy+15,14,2.5);
+  }
+  // ivy climbing from the base, clear of the doorway
+  const ivy=(bx,by,n,col)=>{ g.fillStyle=col;
+    for(let i=0;i<n;i++){ g.beginPath();
+      g.ellipse(bx+r()*8-4, by-i*7-r()*4, 4.5-i*0.4, 3.2-i*0.25, r()*TAU, 0, TAU); g.fill(); } };
+  ivy(cxp-22,h-26,6,'rgba(74,110,54,0.85)');
+  ivy(cxp-21,h-30,4,'rgba(96,138,66,0.7)');
+  ivy(cxp+22,h-28,4,'rgba(74,110,54,0.8)');
 }
 function shade(hex,amt){
   const n=parseInt(hex.slice(1),16);

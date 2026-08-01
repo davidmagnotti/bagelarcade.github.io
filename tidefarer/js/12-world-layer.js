@@ -238,18 +238,26 @@ function leaveDungeon(){
     frostvault:typeof exitFrostVault==='function'&&exitFrostVault,
     milldeep:typeof exitMillDungeon==='function'&&exitMillDungeon,
     undermaw:typeof exitUndermaw==='function'&&exitUndermaw,
-    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep };
+    reachdeep:typeof exitReachDeep==='function'&&exitReachDeep,
+    barikdeep:typeof exitBarikDeep==='function'&&exitBarikDeep };
   const fn=EX[G.worldId];
   if(fn){ fn(); return true; }
+  // the returned-isle gate dungeons (winddeep, sunwarddeep, skydeep, embertomb) climb out
+  // through their own `deepworld` way-up mouth
+  const gm=(G.decor||[]).find(d=>d.kind==='dungeonmouth' && d.exit && d.deepworld);
+  if(gm && typeof useGateDungeon==='function'){ useGateDungeon(gm); return true; }
   return false;
 }
-// step into THE WAY UP: full heal, ~one level, and rise to the surface
+// step into THE WAY UP: full heal, ~one level, and rise to the surface. Only reward the climb if
+// we can actually leave from here - otherwise a missing exit mapping would let the reward be
+// farmed over and over without ever rising.
 function useFastExit(){
   if(dlg.open) return;
+  if(!leaveDungeon()){ if(typeof toast==='function') toast('There is no way up from here.',3000); return; }
   P.hp=P.maxhp; P.mp=P.maxmp;
   if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
   if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-  if(leaveDungeon()) toast('You step into the way up - whole again, and a level the wiser.',4200);
+  toast('You step into the way up - whole again, and a level the wiser.',4200);
 }
 
 function addCrowsFor(){
@@ -4431,9 +4439,9 @@ QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', ne
   log:'Bring Doran the Factor 6 grilled fish and 4 fresh bread for the Bazaar stores.',
   doneText:'Counted and crated - the stalls will bless your name by morning. Here is the crown\'s rate, and a little over for the legs it cost you.',
   rw:{gold:90, item:{potion:2}, xp:{fishing:120, farming:120}} };
-QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{bar:4, hardwood:2}, xpL:220,
-  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Four good iron bars and two lengths of hardwood for the hafts, and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
-  log:'Bring Captain Halvard 4 iron bars and 2 hardwood for the Garrison armoury.',
+QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{ore:8, hardwood:2}, xpL:220,
+  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
+  log:'Bring Captain Halvard 8 iron ore and 2 hardwood for the Garrison armoury.',
   doneText:'Good steel, well chosen. The Watch stands the sounder for it - and so does the King who sleeps behind our wall. Take a soldier\'s thanks, and a soldier\'s coin.',
   rw:{gold:100, item:{elixir:1, potion:2}, xp:{melee:200, mining:120}} };
 
@@ -4759,10 +4767,10 @@ function placeObjectsBarikDeep(){
   G._barikVoid=new Set(); G._barikSlabs=[]; G._barikT=0; G._barikPlunge=null;
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++) if(tileAt(x,y)===T.DEEP) G._barikVoid.add(x+','+y);
   G._barikCross={sx:36.5, sy:76.5};   // default respawn (updates to the last dry ledge you reach)
-  // ---- THE LOCKS: a sluice-lever in room 1 raises gate A; a ward-plate in room 3 raises gate B ----
-  dungGate('barA', 78, 34, 38, 'The sluice-lever throws - the barred gate grinds up into the vault roof.');
+  // ---- THE LOCKS: clearing room 1 of its drowned dead raises gate A (no lever - the fight is
+  // the key); a ward-plate in room 3 raises gate B. ----
+  dungGate('barA', 78, 34, 38, 'The last of the drowned dead falls - the barred gate grinds up into the vault roof.');
   dungGate('barB', 60, 34, 38, 'The ward-plate sinks - the inner gate hauls open.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'barA', on:false, label:'a sluice-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:64.5, gate:'barB', pressed:false, label:'a ward-plate'});
   // ---- THE CISTERN: the boss seal + the reward ----
   G._barikSealed=0;
@@ -4780,8 +4788,8 @@ function placeObjectsBarikDeep(){
 }
 function spawnMobsBarikDeep(){
   if(!(P.story && P.story.barikDeepDone)){
-    // ROOM 1 combat: drowned dead + a bowman, guarding the sluice-lever
-    for(const [zx,zy,k] of [[28,83,'skeleton'],[42,84,'skeleton'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: drowned dead + a bowman - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'skeleton'],[42,84,'skeleton'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='barA'; mm.respawnT=-1; } } }
     // ROOM 3: dead guarding the ward-plate
     for(const [zx,zy] of [[28,65],[44,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
     // ROOM 5: a last stand of the dead before the Cistern
@@ -4807,6 +4815,7 @@ function updateBarikDeep(dt){
     else if(walkTile(tileAt(tx,ty))) G._barikCross={sx:tx+0.5, sy:ty+0.5};   // bank the last dry ledge as respawn
   }
   dungPlateCheck();
+  dungRoom1Check('barA');
   barikSealCheck();
   for(const m of G.mobs) if(m.tidemaw && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateTidemaw(m,dt);
 }
@@ -5066,10 +5075,10 @@ function placeObjectsWindDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE LOCKS: a vane-lever in room 1 raises gate A; a vane-plate in room 3 raises gate B ----
-  dungGate('winA', 78, 34, 38, 'The vane-lever swings home - the gate hauls up on a howl of wind.');
+  // ---- THE LOCKS: clearing room 1 of its cave-bats raises gate A (no lever - the fight is the
+  // key); a vane-plate in room 3 raises gate B. ----
+  dungGate('winA', 78, 34, 38, 'The last bat drops - the gate hauls up on a howl of wind.');
   dungGate('winB', 58, 34, 38, 'The vane-plate drops - the inner gate grinds wide.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'winA', on:false, label:'a vane-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'winB', pressed:false, label:'a vane-plate'});
   // ---- THE TWO ABYSS CROSSINGS: void bands crossed on drifting platforms, swept by gales ----
   //  ROOM 2 [70..77]: south ledge 76-77 | BAND 72-75 gale EAST | north ledge 70-71
@@ -5095,8 +5104,8 @@ function placeObjectsWindDeep(){
 }
 function spawnMobsWindDeep(){
   if(!(P.story && P.story.galeDeepDone)){
-    // ROOM 1 combat: a flock of cave-bats guarding the vane-lever
-    for(const [zx,zy] of [[28,83],[44,83],[36,82],[30,84]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
+    // ROOM 1 combat: a flock of cave-bats - fell them all to raise gate A
+    for(const [zx,zy] of [[28,83],[44,83],[36,82],[30,84]]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob('bat',sp[0],sp[1]); if(mm){ mm.room1gate='winA'; mm.respawnT=-1; } } }
     // ROOM 3: bats swarming the vane-plate
     for(const [zx,zy] of [[28,64],[44,64],[36,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
     // ROOM 5: a last swarm on the Eye step
@@ -5131,6 +5140,7 @@ function updateWindDeep(dt){
     }
   }
   dungPlateCheck();
+  dungRoom1Check('winA');
   windSealCheck();
   for(const m of G.mobs) if(m.skirl && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined' && dlg.open)) updateSkirl(m,dt);
 }
@@ -5244,10 +5254,10 @@ function placeObjectsSunwardDeep(){
   const ventField=(x0,y0,x1,y1,step)=>{ for(let gy=y0; gy<=y1; gy+=(step||3)) for(let gx=x0; gx<=x1; gx+=5){
     const jx=gx+((Math.floor(gy/3)%2)? 2:0);   // stagger alternate rows
     if(inb(jx,gy) && !solidAt(jx,gy)){ G.decor.push({kind:'firepit', x:jx+0.5, y:gy+0.5}); G._forgeVents.push({gx:jx, gy, period:2.6+((n*0.7)%2), nextT:0.6+(n%5)*0.5}); n++; } } };
-  // ---- THE LOCKS: a bellows-lever in room 1 raises gate A; a heat-plate in room 3 raises gate B ----
-  dungGate('sunA', 78, 34, 38, 'The bellows-lever drops - the iron gate hauls up in a gust of heat.');
+  // ---- THE LOCKS: clearing THE SLAG YARD (room 1) of its guardians raises gate A;
+  // a heat-plate in room 3 raises gate B. (No lever - the fight is the key.) ----
+  dungGate('sunA', 78, 34, 38, 'The last of the yard\'s guardians falls - the iron gate hauls up in a gust of heat.');
   dungGate('sunB', 58, 34, 38, 'The heat-plate glows and sinks - the inner gate grinds open.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'sunA', on:false, label:'a bellows-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'sunB', pressed:false, label:'a heat-plate'});
   // ---- ROOM 2 - THE FORGE CAUSEWAY: the lava is gathered into one POOL, crossed only on a
   // spinning basalt platform. Board it at the south rim, ride it over the lava to the north rim,
@@ -5282,8 +5292,8 @@ function placeObjectsSunwardDeep(){
 }
 function spawnMobsSunwardDeep(){
   if(!(P.story && P.story.ashenForgeDone)){
-    // ROOM 1 combat: a scorpion and ash-wracked dead guarding the bellows-lever
-    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: a scorpion and ash-wracked dead guarding the way up - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='sunA'; mm.respawnT=-1; } } }
     // ROOM 3: a stoker guarding the heat-plate
     for(const [zx,zy,k] of [[28,64,'skeleton'],[44,64,'scorpion']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // ROOM 5: a last stand on the clinker stair
@@ -5347,6 +5357,7 @@ function updateSunwardDeep(dt){
   }
   forgeTickErupts(dt);
   dungPlateCheck();
+  dungRoom1Check('sunA');
   forgeSealCheck();
   for(const m of G.mobs) if(m.cinder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateCinderwrought(m,dt);
 }
@@ -5361,6 +5372,14 @@ function forgeRespawn(){
   G._forgePlunge=null; const c=G._forgeStart||{sx:36.5,sy:62.5};
   P.x=c.sx; P.y=c.sy; P.click=null; P.moving=false; P.slideDir=null;
   if(typeof isoX==='function'){ G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20; }
+}
+// A room-1 combat lock: once every guardian tagged for `gate` is dead, that gate hauls up - the
+// fight is the key, no lever. Fail-safe: if none are present (a cleared run, or no open spawn
+// tile), the gate simply opens so the way is never barred.
+function dungRoom1Check(gate){
+  const g=G.decor.find(d=>d.kind==='dgate' && d.gate===gate);
+  if(!g || g.open) return;
+  if(!G.mobs.some(m=>m.room1gate===gate && !m.dead)) dungOpenGate(gate);
 }
 function forgeSealCheck(){
   if(!G._sunSealed && !(P.story&&P.story.ashenForgeDone)){
@@ -5422,10 +5441,10 @@ function placeObjectsSkyDeep(){
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  // ---- THE LOCKS: a bell-lever in room 1 raises gate A; a rune-plate in room 3 raises gate B ----
-  dungGate('skyA', 78, 34, 38, 'The bell-lever tolls once - the temple gate rises on a peal of thunder.');
+  // ---- THE LOCKS: clearing room 1 of its storm-shades raises gate A (no lever - the fight is
+  // the key); a rune-plate in room 3 raises gate B. ----
+  dungGate('skyA', 78, 34, 38, 'The last storm-shade scatters - the temple gate rises on a peal of thunder.');
   dungGate('skyB', 58, 34, 38, 'The rune-plate lights and sinks - the inner gate swings wide.');
-  G.decor.push({kind:'dlever', x:46.5, y:82.5, gate:'skyA', on:false, label:'a bell-lever'});
   G.decor.push({kind:'dplate', x:36.5, y:63.5, gate:'skyB', pressed:false, label:'a rune-plate'});
   // tall temple pillars for cover-that-isn't (the lightning falls from straight above)
   for(const [px,py] of [[26,73],[46,73],[26,52],[46,52],[30,55],[42,55]]) if(inb(px,py) && !solidAt(px,py)){ G.decor.push({kind:'pillar', x:px+0.5, y:py+0.5, broken:false}); setSolid(px,py,1); }
@@ -5441,8 +5460,8 @@ function placeObjectsSkyDeep(){
 }
 function spawnMobsSkyDeep(){
   if(!(P.story && P.story.stormTempleDone)){
-    // ROOM 1 combat: storm-shades and a bowman guarding the bell-lever
-    for(const [zx,zy,k] of [[28,83,'skywraith'],[42,84,'skywraith'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // ROOM 1 combat: storm-shades and a bowman - fell them all to raise gate A
+    for(const [zx,zy,k] of [[28,83,'skywraith'],[42,84,'skywraith'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='skyA'; mm.respawnT=-1; } } }
     // ROOM 3: storm-shades guarding the rune-plate
     for(const [zx,zy] of [[28,64],[44,64]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
     // ROOM 5: a last stand on the sanctuary step
@@ -5473,6 +5492,7 @@ function updateSkyDeep(dt){
   if(G._stormHuntT<=0 && inNave){ G._stormHuntT=1.35; stormQueueStrike(Math.round(P.x),Math.round(P.y)); }
   stormTickStrikes(dt);
   dungPlateCheck();
+  dungRoom1Check('skyA');
   stormSealCheck();
   for(const m of G.mobs) if(m.thunder && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateThundercaller(m,dt);
 }
@@ -6072,17 +6092,17 @@ function attemptSail(){
   if(sailing) return;
   if(G.worldId==='isle'){
     if(qs('king')!=='done'){
-      toast('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>',4800);
+      blockMsg('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>');
       return;
     }
     if(qs('wreck')!=='done'){
-      toast('Captain Brant thumps the cracked hull. <b>"She won\'t swim till she\'s patched - bring me twelve wood and I\'ll mend her."</b> Speak with him here at the dock.',5800);
+      blockMsg('Captain Brant thumps the cracked hull. <b>"She won\'t swim till she\'s patched - bring me twelve wood and I\'ll mend her."</b> Speak with him here at the dock.');
       return;
     }
   }
   // Windsurf is walled off by the killing tide until you calm the strait.
   if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){
-    toast('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.',5200);
+    blockMsg('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.');
     return;
   }
   // Stormreach is only reachable by sea, so its berth is always a ferry. But in
@@ -6092,7 +6112,7 @@ function attemptSail(){
   // link of the Act II chain that unlocks the Frozen Isle (see boatMenu).
   if(G.worldId==='reach'){
     if(P.story && P.story.act2 && !P.story.reachBossDown){
-      toast('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>',5800);
+      blockMsg('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>');
       return;
     }
     boatMenu(); return;
@@ -6367,7 +6387,7 @@ function tryRoll(){
   // your step: a half-again longer dash. rollT drives the whole roll - movement, footwork
   // animation and i-frames all scale together - so the dash simply reaches 1.5x as far.
   const dashReach=(P.unlocked&&P.unlocked.dashfar)?1.5:1;
-  P.rollT=0.26*dashReach; P.rollCd=1.0; buzz(9);
+  P.rollT=0.26*dashReach; P.rollMax=P.rollT; P.rollCd=1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});

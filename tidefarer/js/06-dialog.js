@@ -475,9 +475,8 @@ function vendorShop(npc,line,wares){
   rebuild();
 }
 function shopButtons(npc,btns){
-  if(npc.id==='bram'){
-    btns.unshift({label:'Smith & craft…', fn:()=>craftMenu(npc)});
-  }
+  // Bram no longer runs a crafting bench - the tutorial smith just gives quests and
+  // talk now; gear is earned through the isle's tasks and foes (and the crossing kit).
   if(npc.id==='orin'){
     btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
   }

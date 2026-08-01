@@ -4,8 +4,18 @@
 function worldToScreen(wx,wy){ return { x: isoX(wx,wy)-G.cam.x, y: isoY(wx,wy)-G.cam.y }; }
 function screenToWorld(sx,sy){
   sx-=LB.x; sy-=LB.y;   // undo Performance Mode letterbox offset
-  const ox=sx+G.cam.x, oy=sy+G.cam.y;
-  return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 };
+  const inv=(yy)=>{ const ox=sx+G.cam.x, oy=yy+G.cam.y;
+    return { x:(ox/(TW/2)+oy/(TH/2))/2, y:(oy/(TH/2)-ox/(TW/2))/2 }; };
+  let w=inv(sy);
+  // Height-aware refinement: raised terrain is DRAWN shifted up by its lift,
+  // so a click on tall ground under the flat inverse lands short. Re-invert
+  // against the lift at the current guess; converges in a few steps because
+  // the height field is smooth. (Also widens the top-edge cull correctly -
+  // without it, tall tiles lifted into view at the screen top could pop in.)
+  if(typeof elevActive==='function' && elevActive() && G.height){
+    for(let k=0;k<3;k++) w=inv(sy + groundLiftAt(w.x,w.y));
+  }
+  return w;
 }
 
 /* ---- pre-baked ground (low-gfx) ----
@@ -18,6 +28,8 @@ const GC_S=0.5;
 /* The vignette's radial gradient never changes except when the viewport
    resizes, yet it was rebuilt every single frame. Cache it, keyed by size. */
 let _vgCache=null, _vgKey='';
+/* backdrop sea/sky gradient - same idea: rebuilt only when the viewport resizes */
+let _bgGrad=null, _bgKey='';
 function gcDims(){
   const OX=(MAPH-1)*(TW/2)+TW, OY=TH;
   const W=Math.max(1,Math.ceil(((MAPW+MAPH)*(TW/2)+TW*2)*GC_S));
@@ -32,18 +44,24 @@ function buildGroundCache(){
   const g=c.getContext('2d');
   g.setTransform(GC_S,0,0,GC_S,0,0);
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     const t=G.map[y*MAPW+x], sx=isoX(x,y)+OX, sy=isoY(x,y)+OY;
     if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - stays transparent so the backdrop shows
+    const L = EL ? elevTileLift(x,y) : 0;
+    if(EL && L>0.02) elevDrawCliff(g,x,y,sx,sy);
     const spr=TILE_SPR[t] && TILE_SPR[t][G.variant[y*MAPW+x]];
-    if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2);
+    if(spr) g.drawImage(spr, sx-TW/2, sy-TH/2-L);
+    if(EL && (t===T.SHALLOW||t===T.DEEP) && typeof elevWaterTint==='function') elevWaterTint(g,x,y,sx,sy);
     if(t!==T.SHALLOW && t!==T.DEEP){
       const mc=terrainCls(t);
       if(mc<4) for(const nb of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
         const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
-        if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+        if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
       }
     }
+    if(EL) elevTileFX(g,x,y,sx,sy);   // baked once: sun wash + contact shadows are free here
   }
   groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
 }
@@ -73,12 +91,15 @@ function buildSceneryCache(){
   g.setTransform(GC_S,0,0,GC_S,0,0);
   const savedCx=cx, camX=G.cam.x, camY=G.cam.y;
   cx=g; G.cam.x=-OX; G.cam.y=-OY;
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
   try{
     const items=[];
     for(const n of G.nodes){ if(!n.dead) items.push({o:n, t:'node'}); }
     for(const b of G.decor){ if(!DYNAMIC_DECOR[b.kind]) items.push({o:b, t:'decor'}); }
     items.sort((a,b)=>(a.o.x+a.o.y)-(b.o.x+b.o.y));
     for(const it of items){ const s=worldToScreen(it.o.x,it.o.y);
+      if(EL) s.y -= groundLiftAt(it.o.x,it.o.y);
       if(it.t==='node') drawNode(it.o,s); else drawDecor(it.o,s); }
   }catch(e){}
   cx=savedCx; G.cam.x=camX; G.cam.y=camY;
@@ -92,7 +113,14 @@ function render(){
   // the Rainbow Road's little stepping-isles gently sway (skyIsleSwingAt); skipped in
   // low-gfx, where the ground is a static blit and a sway would slide actors off it.
   const SKYSWING = !LOWFX && G.worldId==='skydungeon' && typeof skyIsleSwingAt==='function';
-  cx.fillStyle = CLOUD ? '#bcd6ee' : '#16283e'; cx.fillRect(0,0,VW,VH);
+  // graded backdrop: open sea falls off into deep abyss (cloud worlds get a
+  // bright sky dome). Gradient cached by viewport size - built once, not per frame.
+  {const bgKey=VW+'x'+VH+(CLOUD?'c':'o');
+   if(_bgKey!==bgKey){ const bg=cx.createLinearGradient(0,0,0,VH);
+     if(CLOUD){ bg.addColorStop(0,'#e2f0fa'); bg.addColorStop(0.6,'#bcd6ee'); bg.addColorStop(1,'#9dc0dc'); }
+     else { bg.addColorStop(0,'#1e4467'); bg.addColorStop(0.55,'#16283e'); bg.addColorStop(1,'#0c1727'); }
+     _bgGrad=bg; _bgKey=bgKey; }
+   cx.fillStyle=_bgGrad;} cx.fillRect(0,0,VW,VH);
   // Trauma-style shake: squared falloff (a punchier decay than linear), a small
   // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
   // reads as a jolt rather than a uniform wobble. setTransform() resets fully each
@@ -112,6 +140,11 @@ function render(){
     minY=Math.min(minY,c.y); maxY=Math.max(maxY,c.y); }
   minX=Math.floor(minX)-2; maxX=Math.ceil(maxX)+2; minY=Math.floor(minY)-2; maxY=Math.ceil(maxY)+4;
 
+  // Elevation: fake-3D terrain height (surface worlds only). Lifts ground tiles,
+  // paints cliff faces, and rides actors up on the raised ground beneath them.
+  const EL = (typeof elevActive==='function') && elevActive();
+  if(EL) ensureHeight();
+
   // ---- ground pass ----
   if(DBG.ground){
    if(LOWFX){
@@ -130,21 +163,46 @@ function render(){
       const s=worldToScreen(x,y); // top corner of diamond at tile origin
       let sx=s.x - 0; const sy=s.y;
       if(SKYSWING && t===T.SNOW){ const sw=skyIsleSwingAt(x,y); if(sw) sx+=sw; }   // sway the isle tiles
+      const L = EL ? elevTileLift(x,y) : 0;
+      if(EL && L>0.02) elevDrawCliff(cx,x,y,sx,sy);
       // sprite drawn with its diamond centered at (TW/2, TH/2): blit so tile (x,y) top corner maps
-      cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2);
+      cx.drawImage(TILE_SPR[t][G.variant[y*MAPW+x]], sx-TW/2, sy-TH/2-L);
       if(t===T.SHALLOW || t===T.DEEP){
+        // solid depth-graded colour first (under the animated sheen/waves) so
+        // the sea reads as one smooth surface, not a quilt of diamond tiles
+        if(EL && typeof elevWaterTint==='function') elevWaterTint(cx,x,y,sx,sy);
         // gentle animated sheen + drifting sparkles (per-water-tile path ops -
         // one of the biggest costs on a software-rendered canvas; drop at LOWFX)
         if(!LOWFX){
           const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
           if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
             cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
-          // deeper water reads darker/greener; a caustic ribbon crawls the surface
-          if(t===T.DEEP){ cx.fillStyle='rgba(6,20,40,0.16)';
-            cx.beginPath(); cx.ellipse(sx, sy+3, 15, 6, 0, 0, TAU); cx.fill(); }
+          // (the old per-DEEP-tile dark ellipse was removed: it stamped one blob
+          //  on every tile = a regular grid. Depth darkening is now the smooth
+          //  overlapping blobs in elevTileFX/js-33.)
           const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
           if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
             cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }
+          // shore-lap: a crest rolls in from open water (phase rides the depth
+          // field, so it travels shoreward) and breaks into white foam flecks
+          // as it arrives on the shallows
+          if(EL && G.wdepth){
+            const wdp=waterDepthLv(x,y);
+            if(wdp>0 && wdp<2.2){
+              const w=Math.sin(wdp*2.0 - G.time*1.5 + ((x*31+y*17)%7)*0.09);
+              if(w>0.55){
+                const aa=(w-0.55)/0.45;
+                cx.strokeStyle='rgba(238,250,252,'+(0.30*aa).toFixed(3)+')'; cx.lineWidth=1.6;
+                cx.beginPath(); cx.moveTo(sx-11,sy+1); cx.quadraticCurveTo(sx,sy-2.5,sx+11,sy+1); cx.stroke();
+                if(aa>0.75 && wdp<1.2){
+                  cx.fillStyle='rgba(255,255,255,'+(0.5*(aa-0.75)*4).toFixed(3)+')';
+                  cx.beginPath();
+                  cx.arc(sx-6,sy+1,1.3,0,TAU); cx.arc(sx+2,sy-0.5,1.1,0,TAU); cx.arc(sx+8,sy+1.4,1.2,0,TAU);
+                  cx.fill();
+                }
+              }
+            }
+          }
           if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
             const sa=0.35+0.35*Math.sin(G.time*6+x);
             cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
@@ -161,8 +219,22 @@ function render(){
           for(const nb of nbs){
             const nt=tileAt(x+nb[0],y+nb[1]);
             const nc=terrainCls(nt);
-            if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+            if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
           }
+        }
+      }
+      if(EL) elevTileFX(cx,x,y,sx,sy);   // sun wash on hills + cliff-foot contact shadows
+      // Coastline bleed: the beach (and grassy banks) raggedly overhang the
+      // waterline instead of stopping at a crisp diamond edge, so the shore
+      // reads as an organic, rounded coast rather than a stair-step of tiles.
+      // Drawn last, on top of the depth grade, using the same wavy fringe
+      // sprites the land pass uses. Sand + grass only (their fringe colours are
+      // right); other shores keep their edge. (!LOWFX - the baked path is flat.)
+      if(!LOWFX && (t===T.SHALLOW || t===T.DEEP)){
+        const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+        for(const nb of nbs){
+          const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
+          if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
         }
       }
     }
@@ -170,6 +242,10 @@ function render(){
   }
   if(fxOn('foam')) drawFoam(minX,maxX,minY,maxY);
   if(fxOn('decals')) drawDecals(minX,maxX,minY,maxY);
+  // ground-plane atmosphere: daytime hearth light cast on the grass, building
+  // contact AO, and terrain break-up scatter - drawn UNDER the actors that
+  // stand on them. (Defined in js/34-atmosphere.js; full-detail worlds only.)
+  if(typeof atmoGround==='function') atmoGround(minX,maxX,minY,maxY,EL);
   // farm crops (flat, above ground below objects)
   for(const pl of G.plots){
     if(pl.stage>0){ const s=worldToScreen(pl.x+0.5,pl.y+0.5); drawCrop(cx,s.x,s.y+4,pl.stage,G.time); }
@@ -206,6 +282,7 @@ function render(){
 
   if(DBG.entities) for(const it of items){
     const o=it.o, s=worldToScreen(o.x,o.y);
+    if(EL) s.y -= groundLiftAt(o.x,o.y);   // stand on the raised terrain
     if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }   // ride the isle's sway
     switch(it.kind){
       case 'node': drawNode(o,s); break;
@@ -260,6 +337,33 @@ function render(){
       cx.beginPath(); cx.arc(s.x,s.y-14,1.8,0,TAU); cx.fill();
       cx.globalAlpha=a*night*0.3;
       cx.beginPath(); cx.arc(s.x,s.y-14,5,0,TAU); cx.fill();
+      cx.globalAlpha=1;
+    }
+  }
+  // drifting pollen motes & tumbling leaves over grass and forest by day -
+  // stateless (position derived from time), so they cost no particle budget.
+  // Fireflies own the night; these fade out as dusk falls.
+  if(!LOWFX && fxOn('particles') && night<0.6){
+    const spanX=(maxX-minX)||1, spanY=(maxY-minY)||1;
+    for(let i=0;i<14;i++){
+      const hs=((i*2654435761)>>>0)%100000/100000;
+      const wob=Math.sin(G.time*(0.8+hs)+i*2.1);
+      const wx=minX+(((hs*977+G.time*(0.18+hs*0.2))%1)+1)%1*spanX;
+      const wy=minY+(((hs*541+G.time*(0.13+hs*0.14)+0.37)%1)+1)%1*spanY;
+      const t=tileAt(wx|0,wy|0);
+      if(t!==T.GRASS && t!==T.FOREST) continue;
+      const s=worldToScreen(wx,wy);
+      if(EL) s.y-=groundLiftAt(wx,wy);
+      const sy=s.y-12-wob*4;
+      cx.globalAlpha=(0.3+0.3*Math.abs(wob))*(1-night/0.6);
+      if(i%3===0){
+        cx.fillStyle='rgba(150,180,90,0.9)';
+        cx.save(); cx.translate(s.x,sy); cx.rotate(G.time*1.2+i);
+        cx.fillRect(-2.4,-1.4,4.8,2.8); cx.restore();
+      } else {
+        cx.fillStyle='#f4eebc';
+        cx.beginPath(); cx.arc(s.x,sy,1.5,0,TAU); cx.fill();
+      }
       cx.globalAlpha=1;
     }
   }
@@ -3321,7 +3425,11 @@ function drawPlayer(s){
     return;
   }
   if((P.rollT||0)>0 && !P.riding) drawRollFX(s);
-  drawShadowAt(cx,s.x,s.y,14);
+  // hop (item 3): shadow stays on the ground and shrinks a touch while the
+  // dash-roll is airborne; the figure lifts by P.z above it.
+  const _pz=P.z||0;
+  drawShadowAt(cx,s.x,s.y, _pz>0 ? 14*Math.max(0.55,1-_pz/26) : 14);
+  if(_pz>0) s={x:s.x, y:s.y-_pz};
   drawPlayerFigure(s);
   drawCarriedFlame(s);
 }
@@ -3417,6 +3525,12 @@ function drawPlayerFigure(s){
   }
 }
 function drawProj(p,s){
+  // airborne arc (item 3): thrown/loosed shots ride a parabola in p.z; keep a
+  // shadow on the ground that separates from the shot as it climbs.
+  if(p.z){
+    drawShadowAt(cx, s.x, s.y-2, Math.max(3, 6-p.z*0.10));
+    s={x:s.x, y:s.y - p.z};
+  }
   if(p.kind==='galewisp'){
     // a little dodge-only flier the Storm-Eye spits: a comet-wisp with flitting wings
     const g=cx, t=G.time, a=Math.atan2(p.vy, p.vx), flap=Math.sin(t*22+(p.ph||0))*3;

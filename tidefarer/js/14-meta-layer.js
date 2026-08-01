@@ -239,7 +239,11 @@ function loadCode(str){
   // First rebuild the parent isle with its saved flags: switchWorld then caches that
   // correct parent state, so the dungeon's "way up" exit returns there properly. Then
   // descend into the dungeon itself and let the saved coordinates below resume the hero.
-  const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie', reachdeep:'reach', milldeep:'wind', undermaw:'main', skydungeon:'sky'};
+  const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie', reachdeep:'reach', milldeep:'wind', undermaw:'main', skydungeon:'sky',
+    // Act II return dungeons: without these, a save made inside one falls through to the default
+    // tutorial isle and drops the hero at their dungeon coords - straight into the Hollow King's
+    // court. Restore each into its own dungeon, over its correct parent isle instead.
+    barikdeep:'main', winddeep:'wind', sunwarddeep:'east', skydeep:'sky', embertomb:'isle'};
   if(DUNGEON_PARENT[d.world]){
     const par=DUNGEON_PARENT[d.world];
     switchWorld(par);
