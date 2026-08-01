@@ -1491,6 +1491,22 @@ function updateMobs(dt){
           if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.3,color:'rgba(190,190,200,0.5)',size:3});
         }
       }
+      // THE MAW-STALKER pounces: it periodically telegraphs, then dashes hard at you and
+      // keeps chasing - the lunge is a fast closing burst (its telegraphed slam still lands
+      // the blow, which you can dodge-roll through).
+      if(m.undermawBeast && !m.introKind){
+        m.lungeCd=(m.lungeCd||rnd(3,4))-dt;
+        if(m.lungeCd<=0 && (m.lunge||0)<=0 && l>2.0 && l<8.5 && !((m.stunT||0)>0)){
+          m.lungeCd=rnd(3.2,4.8); m.lunge=0.5; m.face=dx<0?-1:1;
+          addFloat('SKITTER!', m.x, m.y-2.8, '#ffd08a', 1.2);
+          if(Snd.noise) Snd.noise(0.30,0.07,270,0.6);
+          G.shake=Math.max(G.shake||0,0.2);
+        }
+        if((m.lunge||0)>0){ m.lunge-=dt;
+          moveEntity(m, dx/l*d.speed*3.0*dt, dy/l*d.speed*3.0*dt);   // the pounce - a hard closing dash
+          for(let k=0;k<2;k++) G.parts.push({x:m.x+rnd(-0.4,0.4),y:m.y,vx:-dx/l*rnd(0.5,1.1),vy:-dy/l*rnd(0.5,1.1),life:0.3,color:'rgba(210,180,120,0.6)',size:2.8});
+        }
+      }
       if(m.kind==='frostwarden'){
         // a slow siege-engine of ice: closes ground and flings frost shards,
         // fanning wider volleys as the binding drives it harder (lower HP)
