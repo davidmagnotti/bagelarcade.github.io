@@ -1463,12 +1463,13 @@ function pressEmberButton(b){
     toast('Wrong rune! The ward flares and a <b>barrow archer</b> claws up out of the ash. The runes go dark - begin again from <b>I</b>.',4200);
   }
 }
-/* THE EMBER WARD: an arcane fence across the hoard's doorway. Blades and arrows
-   pass through it uselessly - ONLY a fire staff unmakes it. */
+/* THE EMBER WARD: an arcane fence across the hoard's doorway. The working feeds on
+   a caster's own fire - so a plain steel edge, carrying none, cuts its threads
+   where a spell would only be swallowed. A braced sword-strike unmakes it. */
 function dispelStaffGate(b){
   if(!b || b.open) return;
-  if(!(P.unlocked && P.unlocked.staff)){
-    toast('An <b>arcane ember-ward</b> hums across the way - no blade or arrow so much as marks it. Only a <b style="color:var(--ember)">fire staff</b> could unmake a working like this.',4800);
+  if(!(P.unlocked && P.unlocked.melee)){
+    toast('An <b>arcane ember-ward</b> hums across the way. It drinks any fire thrown at it - but it has no answer for cold steel. You will want a <b style="color:var(--ember)">sword</b> in hand.',4800);
     Snd.step&&Snd.step(5); return;
   }
   b.open=true;
@@ -3159,8 +3160,8 @@ function placeObjectsUndermaw(){
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.staff=true;
-    toast('An old ember-staff leans by the maw - you can loose <b>bolts</b> here (press <b>3</b> / the staff slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  if(!(P.unlocked && P.unlocked.bow)){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
+    toast('An old hunting <b>bow</b> and a quiver lean by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -4392,10 +4393,10 @@ QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'sprin
   log:'Discover the Ember Springs in the isle\'s western hills.',
   doneText:"You FOUND them. Warm as a kettle, she used to say. Go soak whenever the island bites you - and take this for an old woman's peace of mind.",
   rw:{gold:30, item:{potion:1}, xp:{farming:80, fishing:80}} };
-QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{wolf:3},
-  brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a wolf pack dens there now. Put down three of the brutes and the cove's yours to pick clean.",
-  log:'Slay 3 wolves at Smuggler\'s Cove and claim the camp.',
-  doneText:"Three pelts' worth of quiet. The cove's yours, friend - crack that chest open and think of me.",
+QUESTS.cove={ giver:'bram', title:"Smuggler's Rest", kind:'kill', kill:{slime:3},
+  brief:"There's an old smuggler camp on the northeast point - good iron in that chest, if the tales hold. Trouble is, a nest of slimes has oozed in and claimed it. Squash three of them and the cove's yours to pick clean.",
+  log:'Squash 3 slimes at Smuggler\'s Cove and claim the camp.',
+  doneText:"Three less to ooze about. The cove's yours, friend - crack that chest open and think of me.",
   rw:{gold:35, item:{crystal:1}, xp:{melee:120, archery:120}} };
 QUESTS.orchard={ giver:'willa', title:'Applewood', kind:'gather', need:{apple:5},
   brief:"The old orchard south-east still fruits - nobody's picked it since the king went hollow. Five good apples and I'll bake you something worth the walk. Mind the branches; they drop hard.",
@@ -5918,15 +5919,15 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
     setTimeout(autoSave,300); return;
   }
-  // SUNWARD - THE ASHEN FORGE: the Flame Snare - staff-bolts root a foe in fire.
+  // SUNWARD - THE ASHEN FORGE: the Flame Snare - fire-fletched arrows root a foe.
   if(b.snaregift){
     bumpStat('chests'); P.spells=P.spells||{}; P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(255,140,60,0.9)',56); burst(b.x,b.y-0.5,'#ff9a3c',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.spells.flamesnare){
       P.spells.flamesnare=1; P.story.ashenForgeDone=1;
       if(typeof WORLDS!=='undefined') delete WORLDS.isle;
-      banner('THE FLAME-SNARE','STAFF-BOLTS ROOT A FOE IN FIRE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your staff-hand, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your fire-staff bolts now lay a FLAME SNARE</b> - <i>every bolt roots the foe it strikes in a snare of fire, held fast where it stands. Channel it with the staff ('+((typeof isTouch!=='undefined'&&isTouch)?'the staff slot':'press 3')+').</i>'); },500);
+      banner('THE FLAME-SNARE','FIRE-FLETCHED ARROWS ROOT A FOE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your quiver, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your arrows now lay a FLAME SNARE</b> - <i>every shaft roots the foe it strikes in a snare of fire, held fast where it stands. Loose it with the bow ('+((typeof isTouch!=='undefined'&&isTouch)?'the bow slot':'press 2')+').</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ASHEN FORGE','EMBER-GLASS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
@@ -6352,13 +6353,13 @@ function switchWorld(id){
     if(P.earlySail && !P.earlyKit){
       P.earlyKit=1;
       P.kit=true;
-      P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.staff=true;
+      P.unlocked.melee=true; P.unlocked.bow=true; P.unlocked.parry=true; P.unlocked.dash=true;
       P.swordTier=Math.max(P.swordTier||0,2);
       P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
       giveQuiet('potion',3); giveQuiet('bread',2); P.gold+=50;
       buildHotbar(); refreshUI();
       setTimeout(()=>{
-        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, oak staff, plate, tools, tonics, and fifty gold press into your arms. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
+        toast('Brant claps your shoulder on the gangway. <b>“I can\'t have you walking around unprepared, so here”</b> - steel sword, yew bow, plate, tools, tonics, and fifty gold press into your arms - and a word from old Rask on how to turn a blade aside. <b>“The isle\'s lessons, minus the homework. Don\'t make me regret the shortcut.”</b>',9000);
         Snd.quest(); autoSave();
       }, 1400);
     }

@@ -91,22 +91,20 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
-  // The Hollow King is gated behind Sage Orin's fire. If the traveler comes to Maren
-  // with steel but no staff, she will not speak the causeway gate open - she sends
-  // them to Orin first. (Once his staff quest is done, the normal offer path fires,
-  // with Maren's astonishment that Orin lent it woven into the brief.)
-  if(npc.id==='maren' && qs('king')==='avail' && qs('mushrooms')!=='done'){
-    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for steel alone. Whatever crawls beneath that crypt is older than iron, and it does not fear a blade. It is his waking that cursed the strait - his spite reaches out into the water and drags down any hull that dares the crossing. Put him down and the sea loosens its grip; Emberwick can sail again.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do what the old mage asks of you, and let him arm you with more than an edge. Come back to me when you carry his <b>fire</b> - then, and only then, will I open the causeway.”',
-      shopButtons(npc,[{label:'I\'ll find Orin', ghost:true, fn:closeDialog}]));
+  // The Hollow King is gated behind a fighter's full craft, not steel alone. If the
+  // traveler comes to Maren with a sword but no parry, she will not speak the causeway
+  // gate open - she sends them east to Rask the Bladesworn first, to learn the turning.
+  if(npc.id==='maren' && qs('king')==='avail' && !(P.unlocked&&P.unlocked.parry)){
+    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for a swinging arm alone. Whatever crawls beneath that crypt strikes back, and hard - you\'ll not last if all you know is how to hit. It is his waking that cursed the strait - his spite reaches out into the water and drags down any hull that dares the crossing. Put him down and the sea loosens its grip; Emberwick can sail again.” <i>She looks east, past the meadow.</i> “Go and find <b>Rask</b>. The old Bladesworn keeps the quiet out there - let him teach you to <b>turn a strike aside</b>. Come back to me when you can <b>parry</b>, and then we\'ll talk about the crypt.”',
+      shopButtons(npc,[{label:'I\'ll find Rask', ghost:true, fn:closeDialog}]));
     return;
   }
-  // Fire alone is not enough: the traveler also needs the footwork Orin's tower
-  // teaches. If the staff quest is done but the scrying orb's dash has not yet been
-  // learned, Maren will not open the causeway - she sends them back up to the tower
-  // to lay hands on the orb before they take up the Hollow King.
-  if(npc.id==='maren' && qs('king')==='avail' && qs('mushrooms')==='done' && !(P.unlocked&&P.unlocked.dash)){
-    setDialog('<i>Maren stays your hand before you can speak of the crypt.</i> “Orin\'s fire, aye - but fire alone won\'t carry you through what waits down there. Did the old man not send you to his scrying orb?” <i>She frowns up the north road, toward the tower.</i> “Go back to <b>Orin\'s tower</b> and lay both hands on the <b>orb</b>. It will teach your feet to <b>dash</b> - and you\'ll want that step under you before I open the causeway. Come back when you have it.”',
-      shopButtons(npc,[{label:'Back to the tower', ghost:true, fn:closeDialog}]));
+  // A parry alone is not enough: the traveler also needs the footwork Orin teaches.
+  // If the turning is learned but the dash is not, Maren sends them up to the tower
+  // to do Orin's errand and learn the dash before they take up the Hollow King.
+  if(npc.id==='maren' && qs('king')==='avail' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.dash)){
+    setDialog('<i>Maren stays your hand before you can speak of the crypt.</i> “Rask taught you the turning - good, that\'ll keep you alive. But standing your ground won\'t always do; down there you\'ll need to be somewhere a blow ISN\'T.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do the old man\'s errand and let him quicken your feet - the <b>dash</b>. You\'ll want that step under you before I open the causeway. Come back when you have it.”',
+      shopButtons(npc,[{label:'Up to the tower', ghost:true, fn:closeDialog}]));
     return;
   }
   // After the Hollow King falls, the elder does more than thank you: she names the
@@ -411,6 +409,15 @@ function buildDialogContent(npc){
   if(npc.id==='brother' && P.story && P.story.vathVeil){
     setDialog('<i>Jaist keeps a weather-eye on the strait and the moored boat.</i> “The Veil holds - I can feel it holding. His curses have had free run of the old islands while we were gone; there\'s no telling what\'s festered. Sail back and undo them, one at a time. I\'ll keep the way home - same as ever.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
+  // Rask the Bladesworn teaches the parry. Once his oath-quest is underway and the
+  // guard is not yet learned, his lesson is a single choice that grants it - after
+  // which the quest reads Ready and turns in through the ordinary path below.
+  if(npc.id==='rask' && qs('bladeoath')==='active' && !(P.unlocked&&P.unlocked.parry)){
+    setDialog('<b style="color:var(--ember)">'+QUESTS.bladeoath.title+'</b><br>“'+QUESTS.bladeoath.brief+'”',
+      shopButtons(npc,[{label:'Show me the turning', cls:'gold', fn:()=>{ closeDialog(); unlockParry(); }},
+                       {label:'Not yet', ghost:true, fn:closeDialog}]));
     return;
   }
   // 1) talk-quest completion

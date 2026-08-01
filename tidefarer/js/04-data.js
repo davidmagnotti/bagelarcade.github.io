@@ -62,8 +62,13 @@ const QUESTS = {
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
     brief:'You\'ll get nowhere on this isle bare-handed - take these, a woodsman\'s axe and a miner\'s pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I\'ll forge you a proper iron sword.',
     log:'Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.',
-    doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Off you go - Maren\'s by the well, and she\'ll have work worthy of that blade.',
-    rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['king'] },
+    doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Now, a blade\'s only half of it - anyone can swing. Go east, past the meadow, and find old <b>Rask</b>. Bladesworn, before he came to keep the quiet out there. He\'ll teach you to TURN a strike aside - the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you.',
+    rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['bladeoath'] },
+  bladeoath:{ giver:'rask', title:'The Turning of the Blade', kind:'special',
+    brief:'So Bram sent me another one with a new sword and no idea what to do when it\'s the OTHER fellow swinging. Sit down. A dash carries you out of a blow you can see coming - but you won\'t always get the room, and some strikes come faster than feet. For those you PARRY: brace the blade, meet the strike, and turn it. Do it clean and an arrow flies back the way it came and a swordsman\'s left staggered on his own missed swing. Take up your steel. I\'ll show you the turning.',
+    log:'Learn to parry from Rask, the blade-master east of the Slime Meadow.',
+    doneText:'There it is - you felt that, the whole blow just… gone, turned off your edge. That\'s the turning. Time it late, right as the strike arrives, not early. Now you\'re fit to go down into that crypt. Off to Maren.',
+    rw:{gold:10, xp:{melee:120}}, unlocks:['king'] },
   // - Captain Brant's shipwright chain -
   wreck:{ giver:'brant', title:'The Wrecked Tidewalker', kind:'gather', need:{wood:12},
     brief:'The Hollow King\'s down and the strait\'s gone calm - so now she just needs patching, and honest timber is all it takes. See that hull? Split like a walnut on Gull Reef. Bring me twelve planks of common wood and I\'ll have the Tidewalker seaworthy by the tide. No iron, no fuss.',
@@ -91,10 +96,10 @@ const QUESTS = {
     log:'Bring Bram 5 iron ore, 2 ember crystals, and 2 hardwood.',
     doneText:'Look at that heat! Take this - a tonic of my own tempering, and worth more than its weight. The rest becomes something the mainland will hear about.',
     rw:{gold:40, item:{elixir:1}, xp:{mining:200}} },
-  wolffold:{ giver:'willa', title:'Wolves at the Fold', kind:'kill', kill:{wolf:6},
-    brief:'Six sets of tracks around the fold this morning. SIX. The cove pack\'s grown bold since the cold snap. Thin them before I lose a single lamb.',
-    log:'Hunt 6 wolves (the pine cove to the northeast, and the deep forest).',
-    doneText:'Six pelts\' worth of peace. The flock thanks you - loudly, at dawn, forever.',
+  wolffold:{ giver:'willa', title:'Pests at the Fold', kind:'kill', kill:{slime:6},
+    brief:'Six slime-trails around the fold this morning. SIX. The meadow nest\'s grown bold since the warm snap - and they spook the flock something awful. Thin them before I lose a single lamb to a stampede.',
+    log:'Squash 6 slimes (the meadow to the east, and the smuggler\'s cove).',
+    doneText:'Six less to ooze about. The flock thanks you - loudly, at dawn, forever.',
     rw:{gold:24, hp:6, xp:{melee:120, archery:120}} },
   feast:{ giver:'willa', title:'A Village Feast', kind:'gather', need:{bread:3, apple:3, fish:2},
     brief:'Before you sail we\'re doing this PROPERLY: a farewell feast. Three loaves, three orchard apples, two fresh fish. I\'ll handle the rest - and no, you can\'t eat the ingredients on the way.',
@@ -147,17 +152,17 @@ const QUESTS = {
     doneText:'PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything.',
     rw:{item:{potion:2}, xp:{melee:40}, gold:3} },
   mushrooms:{ giver:'orin', title:'Light in the Dark', kind:'gather', need:{mushroom:3},
-    brief:'Hm. You have the look of someone who hasn\'t set anything on fire yet. Promising. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will wake the staff that\'s been asleep in my cellar.',
+    brief:'Hm. You move like someone who has never once had to move fast. That will get you killed in the ruins. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will grind them into a draught that quickens the blood. Then I will teach your feet the one lesson worth more than any blade.',
     log:'Gather 3 bluecaps from the Whisperwood for Orin.',
-    doneText:'Bluecaps crushed, essence bound… there. Press 3, and mind the eyebrows - this staff throws fire that answers to you. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not put my fire in just any hand. <i>He presses the staff into your grip.</i> Take it down to Elder Maren - tell her old Orin says you\'re ready for the Hollow King. And my tower ward is lifted for you now: go inside and lay both hands on the scrying orb before you face him. Fire is only half of what a mage owes their feet.',
-    rw:{staff:true, xp:{magic:150}}, unlocks:['king'] },
+    doneText:'Bluecaps crushed, essence bound, and down it goes… there. <i>He walks you through it twice in the tower yard - a low push off the back foot, a breath of speed, and gone before the blow lands.</i> That is the DASH. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not spend this old trick on just anyone. Take those quick feet down to Elder Maren - tell her old Orin says you\'re ready for the Hollow King. A sword is only half of what a fighter owes their feet.',
+    rw:{dash:true, xp:{melee:150}}, unlocks:['king'] },
   skeletons:{ giver:'orin', title:'Restless Bones', kind:'kill', kill:{skeleton:3},
     brief:'The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
     log:'Destroy 3 skeletons in the Old Ruins, north of the tower.',
     doneText:'Quieter already. This ember charm rides your strikes - every blow burns a little brighter now.',
     rw:{item:{charm:1}, gold:20, xp:{melee:80, archery:80, magic:80}}, unlocks:['king'] },
   king:{ giver:'maren', title:'The Hollow King', kind:'kill', kill:{boss:1},
-    brief:'Orin gave you his staff? <i>Elder Maren\'s brow climbs near to her hairline.</i> That old hoarder hasn\'t let a soul touch it in forty years - and he hands it to a castaway he\'s known a week. …Then he sees something in you, and Orin is never a fool. So it\'s true: the Hollow King stirs beneath the crypt, who long ago traded his heart for a crown. My folk raised the warded gate on the ruined causeway a lifetime ago to seal him in, and I am the last who knows the word to open it. His curse is what has locked the strait against us - no boat leaves Emberwick while he churns the deep. Break him, and the sea opens again. Say you\'ll face him and I\'ll speak it open - for you, and you alone. Take your tonics, your steel, and Orin\'s fire. Emberwick believes in you.',
+    brief:'Rask says you can turn a blade, and Orin says your feet are quick? <i>Elder Maren\'s brow climbs near to her hairline.</i> Old Rask hasn\'t taken a student in years, and that old hermit Orin never spends his tricks on anyone - and both of them, for a castaway they\'ve known a week. …Then they see something in you, and neither man is a fool. So it\'s true: the Hollow King stirs beneath the crypt, who long ago traded his heart for a crown. My folk raised the warded gate on the ruined causeway a lifetime ago to seal him in, and I am the last who knows the word to open it. His curse is what has locked the strait against us - no boat leaves Emberwick while he churns the deep. Break him, and the sea opens again. Say you\'ll face him and I\'ll speak it open - for you, and you alone. Take your tonics, your steel, and the craft those two beat into you: strike, dash, and turn. Emberwick believes in you.',
     log:'Defeat the Hollow King at the crypt in the Old Ruins.',
     doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow King\'s curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing.',
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
@@ -187,6 +192,10 @@ function spawnNPCs(){
       inn.nightOwl=true; return inn; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
+    // Rask the Bladesworn - an old sword-master who keeps the quiet meadow on the
+    // isle's east side. Bram sends new blades to him to learn the parry.
+    makeNPC('rask','Rask the Bladesworn',64,51,{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80'},
+      ['A blade that only knows how to swing knows half its trade.','The dash is for the blow you see. The parry is for the one you don\'t.','I turned strikes on three isles before this one. My feet are tired; my hands still remember.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long'},
@@ -286,8 +295,8 @@ function spawnMobs(){
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
-  const wolfSpots=[[30,39],[35,36],[28,34],[37,42]];
-  for(const [x,y] of wolfSpots){ const s=findOpenNear(x,y,3); if(s) spawnMob('wolf',s[0],s[1]); }
+  // Emberwick's wolf packs were cleared from the isle - the old dog-runs on the
+  // hills and at the cove now stand quiet. (Wolves still den on the far isles.)
   // bone-guard the ground between the fire-gate and the King, at the northern spit.
   // They and the King wear .hollowGuard so the ward-seal can hide them all together
   // while the causeway stands sealed (see sealHollowKing in 09-gameplay).

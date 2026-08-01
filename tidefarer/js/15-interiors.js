@@ -148,11 +148,11 @@ function enterHouse(b){
     banner('THE PALACE KITCHEN','TRADESMAN’S ENTRANCE'); Snd.quest&&Snd.quest();
     closeAllPanels&&closeAllPanels(); return;
   }
-  // Orin's tower stays warded shut until you've earned the fire staff (the
-  // blue-cap quest). Only then does he open it - and the scrying orb inside is
-  // what teaches the dash, so the tower is the deliberate next step after the staff.
+  // Orin's tower stays warded shut until he has taken your measure and taught you
+  // the dash (the blue-cap quest). Only then does he lift the ward and let you in
+  // to his scrying orb - the tower is the reward for finishing his lesson.
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('orin') && qs('mushrooms')!=='done'){
-    blockMsg('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b>');
+    blockMsg('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b> <i>Old Orin opens it for those who\'ve done as he asked.</i>');
     Snd.step(5); return;
   }
   // Aelin's Spire is a school, not a lobby: the door only knows students. Train

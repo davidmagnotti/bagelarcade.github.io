@@ -21,7 +21,7 @@
 <div id="hud">
   <div id="topLeft">
     <div class="bar"><div class="fill" id="hpFill"></div><div class="lbl" id="hpLbl"></div></div>
-    <div class="bar" style="width:150px;height:14px;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
+    <div class="bar" id="mpBar" style="width:150px;height:14px;display:none;"><div class="fill" id="mpFill"></div><div class="lbl" id="mpLbl" style="font-size:9px;"></div></div>
     <div id="goldRow"><canvas id="goldIcon" width="18" height="18"></canvas><span id="goldTxt">0</span><span id="plvlTxt" style="margin-left:10px;color:#c9b0ff;font-weight:bold;">Lv 1</span></div>
   </div>
   <div id="tracker">
@@ -47,6 +47,7 @@
   <div id="actBtns">
     <div class="abtn small" id="mountBtn" style="display:none;">Ride</div>
     <div class="abtn" id="interactBtn">Talk</div>
+    <div class="abtn small" id="parryBtn" style="display:none;">⛨</div>
     <div class="abtn small" id="dodgeBtn">⤸</div>
     <div class="abtn" id="attackBtn">⚔</div>
   </div>

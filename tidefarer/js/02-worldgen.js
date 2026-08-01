@@ -236,16 +236,17 @@ function placeObjects(){
     G.decor.push({kind:'tuft',   x:ix-1.1, y:iy+1.0, ph:0.7});
     G.decor.push({kind:'flower', x:ix+1.3, y:iy-0.6, ph:2.1, c:'#ffd76a'});
   }
-  // smuggler's cove: an abandoned camp - wolves keep it now
+  // smuggler's cove: an abandoned camp - a nest of slimes has oozed in where the
+  // old wolf pack used to den (the isle's wolves were cleared out)
   const cv2=ZONES.cove;
   G.decor.push({kind:'stump',x:cv2.x-1.5,y:cv2.y+1.5});
   G.decor.push({kind:'stump',x:cv2.x+2.5,y:cv2.y+2});
   addBuilding('lamp', Math.floor(cv2.x), Math.floor(cv2.y+1),'');
   G.decor.push({kind:'chest',x:cv2.x+1.5,y:cv2.y-0.5,opened:false});
   setSolid(Math.floor(cv2.x+1),Math.floor(cv2.y-1),1);
-  spawnMob('wolf',Math.floor(cv2.x-2),Math.floor(cv2.y-1));
-  spawnMob('wolf',Math.floor(cv2.x+3),Math.floor(cv2.y+3));
-  spawnMob('wolf',Math.floor(cv2.x-1),Math.floor(cv2.y+4));
+  spawnMob('slime',Math.floor(cv2.x-2),Math.floor(cv2.y-1));
+  spawnMob('slime',Math.floor(cv2.x+3),Math.floor(cv2.y+3));
+  spawnMob('slime',Math.floor(cv2.x-1),Math.floor(cv2.y+4));
   // springs: an old marker stone with its own story
   G.decor.push({kind:'pillar',x:ZONES.springs.x+2.8,y:ZONES.springs.y+0.5,broken:false,loreKey:'springs'});
   setSolid(Math.floor(ZONES.springs.x+2.3),Math.floor(ZONES.springs.y),1);

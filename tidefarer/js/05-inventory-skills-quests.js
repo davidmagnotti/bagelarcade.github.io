@@ -35,7 +35,7 @@ function addXP(skill,amt){
 }
 function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
 function bowDmg(){ return 5 + P.skills.archery.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
-function magicDmg(){ return 8 + P.skills.magic.lvl*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
+function magicDmg(){ return 8 + ((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
 function qs(id){ return P.quests[id]; }
@@ -51,6 +51,7 @@ function questReady(id){
     if(id==='echoes') return Object.keys(P.loreRead||{}).length>=7;
     if(id==='profit') return (P.prog.profit||0)>=12;
     if(id==='setsail') return isleQuestsSettled();
+    if(id==='bladeoath') return !!(P.unlocked&&P.unlocked.parry);   // ready the moment Rask's turning is learned
     // regional boss-hunts complete off the flag the boss sets when it falls
     if(id==='hoarfrost') return !!(P.story&&P.story.iceBearDown);
     if(id==='rimebound') return !!(P.story&&P.story.deepDone);
@@ -107,6 +108,7 @@ function completeQuest(id){
     // scrying orb inside is what teaches the dash (see enterHouse + the orb boon).
   }
   if(rw.dash){ if(typeof unlockDash==='function') unlockDash(); }
+  if(rw.parry){ if(typeof unlockParry==='function') unlockParry(); }
   if(rw.surf){ P.unlocked.surf=true;
     toast('<b style="color:var(--ember)">Windsurf board earned!</b> Walk onto the water and ride it - the sea is a road now, at nearly double speed.',6500); }
   if(rw.moa){ P.unlocked.moa=true; P.riding=1; if(typeof updateMountBtn==='function') updateMountBtn();
@@ -173,6 +175,8 @@ function rewardText(q){
   if(rw.kit) parts.push('a woodsman\'s <b>axe &amp; pick</b>');
   if(rw.bow) parts.push('<b style="color:var(--ember)">the Hunting Bow</b>');
   if(rw.staff) parts.push('<b style="color:var(--ember)">the Fire Staff</b>');
+  if(rw.dash) parts.push('<b style="color:#c9b0ff">the Dash</b>');
+  if(rw.parry) parts.push('<b style="color:#ffe08a">the Parry</b>');
   if(rw.surf) parts.push('<b style="color:var(--ember)">a windsurf board</b>');
   if(rw.moa) parts.push('<b style="color:var(--ember)">Kiko the Moa</b>');
   if(rw.dash2) parts.push('<b style="color:var(--ember)">the Double Dash</b>');
@@ -226,11 +230,12 @@ function questTargetPos(id){
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
     if(id==='sharpen') return {x:52,y:47};
+    if(id==='bladeoath'){ const r=G.npcs&&G.npcs.find(n=>n.id==='rask'); return r? {x:r.x,y:r.y} : {x:ZONES.meadow.x,y:ZONES.meadow.y}; }
   }
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

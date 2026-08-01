@@ -334,7 +334,7 @@ function pollGamepad(){
     if(edge(2)) doInteract();
     if(edge(3)) useItem(P.quickItem||'potion');
     if(edge(4)||edge(5)){
-      const order=['melee','bow','staff'].filter(w=> w==='melee'||P.unlocked[w]);
+      const order=['melee','bow'].filter(w=> w==='melee'||P.unlocked[w]);
       let i=order.indexOf(P.weapon); if(i<0) i=0;
       i=(i+(edge(5)?1:order.length-1))%order.length;
       selectWeapon(order[i]);

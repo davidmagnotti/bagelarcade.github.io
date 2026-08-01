@@ -3567,6 +3567,25 @@ function drawPlayerFigure(s){
     cx.closePath(); cx.fill();
     cx.restore(); cx.globalAlpha=1;
   }
+  // parry guard: a bright braced arc held in front while the guard is up, and a
+  // sharp ring on a clean parry. Drawn in the same iso-facing frame as the slash.
+  if((P.parryT||0)>0 || (P.parrySuccess||0)>0){
+    const a0=Math.atan2((P.dir.x+P.dir.y)*(TH/2),(P.dir.x-P.dir.y)*(TW/2));
+    const hold=(P.parryT||0)>0 ? (P.parryT/(P.parryMax||0.34)) : 0;
+    const flash=(P.parrySuccess||0)/0.22;
+    cx.save(); cx.translate(s.x,s.y-16); cx.rotate(a0); cx.scale(1,0.6);
+    // the held guard - a thin gold shield-arc
+    if(hold>0){
+      cx.globalAlpha=0.5+0.4*hold; cx.strokeStyle='rgba(255,226,140,0.9)'; cx.lineWidth=3.5;
+      cx.beginPath(); cx.arc(0,0,26,-0.85,0.85); cx.stroke();
+    }
+    // the clean-parry burst - a wider, fading ring of sparks
+    if(flash>0){
+      cx.globalAlpha=flash; cx.strokeStyle='rgba(255,244,200,'+flash.toFixed(2)+')'; cx.lineWidth=2+3*flash;
+      cx.beginPath(); cx.arc(0,0,20+34*(1-flash),-1.1,1.1); cx.stroke();
+    }
+    cx.restore(); cx.globalAlpha=1;
+  }
   if(P.fishing){
     const n=P.fishing.node, ns=worldToScreen(n.x,n.y);
     cx.strokeStyle='rgba(240,235,220,0.7)'; cx.lineWidth=1;

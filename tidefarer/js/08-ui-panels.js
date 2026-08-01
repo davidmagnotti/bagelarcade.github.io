@@ -51,10 +51,13 @@ document.getElementById('btnSound').onclick=function(){ Snd.init(); Snd.on=!Snd.
 const HOT = [
   {id:'melee', icon:'sword', key:'1', wpn:true},
   {id:'bow', icon:'bow', key:'2', wpn:true},
-  {id:'staff', icon:'staff', key:'3', wpn:true},
   {id:'potion', icon:'potion', key:'4', wpn:false}
 ];
 function buildHotbar(){
+  // the parry touch-button rides alongside the dodge button, but only once Rask
+  // has taught the guard (it starts hidden, like the mount button)
+  const pb=document.getElementById('parryBtn');
+  if(pb) pb.style.display = (P.unlocked && P.unlocked.parry) ? 'flex' : 'none';
   const hb=document.getElementById('hotbar'); hb.innerHTML='';
   HOT.forEach(h=>{
     // a weapon you don't own yet stays hidden entirely (no grayed placeholder) -
@@ -270,6 +273,7 @@ function refreshSkillsPanel(){
   const rows=document.getElementById('skillRows'); rows.innerHTML='';
   const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
   for(const k in SKILLS){
+    if(k==='magic') continue;   // magic is gone from the player's kit - the sword and (later) the bow are the arts now
     const sk=P.skills[k];
     const maxed=sk.lvl>=cap;
     const need=xpForLevel(sk.lvl);
@@ -290,7 +294,7 @@ function refreshQuestLog(){
   const box=document.getElementById('qlog'); box.innerHTML='';
   const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
   const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue;
@@ -338,7 +342,7 @@ function questProgressText(id){
   if(id==='sail') return (P.story&&P.story.haveSail)? 'Stormsail recovered - see Rell' : (P.story&&P.story.millDone)? 'Take the sail from the vault' : 'Defeat the guardian in the Undermill';
   return '';
 }
-const ISLE_IDS=['kit','mushrooms','harvest','fish','cat','king','wreck'];
+const ISLE_IDS=['kit','bladeoath','mushrooms','harvest','fish','cat','king','wreck'];
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
 // Brant's ship repair only opens once the Hollow King is felled and the strait calms.
 const UNLOCK_AFTER={ wreck:['king'],
@@ -370,7 +374,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};

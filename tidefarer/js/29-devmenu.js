@@ -181,8 +181,8 @@ function completeActive(){
   ui(); note('Completed '+n+' active quest(s)');
 }
 function unlockAll(){
-  P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.staff=P.unlocked.surf=P.unlocked.moa=true;
-  P.unlocked.dash=true;   // base footwork
+  P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.surf=P.unlocked.moa=true;
+  P.unlocked.dash=true; P.unlocked.parry=true;   // base footwork + the guard
   // the four returned-isle gifts (Act II)
   P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
