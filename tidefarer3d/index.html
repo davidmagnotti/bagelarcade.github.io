@@ -174,7 +174,7 @@ const COL={
   plaster:0xd8b981, timber:0x5a3d28, timberDk:0x412b1c, slate:0x4c5666, roofWarm:0x9c5638, stone:0x9a9384, stoneDk:0x6a655b,
   ember:0xff9a3c, flame:0xffbe63, windowGlow:0xffcf87,
   slime:0x86c66a, wolf:0x6d7078, wolfDk:0x4a4d54, wool:0xece3cf, sheepFace:0x4a4038,
-  skin:0xe0ac7e, tunic:0x5f7f3f, tunicDk:0x415a2a, scarf:0xff9a3c, boot:0x5a3d24, hair:0x4a3220, ink:0x211812,
+  skin:0xe0ac7e, tunic:0x5f7f3f, tunicDk:0x415a2a, scarf:0xff9a3c, boot:0x5a3d24, hair:0x4a3220, ink:0x241a10,
   npcRobe:0x6b5a86, npcRobe2:0x7c5a3a,
 };
 
@@ -225,12 +225,16 @@ const gradePass=new ShaderPass(Grade); fxc.addPass(gradePass);
 
 // ---------- cel toolkit ----------
 const ramp=(()=>{ const t=new THREE.DataTexture(new Uint8Array([64,64,64,255,128,128,128,255,205,205,205,255,255,255,255,255]),4,1,THREE.RGBAFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.needsUpdate=true; return t; })();
+// Warm walnut ink (#241a10) — a dark WALNUT BROWN, never pure black. This is the
+// single biggest anti-Roblox lever, so the hull runs a touch heavy and its weight
+// varies slightly per prop, the way a hand-inked line does — never machine-uniform.
 const outlineMat=new THREE.MeshBasicMaterial({color:COL.ink,side:THREE.BackSide,fog:true,toneMapped:false});
-const OM=1.5;
-function toon(geo,color,{outline=0.035,flat=false,emissive=0,cast=true,receive=true}={}){
+const OM=1.7;
+function toon(geo,color,{outline=0.04,flat=false,emissive=0,cast=true,receive=true}={}){
   const mat=new THREE.MeshToonMaterial({color,gradientMap:ramp}); mat.flatShading=flat; if(emissive)mat.emissive=new THREE.Color(emissive);
   const m=new THREE.Mesh(geo,mat); m.castShadow=cast; m.receiveShadow=receive;
-  if(outline>0){ const o=new THREE.Mesh(geo,outlineMat); o.scale.multiplyScalar(1+outline*OM); m.add(o);} return m;
+  if(outline>0){ const o=new THREE.Mesh(geo,outlineMat);
+    o.scale.multiplyScalar(1+outline*OM*(0.88+Math.random()*0.28)); m.add(o);} return m;
 }
 const glowMat=c=>new THREE.MeshBasicMaterial({color:c,toneMapped:false});
 const box=(w,h,d)=>new THREE.BoxGeometry(w,h,d), cyl=(a,b,h,s=10)=>new THREE.CylinderGeometry(a,b,h,s), ico=(r,d=1)=>new THREE.IcosahedronGeometry(r,d);
