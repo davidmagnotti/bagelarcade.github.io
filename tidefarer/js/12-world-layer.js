@@ -876,11 +876,14 @@ function spawnEastFolk(){
   // Vath - a visiting Emberbinder who covets the dragon's fire and will lie to
   // get it. Once the wyrm is freed he's fled to the grove, no longer in the village
   // (quest-state gated so it survives reloads).
+  // He stands well NORTH of the village clearing, alone out in the wild grass toward
+  // the mountain - set apart from the warm hearths on purpose. Wander is 0 so he holds
+  // eerily still, a robed figure watching from the treeline: something off about him.
   if(qs('wyrm')!=='done')
-    G.npcs.push(makeNPC('vath','Vath the Emberbinder', V.x-8.5,V.y-4.5,
+    G.npcs.push(makeNPC('vath','Vath the Emberbinder', V.x-9,V.y-10.5,
       {skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'},
       ['The mountain\'s heat is... wasted, on a sleeping beast.',
-       'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0.3));
+       'You have the look of someone the world owes a favor. Climb the mountain; collect it.'],0));
 }
 /* The caldera set-piece: told the wyrm is evil, you climb Mount Kea and step
    INTO his lair, where he turns out kind. Vath's binding takes him mid-word;
