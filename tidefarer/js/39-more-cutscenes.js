@@ -63,7 +63,7 @@ const MC_RIME = [
     html:'<b style="color:#8fd8ff">"…cold. So long in the cold."</b> <i>The violet bleeds out of the great ice-thing — a whale of the deep, once, that swam too near the killing frost and never found the warm dark again.</i>',
     ens:0, calm:0.9 },
   { who:'',
-    html:'<i>Unbound, it settles calm into the melt. Whoever bound it — the robed man the whole strait speaks of — is always one island ahead. But the trail is warming.</i>',
+    html:'<i>Unbound, it settles calm into the melt — and the ice it guarded gives up its secret: an old book, bound in frost that will not thaw. This one Vath never set to hunt you. He set it here to keep something buried.</i>',
     ens:0, calm:1 },
   { who:'', html:'', calm:1, title:'THE RIMEBOUND, FREED', hold:2100 },
 ];
@@ -105,6 +105,24 @@ const MC_AERIE = [
   { who:'', html:'', calm:1, title:'THE TOME BURNS', hold:1800 },
   { who:'', html:'<i>A </i><b style="color:#c9a0ff">robed man</b><i> climbed the Underclimb quiet as smoke, they will tell you — </i><b style="color:#c9a0ff">violet at his sleeves</b><i> — worked this ruin on the sky, and never came down the same. He was here.</i>',
     vath:0.5, calm:1 },
+];
+
+// The WARDING VEIL cast: Jaist, the scholar, reads the hush-frost spellbook onto his
+// sister at the Frostferry landing. The frost lifts off the page and wraps her, then
+// sinks in and she goes unseen to Vath's witch-sight. `calm` = how far the casting has
+// taken; `snow` = the frost fall; `dive` = the veil sinking in / the sister fading hidden.
+const MC_VEIL = [
+  { who:'', html:'', calm:0, snow:0.2, dive:0, hold:1400 },
+  { who:'Jaist',
+    html:'<i>Jaist closes his eyes and speaks the old words the way he used to read to you when the sea was loud — low, sure, unhurried.</i> “Hold still, sister. Let me read it onto you properly.”',
+    calm:0.25, snow:0.45 },
+  { who:'',
+    html:'<i>The frost lifts from the page in a fine violet snow, winds around you, and draws close — a veil settling over you and sinking in: cold, then gone.</i>',
+    calm:0.7, snow:0.9, flash:0.6, shatter:1 },
+  { who:'', html:'', calm:1, snow:1, dive:0.6, title:'THE WARDING VEIL', hold:2000 },
+  { who:'Jaist',
+    html:'<b style="color:#c9b0ff">“There.”</b> <i>He opens his eyes.</i> “It\'s a scholar\'s trick, not a warrior\'s — it won\'t stop a blade, mind. But Vath hunts by his witch-sight, and to that you\'re a blank stretch of open sea now. He won\'t see you coming.”',
+    calm:1, snow:0.7, dive:1 },
 ];
 
 /* ---------- driver ---------- */
@@ -161,7 +179,8 @@ function mcShow(i){
       const last=(i>=MC.beats.length-1);
       tap.textContent = last
         ? (MC.kind==='storm'?'take the high road ›' : MC.kind==='rime'?'let it rest in the deep ›'
-           : MC.kind==='vath'?'turn to your brother ›' : MC.kind==='aerie'?'climb to the light ›' : 'walk back down ›')
+           : MC.kind==='vath'?'turn to your brother ›' : MC.kind==='aerie'?'climb to the light ›'
+           : MC.kind==='veil'?'the way home opens ›' : 'walk back down ›')
         : 'click to continue ›';
     }
     if(sub){ sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show'); }
@@ -228,6 +247,14 @@ function mcMotes(dt){
     for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=Math.max(MC.W,MC.H)*(0.18+Math.random()*0.22);
       MC.motes.push({x:cxm+Math.cos(a)*r, y:cy+Math.sin(a)*r*0.7, tx:cxm, ty:cy, life:1,
         col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.4)}); }
+  } else if(MC.kind==='veil'){
+    // frost lifts off the spellbook's page and streams across to the sister, wrapping her
+    const bx=MC.W*0.37, by=MC.H*0.50, sx=MC.W*0.63, sy=MC.H*0.55;
+    const rate=16 + 48*MC.calm;
+    MC._macc+=dt*rate; let n=Math.floor(MC._macc); MC._macc-=n; if(n>5) n=5;
+    for(let i=0;i<n;i++){
+      MC.motes.push({x:bx+rnd(-8,8), y:by+rnd(-8,8), tx:sx+rnd(-16,16), ty:sy+rnd(-24,24), life:1,
+        col:Math.random()<0.5?'190,215,255':'196,150,242', size:rnd(1.8,3.8)}); }
   } else if(MC.kind==='aerie' && MC.shatter>0.02){
     // the tome burns: violet-and-ember embers stream UP off the pyre
     MC._macc+=dt*54*MC.shatter; let n=Math.floor(MC._macc); MC._macc-=n; if(n>5) n=5;
@@ -264,6 +291,7 @@ function mcDraw(){
   else if(MC.kind==='storm')  drawStormScene(cx,W,H,t);
   else if(MC.kind==='vath')   drawVathScene(cx,W,H,t);
   else if(MC.kind==='aerie')  drawAerieScene(cx,W,H,t);
+  else if(MC.kind==='veil')   drawVeilScene(cx,W,H,t);
 
   // motes
   cx.save(); cx.globalCompositeOperation='lighter';
@@ -651,6 +679,89 @@ function drawBurningTome(cx,x,y,s,ens,calm,t){
     cx.restore(); cx.restore(); }
 }
 
+/* ===================== THE WARDING VEIL (Jaist casts) ===================== */
+function drawVeilScene(cx,W,H,t){
+  const calm=MC.calm, snow=MC.snow, dive=MC.dive, horizon=H*0.68;
+  // night over the Frostferry landing, a faint violet where the old spell wakes
+  const sky=cx.createLinearGradient(0,0,0,horizon);
+  sky.addColorStop(0,'#0a1424');
+  sky.addColorStop(1, mixHex('#1a2740','#241a3e', 0.4));
+  cx.fillStyle=sky; cx.fillRect(0,0,W,horizon+2);
+  // a soft aurora that steadies as the veil takes
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const ag=cx.createLinearGradient(0,0,0,horizon);
+  ag.addColorStop(0,'rgba(160,140,225,0)');
+  ag.addColorStop(0.5,'rgba(160,140,225,'+(0.10*calm).toFixed(3)+')');
+  ag.addColorStop(1,'rgba(160,140,225,0)');
+  cx.fillStyle=ag; cx.fillRect(0,0,W,horizon); cx.restore();
+  // the frost landing
+  const gr=cx.createLinearGradient(0,horizon,0,H);
+  gr.addColorStop(0, mixHex('#2a3c50','#26243c',0.3)); gr.addColorStop(1,'#0c1622');
+  cx.fillStyle=gr; cx.fillRect(0,horizon,W,H-horizon);
+  const footY=horizon+H*0.02;
+  // the sister first (behind the motes), going translucent as the veil sinks in
+  drawVeilSister(cx, W*0.63, footY, Math.min(W,H)*0.22, calm, dive, t);
+  // Jaist, the scholar, reading from the open, glowing spellbook
+  drawScholar(cx, W*0.37, footY, Math.min(W,H)*0.24, calm, t);
+  // frost fall
+  if(snow>0.02) drawGentleSnow(cx,W,H,t,snow*0.7);
+}
+function drawScholar(cx,x,footY,s,calm,t){
+  cx.save(); cx.translate(x,footY);
+  // robe
+  cx.fillStyle='#2a2440';
+  cx.beginPath();
+  cx.moveTo(0,-s*1.12);
+  cx.quadraticCurveTo(-s*0.42,-s*0.5,-s*0.5,s*0.02);
+  cx.lineTo(s*0.5,s*0.02);
+  cx.quadraticCurveTo(s*0.42,-s*0.5,0,-s*1.12);
+  cx.closePath(); cx.fill();
+  // hood + face
+  cx.fillStyle='#3a3355'; cx.beginPath(); cx.ellipse(0,-s*0.92,s*0.17,s*0.2,0,0,TAU); cx.fill();
+  cx.fillStyle='#e8d9b0'; cx.beginPath(); cx.ellipse(0,-s*0.88,s*0.1,s*0.12,0,0,TAU); cx.fill();
+  // the open spellbook, held before him, glowing brighter as the casting takes
+  const bx=0, by=-s*0.36, bw=s*0.36, bh=s*0.12;
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const bg=cx.createRadialGradient(bx,by,1,bx,by,s*0.62);
+  bg.addColorStop(0,'rgba(206,178,255,'+(0.35+0.42*calm).toFixed(3)+')');
+  bg.addColorStop(1,'rgba(206,178,255,0)');
+  cx.fillStyle=bg; cx.beginPath(); cx.arc(bx,by,s*0.62,0,TAU); cx.fill(); cx.restore();
+  // book covers (open V)
+  cx.fillStyle='#5a3f6e'; cx.strokeStyle='#c9b0ff'; cx.lineWidth=Math.max(1,s*0.014);
+  cx.beginPath(); cx.moveTo(bx-bw,by+bh*0.4); cx.lineTo(bx,by-bh*0.2); cx.lineTo(bx,by+bh); cx.closePath(); cx.fill(); cx.stroke();
+  cx.beginPath(); cx.moveTo(bx+bw,by+bh*0.4); cx.lineTo(bx,by-bh*0.2); cx.lineTo(bx,by+bh); cx.closePath(); cx.fill(); cx.stroke();
+  // pages, lit
+  cx.fillStyle='rgba(235,228,255,'+(0.55+0.35*calm).toFixed(3)+')';
+  cx.beginPath(); cx.moveTo(bx-bw*0.88,by+bh*0.32); cx.lineTo(bx,by-bh*0.12); cx.lineTo(bx+bw*0.88,by+bh*0.32); cx.lineTo(bx,by+bh*0.52); cx.closePath(); cx.fill();
+  cx.restore();
+}
+function drawVeilSister(cx,x,footY,s,calm,dive,t){
+  const hidden=dive;   // 0 visible, 1 mostly unseen
+  cx.save(); cx.translate(x,footY);
+  // the shimmer dome the veil weaves around her
+  if(calm>0.05){ cx.save(); cx.globalCompositeOperation='lighter';
+    const a=(0.14+0.24*calm)*(1-0.45*hidden);
+    const dg=cx.createRadialGradient(0,-s*0.5,2,0,-s*0.5,s*0.98);
+    dg.addColorStop(0,'rgba(196,216,255,0)');
+    dg.addColorStop(0.72,'rgba(196,216,255,'+a.toFixed(3)+')');
+    dg.addColorStop(1,'rgba(160,140,225,0)');
+    cx.fillStyle=dg; cx.beginPath(); cx.arc(0,-s*0.5,s*0.98,0,TAU); cx.fill(); cx.restore(); }
+  // the warrior sister, fading as the veil sinks in
+  cx.globalAlpha=Math.max(0.14, 1-hidden*0.72);
+  cx.fillStyle='#3a2c28';
+  cx.beginPath();
+  cx.moveTo(0,-s*0.96);
+  cx.quadraticCurveTo(-s*0.3,-s*0.42,-s*0.34,s*0.02);
+  cx.lineTo(s*0.34,s*0.02);
+  cx.quadraticCurveTo(s*0.3,-s*0.42,0,-s*0.96);
+  cx.closePath(); cx.fill();
+  cx.fillStyle='#e8c9a0'; cx.beginPath(); cx.ellipse(0,-s*0.84,s*0.12,s*0.14,0,0,TAU); cx.fill();
+  // a blade at her side, catching the frost-light
+  cx.strokeStyle='rgba(214,228,248,'+(0.75*(1-hidden)).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.03);
+  cx.beginPath(); cx.moveTo(s*0.3,0); cx.lineTo(s*0.46,-s*0.52); cx.stroke();
+  cx.restore();
+}
+
 /* ---------- shared helpers ---------- */
 // a robed figure with violet cuffs, resolving and fading (the Vath reveal)
 function drawVathFigure(cx,x,y,s,amt){
@@ -702,10 +813,12 @@ function rimeboundFreedCutscene(m, onDone){ mcPlay('rime', MC_RIME, {ens:1, calm
 function stormEyeCutscene(onDone){ mcPlay('storm', MC_STORM, {ens:1, calm:0}, onDone, null); }
 function vathBoundCutscene(m, onDone){ mcPlay('vath', MC_VATH, {ens:1, calm:0, dive:0}, onDone, m); }
 function aerieFreedCutscene(m, onDone){ mcPlay('aerie', MC_AERIE, {ens:1, calm:0}, onDone, m); }
+function veilCastCutscene(onDone){ mcPlay('veil', MC_VEIL, {ens:0, calm:0, snow:0.2, dive:0}, onDone, null); }
 window.wardenFreedCutscene=wardenFreedCutscene;
 window.rimeboundFreedCutscene=rimeboundFreedCutscene;
 window.stormEyeCutscene=stormEyeCutscene;
 window.vathBoundCutscene=vathBoundCutscene;
 window.aerieFreedCutscene=aerieFreedCutscene;
+window.veilCastCutscene=veilCastCutscene;
 
 })();

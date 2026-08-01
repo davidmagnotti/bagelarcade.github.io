@@ -32,7 +32,7 @@ function build(){
   let html='<div id="fxPanel" style="margin:8px 0 2px;padding:9px 11px;border-radius:9px;'+
     'background:rgba(20,14,8,.5);border:1px solid #3a2c1c;">'+
     '<div style="font-size:11px;color:var(--parch-dim);margin-bottom:7px;">'+
-    'Effects in Performance mode - untick to go faster</div>';
+    'Effects in Fast graphics / Performance mode - untick to go faster, tick to add them back</div>';
   for(const [title,items] of GROUPS){
     html+='<div style="font-size:10px;letter-spacing:.5px;color:var(--ember);margin:4px 0 3px;text-transform:uppercase;">'+title+'</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;">';
@@ -49,6 +49,7 @@ function build(){
       const k=cb.getAttribute('data-fx');
       FX[k]=cb.checked?1:0;
       try{ SafeStore.set('tf_fx_'+k, FX[k]?'1':'0'); }catch(e){}
+      if(typeof tfGfxLock==='function') tfGfxLock();  // honor this deliberate choice
     };
   });
   return true;

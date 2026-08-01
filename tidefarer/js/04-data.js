@@ -15,7 +15,8 @@ const ITEMS = {
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
-  veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
+  veilrune:{name:'Hush-Frost Spellbook', desc:'A spell book of the old royal line, its pages hush-frost that will not thaw, scored in a royal script only a scholar could read. The Rimebound was set to guard it. Carry it to your brother.'},
+  reachverse:{name:"The Tidefarer's Verse", desc:'A copy of the prophecy cut into the deep vault beneath Stormreach, in the old royal script: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. Show it to Jaist; the scholar can read what you cannot.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
   cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},
@@ -177,30 +178,30 @@ function makeNPC(id,name,x,y,look,idleLines,wander){
 }
 function spawnNPCs(){
   G.npcs = [
-    makeNPC('maren','Elder Maren',47,56,{skin:'#e6c39a',hair:'#cfcfd6',shirt:'#7a5a8f',pants:'#4a3a5a',robe:'#5a4472',trim:'#c9a24e',hairstyle:'bun',necklace:'#9be07f'},
+    makeNPC('maren','Elder Maren',47,56,{skin:'#e6c39a',hair:'#cfcfd6',shirt:'#7a5a8f',pants:'#4a3a5a',robe:'#5a4472',trim:'#c9a24e',hairstyle:'bun',necklace:'#9be07f',size:0.98,build:{w:0.9,head:0.88,stoop:1.5}},
       ['The well water tastes of iron. Always has.','Lanterns out by the dock mean rain, they say.','You walk like someone the island wanted.'],0.6),
-    makeNPC('bram','Bram the Smith',59,57,{skin:'#d9a06a',hair:'#3a2a1c',shirt:'#8f4a3a',pants:'#3a3a40',hairstyle:'bald',beard:'#2c1f14',apron:'#4a3322'},
+    makeNPC('bram','Bram the Smith',59,57,{skin:'#d9a06a',hair:'#3a2a1c',shirt:'#8f4a3a',pants:'#3a3a40',hairstyle:'bald',beard:'#2c1f14',apron:'#4a3322',size:1.06,build:{w:1.2,head:0.88}},
       ['A dull blade is a heavy blade.','Hear that ring? That\'s good iron talking.','Stone from the north road takes an edge best.'],0.4),
-    (()=>{ const b=makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e'},
+    (()=>{ const b=makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e',size:1.04,build:{w:1.08,head:0.9}},
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.','There\'s an old sailing-hymn my crew\'s grandfathers hummed - the Tide-Queen\'s anthem, for the warrior-queen who first calmed these waters. Fine tune. But her name, in the last verse? Worn clean out of the song. Nobody living can call it back.','That five-point star some folk stitch for luck - older than luck, that. The old blood-mark of the tide-queen\'s line, passed hand to hand down her whole house. You don\'t earn a mark like that. You\'re born owed it.'],false);
       b.nightOwl=true; return b; })(), // a captain sleeps aboard - findable at any hour
-    (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c'},
+    (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c',build:{w:0.95,head:0.95,stoop:0.7}},
       ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that.'],0.5);
       f.nightOwl=true; return f; })(),
     (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 41.5,59.4,
-      {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038'},
+      {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038',build:{w:1.14,head:0.92}},
       ["A bed, a hearth, and no questions past dark. Ten gold.",
        "Night's for wolves and worries. Neither gets past my door."],0.7);
       inn.nightOwl=true; return inn; })(),
-    makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738'},
+    makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
     // Rask the Bladesworn - an old sword-master who keeps the quiet meadow on the
     // isle's east side. Bram sends new blades to him to learn the parry.
-    makeNPC('rask','Rask the Bladesworn',64,51,{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80'},
+    makeNPC('rask','Rask the Bladesworn',64,51,{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',size:1.06,build:{w:0.94,head:0.88}},
       ['A blade that only knows how to swing knows half its trade.','The dash is for the blow you see. The parry is for the one you don\'t.','I turned strikes on three isles before this one. My feet are tired; my hands still remember.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3),
-    makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true},
+    makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
-    makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long'},
+    makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long',build:{w:0.9,head:1.16}},
       ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0),
     // The Woodworker - the most forgettable soul on the island. (He is more than
     // that; the clues are planted from hour one and pay off far, far later.)
@@ -212,7 +213,7 @@ function spawnNPCs(){
       if(P.story && P.story.royalGarb){
         const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
         const j=makeNPC('woody','The Woodworker', sp[0], sp[1],
-          {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short'},
+          {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94}},
           ["Go on and see to the old rock - I'll keep the boat and our way home, same as ever.",
            "Vath's curses have had free run of these islands while we were gone. Undo what you can, Joan; I'll hold the tideline here.",
            "Strange, standing on Emberwick and knowing at last it's mine to leave. I'll be right here by the water when you're ready to sail."],0);
@@ -220,7 +221,7 @@ function spawnNPCs(){
         return j;
       }
       const w=makeNPC('woody','The Woodworker',57.5,50.5,
-      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short'},
+      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94,stoop:0.6}},
       ['Nice day for it. Every day is a nice day for it, really.',
        'I carve little boats, mostly. For someone. I forget who - but they will turn up.',
        'Where am I from? Ha. Woke here one morning, the wood needed chopping, so I chopped. Been happy since.',

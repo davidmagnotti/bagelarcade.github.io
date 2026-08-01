@@ -33,11 +33,25 @@ function addXP(skill,amt){
   if(typeof checkPerkMilestone==='function') checkPerkMilestone(skill);
   refreshSkillsPanel();
 }
-function meleeDmg(){ return 6 + P.swordTier*4 + P.skills.melee.lvl*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0); }
+/* --- Late-game difficulty tuning -----------------------------------------
+   Weapon damage scales off skill levels (cap 100). Left purely linear, a maxed
+   skill ran away from the *static* enemy HP table and made late bosses melt.
+   dmgLvl() keeps the first DMG_SOFT_LVL skill levels at full value - so early
+   and mid game are unchanged - then rolls further growth into a square-root
+   curve (continuous in both value and slope at the seam). Mastery still bites,
+   it just stops outpacing the content. TUNE: raise DMG_SOFT_LVL to push the
+   flattening later, lower it to bite sooner. */
+const DMG_SOFT_LVL = 15;
+function dmgLvl(lvl){
+  const s = DMG_SOFT_LVL;
+  if(lvl <= s) return lvl;
+  return s + 2*Math.sqrt(s)*(Math.sqrt(lvl) - Math.sqrt(s));
+}
+function meleeDmg(){ return Math.round(6 + P.swordTier*4 + dmgLvl(P.skills.melee.lvl)*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0)); }
 // The bow is now a hard-hitting, rationed weapon (a quiver of 20 that trickles
 // back) - so each shaft bites far deeper than the old free-fire bow did.
-function bowDmg(){ return 28 + P.skills.archery.lvl*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0); }
-function magicDmg(){ return 8 + ((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0); }
+function bowDmg(){ return Math.round(28 + dmgLvl(P.skills.archery.lvl)*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0)); }
+function magicDmg(){ return Math.round(8 + dmgLvl((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0)); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
 function qs(id){ return P.quests[id]; }
@@ -60,6 +74,23 @@ function questReady(id){
     if(id==='stormroc') return !!(P.story&&P.story.rocDown);
     if(id==='barrowbrute') return !!(P.story&&P.story.reachBossDown);
     if(id==='drownedwarden') return !!(P.story&&P.story.tombBossDown);
+    // Act II returned-isle restorations complete off each spirit-dungeon's clear flag
+    if(id==='windRestore') return !!(P.story&&P.story.galeDeepDone);
+    if(id==='sunRestore')  return !!(P.story&&P.story.ashenForgeDone);
+    if(id==='barikRestore')return !!(P.story&&P.story.barikDeepDone);
+    if(id==='skyRestore')  return !!(P.story&&P.story.stormTempleDone);
+  }
+  return false;
+}
+// Does this NPC have a quest that's completed and waiting to be reported to them right
+// now? Used by the night-hide pass (updateNPCs) so a quest-giver stays reachable past
+// dusk while you owe them a turn-in - a finished quest never has to wait for dawn. Cheap:
+// only called for NPCs the night would otherwise hide.
+function npcHasReadyTurnIn(npc){
+  if(!npc || !npc.id) return false;
+  for(const id in P.quests){
+    const q=QUESTS[id];
+    if(q && q.giver===npc.id && qs(id)==='active' && questReady(id)) return true;
   }
   return false;
 }

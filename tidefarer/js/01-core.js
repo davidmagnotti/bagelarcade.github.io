@@ -1,7 +1,7 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '103';
+const BUILD = '108';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
 // A tiny always-visible build tag, so a stale/cached load is obvious at a glance:
 // if this number doesn't match the latest, the device is running old cached code.
@@ -142,6 +142,26 @@ let RQ=1, LOWFX=false, SAFE=false;
    full-viewport canvas (fewer on-screen pixels to present each frame). LB holds
    the letterbox offset so input coords map back into the smaller canvas. */
 let PERF = false; try{ PERF = SafeStore.get('tf_perf')==='1'; }catch(e){}
+/* USERGFX: the player deliberately picked their display settings in the pause
+   menu (Performance mode, per-effect toggles). Once set, the adaptive tuner
+   (js/24-perf.js) stops auto-downgrading and only steps in if frames collapse
+   to a near-slideshow (~1 FPS) - so a deliberate choice survives instead of
+   being silently overridden a second later. Persisted so it sticks on reload. */
+let USERGFX = false; try{ USERGFX = SafeStore.get('tf_gfxlock')==='1'; }catch(e){}
+/* FASTGFX: the player chose the fast render pipeline (cached ground+scenery
+   blits, costly per-frame passes stripped) but WITHOUT shrinking the window -
+   Performance Mode's speed at full display size. The one lever for a big desktop
+   panel (e.g. a Surface) that runs a WebGL game fine but chokes on our Canvas2D
+   per-tile draw storm when the window is large. TIER_LOW mirrors the auto-tuner's
+   lowest tier; LOWFX is derived from all three so any one engages the cheap path. */
+let FASTGFX = false; try{ FASTGFX = SafeStore.get('tf_fast')==='1'; }catch(e){}
+let TIER_LOW = false;
+function refreshLOWFX(){ LOWFX = TIER_LOW || PERF || FASTGFX; }
+refreshLOWFX();
+/* URQ: user render-resolution multiplier (Display slider, 0.5..1.0). Lets a
+   player trade sharpness for fill-rate speed while staying full-screen - the
+   direct knob for a fill-rate-bound Canvas2D on a large high-DPI display. */
+let URQ = 1; try{ const v=parseFloat(SafeStore.get('tf_urq')); if(v>=0.5 && v<=1) URQ=v; }catch(e){}
 const PERF_CAP = 640;   // max displayed longest-edge in Performance Mode
 const LB = {x:0, y:0};
 /* Per-effect toggles for Performance mode (checkboxes in the pause menu).
@@ -170,7 +190,7 @@ function resize(){
   }
   VW = dispW; VH = dispH;                 // logical render size == displayed size
   const base = Math.min(window.devicePixelRatio||1, 2);
-  let dpr = base*RQ;
+  let dpr = base*RQ*URQ;   // URQ = the player's Render-resolution slider
   /* Cap the backing store to a pixel budget so a big high-DPI desktop panel
      (e.g. Surface) isn't asked to fill a canvas several times the size of a
      phone's every frame. Phones stay under budget, so they're unaffected. */

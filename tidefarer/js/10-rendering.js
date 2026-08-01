@@ -24,7 +24,26 @@ function screenToWorld(sx,sy){
    instead of thousands of per-tile draws - the measured GPU bottleneck. Only
    used when LOWFX; full-detail devices keep the crisp per-tile pass. */
 let groundCache=null, sceneryCache=null, gcOX=0, gcOY=0, gcWorld=null, scnWorld=null;
-const GC_S=0.5;
+/* GC_S = bake scale for the offscreen ground/scenery caches. Default half-res
+   (~27MB) so it fits weak GPUs and stays under iOS Safari's canvas-memory limit.
+   On a roomy desktop (deviceMemory>=8, hardware canvas) with Fast graphics ON we
+   bake full-res so the blitted ground stays crisp - Surface-class machines have
+   the RAM. Area-capped so a large world never blows past a safe budget.
+   Deterministic in (world size, device, FASTGFX), so the ground and scenery
+   caches always agree on scale. Toggling Fast graphics invalidates both. */
+let GC_S=0.5;
+function gcScale(){
+  let s=0.5;
+  try{
+    const mem=navigator.deviceMemory||0;
+    const soft=(typeof SOFTCANVAS!=='undefined') && SOFTCANVAS;
+    if(FASTGFX && mem>=8 && !soft) s=1;
+  }catch(e){}
+  const base=((MAPW+MAPH)*(TW/2)+TW*2)*((MAPW+MAPH)*(TH/2)+TH*3);
+  const CAP=32e6;   // ~128MB at 4 bytes/px - safe headroom on an 8GB+ machine
+  if(base*s*s>CAP) s=Math.sqrt(CAP/base);
+  return s;
+}
 /* The vignette's radial gradient never changes except when the viewport
    resizes, yet it was rebuilt every single frame. Cache it, keyed by size. */
 let _vgCache=null, _vgKey='';
@@ -45,6 +64,7 @@ function invalidateScenery(){ sceneryCache=null; }
 // it sets G.worldId, so the next drawBigMap rebuilds from the correct G.map.
 function invalidateMapBase(){ mapBaseWorld=null; }
 function buildGroundCache(){
+  GC_S=gcScale();
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;
   const g=c.getContext('2d');
@@ -91,6 +111,7 @@ const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeo
   skyemitter:1, skyprism:1, skyward:1};
 let scnDecorN=-1;
 function buildSceneryCache(){
+  GC_S=gcScale();
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;
   const g=c.getContext('2d');

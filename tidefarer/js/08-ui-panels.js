@@ -365,6 +365,8 @@ const UNLOCK_AFTER={ wreck:['king'],
   feud1:['roadclear'], sting1:['feud1'], feud2:['feud1'], undermaw1:['torv2'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
+    // Act I isle-quest chains never re-arm once Act II opens (the returned isles have moved on).
+    if(P.story && P.story.act2 && typeof ACT1_ISLE_QUESTS!=='undefined' && ACT1_ISLE_QUESTS.includes(id)) continue;
     if(!P.quests[id] && UNLOCK_AFTER[id].every(p=>qs(p)==='done')){
       P.quests[id]='avail';
       if(G.state==='play') toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+npcName(QUESTS[id].giver)+'</b>.',4200);
@@ -403,23 +405,14 @@ function updateQuestUI(){
 /* HUD */
 function refreshUI(){
   document.getElementById('hpFill').style.width=(Math.min(P.hp,P.maxhp)/P.maxhp*100)+'%';
-  // the yellow overheal buffer sits over the right end of a full bar and drains first
+  // the yellow overheal buffer (from resting at the hot springs) sits over the right
+  // end of a full bar and drains before HP does
   const oh=document.getElementById('hpOver');
   if(oh) oh.style.width=((P.overheal||0)/P.maxhp*100)+'%';
   document.getElementById('hpLbl').innerHTML=Math.ceil(P.hp)+' / '+P.maxhp
     + ((P.overheal||0)>0 ? ' <span style="color:#f0d24a">+'+Math.ceil(P.overheal)+'</span>' : '');
-  // the old mana bar is repurposed as the QUIVER gauge - shown only once the bow
-  // is earned, filling toward the 20-arrow cap
-  const mpBar=document.getElementById('mpBar');
-  if(mpBar){
-    if(P.unlocked && P.unlocked.bow){
-      mpBar.style.display='block';
-      const af=document.getElementById('mpFill');
-      af.style.width=((P.arrows||0)/(P.maxArrows||20)*100)+'%';
-      af.style.background='linear-gradient(90deg,#7a4a1e,#d9a441)';
-      document.getElementById('mpLbl').textContent=Math.floor(P.arrows||0)+' / '+(P.maxArrows||20)+' arrows';
-    } else { mpBar.style.display='none'; }
-  }
+  // The quiver gauge that used to sit under the HP bar is gone - the arrow count lives
+  // on the bow hotbar item (its .cnt badge, kept in step just below) and nowhere else.
   // keep the bow hotbar badge in step without a full rebuild
   const bowSlot=document.getElementById('hot_bow');
   if(bowSlot){ const c=bowSlot.querySelector('.cnt'); if(c) c.textContent=Math.floor(P.arrows||0); }

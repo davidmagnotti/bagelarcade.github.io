@@ -894,6 +894,13 @@ function drawHumanoid(g,sx,sy,o){
   const bounce= o.ride? 0 : (walking? Math.abs(sw1)*2.2*s : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s);
   const lean=walking? sw1*0.03 : 0;
   const hurtF=o.hurt?1:0;
+  // ---- build: per-character proportion, the axis that makes the cast read as
+  // individuals instead of one recoloured doll. Every factor defaults to the
+  // original figure, so any caller that omits `build` renders byte-identically.
+  const _bd=o.build||{};
+  const bwF=_bd.w!=null?_bd.w:1;        // torso girth + shoulder/arm/leg spread (broad smith vs slight child)
+  const hdF=_bd.head!=null?_bd.head:1;  // head size (smaller reads adult/elder, larger reads young)
+  const stF=_bd.stoop||0;               // forward head lean, local units (aged / hunched)
 
   g.save();
   // Slight vividness boost for the figure. MUST be set inside this save() so the
@@ -985,7 +992,7 @@ function drawHumanoid(g,sx,sy,o){
     }
   } else if(!o.robe){
     for(const L of [[-4.1,1],[4.1,-1]]){
-      const lx=L[0], sg=L[1];
+      const lx=L[0]*bwF, sg=L[1];
       const la= stride*0.55*sg;
       const lift= Math.max(0, sg*stride)*2.2;
       g.save();
@@ -1008,7 +1015,7 @@ function drawHumanoid(g,sx,sy,o){
   const armY=-20.5+B*0.8;
   const drawArm=(side,ang,lift)=>{
     g.save();
-    g.translate(side*8.2,armY+(lift||0));
+    g.translate(side*8.2*bwF,armY+(lift||0));
     g.rotate(side*0.28 + ang);
     g.fillStyle=o.robe? o.robe : shirt;
     g.beginPath(); g.roundRect(-2.1,0,4.2,7.4,2.1); g.fill();
@@ -1033,6 +1040,7 @@ function drawHumanoid(g,sx,sy,o){
   }
 
   /* ---------------- tiny round body ---------------- */
+  g.save(); if(bwF!==1) g.scale(bwF,1);   // body girth: the torso, belt, apron & armour widen together
   if(o.robe){
     const hem=Math.sin(step||G.time*1.6)*1.2;
     const rg2=g.createLinearGradient(0,-27,0,0);
@@ -1141,6 +1149,7 @@ function drawHumanoid(g,sx,sy,o){
       }
     }
   }
+  g.restore();   // end body-girth scale
   if(o.necklace && !away){
     g.strokeStyle='rgba(0,0,0,0.4)'; g.lineWidth=1;
     g.beginPath(); g.arc(0,-24.5+B,4.2,Math.PI*0.15,Math.PI*0.85); g.stroke();
@@ -1217,8 +1226,9 @@ function drawHumanoid(g,sx,sy,o){
 
   /* ---------------- THE HEAD: half the hero ---------------- */
   g.save();
-  g.translate(0,-34.6+B*1.15);
-  if(o.hero){ g.scale(1.12,1.12); } // the hero's head is grander still
+  g.translate(flip*stF,-34.6+B*1.15+stF*0.6);           // stoop leans the head forward & down
+  const headScale=hdF*(o.hero?1.12:1);                  // hero head grander; build.head resizes per character
+  if(headScale!==1) g.scale(headScale,headScale);
   if(walking) g.rotate(sw1*0.035);
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
   // ball with soft top-light - round, not flat
@@ -1707,7 +1717,7 @@ function drawHumanoid(g,sx,sy,o){
     const swv=o.swing||0;
     g.save();
     const isSword=o.weapon==='sword';
-    g.translate(flip*8.2, armY);
+    g.translate(flip*8.2*bwF, armY);
     g.scale(flip,1);
     // Sword rests out to the side (blade angled up & away from the body) so it
     // reads as held in the hand instead of floating over the chest; its swing

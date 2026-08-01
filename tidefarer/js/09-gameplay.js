@@ -518,6 +518,16 @@ function tryAttack(useMouse){
   P.dir={...aim};
   P.lastCombat=G.time;
   if(P.weapon==='melee'){
+    // no room to swing a blade from the saddle - dismount to fight with the sword. The
+    // bow is fine from horseback (this guard is melee-only), so a mounted rider can still
+    // loose arrows but can't sword-fight while riding Kiko or Chestnut.
+    if(P.riding){
+      P._rideSwordT=P._rideSwordT||0;
+      if(G.time>P._rideSwordT){ P._rideSwordT=G.time+2.5;
+        blockMsg('No room to swing a sword from the saddle - <b>dismount</b> to fight with the blade. (Arrows loose fine from horseback.)'); }
+      P.atkCd=0.25; P.combo=0;
+      return;
+    }
     P.atkCd=0.42; P.swing=0.3; Snd.hit();
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
@@ -708,8 +718,12 @@ function damageMob(m,dmg,knock,skill){
   dmg=Math.max(1,Math.round(dmg*Math.max(0.5,1-0.07*lvdiff))); // high-level foes shrug (softened - the old 0.35/0.09 floor turned late bosses into 25-hit slogs)
   // big setpiece fights (any 300+ HP boss) yield to a determined blade - a targeted
   // boss-damage bonus that leaves trash-mob tuning untouched. Keeps marquee fights
-  // decisive (~10-15 hits) instead of attrition sponges.
-  if((m.maxhp||0)>=300) dmg=Math.round(dmg*1.3);
+  // decisive instead of attrition sponges. TUNE: softened from 1.3 as part of the
+  // late-game difficulty pass (dmgLvl's diminishing returns already keep bosses
+  // from melting, so this bonus no longer needs to carry as much). Lower toward
+  // 1.0 to make bosses tankier, raise it if they start to feel like slogs.
+  const BOSS_DMG_MULT = 1.2;
+  if((m.maxhp||0)>=300) dmg=Math.round(dmg*BOSS_DMG_MULT);
   // Backstab: a melee blow from behind bites half again as deep. Marquee bosses
   // (bigBoss) wheel to face you and are immune. Taught in Rook's yard drill.
   let backstab=false;
@@ -996,6 +1010,8 @@ function killMob(m,skill){
   if(m.tidemaw){
     P.story=P.story||{}; P.story.barikDeepDone=1;
     if(typeof unsealBarikCistern==='function') unsealBarikCistern();
+    // Vath's flood recedes: drop Barik's cached surface so it regenerates restored on return.
+    if(typeof WORLDS!=='undefined' && WORLDS.main) delete WORLDS.main;
     banner('THE TIDEMAW IS SLAIN','THE DROWNED VAULT FALLS STILL');
     if(typeof autoSave==='function') autoSave();
   }
@@ -1003,6 +1019,11 @@ function killMob(m,skill){
   // Emberwick Tideward Guardian) share one clear-flag: m.gateDone names the story flag.
   if(m.gateboss && m.gateDone){
     P.story=P.story||{}; P.story[m.gateDone]=1;
+    // Clearing an isle's spirit-dungeon lifts its surface curse: drop the parent isle's cached
+    // world so it regenerates restored (flood/lava/storm gone) the next time the player lands.
+    { const SURF={galeDeepDone:'wind', ashenForgeDone:'east', stormTempleDone:'sky'};
+      const sid=SURF[m.gateDone];
+      if(sid && typeof WORLDS!=='undefined' && WORLDS[sid]) delete WORLDS[sid]; }
     if(typeof autoSave==='function') autoSave();
   }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe
@@ -1491,7 +1512,14 @@ function updatePlayer(dt){
 function updateNPCs(dt){
   const night=isNight();
   // during a training drill the yard clears - only the trainer is present (n.id===TRAIN.who)
-  for(const n of G.npcs) n.hidden = n.throne ? true : ((TRAIN && n.id!==TRAIN.who) || (night && !n.nightOwl));   // throne-bound NPCs (the King) never appear in the open city
+  for(const n of G.npcs){
+    let hide = n.throne ? true : ((TRAIN && n.id!==TRAIN.who) || (night && !n.nightOwl));   // throne-bound NPCs (the King) never appear in the open city
+    // ...but a quest-giver you have a completed quest ready to report to keeps a light lit
+    // past dusk, so nightfall never strands a finished quest until dawn. Only overrides a
+    // plain night-hide (not the throne-bound or a training-yard clear-out).
+    if(hide && night && !n.throne && !(TRAIN && n.id!==TRAIN.who) && npcHasReadyTurnIn(n)) hide=false;
+    n.hidden = hide;
+  }
   for(const n of G.npcs){
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
