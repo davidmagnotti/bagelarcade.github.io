@@ -698,8 +698,8 @@ function dragonFaints(m){
   }
   bossReward(m);
   m.windup=0; m.swing=0; m.lunge=0; m.lungeCd=1e9; m.hitCd=1e9; m.noAggroT=1e9;
-  // in the Emberdeep, THE WAY UP opens like every other dungeon (Ashwing's lift is still offered too)
-  if(typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
+  // no "way out" drop here: the freed Ashwing personally bears you up (the lift below), and the
+  // far-south ember mouth remains - the Emberdeep's exit is the dragon, not a portal at his feet
   Snd.boss(); G.shake=0.9; G.slowmo=1.15;
   shockwave(m.x,m.y,'rgba(255,190,90,0.95)',95);
   banner('THE SPELL BREAKS','ASHWING RETURNS TO HIMSELF');
