@@ -206,6 +206,9 @@ function _epiLandfall(){
   P.story=P.story||{};
   P.story.act=Math.max(P.story.act||1,2);
   P.story.act2=1; P.story.reachArrived=1;   // Act II: Stormreach and the far isles open up
+  // The old isles' Act I quest-board work retires now - clear any of it still merely on offer
+  // (accepted/finished quests, and the Duchess chain, are kept).
+  if(typeof purgeAct1AvailQuests==='function') purgeAct1AvailQuests();
   if(G.interior){ G.interior=null; }
   P.dead=false;
   const deadOv=document.getElementById('deadOv'); if(deadOv) deadOv.style.display='none';

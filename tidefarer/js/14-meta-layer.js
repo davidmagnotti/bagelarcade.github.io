@@ -199,6 +199,12 @@ function loadCode(str){
   if(P.story.deepDone && P.story.act2 && !P.story.vathVeil && !P.story.veilTome){
     P.story.veilTome=1; P.inv=P.inv||{}; P.inv.veilrune=(P.inv.veilrune||0)+1;
   }
+  // Act II returned-isle catch-up: retire the old isles' Act I quest-board work on existing Act II
+  // saves (one-time). The isle worlds themselves are dropped from the cache on every load below, so
+  // they already regenerate into their damaged/restored state - only the stale 'avail' Act I quests
+  // need clearing (accepted/finished quests and the Duchess chain are preserved).
+  if(P.story.act2 && !P.story.mig104){ P.story.mig104=1;
+    if(typeof purgeAct1AvailQuests==='function') purgeAct1AvailQuests(); }
   // The Emberwick mask rides the whole journey. Restore it for saves made before it
   // existed - unless the player has already reached the unmasking (or the old finale).
   if(P.story.masked===undefined){

@@ -365,6 +365,8 @@ const UNLOCK_AFTER={ wreck:['king'],
   feud1:['roadclear'], sting1:['feud1'], feud2:['feud1'], undermaw1:['torv2'] };
 function unlockSweep(){
   for(const id in UNLOCK_AFTER){
+    // Act I isle-quest chains never re-arm once Act II opens (the returned isles have moved on).
+    if(P.story && P.story.act2 && typeof ACT1_ISLE_QUESTS!=='undefined' && ACT1_ISLE_QUESTS.includes(id)) continue;
     if(!P.quests[id] && UNLOCK_AFTER[id].every(p=>qs(p)==='done')){
       P.quests[id]='avail';
       if(G.state==='play') toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+npcName(QUESTS[id].giver)+'</b>.',4200);

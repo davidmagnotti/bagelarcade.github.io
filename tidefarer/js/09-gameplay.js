@@ -996,6 +996,8 @@ function killMob(m,skill){
   if(m.tidemaw){
     P.story=P.story||{}; P.story.barikDeepDone=1;
     if(typeof unsealBarikCistern==='function') unsealBarikCistern();
+    // Vath's flood recedes: drop Barik's cached surface so it regenerates restored on return.
+    if(typeof WORLDS!=='undefined' && WORLDS.main) delete WORLDS.main;
     banner('THE TIDEMAW IS SLAIN','THE DROWNED VAULT FALLS STILL');
     if(typeof autoSave==='function') autoSave();
   }
@@ -1003,6 +1005,11 @@ function killMob(m,skill){
   // Emberwick Tideward Guardian) share one clear-flag: m.gateDone names the story flag.
   if(m.gateboss && m.gateDone){
     P.story=P.story||{}; P.story[m.gateDone]=1;
+    // Clearing an isle's spirit-dungeon lifts its surface curse: drop the parent isle's cached
+    // world so it regenerates restored (flood/lava/storm gone) the next time the player lands.
+    { const SURF={galeDeepDone:'wind', ashenForgeDone:'east', stormTempleDone:'sky'};
+      const sid=SURF[m.gateDone];
+      if(sid && typeof WORLDS!=='undefined' && WORLDS[sid]) delete WORLDS[sid]; }
     if(typeof autoSave==='function') autoSave();
   }
   // The Barrow Brute menaces the storm-coast - down it and Stormreach can breathe

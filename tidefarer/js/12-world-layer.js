@@ -4531,6 +4531,47 @@ QUESTS.drownedwarden={ giver:'tibb', title:'Warden of the Drowned Vault', kind:'
   log:'Descend into the catacomb beneath Stormreach, tread the Ossuary\'s ward-dance, and put down the Drowned Minotaur.',
   doneText:'The whole warren went quiet when it fell - I felt the floor settle. The bone-stones lie dark and the way stands open now, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
   rw:{gold:130, item:{elixir:1, potion:2}, xp:{melee:260, magic:220}} };
+/* ---------- Act II: the returned-isle RESTORATIONS -----------------------------
+   Under the Warding Veil you steal home to find each old isle warped by a curse
+   Vath let fester. Each isle's curse is anchored to a spirit bound in a new
+   dungeon; put the spirit down and the wound closes and the isle is itself again.
+   One restoration quest per isle, offered only in Act II while the curse stands
+   (armed in switchWorld), completing off the dungeon's clear flag. -- */
+QUESTS.windRestore={ giver:'rell', title:'The Drowning of Windsurf', kind:'special', xpL:460,
+  brief:'Look at my harbour, traveler - half of it under water that has no business being there. The old waterwheel spun itself to ruin and burst its race, and a wind that will not die has driven the sea up over Waterwheel Row and a whole north-yard district besides. It is no natural gale; it is a thing, denned in the spire that tore open at the wheel\'s foot. Go down into the Gale Spire and still whatever howls in it. Till then Windsurf drowns by inches.',
+  log:'Descend the Gale Spire at the ruined waterwheel and still the maddened wind, and Windsurf\'s flood will drain.',
+  doneText:'The wind just... stopped. Dead calm, for the first time in weeks - and look, the water\'s pulling back off the Row already. You\'ve given us our isle back, and the yard the flood stole with it. Windsurf won\'t forget the day you walked in under that Veil.',
+  rw:{gold:150, item:{elixir:1, potion:2}, xp:{melee:300, archery:220}} };
+QUESTS.sunRestore={ giver:'moli', title:'The Unquiet Mountain', kind:'special', xpL:470,
+  brief:'You feel the ground, child? Mount Kea has not slept a single night since the robed man\'s shadow fell on us. It burns without pause - lava down every slope, ash on every breath - and it is no mere eruption. Something has been stoked in the mountain\'s heart, in the forge-fissure that split the south face. Go down into the Ashen Forge and quench whatever fans that fire, or Kea will bury the Sunward Isle in cinders.',
+  log:'Descend the Ashen Forge on Mount Kea\'s south face and quench the spirit stoking the eruption, and the mountain will settle.',
+  doneText:'The mountain is quiet. QUIET - do you hear it? No grumble, no gout of fire. The ash is thinning already and the slopes are cooling under our feet. You have given the Sunward Isle back its mornings. Bless you, child, and take an elder\'s thanks.',
+  rw:{gold:160, item:{elixir:1, potion:2}, xp:{melee:320, archery:220}} };
+QUESTS.barikRestore={ giver:'kell', title:'The Drowning of Barik', kind:'special', xpL:470,
+  brief:'You sailed from a green isle, and you come back to a drowned one. Vath\'s flood has swallowed the Mirefen and the whole farm-lowland east of here - Hedda\'s fields are a lake, and the folk that worked them are crowded onto the high ground. The water rises from a sinkhole up the reed-causeway, and it will not fall while the thing wardening the vault below still churns the deep. Go down into the Drowned Vault, put it down, and give Barik its shore back.',
+  log:'Descend the Drowned Vault up the reed-causeway and fell the thing that churns the flood, and Barik\'s water will recede.',
+  doneText:'The Warden\'s work is done - look east, the water\'s falling off the fields by the hour. The farmsteads will drain and dry, and Hedda can put a plough in real dirt again. You gave a drowned isle back its ground, and I\'ll see the whole of Barik hears whose hand did it.',
+  rw:{gold:160, item:{elixir:1, potion:2}, xp:{melee:320, mining:160}} };
+QUESTS.skyRestore={ giver:'aeron', title:'The Storm That Will Not Break', kind:'special', xpL:450,
+  brief:'This cloud has weathered every gale in living memory, but not this one - a storm settled over the Cloudreach the day the robed man\'s shadow reached us, and it will NOT break. Lightning walks the standing stones and splits them where they stand. It is caged thunder, traveler, penned in the temple that cracked open by the landing. Go down into the Storm Temple and let it out, or spend it, or do whatever a hero does - only make my sky clear again.',
+  log:'Descend the Storm Temple by the landing and quiet the caged thunder, and the endless storm will break.',
+  doneText:'It broke. The storm just - broke, clean away to blue, like a held breath let go. First clear sky over the Cloudreach in a season. You have my thanks, Skyward, and the whole cloud\'s besides - we thought we\'d lost the sun for good.',
+  rw:{gold:150, item:{elixir:1, potion:2}, xp:{melee:300, archery:220}} };
+
+// Act I isle side-work that RETIRES when Act II opens: the returned isles have moved past these
+// errands, so they never re-offer once you sail back under the Veil, and any left sitting 'avail'
+// but unaccepted is purged at the Act II transition. The Duchess chain (duchesslove/duchessreply)
+// is deliberately excluded - it is the one Act I errand that carries into Act II.
+const ACT1_ISLE_QUESTS=['welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1',
+  'ribbon1','ribbon2','ribbon3','feud1','feud2','sting1','undermaw1','bounty','alpha','embers',
+  'mossbrew','pearlq','hunt1','tame1','wyrm','vhunt','board','sail','tide','breakers'];
+// Clear any of the above that is merely offered ('avail') but never accepted, so a returned isle
+// shows none of its Act I quest-board work. Accepted ('active') and finished ('done') quests are
+// preserved untouched.
+function purgeAct1AvailQuests(){
+  if(typeof P==='undefined' || !P || !P.quests) return;
+  for(const id of ACT1_ISLE_QUESTS) if(P.quests[id]==='avail') delete P.quests[id];
+}
 
 /* ---------- Aldermere side-work ----------------------------------------------
    The royal capital was grand but quiet - a dozen townsfolk and only three
@@ -5017,6 +5058,10 @@ function exitBarikDeep(){
 // diver's cache waits on a rock the deep water keeps.
 function placeBarikFlood(){
   if(!(P.story && P.story.vathVeil)) return;
+  // Once the Tidemaw in the Drowned Vault is felled (barikDeepDone), Vath's flood recedes and
+  // Barik is itself again - so a restored isle regenerates without the flood/decor, keeping only
+  // the Vault mouth so the drained halls stay re-enterable.
+  const restored = !!(P.story && P.story.barikDeepDone);
   const D=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.dock) ? MAIN_ZONES.dock : {x:55,y:258};
   const M=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.meadow) ? MAIN_ZONES.meadow : {x:258,y:254,r:24};
   const F=(typeof MAIN_ZONES!=='undefined' && MAIN_ZONES.farm) ? MAIN_ZONES.farm : {x:293,y:213,r:16};
@@ -5025,26 +5070,29 @@ function placeBarikFlood(){
   // where the fields used to be. The isle you sailed from is unrecognisable - a mirror of the
   // Drowned Vault waiting beneath it. (Integer loop bounds; a float r no-ops the loop.)
   const flooded=[];   // remember the new shallows so we can decorate their edges
+  const way=[];       // the dry reed-causeway (also feeds the sinkhole-mouth placement)
   const flood=(cx,cy,r,deepR)=>{ cx=Math.round(cx); cy=Math.round(cy); const R=Math.ceil(r);
     for(let y=cy-R;y<=cy+R;y++) for(let x=cx-R;x<=cx+R;x++){ const dd=dist(x,y,cx,cy);
       if(inb(x,y) && dd<=r && walkTile(tileAt(x,y)) && !solidAt(x,y) && tileAt(x,y)!==T.PATH && tileAt(x,y)!==T.PLANK){
         setTile(x,y, dd<=deepR?T.DEEP:T.SHALLOW); setSolid(x,y,1);
         if(dd>deepR && dd>r*0.7) flooded.push([x,y]); } } };
-  // the Mirefen: a huge lagoon with a drowned heart
-  flood(M.x, M.y, M.r*1.05, M.r*0.55);
-  flood(M.x-M.r*0.5, M.y-M.r*0.35, M.r*0.55, M.r*0.22);
-  // the drowned farmlands to the north - a second inland sea, joined to the fen by a channel
-  flood(F.x, F.y, F.r*1.0, F.r*0.4);
-  flood((M.x+F.x)/2, (M.y+F.y)/2, M.r*0.42, M.r*0.14);   // the channel linking them
-  // KEEP THE ISLE REACHABLE: a dry reed-causeway from the south shore up to the sinkhole,
-  // so you can still walk to the Vault before you've earned the dive.
-  const way=[];
-  for(let yy=Math.round(M.y+M.r*0.95); yy>=Math.round(M.y+M.r*0.2); yy--){
-    const xx=Math.round(M.x-M.r*0.7 + Math.sin((yy-M.y)*0.25)*2);
-    for(let ox=-1;ox<=1;ox++){ const cxx=xx+ox; if(inb(cxx,yy) && (tileAt(cxx,yy)===T.SHALLOW||tileAt(cxx,yy)===T.DEEP)){ setTile(cxx,yy,T.SOIL); setSolid(cxx,yy,0); } }
-    way.push([xx,yy]);
+  if(!restored){
+    // the Mirefen: a huge lagoon with a drowned heart
+    flood(M.x, M.y, M.r*1.05, M.r*0.55);
+    flood(M.x-M.r*0.5, M.y-M.r*0.35, M.r*0.55, M.r*0.22);
+    // the drowned farmlands to the north - a second inland sea, joined to the fen by a channel
+    flood(F.x, F.y, F.r*1.0, F.r*0.4);
+    flood((M.x+F.x)/2, (M.y+F.y)/2, M.r*0.42, M.r*0.14);   // the channel linking them
+    // KEEP THE ISLE REACHABLE: a dry reed-causeway from the south shore up to the sinkhole,
+    // so you can still walk to the Vault before you've earned the dive.
+    for(let yy=Math.round(M.y+M.r*0.95); yy>=Math.round(M.y+M.r*0.2); yy--){
+      const xx=Math.round(M.x-M.r*0.7 + Math.sin((yy-M.y)*0.25)*2);
+      for(let ox=-1;ox<=1;ox++){ const cxx=xx+ox; if(inb(cxx,yy) && (tileAt(cxx,yy)===T.SHALLOW||tileAt(cxx,yy)===T.DEEP)){ setTile(cxx,yy,T.SOIL); setSolid(cxx,yy,0); } }
+      way.push([xx,yy]);
+    }
   }
-  // the hidden mouth: a flooded sinkhole in the reeds at the head of the causeway
+  // the hidden mouth: a flooded sinkhole in the reeds at the head of the causeway. Placed even on
+  // a restored isle (on now-dry ground) so the drained Vault below stays re-enterable.
   const head=way.length? way[way.length-1] : null;
   const sp=head || ((typeof findOpenNear==='function' && findOpenNear(Math.round(M.x-M.r*0.7), Math.round(M.y+M.r*0.3), 12)) || null);
   if(sp && inb(sp[0],sp[1]) && !G.decor.some(d=>d.kind==='dungeonmouth' && d.drowned)){
@@ -5052,28 +5100,30 @@ function placeBarikFlood(){
     setTile(sp[0],sp[1]+1,T.PATH); setSolid(sp[0],sp[1]+1,0);   // dry approach from the south
     G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, drowned:1, label:'the Drowned Vault', name:'THE DROWNED VAULT ▼', hidden:1});
   }
-  // decorate the drowned land: dead trees standing in the shallows, half-sunk ruins, and reeds.
-  { const RS=mulberry32(((SEED||1)+4471)>>>0);
-    const causeway=new Set(way.map(w=>w[0]+','+w[1]));
-    let placed=0;
-    for(let i=0;i<flooded.length && placed<160;i++){ const [x,y]=flooded[(i*29+7)%flooded.length];
-      if(causeway.has(x+','+y)) continue;
-      const roll=RS();
-      if(roll<0.10){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:12+RS()*10, lean:(RS()-0.5)*1.4}); placed++; }
-      else if(roll<0.14){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:true}); placed++; }
-      else if(roll<0.22){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
-    } }
-  // a diver's cache out on a drowned rock offshore of the docks (once you can dive)
-  if(P.unlocked && P.unlocked.dive && !G.decor.some(d=>d.diverCache)){
-    let rock=null;
-    for(let rr=6; rr<=22 && !rock; rr+=2){ for(let a=0;a<16 && !rock;a++){
-      const ang=a/16*TAU, rx=Math.round(D.x+Math.cos(ang)*rr), ry=Math.round(D.y+Math.sin(ang)*rr);
-      if(inb(rx,ry) && tileAt(rx,ry)===T.DEEP) rock=[rx,ry];
-    }}
-    if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
-      G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
+  if(!restored){
+    // decorate the drowned land: dead trees standing in the shallows, half-sunk ruins, and reeds.
+    { const RS=mulberry32(((SEED||1)+4471)>>>0);
+      const causeway=new Set(way.map(w=>w[0]+','+w[1]));
+      let placed=0;
+      for(let i=0;i<flooded.length && placed<160;i++){ const [x,y]=flooded[(i*29+7)%flooded.length];
+        if(causeway.has(x+','+y)) continue;
+        const roll=RS();
+        if(roll<0.10){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:12+RS()*10, lean:(RS()-0.5)*1.4}); placed++; }
+        else if(roll<0.14){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:true}); placed++; }
+        else if(roll<0.22){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
+      } }
+    // a diver's cache out on a drowned rock offshore of the docks (once you can dive)
+    if(P.unlocked && P.unlocked.dive && !G.decor.some(d=>d.diverCache)){
+      let rock=null;
+      for(let rr=6; rr<=22 && !rock; rr+=2){ for(let a=0;a<16 && !rock;a++){
+        const ang=a/16*TAU, rx=Math.round(D.x+Math.cos(ang)*rr), ry=Math.round(D.y+Math.sin(ang)*rr);
+        if(inb(rx,ry) && tileAt(rx,ry)===T.DEEP) rock=[rx,ry];
+      }}
+      if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
+        G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
+    }
+    _curseHint('barikCurseSeen','<b>Vath\'s flood has swallowed the east of Barik</b> - the Mirefen and the farmsteads are one drowned sea now, dead trees standing where the fields were. Something waits in a <b>flooded sinkhole</b> up the reed-causeway from the south shore.');
   }
-  _curseHint('barikCurseSeen','<b>Vath\'s flood has swallowed the east of Barik</b> - the Mirefen and the farmsteads are one drowned sea now, dead trees standing where the fields were. Something waits in a <b>flooded sinkhole</b> up the reed-causeway from the south shore.');
 }
 /* =====================================================================
    THE OLD-ISLAND RETURN DUNGEONS - Windsurf, Sunward, Cloudreach. Under the
@@ -5816,6 +5866,10 @@ function _curseHint(flag,msg){ P.prog=P.prog||{}; if(P.prog[flag]) return; P.pro
 // Waterwheel Row, and a shaft tore open at the foot of the wheel: the Gale Spire.
 function placeWindHazard(){
   if(!(P.story && P.story.vathVeil)) return;
+  // Once the Skirl in the Gale Spire is felled (galeDeepDone) the maddened wind dies, the burst
+  // race stops, and the flood drains - a restored isle regenerates dry (keeping only the Spire
+  // mouth), and the drowned north-yard district opens back up so its reward can be claimed.
+  const restored = !!(P.story && P.story.galeDeepDone);
   const WH=(typeof WIND_ZONES!=='undefined' && WIND_ZONES.wheel) ? WIND_ZONES.wheel : {x:58,y:68};
   const flooded=[];
   const flood=(cx,cy,r)=>{ cx=Math.round(cx); cy=Math.round(cy); const R=Math.ceil(r);
@@ -5823,60 +5877,244 @@ function placeWindHazard(){
       if(inb(x,y) && dd<=r && walkTile(tileAt(x,y)) && !solidAt(x,y) && tileAt(x,y)!==T.PATH){
         setTile(x,y, dd<=r-1.6?T.DEEP:T.SHALLOW); setSolid(x,y,1);
         if(dd>r-1.6) flooded.push([x,y]); } } };
-  // the burst race drowns the whole of Waterwheel Row - a wide brown lagoon east of the wheel
-  flood(WH.x+5, WH.y+1, 6);
-  flood(WH.x+4, WH.y-4, 4);     // ...and spills across the north yard
-  flood(WH.x+8, WH.y+4, 4);     // ...and down the mill-leat to the south-east
-  // the hidden mouth at the wheel's south foot, with a dry approach from the town road (south)
+  if(!restored){
+    // the burst race drowns the whole of Waterwheel Row - a wide brown lagoon east of the wheel
+    flood(WH.x+5, WH.y+1, 6);
+    flood(WH.x+4, WH.y-4, 4);     // ...and spills across the north yard
+    flood(WH.x+8, WH.y+4, 4);     // ...and down the mill-leat to the south-east
+  }
+  // the hidden mouth at the wheel's south foot, with a dry approach from the town road (south).
+  // Placed even on a restored isle so the Gale Spire below stays re-enterable.
   _curseMouthAt(WH.x+2, WH.y+2, [WH.x+2, WH.y+3], 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼');
-  // flotsam in the drowned yard: snapped mill-timbers, reeds, a toppled post
-  { const RS=mulberry32(((SEED||1)+2213)>>>0); let placed=0;
-    for(let i=0;i<flooded.length && placed<40;i++){ const [x,y]=flooded[(i*17+5)%flooded.length];
-      if(Math.abs(x-(WH.x+2))<=1 && Math.abs(y-(WH.y+2))<=2) continue;   // keep the mouth clear
-      const roll=RS();
-      if(roll<0.12){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:10+RS()*7, lean:(RS()-0.5)*1.6}); placed++; }
-      else if(roll<0.18){ G.decor.push({kind:'woodpile', x:x+0.5, y:y+0.5}); placed++; }
-      else if(roll<0.26){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
+  // THE DROWNED DISTRICT: a whole scrap of the north yard the flood cuts off ENTIRELY - a little
+  // island of drowned rooftops ringed by deep water you cannot reach at all while the isle is
+  // cursed. Its reward chest is placed in BOTH states, but while the curse stands a wide ring of
+  // solid deep water moats the district off (dive-proof - DIVE only crosses NON-solid deep water).
+  // Only once the Spire is cleared and the waters drain does the yard regenerate as dry ground,
+  // opening the district and leaving the chest reachable. (The north yard holds no town zone and no
+  // through-route, so sealing it can never block a way anywhere - see the reachability audit.)
+  { const cx=WH.x+4, cy=WH.y-9;   // (62,59) - deep in the peripheral north yard
+    if(inb(cx,cy)){
+      if(!restored){
+        // a broad moat: a solid deep-water ring (radius 2.5 out to 5) with no gap, so nothing
+        // walks in. Contiguous with the dry core below (no walkable land between core and ring).
+        for(let y=cy-5;y<=cy+5;y++) for(let x=cx-5;x<=cx+5;x++){ const dd=dist(x,y,cx,cy);
+          if(inb(x,y) && dd>2.5 && dd<=5 && tileAt(x,y)!==T.PATH && tileAt(x,y)!==T.PLANK){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }
+      }
+      // the dry district core (~5 tiles across), walkable in both states; a couple of half-sunk
+      // rooftops for flavour while it is an island
+      for(let y=cy-2;y<=cy+2;y++) for(let x=cx-2;x<=cx+2;x++){ if(inb(x,y) && dist(x,y,cx,cy)<=2.5){ setTile(x,y,T.SOIL); setSolid(x,y,0);
+        if(G.nodes) G.nodes=G.nodes.filter(n=>!(Math.floor(n.x)===x && Math.floor(n.y)===y)); } }
+      if(!restored && !G.decor.some(d=>d.kind==='snag'&&d.windRoof)){
+        G.decor.push({kind:'snag', x:cx-1.5, y:cy-1.5, ph:1.2, h:12, lean:0.4, windRoof:1});
+        G.decor.push({kind:'snag', x:cx+1.5, y:cy+1.5, ph:3.4, h:10, lean:-0.5, windRoof:1});
+      }
+      if(!G.decor.some(d=>d.windDistrict)) G.decor.push({kind:'chest', x:cx+0.5, y:cy+0.5, rich:8, windDistrict:1});
     } }
-  _curseHint('windCurseSeen','<b>Windsurf lies half-drowned</b> - the maddened wind has spun the old <b>waterwheel</b> to ruin and burst its race, flooding all of Waterwheel Row. Something has torn open at the wheel\'s foot.');
+  if(!restored){
+    // flotsam in the drowned yard: snapped mill-timbers, reeds, a toppled post
+    { const RS=mulberry32(((SEED||1)+2213)>>>0); let placed=0;
+      for(let i=0;i<flooded.length && placed<40;i++){ const [x,y]=flooded[(i*17+5)%flooded.length];
+        if(Math.abs(x-(WH.x+2))<=1 && Math.abs(y-(WH.y+2))<=2) continue;   // keep the mouth clear
+        const roll=RS();
+        if(roll<0.12){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:10+RS()*7, lean:(RS()-0.5)*1.6}); placed++; }
+        else if(roll<0.18){ G.decor.push({kind:'woodpile', x:x+0.5, y:y+0.5}); placed++; }
+        else if(roll<0.26){ G.decor.push({kind:'tuft', x:x+0.5, y:y+0.5, ph:RS()*6.28}); placed++; }
+      } }
+    _curseHint('windCurseSeen','<b>Windsurf lies half-drowned</b> - the maddened wind has spun the old <b>waterwheel</b> to ruin and burst its race, flooding all of Waterwheel Row, and a whole north-yard district is cut off by the deep water. Something has torn open at the wheel\'s foot.');
+  }
 }
 // SUNWARD - Mount Kea erupts unending: fresh lava creeps down the slopes and a fissure has
 // split open low on the south face - the way into the Ashen Forge.
 function placeSunwardHazard(){
   if(!(P.story && P.story.vathVeil)) return;
+  // Once the Cinderwrought in the Ashen Forge is felled (ashenForgeDone) Mount Kea settles - the
+  // lava flows cool and the ash clears - so a restored isle regenerates without the lava/cracks,
+  // keeping only the fissure mouth so the Forge below stays re-enterable.
+  const restored = !!(P.story && P.story.ashenForgeDone);
   const V=(typeof EAST_ZONES!=='undefined' && EAST_ZONES.volcano) ? EAST_ZONES.volcano : {x:88,y:52,r:22};
-  // fresh lava flows + glowing cracks down the mid-slopes (on the RUIN massif, clear of the caldera)
-  const lavaPool=(cx,cy,r)=>{ if(!inb(cx,cy) || tileAt(cx,cy)!==T.RUIN) return;
-    G.decor.push({kind:'lava', x:cx+0.5, y:cy+0.5, r});
-    for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++) if(inb(x,y) && dist(x,y,cx,cy)<=r-0.3 && tileAt(x,y)===T.RUIN) setSolid(x,y,1); };
-  const S=mulberry32((SEED||1)+404);
-  for(let i=0;i<14;i++){ const a=S()*TAU, rr=V.r*0.45+S()*V.r*0.4;
-    lavaPool(Math.round(V.x+Math.cos(a)*rr), Math.round(V.y+Math.sin(a)*rr*0.9), 2+Math.floor(S()*2)); }
-  for(let i=0;i<26;i++){ const a=S()*TAU, rr=V.r*0.4+S()*V.r*0.55;
-    const cx=Math.round(V.x+Math.cos(a)*rr), cy=Math.round(V.y+Math.sin(a)*rr*0.9);
-    if(inb(cx,cy) && tileAt(cx,cy)===T.RUIN && !solidAt(cx,cy)) G.decor.push({kind:'lavacrack', x:cx+0.5, y:cy+0.5, seed:i, big:i%4===0}); }
-  // the hidden fissure, low on the south slope (distinct from the summit Emberthroat)
+  if(!restored){
+    // fresh lava flows + glowing cracks down the mid-slopes (on the RUIN massif, clear of the caldera)
+    const lavaPool=(cx,cy,r)=>{ if(!inb(cx,cy) || tileAt(cx,cy)!==T.RUIN) return;
+      G.decor.push({kind:'lava', x:cx+0.5, y:cy+0.5, r});
+      for(let y=cy-r;y<=cy+r;y++) for(let x=cx-r;x<=cx+r;x++) if(inb(x,y) && dist(x,y,cx,cy)<=r-0.3 && tileAt(x,y)===T.RUIN) setSolid(x,y,1); };
+    const S=mulberry32((SEED||1)+404);
+    for(let i=0;i<14;i++){ const a=S()*TAU, rr=V.r*0.45+S()*V.r*0.4;
+      lavaPool(Math.round(V.x+Math.cos(a)*rr), Math.round(V.y+Math.sin(a)*rr*0.9), 2+Math.floor(S()*2)); }
+    for(let i=0;i<26;i++){ const a=S()*TAU, rr=V.r*0.4+S()*V.r*0.55;
+      const cx=Math.round(V.x+Math.cos(a)*rr), cy=Math.round(V.y+Math.sin(a)*rr*0.9);
+      if(inb(cx,cy) && tileAt(cx,cy)===T.RUIN && !solidAt(cx,cy)) G.decor.push({kind:'lavacrack', x:cx+0.5, y:cy+0.5, seed:i, big:i%4===0}); }
+  }
+  // the hidden fissure, low on the south slope (distinct from the summit Emberthroat). Placed even
+  // on a restored isle so the Ashen Forge below stays re-enterable.
   const fx=Math.round(V.x), fy=Math.round(V.y+V.r*0.72);
   const sp=(typeof findOpenNear==='function' && findOpenNear(fx, fy, 8)) || [fx,fy];
   _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'sunwarddeep', 'the Ashen Forge', 'THE ASHEN FORGE ▼');
-  _curseHint('sunCurseSeen','<b>Mount Kea burns without pause</b> - lava creeps down the slopes and ash chokes the sky. A fresh <b>fissure</b> has split the mountain\'s south face.');
+  if(!restored) _curseHint('sunCurseSeen','<b>Mount Kea burns without pause</b> - lava creeps down the slopes and ash chokes the sky. A fresh <b>fissure</b> has split the mountain\'s south face.');
 }
 // CLOUDREACH - a storm has settled over the cloud and will not break: the old standing stones
 // are lightning-struck and toppled, and one has cracked open onto the Storm Temple below.
 function placeSkyHazard(){
   if(!(P.story && P.story.vathVeil)) return;
+  // Once the Thundercaller in the Storm Temple is felled (stormTempleDone) the storm breaks and
+  // the Cloudreach clears - so a restored isle regenerates without the stormstruck stones, keeping
+  // only the Temple mouth so it stays re-enterable.
+  const restored = !!(P.story && P.story.stormTempleDone);
   const L=(typeof SKY_ZONES!=='undefined' && SKY_ZONES.landing) ? SKY_ZONES.landing : {x:32,y:42,r:7};
-  // the storm has walked the whole ring: stones toppled and lightning-split right across the
-  // plateau (SNOW->cloud is the ground here). A scatter of stormstruck stones, not just three.
-  const RS=mulberry32(((SEED||1)+7717)>>>0);
-  for(let i=0;i<16;i++){ const a=(i/16)*TAU + RS()*0.4, rr=2+RS()*7;
-    const cx=Math.round(L.x+Math.cos(a)*rr), cy=Math.round(L.y+Math.sin(a)*rr*0.9);
-    if(inb(cx,cy) && tileAt(cx,cy)===T.SNOW && !solidAt(cx,cy) && !(Math.abs(cx-(L.x+4))<=1 && Math.abs(cy-(L.y+3))<=1))
-      G.decor.push({kind:'pillar', x:cx+0.5, y:cy+0.5, broken:true, stormstruck:1}); }
-  // the hidden mouth beside a shattered stone, just off the landing
+  if(!restored){
+    // the storm has walked the whole ring: stones toppled and lightning-split right across the
+    // plateau (SNOW->cloud is the ground here). A scatter of stormstruck stones, not just three.
+    const RS=mulberry32(((SEED||1)+7717)>>>0);
+    for(let i=0;i<16;i++){ const a=(i/16)*TAU + RS()*0.4, rr=2+RS()*7;
+      const cx=Math.round(L.x+Math.cos(a)*rr), cy=Math.round(L.y+Math.sin(a)*rr*0.9);
+      if(inb(cx,cy) && tileAt(cx,cy)===T.SNOW && !solidAt(cx,cy) && !(Math.abs(cx-(L.x+4))<=1 && Math.abs(cy-(L.y+3))<=1))
+        G.decor.push({kind:'pillar', x:cx+0.5, y:cy+0.5, broken:true, stormstruck:1}); }
+  }
+  // the hidden mouth beside a shattered stone, just off the landing. Placed even on a restored isle
+  // so the Storm Temple below stays re-enterable.
   const sp=(typeof findOpenNear==='function' && findOpenNear(L.x+4, L.y+3, 8)) || [L.x+4, L.y+3];
   _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼');
-  _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
+  if(!restored) _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
+}
+
+/* ---- Act II returned-isle DIALOGUE: the folk speak the wound while it stands, and speak
+   their relief once you break it. Each is gated on the Warding Veil (so it never touches the
+   Act I town) and picks the damaged or restored line-set by the isle's spirit-dungeon clear
+   flag. Called from switchWorld's per-isle block, which re-spawns the NPCs every visit - so a
+   single call there covers first arrival and the post-restoration return. set() no-ops on any
+   NPC not present (conditional spawns like Lord Elias), so the lists are safe supersets. ---- */
+function _curseMoodSetter(restored){
+  return (id,dmg,res)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=restored?res:dmg; n.li=0; } };
+}
+// BARIK - Vath's flood drowned the Mirefen and the eastern farmlands (barikDeepDone lifts it).
+function updateBarikCurseMood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const set=_curseMoodSetter(!!(P.story && P.story.barikDeepDone));
+  set('kell',
+    ['You come back to a drowned Barik, warrior. The flood took the whole east - fen, farms, the low road - and half my folk are camped on the keep hill. Whatever churns that water up the reed-causeway, it needs putting DOWN.',
+     'I hold the high ground and count heads by lantern. It is all a warden can do while the sea sits where the wheat should be. If you mean to go down that sinkhole - go with my blessing, and quickly.'],
+    ['The water\'s falling by the hour and the fields are surfacing black and rich. You gave Barik back its ground, warrior - I\'ll not forget it, and neither will the folk coming down off the hill.',
+     'Dry road east again for the first time in weeks. The keep can breathe. Whatever you put down in that vault, it stayed down - and Barik is Barik again because of it.']);
+  set('sela',
+    ['Half my stores are under three feet of floodwater, love. I\'m selling what I could carry uphill, at prices that shame me. This isn\'t weather - it\'s a curse, plain as the wet.',
+     'I rationed the dry goods and prayed. That\'s a provisioner\'s whole trade this season - rationing and praying. End this flood and I\'ll stand you a full pack, free.'],
+    ['Cellars drying out, shelves filling back up - I can trade like an honest woman again. Come by, the first hot meal off the mended hearth is yours.',
+     'The flood\'s gone and trade\'s come roaring back up the dry road. Bless you for it, love - take a loaf, on the house, and don\'t argue.']);
+  set('hedda',
+    ['My fields are a LAKE, friend. Thirty years I worked that lowland and now I row a boat over my own furrows. There\'s no farming a curse - somebody has to break the thing making the water.',
+     'The beasts are penned on the high paddock and the ploughs are under water. I just sit and watch the flood and grind my teeth. If you can drain it, I\'ll name my best sow after you.'],
+    ['DIRT. Real, honest, draining dirt where my lake used to be! It\'ll want a season to dry true, but it\'s mine again. You wonderful, wonderful stranger.',
+     'I had a plough in the ground the very morning the water fell. You gave a farmer back her fields - there\'s no thanks big enough, so take a sackful of the first crop and we\'ll call it a start.']);
+  set('torv',
+    ['I read the deep for a living, and the deep is WRONG. The water\'s not rising off the sky - it\'s welling up from something churning in the vault below the sinkhole. Go quiet whatever it is before the whole east goes under.',
+     'Every delver instinct I own says stay out of that flooded stair. And every one says it\'s the only way to stop the water. So - mind the reed-causeway, and go down braver than I would.'],
+    ['The deep\'s gone still and honest again - no more churn, no more welling water. Whatever you put down in that vault, the stone remembers it was afraid of you.',
+     'I can work the low tunnels again now the flood\'s drained. Found your name would be worth carving over the vault mouth, if you\'d let me.']);
+  set('ivo',
+    ['The shell-beds are all under deep water now, and what I can reach tastes of the curse. Grim season to be a gatherer on Barik.',
+     'I gather what the flood leaves me and it isn\'t much. End this and the beds come back - I\'d owe you the finest pearl in them.'],
+    ['Shell-beds surfacing again and the water running clear off them - best gathering in years, and I\'ve you to thank for the season.',
+     'The tide sits where it ought to and the beds are fat. Take a spiral shell, friend, for luck - you\'ve earned a whole strand of them.']);
+  set('saffi',
+    ['Everyone I know is crowded onto the high streets and frightened. The flood came up so fast, and it just... stays. Please tell me you mean to do something about it.',
+     'I keep the little ones away from the waterline - it\'s not right, that water, it looks like it\'s watching. Break the curse, warrior. We\'re all counting on it.'],
+    ['The streets are draining and folk are drifting back down to their own doors, laughing like they forgot how. That\'s YOUR doing.',
+     'It feels like the isle exhaled. Thank you - truly. Barik will tell your name to its children.']);
+  set('maelis',
+    ['A duchess rules by ledger and patience, warrior, and neither balances a flood. Vath\'s water has cost Barik half its harvest and all its calm. Whatever wardens that drowned vault - it is beyond my writ. It may not be beyond your blade.',
+     'I have quartered the flooded families in the keep and stretched the stores as far as sums allow. It is not enough. Nothing is, while the water rules the east. If you can end it, name your fee.'],
+    ['You have done what no ledger of mine could: given Barik back its ground. The east will dry, the harvest will come late but it will come, and the keep will remember whose hand drained the fen.',
+     'Barik is solvent in more than coin again, thanks to you. The Duchy owes you a debt it will be glad to keep paying.']);
+}
+// WINDSURF - the maddened wind drowned Waterwheel Row and a north district (galeDeepDone lifts it).
+function updateWindCurseMood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const set=_curseMoodSetter(!!(P.story && P.story.galeDeepDone));
+  set('rell',
+    ['Half my harbour\'s under water that shouldn\'t be there, and a wind that won\'t die drove it up over the Row and a whole north district besides. That\'s no gale - it\'s a THING, denned in the spire that tore open at the wheel\'s foot. Go still it.',
+     'I count my drowned jetties every morning and swear at the wind. It never stops - never once drops - and till it does, Windsurf drowns by inches. If you\'ve the nerve for that spire, harbormaster to hero: go.'],
+    ['Dead calm, first time in weeks, and the water\'s pulling back off the Row like a tide remembering its manners. You gave us our harbour back - and the north district the flood had stolen with it.',
+     'Boats working the strait again and every one of them puts in to ask who broke the curse. I point them at you. Windsurf owes you its whole livelihood, and it knows it.']);
+  set('coralie',
+    ['I\'ve shuttered the Breakers against the gale and the sea both - the salt baths are full of storm-wrack and the guest wing looks out on a flood. No one takes a room to watch a curse. Break it, and I\'ll open every window I own.',
+     'The wind screams down the chimneys all night and the water laps the terrace. A resort needs weather folk want to sit IN. Still that spire, love, and the Breakers lives again.'],
+    ['GUESTS again! The wind\'s gone gentle and the flood\'s drawn off the terrace - the salt baths are hot and the sea view is glorious. All yours, on the house, for as long as you like.',
+     'The Breakers is full to the rafters and the sea\'s a mill-pond off the terrace. You didn\'t just save a resort, you saved my whole trade. Bless you, traveller.']);
+  set('burl',
+    ['I built half the jetties the flood just ate. Forty years of joinery gone brackish overnight. It\'s that cursed wind off the wheel - fix the wheel\'s curse and I\'ll rebuild, gladly.',
+     'Can\'t drive a pile in water that won\'t hold still and a wind that won\'t quit. A wright\'s hands go idle in a drowned town. Go do the thing I can\'t.'],
+    ['Solid ground to build on again and a calm sky to build under - I\'ve three jetties framed already. Good work makes a body forget the bad season, and this is good work.',
+     'The Row\'s draining and every plank I lay stays dry. That\'s your doing, and I\'ll carve it into the first new post if you don\'t stop me.']);
+  set('pia',
+    ['Trade Row\'s half-flooded and the sailors that used to buy me out are gone with the calm water. I sell what I can from the high stalls and watch the deep creep up the cobbles.',
+     'No fleet, no festival, no sugar-melon sold by noon - just the wind and the rising water. Break the curse and I\'ll have this Row humming by nightfall, see if I don\'t.'],
+    ['Sold clean out by midday - the sailors are back and they buy like it\'s a festival! Take a spice-plum, on the house, for giving Trade Row its bustle back.',
+     'The Row hums again and the deep water\'s off the cobbles for good. Best season I can remember, and I know exactly whose boots to thank for it.']);
+  set('tolen',
+    ['A whittler needs dry wood and a steady hand, and this cursed wind gives me neither - it snatches the shavings clean off my knife. No boards get shaped till that gale is stilled.',
+     'I keep my good timber up on the loft-beams away from the flood and wait. That\'s all Windsurf does now: keep things high, and wait. Go end the waiting.'],
+    ['The wind\'s gentle enough to whittle by again - curls of cedar dropping neat at my feet like the old days. Come by, I\'ll shape you something that rides a calm sea.',
+     'Dry benches, still air, and a whole stack of boards to catch up on. You handed a craftsman back his craft, friend. That\'s not a small thing.']);
+  set('nessa',
+    ['Every loom in my loft would run if there were a fleet to buy the canvas - but the flood\'s drowned the Row and the wind\'s eaten the sails I DID make. There\'s no sailmaking under a curse.',
+     'I stitch and I unpick and I watch the water. Told you once I\'d have this town in sail by nightfall if a boat could only cross - well. Break the wind\'s curse and hold me to it.'],
+    ['Every loom in the loft running and the fleet wants canvas YESTERDAY - the strait\'s a highway again. You made a liar of no one: the town\'s in sail, just as I swore.',
+     'Sails going out faster than I can stitch them, and a calm sky to test them under. That\'s a sailmaker\'s heaven, and you built it. My thanks, on every hull that crosses.']);
+  set('wenna',
+    ['The little ones aren\'t allowed near the waterline anymore - it came up so fast and it just STAYS, and the wind never lets up. I\'ll sleep easy the day someone stills that spire.',
+     'We keep to the high streets and mind the young ones and hope. Please - if you can quiet that wind, do it soon. This isn\'t a town anymore, it\'s a huddle.'],
+    ['The children are back paddling in the SHALLOWS where the flood used to be, laughing their heads off. That\'s the sound of a curse lifted, and it\'s the sweetest thing I know.',
+     'The wind\'s a friend again and the water knows its place. You gave us our town back, whole. We won\'t forget the day you walked in under that Veil.']);
+}
+// SUNWARD - Mount Kea erupts without pause, ash and lava over the isle (ashenForgeDone lifts it).
+function updateSunCurseMood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const set=_curseMoodSetter(!!(P.story && P.story.ashenForgeDone));
+  set('moli',
+    ['Kea has not slept one night since the robed man\'s shadow crossed us, child. It burns and burns - lava down every slope, ash on every breath. Something is stoked in the mountain\'s heart, in the fissure on the south face. Quench it, or Kea buries us all.',
+     'I am too old to run from a mountain and too stubborn to leave it. So I sit in the ash and I trust that a hero walked in under the Veil for a reason. Go down into that forge, child, and give me back my quiet mornings.'],
+    ['Quiet. QUIET - do you feel it under your feet? No grumble, no fire. The ash is thinning and the slopes cool by the hour. You gave the Sunward Isle back its mornings, child. Bless you.',
+     'The mountain sleeps like it used to, and the sky is blue over Kohana again. An old woman does not cry easily, but I came near it when the first clear dawn broke. Thank you.']);
+  set('kaia',
+    ['I can\'t launch a hull through ash this thick - it fouls the sail and burns little holes clean through the canvas. The Wavewright sits idle while Kea rages. That fire needs quenching at its source.',
+     'Every wave off the north shore comes in grey with cinders. No wright works in weather like this. Still the mountain and I\'ll build you the finest boat on the isle.'],
+    ['Clear air off the water again - I\'ve two hulls on the stocks and ash-free canvas for both. You gave a wavewright back her trade, and the sea back its blue.',
+     'The strait\'s clean and the sky is clear and every boat I launch stays that way. Come sail one out with me sometime - I owe you at least that.']);
+  set('huk',
+    ['The boars have gone half-mad with the ash and the shaking, fleeing down off the slopes into the village pens. A boarfather can\'t herd against a burning mountain. Somebody has to cool Kea\'s temper.',
+     'Even the tuskiest old sow won\'t face those slopes now, and I don\'t blame her - the lava creeps where the grazing was. Quench the mountain and I\'ll drive the herd back up myself.'],
+    ['The herd\'s climbing back up the cooled slopes to the good grazing, calm as you please. The mountain scared them witless for a season - you unscared it. My thanks, hunter.',
+     'Boars fat and slopes green again, no ash in the wallows. That\'s a good isle to be a boarfather on, and you made it one. Come, I\'ll roast you the best of the drove.']);
+  set('sable',
+    ['The ash gets into everything - the wells, the washing, the lungs of the little ones. We wear rags over our faces and pray the mountain tires. It never does. Not on its own.',
+     'I sweep the same ash off the same step three times a day and it falls again by dusk. This isn\'t living, it\'s enduring. End it, traveler, if any hand can.'],
+    ['Clean air, clear wells, washing that dries WHITE on the line - I\'d forgotten the isle could be like this. That\'s your gift to us, and I\'ll thank you for it every clean morning.',
+     'The little ones play in the open again with no rag over their faces. You gave the Sunward Isle back its breath. There\'s no repaying that, so I\'ll just say bless you.']);
+  set('lani',
+    ['The groves are choked grey and half the fruit drops scorched before it ripens. Ash-farming, we\'re calling it, and laughing so we don\'t weep. Cool that mountain and the green comes back.',
+     'I shake cinders off the leaves and gather what survives. It isn\'t much of a harvest under a burning sky. Still Kea and I\'ll fill your pack with the first clean fruit.'],
+    ['The groves are GREEN again and the fruit ripens sweet with no ash to scorch it. First honest harvest in a season, and it\'s down to you. Take an armful, they\'re perfect.',
+     'Leaves clean, boughs heavy, sky clear - a grower could weep for joy. You gave us the season back. The whole Sunward Isle eats better because you walked in under that Veil.']);
+  set('corvoE',
+    ['I\'d ferry folk clear of this burning rock if the ash didn\'t choke my sails to rags. So I sit at anchor and watch Kea rage and curse the robed man who woke it.',
+     'No captain sails blind through a cinder-sky, and that\'s all the sky there is now. Quench the mountain, hero, and I\'ll run you anywhere the water reaches.'],
+    ['Clear air and a fair wind - the Sunward\'s a port worth calling at again. You cooled the mountain that had me trapped at anchor, and a captain remembers a debt like that.',
+     'Sailed out this morning under a blue sky for the first time in a season and near wept at the clean horizon. That\'s your doing. Passage is free for you, always.']);
+}
+// CLOUDREACH - a storm settled over the cloud and will not break (stormTempleDone lifts it).
+function updateSkyCurseMood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const set=_curseMoodSetter(!!(P.story && P.story.stormTempleDone));
+  set('aeron',
+    ['This cloud weathered every gale in memory, Skyward - but not this one. A storm settled the day the robed man\'s shadow reached us and it will NOT break. Lightning walks the standing stones and splits them where they lie. It\'s caged thunder, penned in the temple by the landing. Let it out.',
+     'I have watched the sky my whole life and I have never seen it stay angry this long. It is unnatural - a curse, penned and pacing. Go down into that temple and quiet it, before the lightning walks the whole cloud to rubble.'],
+    ['It BROKE. The storm broke clean away to blue, like a held breath let go - first clear sky over the Cloudreach in a season. You have my thanks, Skyward, and the whole cloud\'s besides.',
+     'Clear air and gentle wind and the old stones standing quiet. We truly thought we\'d lost the sun for good. You gave it back. The cloud-folk will sing your name up here for three generations.']);
+  set('wisp',
+    ['I tend the cloud, but there\'s no tending a storm that won\'t break - it frays the vapour faster than I can knit it, and the lightning scares the sky-drift clean away. Please, quiet the temple.',
+     'The endless thunder sets my teeth on edge and thins the cloud beneath our very feet. I do what a cloud-tender can and it isn\'t enough. Still it, Skyward, before the plateau itself comes apart.'],
+    ['The cloud knits thick and gentle again and the sky-drift\'s drifting home - I can hear myself think for the first time in a season. That\'s your gift, and I\'ll tend it well.',
+     'Calm sky, whole cloud, quiet stones. You gave the Cloudreach back to the cloud-folk. There\'s no thanks light enough to float up here and carry all I mean by it.']);
 }
 // The Emberwick capstone opens only once all four returned-isle gifts are in hand.
 function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.swiftstep && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
@@ -5911,7 +6149,7 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(120,200,230,0.9)',56); burst(b.x,b.y-0.5,'#8fd8ff',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.unlocked.dive){
       P.unlocked.dive=true; P.story.barikDeepDone=1;
-      if(typeof WORLDS!=='undefined') delete WORLDS.isle;   // may be the 4th gift - refresh the capstone mouth
+      if(typeof WORLDS!=='undefined'){ delete WORLDS.isle; delete WORLDS.main; }   // refresh the capstone mouth + drain restored Barik
       banner('THE PEARL OF THE DEEP','DIVE - CROSS THE DROWNED WATER');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the vault\'s heart, cupped in the Minotaur\'s drowned hoard, a single great <b>pearl</b> the colour of deep water. It is warm, though the vault is cold, and when you close your hand on it the flood outside stops feeling like a wall.</i> <b style="color:#8fd8ff">You learn to DIVE.</b> <i>Walk into the deep water now and you sink beneath it and swim - the drowned reaches Vath\'s flood cut off across the old islands are yours to cross at last.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('pearl',1); banner('THE TIDE-LOCK HOARD','PEARLS AND OLD COIN'); }
@@ -5954,7 +6192,7 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(180,230,255,0.9)',56); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.unlocked.swiftstep){
       P.unlocked.swiftstep=true; P.story.galeDeepDone=1;
-      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      if(typeof WORLDS!=='undefined'){ delete WORLDS.isle; delete WORLDS.wind; }   // drain restored Windsurf
       banner('THE SWIFTSTEP CHARM','QUICKER DASH - YOUR DODGE RECOVERS FASTER');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash recovers half again as fast</b> - <i>you can roll again far sooner. Windsurf can breathe again.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
@@ -5966,7 +6204,7 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(255,140,60,0.9)',56); burst(b.x,b.y-0.5,'#ff9a3c',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.spells.flamesnare){
       P.spells.flamesnare=1; P.story.ashenForgeDone=1;
-      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      if(typeof WORLDS!=='undefined'){ delete WORLDS.isle; delete WORLDS.east; }   // settle restored Sunward
       banner('THE FLAME-SNARE','FIRE-FLETCHED ARROWS ROOT A FOE');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>In the forge\'s heart, cooling on the anvil where the Ash-Scorpion guarded it, a bead of black glass with a live coal trapped inside. It sinks warm into your quiver, and the volcano\'s fury eases off the isle above.</i> <b style="color:#ff9a3c">Your arrows now lay a FLAME SNARE</b> - <i>every shaft roots the foe it strikes in a snare of fire, held fast where it stands. Loose it with the bow ('+((typeof isTouch!=='undefined'&&isTouch)?'the bow slot':'press 2')+').</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE ASHEN FORGE','EMBER-GLASS AND OLD COIN'); }
@@ -5978,7 +6216,7 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(201,176,255,0.9)',56); burst(b.x,b.y-0.5,'#c9b0ff',22,2.8); if(Snd.levelup) Snd.levelup();
     if(!P.unlocked.dash2){
       P.unlocked.dash2=true; P.story.stormTempleDone=1;
-      if(typeof WORLDS!=='undefined') delete WORLDS.isle;
+      if(typeof WORLDS!=='undefined'){ delete WORLDS.isle; delete WORLDS.sky; }   // clear restored Cloudreach
       banner('THE STORMSTEP','DOUBLE DASH - CHAIN A SECOND DODGE');
       setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Stormheart gutters out, and the caged thunder pours into your legs like a second heartbeat. The temple\'s endless lightning stills to a clean, quiet sky.</i> <b style="color:#c9b0ff">Double Dash learned!</b> <i>Dash again in the instant after the first - two darts, quick as breath - to clear the widest gaps of all.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE STORMHEART','STORM-GLASS AND OLD COIN'); }
@@ -6408,10 +6646,16 @@ function switchWorld(id){
   // Act IV: coming back to Emberwick with the last hunt underway - make sure Vath
   // is on the green if you'd already drawn him out and left mid-fight.
   if(id==='isle' && typeof ensureFinalVath==='function') ensureFinalVath();
-  if(id==='main' && !P.quests.mossbrew) P.quests.mossbrew='avail';
-  if(id==='main' && !P.quests.pearlq && qs('fish')==='done') P.quests.pearlq='avail';
+  // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
+  // chain below is the one exception, left armed on purpose).
+  if(id==='main' && !P.quests.mossbrew && !(P.story&&P.story.act2)) P.quests.mossbrew='avail';
+  if(id==='main' && !P.quests.pearlq && qs('fish')==='done' && !(P.story&&P.story.act2)) P.quests.pearlq='avail';
+  // Act II: under the Veil, Barik lies flooded until the Drowned Vault is cleared - Warden Kell's
+  // restoration plea (offered only while the flood stands).
+  if(id==='main' && P.story && P.story.vathVeil && !P.story.barikDeepDone && qs('barikRestore')!=='done' && !P.quests.barikRestore) P.quests.barikRestore='avail';
+  if(id==='main' && typeof updateBarikCurseMood==='function') updateBarikCurseMood();
   if(id==='main'){
-    for(const q2 of ['welcome2','hedda1','torv1','ivo1','ribbon1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
+    if(!(P.story&&P.story.act2)) for(const q2 of ['welcome2','hedda1','torv1','ivo1','ribbon1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
     if(P.earlySail && !P.earlyKit){
       P.earlyKit=1;
       P.kit=true;
@@ -6446,10 +6690,14 @@ function switchWorld(id){
       setTimeout(()=>{ if(typeof barikArrivalGreeting==='function') barikArrivalGreeting(); }, 1000);
     }
   }
-  if(id==='main' && !P.quests.bounty){ P.quests.bounty='avail'; }   // Warden Kell's work is available; no toast - the player finds him
-  // the Duchess's letter-errand waits at the keep; carry it on your first trip east
+  if(id==='main' && !P.quests.bounty && !(P.story&&P.story.act2)){ P.quests.bounty='avail'; }   // Act I: Warden Kell's work; suppressed in Act II
+  // the Duchess's letter-errand waits at the keep; carry it on your first trip east. This is the
+  // ONE Act I quest that carries into Act II - left ungated on purpose.
   if(id==='main' && !P.quests.duchesslove && !(P.story&&P.story.duchessWed)) P.quests.duchesslove='avail';
-  if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  if(id==='east' && !(P.story&&P.story.act2)) for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
+  // Act II: the Sunward Isle burns until the Ashen Forge is quenched - Elder Moli's restoration plea
+  if(id==='east' && P.story && P.story.vathVeil && !P.story.ashenForgeDone && qs('sunRestore')!=='done' && !P.quests.sunRestore) P.quests.sunRestore='avail';
+  if(id==='east' && typeof updateSunCurseMood==='function') updateSunCurseMood();
   if(id==='east'){
     // Vath leaves the Sunward village for good once the wyrm quest is behind you; he
     // does NOT reappear as a grove mob (the dragon-freeing no longer starts a hunt).
@@ -6457,13 +6705,18 @@ function switchWorld(id){
   }
   if(id==='wind'){
     const hasBoard = !!(P.unlocked && P.unlocked.surf);
-    // you must earn a windsurf before Rell will send you at the Leviathan - the
-    // beast lives on the water, past the reach of any jetty. Tolen shapes boards.
-    if(!hasBoard && qs('board')!=='done' && !P.quests.board) P.quests.board='avail';
-    if(hasBoard && qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    const wA2 = !!(P.story && P.story.act2);
+    // Act I: you must earn a windsurf before Rell will send you at the Leviathan - the beast lives
+    // on the water, past the reach of any jetty. Tolen shapes boards. All suppressed in Act II.
+    if(!hasBoard && qs('board')!=='done' && !P.quests.board && !wA2) P.quests.board='avail';
+    if(hasBoard && qs('tide')!=='done' && !P.quests.tide && !wA2) P.quests.tide='avail';
     // once the strait is calm, Coralie can finally reopen the Breakers properly
-    if(P.story && P.story.tideCalm && qs('breakers')!=='done' && !P.quests.breakers) P.quests.breakers='avail';
+    if(P.story && P.story.tideCalm && qs('breakers')!=='done' && !P.quests.breakers && !wA2) P.quests.breakers='avail';
     if(P.story && P.story.tideCalm) updateWindFolkMood();
+    // Act II: Windsurf lies half-drowned until the Gale Spire is cleared - Rell's restoration plea.
+    // Runs AFTER updateWindFolkMood so the curse/restore lines win over the Act I tideCalm mood.
+    if(P.story && P.story.vathVeil && !P.story.galeDeepDone && qs('windRestore')!=='done' && !P.quests.windRestore) P.quests.windRestore='avail';
+    if(typeof updateWindCurseMood==='function') updateWindCurseMood();
     if(!P.prog.windSeen){ P.prog.windSeen=1; }
     // First drop out of the cloud (you can only reach Windsurf via The Leap): Rell greets
     // the impossible visitor. Fires once, after the arrival fade/banner has settled.
@@ -6490,6 +6743,9 @@ function switchWorld(id){
     // the wind bears you to Windsurf. Point first-timers at the bird so it isn't missed.
     if(!(P.story && (P.story.birdQuest || P.story.skyDungeonDone || P.story.parachute)))
       setTimeout(()=>toast('A stormtossed <b>Wind-Lost Bird</b> frets by the landing. The high wind is soured, and it is the only road down from here - hear her out and run her <b>rainbow road</b> to calm the sky.',7600),1200);
+    // Act II: the Cloudreach is stormbound until the Storm Temple is cleared - Aeron's restoration plea
+    if(P.story && P.story.vathVeil && !P.story.stormTempleDone && qs('skyRestore')!=='done' && !P.quests.skyRestore) P.quests.skyRestore='avail';
+    if(typeof updateSkyCurseMood==='function') updateSkyCurseMood();
   }
   if(id==='reach'){
     // the castaways' two tormentors: the Brute on the barrow road (Mora) and the

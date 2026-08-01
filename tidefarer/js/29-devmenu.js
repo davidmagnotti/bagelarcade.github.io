@@ -106,6 +106,7 @@ function clearMobs(){
 function enterReturnPhase(){
   P.story=P.story||{}; P.unlocked=P.unlocked||{}; P.spells=P.spells||{};
   P.story.act=Math.max(P.story.act||1,2); P.story.act2=1;
+  if(typeof purgeAct1AvailQuests==='function') purgeAct1AvailQuests();   // retire the old isles' Act I quest-board work
   // Act I is closed by the time Act II opens: the mask is off, the prince is remembered,
   // and the throne fell. Set those so the return phase is coherent (Jaist reads as Prince
   // Jaist and holds the boat on Emberwick, not the woodpile).

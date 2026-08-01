@@ -74,6 +74,11 @@ function questReady(id){
     if(id==='stormroc') return !!(P.story&&P.story.rocDown);
     if(id==='barrowbrute') return !!(P.story&&P.story.reachBossDown);
     if(id==='drownedwarden') return !!(P.story&&P.story.tombBossDown);
+    // Act II returned-isle restorations complete off each spirit-dungeon's clear flag
+    if(id==='windRestore') return !!(P.story&&P.story.galeDeepDone);
+    if(id==='sunRestore')  return !!(P.story&&P.story.ashenForgeDone);
+    if(id==='barikRestore')return !!(P.story&&P.story.barikDeepDone);
+    if(id==='skyRestore')  return !!(P.story&&P.story.stormTempleDone);
   }
   return false;
 }
