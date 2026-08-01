@@ -405,6 +405,11 @@ const THR = {
     { who:'King Aldous', title:'THE KING RISES',
       html:'“You won’t have them, Vath. Not again — I will not let you take them from me a second time.”',
       vath:0.85, gold:0.5, violet:0.55, clash:0, flee:0, guards:0 },
+    // Vath answers with a wicked flourish and lifts his hands — the violet gathering, no beam
+    // loosed yet: the threat lands, THEN the strike on the next beat.
+    { who:'Vath',
+      html:'“Then it’s time for all of you to meet the end.”',
+      vath:1, gold:0.5, violet:0.85, clash:0, flee:0, guards:0 },
     // NOW Vath strikes — a wordless beat: the animation carries it (auto-advances).
     { who:'', html:'',
       vath:1, gold:0.85, violet:0.8, clash:0.6, flee:0, guards:0, strike:1 },
@@ -460,18 +465,19 @@ const THR_STAGE=[
   {kAdv:0,    foc:[2.6,2.3], zoom:1.10, kingDown:0},  // 0  the homecoming - King faces his children
   {kAdv:0,    foc:[1.3,0.9], zoom:1.18, kingDown:0},  // 1  Vath comes - King still on the throne
   {kAdv:0.8,  foc:[1.6,1.2], zoom:1.23, kingDown:0},  // 2  King declares - steps between, no beams yet
-  {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 3  Vath strikes, King in its path
-  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 4  the surge / RUN
-  {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 5  the Prince refuses to leave
-  {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 6  the King's warning
-  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 7  the grab-and-haul
-  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 8  burst the doors
-  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 9  Vath laughs
-  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 10 the Tideglass taken
-  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 11 guards flood in
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 12 the memory pulse
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 13 Vath's lie
-  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 14 END OF ACT I
+  {kAdv:0.9,  foc:[1.7,1.3], zoom:1.25, kingDown:0},  // 3  Vath: 'meet the end' - hands raised, violet gathering
+  {kAdv:0.95, foc:[1.8,1.4], zoom:1.26, kingDown:0},  // 4  Vath strikes, King in its path
+  {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 5  the surge / RUN
+  {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 6  the Prince refuses to leave
+  {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 7  the King's warning
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 8  the grab-and-haul
+  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 9  burst the doors
+  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 10 Vath laughs
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 11 the Tideglass taken
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 12 guards flood in
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 13 the memory pulse
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 14 Vath's lie
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 15 END OF ACT I
 ];
 /* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
    The nave runs down the line x==y (which projects straight down the screen);
@@ -609,9 +615,9 @@ function _thrLoop(ts){
   // The King faces Vath for the whole confrontation (back-to-camera), so his cast-hands would
   // only ever render as a mis-placed pair behind him - keep them down for good once Vath is here.
   const kHandT = 0;
-  // Vath lifts his hands to LOOSE the beam: fully raised through the strike and the clash
-  // (beats 2-9), high again as he seizes the Tideglass (10), lowered once it's done (11+).
-  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=9) ? 1 : _i===10 ? 0.85 : 0;
+  // Vath lifts his hands to LOOSE the beam: fully raised from his threat through the strike
+  // and the clash (beats 2-10), high again as he seizes the Tideglass (11), lowered after (12+).
+  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=10) ? 1 : _i===11 ? 0.85 : 0;
   THR.kHand = e(THR.kHand, kHandT, 3.2);
   THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
@@ -652,7 +658,7 @@ function _thrLoop(ts){
   if(THR.clash>0.35 && Math.random()<THR.clash){
     THR.sparks.push({x:(Math.random()*2-1)*10,y:(Math.random()*2-1)*10,
       vx:(Math.random()*2-1)*70,vy:(Math.random()*2-1)*70-10,life:0.5,max:0.5,
-      col:Math.random()<0.5?'#ffd27a':'#c9a0ff'});
+      col:Math.random()<0.5?'#ffbf3a':'#b45cff'});
   }
   for(const s of THR.sparks){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=90*dt; s.life-=dt; }
   THR.sparks=THR.sparks.filter(s=>s.life>0);
@@ -698,12 +704,12 @@ function _thrDraw(){
   { const look=down>0.5?LOOK_KSPENT:LOOK_KING;
     const ds=down*down*(3-2*down);        // smooth collapse
     items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,kingDir,THR.stepK*(1-ds),
-      {aura:gold*0.95, auraCol:'255,196,90', lift:12*Z*(1-THR.kAdv), drop:5*Z*down,
+      {aura:gold*0.95, auraCol:'255,170,46', lift:12*Z*(1-THR.kAdv), drop:5*Z*down,
        scale:1-0.12*down, hurt:down>0.15&&down<0.6, tip: ds*1.5})}); }   // topples over, lies dead on the floor
   if(THR.vAdv>0.03){   // Vath is absent for the homecoming, then strides in
-    const dir=THR.idx>=11?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+    const dir=THR.idx>=12?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
-      {aura:0.3+violet*0.6, auraCol:'160,110,240'})}); }
+      {aura:0.3+violet*0.6, auraCol:'150,66,238'})}); }
   const sibA=THR.flee>0.68?Math.max(0,1-(THR.flee-0.68)*4.8):1;  // clear the doors and be GONE by ~0.9
   if(sibA>0.02){
     const hdir=THR.flee>0.2?_thrFace(THR.hero,HEROF):_thrFace(THR.hero,THRONE);
@@ -732,12 +738,12 @@ function _thrDraw(){
     return w ? Math.abs(Math.sin(step))*2.2*size : (Math.sin(G.time*2.1)*0.5+0.5)*0.9*size; };
   if(THR.vHand>0.02 && THR.vAdv>0.03){
     const vGY=SC(THR.vath.x,THR.vath.y).y - _bob(THR.stepV,1.34*Z);
-    _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'160,110,240',true,vGY,1);
+    _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'150,66,238',true,vGY,1);
   }
   if(THR.kHand>0.02 && !kingAway){
     const kSc=1-0.17*down;
     const kGY=SC(THR.king.x,THR.king.y).y - 12*Z*(1-THR.kAdv) + 11*Z*down - _bob(THR.stepK,1.34*Z*kSc);
-    _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,196,90',false,kGY,kSc);
+    _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,170,46',false,kGY,kSc);
   }
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
@@ -838,10 +844,10 @@ function _thrFloor(SC,Z,t,gold,violet){
   const ks=SC(THR.king.x,THR.king.y), vs=SC(THR.vath.x,THR.vath.y);
   cx.save(); cx.globalCompositeOperation='lighter';
   if(gold>0.05){ const g=cx.createRadialGradient(ks.x,ks.y,4,ks.x,ks.y,150*Z);
-    g.addColorStop(0,`rgba(255,196,90,${0.16*gold})`); g.addColorStop(1,'rgba(255,196,90,0)');
+    g.addColorStop(0,`rgba(255,170,46,${0.16*gold})`); g.addColorStop(1,'rgba(255,170,46,0)');
     cx.fillStyle=g; cx.fillRect(0,0,W,H); }
   if(violet>0.05){ const g=cx.createRadialGradient(vs.x,vs.y,4,vs.x,vs.y,150*Z);
-    g.addColorStop(0,`rgba(160,110,240,${0.16*violet})`); g.addColorStop(1,'rgba(160,110,240,0)');
+    g.addColorStop(0,`rgba(150,66,238,${0.16*violet})`); g.addColorStop(1,'rgba(150,66,238,0)');
     cx.fillStyle=g; cx.fillRect(0,0,W,H); }
   cx.restore();
 }
@@ -900,9 +906,13 @@ function _thrClash(SC,Z,clash,t){
   const ax=a.x, ay=a.y-30*Z, bx=b.x, by=b.y-30*Z, mx=(ax+bx)/2, my=(ay+by)/2;
   cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
   const beam=cx.createLinearGradient(ax,ay,bx,by);
-  beam.addColorStop(0,`rgba(160,110,240,${0.85*clash})`);
-  beam.addColorStop(0.5,`rgba(255,255,255,${0.9*clash})`);
-  beam.addColorStop(1,`rgba(255,196,90,${0.85*clash})`);
+  // keep each half its own colour - Vath's violet, the King's gold - with only a thin
+  // white seam where the two magics actually collide, so the sides stay clearly told apart
+  beam.addColorStop(0,`rgba(150,66,238,${0.9*clash})`);
+  beam.addColorStop(0.42,`rgba(150,66,238,${0.9*clash})`);
+  beam.addColorStop(0.5,`rgba(255,255,255,${0.95*clash})`);
+  beam.addColorStop(0.58,`rgba(255,170,46,${0.9*clash})`);
+  beam.addColorStop(1,`rgba(255,170,46,${0.9*clash})`);
   cx.strokeStyle=beam; cx.lineWidth=(3+7*clash)*Z+2*Math.sin(t*40)*clash;
   cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(bx,by); cx.stroke();
   const nr=(9+13*clash)*Z*(0.85+0.15*Math.sin(t*30));
@@ -926,14 +936,14 @@ function _thrStrike(SC,Z,strike,t){
   cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
   // the lash from Vath's hand to where the King now stands (the interception point)
   const g1=cx.createLinearGradient(vx,vy,kx,ky);
-  g1.addColorStop(0,`rgba(160,110,240,${0.85*strike})`);
-  g1.addColorStop(1,`rgba(205,175,255,${0.85*strike})`);
+  g1.addColorStop(0,`rgba(150,66,238,${0.85*strike})`);
+  g1.addColorStop(1,`rgba(176,102,246,${0.85*strike})`);
   cx.strokeStyle=g1; cx.lineWidth=(3+4*strike)*Z + Math.sin(t*38)*strike;
   cx.beginPath(); cx.moveTo(vx,vy); cx.lineTo(kx,ky); cx.stroke();
   // ...and the tail still straining PAST him toward the children, retracting as he catches it
   const g2=cx.createLinearGradient(kx,ky,tx,ty);
-  g2.addColorStop(0,`rgba(190,150,255,${0.55*strike})`);
-  g2.addColorStop(1,'rgba(190,150,255,0)');
+  g2.addColorStop(0,`rgba(165,84,244,${0.55*strike})`);
+  g2.addColorStop(1,'rgba(165,84,244,0)');
   cx.strokeStyle=g2; cx.lineWidth=(1.5+2.5*strike)*Z;
   cx.beginPath(); cx.moveTo(kx,ky);
   cx.lineTo(kx+(tx-kx)*strike, ky+(ty-ky)*strike); cx.stroke();
@@ -944,7 +954,7 @@ function _thrPulse(cx,cxp,cyp,pr,W,H){
   const R=Math.max(W,H)*0.75*pr, a=Math.max(0,1-pr/1.8);
   cx.save(); cx.globalCompositeOperation='lighter';
   const rg=cx.createRadialGradient(cxp,cyp,R*0.7,cxp,cyp,R);
-  rg.addColorStop(0,'rgba(160,110,240,0)'); rg.addColorStop(0.85,`rgba(180,140,255,${0.4*a})`); rg.addColorStop(1,'rgba(160,110,240,0)');
+  rg.addColorStop(0,'rgba(150,66,238,0)'); rg.addColorStop(0.85,`rgba(170,96,246,${0.4*a})`); rg.addColorStop(1,'rgba(150,66,238,0)');
   cx.fillStyle=rg; cx.fillRect(0,0,W,H); cx.restore();
 }
 // a tall arched window high on the back wall, storm-dark, flaring white with the lightning
