@@ -38,6 +38,12 @@ function gcDims(){
 }
 function invalidateGround(){ groundCache=null; }
 function invalidateScenery(){ sceneryCache=null; }
+// Force the shared big-map canvas to rebuild for the world you're actually on. Needed
+// because a dungeon's genXAll() calls buildMapBase() while switchWorld has NOT yet flipped
+// G.worldId - so the dungeon's gray fill gets mislabelled with the previous world, and the
+// overworld big map then reads as an all-gray sheet on return. switchWorld calls this after
+// it sets G.worldId, so the next drawBigMap rebuilds from the correct G.map.
+function invalidateMapBase(){ mapBaseWorld=null; }
 function buildGroundCache(){
   const {OX,OY,W,H}=gcDims();
   const c=document.createElement('canvas'); c.width=W; c.height=H;

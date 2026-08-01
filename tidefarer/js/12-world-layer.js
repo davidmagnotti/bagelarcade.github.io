@@ -6221,6 +6221,9 @@ function switchWorld(id){
     if(typeof placeDungeonHideaways==='function') placeDungeonHideaways(id);
   }
   G.worldId=id;
+  // a dungeon's genXAll() built the shared mapBase while G.worldId still named the PREVIOUS
+  // world, mislabelling it - so the big map read all-gray on return. Force a correct rebuild.
+  if(typeof invalidateMapBase==='function') invalidateMapBase();
   if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once
   P.x=def.spawn.x; P.y=def.spawn.y; P.dir={x:1,y:0}; P.fishing=null;
   // Arriving on an isle should not pop a DISCOVERED banner for the spot you land on -

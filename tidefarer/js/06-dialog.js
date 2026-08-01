@@ -512,14 +512,8 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
       [{item:'manapot',price:10},{item:'potion',price:30}])});
   }
-  if(npc.id==='mira'){
-    // her silk was stolen on the north road - she has none to sell until it's recovered
-    // (the ribbon quest, stage 2). Before that, no cloth for sale.
-    if(qs('ribbon2')==='done'){
-      btns.unshift({label:'Buy cloth…', fn:()=>vendorShop(npc,'Dawn-dyed silk, cut clean and true - back on the loom now the north road\'s seen to. A bolt goes further than you\'d think, and the resort\'s always wanting more.',
-        [{item:'silk',price:14}])});
-    }
-  }
+  // Mira the seamstress does not sell the recovered Stolen Silk - it's the one-off bolt
+  // the brigands took, meant for Wren's ribbon, not stock to buy back over the counter.
   if(npc.id==='brant' && qs('wreck')==='done'){
     btns.unshift({label:'Set sail for Greyharbor', fn:()=>{ closeDialog(); departEarly(); }});
   }
