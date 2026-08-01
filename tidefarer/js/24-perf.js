@@ -53,8 +53,7 @@ frame=function(ts){
   _frame(ts);
   if(safe) return; // pinned
   if(BENCH){ prev=ts; return; } // benchmark harness is driving; don't auto-tune
-  if(G.paused || G.menuPause || document.hidden ||
-     document.body.classList.contains('photoing')){ prev=ts; return; }
+  if(G.paused || G.menuPause || document.hidden){ prev=ts; return; }
   if(prev){ const dt=ts-prev; if(dt>0 && dt<2000){ acc+=dt; cnt++; } }
   prev=ts;
   // Evaluate roughly every 0.6s of wall time (or 60 frames, whichever first),

@@ -714,11 +714,10 @@ function dragonFaints(m){
   if(typeof dragonFreedCutscene==='function'){
     setTimeout(()=>dragonFreedCutscene(offerLift), 700);
   } else {
-    setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled into the palm grove. Do not let him bind another.”',
+    setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled the moment the chain broke - gone from the isle entirely, the way his kind goes. You will meet him again, I think. But not here.”',
       {onOk:offerLift}),1200);
   }
   if(qs('wyrm')==='active') completeQuest('wyrm');
-  if(typeof startMageHunt==='function') startMageHunt();
 }
 // Which overworld isle a dungeon belongs to - felling a dungeon boss pacifies
 // the isle above it too, so its nights fall quiet like any other cleared isle.

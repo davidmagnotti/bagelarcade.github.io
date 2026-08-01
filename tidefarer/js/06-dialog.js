@@ -727,10 +727,15 @@ function shopButtons(npc,btns){
       else setDialog('“Four coin a cap.”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
-  if(npc.id==='willa'){
+  // Willa and every island farmer (npc.farmer, set in 36-island-farms.js) hand out
+  // seed for free - the "work with a farmer" hook that makes their plots plantable.
+  if(npc.id==='willa' || npc.farmer){
     btns.unshift({label:'Ask for seeds (free)', fn:()=>{
       giveQuiet('seed',3); Snd.pickup(); refreshUI();
-      setDialog('“Seeds are the island\'s, not mine. Plant kindly.” <i>(+3 seeds)</i>', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
+      const line = npc.id==='willa'
+        ? '“Seeds are the island\'s, not mine. Plant kindly.” <i>(+3 seeds)</i>'
+        : '“Here - a handful of seed. Work the beds and they\'ll pay you back.” <i>(+3 seeds)</i>';
+      setDialog(line, shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
   return withTravel(npc,btns);

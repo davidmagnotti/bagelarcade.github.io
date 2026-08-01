@@ -128,16 +128,21 @@ function loadCode(str){
    for(const k in P.skills){ const sk=P.skills[k]; if(sk && sk.lvl>=cap){ sk.lvl=cap; sk.xp=0; } }}
   P.quests=d.quests||{}; P.prog=d.prog||{};
   // One-time migration: anyone who felled the wyrm under the PRE-rework version
-  // never saw the inside-the-volcano scene, the faint-not-die twist, or the
-  // mage-hunt follow-up. A new-version completion always leaves a `vhunt` quest
-  // behind; an old one never does - so wyrm-done-but-no-vhunt uniquely marks an
-  // old save. Roll the whole Ashwing chain back so Vath returns to Kohana and
-  // it can be replayed fresh. Guarded so it only ever fires once.
-  if(qs('wyrm')==='done' && !P.quests.vhunt && !P.prog.wyrmReplayed){
+  // never saw the inside-the-volcano scene or the faint-not-die twist. The new
+  // freeing path always sets `eastDragonFreed`; an old completion never did - so
+  // wyrm-done-but-not-eastDragonFreed uniquely marks an old save. Roll the whole
+  // Ashwing chain back so it can be replayed fresh. Guarded to fire only once.
+  if(qs('wyrm')==='done' && !P.eastDragonFreed && !P.prog.wyrmReplayed){
     P.prog.wyrmReplayed=1;
     delete P.quests.wyrm;   // re-offered as 'avail' on entering the east isle
-    delete P.prog.vhunt;
+    delete P.quests.vhunt; delete P.prog.vhunt;   // scrub any stale hunt from an in-between build
     P.metDragon=0; P.mageHuntStarted=0; P.eastDragonFought=0; P.eastDragonFreed=0;
+  }
+  // A save from the in-between build may carry an ACTIVE grove hunt that can no longer
+  // be finished (the mage no longer spawns). If Ashwing is already freed, retire it so
+  // it isn't stuck forever in the quest log with a marker on an empty grove.
+  if(P.eastDragonFreed && P.quests && P.quests.vhunt && P.quests.vhunt!=='done'){
+    delete P.quests.vhunt; delete P.prog.vhunt;
   }
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
