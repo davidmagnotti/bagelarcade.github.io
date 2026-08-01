@@ -226,9 +226,9 @@ function inDungeon(id){ const d=WORLD_DEFS[id||G.worldId]; return !!(d && d.dung
 function spawnFastExit(x,y){
   if(!inDungeon() || !G.decor || G.decor.some(d=>d.kind==='fastexit')) return;
   const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(x),Math.round(y),4)) || [Math.round(x),Math.round(y)];
-  G.decor.push({kind:'fastexit', x:sp[0]+0.5, y:sp[1]+0.5, name:'THE WAY UP', labelY:-46});
+  G.decor.push({kind:'fastexit', x:sp[0]+0.5, y:sp[1]+0.5, name:'CLIMB OUT', labelY:-46});
   if(typeof invalidateScenery==='function') invalidateScenery();
-  setTimeout(()=>{ if(typeof toast==='function') toast('A shimmering <b style="color:#c9b0ff">way up</b> opens where the guardian fell. Step into it whenever you\'re ready to rise from the dungeon - <b>mended and a level stronger</b>.',6500); },1600);
+  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down and the prize is yours - a <b style="color:#c9b0ff">way out</b> opens where it fell. Take what it guarded, then step in to <b>climb out</b> of the dungeon, <b>mended and a level stronger</b>.',6500); },1600);
 }
 // which exit each dungeon world uses to climb back to the surface
 function leaveDungeon(){
@@ -257,7 +257,7 @@ function useFastExit(){
   P.hp=P.maxhp; P.mp=P.maxmp;
   if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));   // ~one full level
   if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
-  toast('You step into the way up - whole again, and a level the wiser.',4200);
+  toast('You climb out of the dungeon - whole again, and a level the wiser.',4200);
 }
 
 function addCrowsFor(){

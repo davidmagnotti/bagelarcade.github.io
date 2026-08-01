@@ -228,7 +228,7 @@ function nearestInteract(){
     if(b.kind==='signalbeacon'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.2 && d<bd){ bd=d; best={type:'signalbeacon',o:b,label:(P.story&&P.story.tideCalm)?'Signal Ashwing to the Cloudreach':'A signal beacon'}; } }
     if(b.kind==='fastexit'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<2.4 && d<bd){ bd=d; best={type:'fastexit',o:b,label:'Rise - THE WAY UP'}; } }
+      if(d<2.4 && d<bd){ bd=d; best={type:'fastexit',o:b,label:'Climb out'}; } }
     if(b.kind==='skybird'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.6 && d<bd){ bd=d; best={type:'skybird',o:b,label: G.worldId==='skydungeon'?'Fly down':'Speak'}; } }
     if(b.kind==='skytile' && !(P.story&&P.story.skyG2)){ const d=dist(P.x,P.y,b.x,b.y);

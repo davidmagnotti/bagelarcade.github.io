@@ -199,16 +199,21 @@ function placeDungeonHideaways(id){
           Lodestone       (Undermill / Cog-Bound)     -> lodestone plate rooms (isles)
 ---- */
 var BOSS_TOOL={
-  undermaw:    {grant:'grantRivenedge',  have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
-  eastdeep:    {grant:'grantCragbreaker', have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
-  sunwarddeep: {grant:'grantBomb',        have:function(){return !!(P.unlocked&&P.unlocked.bomb);},      is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
-  milldeep:    {grant:'grantLodestone',   have:function(){return !!(P.unlocked&&P.unlocked.lodestone);}, is:function(m){return !!m.millboss;}}
+  undermaw:    {flag:'axegift',  have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
+  eastdeep:    {flag:'pickgift', have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
+  sunwarddeep: {flag:'bombgift', have:function(){return !!(P.unlocked&&P.unlocked.bomb);},      is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
+  milldeep:    {flag:'lodegift', have:function(){return !!(P.unlocked&&P.unlocked.lodestone);}, is:function(m){return !!m.millboss;}}
 };
+// The boss drops its prize as a CHEST where it falls - you go to it, open it (get the
+// prize), then climb out. (Not a silent grant; the "get prize, then climb out" flow.)
 function awardDungeonTool(m){
   try{
     var t=BOSS_TOOL[G.worldId]; if(!t || !m || !t.is(m) || t.have()) return;
-    // let the boss's own fall beat play first, then reveal the prize
-    setTimeout(function(){ try{ var fn=window[t.grant]; if(typeof fn==='function'){ fn(); if(typeof autoSave==='function') autoSave(); } }catch(e){} }, 1500);
+    if(G.decor.some(function(d){return d[t.flag];})) return;   // already dropped
+    var pos=(typeof findOpenNear==='function' && findOpenNear(Math.round(m.x),Math.round(m.y),6)) || [Math.round(m.x),Math.round(m.y)];
+    var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5}; o[t.flag]=1;
+    G.decor.push(o);
+    if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){}
 }
 
