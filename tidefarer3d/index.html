@@ -423,7 +423,7 @@ function dock(x,z){ const g=new THREE.Group(); for(let i=0;i<8;i++){ g.add(pos(t
   boat.position.set(-24,-1.0,4.6); boat.rotation.y=.18; boat.userData.bob=Math.random()*6; g.add(boat); g.userData.boat=boat; onGround(g,x,z,0.2); return g; }
 function ruinPillar(x,z,h){ const g=new THREE.Group(); const seg=Math.max(1,Math.round(h)); for(let i=0;i<seg;i++)g.add(pos(rotY(toon(cyl(.9,1.0,1.4,8),i%2?COL.stoneDk:COL.stone,{outline:0.03}),Math.random()),0,.7+i*1.4,0)); ground(g,1.1); onGround(g,x,z); return g; }
 function fold(x,z){ const g=new THREE.Group(),R=6; for(let a=0;a<Math.PI*2-.35;a+=.5){ g.add(pos(toon(box(.28,1.5,.28),COL.timber,{outline:0}),Math.cos(a)*R,.75,Math.sin(a)*R)); }
-  for(const[sx,sz]of[[-2,1],[2,-1.5],[.5,2.5]]){ const s=new THREE.Group(); s.add(pos(scl(toon(ico(1.2,1),COL.wool,{outline:0.04}),1.3,1,1.05),0,1.35,0)); s.add(pos(toon(box(.65,.75,.85),COL.sheepFace,{outline:0.04}),1.35,1.25,0)); for(const[lx,lz]of[[-.7,-.5],[-.7,.5],[.7,-.5],[.7,.5]])s.add(pos(toon(box(.26,1,.26),COL.sheepFace,{outline:0}),lx,.5,lz)); ground(s,1.4); s.position.set(sx,0,sz); g.add(s);} ground(g,6.4); onGround(g,x,z); return g; }
+  for(const[sx,sz]of[[-2,1],[2,-1.5],[.5,2.5]]){ const s=new THREE.Group(); s.add(pos(scl(toon(ico(1.2,1),COL.wool,{outline:0.04}),1.3,1,1.05),0,1.35,0)); s.add(pos(scl(toon(ico(.42,1),COL.sheepFace,{outline:0.04}),0.9,1.0,1.15),1.32,1.2,0)); for(const[lx,lz]of[[-.7,-.5],[-.7,.5],[.7,-.5],[.7,.5]])s.add(pos(toon(cap(.12,.7,7),COL.sheepFace,{outline:0}),lx,.5,lz)); ground(s,1.4); s.position.set(sx,0,sz); g.add(s);} ground(g,6.4); onGround(g,x,z); return g; }
 // small helpers
 function pos(o,x,y,z){ o.position.set(x,y,z); return o; }
 function rotY(o,a){ o.rotation.y=a; return o; }
@@ -589,12 +589,12 @@ addNPC(zc.village.x+12,zc.village.z-6,'The Woodworker',[
 
 // Pip the cat — Nia's, prowling the north
 function catCritter(x,z){ const g=new THREE.Group(); const c=0xd98a4a;
-  g.add(pos(toon(box(1.0,.55,.5),c,{outline:0.04}),0,.7,0));
+  { const bd=rotZ(toon(cap(.27,.5,10),c,{outline:0.04}),Math.PI/2); bd.scale.set(1,1,0.92); g.add(pos(bd,0,.72,0)); }
   g.add(pos(toon(new THREE.SphereGeometry(.36,10,8),c,{outline:0.04}),.6,1.0,0));
   for(const ez of[-.15,.15]) g.add(pos(toon(cyl(.02,.14,.22,4),c,{outline:0}),.75,1.35,ez));
   for(const ex of[-.1,.1]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.05,6,6),new THREE.MeshBasicMaterial({color:0x203010})),.9+0,1.05,ex));
   g.add(pos(rotZ(toon(cyl(.06,.02,.9,5),c,{outline:0}),.8),-.6,1.0,0));   // tail
-  for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(box(.14,.5,.14),c,{outline:0}),lx,.25,lz));
+  for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(cap(.075,.34,6),c,{outline:0}),lx,.25,lz));
   ground(g,.7); onGround(g,x,z); g.userData.face=Math.random()*7; return g; }
 const pip=catCritter(zc.springs.x+3, zc.springs.z-4);
 
@@ -624,26 +624,26 @@ function spawnSlime(x,z){ const g=new THREE.Group(); const body=toon(new THREE.S
   for(const ex of[-.5,.5])g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.2,10,10),new THREE.MeshBasicMaterial({color:0x20301a})),ex,1.7,1.35));
   ground(g,1.6); onGround(g,x,z); enemies.push({g,body,kind:'slime',hp:60,max:60,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:3.4,dmg:8,reach:2.6}); }
 function spawnWolf(x,z){ const g=new THREE.Group();
-  const body=toon(box(2.2,1.2,1.1),COL.wolf,{outline:0.04}); body.position.y=1.5; g.add(body);
-  g.add(pos(toon(box(1,1,.9),COL.wolf,{outline:0.04}),1.2,1.9,0)); // head
+  const body=rotZ(toon(cap(.55,1.05,10),COL.wolf,{outline:0.04}),Math.PI/2); body.scale.set(1,1,0.9); body.position.y=1.5; g.add(body);
+  g.add(pos(scl(toon(ico(.56,1),COL.wolf,{outline:0.04}),1.05,1.0,0.95),1.2,1.85,0)); // head
   g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,.25)); g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,-.25));
-  const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(box(.32,1.2,.32),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
+  const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(cap(.16,.9,7),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
   ground(g,1.5); onGround(g,x,z); enemies.push({g,body,legs,kind:'wolf',hp:85,max:85,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:6.5,dmg:14,reach:3.0,face:0}); }
 for(let i=0;i<6;i++){ const a=Math.random()*7,r=Math.random()*10; spawnSlime(zc.meadow.x+Math.cos(a)*r,zc.meadow.z+Math.sin(a)*r); }
 for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*8; spawnSlime(zc.springs.x+Math.cos(a)*r,zc.springs.z+Math.sin(a)*r); }
 for(let i=0;i<4;i++){ const a=Math.random()*7,r=Math.random()*12; spawnWolf(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r); }
 // The Old Ruins: the Hollow King's hollow guard — skeletons, and the crowned King himself.
 function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4; const g=new THREE.Group();
-  const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(box(.28*s,1.6*s,.28*s),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
-  g.add(pos(toon(box(1.0*s,.4*s,.5*s),bone,{outline:0.03}),0,1.7*s,0));
-  const rib=pos(toon(box(1.1*s,1.4*s,.7*s),bone,{outline:0.03}),0,2.6*s,0); g.add(rib);
+  const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(cap(.14*s,1.32*s,7),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
+  g.add(pos(scl(toon(ico(.34*s,1),bone,{outline:0.03}),1.45,0.7,0.95),0,1.72*s,0));
+  const rib=pos(toon(cap(.48*s,.6*s,10),bone,{outline:0.03}),0,2.6*s,0); rib.scale.set(1.05,1,0.7); g.add(rib);
   for(let i=0;i<3;i++) g.add(pos(toon(box(1.16*s,.1*s,.75*s),dk,{outline:0}),0,(2.15+i*0.42)*s,0.02));
   g.add(pos(toon(new THREE.SphereGeometry(.55*s,12,10),bone,{outline:0.04}),0,3.7*s,0));
   for(const ex of[-0.22,0.22]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.13*s,8,8),new THREE.MeshBasicMaterial({color:boss?0x8fffcf:0x120c08,toneMapped:!boss})),ex*s,3.72*s,0.42*s));
   g.add(pos(toon(box(.5*s,.18*s,.4*s),dk,{outline:0}),0,3.4*s,0.34*s));  // jaw
-  const armR=new THREE.Group(); armR.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),0,-.6*s,0)); armR.position.set(.78*s,3.1*s,0); g.add(armR);
-  armR.add(pos(toon(box(.15*s,1.9*s,.15*s),0x9a9384,{outline:0.03}),0,-1.7*s,0));   // rusty blade
-  g.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),-.78*s,2.5*s,0));
+  const armR=new THREE.Group(); armR.add(pos(toon(cap(.12*s,1.28*s,6),bone,{outline:0.03}),0,-.6*s,0)); armR.position.set(.78*s,3.1*s,0); g.add(armR);
+  armR.add(pos(toon(box(.15*s,1.9*s,.15*s),0x9a9384,{outline:0.03}),0,-1.7*s,0));   // rusty blade (a weapon stays angular)
+  g.add(pos(toon(cap(.12*s,1.28*s,6),bone,{outline:0.03}),-.78*s,2.5*s,0));
   if(boss){ g.add(pos(toon(cyl(.52*s,.58*s,.42*s,7),0xd9b24a,{outline:0.04,emissive:0x6a4a00}),0,4.25*s,0));   // crown
     const aura=new THREE.PointLight(0x8fffc0,12,30,2); aura.position.y=3*s; g.add(aura); rib.material.emissive=new THREE.Color(0x0f3324); }
   ground(g,1.4*s); onGround(g,x,z);
