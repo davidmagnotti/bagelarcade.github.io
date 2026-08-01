@@ -195,17 +195,9 @@ function render(){
     if(!sceneryCache || scnWorld!==G.worldId || scnDecorN!==G.decor.length || scnLiveSig!==_sceneryLiveSig()) buildSceneryCache();
     if(sceneryCache) cx.drawImage(sceneryCache, -G.cam.x-gcOX, -G.cam.y-gcOY,
       sceneryCache.width/GC_S, sceneryCache.height/GC_S);
-    // Damaged/harvested nodes are held OUT of the static bake, so draw them live
-    // here (behind the actors) - this restores the health bar, cracks and lean
-    // that a chopped tree / mined rock shows while you work it. Only the node(s)
-    // actually being harvested qualify, so it's a handful of draws at most.
-    for(const n of G.nodes){
-      if(n.dead || !(n.maxhp && n.hp<n.maxhp)) continue;
-      const s=worldToScreen(n.x,n.y);
-      if(s.x<-60||s.x>VW+60||s.y<-80||s.y>VH+80) continue;
-      if(EL) s.y -= groundLiftAt(n.x,n.y);
-      drawNode(n,s);
-    }
+    // (Nearby + damaged nodes and nearby buildings are drawn LIVE in the
+    //  depth-sorted object pass below, so they occlude the player correctly and
+    //  show harvest damage; only far, static scenery lives in the blit above.)
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -312,13 +304,26 @@ function render(){
 
   // ---- object/entity pass (depth sorted) ----
   const items=[];
-  // In low-gfx the static nodes are pre-baked into the scenery cache; skip them here.
-  if(!LOWFX) for(const n of G.nodes){
+  // Nodes: full detail depth-sorts them all. Low-gfx keeps the far, intact ones
+  // in the baked blit, but draws NEARBY nodes and any DAMAGED node live here so
+  // they sort correctly against the player (walk-behind occlusion) and show
+  // harvest damage/health while you chop or mine them.
+  for(const n of G.nodes){
     if(n.tx<minX-1||n.tx>maxX+1||n.ty<minY-1||n.ty>maxY+1) continue;
+    if(LOWFX){
+      if(n.dead) continue;
+      const damaged = n.maxhp && n.hp<n.maxhp;
+      if(!damaged && (Math.abs(n.x-P.x)>5 || Math.abs(n.y-P.y)>5)) continue;
+    }
     items.push({d:n.x+n.y, kind:'node', o:n});
   }
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
-    if(LOWFX && !DYNAMIC_DECOR[b.kind]) continue;   // static decor is baked into the scenery cache
+    if(LOWFX && !DYNAMIC_DECOR[b.kind]){
+      // far static decor stays in the baked blit; draw NEARBY buildings live so
+      // they depth-sort against the player and occlude correctly (walk-behind).
+      const nr=b.grand?22:(b.kind==='house'||b.kind==='house2'||b.kind==='barn'||b.kind==='forge'||b.kind==='igloo'||(b.kind==='tower'&&b.tall)||b.kind==='resort')?13:8;
+      if(Math.abs(b.x-P.x)>nr || Math.abs(b.y-P.y)>nr) continue;
+    }
     const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn'||b.kind==='dplate')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
@@ -344,54 +349,6 @@ function render(){
       case 'player': drawPlayer(s); break;
       case 'proj': drawProj(o,s); break;
       case 'pickup': drawPickup(o,s); break;
-    }
-  }
-
-  // ---- low-gfx occlusion fix ----
-  // The baked scenery blit sits BEHIND every actor, so in Fast graphics the
-  // player would always draw in front of houses and trees. A plain depth test
-  // is wrong for big multi-tile buildings (a single anchor depth can't say when
-  // the player is under a wide roof), so test in SCREEN space using each object's
-  // real sprite box: if the player's feet fall inside a nearby object's sprite
-  // AND above its base line, the player is behind it - redraw it live on top.
-  // (Feet below the base line = the player is in front, e.g. at the doorway, so
-  // it's left behind them.) Only a handful of nearby objects qualify: cheap.
-  if(LOWFX && DBG.entities && !P.dead){
-    const pf=worldToScreen(P.x,P.y);
-    const pfy=pf.y - (EL? groundLiftAt(P.x,P.y):0);
-    const occ=[];
-    // trees / rocks (~1 tile, procedural) - estimated box
-    for(const n of G.nodes){
-      if(n.dead || (n.maxhp && n.hp<n.maxhp)) continue;
-      if(Math.abs(n.x-P.x)>9 || Math.abs(n.y-P.y)>9) continue;
-      const s=worldToScreen(n.x,n.y), sy=s.y-(EL?groundLiftAt(n.x,n.y):0);
-      if(pf.x<s.x-20 || pf.x>s.x+20 || pfy>sy+4 || pfy<sy-54) continue;
-      occ.push({d:n.x+n.y, o:n, node:true, sx:s.x, sy});
-    }
-    // buildings / static decor - exact sprite box (mirrors drawDecor's blit math)
-    for(const b of G.decor){
-      if(DYNAMIC_DECOR[b.kind]) continue;
-      if(Math.abs(b.x-P.x)>32 || Math.abs(b.y-P.y)>32) continue;
-      let W=64,H=64;
-      try{
-        const S=(b.kind==='bazaar')? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
-              :(b.kind==='tower'&&b.tall)? SPR.towerTall
-              : SPR[b.kind==='pillar'?(b.broken?'pillarBroken':'pillar'):b.kind];
-        if(S){ const BS=b.kind==='castle'?(b.grand?0.9:0.4)
-              :(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16
-              : b.kind==='resort'?1.28:1;
-          W=S.width*BS; H=S.height*BS; }
-      }catch(e){}
-      const s=worldToScreen(b.x,b.y), sy=s.y-(EL?groundLiftAt(b.x,b.y):0);
-      if(pf.x<s.x-W/2 || pf.x>s.x+W/2) continue;   // outside the sprite width
-      if(pfy>sy+6) continue;                        // player in front of the base
-      if(pfy<sy-H+10) continue;                     // player above the roofline
-      occ.push({d:b.x+b.y, o:b, node:false, sx:s.x, sy});
-    }
-    occ.sort((a,b)=>a.d-b.d);
-    for(const it of occ){ const s={x:it.sx, y:it.sy};
-      if(SKYSWING){ const sw=skyIsleSwingAt(it.o.x,it.o.y); if(sw) s.x+=sw; }
-      if(it.node) drawNode(it.o,s); else drawDecor(it.o,s);
     }
   }
 
