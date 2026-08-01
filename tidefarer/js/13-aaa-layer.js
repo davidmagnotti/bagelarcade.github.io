@@ -398,7 +398,7 @@ const THR = {
       html:'“You’re home. Joan — Jaist — I can’t believe it. Both of you, home at last.”',
       vath:0, gold:0.14, violet:0, clash:0, flee:0, guards:0 },
     { who:'Vath', title:'THE ENCHANTER COMES',
-      html:'“Thirty years I waited for your whole line to stand in a single room. How good of you to gather.”',
+      html:'“Forgive me — I do hate to interrupt so loving a family reunion. But how good of you all to gather in a single room.”',
       vath:0.55, gold:0.16, violet:0.32, clash:0, flee:0, guards:0 },
     // the King speaks and moves FIRST — plants himself between, gold only just waking,
     // Vath's hand rising. No beams yet: the defiance lands before the violence.
