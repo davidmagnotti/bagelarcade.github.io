@@ -70,6 +70,32 @@
   #playBtn:active{transform:translateY(1px);}
   #loadNote{margin-top:16px;font-size:11px;opacity:.5;letter-spacing:1px;}
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;z-index:30;font-size:14px;line-height:1.6;}
+  /* quest tracker */
+  #quest{position:absolute;left:14px;top:118px;max-width:250px;background:rgba(20,14,8,.66);
+    border:1px solid var(--walnut2);border-left:3px solid var(--ember);border-radius:7px;padding:7px 11px;display:none;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  #quest .qt{font-family:Georgia,serif;color:var(--ember);font-size:12px;letter-spacing:.5px;margin-bottom:3px;}
+  #quest .qo{font-size:11px;color:#e4d6b4;line-height:1.4;}
+  #quest .qp{font-size:11px;color:#9fd06a;margin-top:3px;}
+  /* pause button */
+  #pauseBtn{position:absolute;right:156px;top:14px;width:34px;height:34px;border-radius:8px;pointer-events:auto;cursor:pointer;
+    border:2px solid var(--walnut2);background:rgba(20,14,8,.6);color:var(--parch);display:flex;align-items:center;justify-content:center;font-size:14px;}
+  #pauseBtn:active{background:rgba(255,154,60,.3);}
+  /* pause menu */
+  #pauseMenu{position:fixed;inset:0;z-index:18;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(8,10,16,.72);backdrop-filter:blur(4px);}
+  #pauseMenu h2{font-family:Georgia,serif;color:var(--ember);font-size:34px;letter-spacing:8px;margin-bottom:8px;text-shadow:0 3px 16px #000;}
+  #pauseMenu .pm{font-size:12px;opacity:.7;max-width:360px;text-align:center;line-height:1.7;margin-bottom:22px;}
+  #pauseMenu button{pointer-events:auto;cursor:pointer;font-family:Georgia,serif;letter-spacing:2px;font-size:15px;color:#1a120a;
+    background:linear-gradient(180deg,#ffcf7a,#ff9a3c);border:none;border-radius:9px;padding:11px 34px;margin-top:4px;}
+  /* dialogue */
+  #dlg{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(92vw,680px);
+    background:rgba(20,14,8,.9);border:2px solid var(--walnut2);border-radius:12px;padding:14px 18px 30px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6);display:none;pointer-events:auto;cursor:pointer;z-index:12;}
+  #dlg .dn{font-family:Georgia,serif;color:var(--ember);font-size:15px;letter-spacing:.5px;margin-bottom:5px;}
+  #dlg .dt{font-size:13.5px;line-height:1.55;color:#ece0c2;min-height:2.6em;}
+  #dlg .dc{position:absolute;right:16px;bottom:8px;font-size:11px;color:#a99873;letter-spacing:1px;}
+  #dlg .dc::after{content:' ▸';animation:blinkc 1s steps(2) infinite;}
+  @keyframes blinkc{50%{opacity:.2;}}
   @media (max-width:560px){
     #vitals{width:150px;} #mini{width:104px;height:104px;} #clock{top:120px;width:104px;}
     #zone{font-size:13px;letter-spacing:3px;} #hint{display:none;}
@@ -85,19 +111,26 @@
   </div>
   <canvas id="mini" width="132" height="132"></canvas>
   <div id="clock">—</div>
+  <div id="pauseBtn">❚❚</div>
+  <div id="quest"><div class="qt"></div><div class="qo"></div><div class="qp"></div></div>
   <div id="zone"></div>
   <div id="toast"></div>
   <div id="fps"></div>
   <div id="hint"></div>
 </div>
 <div id="dmgVig"></div>
+<div id="dlg"><div class="dn"></div><div class="dt"></div><div class="dc">continue</div></div>
+<div id="pauseMenu">
+  <h2>PAUSED</h2>
+  <div class="pm" id="pmHelp"></div>
+  <button id="resumeBtn">RESUME</button>
+</div>
 <div id="touch">
   <div id="stick"></div><div id="stickBase"></div><div id="stickKnob"></div>
   <div id="lookBase"></div><div id="lookKnob"></div>
   <div id="lookHint">drag to look</div>
   <div id="atk" class="rbtn">SWING</div>
   <div id="act" class="rbtn">TALK</div>
-  <div id="roll" class="rbtn">ROLL</div>
 </div>
 <div id="start">
   <h1>TIDE<span>FARER</span></h1>
@@ -342,14 +375,13 @@ function maskedHead(skin,hair){
   // red warrior's sigil (a chevron across the brow)
   const s1=pos(toon(box(.26,.055,.05),0x962a34,{outline:0}),-0.10,0.34,0.83); s1.rotation.z=0.55; g.add(s1);
   const s2=pos(toon(box(.26,.055,.05),0x962a34,{outline:0}), 0.10,0.34,0.83); s2.rotation.z=-0.55; g.add(s2);
-  // eye-slits (dark almonds) with blinking eyes nestled in them
+  // dark almond eye-slits with a faint glint — they narrow to a line on a blink
   const eyes=[];
   for(const ex of [-1,1]){
-    const slit=new THREE.Mesh(new THREE.SphereGeometry(1,10,8), new THREE.MeshBasicMaterial({color:0x140d08})); slit.scale.set(0.24,0.12,0.06); slit.position.set(ex*0.26,0.08,0.80); g.add(slit);
     const eye=new THREE.Group();
-    const white=new THREE.Mesh(new THREE.SphereGeometry(1,10,8), new THREE.MeshBasicMaterial({color:0xf3ece0,toneMapped:false})); white.scale.set(0.13,0.11,0.05); eye.add(white);
-    const pup=new THREE.Mesh(new THREE.SphereGeometry(1,8,8), new THREE.MeshBasicMaterial({color:0x1a120c})); pup.scale.set(0.06,0.075,0.05); pup.position.set(ex*0.02,0,0.04); eye.add(pup);
-    eye.position.set(ex*0.26,0.08,0.84); g.add(eye); eyes.push(eye);
+    const almond=new THREE.Mesh(new THREE.SphereGeometry(1,14,10), new THREE.MeshBasicMaterial({color:0x171009})); almond.scale.set(0.235,0.11,0.05); eye.add(almond);
+    const glint=new THREE.Mesh(new THREE.SphereGeometry(1,6,6), new THREE.MeshBasicMaterial({color:0xc7cfd4,toneMapped:false})); glint.scale.set(0.032,0.032,0.03); glint.position.set(ex*0.08,0.018,0.05); eye.add(glint);
+    eye.position.set(ex*0.255,0.055,0.82); g.add(eye); eyes.push(eye);
   }
   // a quiet mouth on the free lower face
   g.add(pos(toon(box(.22,.045,.05),0x6a4432,{outline:0}),0,-0.5,0.68));
@@ -368,7 +400,7 @@ function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.ha
     g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
     if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
   rig.arm=new THREE.Group(); rig.arm.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),0,-.7,0)); rig.arm.position.set(1.05,3.1,0); g.add(rig.arm);
-  if(sword){ rig.arm.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); rig.arm.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); }
+  if(sword){ const sw=new THREE.Group(); sw.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); sw.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); rig.arm.add(sw); rig.sword=sw; }
   g.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),-1.05,2.4,0));
   rig.legL=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
   rig.legR=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
@@ -430,7 +462,7 @@ while(planted<(isMobile?140:280) && tries<4000){ tries++;
 const npcs=[];
 function addNPC(x,z,name,lines,opts){ const g=figure(opts||{tunic:COL.npcRobe,tunicDk:0x4a3a63,scarf:0x8a76a8,cape:false});
   const label=textSprite(name,'#ffdca0',38); label.position.y=5.2; label.visible=false; g.add(label);
-  ground(g,1.3); onGround(g,x,z); g.userData={name,lines,label,li:0,face:Math.random()*7}; npcs.push(g); return g; }
+  ground(g,1.3); onGround(g,x,z); g.userData={name,lines,label,li:0,face:Math.random()*7,id:(opts&&opts.id)||name}; npcs.push(g); return g; }
 addNPC(zc.village.x+1,zc.village.z-1,'Elder Maren',[
  "Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back.",
  "The meadow slimes have gone bold with the warm snap. Thin them, would you?",
@@ -477,17 +509,86 @@ function dmgNum(x,y,z,val,color){ const sp=textSprite(String(val),color,52); sp.
 // auburn hair, the pale Emberwick mask (skin/hair/shirt from the 2D hero look)
 const player=figure({princess:true, sword:true, skin:0xd8a97a, hair:0x7a4526, tunic:0x3f6e56, tunicDk:0x2f5340, boot:0x3c3833});
 const rig=player.userData.rig;
+if(rig.sword) rig.sword.visible=false;   // she has no blade until Bram forges it
 const pShadow=contactShadow(1.6); player.add(pShadow);
 world.add(player);
-const P={x:zc.dock.x+6,z:zc.dock.z+2,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,roll:0,rollCd:0,dead:0};
+// spawn on the village green beside Elder Maren, where she wakes
+const P={x:zc.village.x-2,z:zc.village.z+5,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,dash:0,dashCd:0,dead:0,
+  hasSword:false,hasTools:false,hasDash:false,wood:0,stone:0};
 player.position.set(P.x,heightAt(P.x,P.z),P.z);
+
+// ============================================================
+//  BRAM, THE FORGE, GATHERABLES, DIALOGUE & THE SWORD QUEST
+// ============================================================
+function forge(x,z){ const g=new THREE.Group();
+  g.add(pos(toon(box(2.4,2.6,2.0),COL.stoneDk,{outline:0.03}),0,1.3,0));
+  g.add(pos(new THREE.Mesh(box(1.0,0.9,0.35),glowMat(0xff7a2a)),0,1.35,1.02));   // furnace mouth (bloom)
+  const l=new THREE.PointLight(0xff8a3a,12,13,2); l.position.set(0,1.7,1.7); g.add(l);
+  g.add(pos(toon(box(0.8,3.4,0.8),COL.stoneDk,{outline:0.03}),0,3.6,-0.5));       // chimney
+  const an=new THREE.Group(); an.add(pos(toon(box(0.7,0.9,0.7),COL.timberDk,{outline:0.03}),0,0.45,0)); an.add(pos(toon(box(1.5,0.5,0.7),0x3b3e46,{outline:0.03}),0,1.1,0)); an.add(pos(rotZ(toon(cyl(.03,.34,.7,6),0x3b3e46,{outline:0}),Math.PI/2),0.85,1.15,0)); an.position.set(2.4,0,0.4); g.add(an);
+  ground(g,2.6); onGround(g,x,z); return g; }
+const bramX=zc.village.x+18, bramZ=zc.village.z+5;
+forge(bramX+3,bramZ-1);
+addNPC(bramX,bramZ,'Bram the Smith',[],{tunic:0x8f4a3a,tunicDk:0x5a2f24,scarf:0x4a3322,hair:0x3a2a1c,cape:false,id:'bram'});
+
+const gathers=[];
+function gatherTree(x,z){ const t=tree(x,z,1.05); gathers.push({g:t,type:'wood',ready:true,cd:0,base:t.scale.clone()}); }
+function gatherRock(x,z){ const r=rock(x,z,1.2); gathers.push({g:r,type:'stone',ready:true,cd:0,base:r.scale.clone()}); }
+gatherTree(zc.village.x+8,zc.village.z+5); gatherTree(zc.village.x+24,zc.village.z+11);
+gatherRock(zc.village.x+13,zc.village.z+5); gatherRock(zc.village.x+27,zc.village.z-4);
+
+// dialogue — locks movement while active; advance by tap / click / Space / F
+const dlgEl=document.getElementById('dlg'), dlgName=dlgEl.querySelector('.dn'), dlgText=dlgEl.querySelector('.dt');
+let dlgActive=false, dlgSeq=null, dlgI=0, dlgEnd=null;
+function startDialogue(seq,onEnd){ if(!seq||!seq.length)return; dlgSeq=seq; dlgI=0; dlgEnd=onEnd||null; dlgActive=true; dlgEl.style.display='block'; dlgName.textContent=seq[0].who; dlgText.textContent=seq[0].text; }
+function advanceDialogue(){ if(!dlgActive)return; dlgI++; if(dlgI>=dlgSeq.length){ dlgActive=false; dlgEl.style.display='none'; const cb=dlgEnd; dlgEnd=null; if(cb)cb(); } else { dlgName.textContent=dlgSeq[dlgI].who; dlgText.textContent=dlgSeq[dlgI].text; } }
+
+// quest tracker
+const questEl=document.getElementById('quest'), qtEl=questEl.querySelector('.qt'), qoEl=questEl.querySelector('.qo'), qpEl=questEl.querySelector('.qp');
+let stage='wake';
+function setStage(s){ stage=s; updateQuest(); }
+function updateQuest(){ if(stage==='wake'){ questEl.style.display='none'; return; } questEl.style.display='block';
+  let t='',o='',p='';
+  if(stage==='seeBram'){ t='Tools of the Trade'; o='Speak with Bram at the forge, east of the well.'; }
+  else if(stage==='gather'){ t='Tools of the Trade'; o='Fell a tree for wood, break a rock for stone.'; p='Wood '+Math.min(P.wood,1)+'/1   ·   Stone '+Math.min(P.stone,1)+'/1'; }
+  else if(stage==='forge'){ t='Tools of the Trade'; o='Bring the wood and stone back to Bram.'; }
+  else if(stage==='done'){ t='Blade in Hand'; o='Thin the meadow slimes — or find Rask to learn the parry.'; }
+  qtEl.textContent=t; qoEl.textContent=o; qpEl.textContent=p; }
+
+function talkTo(npc){ const id=npc.userData.id;
+  if(id==='bram'){
+    if(!P.hasTools) startDialogue([
+      {who:'Bram the Smith',text:"You'll get nowhere on this isle bare-handed — take these, a woodsman's axe and a miner's pick off my own rack."},
+      {who:'Bram the Smith',text:"Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I'll forge you a proper iron sword."}],
+      ()=>{ P.hasTools=true; toast('<b>Woodsman\'s kit received</b> — axe &amp; pick. You can CHOP trees and MINE rocks now.'); setStage('gather'); });
+    else if(!P.hasSword && (P.wood<1||P.stone<1)) startDialogue([{who:'Bram the Smith',text:"Not yet. Bring me 1 wood and 1 stone — fell a tree, break a rock — then we'll talk steel."}]);
+    else if(!P.hasSword) startDialogue([
+      {who:'Bram the Smith',text:"There it is — good seasoned wood and honest stone. Stand back from the sparks now."},
+      {who:'Bram the Smith',text:"…There. Your first true blade — an iron sword, no letter-opener. Go put it to use."}],
+      ()=>{ P.wood--; P.stone--; P.hasSword=true; if(rig.sword)rig.sword.visible=true; toast('<b style="color:#ffd27a">Iron Sword forged!</b> Press SPACE / SWING to strike.'); setStage('done'); });
+    else startDialogue([{who:'Bram the Smith',text:"Keep that edge keen. The meadow's crawling — Willa will thank you for thinning it."}]);
+  } else { const seq=(npc.userData.lines||[]).map(t=>({who:npc.userData.name,text:t})); startDialogue(seq); }
+}
+function gather(e){ if(!e.ready)return; e.ready=false; e.cd=8; e.g.scale.copy(e.base).multiplyScalar(0.14);
+  if(e.type==='wood'){ P.wood++; toast('<b>+1 wood</b>'); hitSpark(e.g.position.x,e.g.position.y+3,e.g.position.z,0x8a5a2a); }
+  else { P.stone++; toast('<b>+1 stone</b>'); hitSpark(e.g.position.x,e.g.position.y+1,e.g.position.z,0x9a9384); }
+  if(stage==='gather'&&P.wood>=1&&P.stone>=1) setStage('forge'); else updateQuest();
+}
+function getInteract(){ let best=null,bd=1e9;
+  for(const n of npcs){ const d=Math.hypot(n.position.x-P.x,n.position.z-P.z); if(d<6&&d<bd){bd=d;best={type:'talk',t:n,label:(n.userData.name.split(' ')[0]||'TALK').toUpperCase()};} }
+  if(P.hasTools) for(const e of gathers){ if(!e.ready)continue; const d=Math.hypot(e.g.position.x-P.x,e.g.position.z-P.z); if(d<5&&d<bd){bd=d;best={type:e.type==='wood'?'chop':'mine',t:e,label:e.type==='wood'?'CHOP':'MINE'};} }
+  return best;
+}
 
 // ============================================================
 //  INPUT
 // ============================================================
 const keys={};
 addEventListener('keydown',e=>{ keys[e.code]=true; if(['Space','KeyF','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
-  if(e.code==='Space') doSwing(); if(e.code==='KeyF') doInteract(); if(e.code==='ShiftLeft'||e.code==='ShiftRight') doRoll();
+  if(e.code==='Space'){ if(dlgActive) advanceDialogue(); else doSwing(); }
+  if(e.code==='KeyF') doInteract();
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight') doDash();
+  if(e.code==='Escape'||e.code==='KeyP') togglePause();
   const n=e.code.match(/^Digit([1-9])$/); if(n){ const zn=ZONES3[+n[1]-1]; if(zn){ P.x=zn.x;P.z=zn.z; banner(zn.name);} } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let camYaw=P.yaw+Math.PI, camPitch=0.5, camDist=22;
@@ -496,7 +597,12 @@ const look={a:false,id:-1,x:0,y:0}, mv={a:false,id:-1,ox:0,oy:0,x:0,y:0}, lk={a:
 const stickBase=document.getElementById('stickBase'), stickKnob=document.getElementById('stickKnob');
 const lookBase=document.getElementById('lookBase'), lookKnob=document.getElementById('lookKnob'), lookHint=document.getElementById('lookHint');
 if(isTouch) document.getElementById('touch').style.display='block';
-function onDown(e){ const id=e.target.id; if(id==='atk'){doSwing();return;} if(id==='act'){doInteract();return;} if(id==='roll'){doRoll();return;}
+const actBtn=document.getElementById('act'), atkBtn=document.getElementById('atk'); actBtn.style.display='none'; atkBtn.style.display='none';
+function onDown(e){ const id=e.target.id;
+  if(e.target.closest&&e.target.closest('#dlg,#pauseMenu,#start')){ if(dlgActive&&e.target.closest('#dlg')) advanceDialogue(); return; }
+  if(id==='pauseBtn'||id==='resumeBtn')return;
+  if(dlgActive){ advanceDialogue(); return; }            // any tap/click advances scripted dialogue
+  if(id==='atk'){doSwing();return;} if(id==='act'){doInteract();return;}
   if(e.pointerType==='mouse'){ look.a=true; look.id=e.pointerId; look.x=e.clientX; look.y=e.clientY; return; }
   if(e.clientX<innerWidth*0.5&&!mv.a){ mv.a=true; mv.id=e.pointerId; mv.ox=e.clientX; mv.oy=e.clientY; mv.x=mv.y=0; stickBase.style.display=stickKnob.style.display='block'; stickBase.style.left=stickKnob.style.left=e.clientX+'px'; stickBase.style.top=stickKnob.style.top=e.clientY+'px'; }
   else if(e.clientX>=innerWidth*0.5&&!lk.a){ lk.a=true; lk.id=e.pointerId; lk.ox=e.clientX; lk.oy=e.clientY; lk.x=lk.y=0; lookHint.style.display='none'; lookBase.style.display=lookKnob.style.display='block'; lookBase.style.left=lookKnob.style.left=e.clientX+'px'; lookBase.style.top=lookKnob.style.top=e.clientY+'px'; } }
@@ -513,15 +619,19 @@ function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitc
   if(keys['KeyQ'])camYaw+=1.9*dt; if(keys['KeyE'])camYaw-=1.9*dt;
   if(keys['KeyR'])camPitch=clamp(camPitch+1.3*dt,0.2,1.15); if(keys['KeyC'])camPitch=clamp(camPitch-1.3*dt,0.2,1.15); }
 
-function doSwing(){ if(started&&P.swCd<=0&&P.dead<=0){ P.swing=0.001; P.swCd=0.42; const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);
+function doSwing(){ if(!started||paused||dlgActive||P.dead>0||P.swCd>0)return;
+  if(!P.hasSword){ toast('You have no blade yet — see <b>Bram</b> at the forge.'); return; }
+  P.swing=0.001; P.swCd=0.42; const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);
   for(const e of enemies){ if(e.dead>0)continue; const dx=e.g.position.x-P.x,dz=e.g.position.z-P.z,d=Math.hypot(dx,dz); if(d>6)continue; if((dx/d)*fx+(dz/d)*fz<0.25)continue;
     e.hp-=34; e.hurt=0.25; e.g.position.x+=dx/d*1.2; e.g.position.z+=dz/d*1.2; const hy=e.g.position.y+2;
     hitSpark(e.g.position.x,hy,e.g.position.z, e.kind==='slime'?0x9ff07a:0xffd27a); dmgNum(e.g.position.x,hy+1,e.g.position.z,34,'#ffe6a8');
     if(e.hp<=0&&e.dead<=0){ e.dead=0.001; e.state='dead'; P.coins+=e.kind==='wolf'?5:2; banner(e.kind==='wolf'?'WOLF DOWNED':'SLIME SQUASHED', e.kind==='wolf'?'the pack thins':'the meadow menace, thinned'); } }
-} }
-function doInteract(){ if(!started)return; let best=null,bd=6; for(const n of npcs){ const d=Math.hypot(n.position.x-P.x,n.position.z-P.z); if(d<bd){bd=d;best=n;} }
-  if(best){ const u=best.userData; toast('<b>'+u.name+':</b> '+u.lines[u.li%u.lines.length]); u.li++; } }
-function doRoll(){ if(started&&P.rollCd<=0&&P.st>=25&&P.dead<=0){ P.roll=0.4; P.rollCd=0.7; P.st-=25; P.inv=Math.max(P.inv,0.4); } }
+}
+function doInteract(){ if(!started||paused)return; if(dlgActive){ advanceDialogue(); return; }
+  const it=getInteract(); if(!it)return; if(it.type==='talk') talkTo(it.t); else gather(it.t); }
+// dash is an EARNED ability (P.hasDash) — not available at the start
+function doDash(){ if(!started||paused||dlgActive||P.dead>0)return; if(!P.hasDash){ toast('You haven\'t learned the <b>dash</b> yet.'); return; }
+  if(P.dashCd>0)return; P.dash=0.32; P.dashCd=0.8; P.inv=Math.max(P.inv,0.32); }
 
 // HUD helpers
 const zoneEl=document.getElementById('zone'), toastEl=document.getElementById('toast'), coinEl=document.getElementById('coinN');
@@ -573,14 +683,28 @@ paintSky(new THREE.Color(0x7fb2d6),new THREE.Color(0xf3ddb6));
 // ============================================================
 //  LOOP
 // ============================================================
-let started=false; const startEl=document.getElementById('start'), playBtn=document.getElementById('playBtn');
+let started=false, paused=false; const startEl=document.getElementById('start'), playBtn=document.getElementById('playBtn');
 document.getElementById('loadNote').textContent='ready';
-document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag or Q/E/R/C look · wheel zoom · SPACE swing · F talk · SHIFT roll · 1–9 warp';
-playBtn.addEventListener('click',()=>{ started=true; startEl.style.opacity='0'; setTimeout(()=>startEl.style.display='none',800); banner('EMBERWICK ISLE','HOME SHORES — CHAPTER I'); });
+document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag or Q/E/R/C look · SPACE swing · F talk/act · ESC pause · 1–9 warp';
+// pause
+const pauseMenu=document.getElementById('pauseMenu');
+document.getElementById('pmHelp').innerHTML = isTouch? 'Left stick move · right stick look · SWING / talk buttons' : 'WASD move · drag or Q/E/R/C look · SPACE swing · F talk/act · ESC pause · 1–9 warp';
+function togglePause(){ if(!started)return; paused=!paused; pauseMenu.style.display=paused?'flex':'none'; }
+document.getElementById('pauseBtn').addEventListener('click',togglePause);
+document.getElementById('resumeBtn').addEventListener('click',togglePause);
+playBtn.addEventListener('click',()=>{ started=true; startEl.style.opacity='0'; setTimeout(()=>startEl.style.display='none',800);
+  banner('EMBERWICK ISLE','HOME SHORES — CHAPTER I');
+  // the wake-up: Elder Maren speaks, and you can't move until she's done
+  setTimeout(()=>startDialogue([
+    {who:'Elder Maren',text:"Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back."},
+    {who:'Elder Maren',text:"You'll get nowhere on these shores bare-handed. Our smith Bram keeps his forge east of the well — start with him. He'll set you right."}
+  ], ()=>setStage('seeBram')), 700);
+});
 
 const clock=new THREE.Clock(); let fpsT=0,fpsN=0; const fpsEl=document.getElementById('fps');
 const camP=new THREE.Vector3(), camA=new THREE.Vector3(), fwd=new THREE.Vector3();
 function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta(),0.05), time=clock.elapsedTime;
+  if(paused){ fxc.render(); return; }
   updateDay(started?dt:dt*0.15);
   if(started) step(dt,time);
   // camera
@@ -599,20 +723,21 @@ function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta()
 function step(dt,time){
   // ---- player movement ----
   if(P.dead>0){ P.dead-=dt; if(P.dead<=0){ P.hp=P.max; P.x=zc.village.x; P.z=zc.village.z; P.inv=1.2; } }
-  let ix=0,iz=0; if(P.dead<=0){ if(keys['KeyW']||keys['ArrowUp'])iz-=1; if(keys['KeyS']||keys['ArrowDown'])iz+=1; if(keys['KeyA']||keys['ArrowLeft'])ix-=1; if(keys['KeyD']||keys['ArrowRight'])ix+=1; if(mv.a){ix+=mv.x;iz+=mv.y;} }
+  let ix=0,iz=0; if(P.dead<=0&&!dlgActive){ if(keys['KeyW']||keys['ArrowUp'])iz-=1; if(keys['KeyS']||keys['ArrowDown'])iz+=1; if(keys['KeyA']||keys['ArrowLeft'])ix-=1; if(keys['KeyD']||keys['ArrowRight'])ix+=1; if(mv.a){ix+=mv.x;iz+=mv.y;} }
   let mag=Math.hypot(ix,iz); if(mag>1){ix/=mag;iz/=mag;mag=1;} const moving=mag>0.06;
-  let speed=8.5; if(P.roll>0){ speed=17; P.roll-=dt; }
-  if(moving){ const cs=Math.cos(camYaw),sn=Math.sin(camYaw); const wx=ix*cs-iz*sn, wz=-ix*sn-iz*cs; P.yaw=Math.atan2(wx,wz);
+  let speed=8.5; if(P.dash>0){ speed=18; P.dash-=dt; }
+  if(moving){ const cs=Math.cos(camYaw),sn=Math.sin(camYaw); const wx=-ix*cs-iz*sn, wz=ix*sn-iz*cs; P.yaw=Math.atan2(wx,wz);   // (ix negated: strafe was inverted)
     const nx=P.x+wx*speed*dt, nz=P.z+wz*speed*dt; if(heightAt(nx,nz)>0.4&&Math.hypot(nx,nz)<ISLR-2){ P.x=nx; P.z=nz; } }
   const gy=heightAt(P.x,P.z); player.position.set(P.x, gy+(moving?Math.abs(Math.sin(time*11))*0.12:0), P.z);
   player.rotation.y+=(P.yaw-player.rotation.y)*Math.min(1,dt*12);
   const bob=moving?Math.sin(time*11)*0.5:0; rig.legL.rotation.x=bob; rig.legR.rotation.x=-bob; pShadow.position.y=0.06-(player.position.y-gy);
-  if(P.roll>0){ player.rotation.x=(0.4-P.roll)/0.4*Math.PI*0.9; } else player.rotation.x*=0.7;
   // swing anim + cooldowns
   if(P.swing>0){ P.swing+=dt*3.6; const a=Math.sin(Math.min(P.swing,1)*Math.PI); rig.arm.rotation.x=-a*2.6; if(P.swing>=1){P.swing=0;rig.arm.rotation.x=0;} } else rig.arm.rotation.x+=(0-rig.arm.rotation.x)*dt*8;
-  P.swCd=Math.max(0,P.swCd-dt); P.rollCd=Math.max(0,P.rollCd-dt); P.inv=Math.max(0,P.inv-dt);
+  P.swCd=Math.max(0,P.swCd-dt); P.dashCd=Math.max(0,P.dashCd-dt); P.inv=Math.max(0,P.inv-dt);
+  // gatherables respawn (felled tree / broken rock grows back)
+  for(const e of gathers){ if(!e.ready){ e.cd-=dt; const f=e.cd>1.2?0.14:clamp(0.14+0.86*(1.2-e.cd)/1.2,0.14,1); e.g.scale.copy(e.base).multiplyScalar(f); if(e.cd<=0){ e.ready=true; e.g.scale.copy(e.base); } } }
   P.st=Math.min(P.max, P.st+dt*(moving?6:14)); if(P.hp<P.max) P.hp=Math.min(P.max,P.hp+dt*1.2);
-  if(rig.eyes){ const bl=(time%3.6)<0.22; for(const e of rig.eyes) e.scale.y=bl?0.12:1; }   // the mask's eyes blink
+  if(rig.eyes){ const bt=time%3.0; let bf=0; if(bt<0.16) bf=(bt<0.08? bt/0.08 : (0.16-bt)/0.08); const sy=1-0.86*bf; for(const e of rig.eyes) e.scale.y=sy; }  // a real, visible blink every ~3s
 
 
 
@@ -655,6 +780,10 @@ function step(dt,time){
   document.getElementById('hpFill').style.width=(P.hp/P.max*100)+'%';
   document.getElementById('stFill').style.width=(P.st/P.max*100)+'%';
   coinEl.textContent=P.coins;
+  // contextual action button (TALK / CHOP / MINE) — only shows when there's something to do
+  const it=dlgActive?null:getInteract();
+  actBtn.style.display=(isTouch&&it)?'flex':'none'; if(it)actBtn.textContent=it.label;
+  atkBtn.style.display=(isTouch&&P.hasSword&&!dlgActive)?'flex':'none';
   if(zoneT>0){ zoneT-=dt; if(zoneT<=0)zoneEl.style.opacity='0'; }
   if(toastT>0){ toastT-=dt; if(toastT<=0)toastEl.style.opacity='0'; }
   mmT-=dt; if(mmT<=0){ drawMini(); mmT=0.12; }

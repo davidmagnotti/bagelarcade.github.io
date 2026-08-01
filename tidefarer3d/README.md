@@ -38,10 +38,18 @@ would be ported into region by region — that remains a large ongoing effort.
 | Move | WASD / arrows | left-thumb stick |
 | Look | drag mouse, or Q/E (turn) + R/C (tilt) | right-thumb look stick |
 | Zoom | mouse wheel | — |
-| Swing | Space | **SWING** |
-| Talk / interact | F | **TALK** |
-| Dodge roll | Shift | **ROLL** |
+| Swing (once earned) | Space | **SWING** |
+| Talk / chop / mine | F | contextual button |
+| Dash (earned later) | Shift | — |
+| Pause | Esc / P | ❚❚ button |
 | Warp to a zone | keys 1–9 | — |
+
+**First quest — the sword.** You wake on the green as **Elder Maren** speaks
+(you can't move until she's done). She sends you to **Bram** at the forge east
+of the well; he hands you an axe and pick and asks for **1 wood + 1 stone** —
+**chop** a tree and **mine** a rock, bring them back, and he forges your **iron
+sword**. Only then can you fight. The action button is contextual — it shows
+**TALK / CHOP / MINE** only when something's in reach.
 
 The player is **the masked princess** — the castaway who is secretly royalty,
 in her pale Emberwick mask (dark eye-slits, the red warrior's sigil, her bound
