@@ -1945,11 +1945,17 @@ function drawDragon(cx,sx,sy,m){
   cx.strokeStyle=shade(wingMem,26); cx.lineWidth=2.2;
   cx.beginPath(); cx.moveTo(2,2); cx.lineTo(46,-10); cx.moveTo(4,4); cx.lineTo(30,0); cx.moveTo(4,6); cx.lineTo(16,6); cx.stroke();
   cx.restore();
-  // far wing hint - grown to match the bigger near wing (kept a touch smaller so it
-  // still reads as the far side, tucked behind the body)
-  cx.save(); cx.translate(-2,-42); cx.rotate(0.4-wing); cx.scale(-1.12,1.14);
-  cx.fillStyle=shade(wingMem,-14);
-  cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(30,-26,46,-12); cx.lineTo(38,2); cx.quadraticCurveTo(20,-4,0,8); cx.closePath(); cx.fill();
+  // far wing - the SAME scalloped membrane as the near wing (fingers, outline and
+  // wingbones), mirrored to fan the other way and drawn a touch smaller and darker so
+  // it still reads as the far side, tucked behind the body
+  cx.save(); cx.translate(-4,-40); cx.rotate(0.46-wing); cx.scale(-1.45,1.3);
+  cx.fillStyle=shade(wingMem,-16);
+  cx.beginPath(); cx.moveTo(0,0);
+  cx.quadraticCurveTo(34,-30, 52,-14); cx.lineTo(44,-2); cx.quadraticCurveTo(40,-12,30,-6);
+  cx.lineTo(30,4); cx.quadraticCurveTo(26,-6,16,0); cx.lineTo(14,10); cx.quadraticCurveTo(8,2,0,8);
+  cx.closePath(); cx.fill(); cx.strokeStyle=OUTL; cx.lineWidth=2; cx.stroke();
+  cx.strokeStyle=shade(wingMem,8); cx.lineWidth=2;
+  cx.beginPath(); cx.moveTo(2,2); cx.lineTo(46,-10); cx.moveTo(4,4); cx.lineTo(30,0); cx.moveTo(4,6); cx.lineTo(16,6); cx.stroke();
   cx.restore();
   // body
   const bg=cx.createLinearGradient(-18,-60,18,-6);
