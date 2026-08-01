@@ -63,6 +63,18 @@ function questReady(id){
   }
   return false;
 }
+// Does this NPC have a quest that's completed and waiting to be reported to them right
+// now? Used by the night-hide pass (updateNPCs) so a quest-giver stays reachable past
+// dusk while you owe them a turn-in - a finished quest never has to wait for dawn. Cheap:
+// only called for NPCs the night would otherwise hide.
+function npcHasReadyTurnIn(npc){
+  if(!npc || !npc.id) return false;
+  for(const id in P.quests){
+    const q=QUESTS[id];
+    if(q && q.giver===npc.id && qs(id)==='active' && questReady(id)) return true;
+  }
+  return false;
+}
 function acceptQuest(id){
   P.quests[id]='active'; P.prog[id]=0;
   if(id==='kit'){ // Bram hands over the tools on the spot; the sword is the reward for finishing

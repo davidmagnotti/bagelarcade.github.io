@@ -1478,7 +1478,14 @@ function updatePlayer(dt){
 function updateNPCs(dt){
   const night=isNight();
   // during a training drill the yard clears - only the trainer is present (n.id===TRAIN.who)
-  for(const n of G.npcs) n.hidden = n.throne ? true : ((TRAIN && n.id!==TRAIN.who) || (night && !n.nightOwl));   // throne-bound NPCs (the King) never appear in the open city
+  for(const n of G.npcs){
+    let hide = n.throne ? true : ((TRAIN && n.id!==TRAIN.who) || (night && !n.nightOwl));   // throne-bound NPCs (the King) never appear in the open city
+    // ...but a quest-giver you have a completed quest ready to report to keeps a light lit
+    // past dusk, so nightfall never strands a finished quest until dawn. Only overrides a
+    // plain night-hide (not the throne-bound or a training-yard clear-out).
+    if(hide && night && !n.throne && !(TRAIN && n.id!==TRAIN.who) && npcHasReadyTurnIn(n)) hide=false;
+    n.hidden = hide;
+  }
   for(const n of G.npcs){
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
