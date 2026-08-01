@@ -2,12 +2,14 @@
    GATHERING-TOOL GATES  -  tiered axe/pick as Metroidvania keys.
 
    The chop/mine power formula already reads P.tools.axe / P.tools.pick as
-   integer tiers (0 = none, 1 = iron from the forge). This adds tier 2 -
-   a dungeon-forged Rivenedge Axe and Cragbreaker Pick - and two gated
-   materials that only a tier-2 tool can cut:
+   integer tiers (0 = none, 1 = iron from the forge). This adds the
+   dungeon/mill-forged upper tiers - a Rivenedge Axe and Cragbreaker Pick
+   (tier 2) and a Cograzor Pick (tier 3) - and three gated materials that
+   only the matching tool can cut:
 
      - IRONWOOD  (blue-black pines)  needs axe  tier >= 2  (Rivenedge)
      - BASALT    (violet stone)      needs pick tier >= 2  (Cragbreaker)
+     - SLAGIRON  (rust-red stone)    needs pick tier >= 3  (Cograzor)
 
    A gated node is an ordinary tree/rock with n.gate set. It is a solid
    BARRIER: it never regrows once felled (n.gone), so cutting it opens the
@@ -28,7 +30,10 @@ var GATES={
              need:'the dungeon-forged <b>Rivenedge Axe</b>', drop:'hardwood', dropN:2, skill:'woodcut' },
   basalt:{   tool:'pick', req:2, kind:'rock', hp:24, tag:'BASALT',
              color:'#c79bff', glow:'rgba(120,70,180,1)', spark:'#d9b8ff',
-             need:'the dungeon-forged <b>Cragbreaker Pick</b>', drop:'ore', dropN:2, skill:'mining' }
+             need:'the dungeon-forged <b>Cragbreaker Pick</b>', drop:'ore', dropN:2, skill:'mining' },
+  slagiron:{ tool:'pick', req:3, kind:'rock', hp:26, tag:'SLAGIRON',
+             color:'#e0955a', glow:'rgba(190,95,45,1)', spark:'#f2b98a',
+             need:'the mill-forged <b>Cograzor Pick</b>', drop:'ore', dropN:3, skill:'mining' }
 };
 function tierOf(tool){ return (P.tools && P.tools[tool]) || 0; }
 
@@ -111,6 +116,14 @@ function grantCragbreaker(){
   storyCard('<i>A pick of blackened steel, heavy as a grudge, hafted for two hands.</i> <b style="color:#c79bff">You take the Cragbreaker Pick.</b> <i>The violet <b>basalt</b> that sealed the deep ways shatters under it - and ordinary stone gives up far faster. The sealed passages you passed are open to you now.</i>');
   if(typeof refreshUI==='function') refreshUI();
 }
+function grantCograzor(){
+  P.tools=P.tools||{axe:0,pick:0}; P.kit=true;
+  if((P.tools.pick||0)>=3) return;
+  P.tools.pick=3; give('cograzor',1);
+  banner('THE COGRAZOR PICK','SLAGIRON WILL BREAK');
+  storyCard('<i>A pick hafted from a broken mill-gear, its tooth still keen.</i> <b style="color:#e0955a">You take the Cograzor Pick.</b> <i>The rust-red <b>slagiron</b> that sealed the mill-deep nooks breaks under it - and every ordinary stone splits faster still. Go back for the ways the slagiron kept from you.</i>');
+  if(typeof refreshUI==='function') refreshUI();
+}
 
 /* ---- sandbox (dev): a hard gate of each, treasure behind, NO tools granted
         so you feel the bounce first; grant the tools from the dev menu. ---- */
@@ -129,14 +142,18 @@ function spawnToolgateSandbox(){
   // a wall of basalt to the west, a chest behind it
   for(var j=-1;j<=1;j++){ var b=walkNear(-5, j); addGateNode('basalt', b[0], b[1]); }
   var cw=walkNear(-7,0); G.decor.push({kind:'chest', x:cw[0]+0.5, y:cw[1]+0.5, pickgift:1});
+  // a wall of slagiron to the south, a chest behind it (needs the tier-3 Cograzor Pick)
+  for(var s=-1;s<=1;s++){ var sg=walkNear(s, 5); addGateNode('slagiron', sg[0], sg[1]); }
+  var cs=walkNear(0,7); G.decor.push({kind:'chest', x:cs[0]+0.5, y:cs[1]+0.5, slaggift:1});
   if(typeof invalidateScenery==='function') invalidateScenery();
-  if(typeof toast==='function') toast('<b>Tool-gate sandbox:</b> a wall of <b style="color:#8fb3ff">ironwood</b> east, <b style="color:#c79bff">basalt</b> west - each with a chest behind. Try chopping/mining them now (they bounce), then grant the tier-2 tool from the dev menu.',8000);
+  if(typeof toast==='function') toast('<b>Tool-gate sandbox:</b> a wall of <b style="color:#8fb3ff">ironwood</b> east, <b style="color:#c79bff">basalt</b> west, <b style="color:#e0955a">slagiron</b> south - each with a chest behind. Try chopping/mining them now (they bounce), then grant the matching tool from the dev menu.',8000);
 }
 
 /* ---- exports ---- */
 window.GATES=GATES; window.addGateNode=addGateNode;
 window.gateBlocked=gateBlocked; window.clearGateNode=clearGateNode; window.drawGateAura=drawGateAura;
 window.grantRivenedge=grantRivenedge; window.grantCragbreaker=grantCragbreaker;
+window.grantCograzor=grantCograzor;
 window.spawnToolgateSandbox=spawnToolgateSandbox;
 
 })();

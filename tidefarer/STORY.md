@@ -256,35 +256,33 @@ Calming a spirit, or an item won on one isle, changes terrain or gives a new way
 to move — so isles you couldn't fully cross open up on return. (Same shape as the
 existing Stormlight and stormsail unlocks.)
 
-#### The relic verbs — [built: systems; open: placement]
+#### The relic verb — [built: systems; open: placement]
 
-Two actively-triggered "verb" tools exist in code (`js/33-relics.js`). (An earlier
-draft also had a grapple and a slow-time, but those read as *just more dashes* and
-were cut.) Each hangs off `P.unlocked.*` (so it saves with no migration) and has a
-reward-chest flag wired into `openChest`, so dropping one into a dungeon is a
+One actively-triggered "verb" tool remains in code (`js/33-relics.js`). (Earlier
+drafts also had a grapple, a slow-time and a heart-iron **Lodestone**, but the first
+two read as *just more dashes* and the Lodestone's drag-a-block-onto-a-plate puzzle
+was a fiddly outlier — all cut. Gated progression now lives entirely in the tiered
+gathering tools below.) It hangs off `P.unlocked.*` (so it saves with no migration)
+and has a reward-chest flag wired into `openChest`, so dropping it into a dungeon is a
 one-line decor placement.
 
 | Relic | Flag / chest | Key · button | Verb | Intended home (per this doc) |
 |-------|--------------|--------------|------|------------------------------|
-| **Blast Charge** | `bomb` · `{bombgift:1}` | Q · ✸ | Open **cracked walls**, trip distant plates, stagger foes | Sunwick / the Cinderwrought (fire) |
-| **Lodestone** | `lodestone` · `{lodegift:1}` | G · ❖ | Drag **heart-iron lodeblocks** onto plates / out of the way | Barik / the quake spirit |
+| **Blast Charge** | `bomb` · `{bombgift:1}` | Q · ✸ | Open **cracked walls**, stagger foes | Sunwick / the Cinderwrought (fire) |
 
-World objects they act on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...]}`),
-`ironblock` (`{bx,by}`), `plate` (`{gate:[...]}`), `bomb`. **Test:** dev menu →
-*Relic verbs* → "Sandbox: grant both + spawn puzzles here."
+World objects it acts on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...]}`),
+`bomb`. **Test:** dev menu → *Relic verb* → "Sandbox: grant + spawn crackwall here."
 
-**Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The two verbs are now
-*earnable* as **boss prizes** (see "The four tools are BOSS PRIZES" below): Blast Charge
-off the **Ashen Forge** boss, Lodestone off the **Undermill** boss. And they hide real
-loot out on the isles (dungeon interiors are too
-densely connected for sealable nooks): **crackwall vaults** (a flood-fill-verified nook
-walled by a fissured wall a Blast Charge opens — Barik, Sunward, Stormreach, Windsurf)
-and **lodestone plate rooms** (the nook's neck sealed by a plate-gate; a pressure plate
-and an iron block sit in the open so one Lodestone pull drags the block onto the plate
-and opens the neck — Barik, Windsurf, Frozen, Sunward). Same pocket method + `P.story.tg`
-persistence as the tool-gate caches; each hideaway is proven sealed-until-opened and
-never blocks a route. (Also fixed a tile-rounding bug in the Lodestone's plate
-detection.)
+**Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The Blast Charge is
+*earnable* as a **boss prize** (see "The four tools are BOSS PRIZES" below): off the
+**Ashen Forge** boss. And the hideaways hold real loot out on the isles (dungeon
+interiors are too densely connected for sealable nooks): **crackwall vaults** (a
+flood-fill-verified nook walled by a fissured wall a Blast Charge opens — Barik,
+Sunward, Stormreach, Windsurf) and **slagiron gate rooms** (the same kind of nook,
+but the neck is sealed by an ordinary gated **slagiron** rock the tier-3 Cograzor Pick
+mines through, exactly like a tree or basalt — Barik, Windsurf, Frozen, Sunward). Same
+pocket method + `P.story.tg` persistence as the tool-gate caches; each hideaway is
+proven sealed-until-opened and never blocks a route.
 
 #### Tiered gathering tools as Metroidvania keys — [built: systems; open: placement]
 
@@ -301,6 +299,7 @@ Colour-coded on sight so you can note it and come back.
 |---------------|------|-----------------------|--------|------------|
 | **Rivenedge Axe** | `axe`→2 | **Ironwood** — blue-black pines | blue `#8fb3ff` | `{axegift:1}` |
 | **Cragbreaker Pick** | `pick`→2 | **Basalt** — violet stone | violet `#c79bff` | `{pickgift:1}` |
+| **Cograzor Pick** | `pick`→3 | **Slagiron** — rust-red stone | rust `#e0955a` | `{slaggift:1}` |
 
 The tier also **speeds all ordinary chopping/mining**, so the upgrade is a felt
 reward, not just a key. One dungeon gives the axe, another the pick — **hard gates on
@@ -345,7 +344,7 @@ and the tools are now earned off the boss, one per dungeon.)
 | **Undermaw** (Barik) | Maw-Stalker | **Rivenedge Axe** (axe→2) | fells **ironwood** gates (isles) |
 | **Emberdeep** (Mount Kea) | Ashwing | **Cragbreaker Pick** (pick→2) | breaks **basalt** gates (isles) |
 | **Ashen Forge** (Sunward) | Cinderwrought | **Blast Charge** | opens **crackwall** vaults (isles) |
-| **Undermill** (Windsurf) | Cog-Bound | **Lodestone** | solves **plate** rooms (isles) |
+| **Undermill** (Windsurf) | Cog-Bound | **Cograzor Pick** (pick→3) | mines **slagiron** gate rooms (isles) |
 
 `awardDungeonTool(m)` matches the dungeon + its boss, then (after the boss's own fall beat)
 calls the existing grant fn — so nothing is placed as a loose chest and no dungeon carries

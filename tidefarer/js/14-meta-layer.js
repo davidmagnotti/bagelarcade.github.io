@@ -141,6 +141,11 @@ function loadCode(str){
   }
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
+  // The Lodestone relic was removed - its plate-puzzle rooms are now slagiron
+  // gate rooms mined open with the Cograzor Pick. Strip the dead item + unlock
+  // flag from older saves so the inventory panel never reads a missing ITEMS entry.
+  if(P.inv) delete P.inv.lodestone;
+  delete P.unlocked.lodestone;
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   // dash is now a taught ability (mage-tower orb). Grandfather any save past the

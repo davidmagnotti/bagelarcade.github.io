@@ -1,18 +1,19 @@
 /* =====================================================================
-   HIDEAWAYS  -  the relic verbs, earnable, plus hidden areas that use them.
+   HIDEAWAYS  -  the Blast Charge, earnable, plus hidden areas that use it
+   and the slagiron gate rooms the Cograzor Pick opens.
 
-     1. RELIC REWARD CHESTS (in dungeons). {bombgift} in the Ashen Forge,
-        {lodegift} in the Undermaw - so Blast Charge and Lodestone are
-        actually earnable in play, not just from the dev menu.
+     1. RELIC REWARD CHEST (in a dungeon). {bombgift} in the Ashen Forge -
+        so the Blast Charge is actually earnable in play, not just from the
+        dev menu.
 
      2. CRACKWALL VAULTS (on the isles). A small natural nook - a dead-end a
         flood-fill proves seals a tiny, content-free area - has its neck
         walled by a fissured wall a Blast Charge opens; a loot chest inside.
 
-     3. LODESTONE PLATE ROOMS (on the isles). Same nook, neck sealed by a
-        plate-gate; out in the open sit a pressure plate and, one tile past
-        it, an iron block, so a single Lodestone pull drags the block onto
-        the plate and opens the neck to the loot.
+     3. SLAGIRON GATE ROOMS (on the isles). Same nook, neck sealed by a
+        rust-red slagiron block - an ordinary gated rock the tier-3 Cograzor
+        Pick mines through (chop/mine prompt, exactly like a tree or basalt),
+        opening the neck to the loot. No fiddly plate/block-shove puzzle.
 
    The hidden areas live on the isles (not in the tight, densely-connected
    dungeon interiors, which rarely have a sealable nook) - the classic loop:
@@ -27,10 +28,10 @@
 'use strict';
 
 var DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
-var RELIC_CHESTS={ sunwarddeep:{flag:'bombgift', unlock:'bomb'}, undermaw:{flag:'lodegift', unlock:'lodestone'} };
+var RELIC_CHESTS={ sunwarddeep:{flag:'bombgift', unlock:'bomb'} };
 // isle world id -> loot the hidden area holds
 var CRACK_VAULTS={ main:'trove', east:'materials', reach:'trove', wind:'elixirs' };
-var IRON_ROOMS ={ main:'elixirs', wind:'trove', frost:'materials', east:'trove' };
+var SLAG_ROOMS ={ main:'elixirs', wind:'trove', frost:'materials', east:'trove' };
 
 function strHash(s){ var h=2166136261>>>0; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function tg(){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; return P.story.tg; }
@@ -123,25 +124,6 @@ function findPocket(rng, spawn, used){
   }
   return null;
 }
-// A - Pl - B collinear open floor near the neck, for a one-pull block->plate.
-// B (the block) must sit in open floor (>=3 walkable neighbours) so solidifying it is safe.
-function findTrack(rng, neck, used, forbid){
-  var R=9;
-  for(var ry=-R;ry<=R;ry++) for(var rx=-R;rx<=R;rx++){
-    var px=neck[0]+rx, py=neck[1]+ry;
-    if(!walkable(px,py) || occ(px,py) || forbid[px+','+py]) continue;
-    for(var k=0;k<2;k++){ var d=DIRS[k*2];
-      var ax=px-d[0], ay=py-d[1], bx=px+d[0], by=py+d[1];
-      if(!walkable(ax,ay) || !walkable(bx,by)) continue;
-      if(occ(ax,ay)||occ(bx,by)||forbid[ax+','+ay]||forbid[bx+','+by]) continue;
-      var open=0; for(var q=0;q<4;q++){ if(walkable(bx+DIRS[q][0],by+DIRS[q][1])) open++; }
-      if(open<3) continue;
-      return { A:[ax,ay], plate:[px,py], block:[bx,by] };
-    }
-  }
-  return null;
-}
-
 /* ---- 1. relic reward chests (dungeons) ---- */
 function placeRelicChest(id){
   var rc=RELIC_CHESTS[id]; if(!rc) return;
@@ -166,43 +148,46 @@ function placeCrackVault(id, loot, spawn, used){
   G.decor.push({kind:'chest', x:pk.chest[0]+0.5, y:pk.chest[1]+0.5, tgcache:loot, tgid:gid+':loot'});
 }
 
-/* ---- 3. lodestone plate room ---- */
-function placeIronRoom(id, loot, spawn, used){
-  var gid=id+':iron'; if(tg()[gid+':loot']) return;
+/* ---- 3. slagiron gate room ----
+   Seal the pocket's neck with an ordinary gated slagiron rock: the tier-3
+   Cograzor Pick mines through it just like any tree/basalt (chop/mine prompt),
+   opening the way for good. Same pocket + P.story.tg persistence as the
+   tool-gate side-caches (a felled gate records under its gid; a looted chest
+   under gid+':loot'), so opened rooms stay open across save/reload. ---- */
+function placeSlagRoom(id, loot, spawn, used){
+  var gid=id+':slag';
+  var t=tg();
+  if(t[gid+':loot']) return;                 // already looted - nothing to place
+  var felled=!!t[gid];                        // gate already mined - leave the neck open
   var rng=mulberry32((SEED ^ strHash(gid))>>>0);
   var pk=findPocket(rng, spawn, used); if(!pk) return;
-  var forbid={}; forbid[pk.neck[0]+','+pk.neck[1]]=1; for(var i=0;i<pk.cells.length;i++) forbid[pk.cells[i][0]+','+pk.cells[i][1]]=1;
-  var tr=findTrack(rng, pk.neck, used, forbid); if(!tr) return;
-  used.push(pk.neck); used.push(tr.plate);
-  setTile(pk.neck[0],pk.neck[1],T.RUIN); setSolid(pk.neck[0],pk.neck[1],1);
-  G.decor.push({kind:'plate', x:tr.plate[0]+0.5, y:tr.plate[1]+0.5, gate:[[pk.neck[0],pk.neck[1]]]});
-  G.decor.push({kind:'ironblock', x:tr.block[0]+0.5, y:tr.block[1]+0.5, bx:tr.block[0], by:tr.block[1]});
-  setSolid(tr.block[0],tr.block[1],1);
+  used.push(pk.neck);
   G.decor.push({kind:'chest', x:pk.chest[0]+0.5, y:pk.chest[1]+0.5, tgcache:loot, tgid:gid+':loot'});
+  if(!felled && typeof addGateNode==='function'){ var g=addGateNode('slagiron', pk.neck[0], pk.neck[1]); if(g) g.gid=gid; }
 }
 
 function placeDungeonHideaways(id){
   try{
     var sp=spawnOf(id); var used=[];
     if(CRACK_VAULTS[id]) placeCrackVault(id, CRACK_VAULTS[id], sp, used);
-    if(IRON_ROOMS[id])  placeIronRoom(id, IRON_ROOMS[id], sp, used);
+    if(SLAG_ROOMS[id])  placeSlagRoom(id, SLAG_ROOMS[id], sp, used);
     if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){ try{ console.warn('placeDungeonHideaways failed', e); }catch(_){ } }
 }
 
-/* ---- the four tier-2 tools are BOSS PRIZES: one per dungeon, dropped when the
+/* ---- the four dungeon tools are BOSS PRIZES: one per dungeon, dropped when the
         dungeon's marquee boss falls (hooked from killMob in 09-gameplay.js).
         Each has its "use it here" example already in the world:
           Rivenedge Axe   (Undermaw / Maw-Stalker)   -> ironwood gates (isles)
           Cragbreaker Pick(Emberdeep / Ashwing)       -> basalt gates (isles)
           Blast Charge    (Ashen Forge / Cinderwrought)-> crackwall vaults (isles)
-          Lodestone       (Undermill / Cog-Bound)     -> lodestone plate rooms (isles)
+          Cograzor Pick   (Undermill / Cog-Bound)     -> slagiron gate rooms (isles)
 ---- */
 var BOSS_TOOL={
   undermaw:    {flag:'axegift',  have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
   eastdeep:    {flag:'pickgift', have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
   sunwarddeep: {flag:'bombgift', have:function(){return !!(P.unlocked&&P.unlocked.bomb);},      is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
-  milldeep:    {flag:'lodegift', have:function(){return !!(P.unlocked&&P.unlocked.lodestone);}, is:function(m){return !!m.millboss;}}
+  milldeep:    {flag:'slaggift', have:function(){return (P.tools&&P.tools.pick||0)>=3;}, is:function(m){return !!m.millboss;}}
 };
 // The boss drops its prize as a CHEST where it falls - you go to it, open it (get the
 // prize), then climb out. (Not a silent grant; the "get prize, then climb out" flow.)

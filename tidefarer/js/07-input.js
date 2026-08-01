@@ -20,7 +20,6 @@ window.addEventListener('keydown',e=>{
   if(k==='m'){ toggleRide(); }
   // relic verbs (see 33-relics.js)
   if(k==='q'){ if(typeof tryBomb==='function') tryBomb(); }
-  if(k==='g'){ if(typeof tryLodestone==='function') tryLodestone(); }
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }

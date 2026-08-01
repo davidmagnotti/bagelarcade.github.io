@@ -5857,9 +5857,9 @@ function openChest(b){
     if(!(P.unlocked&&P.unlocked.bomb)){ if(typeof grantBomb==='function') grantBomb(); }
     else { giveGold(rndi(120,180)); give('crystal',1); banner('THE POWDER-HOARD','FIRE-SALT AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
-  if(b.lodegift){ bumpStat('chests');
-    if(!(P.unlocked&&P.unlocked.lodestone)){ if(typeof grantLodestone==='function') grantLodestone(); }
-    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE IRON-HOARD','HEART-IRON AND OLD COIN'); }
+  if(b.slaggift){ bumpStat('chests');
+    if((P.tools&&P.tools.pick||0)<3){ if(typeof grantCograzor==='function') grantCograzor(); }
+    else { giveGold(rndi(120,180)); give('ore',2); banner('THE MILL-HOARD','SLAGIRON AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
   // -- the tiered gathering-tool prizes (see 34-toolgates.js): a dungeon each --
   if(b.axegift){ bumpStat('chests');
