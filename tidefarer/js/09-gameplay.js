@@ -152,6 +152,9 @@ function nearestInteract(){
   for(const n of G.npcs){ if(n.hidden) continue; const d=dist(P.x,P.y,n.x,n.y); if(d<1.9 && d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
   if(G.cat && !G.cat.following){ const d=dist(P.x,P.y,G.cat.x,G.cat.y);
     if(d<1.9 && d<bd){bd=d;best={type:'cat',o:G.cat,label:'Pet'};} }
+  // any wandering cat (the ambient village/plaza critters) can be petted for a 'meow'
+  for(const c of (G.critters||[])){ if(c.kind!=='cat') continue; const d=dist(P.x,P.y,c.x,c.y);
+    if(d<1.6 && d<bd){bd=d;best={type:'petcat',o:c,label:'Pet'};} }
   for(const n of G.nodes){
     if(n.dead) continue;
     const d=dist(P.x,P.y,n.x,n.y);
@@ -206,7 +209,7 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label: b.order? 'Throw lock valve '+b.pips : (b.on?'Sluice (open)':'Turn the sluice valve')}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:(b.on?'Sluice (open)':'Turn the sluice valve')}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
@@ -324,9 +327,10 @@ function doInteract(){
       burst(G.cat.x,G.cat.y-0.4,'#ffd76a',12); Snd.quest();
       toast('<b style="color:var(--ember)">Pip found!</b> He trots along behind you - back to Nia!');
       updateQuestUI();
-    } else { addFloat('mrrp~',G.cat.x,G.cat.y-1,'#ffd76a'); Snd.pickup(); }
+    } else { addFloat('meow',G.cat.x,G.cat.y-1,'#ffd76a'); Snd.pickup(); }
     return;
   }
+  if(it.type==='petcat'){ facePoint(it.o.x,it.o.y); addFloat('meow',it.o.x,it.o.y-1,'#ffd76a'); if(Snd.pickup)Snd.pickup(); return; }
   if(it.type==='node') hitNode(it.o);
   if(it.type==='plot') usePlot(it.o);
 }
@@ -540,7 +544,6 @@ function tryAttack(useMouse){
     // Emberburst perk (magic L5): bigger splash. Overcharge perk: the bolt strikes twice as hard.
     const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
     const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:oc?magicDmg()*2:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
-    if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
     if(P.spells && P.spells.flamesnare){ bolt.snare=1.6; bolt.flame=1; }   // Sunward's Emberdeep gift: bolts root a foe in a snare of fire
     G.projs.push(bolt);
     refreshUI();
@@ -603,6 +606,15 @@ function damageMob(m,dmg,knock,skill){
       burst(m.x,m.y-0.3,'#bfe8ff',10,2.4); if(Snd.hit) Snd.hit();
       addFloat('STUNNED', m.x, m.y-2.4, '#bfe8ff', 1.1);
     } else if(Math.random()<0.5) addFloat('!',m.x,m.y-2.1,'#bfe8ff');
+    return;
+  }
+  // THE STORM-EYE answers only to the bow - blade and staff-bolt scatter off it. (Its shield
+  // still gates WHEN even an arrow can land: only while it's discharged, above.)
+  if(m.stormeye && skill!=='archery'){
+    m.hurtT=0.1;
+    if(Math.random()<0.35) addFloat('BOW ONLY', m.x, m.y-2.2, '#bfe8ff');
+    if(!P._eyeBowHint){ P._eyeBowHint=1;
+      toast('Blade and bolt scatter off the Storm-Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
     return;
   }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
@@ -728,7 +740,7 @@ const OVERWORLD_PARENT = { frostvault:'frost', frostdeep:'frost', aeriedeep:'aer
 // must never touch. Keep this list in step with the isle-clear check below.
 function isBossMob(m){
   return !!(m && (m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
-    ||m.skyminiboss||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
+    ||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
 }
 // Record that this isle's boss has fallen. Once cleared, the wilds stop sending
 // night-wraiths here after dark, and any still abroad quietly disperse. This is
@@ -836,30 +848,36 @@ function killMob(m,skill){
       else toast('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and 120 gold with it.',7000); }, 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
-  // up (see updateSkyDungeon); the gate opens now, but the stun is granted on pickup.
-  if(m.skyminiboss){
-    P.story=P.story||{}; P.story.skyG4=1;
-    if(typeof openSkyGate==='function') openSkyGate('g4');
-    Snd.magic&&Snd.magic();
-    banner('THE STORM-WRAITH FALLS','A SNARE-SPARK DROPS');
-    // drop the bead on its isle home, not wherever a lunge left it (open sky isn't walkable)
-    G.decor.push({kind:'stormbead', x:(m.hx||m.x), y:(m.hy||m.y)});
-    if(typeof autoSave==='function') autoSave();
-  }
-  // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind, and the
-  // calmed sky is what bears you DOWN off the Cloudreach: it grants the stormsail and
-  // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
+  // (The Storm-Wraith mini-boss on the Rainbow Road was cut - the fourth isle is a quiet
+  //  waypoint now, so there is no mid-road boss kill to handle here.)
+  // THE STORM-EYE (Rainbow Road final boss) - felling it stills the high wind and unknots the
+  // crown-ward to the vault beyond, where the Cloud-Chart waits. No stormsail, no Leap: you
+  // carry the chart to Ashwing, who bears you between the isles (see askSkyDragon).
   if(m.skyfinalboss){
-    P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.parachute=1;
-    // the reward at the end of the rainbow road: the calmed sky's lightness stays in your
-    // step, and your dash now carries you half-again as far (see tryRoll's dashReach).
-    P.unlocked=P.unlocked||{}; P.unlocked.dashfar=true;
+    P.story=P.story||{}; P.story.skyDungeonDone=1; P.story.skyEyeDone=1;
     Snd.boss&&Snd.boss();
-    banner('THE STORM-EYE CLOSES','THE HIGH WIND CALMS - YOUR DASH REACHES FARTHER');
+    // open the crown-ward to the Crown-Vault, and reopen the arena seal now the fight is won
+    if(typeof openSkyGate==='function') openSkyGate('gEye');
+    const g5=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='g5');
+    if(g5 && !g5.open){ g5.open=true; for(const [x,y] of (g5.tiles||[])) setSolid(x,y,0); }
+    P.hp=P.maxhp; P.mp=P.maxmp;
+    if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
+    banner('THE STORM-EYE CLOSES','THE HIGH WIND FALLS STILL');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind calms, the rainbow runs quiet - and the settled sky keeps its lightness in your step: your <b style="color:#c9b0ff">dash now carries you half-again as far</b>. The little bird loops back and lays a great kite of stitched stormcloth at your feet too: a <b>stormsail</b>, woven of the settled sky. <b style="color:#c9b0ff">Take THE LEAP</b> from the Cloudreach\'s west shelf now, and the calmed wind will carry you down to <b>Windsurf</b>, far below.',
-      {onOk:()=>{ if(typeof offerSkyReturn==='function') offerSkyReturn(); }}), 1400);
+    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind falls still and the rainbow runs quiet at last. <i>North of the Broken Crown a ward of light unknots, and a small vault opens onto the cloud - something the crown kept, waiting there for you.</i> <b style="color:#c9b0ff">Take what it kept, then carry it down to Ashwing.</b>',
+      {label:'OK'}), 1400);
+  }
+  // THE WIND SPIRIT on the Cloudreach - felling it lifts the ward on the Gale-Shrine, so you
+  // can take the bow (the one arm that can strike the Storm-Eye up on the rainbow road).
+  if(m.windspirit){
+    P.story=P.story||{}; P.story.skyWindSpiritDown=1;
+    const g=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='windward');
+    if(g && !g.open){ g.open=true; for(const [x,y] of (g.tiles||[])) setSolid(x,y,0);
+      shockwave(g.x,g.y,'rgba(200,230,255,0.9)',44); }
+    Snd.boss&&Snd.boss();
+    banner('THE WIND SPIRIT FALLS','THE SHRINE-WARD LIFTS');
+    toast('The wind spirit unravels into still air, and the ward on the little shrine winks out. <b>Something waits in the chest within.</b>',5200);
+    if(typeof autoSave==='function') autoSave();
   }
   // The Drowned Minotaur dens in the Stormreach catacomb
   if(m.tombboss){
@@ -894,12 +912,15 @@ function killMob(m,skill){
     if(G._millWalls && typeof applyMillWall==='function') for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     // the works fall silent: still the grind-blades and spike-grates
     G._millAxes=[]; G._millSpikes=[]; G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap');
-    // the freed gear-train grinds the Cog-Gate back up - the way out of the chamber opens
+    // the freed gear-train grinds BOTH gates up: the Cog-Gate behind you (so you're not trapped)
+    // and the inner sail-vault gate ahead - the sail and the way up stand right there.
     if(typeof MILL_BOSS_SEAL!=='undefined') for(const [x,y] of MILL_BOSS_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    if(typeof MILL_VAULT_SEAL!=='undefined') for(const [x,y] of MILL_VAULT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     { const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=true; }
+    { const vg=G.decor.find(d=>d.kind==='catgate' && d.gate==='millvault'); if(vg) vg.open=true; }
     G._millSealed=0;
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE COG-BOUND FALLS','THE WORKS FALL SILENT - THE SAIL IS YOURS');
+    banner('THE COG-BOUND FALLS','THE VAULT GRINDS OPEN - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
   }
   // THE BONE-YARD (Undermaw R1): the second room's horde. Each fallen skeleton stays
@@ -920,8 +941,9 @@ function killMob(m,skill){
   }
   // After felling ANY dungeon boss, open THE WAY UP - the same fast-exit portal in every
   // dungeon, right where the boss fell. No dialogue: step into it to rise, mended and a level
-  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent.)
-  if((m.boss||m.bigBoss) && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
+  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent; the
+  // Undermill's Cog-Bound has no drop - its sail-vault opens with the exit already inside it.)
+  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
     spawnFastExit(m.x, m.y);
   }
   // the four tier-2 tool prizes are BOSS DROPS - one per dungeon (see 37-dungeon-hideaways.js)
@@ -1276,7 +1298,7 @@ function updatePlayer(dt){
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
-  if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
+  if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
   // fishing timer
   if(P.fishing){
     const f=P.fishing; f.t+=dt;
@@ -1404,7 +1426,6 @@ function updateMobs(dt){
       if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function' && dist(m.x,m.y,P.x,P.y)<11)
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
       m.face=(P.x<m.x?-1:1); continue; }
-    if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
     if(m.customAI){ m.face=(P.x<m.x?-1:1); continue; }   // bespoke returned-isle bosses: driven by their dungeon's update hook
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
@@ -1539,9 +1560,9 @@ function updateMobs(dt){
         m.rooted=1;   // generic land-chase stays off; it swims via the water-only step here
         if(l>2.4 && !((m.stunT||0)>0) && !((m.snareT||0)>0)){
           const spd=(m.hp<m.maxhp*0.5)?2.6:1.8;   // enraged and faster once wounded
-          // only advance onto LIGHT water (shallows - the surf arena), so it stays where
-          // you can reach it and never crawls onto land or dives off into the dark deep
-          const swim=(nx,ny)=>{ const tx=nx|0, ty=ny|0; return inb(tx,ty) && tileAt(tx,ty)===T.SHALLOW; };
+          // it swims through ANY water - the surf shallows or the dark deep beyond the
+          // breakwater - so it can chase you across the whole harbour; it just can't crawl onto land
+          const swim=(nx,ny)=>{ const tx=nx|0, ty=ny|0; return inb(tx,ty) && tileAt(tx,ty)<=T.SHALLOW; };
           const sx=m.x+dx/l*spd*dt; if(swim(sx,m.y)) m.x=sx;
           const sy=m.y+dy/l*spd*dt; if(swim(m.x,sy)) m.y=sy;
         }

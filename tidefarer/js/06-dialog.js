@@ -333,11 +333,18 @@ function buildDialogContent(npc){
       [{label:'You should tell him yes', cls:'gold', fn:sc2}]);
     return;
   }
-  // Burl keeps the Undermill - once Tolen sends you for the sail, the millwright
-  // warns of the thing fouling the seized works below.
-  if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
-    setDialog('<i>Burl lowers his voice, nodding at the mill behind him.</i> “Tolen sent you for the sail - Nessa\'s finest, locked in the vault since the gear-train seized. Go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped the works. There\'s a <b>thing</b> fouled in the shaft, and it don\'t like company. Put it down and the sail\'s yours. Go armed.”',
+  // Nessa the sailmaker owns the sail quest - once Tolen sends you to her, she warns
+  // of the thing fouling the seized works below the windmill where her sail is locked.
+  if(npc.id==='nessa' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
+    setDialog('<i>Nessa sets down her needle and nods toward the windmill on the rise.</i> “My sail\'s down in the old works, behind the millstone gate - go <b>in through the mill</b> and take the <b>cellar stair down</b>. But hear me: it weren\'t rust that stopped those works. There\'s a <b>thing</b> fouled in the shaft, and it don\'t like company. Put it down and bring my sail up, and I\'ll step it to your board. Go armed.”',
       shopButtons(npc,[{label:'I\'ll go down',ghost:true,fn:closeDialog}]));
+    return;
+  }
+  // Burl the millwright is just flavor now - he padlocked the works, but the sail (and
+  // its quest) are Nessa's. He still grumbles about what's down there.
+  if(npc.id==='burl' && qs('sail')==='active' && !(P.story&&P.story.haveSail)){
+    setDialog('<i>Burl thumbs toward the mill behind him.</i> “Nessa send you down for her sail? Aye, I chained that stair myself when the gear-train seized - and I\'d not have done it for rust. Something\'s FOULED in the shaft down there. Mind yourself, and mind my millstones.”',
+      shopButtons(npc,[{label:'I\'ll be careful',ghost:true,fn:closeDialog}]));
     return;
   }
   // Rell won't send you at the Leviathan until you have a windsurf - the beast
@@ -511,6 +518,11 @@ function shopButtons(npc,btns){
   if(npc.id==='wisp'){
     btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
       [{item:'manapot',price:10},{item:'potion',price:30}])});
+  }
+  // Pia runs a food stall on Trade Row - fresh fish off the boats and island-grown fare.
+  if(npc.id==='pia'){
+    btns.unshift({label:'Buy from the stall…', fn:()=>vendorShop(npc,'Fresh off the boats and the orchards, friend - fish, a grilled fillet, an apple, a loaf, a sweet coconut. A stall with no customers is just a sad little roof - so what\'ll it be?',
+      [{item:'fish',price:4},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'bread',price:5},{item:'coconut',price:4}])});
   }
   // Mira the seamstress does not sell the recovered Stolen Silk - it's the one-off bolt
   // the brigands took, meant for Wren's ribbon, not stock to buy back over the counter.

@@ -14,7 +14,7 @@ const ITEMS = {
   wardplate:{name:'Deepiron Ward', desc:'A cold slab of deep-iron. Turns aside 15% of every blow while carried, atop any armour you wear.'},
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
-  stormrune:{name:'Snare Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now snare a foe fast where it stands for a heartbeat.'},
+  skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
   veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
@@ -127,10 +127,10 @@ const QUESTS = {
     doneText:'Stand back- *CLANG* -there. Iron, balanced, and mean. Try not to lose it.',
     rw:{item:{}, sword:1, gold:5, xp:{melee:60, mining:80, woodcut:80}}, unlocks:['slimes','cove'] },
   slimes:{ giver:'bram', title:'Meadow Menace', kind:'kill', kill:{slime:4},
-    brief:'Slimes have gone and claimed the east meadow - Willa\'s cows won\'t graze. Squash four of them and I\'ll dig out my old hunting bow for you.',
+    brief:'Slimes have gone and claimed the east meadow - Willa\'s cows won\'t graze. Squash four of them and I\'ll see you right.',
     log:'Defeat 4 slimes in the meadow east of the village.',
-    doneText:'Not a drop of goo on you! Here - my old yew bow. She pulls a little left. Press 2 to draw it.',
-    rw:{bow:true, gold:10, xp:{melee:80, archery:120}}, unlocks:['mushrooms'] },
+    doneText:'Not a drop of goo on you! Willa\'s cows can graze again - here\'s coin for a clean job, and my thanks.',
+    rw:{gold:25, xp:{melee:120}}, unlocks:['mushrooms'] },
   fish:{ giver:'finn', title:'Supper for Three', kind:'gather', need:{fish:3},
     brief:'Tide\'s kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.',
     log:'Catch 3 fish at rippling water. Interact to cast, again on the "!"',
@@ -237,7 +237,7 @@ const MOBDEF = {
   boar:{hp:160, dmg:16, speed:3.5, aggro:7, xp:130, gold:[6,14], lvl:5, name:'Bristleback Boar'},
   dragon:{hp:680, dmg:40, speed:3.1, aggro:11, xp:600, gold:[90,140], lvl:9, name:'Ashwing, the Enthralled'},
   mage:{hp:200, dmg:26, speed:2.7, aggro:12, xp:260, gold:[30,55], lvl:8, name:'Vath the Enchanter'},
-  leviathan:{hp:1500, dmg:42, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
+  leviathan:{hp:750, dmg:42, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
   raptor:{hp:64, dmg:24, speed:4.5, aggro:11, xp:70, gold:[0,0], lvl:12, name:'Screaming Raptor'},
   bat:{hp:16, dmg:12, speed:5.2, aggro:14, xp:14, gold:[0,0], lvl:11, name:'Cave Bat'},   // a flying swooper - its hit shoves you (off a platform, into the pit)
   serpent:{hp:920, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},
@@ -254,9 +254,10 @@ const MOBDEF = {
   thundercaller:{hp:960, dmg:34, speed:2.8, aggro:14, xp:840, gold:[0,0], lvl:12, name:'The Thundercaller'}, // Cloudreach's Storm Temple: a storm-herald; hunting strikes + a charge/discharge shield
   wardking:{hp:1600, dmg:40, speed:2.5, aggro:12, xp:1200, gold:[0,0], lvl:16, name:'The Tideward Guardian'}, // Emberwick capstone: the founders' sentinel; sweep, shard-fan, and a summoning slam across three phases
   // -- the Rainbow Road (sky-dungeon) --
-  skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches
+  skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches (Storm Temple storm-shades reuse this)
+  skybat:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Storm Bat'},               // the Rainbow Road's roosting swarm - same fight as the old sky wraith, now a winged cloud-bat
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank
-  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // mini-boss; its stormlight lets your staff stun
+  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // (retired) old Rainbow Road mini-boss - no longer spawned
   skyspirit:{hp:980, dmg:30, speed:3.2, aggro:13, xp:820, gold:[0,0], lvl:13, name:'The Corrupted Spirit'}, // (retired) old final sky boss
   stormeye:{hp:900, dmg:24, speed:1.4, aggro:20, xp:900, gold:[0,0], lvl:13, name:'The Storm-Eye'},         // final sky boss: shielded, hurls dodge-only gale-wisps; only vulnerable when it discharges
   galewisp:{hp:1, dmg:18, speed:0, aggro:0, xp:0, gold:[0,0], lvl:12, name:'Gale-Wisp'}                     // its spat minions (spawned as dodge-only projectiles)

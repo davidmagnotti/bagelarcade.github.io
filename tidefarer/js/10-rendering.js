@@ -80,8 +80,8 @@ function buildGroundCache(){
    walls, fences, pillars, stumps...) is static and gets baked. */
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
-  skygate:1, skytile:1, skybird:1, stormbead:1, vathghost:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1,
+  skygate:1, skytile:1, skybird:1, vathghost:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1, millwater:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
@@ -1150,6 +1150,23 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-32,-H); g.lineTo(0,-16-H); g.lineTo(32,-H); g.stroke();
     g.restore(); return;
   }
+  if(b.kind==='millwater'){
+    // a raised churning water-curtain - only where the water still stands (a drained doorway is
+    // flat floor, so we draw nothing there). Reads clearly as an impassable wall of water.
+    if(!(inb(b.gx,b.gy) && tileAt(b.gx,b.gy)===T.DEEP && solidAt(b.gx,b.gy))) return;
+    const g=cx, t=G.time, H=12; g.save(); g.translate(s.x,s.y);
+    const bob=Math.sin(t*3 + b.gx*0.8 + b.gy*0.6)*1.4;
+    g.fillStyle='rgba(26,70,98,0.92)';   // left face
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(18,54,78,0.92)';   // right face
+    g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
+    g.fillStyle='rgba(48,116,156,0.95)';   // top (choppy crest)
+    g.beginPath(); g.moveTo(0,-16-H+bob); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+    g.strokeStyle='rgba(190,228,246,0.5)'; g.lineWidth=1.3;   // bright churn along the crest
+    g.beginPath(); g.moveTo(-30,-H-1); g.quadraticCurveTo(-14,-16-H+bob,0,-14-H+bob); g.quadraticCurveTo(14,-16-H-bob,30,-H-1); g.stroke();
+    if(Math.random()<0.03) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.8), life:rnd(0.3,0.7), color:'rgba(205,232,246,0.7)', size:rnd(1,2), grav:0.04});
+    g.restore(); return;
+  }
   if(b.kind==='emberbutton'){
     const g=cx; const lit=b.set, gl=0.4+0.5*Math.sin(G.time*3+b.x);
     g.save(); g.translate(s.x,s.y);
@@ -1389,21 +1406,6 @@ function drawDecor(b,s){
     if(Math.random()<0.12) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.15,0.15),vy:-rnd(0.2,0.7),life:rnd(0.5,1.1),color:'rgba(220,235,255,0.6)',size:rnd(1,2),grav:-0.03});
     g.restore(); return;
   }
-  if(b.kind==='stormbead'){
-    // a hovering bead of white stormlight, dropped by the Storm-Wraith - walk over it
-    const g=cx, t=G.time, bob=Math.sin(t*3)*2.4;
-    g.save(); g.translate(s.x, s.y-14+bob);
-    const gl=0.55+0.35*Math.sin(t*5);
-    g.fillStyle='rgba(200,176,255,'+(0.30*gl).toFixed(2)+')'; g.beginPath(); g.arc(0,0,13,0,TAU); g.fill();
-    g.fillStyle='rgba(230,215,255,0.95)'; g.beginPath(); g.arc(0,0,5.5,0,TAU); g.fill();
-    g.fillStyle='#fff'; g.beginPath(); g.arc(-1.4,-1.4,2.2,0,TAU); g.fill();
-    // a couple of crackle-sparks
-    for(let i=0;i<3;i++){ const a=t*4+i*2.1; g.strokeStyle='rgba(200,176,255,'+(0.6*gl).toFixed(2)+')'; g.lineWidth=1;
-      g.beginPath(); g.moveTo(Math.cos(a)*6,Math.sin(a)*6); g.lineTo(Math.cos(a)*11,Math.sin(a)*11); g.stroke(); }
-    g.restore();
-    if(Math.random()<0.3) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.1,0.1),vy:-rnd(0.2,0.5),life:rnd(0.4,0.9),color:'rgba(210,190,255,0.7)',size:rnd(1,2),grav:-0.02});
-    return;
-  }
   if(b.kind==='skybird'){
     // a small bright bird perched on a cloud-post, wings shifting
     const g=cx, t=G.time, flap=Math.sin(t*3)*3, hop=Math.sin(t*1.4)*1.5;
@@ -1437,9 +1439,17 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(0,-30); g.quadraticCurveTo(-14,-22,-11,6);
     g.quadraticCurveTo(-6,14,-3,6+Math.sin(t*6)*2); g.quadraticCurveTo(0,16,3,6+Math.sin(t*6+1)*2);
     g.quadraticCurveTo(6,14,11,6); g.quadraticCurveTo(14,-22,0,-30); g.closePath(); g.fill();
-    g.fillStyle='rgba(40,26,58,0.95)'; g.beginPath(); g.ellipse(0,-22,7,9,0,0,TAU); g.fill();        // hood shadow
+    // the hood frames a pale, bearded face - recognisably Vath, just spectral
+    g.fillStyle='rgba(40,26,58,0.95)'; g.beginPath(); g.ellipse(0,-22,7.5,9.5,0,0,TAU); g.fill();     // hood shadow
+    g.fillStyle='rgba(150,120,200,0.7)'; g.beginPath(); g.ellipse(0,-21.5,4.6,5.6,0,0,TAU); g.fill();  // spectral face
+    g.fillStyle='rgba(70,48,104,0.9)';                                                                 // his short beard wrapping the jaw
+    g.beginPath(); g.moveTo(-4.4,-22); g.quadraticCurveTo(-4.6,-16,0,-14.5); g.quadraticCurveTo(4.6,-16,4.4,-22);
+    g.quadraticCurveTo(2.2,-19,0,-19.4); g.quadraticCurveTo(-2.2,-19,-4.4,-22); g.closePath(); g.fill();
     const eg=0.6+0.4*Math.sin(t*3);
-    g.fillStyle='rgba(224,176,255,'+eg.toFixed(2)+')'; g.beginPath(); g.arc(-3,-23,1.5,0,TAU); g.arc(3,-23,1.5,0,TAU); g.fill();
+    g.fillStyle='rgba(20,12,32,0.9)'; g.beginPath(); g.arc(-2.4,-23,1.7,0,TAU); g.arc(2.4,-23,1.7,0,TAU); g.fill();   // deep-set sockets
+    g.fillStyle='rgba(224,176,255,'+eg.toFixed(2)+')'; g.beginPath(); g.arc(-2.4,-23,1.0,0,TAU); g.arc(2.4,-23,1.0,0,TAU); g.fill(); // glowing eyes
+    g.strokeStyle='rgba(28,16,42,0.7)'; g.lineWidth=1; g.lineCap='round';                              // a stern brow
+    g.beginPath(); g.moveTo(-4.2,-25.6); g.lineTo(-1,-25); g.moveTo(4.2,-25.6); g.lineTo(1,-25); g.stroke(); g.lineCap='butt';
     g.restore();
     if(Math.random()<0.3) G.parts.push({x:b.x+rnd(-0.4,0.4), y:b.y-1.4, vx:rnd(-0.15,0.15), vy:-rnd(0.3,0.7), life:rnd(0.6,1.2), color:'#c77bff', size:rnd(1.5,3), grav:-0.03});
     return;
@@ -2638,6 +2648,33 @@ function drawMob(m,s){
     g.fillStyle='#c77bff'; g.beginPath(); g.arc(fl*4,-8,1.5,0,TAU); g.fill(); // maddened violet eye
     g.strokeStyle='#3a2c1c'; g.lineWidth=1.4; g.beginPath(); g.moveTo(-2,6); g.lineTo(-3,10); g.moveTo(2,6); g.lineTo(3,10); g.stroke();
     g.restore();
+    drawMobBars&&drawMobBars(m,s); return;
+  }
+  if(m.kind==='skybat'){
+    // the Rainbow Road roost: a larger, storm-hued cave-bat - dusky violet body, electric-cyan
+    // eyes, a faint stormlight shimmer that fits the sky-road palette. Same silhouette as the
+    // cave bat, scaled up to read as a real threat between the isles.
+    const g=cx, fl=(m.face||1), t=G.time+(m.anim||0), flap=Math.sin((m.bob||0)+t*4.2);
+    const sc=(m.bscale||1)*1.7, hurt=m.hurtT>0;
+    drawShadowAt(g,s.x,s.y,7*sc);
+    g.save(); g.translate(s.x, s.y-19*sc+Math.sin((m.bob||0)+t*2)*2.2); g.scale(sc,sc);
+    // membranous wings, flapping
+    g.fillStyle= hurt? '#e6b0d0' : '#2b2440';
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(-11,-6-flap*7,-16,-1+flap*3); g.quadraticCurveTo(-9,0,-3,2); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(11,-6+flap*7,16,-1-flap*3); g.quadraticCurveTo(9,0,3,2); g.closePath(); g.fill();
+    // wing-strut highlight
+    g.strokeStyle= hurt? 'rgba(255,200,230,0.5)' : 'rgba(150,200,255,0.4)'; g.lineWidth=0.8;
+    g.beginPath(); g.moveTo(-3,1); g.quadraticCurveTo(-10,-3-flap*5,-15,-1+flap*3); g.moveTo(3,1); g.quadraticCurveTo(10,-3+flap*5,15,-1-flap*3); g.stroke();
+    // body + ears
+    g.fillStyle= hurt? '#f0c0dc' : '#3a3252'; g.beginPath(); g.ellipse(0,0,4,5,0,0,TAU); g.fill();
+    g.beginPath(); g.moveTo(-2.5,-4); g.lineTo(-3.5,-8); g.lineTo(-0.5,-5); g.closePath();
+    g.moveTo(2.5,-4); g.lineTo(3.5,-8); g.lineTo(0.5,-5); g.closePath(); g.fill();
+    // electric-cyan eyes with a soft glow
+    const eg=0.6+0.4*Math.sin(t*7);
+    g.fillStyle='rgba(150,220,255,'+(0.3*eg).toFixed(2)+')'; g.beginPath(); g.arc(-1.6,-1,2,0,TAU); g.arc(1.6,-1,2,0,TAU); g.fill();
+    g.fillStyle= hurt? '#fff' : '#8fe4ff'; g.beginPath(); g.arc(-1.6,-1,1,0,TAU); g.arc(1.6,-1,1,0,TAU); g.fill();
+    g.restore();
+    if(Math.random()<0.12) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.4,1.0), 'rgba(170,205,255,0.5)', 1, 1.0);
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='bat'){

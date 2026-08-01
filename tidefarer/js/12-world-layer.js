@@ -99,8 +99,8 @@ const EASTDEEP_ZONES = { // THE EMBERDEEP - a small warded dungeon inside Mount 
 };
 const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Windsurf windmill
   entry: {x:20, y:95, r:6,  name:'The Millstair',         lv:[0,0]},
-  works: {x:20, y:4,  r:6,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian + the stormsail
-  vault: {x:20, y:4,  r:6,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail, in the guardian's chamber
+  works: {x:20, y:6,  r:5,  name:'The Grinding Floor',    lv:[0,0]}, // the guardian (boss arena, y4-8)
+  vault: {x:20, y:2,  r:4,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail + the way up (behind the gate)
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
   maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
@@ -112,7 +112,7 @@ const DROWNED_ZONES = { // THE DROWNED VAULT - the flooded harbor-vault beneath 
   gallery:{x:36, y:56, r:12, name:'The Flooded Gallery', lv:[4,6]},  // a plank causeway over deep water, flanked by drowned dead
   vault:  {x:36, y:20, r:12, name:'The Tide-Lock Vault', lv:[6,7]}   // the Drowned Minotaur + the diving-charm chest
 };
-const GALEDEEP_ZONES = { // THE GALE SPIRE - a wind-scoured shaft beneath Windsurf (grants the longer dash)
+const GALEDEEP_ZONES = { // THE GALE SPIRE - a wind-scoured shaft beneath Windsurf (grants the Swiftstep charm (quicker dash))
   entry: {x:36, y:88, r:7,  name:'The Windward Stair', lv:[4,6]},
   updraft:{x:36, y:54, r:12, name:'The Updraft Hall',  lv:[5,7]},   // gale-swept gaps you dash across
   eye:   {x:36, y:20, r:12, name:'The Eye of the Gale', lv:[7,8]}   // the Storm-Wraith + the swiftstep chest
@@ -130,7 +130,7 @@ const STORMTEMPLE_ZONES = { // THE STORM TEMPLE - a lightning-wracked temple on 
 const TIDEWARD_ZONES = { // THE TIDEWARD CRYPT - the Emberwick capstone, opened only with all four gifts
   entry:  {x:40, y:96, r:8,  name:'The Founders\' Stair', lv:[12,14]},
   ford:   {x:40, y:74, r:12, name:'The Sunken Ford',    lv:[12,14]},   // DIVE across
-  span:   {x:40, y:54, r:12, name:'The Broken Span',     lv:[13,15]},  // LONGER DASH the gap
+  span:   {x:40, y:54, r:12, name:'The Broken Span',     lv:[13,15]},  // a 2-tile gap the base dash clears
   briar:  {x:40, y:36, r:12, name:'The Emberbriar Gate', lv:[13,15]},  // FLAME SNARE the wardthorns
   chasm:  {x:40, y:18, r:14, name:'The Tideward Vault',  lv:[14,16]}   // DOUBLE DASH the chasm -> the guardian
 };
@@ -913,9 +913,13 @@ function dragonLairSpeak(){
     return;
   }
   if(qs('wyrm')==='done' || P.eastDragonFreed){
-    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds. A rock that floats in the cloud-sea, where the <b>Storm Roc</b> roosts and the whole archipelago lies spread out below like a map. My wings do not fear the height. Say the word and I will carry you up.”',
-      [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }},
-       {label:'Rest a while', ghost:true, fn:closeDialog}]);
+    const haveChart = !!(P.story && P.story.skyMapTaken);
+    const fbtns=[{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }}];
+    if(haveChart) fbtns.push({label:'Fly me on to Windsurf', fn:()=>{ closeDialog();
+      flyToWorld('wind','Ashwing springs from the fire-shelf and climbs - the Sunward Isle falls away, and far off Windsurf rises bright on the water ahead.'); }});
+    fbtns.push({label:'Rest a while', ghost:true, fn:closeDialog});
+    lairDialog('Ashwing','“Rest by my fire as long as you like, little flame. A mountain remembers a kindness.” <i>His great eye turns up, past the smoke-hole, to the weather.</i> “And when horizons itch at you - there is a place above the clouds, and the whole archipelago spread below like a map. My wings do not fear the height. Say where, and I will carry you.”',
+      fbtns);
     return;
   }
   if(qs('wyrm')!=='active'){
@@ -1640,7 +1644,7 @@ function updateWind(dt){
     const lv=spawnLeviathan();
     // the shake + banner now ride the 'surface' entrance (fires as it breaches); keep the
     // toast for the gameplay hint, delayed until control returns to the player
-    if(lv){ setTimeout(()=>toast('Something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),2800); }
+    if(lv){ setTimeout(()=>toast('Something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - it can chase you across any water, so keep to your board and end it.',6000),2800); }
   }
 }
 function spawnLeviathan(){
@@ -1764,7 +1768,17 @@ function signalAshwing(b){
   Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.3);
   P.story=P.story||{}; P.story.skyKnown=1;
   toast('You touch a flame to the beacon and it ROARS up gold against the sky. Far above, something vast peels off the cloud-sea and comes wheeling down - <b>Ashwing</b>, answering the signal.',5200);
-  setTimeout(()=>{ if(typeof flyToCloudreach==='function') flyToCloudreach(); },2600);
+  setTimeout(()=>{ askWindsurfFlight(); },2600);
+}
+// Where to, from Windsurf? Ashwing always bears you up to the Cloudreach; with the Cloud-Chart
+// in hand he'll also fly you on to the Sunward Isle - the three isles the chart maps.
+function askWindsurfFlight(){
+  const haveChart = !!(P.story && P.story.skyMapTaken);
+  const btns=[ {label:'Fly up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }} ];
+  if(haveChart) btns.push({label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
+    flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - Windsurf falls away behind, and the Sunward Isle swells green out of the sea ahead.'); }});
+  btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  lairDialog('Ashwing','<i>Ashwing settles on the bluff, wings spread against the wind, and rumbles low - where to?</i>', btns);
 }
 /* =====================================================================
    THE AERIE ISLE - Vath turned the sky against the island. Screaming
@@ -2797,6 +2811,7 @@ function exitFrostVault(){
    ===================================================================== */
 let MILL_WALLS = [];               // stone tiles that read as visible walls (bordering the floor)
 const MILL_BOSS_SEAL=[[18,9],[19,9],[20,9],[21,9],[22,9]];   // the corridor mouth into the Grinding Floor; slams shut behind you when you step up to the Cog-Bound
+const MILL_VAULT_SEAL=[[19,3],[20,3],[21,3]];                // the inner millstone gate into the sail-vault; grinds up when the Cog-Bound falls
 function genMillDeep(){
   // the flooded undercroft: an entry landing, then FOUR flooded halls climbing north, and the
   // guardian's chamber at the top with the sail. The first two halls (A,B) are COMBINATION
@@ -2806,7 +2821,10 @@ function genMillDeep(){
   // as a WALL (ewall decor) so the rooms read clearly - no invisible collision.
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
-  carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian + the stormsail
+  carve(9,1,31,8);      // THE GRINDING FLOOR - the guardian below, the sail-vault above
+  // split it: a REWARD VAULT (y1-2, the sail + the way up) behind an inner millstone gate at
+  // y3, and the BOSS ARENA (y4-8) below. The gate opens only when the Cog-Bound falls.
+  for(let x=9;x<=31;x++){ if(x>=19 && x<=21) continue; setTile(x,3,T.RUIN); setSolid(x,3,1); }
   carve(18,8,22,11);    // corridor -> Hall D
   carve(7,11,33,28);    // TIDE-LOCK HALL D - the five-lock sequence (deepest, hardest)
   carve(18,28,22,31);   // corridor -> Hall C
@@ -2839,12 +2857,18 @@ function placeObjectsMillDeep(){
   // grinds back up when the guardian falls (killMob). A cleared run leaves it open.
   G._millSealed=0;
   G.decor.push({kind:'catgate', x:20, y:9, open:true, gate:'cog', tiles:MILL_BOSS_SEAL.slice(), label:'the Cog-Gate'});
-  for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE SAIL-VAULT GATE: the inner millstone gate (y3) into the reward vault above the arena.
+  // Sealed until the Cog-Bound falls (killMob), then it grinds up and the sail + the way out
+  // stand right there.
+  { const vopen=!!(P.story && P.story.millDone); const vt=MILL_VAULT_SEAL.slice();
+    G.decor.push({kind:'catgate', x:20, y:3, open:vopen, gate:'millvault', tiles:vt, label:'the sail-vault gate'});
+    for(const [x,y] of vt) setSolid(x,y, vopen?0:1); }
+  for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,1],[28,1]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // a decorative great wheel in the landing (the works are drowned, not turning)
   G.decor.push({kind:'millwheel', x:12.5, y:97.2, r:6});
-  // THE MILLER'S ARMS-CHEST: his old hunting bow + the winch-crank that frees the seized
-  // sluice valves. You cannot work a valve until you've taken the crank.
-  if(!(P.story && P.story.millBowTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, bow:1});
+  // THE MILLER'S ARMS-CHEST: the winch-crank that frees the seized sluice valves. You cannot
+  // work a valve until you've taken it. (The bow lives on the Cloudreach now, not here.)
+  if(!(P.story && P.story.millCrankTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, crank:1});
   // ---- THE FLOODED HALLS. Each hall is barred by four WATER-WALLS, every doorway flooded shut by
   // default (you cannot get through). Sluice valves sit at each hall's mouth. There are TWO kinds:
   //   * COMBINATION halls (A,B): each valve is coupled to TWO doorways - throwing it drains one pair
@@ -2856,7 +2880,10 @@ function placeObjectsMillDeep(){
   //     and the locks slam shut. ----
   G._millWalls=[];
   const wwall=(hall, id, y, doorX0, doorX1)=>{
-    for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1); } }   // the whole row floods, blocking
+    for(let x=7;x<=33;x++){ if(inb(x,y)){ setTile(x,y,T.DEEP); setSolid(x,y,1);
+      // a raised churning water-curtain over every flooded tile, so the barrier reads as a WALL of
+      // water (not a calm pool you might jump). The render hides itself where a doorway has drained.
+      G.decor.push({kind:'millwater', x:x+0.5, y:y+0.5, gx:x, gy:y}); } }
     const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
   };
   const valve=(hall, vx, vy, flips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, flips, label:'a sluice valve'}); };
@@ -2868,20 +2895,13 @@ function placeObjectsMillDeep(){
   // HALL B (y51-68): four more, coupled differently. Solve: valve1 off, valve2 on, valve3 on.
   wwall('B','b1', 66, 20,24); wwall('B','b2', 63, 9,13); wwall('B','b3', 60, 20,24); wwall('B','b4', 57, 9,13);
   valve('B', 11,67, ['b2','b3']); valve('B', 20,67, ['b1','b2']); valve('B', 29,67, ['b3','b4']);
-  // HALL C (y31-48): the first TIDE-LOCK. Four walls; four numbered valves. Carved order: 2,4,1,3.
+  // HALL C (y31-48): four water-walls, one valve per wall. Throw each valve to drain its own
+  // stretch - any order (the old carved-order tide-lock is gone). Drain all four to cross.
   wwall('C','c1', 46, 20,24); wwall('C','c2', 43, 9,13); wwall('C','c3', 40, 26,30); wwall('C','c4', 37, 15,19);
-  ovalve('C', 9,47, 3); ovalve('C', 15,47, 1); ovalve('C', 25,47, 4); ovalve('C', 31,47, 2);
-  plaque('C', 20,49, [2,4,1,3]);
-  // HALL D (y11-28): the deepest TIDE-LOCK. Five walls; SIX numbered valves (one a decoy). Carved
-  // order: 4,1,5,2,6 - the valve numbered 3 is never called, and throwing it slams the locks shut.
+  valve('C', 9,47, ['c1']); valve('C', 15,47, ['c2']); valve('C', 25,47, ['c3']); valve('C', 31,47, ['c4']);
+  // HALL D (y11-28): five water-walls, one valve per wall - same simple drain, any order.
   wwall('D','d1', 26, 20,24); wwall('D','d2', 23, 9,13); wwall('D','d3', 20, 26,30); wwall('D','d4', 17, 15,19); wwall('D','d5', 14, 9,13);
-  ovalve('D', 8,27, 5); ovalve('D', 12,27, 2); ovalve('D', 17,27, 6); ovalve('D', 22,27, 1); ovalve('D', 27,27, 4); ovalve('D', 31,27, 3);
-  plaque('D', 20,29, [4,1,5,2,6]);
-  // the two tide-lock sequences: which valve-number opens the next wall northward, in order
-  G._millSeq={
-    C:{ order:[2,4,1,3],   gates:['c1','c2','c3','c4'],           idx:0 },
-    D:{ order:[4,1,5,2,6], gates:['d1','d2','d3','d4','d5'],       idx:0 }
-  };
+  valve('D', 8,27, ['d1']); valve('D', 13,27, ['d2']); valve('D', 18,27, ['d3']); valve('D', 23,27, ['d4']); valve('D', 28,27, ['d5']);
   // ---- THE GRINDING HAZARDS ----
   // the drowned works still turn where the shaft never fully seized: rusted spike-grates snap up
   // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
@@ -2899,13 +2919,17 @@ function placeObjectsMillDeep(){
   // Hall D (tide-lock) - the meat-grinder: grates and three blades over the deepest locks
   mspikes(12,22,25, 0.95, 0.0); mspikes(20,28,21, 0.95, 0.5); mspikes(10,18,15, 0.95, 0.25);
   maxe(20,24, 3.0, 2.4, 0.0); maxe(20,18, 3.0, 2.5, 0.5); maxe(13,21, 2.2, 2.6, 0.3);
-  // THE STORMSAIL, in the guardian's chamber at the top
-  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:27.5, y:3.5, sail:1});
+  // THE STORMSAIL + THE WAY UP, in the reward vault above the arena (behind the sail-vault gate,
+  // so you only reach them once the Cog-Bound falls and the gate grinds up). The exit is right here.
+  if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:24.5, y:1.5, sail:1});
+  G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:15.5, y:1.5, label:'the way up'});
+  setSolid(15,1,0); setTile(15,1,T.RUIN);
   G.critters=[];
-  // a cleared run leaves every hall drained (the mazes are solved) and the works stilled
+  // a cleared run leaves every hall drained (the mazes are solved), the works stilled, and the
+  // sail-vault gate standing open
   if(P.story && P.story.millDone){ for(const w of G._millWalls){ w.on=true; applyMillWall(w); }
     for(const d of G.decor) if(d.kind==='sluicelever') d.on=true;
-    if(G._millSeq) for(const k in G._millSeq) G._millSeq[k].idx=G._millSeq[k].order.length;
+    for(const [x,y] of MILL_VAULT_SEAL){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     G.decor=G.decor.filter(d=>d.kind!=='spiketile' && d.kind!=='axetrap'); G._millSpikes=[]; G._millAxes=[]; }
 }
 // drain (walkable) or flood (blocking water) a water-wall's doorway to match its valve
@@ -2914,16 +2938,15 @@ function applyMillWall(w){
     if(w.on){ setTile(x,w.y,T.RUIN); setSolid(x,w.y,0); }
     else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
-// THE SLUICE VALVES. Combination valves (flips) are coupled to TWO doorways - throwing one flips
-// both. Tide-lock valves (order) must be thrown in the one carved order (see pullSluiceOrder). All
+// THE SLUICE VALVES. Halls A/B couple each valve to TWO doorways (a small combination puzzle);
+// halls C/D give each valve its own single doorway (just throw them all - no order to read). All
 // are seized until you take the winch-crank from the miller's arms-chest.
 function pullSluiceLever(b){
-  if(!b.order && !b.flips) return;   // the mill's only valves are the water-sluices
-  if(!(P.story && P.story.millBowTaken)){
+  if(!b.flips) return;   // the mill's only valves are the water-sluices
+  if(!(P.story && P.story.millCrankTaken)){
     toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
     Snd.step&&Snd.step(5); return;
   }
-  if(b.order) return pullSluiceOrder(b);   // the deeper tide-locks read the carved order
   b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
   for(const id of b.flips){ const w=(G._millWalls||[]).find(x=>x.id===id); if(!w) continue;
     w.on=!w.on; applyMillWall(w);
@@ -2939,56 +2962,21 @@ function pullSluiceLever(b){
     toast('The coupled sluices shift - some stretches drain as others flood over. <b>'+openN+' of '+hw.length+'</b> walls stand open. Find the combination that opens them all at once.',3600);
   }
 }
-// THE TIDE-LOCKS (halls C & D): the water only falls if the numbered valves are thrown in the one
-// carved order shown on the hall's plaque. Each correct valve drains the next wall northward; ANY
-// wrong valve reverses the sluices, floods every drained stretch back, and resets the sequence.
-function pullSluiceOrder(b){
-  const S=G._millSeq && G._millSeq[b.hall]; if(!S) return;
-  const gateWall=id=>(G._millWalls||[]).find(w=>w.id===id);
-  if(S.idx>=S.order.length){ b.on=true; return; }   // already open - nothing left to throw
-  const expected=S.order[S.idx];
-  if(b.pips===expected){
-    // the right lock, in the right place: drain the next wall northward and hold it
-    b.on=true;
-    const w=gateWall(S.gates[S.idx]);
-    if(w){ w.on=true; applyMillWall(w);
-      for(let i=0;i<12;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.6,2.4);
-        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.4, life:rnd(0.4,1.1), color:'#bfe0f4', size:rnd(1.5,3), grav:0.05}); } }
-    S.idx++;
-    Snd.quest&&Snd.quest(); buzz&&buzz(7); shockwave(b.x,b.y,'rgba(150,205,235,0.85)',44);
-    invalidateScenery&&invalidateScenery();
-    if(S.idx>=S.order.length){
-      G.shake=Math.max(G.shake||0,0.5); banner('THE TIDE-LOCK OPENS','THE WATER FALLS - THE WAY NORTH IS CLEAR');
-      toast('The last lock gives and the whole hall drains at once - a clear channel opens all the way north. <b>Cross it before you touch another valve.</b>',5000);
-    } else {
-      addFloat('lock '+S.idx+' / '+S.order.length, b.x, b.y-1.4, '#bfe0f4', 1.1);
-      toast('The water recedes a stretch and holds - <b>'+S.idx+' of '+S.order.length+'</b> locks thrown in order. The carved stele shows the next number.',3000);
-    }
-  } else {
-    // wrong lock: the whole hall floods black again and the order resets
-    const had=S.idx; S.idx=0;
-    for(const gid of S.gates){ const w=gateWall(gid); if(w && w.on){ w.on=false; applyMillWall(w);
-      for(let i=0;i<7;i++){ const px=w.dx0+Math.random()*(w.dx1-w.dx0+1), a=Math.random()*TAU, sp=rnd(0.5,1.8);
-        G.parts.push({x:px, y:w.y+0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp*0.5-0.2, life:rnd(0.3,0.9), color:'#5a7a92', size:rnd(1.5,3), grav:0.04}); } } }
-    for(const v of (G.decor||[])) if(v.kind==='sluicelever' && v.order && v.hall===b.hall) v.on=false;
-    G.shake=Math.max(G.shake||0,0.55); buzz&&buzz(14); Snd.hit&&Snd.hit();
-    invalidateScenery&&invalidateScenery();
-    if(had>0) banner('THE LOCKS SLAM SHUT','THE ORDER BREAKS - THE HALL FLOODS BACK');
-    toast('Wrong valve - the sluices reverse with a roar and every stretch you drained floods black again. The tide-lock resets. <b>The carved stele shows the order - throw the numbers just as it reads.</b>',4400);
-  }
-}
+// (The old carved-ORDER tide-lock - pullSluiceOrder + the millplaque steles - was cut. Halls C/D
+//  are plain per-valve drains now; every sluice runs through pullSluiceLever above.)
 // drive the mill's grinding hazards: cycle the spike-grates and sweep the grind-blades, bleeding
 // the player on a clean hit (a dash's roll frames pass through everything unharmed).
 function updateMillDeep(dt){
   const t=(G._millT=(G._millT||0)+dt);
-  // THE COG-GATE: stepping onto the Grinding Floor with the Cog-Bound alive slams it shut behind
-  // you, so there's no backing down the halls to kite the guardian. It reopens when it falls.
-  if(!G._millSealed && !(P.story&&P.story.millDone) && P.y<=8 && P.x>=9 && P.x<=31
-     && (G.mobs||[]).some(mb=>mb.millboss && !mb.dead)){
+  // THE COG-GATE: stepping onto the Grinding Floor RAISES the Cog-Bound out of the works and
+  // slams the gate shut behind you - the guardian is not there until you commit. No backing down
+  // the halls to kite it; the gate reopens only when it falls.
+  if(!G._millSealed && !(P.story&&P.story.millDone) && P.y>=4 && P.y<=8 && P.x>=9 && P.x<=31){
+    if(typeof spawnCogBound==='function') spawnCogBound();
     G._millSealed=1; for(const [x,y] of MILL_BOSS_SEAL) setSolid(x,y,1);
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
-    banner('THE COG-GATE SLAMS SHUT','NO RETREAT - FELL THE COG-BOUND');
+    banner('THE COG-BOUND RISES','THE COG-GATE SLAMS SHUT - NO RETREAT');
   }
   const safe = P.dead || (P.rollT||0)>0;
   const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:12}); };
@@ -3007,13 +2995,19 @@ function updateMillDeep(dt){
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
 // millstone gate up. A single mini-boss - the whole reason the dungeon exists.
 function spawnMobsMillDeep(){
-  if(P.story && P.story.millDone) return;   // already felled - the works turn free
+  // The Cog-Bound no longer stands waiting - it rises only when you step onto the Grinding Floor
+  // and the Cog-Gate slams shut behind you (see spawnCogBound, called from updateMillDeep).
+}
+function spawnCogBound(){
+  if(P.story && P.story.millDone) return;
+  if((G.mobs||[]).some(mb=>mb.millboss)) return;   // one at a time
   const Z=MILLDEEP_ZONES.works;
-  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 6) || [Z.x, Z.y];
+  const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 5) || [Z.x, Z.y];
   const b=spawnMob('skeleton', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
     b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
-    b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
+    b.hx=sp[0]; b.hy=sp[1]; b.state='chase'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
+  return b;
 }
 function genMillDeepAll(){ genMillDeep(); placeObjectsMillDeep(); spawnMobsMillDeep(); buildMapBase(); }
 function enterMillDungeon(){
@@ -3120,8 +3114,8 @@ function placeObjectsUndermaw(){
   setSolid(27,4,0); setTile(27,4,T.RUIN);
   // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
-    toast('A barrow-bow hangs racked by the maw - you can loose <b>arrows</b> here (press <b>2</b> / the bow slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
+  if(!(P.unlocked && (P.unlocked.bow || P.unlocked.staff))){ P.unlocked=P.unlocked||{}; P.unlocked.staff=true;
+    toast('An old ember-staff leans by the maw - you can loose <b>bolts</b> here (press <b>3</b> / the staff slot).',4600); if(typeof buildHotbar==='function') buildHotbar(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -3390,6 +3384,7 @@ function genSky(){
   const Z=SKY_ZONES;
   carveDisc(Z.landing.x,Z.landing.y,Z.landing.r,T.SNOW,false);
   carveDisc(Z.leap.x,Z.leap.y,Z.leap.r,T.SNOW,false);
+  carveDisc(32,16,5,T.SNOW,false);   // the Gale-Shrine (the wind spirit + the bow) at the north
 }
 function placeObjectsSky(){
   const Z=SKY_ZONES;
@@ -3410,6 +3405,20 @@ function placeObjectsSky(){
   // Cloud-Tender so she's easy to spot (she reads small and got lost in the crowd before).
   { const sp=findOpenNear(Z.landing.x-3, Z.landing.y-6, 5) || [Z.landing.x-3, Z.landing.y-6];
     G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-44}); }
+  // THE GALE-SHRINE: a little stone-ringed shrine at the north where a WIND SPIRIT guards a
+  // chest. Beat the spirit and the wind-ward across the throat lifts (see killMob's windspirit
+  // branch), and the chest gives up the BOW - the one arm that can strike the Storm-Eye.
+  { const cx0=32, cy0=15;
+    const walls=[[31,13],[32,13],[33,13],[30,14],[30,15],[30,16],[34,14],[34,15],[34,16],[30,17],[34,17]];
+    for(const [x,y] of walls){ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } }
+    // the bow-chest, boxed inside the ring
+    if(!(P.story && P.story.skyBowTaken)) G.decor.push({kind:'chest', x:cx0+0.5, y:cy0+0.5, skybow:1});
+    // the wind-ward across the southern throat - open once the spirit is down
+    const tiles=[[31,17],[32,17],[33,17]];
+    const wopen=!!(P.story && P.story.skyWindSpiritDown);
+    G.decor.push({kind:'skygate', gate:'windward', x:32, y:17, tiles, open:wopen, label:'a wind-ward'});
+    for(const [x,y] of tiles) setSolid(x,y, wopen?0:1);
+  }
   G.critters=[];
 }
 function spawnSkyFolk(){
@@ -3417,8 +3426,8 @@ function spawnSkyFolk(){
   G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.landing.x-2.5, Z.landing.y+2.5,
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
     ['Few climb Ashwing’s wing this high. Fewer still leave - the wind up here is soured, and a soured sky suffers no guests.',
-     'There is a shelf on the west edge - The Leap. Step off it and you fall forever… unless the wind itself will bear you. It will not, the way it blows now.',
-     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Calm the wind and it will carry you DOWN from The Leap to <b>Windsurf</b>, bright on the water below - there is no other road off this rock.'],0.4));
+     'There\'s a wind <b>spirit</b> haunting the shrine to the north - it guards an old <b>bow</b>. Mind it if you mean to run the road: the Storm-Eye up there laughs at steel, and only an arrow will reach it.',
+     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Bring the chart down from the crown, and <b>Ashwing</b> will bear you on to <b>Windsurf</b>, bright on the water below.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
@@ -3426,8 +3435,15 @@ function spawnSkyFolk(){
      'If the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
 }
 function spawnMobsSky(){
-  // The Cloudreach is a calm little perch now - no Storm Roc, no raptors. The danger
-  // (and the whole journey) lives on the Wind-Lost Bird's rainbow road.
+  // THE WIND SPIRIT guards the Gale-Shrine at the north until it's put down. Beat it (with
+  // blade or bolt - you've no bow yet) and the ward on the shrine lifts, giving up the bow.
+  if(!(P.story && P.story.skyWindSpiritDown)){
+    const sp=findOpenNear(32, 21, 4) || [32,21];
+    const m=spawnMob('stormwraith', sp[0], sp[1]);
+    if(m){ m.boss=true; m.bigBoss=true; m.windspirit=1; m.bscale=1.7; m.title='THE WIND SPIRIT';
+      m.hp=m.maxhp=360; m.dmg=20; m.lvl=Math.max(9,Math.min(12,P.level||10)); m.hx=m.x; m.hy=m.y;
+      m.respawnT=-1; m.entrance='descend'; }
+  }
 }
 function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); placeSkyHazard(); spawnSkyFolk(); spawnMobsSky(); buildMapBase(); }
 // ---------- STORMREACH ----------
@@ -3783,12 +3799,12 @@ function flyToCloudreach(){
   flyToWorld('sky');
 }
 function askSkyDragon(){
-  // Ashwing on the Cloudreach carries you back DOWN off the rock. Once the Rainbow
-  // Road is run (the stormsail is yours) he can also bear you forward to Windsurf,
-  // so "Fly down" always has somewhere to go.
-  const runRoad = !!(P.story && (P.story.parachute || P.story.skyDungeonDone));
+  // Ashwing on the Cloudreach is your ride between the isles. He always bears you back to
+  // the Sunward Isle; once you carry the CLOUD-CHART down from the Broken Crown (and the high
+  // wind is tamed), he'll also fly you on to Windsurf - the three isles the chart maps.
+  const haveChart = !!(P.story && P.story.skyMapTaken);
   const btns=[];
-  if(runRoad) btns.push({label:'Fly down to Windsurf', cls:'gold', fn:()=>{ closeDialog();
+  if(haveChart) btns.push({label:'Fly on to Windsurf', cls:'gold', fn:()=>{ closeDialog();
     if(!flightLockOK()) return;
     const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
     toast('Ashwing tips off the cloud-shelf and pours down through the cold cloud - an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6000);
@@ -3797,43 +3813,25 @@ function askSkyDragon(){
         banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
       } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1000);
   }});
-  btns.push({label:'Fly back to the Sunward Isle', cls: runRoad?undefined:'gold', fn:()=>{ closeDialog();
+  btns.push({label:'Fly back to the Sunward Isle', cls: haveChart?undefined:'gold', fn:()=>{ closeDialog();
     flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  const line = haveChart
+    ? '<i>Ashwing dips his great head to the Cloud-Chart and rumbles low, tracing a wing-tip along its inked wind-roads. He knows every one - Windsurf, the Cloudreach, the Sunward Isle - and will bear you to any of them, now the high wind lies still.</i>'
+    : '<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down to the Sunward Isle whenever the height gets into your knees. (Run the rainbow road and bring back the crown\'s chart, and he\'ll fly you on to Windsurf too.)</i>';
   // open the dialog window itself (dlg.open + display + portrait) via lairDialog - calling
   // setDialog alone only fills a HIDDEN panel, so the menu never appeared and "Fly down" read as dead
-  lairDialog('Ashwing','<i>Ashwing folds a wing against the wind and rumbles - he will carry you down off the Cloudreach whenever the height gets into your knees.</i>', btns);
+  lairDialog('Ashwing', line, btns);
 }
+// The Leap is now just a scenic overlook - there is no stormsail. Travel between the isles
+// is Ashwing's work, unlocked by the Cloud-Chart. The shelf points you to him.
 function useLeapPoint(){
-  if(!(P.story && P.story.parachute)){
-    toast('You lean into the drop and the wind nearly tears you off the shelf - <b>the winds that way are deadly</b>, and you have <b>no safe way down</b>. You would need a <b>sail</b> the wild sky can\'t rip apart. Seek the <b>Wind-Lost Bird</b> by the landing: run her <b>rainbow road</b>, put out the Storm-Eye, and the calmed sky will bear you down.',6600);
-    Snd.step&&Snd.step(5); return;
+  if(!(P.story && P.story.skyMapTaken)){
+    toast('You lean over the shelf-lip - nothing below but cold cloud and, far down, a city bright on the water. <b>It is far too far to jump.</b> Run the <b>Wind-Lost Bird</b>\'s rainbow road, put out the Storm-Eye, and bring the <b>Cloud-Chart</b> back to <b>Ashwing</b> at the landing - he\'ll bear you down.',6600);
+  } else {
+    toast('The high wind is tamed, but it is still a long drop. <b>Ashwing</b> waits at the landing - show him the <b>Cloud-Chart</b> and he\'ll fly you down to Windsurf, on to the Sunward Isle, or back up here whenever you like.',6000);
   }
-  if(typeof dlg!=='undefined' && dlg.open) return;
-  // Confirm first: dropping to Windsurf is effectively one-way. No hull crosses its straits
-  // until its sea-beast is put down, so once you step off you're committed to that island
-  // for a good while. Warn the player and let them back out.
-  const doLeap=()=>{
-    closeDialog();
-    if(!flightLockOK()) return;
-    const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
-    toast('You shake out your <b>stormsail</b>, run three steps, and <b>step off the world</b>. The sail cracks open - and you drift down through the cold cloud, an industrious city rising bright out of the water to meet you: <b>Windsurf</b>.',6500);
-    if(Snd.boss) Snd.boss();
-    setTimeout(()=>{ try{ switchWorld('wind'); autoSave&&autoSave();
-        banner('WINDSURF ISLE','YOU COME DOWN OUT OF THE CLOUD');
-      } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },260); } }, 1100);
-  };
-  dlg.open=true; dlg.npc=null;
-  document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent='The Leap';
-  { const pc=document.getElementById('dportrait'); if(pc){ const pg=pc.getContext('2d');
-      pg.fillStyle='#2a3a52'; pg.fillRect(0,0,72,72);
-      pg.fillStyle='rgba(235,240,250,0.92)'; pg.beginPath(); pg.ellipse(30,28,20,12,0,0,TAU); pg.ellipse(46,32,15,10,0,0,TAU); pg.fill();   // cloud
-      pg.strokeStyle='rgba(190,224,255,0.6)'; pg.lineWidth=2; pg.beginPath(); pg.moveTo(40,42); pg.lineTo(40,62); pg.stroke();              // the drop
-      pg.fillStyle='#bfe0ff'; pg.beginPath(); pg.moveTo(36,58); pg.lineTo(44,58); pg.lineTo(40,68); pg.closePath(); pg.fill(); } }
-  setDialog('<i>You stand at the lip of the shelf, the stormsail humming in your grip - and below there is nothing but cold cloud and, far down, a city bright on the water.</i> Once you drop to <b>Windsurf</b> you may be <b>stranded there a good while</b>: no hull has crossed its straits since its waters turned, so there is <b>no easy way back up</b> until you\'ve set them right. <b>Take the Leap?</b>',
-    [{label:'Take the Leap', cls:'gold', fn:doLeap},
-     {label:'Not yet', ghost:true, fn:closeDialog}]);
+  Snd.step&&Snd.step(5);
 }
 
 /* =====================================================================
@@ -4243,12 +4241,12 @@ QUESTS.surf1={ giver:'kaia', title:'The Wind Is a Road', kind:'gather', need:{wo
 QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', need:{wood:6, shell:3}, xpL:240,
   brief:'Face the beast in the strait? Not off Rell\'s jetty you won\'t - it only reaches so far, and that thing swims. You\'ll want a windsurf, and I\'m the only hand on this rock who can shape one. Bring me six lengths of good timber and three big spiral shells to inlay the rails, and I\'ll shape you a board fit for that killing water. The sail\'s another matter - but one thing at a time.',
   log:'Bring Tolen the Whittler 6 wood and 3 spiral shells so he can shape you a windsurf board. (Chop the palms; comb the beach for shells.)',
-  doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is Nessa\'s, and it\'s locked in the old grinding works BENEATH THE WINDMILL - Burl keeps it padlocked, and has since the gear-train jammed. But he left the key with me for just such a day. Here - take it, open the mill yourself, and bring the sail up. Then I\'ll step it for you.',
+  doneText:'There she is - rails inlaid, deck sanded smooth. Fine board, if I say so. Only she\'s bare, and no board crosses that strait without a sail... and I\'ve none fit for it. The last stormsail on this rock is <b>Nessa the sailmaker\'s</b>, locked in the old grinding works BENEATH THE WINDMILL since the gear-train jammed. Burl left the key with me for just such a day - here, take it. Now go see <b>Nessa</b>: it\'s her sail down there, and she\'ll tell you what fouled the works. Bring it up and she\'ll step it to your board.',
   rw:{gold:20} };
-QUESTS.sail={ giver:'burl', title:'The Sail in the Undermill', kind:'special', xpL:220,
-  brief:'The stair down? Chained shut, and for good reason - the gear-train siezed a season back and the works went dead, Nessa\'s good stormsail locked in the vault behind the millstone gate. And it wasn\'t rust that stopped it. Something got FOULED in the shaft down there and won\'t lie quiet. Put the thing down, the gear-train frees, the gate grinds up - and the sail\'s yours. Mind yourself in the dark.',
-  log:'Descend the Undermill beneath the windmill. Defeat the guardian fouling the works to raise the millstone gate, and carry Nessa\'s stormsail back up.',
-  doneText:'You brought it up! Nessa\'s stormsail, whole and dry. Take it to Tolen - or just set it to your board; she\'ll fly true now. Then it\'s Rell you want, and that thing past the breakwater.',
+QUESTS.sail={ giver:'nessa', title:'The Sail in the Undermill', kind:'special', xpL:220,
+  brief:'So Tolen shaped you a board - then it\'s my sail you\'ll be needing, and there\'s the rub. My last good stormsail is locked in the old grinding works BENEATH THE WINDMILL, behind the millstone gate, and has been since the gear-train seized a season back. And it wasn\'t rust that stopped it - something got FOULED in the shaft down there and won\'t lie quiet. Take Tolen\'s key, go down, put the thing down, and bring my sail up. Do that and I\'ll step it to your board myself.',
+  log:'Descend the Undermill beneath the windmill. Defeat the guardian fouling the works to raise the millstone gate, and carry Nessa\'s stormsail back up to her.',
+  doneText:'You brought it up - my own stormsail, whole and dry, after all this time. Hold still and I\'ll step it to your board now... there. She\'ll fly true. Then it\'s Rell you want, and that cold thing past the breakwater.',
   rw:{surf:true, gold:40} };
 QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
   brief:'You feel it in the water, past my breakwater - a wrongness, cold and patient. No hull has crossed since it woke, and Windsurf is starving for want of a sail. It is no natural beast; it moves like something bound. Walk the jetty and face it, friend - end this, and you give this whole city back its sea.',
@@ -5069,14 +5067,14 @@ function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
     if(b){ b.boss=true; b.bigBoss=true; b.title=title; b.subtitle=sub; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone=doneFlag; b.entrance='loom'; }
   }
 }
-// ---- WINDSURF: THE GALE SPIRE (grants the longer dash) ----
+// ---- WINDSURF: THE GALE SPIRE (grants the Swiftstep charm (quicker dash)) ----
 /* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke ----------
    Three chambers climb the wind-scoured spire before the Eye. THE ANTECHAMBER, where cave-bats
    swoop out of the dark; then two ABYSS CROSSINGS - THE UPDRAFT and THE HIGH CROSSING - each a
    bottomless wind-shaft you cross on a drifting stone platform while a SIDEWAYS GALE (east in
    one room, west in the next, on staggered timing) shoves you toward the drop. Ride the
    platform and hold into the wind or be swept off. At the top the Eye of the Gale seals shut
-   and THE SKIRL forms; its charm grants the longer dash. ============================== */
+   and THE SKIRL forms; its charm grants the Swiftstep boon (a quicker dash). ============================== */
 const WIND_SEAL=[[34,37],[35,37],[36,37],[37,37],[38,37]];
 function genWindDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
@@ -5122,7 +5120,7 @@ function placeObjectsWindDeep(){
   G._windGusts.push({x0:20,x1:52,y0:51,y1:54, dir:-1, push:3.0, period:4.0, t:2.0});   // ROOM 4 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - LONGER DASH
+  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - QUICKER DASH (faster recovery)
   G.critters=[];
   if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; dungOpenAllGates(true); }
@@ -5558,9 +5556,10 @@ function updateThundercaller(m,dt){
 // the founders' trials, ending at the Tideward Guardian and a hook toward the
 // weapon the prophecy names (see STORY.md, Act II climax).
 /* ---------- THE TIDEWARD CRYPT (embertomb) - the Emberwick capstone, bespoke ------------
-   Opened only with all four returned-isle gifts, and every chamber demands one of them in
-   turn: DIVE the Sunken Ford, clear the Broken Span with the LONGER DASH, burn the Emberbriar
-   with a FLAME SNARE, and cross the Sundering Chasm with the DOUBLE DASH - then face THE
+   Opened only with all four returned-isle gifts (DIVE, the SWIFTSTEP charm, the FLAME SNARE,
+   and the DOUBLE DASH). DIVE the Sunken Ford, hop the Broken Span (a 2-tile gap the base dash
+   clears now), burn the Emberbriar with a FLAME SNARE, and cross the Sundering Chasm with the
+   DOUBLE DASH - then face THE
    TIDEWARD GUARDIAN, the founders' sentinel, and take the trail to the weapon.
    ================================================================================= */
 const TOMB_THORN=[[37,29],[38,29],[39,29],[40,29],[41,29],[42,29],[43,29]];   // the Emberbriar wall
@@ -5573,7 +5572,7 @@ function genEmberTomb(){
   _dungCarve(28,68,52,74,T.RUIN);         // north lip
   _dungCarve(37,62,43,68,T.RUIN);         // corridor
   _dungCarve(28,56,52,62,T.RUIN);         // BROKEN SPAN - south ledge
-  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (voided in placeObjects: LONGER DASH)
+  _dungCarve(28,50,52,55,T.RUIN);         // ...the span floor (a 2-tile band is voided in placeObjects - base dash clears it)
   _dungCarve(28,44,52,50,T.RUIN);         // north ledge
   _dungCarve(37,38,43,44,T.RUIN);         // corridor
   _dungCarve(28,30,52,38,T.RUIN);         // EMBERBRIAR chamber
@@ -5589,7 +5588,7 @@ function placeEmberTombObjects(){
   for(const [tx,ty] of [[34,98],[46,98],[26,70],[54,70],[26,58],[54,58],[26,32],[54,32],[24,4],[56,4],[40,3]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   G._tombVoid=new Set(); G._tombPlunge=null; G._tombCheck={x:40.5,y:90.5};
   const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); if(((x*3+y)%3)===0) G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
-  voidRect(28,50,52,55);        // THE BROKEN SPAN gap (longer dash)
+  voidRect(28,52,52,53);        // THE BROKEN SPAN gap - a 2-tile void the base dash clears (the old longer-dash requirement is gone)
   voidRect(26,10,54,15);        // THE SUNDERING CHASM gap (double dash)...
   // ...but leave a small mid-island to land the first dash on, then dash again to the vault
   for(let y=11;y<=13;y++) for(let x=38;x<=42;x++){ G._tombVoid.delete(x+','+y); setTile(x,y,T.RUIN); setSolid(x,y,0);
@@ -5764,7 +5763,7 @@ function placeSkyHazard(){
   _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
 }
 // The Emberwick capstone opens only once all four returned-isle gifts are in hand.
-function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.dashfar && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
+function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.swiftstep && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
 function placeEmberTomb(){
   if(!haveAllFourGifts()) return;
   if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld==='embertomb')) return;
@@ -5802,15 +5801,45 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('pearl',1); banner('THE TIDE-LOCK HOARD','PEARLS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
-  // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a longer dash.
+  // THE GALE-SHRINE (Cloudreach): the bow - moved here from the old world, and the ONLY arm
+  // that can strike the Storm-Eye up on the rainbow road. A genuine surprise behind the spirit.
+  if(b.skybow){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.skyBowTaken=1;
+    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
+    P.unlocked=P.unlocked||{};
+    if(!P.unlocked.bow){
+      P.unlocked.bow=true;
+      if(typeof buildHotbar==='function') buildHotbar();
+      Snd.levelup&&Snd.levelup();
+      banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+        else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
+    } else {
+      giveGold(30); give('potion',1); Snd.quest&&Snd.quest();
+      banner('THE SHRINE OPENS','A QUIVER AND A TONIC');
+      setTimeout(()=>toast('You carry a bow already - the shrine\'s spare goes to the pack with a tonic and a few coins. (Its long shafts are the one thing the <b>Storm-Eye</b> will feel.)',6000),400);
+    }
+    setTimeout(autoSave,300); return;
+  }
+  // THE BROKEN CROWN: the Cloud-Chart - the map you carry to Ashwing to be borne between isles.
+  if(b.skymap){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.skyMapTaken=1; give('skymap',1);
+    shockwave(b.x,b.y,'rgba(200,225,255,0.9)',52); burst(b.x,b.y-0.5,'#dce8ff',18,2.6); Snd.levelup&&Snd.levelup();
+    banner('THE CLOUD-CHART','A MAP OF THE WIND-ROADS');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The crown kept an old chart, inked on stormcloth - every wind-road the great dragon once flew, laid out isle to isle.</i> <b style="color:#c9b0ff">You take the Cloud-Chart.</b> <i>The bird waits at the vault\'s edge to bear you down to the Cloudreach. Show the chart to <b>Ashwing</b> at the landing, and - now the high wind is tamed - he will fly you on to <b>Windsurf</b>, back to the Cloudreach, or to the <b>Sunward Isle</b>.</i>'); },500);
+    setTimeout(autoSave,300); return;
+  }
+  // WINDSURF - THE GALE SPIRE: the Swiftstep charm - a QUICKER dash (faster recovery, not longer).
   if(b.dashgift){
     bumpStat('chests'); P.unlocked=P.unlocked||{}; P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(180,230,255,0.9)',56); burst(b.x,b.y-0.5,'#bfe8ff',22,2.8); if(Snd.levelup) Snd.levelup();
-    if(!P.unlocked.dashfar){
-      P.unlocked.dashfar=true; P.story.galeDeepDone=1;
+    if(!P.unlocked.swiftstep){
+      P.unlocked.swiftstep=true; P.story.galeDeepDone=1;
       if(typeof WORLDS!=='undefined') delete WORLDS.isle;
-      banner('THE SWIFTSTEP CHARM','LONGER DASH - YOUR DODGE CARRIES FARTHER');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash now carries you half-again as far.</b> <i>Windsurf can breathe again - and the wider gaps of the old islands are yours to clear.</i>'); },500);
+      banner('THE SWIFTSTEP CHARM','QUICKER DASH - YOUR DODGE RECOVERS FASTER');
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Gale-Wraith unravels back into ordinary wind, and where its heart hung there drifts a charm of knotted stormcloth. It settles against your chest and the maddened gusts outside go slack.</i> <b style="color:#bfe8ff">Your dash recovers half again as fast</b> - <i>you can roll again far sooner. Windsurf can breathe again.</i>'); },500);
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE EYE OF THE GALE','WIND-WORN COIN AND CRYSTAL'); }
     setTimeout(autoSave,300); return;
   }
@@ -5905,25 +5934,16 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
-  if(b.bow){
+  if(b.crank){
     bumpStat('chests');
-    P.story=P.story||{}; P.story.millBowTaken=1;
-    // the crank stowed with the bow is what frees the seized sluice wheel - the water
-    // itself waits on you throwing it (see pullSluiceLever)
+    P.story=P.story||{}; P.story.millCrankTaken=1;
+    // the winch-crank frees the seized sluice valves - the water waits on you throwing them
+    // (see pullSluiceLever). (The old miller's bow is gone - the bow lives on the Cloudreach now.)
     shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
-    if(!(P.unlocked && P.unlocked.bow)){
-      P.unlocked=P.unlocked||{}; P.unlocked.bow=true;
-      if(typeof buildHotbar==='function') buildHotbar();
-      Snd.levelup&&Snd.levelup();
-      banner("THE MILLER'S BOW",'A RANGED ARM - AND THE WINCH-CRANK');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('The miller’s arms-chest gives up a good yew <b>bow</b> and a quiver of shafts - and, laid beside them, the heavy <b>winch-crank</b> that fits the seized sluice wheel down on the landing.<br><br><b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows. Now <b>work the sluice</b> to flood the race and wake the works.', {label:'OK'});
-        else toast('The miller’s arms-chest gives up a good yew <b>bow</b>, a quiver of shafts, and the <b>winch-crank</b> for the sluice. <b style="color:var(--ember)">Bow unlocked!</b>',7400); },400);
-    } else {
-      giveGold(30); give('potion',1);
-      Snd.quest&&Snd.quest();
-      banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
-      setTimeout(()=>toast('You’ve a bow of your own already, so the spare goes to the pack with a few coins and a tonic - but the heavy <b>winch-crank</b> stowed with it is what you came for. Now <b>work the sluice wheel</b> on the landing to flood the race and wake the works.',6600),400);
-    }
+    Snd.quest&&Snd.quest();
+    banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The miller’s arms-chest gives up the heavy <b>winch-crank</b> that fits the seized sluice valves throughout the works.</i> Now <b>work the sluices</b> to drain the flooded halls and climb to the guardian at the top.', {label:'OK'});
+      else toast('The miller’s arms-chest gives up the <b>winch-crank</b> for the sluices. Now <b>work the valves</b> to drain the flooded halls.',6600); },400);
     setTimeout(autoSave,300);
     return;
   }
@@ -6396,11 +6416,10 @@ function tryRoll(){
     if(!(P.unlocked&&P.unlocked.dash2) || P.dashChain) return;
     P.dashChain=1;
   } else P.dashChain=0;
-  // the Rainbow Road's prize (P.unlocked.dashfar) keeps the calmed sky's lightness in
-  // your step: a half-again longer dash. rollT drives the whole roll - movement, footwork
-  // animation and i-frames all scale together - so the dash simply reaches 1.5x as far.
-  const dashReach=(P.unlocked&&P.unlocked.dashfar)?1.5:1;
-  P.rollT=0.26*dashReach; P.rollMax=P.rollT; P.rollCd=1.0; buzz(9);
+  // the Gale Spire's Swiftstep charm (P.unlocked.swiftstep) quickens your FOOTING, not your
+  // reach: the dash recovers faster, so you can roll again sooner. The reach itself is fixed
+  // (no more half-again dash), so no gap anywhere depends on it.
+  P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?0.62:1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});

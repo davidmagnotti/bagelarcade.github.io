@@ -92,7 +92,7 @@ function enterReturnPhase(){
   P.story.frostFreed=1; P.story.deepDone=1; P.story.veilTome=1;    // Frozen Isle done, the rune found
   if(typeof grantVathVeil==='function') grantVathVeil(true); else { P.story.vathVeil=1; P.spells.veil=1; }
   // the four returned-isle gifts, so every Act II dungeon + the capstone is testable
-  P.unlocked.dash=true; P.unlocked.dive=true; P.unlocked.dashfar=true; P.unlocked.dash2=true; P.spells.flamesnare=1;
+  P.unlocked.dash=true; P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells.flamesnare=1;
   // refresh the old isles so their Act II dungeon mouths / flooding appear on arrival
   if(typeof WORLDS!=='undefined'){ ['isle','main','east','wind','sky','frost'].forEach(id=>{ if(WORLDS[id]) delete WORLDS[id]; }); }
   if(G.worldId && typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && !WORLD_DEFS[G.worldId].dungeon) regenWorld(G.worldId);
@@ -111,7 +111,7 @@ const DUNGEONS=[
 // The Act II returned-isle dungeons (veil-gated). Same toggle/clear machinery.
 const DUNGEONS2=[
   ['Drowned Vault (Barik)',  'barikdeep',   'barikDeepDone'],   // The Tidemaw felled -> DIVE
-  ['Gale Spire (Windsurf)',  'winddeep',    'galeDeepDone'],    // The Skirl felled -> longer dash
+  ['Gale Spire (Windsurf)',  'winddeep',    'galeDeepDone'],    // The Skirl felled -> Swiftstep (quicker dash)
   ['Ashen Forge (Sunward)',  'sunwarddeep', 'ashenForgeDone'],  // The Cinderwrought felled -> flame snare
   ['Storm Temple (Cloud)',   'skydeep',     'stormTempleDone'], // The Thundercaller felled -> double dash
   ['Tideward Crypt (capstone)','embertomb', 'tidewardDone'],    // The Tideward Guardian felled
@@ -184,7 +184,7 @@ function unlockAll(){
   P.unlocked=P.unlocked||{}; P.unlocked.melee=P.unlocked.bow=P.unlocked.staff=P.unlocked.surf=P.unlocked.moa=true;
   P.unlocked.dash=true;   // base footwork
   // the four returned-isle gifts (Act II)
-  P.unlocked.dive=true; P.unlocked.dashfar=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
+  P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
   ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
