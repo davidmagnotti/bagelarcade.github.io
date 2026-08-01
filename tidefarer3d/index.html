@@ -303,6 +303,8 @@ function toon(geo,color,{outline=0.04,flat=false,emissive=0,cast=true,receive=tr
 }
 const glowMat=c=>new THREE.MeshBasicMaterial({color:c,toneMapped:false});
 const box=(w,h,d)=>new THREE.BoxGeometry(w,h,d), cyl=(a,b,h,s=10)=>new THREE.CylinderGeometry(a,b,h,s), ico=(r,d=1)=>new THREE.IcosahedronGeometry(r,d);
+// rounded capsule — the anti-lego primitive for bodies/limbs (soft, organic)
+const cap=(r,l,s=10)=>new THREE.CapsuleGeometry(r,l,4,s);
 const shadowTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
   const gr=g.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(20,14,8,.5)'); gr.addColorStop(1,'rgba(20,14,8,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
 const shadowMat=new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,fog:true});
@@ -462,8 +464,9 @@ function maskedHead(skin,hair){
 // beard: colour; rod: a fisher's pole; size: overall scale.
 function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false,hat=null,beard=null,rod=false,size=1}={}){
   const g=new THREE.Group(); const rig={};
-  g.add(pos(toon(box(1.5,1.9,.9),tunic,{outline:0.04}),0,2.4,0));
-  g.add(pos(toon(box(1.6,.4,1),boot,{outline:0}),0,1.6,0));
+  // rounded, organic body — capsules & tapered forms, never lego boxes
+  { const torso=pos(toon(cap(0.66,0.95,12),tunic,{outline:0.04}),0,2.42,0); torso.scale.set(1.08,1,0.82); g.add(torso); }
+  { const belt=pos(toon(ico(0.6,1),boot,{outline:0.03}),0,1.72,0); belt.scale.set(1.12,0.55,0.92); g.add(belt); }
   if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
     const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl); }  // castaway cloak, not the ember cape
   else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
@@ -475,12 +478,15 @@ function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.ha
     if(hat==='wizard'){ g.add(pos(toon(cyl(1.0,1.08,.16,12),tunicDk,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.02,.7,1.9,12),tunicDk,{outline:0.04,flat:true}),0,5.2,0)); }
     else if(hat==='straw'){ g.add(pos(toon(cyl(.95,1.12,.1,12),0xb8965a,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.5,.85,.42,12),0xcaa860,{outline:0.03,flat:true}),0,4.45,0)); }
     if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
-  rig.arm=new THREE.Group(); rig.arm.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),0,-.7,0)); rig.arm.position.set(1.05,3.1,0); g.add(rig.arm);
+  rig.arm=new THREE.Group(); { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),0,-.62,0); a.scale.set(0.94,1,0.94); rig.arm.add(a); } rig.arm.position.set(1.05,3.05,0); g.add(rig.arm);
   if(sword){ const sw=new THREE.Group(); sw.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); sw.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); rig.arm.add(sw); rig.sword=sw; }
   if(rod){ const rd=pos(toon(box(.08,4.4,.08),COL.timber,{outline:0}),1.5,4.2,.6); rd.rotation.z=-0.4; g.add(rd); }
-  g.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),-1.05,2.4,0));
-  rig.legL=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
-  rig.legR=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
+  { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),-1.05,2.43,0); a.scale.set(0.94,1,0.94); g.add(a); }
+  const legF=(sx)=>{ const lg=new THREE.Group();
+    const sh=toon(cap(0.24,1.02,9),boot,{outline:0.035}); sh.scale.set(0.96,1,0.96); lg.add(sh);
+    const ft=pos(toon(ico(0.24,1),boot,{outline:0.03}),0,-0.8,0.18); ft.scale.set(1.0,0.6,1.55); lg.add(ft);   // a rounded foot, not a cut box
+    lg.position.set(sx,0.9,0); g.add(lg); return lg; };
+  rig.legL=legF(-.42); rig.legR=legF(.42);
   g.scale.setScalar(size); g.userData.rig=rig; return g;
 }
 
