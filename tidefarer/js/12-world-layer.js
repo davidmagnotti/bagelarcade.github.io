@@ -6225,6 +6225,8 @@ function switchWorld(id){
     // seed the tiered-tool gates & side-caches for this freshly-generated world,
     // skipping any already felled/looted (persisted in P.story.tg). See 35-toolgate-content.js
     if(typeof placeToolgates==='function') placeToolgates(id);
+    // a farm & farmer you can work with on every overworld isle (36-island-farms.js)
+    if(typeof placeIslandFarms==='function') placeIslandFarms(id);
     if(typeof placeDungeonHideaways==='function') placeDungeonHideaways(id);
   }
   G.worldId=id;
