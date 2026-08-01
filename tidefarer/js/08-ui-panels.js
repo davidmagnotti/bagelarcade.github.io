@@ -120,7 +120,10 @@ function useItem(item){
   const def=ITEMS[item];
   if(def.use==='heal'){
     if(P.hp>=P.maxhp){ toastErr('You\'re already at full health.'); return; }
+    if((P.healCd||0)>0){ toastErr('Steady - you need a moment before the next draught. ('+Math.ceil(P.healCd)+'s)'); return; }
     take(item,1); P.hp=Math.min(P.maxhp,P.hp+def.heal);
+    P.healCd=4.5;   // draughts no longer stack instantly - a real cost to mid-fight healing
+    if(typeof refreshUI==='function') refreshUI();
     addFloat('+'+def.heal+' HP',P.x,P.y-1.4,'#7fe07f'); burst(P.x,P.y-0.6,'#e05648',8); Snd.pickup();
     buildHotbar(); refreshInvPanel();
   }
