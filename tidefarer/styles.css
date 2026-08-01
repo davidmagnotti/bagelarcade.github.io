@@ -89,15 +89,6 @@
   #joyKnob{position:absolute;width:50px;height:50px;border-radius:50%;
     background:rgba(240,226,192,.35);border:2px solid rgba(240,226,192,.5);display:none;}
   #actBtns{position:absolute;right:14px;bottom:84px;display:flex;flex-direction:column;gap:12px;align-items:center;pointer-events:auto;}
-  /* the new relic verbs: a small centred row along the bottom, each shown only once earned */
-  #relicBtns{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;flex-direction:row;gap:10px;align-items:center;pointer-events:auto;z-index:6;}
-  .abtn.relic{font-size:22px;background:
-    radial-gradient(circle at 50% 46%, rgba(120,92,175,.8) 0%, rgba(78,56,120,.9) 42%, transparent 46%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);
-    transition:opacity .14s ease, filter .14s ease, box-shadow .14s ease;}
-  .abtn.relic.cooldown{opacity:.4;filter:grayscale(.9) brightness(.8);}
-  .abtn.relic.active{box-shadow:0 0 0 3px rgba(150,205,255,.85), inset 0 2px 2px rgba(255,255,255,.16), 0 4px 8px rgba(0,0,0,.55);}
   .abtn{width:72px;height:72px;border-radius:50%;background:
     radial-gradient(circle at 50% 46%, rgba(200,55,42,.75) 0%, rgba(140,35,26,.85) 42%, transparent 46%),
     radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),

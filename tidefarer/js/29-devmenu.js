@@ -267,15 +267,12 @@ const SECTIONS=[
     ['Unlock all abilities',()=>unlockAll()], ['Boost skills',()=>maxSkills()],
     ['God mode: off',(b)=>toggleGod(b)],
   ]],
-  ['Relic verb (Blast Charge)', [
-    ['★ Sandbox: grant + spawn crackwall here',()=>{ if(typeof spawnRelicSandbox==='function') spawnRelicSandbox(); ui(); }],
-    ['Grant Blast Charge',()=>{ if(typeof grantBomb==='function') grantBomb(); ui(); }],
-  ]],
   ['Gathering tools & gates', [
     ['★ Sandbox: spawn gated walls here (no tools yet)',()=>{ if(typeof spawnToolgateSandbox==='function') spawnToolgateSandbox(); ui(); }],
     ['Grant Rivenedge Axe (tier 2)',()=>{ if(typeof grantRivenedge==='function') grantRivenedge(); ui(); }],
     ['Grant Cragbreaker Pick (tier 2)',()=>{ if(typeof grantCragbreaker==='function') grantCragbreaker(); ui(); }],
     ['Grant Cograzor Pick (tier 3)',()=>{ if(typeof grantCograzor==='function') grantCograzor(); ui(); }],
+    ['Grant Emberbreaker Pick (tier 4)',()=>{ if(typeof grantEmberbreaker==='function') grantEmberbreaker(); ui(); }],
     ['Reset tools to iron (tier 1)',()=>{ P.tools=P.tools||{}; P.tools.axe=Math.min(P.tools.axe||0,1); P.tools.pick=Math.min(P.tools.pick||0,1); ui(); note('Tools reset to iron'); }],
   ]],
   ['System', [

@@ -256,33 +256,26 @@ Calming a spirit, or an item won on one isle, changes terrain or gives a new way
 to move — so isles you couldn't fully cross open up on return. (Same shape as the
 existing Stormlight and stormsail unlocks.)
 
-#### The relic verb — [built: systems; open: placement]
+#### The relic verbs — [removed; folded into the tiered picks]
 
-One actively-triggered "verb" tool remains in code (`js/33-relics.js`). (Earlier
-drafts also had a grapple, a slow-time and a heart-iron **Lodestone**, but the first
-two read as *just more dashes* and the Lodestone's drag-a-block-onto-a-plate puzzle
-was a fiddly outlier — all cut. Gated progression now lives entirely in the tiered
-gathering tools below.) It hangs off `P.unlocked.*` (so it saves with no migration)
-and has a reward-chest flag wired into `openChest`, so dropping it into a dungeon is a
-one-line decor placement.
+Earlier drafts had a set of actively-triggered "verb" tools (a grapple, a slow-time, a
+heart-iron **Lodestone** that dragged a block onto a plate, and a **Blast Charge** that
+lobbed a bomb to crack walls) — each on its own on-screen button. They were all cut: the
+first two read as *just more dashes*, and the Lodestone/Blast Charge buttons were an
+odd second control scheme sitting alongside the ordinary chop/mine. **Gated progression
+now lives entirely in the tiered gathering picks below** — every sealed nook is just a
+coloured gated rock you walk up and mine, exactly like a tree or a common stone. The
+`js/33-relics.js` module and its `#relicBtns` UI are gone; older saves are migrated
+(`loadCode`) so anyone who'd earned a relic keeps the pick that replaced it.
 
-| Relic | Flag / chest | Key · button | Verb | Intended home (per this doc) |
-|-------|--------------|--------------|------|------------------------------|
-| **Blast Charge** | `bomb` · `{bombgift:1}` | Q · ✸ | Open **cracked walls**, stagger foes | Sunwick / the Cinderwrought (fire) |
-
-World objects it acts on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...]}`),
-`bomb`. **Test:** dev menu → *Relic verb* → "Sandbox: grant + spawn crackwall here."
-
-**Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The Blast Charge is
-*earnable* as a **boss prize** (see "The four tools are BOSS PRIZES" below): off the
-**Ashen Forge** boss. And the hideaways hold real loot out on the isles (dungeon
-interiors are too densely connected for sealable nooks): **crackwall vaults** (a
-flood-fill-verified nook walled by a fissured wall a Blast Charge opens — Barik,
-Sunward, Stormreach, Windsurf) and **slagiron gate rooms** (the same kind of nook,
-but the neck is sealed by an ordinary gated **slagiron** rock the tier-3 Cograzor Pick
-mines through, exactly like a tree or basalt — Barik, Windsurf, Frozen, Sunward). Same
-pocket method + `P.story.tg` persistence as the tool-gate caches; each hideaway is
-proven sealed-until-opened and never blocks a route.
+**Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The hideaways hold real
+loot out on the isles (dungeon interiors are too densely connected for sealable nooks):
+**emberstone gate rooms** (a flood-fill-verified nook whose neck is a molten **emberstone**
+gate the tier-4 Emberbreaker Pick mines through — Barik, Sunward, Stormreach, Windsurf)
+and **slagiron gate rooms** (the same kind of nook, neck sealed by a rust-red **slagiron**
+gate the tier-3 Cograzor Pick mines — Barik, Windsurf, Frozen, Sunward). Same pocket
+method + `P.story.tg` persistence as the tool-gate caches; each hideaway is proven
+sealed-until-opened and never blocks a route.
 
 #### Tiered gathering tools as Metroidvania keys — [built: systems; open: placement]
 
@@ -300,6 +293,7 @@ Colour-coded on sight so you can note it and come back.
 | **Rivenedge Axe** | `axe`→2 | **Ironwood** — blue-black pines | blue `#8fb3ff` | `{axegift:1}` |
 | **Cragbreaker Pick** | `pick`→2 | **Basalt** — violet stone | violet `#c79bff` | `{pickgift:1}` |
 | **Cograzor Pick** | `pick`→3 | **Slagiron** — rust-red stone | rust `#e0955a` | `{slaggift:1}` |
+| **Emberbreaker Pick** | `pick`→4 | **Emberstone** — molten fire-rock | ember `#ff7a4a` | `{embergift:1}` |
 
 The tier also **speeds all ordinary chopping/mining**, so the upgrade is a felt
 reward, not just a key. One dungeon gives the axe, another the pick — **hard gates on
@@ -343,8 +337,8 @@ and the tools are now earned off the boss, one per dungeon.)
 |---------|------|-------|------------------|
 | **Undermaw** (Barik) | Maw-Stalker | **Rivenedge Axe** (axe→2) | fells **ironwood** gates (isles) |
 | **Emberdeep** (Mount Kea) | Ashwing | **Cragbreaker Pick** (pick→2) | breaks **basalt** gates (isles) |
-| **Ashen Forge** (Sunward) | Cinderwrought | **Blast Charge** | opens **crackwall** vaults (isles) |
 | **Undermill** (Windsurf) | Cog-Bound | **Cograzor Pick** (pick→3) | mines **slagiron** gate rooms (isles) |
+| **Ashen Forge** (Sunward) | Cinderwrought | **Emberbreaker Pick** (pick→4) | mines **emberstone** gate rooms (isles) |
 
 `awardDungeonTool(m)` matches the dungeon + its boss, then (after the boss's own fall beat)
 calls the existing grant fn — so nothing is placed as a loose chest and no dungeon carries

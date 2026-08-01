@@ -16,10 +16,10 @@ const ITEMS = {
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   stormrune:{name:'Snare Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now snare a foe fast where it stands for a heartbeat.'},
   veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
-  blastcharge:{name:'Blast Charge', desc:'A clay pot of ground fire-salt. Set it down and stand clear - it cracks open fissured walls and staggers what stands near. (Q / the ✸ button.)'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
-  cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'}
+  cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},
+  emberbreaker:{name:'Emberbreaker Pick', desc:'A pick quenched in the Ashen Forge, its head still smoking. Shatters the molten emberstone that fused the old vaults shut - and any lesser stone gives at a touch.'}
 };
 const SKILLS = {
   melee:{name:'Melee', perk:'+2 dmg / lvl'},

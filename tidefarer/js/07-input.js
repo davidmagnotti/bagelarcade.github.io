@@ -18,8 +18,6 @@ window.addEventListener('keydown',e=>{
   if(k==='4') useItem(P.quickItem||'potion');
   if(k==='r') cycleQuickItem();
   if(k==='m'){ toggleRide(); }
-  // relic verbs (see 33-relics.js)
-  if(k==='q'){ if(typeof tryBomb==='function') tryBomb(); }
   if(k==='escape'){
     if(G.paused){ togglePause(false); return; }
     if(dlg.open){ closeDialog(); return; }

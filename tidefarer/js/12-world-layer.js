@@ -5851,11 +5851,10 @@ function openChest(b){
     } else { giveGold(rndi(120,180)); give('crystal',1); banner('THE STORMHEART','STORM-GLASS AND OLD COIN'); }
     setTimeout(autoSave,300); return;
   }
-  // --- the two relic verbs (see 33-relics.js). Each gift chest grants a
-  //     permanent, actively-triggered tool. One-line dungeon placement. ---
-  if(b.bombgift){ bumpStat('chests');
-    if(!(P.unlocked&&P.unlocked.bomb)){ if(typeof grantBomb==='function') grantBomb(); }
-    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE POWDER-HOARD','FIRE-SALT AND OLD COIN'); }
+  // -- the tiered gathering-tool prizes (see 34-toolgates.js): a dungeon each --
+  if(b.embergift){ bumpStat('chests');
+    if((P.tools&&P.tools.pick||0)<4){ if(typeof grantEmberbreaker==='function') grantEmberbreaker(); }
+    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE FORGE-HOARD','EMBERSTONE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
   if(b.slaggift){ bumpStat('chests');
     if((P.tools&&P.tools.pick||0)<3){ if(typeof grantCograzor==='function') grantCograzor(); }

@@ -141,11 +141,17 @@ function loadCode(str){
   }
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
-  // The Lodestone relic was removed - its plate-puzzle rooms are now slagiron
-  // gate rooms mined open with the Cograzor Pick. Strip the dead item + unlock
-  // flag from older saves so the inventory panel never reads a missing ITEMS entry.
-  if(P.inv) delete P.inv.lodestone;
-  delete P.unlocked.lodestone;
+  // The relic verbs (Lodestone, Blast Charge) were folded into the tiered picks:
+  // their gated nooks are now slagiron / emberstone gate rooms. Grant returning
+  // players the pick that replaced each relic they'd earned (never downgrade), then
+  // strip the dead items + unlock flags so the inventory panel never reads a missing
+  // ITEMS entry and the earned nooks stay openable.
+  if(P.inv){
+    if(P.unlocked.lodestone){ P.tools.pick=Math.max(P.tools.pick||0,3); P.inv.cograzor=P.inv.cograzor||1; }
+    if(P.unlocked.bomb){      P.tools.pick=Math.max(P.tools.pick||0,4); P.inv.emberbreaker=P.inv.emberbreaker||1; }
+    delete P.inv.lodestone; delete P.inv.blastcharge;
+  }
+  delete P.unlocked.lodestone; delete P.unlocked.bomb;
   P.armorOwn=Math.max(d.armorOwn||0, P.armor||0);
   if(P.swordTier>0 || qs('sharpen')==='done') P.unlocked.melee=true; // migrate older saves
   // dash is now a taught ability (mage-tower orb). Grandfather any save past the

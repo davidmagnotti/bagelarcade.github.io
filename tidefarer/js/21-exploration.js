@@ -113,7 +113,6 @@ function frame(ts){
     return;
   }
   updatePlayer(dt);
-  if(typeof updateRelics==='function') updateRelics(dt);
   updateNPCs(dt);
   updateMobs(dt);
   updateProjs(dt);

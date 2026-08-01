@@ -396,7 +396,7 @@ function hitNode(n){
   // handful of swings; a dungeon-forged one (tier 2) bites far deeper. With no proper tool
   // at all - bare hands, or a sword - it's stupid weak: a slow chip many times as long.
   const tier = isTree ? (P.tools.axe||0) : (P.tools.pick||0);
-  const power = tier>=3 ? 7 : tier>=2 ? 5 : tier>=1 ? 2 : 0.34;
+  const power = tier>=4 ? 9 : tier>=3 ? 7 : tier>=2 ? 5 : tier>=1 ? 2 : 0.34;
   n.hp-=power;
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }

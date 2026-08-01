@@ -674,8 +674,6 @@ function drawDecor(b,s){
     G.parts.push({x:b.x+rnd(-0.4,0.4), y:b.y-rnd(0.6,1.3), vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.7),
       life:0.8, color:Math.random()<0.5?'#ffb0c8':'#ffe2ec', size:2.5, grav:0});
   }
-  // relic world-objects (cracked walls, live charges)
-  if(typeof drawRelicDecor==='function' && drawRelicDecor(b,s)) return;
   if(b.kind==='tuft'){
     const sw=Math.sin(G.time*1.7+b.ph)*2.2;
     cx.strokeStyle='#688f4b'; cx.lineWidth=1.5; cx.lineCap='round';
