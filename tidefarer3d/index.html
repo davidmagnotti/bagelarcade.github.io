@@ -224,7 +224,18 @@ const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.0
 const gradePass=new ShaderPass(Grade); fxc.addPass(gradePass);
 
 // ---------- cel toolkit ----------
-const ramp=(()=>{ const t=new THREE.DataTexture(new Uint8Array([64,64,64,255,128,128,128,255,205,205,205,255,255,255,255,255]),4,1,THREE.RGBAFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.needsUpdate=true; return t; })();
+// Toon ramp with a COOL shadow. Same luminance steps as a neutral grey ramp, but
+// the hue is split: the two shadow bands are tinted tideglass-blue (red pulled
+// down, blue pushed up) and the two lit bands run warm parchment. MeshToonMaterial
+// multiplies this ramp per-channel by each surface colour, so EVERY material's
+// shadow skews sea-blue and its lit side skews firelight-warm — the ember/tideglass
+// warm-cool split reproduced in the shading itself (Wind Waker / Okami), not grey.
+const ramp=(()=>{ const t=new THREE.DataTexture(new Uint8Array([
+    46,62,86,255,      // deep shadow — tideglass blue
+    108,122,138,255,   // mid shadow  — cool slate
+    210,202,184,255,   // lit         — warm parchment
+    255,250,238,255    // hot         — warm firelight white
+  ]),4,1,THREE.RGBAFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.needsUpdate=true; return t; })();
 // Warm walnut ink (#241a10) — a dark WALNUT BROWN, never pure black. This is the
 // single biggest anti-Roblox lever, so the hull runs a touch heavy and its weight
 // varies slightly per prop, the way a hand-inked line does — never machine-uniform.
