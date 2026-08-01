@@ -92,7 +92,8 @@ function tryLodestone(){
   var sy=Math.abs(dy)>Math.abs(dx)? (dy>0?1:-1):0;
   var moved=false;
   var nx=b.bx+sx, ny=b.by+sy;
-  if(!(nx===Math.round(P.x) && ny===Math.round(P.y)) && inb(nx,ny) && !solidAt(nx,ny) && walkTile(tileAt(nx,ny))){
+  // tile coords: decor/player x is tile+0.5, so use Math.floor (Math.round would land a tile off).
+  if(!(nx===Math.floor(P.x) && ny===Math.floor(P.y)) && inb(nx,ny) && !solidAt(nx,ny) && walkTile(tileAt(nx,ny))){
     setSolid(b.bx,b.by,0);
     b.bx=nx; b.by=ny; b.x=nx+0.5; b.y=ny+0.5;
     setSolid(b.bx,b.by,1);
@@ -102,7 +103,7 @@ function tryLodestone(){
     if(Snd.step) Snd.step(5); buzz(6); G.shake=Math.max(G.shake||0,0.12);
     for(var i=0;i<5;i++) G.parts.push({x:b.x,y:b.y,vx:rnd(-0.5,0.5),vy:rnd(-0.6,0),life:0.3,color:'rgba(150,170,200,0.6)',size:2.4});
     for(var k=0;k<G.decor.length;k++){ var pl=G.decor[k];
-      if(pl.kind==='plate' && !pl.on && Math.round(pl.x)===b.bx && Math.round(pl.y)===b.by) pressPlate(pl); }
+      if(pl.kind==='plate' && !pl.on && Math.floor(pl.x)===b.bx && Math.floor(pl.y)===b.by) pressPlate(pl); }
     if(typeof invalidateScenery==='function') invalidateScenery();
   } else { nag('lodeblock','The lodeblock will not budge - the way behind it is blocked.'); }
 }

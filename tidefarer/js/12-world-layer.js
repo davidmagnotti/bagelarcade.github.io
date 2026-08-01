@@ -6191,6 +6191,7 @@ function switchWorld(id){
     // skipping any already felled/looted (persisted in P.story.tg). See 35-toolgate-content.js
     if(typeof placeToolgates==='function') placeToolgates(id);
     if(typeof placeDungeonItems==='function') placeDungeonItems(id);
+    if(typeof placeDungeonHideaways==='function') placeDungeonHideaways(id);
   }
   G.worldId=id;
   if(typeof syncMapUI==='function') syncMapUI();   // seal/unseal minimap+map for cloud worlds at once

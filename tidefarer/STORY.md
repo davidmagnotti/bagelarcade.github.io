@@ -273,6 +273,18 @@ World objects they act on (drawn by `drawRelicDecor`): `crackwall` (`{tiles:[...
 `ironblock` (`{bx,by}`), `plate` (`{gate:[...]}`), `bomb`. **Test:** dev menu →
 *Relic verbs* → "Sandbox: grant both + spawn puzzles here."
 
+**Placed in the world — [built] (`js/37-dungeon-hideaways.js`).** The two verbs are now
+*earnable*: a `{bombgift}` chest in the **Ashen Forge**, a `{lodegift}` chest in the
+**Undermaw**. And they hide real loot out on the isles (dungeon interiors are too
+densely connected for sealable nooks): **crackwall vaults** (a flood-fill-verified nook
+walled by a fissured wall a Blast Charge opens — Barik, Sunward, Stormreach, Windsurf)
+and **lodestone plate rooms** (the nook's neck sealed by a plate-gate; a pressure plate
+and an iron block sit in the open so one Lodestone pull drags the block onto the plate
+and opens the neck — Barik, Windsurf, Frozen, Sunward). Same pocket method + `P.story.tg`
+persistence as the tool-gate caches; each hideaway is proven sealed-until-opened and
+never blocks a route. (Also fixed a tile-rounding bug in the Lodestone's plate
+detection.)
+
 #### Tiered gathering tools as Metroidvania keys — [built: systems; open: placement]
 
 The preferred direction over more dashes: **better axe/pickaxe upgrades that cut
