@@ -35,13 +35,17 @@ would be ported into region by region — that remains a large ongoing effort.
 
 | | PC | Mobile |
 |---|---|---|
-| Move | WASD / arrows | left-thumb joystick |
-| Look | drag mouse | right-side drag |
+| Move | WASD / arrows | left-thumb stick |
+| Look | drag mouse, or Q/E (turn) + R/C (tilt) | right-thumb look stick |
 | Zoom | mouse wheel | — |
 | Swing | Space | **SWING** |
-| Talk / interact | E | **TALK** |
+| Talk / interact | F | **TALK** |
 | Dodge roll | Shift | **ROLL** |
 | Warp to a zone | keys 1–9 | — |
+
+The player is **the masked princess** — the castaway who is secretly royalty,
+in her pale Emberwick mask (dark eye-slits, the red warrior's sigil, her bound
+ponytail) with eyes that blink, matching the 2D game's protagonist.
 
 ## Running it
 

@@ -45,8 +45,10 @@
   /* touch */
   #touch{position:fixed;inset:0;z-index:9;pointer-events:none;display:none;}
   #stick{position:absolute;left:0;bottom:0;width:46vw;height:52vh;pointer-events:auto;}
-  #stickBase{position:absolute;width:120px;height:120px;border-radius:50%;border:2px solid rgba(240,226,192,.28);background:rgba(20,14,8,.24);transform:translate(-50%,-50%);display:none;}
+  #stickBase,#lookBase{position:absolute;width:120px;height:120px;border-radius:50%;border:2px solid rgba(240,226,192,.28);background:rgba(20,14,8,.24);transform:translate(-50%,-50%);display:none;}
   #stickKnob{position:absolute;width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,154,60,.7);background:rgba(255,154,60,.28);transform:translate(-50%,-50%);display:none;}
+  #lookKnob{position:absolute;width:56px;height:56px;border-radius:50%;border:2px solid rgba(90,167,232,.75);background:rgba(90,167,232,.24);transform:translate(-50%,-50%);display:none;}
+  #lookHint{position:absolute;right:14%;top:34%;font-size:10px;letter-spacing:1px;opacity:.4;text-shadow:0 1px 2px #000;}
   .rbtn{position:absolute;border-radius:50%;pointer-events:auto;font-family:Georgia,serif;letter-spacing:1px;
     display:flex;align-items:center;justify-content:center;text-align:center;}
   #atk{right:24px;bottom:30px;width:88px;height:88px;border:2px solid var(--ember);background:rgba(255,154,60,.16);color:var(--ember);font-size:13px;}
@@ -91,6 +93,8 @@
 <div id="dmgVig"></div>
 <div id="touch">
   <div id="stick"></div><div id="stickBase"></div><div id="stickKnob"></div>
+  <div id="lookBase"></div><div id="lookKnob"></div>
+  <div id="lookHint">drag to look</div>
   <div id="atk" class="rbtn">SWING</div>
   <div id="act" class="rbtn">TALK</div>
   <div id="roll" class="rbtn">ROLL</div>
@@ -321,20 +325,53 @@ function rotY(o,a){ o.rotation.y=a; return o; }
 function rotZ(o,a){ o.rotation.z=a; return o; }
 function scl(o,a,b,c){ o.scale.set(a,b,c); return o; }
 
-// humanoid figure (player, NPCs, Rask)
-function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,cape=true,sword=false}={}){
+// The protagonist's head: the princess behind the pale Emberwick mask.
+// Faithful to the 2D art (js/03-art.js): a smooth pale plate over brow+eyes
+// with two dark almond eye-slits, a red warrior's sigil on the brow, her
+// bound ponytail falling behind — and eyes that blink inside the slits.
+function maskedHead(skin,hair){
+  const g=new THREE.Group();
+  g.add(toon(new THREE.SphereGeometry(.72,18,16),skin,{outline:0.045}));                                  // skull
+  g.add(pos(toon(new THREE.SphereGeometry(.8,16,14,0,7,0,Math.PI*0.66),hair,{outline:0.04}),0,0.05,-0.06)); // hair cap
+  // ponytail: crown gather + a tail falling behind
+  g.add(pos(toon(ico(.34,1),hair,{outline:0.04}),0,0.55,-0.42));
+  const tail=new THREE.Group(); tail.add(pos(toon(cyl(.32,.16,1.5,8),hair,{outline:0.04}),0,-0.75,0)); tail.add(pos(toon(cyl(.15,.05,1.0,7),hair,{outline:0.03}),0,-1.7,0.12));
+  tail.position.set(0,0.5,-0.55); tail.rotation.x=0.55; g.add(tail);
+  // the pale mask plate over the upper face
+  const mask=toon(new THREE.SphereGeometry(1,18,14),0xe9e2cf,{outline:0.03}); mask.scale.set(0.6,0.5,0.34); mask.position.set(0,0.12,0.5); g.add(mask);
+  // red warrior's sigil (a chevron across the brow)
+  const s1=pos(toon(box(.26,.055,.05),0x962a34,{outline:0}),-0.10,0.34,0.83); s1.rotation.z=0.55; g.add(s1);
+  const s2=pos(toon(box(.26,.055,.05),0x962a34,{outline:0}), 0.10,0.34,0.83); s2.rotation.z=-0.55; g.add(s2);
+  // eye-slits (dark almonds) with blinking eyes nestled in them
+  const eyes=[];
+  for(const ex of [-1,1]){
+    const slit=new THREE.Mesh(new THREE.SphereGeometry(1,10,8), new THREE.MeshBasicMaterial({color:0x140d08})); slit.scale.set(0.24,0.12,0.06); slit.position.set(ex*0.26,0.08,0.80); g.add(slit);
+    const eye=new THREE.Group();
+    const white=new THREE.Mesh(new THREE.SphereGeometry(1,10,8), new THREE.MeshBasicMaterial({color:0xf3ece0,toneMapped:false})); white.scale.set(0.13,0.11,0.05); eye.add(white);
+    const pup=new THREE.Mesh(new THREE.SphereGeometry(1,8,8), new THREE.MeshBasicMaterial({color:0x1a120c})); pup.scale.set(0.06,0.075,0.05); pup.position.set(ex*0.02,0,0.04); eye.add(pup);
+    eye.position.set(ex*0.26,0.08,0.84); g.add(eye); eyes.push(eye);
+  }
+  // a quiet mouth on the free lower face
+  g.add(pos(toon(box(.22,.045,.05),0x6a4432,{outline:0}),0,-0.5,0.68));
+  return {group:g,eyes};
+}
+
+// humanoid figure (player=masked princess, NPCs, Rask)
+function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false}={}){
   const g=new THREE.Group(); const rig={};
   g.add(pos(toon(box(1.5,1.9,.9),tunic,{outline:0.04}),0,2.4,0));
-  g.add(pos(toon(box(1.6,.4,1),COL.boot,{outline:0}),0,1.6,0));
-  g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
-  g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
-  g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
-  if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); }
+  g.add(pos(toon(box(1.6,.4,1),boot,{outline:0}),0,1.6,0));
+  if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
+    const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl); }  // castaway cloak, not the ember cape
+  else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
+    g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
+    g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
+    if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
   rig.arm=new THREE.Group(); rig.arm.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),0,-.7,0)); rig.arm.position.set(1.05,3.1,0); g.add(rig.arm);
   if(sword){ rig.arm.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); rig.arm.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); }
   g.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),-1.05,2.4,0));
-  rig.legL=pos(toon(box(.55,1.7,.6),COL.boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
-  rig.legR=pos(toon(box(.55,1.7,.6),COL.boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
+  rig.legL=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
+  rig.legR=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
   g.userData.rig=rig; return g;
 }
 
@@ -352,12 +389,13 @@ function textSprite(text,color='#f0e2c0',size=44,bold=true){
 // ============================================================
 document.getElementById('loadNote').textContent='planting the isle…';
 const zc={}; for(const zn of ZONES3) zc[zn.name]=zn;
-// Village
-cottage(zc.village.x-8,zc.village.z-4,0.3,COL.slate); cottage(zc.village.x+7,zc.village.z-6,-0.5,COL.roofWarm);
-cottage(zc.village.x+2,zc.village.z+8,Math.PI,COL.slate); cottage(zc.village.x-11,zc.village.z+6,0.5,COL.roofWarm);
-well(zc.village.x,zc.village.z+2);
-for(const[dx,dz]of[[-4,-3],[6,4],[-10,2],[9,-6]]) lamp(zc.village.x+dx,zc.village.z+dz);
-for(const[dx,dz]of[[-16,4],[12,10],[-2,-8],[16,-2]]) bush(zc.village.x+dx,zc.village.z+dz);
+// Village — houses spaced generously around a central green + well
+cottage(zc.village.x-16,zc.village.z-10,0.4,COL.slate);   cottage(zc.village.x+15,zc.village.z-9,-0.5,COL.roofWarm);
+cottage(zc.village.x+5,zc.village.z+16,Math.PI,COL.slate); cottage(zc.village.x-18,zc.village.z+11,0.5,COL.roofWarm);
+cottage(zc.village.x+19,zc.village.z+6,-1.9,COL.slate);
+well(zc.village.x,zc.village.z+1);
+for(const[dx,dz]of[[-6,-4],[8,7],[-13,4],[11,-8],[0,13]]) lamp(zc.village.x+dx,zc.village.z+dz);
+for(const[dx,dz]of[[-22,7],[18,14],[-3,-12],[22,-5]]) bush(zc.village.x+dx,zc.village.z+dz);
 // Tower + Dock + Farm
 tower(zc.tower.x,zc.tower.z); dock(zc.dock.x,zc.dock.z); fold(zc.farm.x,zc.farm.z);
 // Whisperwood (dense) + orchard + scattered
@@ -435,7 +473,10 @@ function dmgNum(x,y,z,val,color){ const sp=textSprite(String(val),color,52); sp.
 // ============================================================
 //  PLAYER
 // ============================================================
-const player=figure({sword:true}); player.userData.rig; const rig=player.userData.rig;
+// the masked castaway — she is the princess: castaway-green over her royal self,
+// auburn hair, the pale Emberwick mask (skin/hair/shirt from the 2D hero look)
+const player=figure({princess:true, sword:true, skin:0xd8a97a, hair:0x7a4526, tunic:0x3f6e56, tunicDk:0x2f5340, boot:0x3c3833});
+const rig=player.userData.rig;
 const pShadow=contactShadow(1.6); player.add(pShadow);
 world.add(player);
 const P={x:zc.dock.x+6,z:zc.dock.z+2,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,roll:0,rollCd:0,dead:0};
@@ -445,23 +486,32 @@ player.position.set(P.x,heightAt(P.x,P.z),P.z);
 //  INPUT
 // ============================================================
 const keys={};
-addEventListener('keydown',e=>{ keys[e.code]=true; if(['Space','KeyE','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
-  if(e.code==='Space') doSwing(); if(e.code==='KeyE') doInteract(); if(e.code==='ShiftLeft'||e.code==='ShiftRight') doRoll();
+addEventListener('keydown',e=>{ keys[e.code]=true; if(['Space','KeyF','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
+  if(e.code==='Space') doSwing(); if(e.code==='KeyF') doInteract(); if(e.code==='ShiftLeft'||e.code==='ShiftRight') doRoll();
   const n=e.code.match(/^Digit([1-9])$/); if(n){ const zn=ZONES3[+n[1]-1]; if(zn){ P.x=zn.x;P.z=zn.z; banner(zn.name);} } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let camYaw=P.yaw+Math.PI, camPitch=0.5, camDist=22;
-const look={a:false,id:-1,x:0,y:0}, mv={a:false,id:-1,ox:0,oy:0,x:0,y:0};
+// mouse: drag = look.  touch: LEFT half = move stick, RIGHT half = look stick (both analog, same feel).
+const look={a:false,id:-1,x:0,y:0}, mv={a:false,id:-1,ox:0,oy:0,x:0,y:0}, lk={a:false,id:-1,ox:0,oy:0,x:0,y:0};
 const stickBase=document.getElementById('stickBase'), stickKnob=document.getElementById('stickKnob');
+const lookBase=document.getElementById('lookBase'), lookKnob=document.getElementById('lookKnob'), lookHint=document.getElementById('lookHint');
 if(isTouch) document.getElementById('touch').style.display='block';
 function onDown(e){ const id=e.target.id; if(id==='atk'){doSwing();return;} if(id==='act'){doInteract();return;} if(id==='roll'){doRoll();return;}
   if(e.pointerType==='mouse'){ look.a=true; look.id=e.pointerId; look.x=e.clientX; look.y=e.clientY; return; }
   if(e.clientX<innerWidth*0.5&&!mv.a){ mv.a=true; mv.id=e.pointerId; mv.ox=e.clientX; mv.oy=e.clientY; mv.x=mv.y=0; stickBase.style.display=stickKnob.style.display='block'; stickBase.style.left=stickKnob.style.left=e.clientX+'px'; stickBase.style.top=stickKnob.style.top=e.clientY+'px'; }
-  else if(!look.a){ look.a=true; look.id=e.pointerId; look.x=e.clientX; look.y=e.clientY; } }
+  else if(e.clientX>=innerWidth*0.5&&!lk.a){ lk.a=true; lk.id=e.pointerId; lk.ox=e.clientX; lk.oy=e.clientY; lk.x=lk.y=0; lookHint.style.display='none'; lookBase.style.display=lookKnob.style.display='block'; lookBase.style.left=lookKnob.style.left=e.clientX+'px'; lookBase.style.top=lookKnob.style.top=e.clientY+'px'; } }
 function onMove(e){ if(mv.a&&e.pointerId===mv.id){ let dx=e.clientX-mv.ox,dy=e.clientY-mv.oy; const g=Math.hypot(dx,dy),mx=54; if(g>mx){dx*=mx/g;dy*=mx/g;} mv.x=dx/mx; mv.y=dy/mx; stickKnob.style.left=(mv.ox+dx)+'px'; stickKnob.style.top=(mv.oy+dy)+'px'; }
+  if(lk.a&&e.pointerId===lk.id){ let dx=e.clientX-lk.ox,dy=e.clientY-lk.oy; const g=Math.hypot(dx,dy),mx=54; if(g>mx){dx*=mx/g;dy*=mx/g;} lk.x=dx/mx; lk.y=dy/mx; lookKnob.style.left=(lk.ox+dx)+'px'; lookKnob.style.top=(lk.oy+dy)+'px'; }
   if(look.a&&e.pointerId===look.id){ camYaw-=(e.clientX-look.x)*0.006; camPitch=clamp(camPitch+(e.clientY-look.y)*0.005,0.2,1.15); look.x=e.clientX; look.y=e.clientY; } }
-function onUp(e){ if(e.pointerId===mv.id){mv.a=false;mv.x=mv.y=0;stickBase.style.display=stickKnob.style.display='none';} if(e.pointerId===look.id)look.a=false; }
+function onUp(e){ if(e.pointerId===mv.id){mv.a=false;mv.x=mv.y=0;stickBase.style.display=stickKnob.style.display='none';}
+  if(e.pointerId===lk.id){lk.a=false;lk.x=lk.y=0;lookBase.style.display=lookKnob.style.display='none';}
+  if(e.pointerId===look.id)look.a=false; }
 addEventListener('pointerdown',onDown); addEventListener('pointermove',onMove); addEventListener('pointerup',onUp); addEventListener('pointercancel',onUp);
 addEventListener('wheel',e=>{ camDist=clamp(camDist+e.deltaY*0.02,10,44); },{passive:true});
+// apply the look stick (touch) + Q/E yaw, R/C pitch (keyboard) — camera adjusts continuously, like the move stick
+function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitch+lk.y*1.7*dt,0.2,1.15); }
+  if(keys['KeyQ'])camYaw+=1.9*dt; if(keys['KeyE'])camYaw-=1.9*dt;
+  if(keys['KeyR'])camPitch=clamp(camPitch+1.3*dt,0.2,1.15); if(keys['KeyC'])camPitch=clamp(camPitch-1.3*dt,0.2,1.15); }
 
 function doSwing(){ if(started&&P.swCd<=0&&P.dead<=0){ P.swing=0.001; P.swCd=0.42; const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);
   for(const e of enemies){ if(e.dead>0)continue; const dx=e.g.position.x-P.x,dz=e.g.position.z-P.z,d=Math.hypot(dx,dz); if(d>6)continue; if((dx/d)*fx+(dz/d)*fz<0.25)continue;
@@ -525,7 +575,7 @@ paintSky(new THREE.Color(0x7fb2d6),new THREE.Color(0xf3ddb6));
 // ============================================================
 let started=false; const startEl=document.getElementById('start'), playBtn=document.getElementById('playBtn');
 document.getElementById('loadNote').textContent='ready';
-document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag look · wheel zoom · SPACE swing · E talk · SHIFT roll · 1–9 warp';
+document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag or Q/E/R/C look · wheel zoom · SPACE swing · F talk · SHIFT roll · 1–9 warp';
 playBtn.addEventListener('click',()=>{ started=true; startEl.style.opacity='0'; setTimeout(()=>startEl.style.display='none',800); banner('EMBERWICK ISLE','HOME SHORES — CHAPTER I'); });
 
 const clock=new THREE.Clock(); let fpsT=0,fpsN=0; const fpsEl=document.getElementById('fps');
@@ -534,6 +584,7 @@ function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta()
   updateDay(started?dt:dt*0.15);
   if(started) step(dt,time);
   // camera
+  updateCamCtl(dt);
   const py=player.position.y;
   const tx=P.x-Math.sin(camYaw)*Math.cos(camPitch)*camDist, tz=P.z-Math.cos(camYaw)*Math.cos(camPitch)*camDist, ty=py+4+Math.sin(camPitch)*camDist;
   camP.set(tx,ty,tz); camera.position.lerp(camP,Math.min(1,dt*(started?6:1.5))); camA.set(P.x,py+2.5,P.z); camera.lookAt(camA);
@@ -561,6 +612,9 @@ function step(dt,time){
   if(P.swing>0){ P.swing+=dt*3.6; const a=Math.sin(Math.min(P.swing,1)*Math.PI); rig.arm.rotation.x=-a*2.6; if(P.swing>=1){P.swing=0;rig.arm.rotation.x=0;} } else rig.arm.rotation.x+=(0-rig.arm.rotation.x)*dt*8;
   P.swCd=Math.max(0,P.swCd-dt); P.rollCd=Math.max(0,P.rollCd-dt); P.inv=Math.max(0,P.inv-dt);
   P.st=Math.min(P.max, P.st+dt*(moving?6:14)); if(P.hp<P.max) P.hp=Math.min(P.max,P.hp+dt*1.2);
+  if(rig.eyes){ const bl=(time%3.6)<0.22; for(const e of rig.eyes) e.scale.y=bl?0.12:1; }   // the mask's eyes blink
+
+
 
   // ---- enemies ----
   for(const e of enemies){
