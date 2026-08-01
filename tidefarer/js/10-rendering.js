@@ -349,31 +349,49 @@ function render(){
 
   // ---- low-gfx occlusion fix ----
   // The baked scenery blit sits BEHIND every actor, so in Fast graphics the
-  // player would always draw in front of houses and trees. Re-draw the static
-  // scenery that is in FRONT of the player (greater iso-depth) and close enough
-  // to overlap, live on top - restoring "walk behind the tree/house". Only a
-  // handful of nearby objects qualify, so it stays cheap. (Damaged nodes are
-  // already drawn live elsewhere; dynamic decor is in the depth pass above.)
+  // player would always draw in front of houses and trees. A plain depth test
+  // is wrong for big multi-tile buildings (a single anchor depth can't say when
+  // the player is under a wide roof), so test in SCREEN space using each object's
+  // real sprite box: if the player's feet fall inside a nearby object's sprite
+  // AND above its base line, the player is behind it - redraw it live on top.
+  // (Feet below the base line = the player is in front, e.g. at the doorway, so
+  // it's left behind them.) Only a handful of nearby objects qualify: cheap.
   if(LOWFX && DBG.entities && !P.dead){
-    const pd=P.x+P.y, occ=[];
+    const pf=worldToScreen(P.x,P.y);
+    const pfy=pf.y - (EL? groundLiftAt(P.x,P.y):0);
+    const occ=[];
+    // trees / rocks (~1 tile, procedural) - estimated box
     for(const n of G.nodes){
       if(n.dead || (n.maxhp && n.hp<n.maxhp)) continue;
-      if(n.x+n.y<=pd) continue;
-      if(Math.abs(n.x-P.x)>8 || Math.abs(n.y-P.y)>8) continue;
-      occ.push({d:n.x+n.y, o:n, node:true});
+      if(Math.abs(n.x-P.x)>9 || Math.abs(n.y-P.y)>9) continue;
+      const s=worldToScreen(n.x,n.y), sy=s.y-(EL?groundLiftAt(n.x,n.y):0);
+      if(pf.x<s.x-20 || pf.x>s.x+20 || pfy>sy+4 || pfy<sy-54) continue;
+      occ.push({d:n.x+n.y, o:n, node:true, sx:s.x, sy});
     }
+    // buildings / static decor - exact sprite box (mirrors drawDecor's blit math)
     for(const b of G.decor){
       if(DYNAMIC_DECOR[b.kind]) continue;
-      if(b.x+b.y<=pd) continue;
-      const rad=b.grand?30:(b.kind==='tower'&&b.tall)?14:10;
-      if(Math.abs(b.x-P.x)>rad || Math.abs(b.y-P.y)>rad) continue;
-      occ.push({d:b.x+b.y, o:b, node:false});
+      if(Math.abs(b.x-P.x)>32 || Math.abs(b.y-P.y)>32) continue;
+      let W=64,H=64;
+      try{
+        const S=(b.kind==='bazaar')? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
+              :(b.kind==='tower'&&b.tall)? SPR.towerTall
+              : SPR[b.kind==='pillar'?(b.broken?'pillarBroken':'pillar'):b.kind];
+        if(S){ const BS=b.kind==='castle'?(b.grand?0.9:0.4)
+              :(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower')?1.16
+              : b.kind==='resort'?1.28:1;
+          W=S.width*BS; H=S.height*BS; }
+      }catch(e){}
+      const s=worldToScreen(b.x,b.y), sy=s.y-(EL?groundLiftAt(b.x,b.y):0);
+      if(pf.x<s.x-W/2 || pf.x>s.x+W/2) continue;   // outside the sprite width
+      if(pfy>sy+6) continue;                        // player in front of the base
+      if(pfy<sy-H+10) continue;                     // player above the roofline
+      occ.push({d:b.x+b.y, o:b, node:false, sx:s.x, sy});
     }
     occ.sort((a,b)=>a.d-b.d);
-    for(const it of occ){ const o=it.o, s=worldToScreen(o.x,o.y);
-      if(EL) s.y -= groundLiftAt(o.x,o.y);
-      if(SKYSWING){ const sw=skyIsleSwingAt(o.x,o.y); if(sw) s.x+=sw; }
-      if(it.node) drawNode(o,s); else drawDecor(o,s);
+    for(const it of occ){ const s={x:it.sx, y:it.sy};
+      if(SKYSWING){ const sw=skyIsleSwingAt(it.o.x,it.o.y); if(sw) s.x+=sw; }
+      if(it.node) drawNode(it.o,s); else drawDecor(it.o,s);
     }
   }
 
