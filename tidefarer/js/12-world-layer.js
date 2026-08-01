@@ -2408,7 +2408,7 @@ function freeWarden(m){
   updateFrostFolkMood();
   // Felling the surface Warden breaks the cruel cold - but the thing that hides you
   // from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
-  // rune in the Rimefissure's reward chest, worked into a spell by your brother.
+  // spellbook in the Rimefissure's reward chest, read into a spell by your brother.
   // Sigrid points the way down. (see openChest `veiltome` + the 'brother' scene.)
   // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js) - the same
   // freed-victim bookend the Leviathan got: the violet sloughs off, the Warden weeps clean
@@ -2422,11 +2422,12 @@ function freeWarden(m){
     else sigridCard();
   },1400);
 }
-// The WARDING VEIL: a warding woven from the freed Rimebound's hush-frost that hides its
-// bearer from Vath's eye, letting you steal back to the old islands (all but the capital,
-// which Vath holds outright). It is retrieved from the Rimefissure's reward chest (the Rune
-// of Hush-Frost) and cast by your brother Jaist in dialogue; this helper just sets the
-// flags. `silent` sets them with no fanfare - used by that scene, save-migration, dev menu.
+// The WARDING VEIL: a warding read from the hush-frost spellbook the Rimebound guarded,
+// hiding its bearer from Vath's eye and letting you steal back to the old islands (all but
+// the capital, which Vath holds outright). The book is retrieved from the Rimefissure's
+// reward chest (the Hush-Frost Spellbook) and cast by your brother Jaist in dialogue; this
+// helper just sets the flags. `silent` sets them with no fanfare - used by that scene (which
+// plays its own casting cutscene), save-migration, and the dev menu.
 function grantVathVeil(silent){
   P.story=P.story||{}; if(P.story.vathVeil) return;
   P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1;
@@ -2436,7 +2437,7 @@ function grantVathVeil(silent){
   if(silent) return;
   if(Snd.magic) Snd.magic();
   banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
-  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Sigrid folds a rune of hush-frost into your palm - cut from the ice the Warden wept.</i> “The robed man\'s eye is on the old islands now, watching every sea-road home. But not on <b>you</b> - not while you carry this.” <b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s influence slides past you now, and the ferry can steal you back to the old islands - Barik, the Sunward Isle, Windsurf, Emberwick.</b> <i>“But not the capital, friend. His gaze never leaves the throne he stole. Aldermere stays shut to us.”</i>'); }, 900);
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Jaist reads the warding from the hush-frost spellbook and settles it over you - cut from the ice the Warden wept.</i> “The robed man\'s eye is on the old islands now, watching every sea-road home. But not on <b>you</b> - not while this holds.” <b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s influence slides past you now, and the ferry can steal you back to the old islands - Barik, the Sunward Isle, Windsurf, Emberwick.</b> <i>“But not the capital. His gaze never leaves the throne he stole. Aldermere stays shut to us.”</i>'); }, 900);
   if(typeof autoSave==='function') autoSave();
 }
 function updateFrostFolkMood(){
@@ -2447,7 +2448,7 @@ function updateFrostFolkMood(){
 }
 // Jaist sails the reaches at his sister's side and holds the way home while she takes
 // the isle - the same watch he keeps on Stormreach. On the Frozen Isle he waits by the
-// Frostferry landing, where the princess brings the hush-frost rune up from the Rimefissure
+// Frostferry landing, where the princess brings the hush-frost spellbook up from the Rimefissure
 // for him to read and cast. Only present once Act II is underway (when the Frozen Isle opens).
 function placeFrostBrother(){
   if(!(P.story && P.story.act2)) return;
@@ -2526,8 +2527,8 @@ function placeObjectsFrostDeep(){
   // the drift-lock lever, on the island (a bare icelever opens the Deep Gate; see pullIceLever)
   G.decor.push({kind:'icelever', x:44.5, y:66.5, on:false, island:1, label:'the drift-lock lever'});
   G._frostCross={cy0:46, cy1:89, farY:44, startX:44, startY:90.5, island:[44,67]};
-  // THE REWARD ROOM: wall off the back of the Frozen Heart (inside the spiked ring) - the Rune of
-  // Hush-Frost (the Warding Veil) + the climb-out wait within, sealed until the Rimebound is freed
+  // THE REWARD ROOM: wall off the back of the Frozen Heart (inside the spiked ring) - the Hush-Frost
+  // Spellbook (the Warding Veil) + the climb-out wait within, sealed until the Rimebound is freed
   // (freeColossus -> openRewardRoom). floor is ICE.
   buildRewardRoom({ x0:30, x1:58, wallY:16, gx0:40, gx1:42, floorT:T.ICE,
     chest:{kind:'chest', x:36.5, y:14.5, deep:1, veiltome:1}, exitX:52, exitY:14,
@@ -2670,13 +2671,13 @@ function freeColossus(m){
   if(typeof openRewardRoom==='function') openRewardRoom();   // the sealed vault at the arena's back grinds open - prize + climb-out within
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
   // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the violet
-  // bleeds out of the great ice-whale and it settles calm into the melt, then sinks. It
-  // carries the "Vath is one island ahead" beat the old story-card held, so the card is
-  // dropped (as the Leviathan's "Where it sank..." card was) - the old card stays only as a
-  // fallback if the overlay layer is missing.
+  // bleeds out of the great ice-whale and it settles calm into the melt, laying bare the
+  // book it was set to guard. It carries that "guarding a secret" beat the old story-card
+  // held, so the card is dropped (as the Leviathan's "Where it sank..." card was) - the old
+  // card stays only as a fallback if the overlay layer is missing.
   setTimeout(()=>{
     if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(m, ()=>{ if(typeof autoSave==='function') autoSave(); });
-    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>');
+    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It settles calm into the melt, <i>and the ice it guarded gives up its secret: an old <b>book</b>, bound in frost that will not thaw. This one Vath never set to hunt you - he set it here to keep something buried.</i>');
   },1400);
 }
 
@@ -6010,22 +6011,22 @@ function openChest(b){
     setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders\' vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid atop it all, a slab of tide-worn stone graven with a name and a map you half-know.</i> “The <b>Tidefarer</b>,” <i>you read, and the old prophecy your brother copied out of Stormreach\'s catacombs stirs in your memory - a weapon forged to seal an evil, hidden on an isle off Emberwick.</i> <b style="color:#ffe9a8">The trail to the weapon lies open.</b> <i>(Act II climax - to be continued.)</i>'); },500);
     setTimeout(autoSave,300); return;
   }
-  // THE RIMEFISSURE'S REWARD: the hush-frost rune the Rimebound wept, cut into a warding.
+  // THE RIMEFISSURE'S REWARD: the hush-frost spellbook the Rimebound was set to guard.
   // The princess cannot read the old royal script - she carries it up to her brother the
-  // scholar (see the 'brother' scene in 06-dialog.js), who works it into the WARDING VEIL.
+  // scholar (see the 'brother' scene in 06-dialog.js), who reads it into the WARDING VEIL.
   if(b.veiltome){
     bumpStat('chests');
     P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(201,176,255,0.9)',56); burst(b.x,b.y-0.5,'#c9b0ff',20,2.7); if(Snd.magic) Snd.magic();
     if(P.story.vathVeil){
-      // already cloaked from Vath - the rune's warding is spent through you; a keepsake and some coin
+      // already cloaked from Vath - the book's warding is spent through you; a keepsake and some coin
       giveGold(rndi(120,180)); give('elixir',1);
-      banner('THE HUSH-FROST RUNE','ITS WARDING IS ALREADY WOVEN THROUGH YOU');
+      banner('THE HUSH-FROST SPELLBOOK','ITS WARDING IS ALREADY WOVEN THROUGH YOU');
       setTimeout(autoSave,300); return;
     }
     P.story.veilTome=1; give('veilrune',1);
-    banner('A WARDING, WEPT IN ICE','THE RUNE OF HUSH-FROST');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a single plate of ice that will not thaw - <b>the hush-frost the warden wept</b>, scored deep in the shape of a warding.</i> The marks are old royal script, the kind your father made you both learn and only <b>Jaist</b> ever loved. You cannot read a word of it. <i>But you know in your blood what it is: a spell to slip a hunter\'s eye - to go unseen, even by <b>Vath</b>.</i> <b style="color:#c9b0ff">You take the Rune of Hush-Frost.</b> <i>Carry it up out of the ice to your brother. Jaist could read this. Jaist could cast it.</i>'); },520);
+    banner('A SECRET, KEPT IN ICE','THE HUSH-FROST SPELLBOOK');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b> - its pages the hush-frost the warden wept, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Jaist</b> ever loved. You cannot read a word of it. <i>But one page you can feel in your blood: a spell to slip a hunter\'s eye - to go unseen, even by <b>Vath</b>. The rest is a scholar\'s puzzle - page on page of other secrets the old line hid across the isles.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. Jaist could read this. Jaist could cast it.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }

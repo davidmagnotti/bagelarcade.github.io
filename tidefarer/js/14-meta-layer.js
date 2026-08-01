@@ -192,7 +192,7 @@ function loadCode(str){
   if(P.story.deepDone||P.story.tideCalm) P.story.bossCleared.east=1;
   if(P.story.undermawDown||P.story.millDone) P.story.bossCleared.main=1;
   // Warding Veil catch-up: the Veil now comes from the Rimefissure's reward chest (the
-  // Rune of Hush-Frost), worked into a spell by your brother. Credit the rune to any Act II
+  // Hush-Frost Spellbook), read into a spell by your brother. Credit the book to any Act II
   // save that already cleared the Rimefissure (deepDone) but predates this flow, so they can
   // complete the casting with Jaist on the Frozen Isle and reopen the old islands. Saves that
   // already earned the Veil under the old rules keep it (guarded by !vathVeil).

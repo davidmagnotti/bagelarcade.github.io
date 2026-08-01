@@ -56,6 +56,7 @@ function playCutscene(kind){
     case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
     case 'vath':           if(typeof vathBoundCutscene==='function')      vathBoundCutscene(null, done('Vath bound')); break;
     case 'aerie':          if(typeof aerieFreedCutscene==='function')     aerieFreedCutscene(null, done('The tome burns')); break;
+    case 'veil':           if(typeof veilCastCutscene==='function')       veilCastCutscene(done('Warding Veil cast')); break;
     default: return;
   }
   note('Playing cutscene: '+kind);
@@ -278,6 +279,7 @@ const SECTIONS=[
     ['Storm-Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
     ['Vath BOUND (Act I villain sealed)',()=>playCutscene('vath')],
     ['The TOME BURNS (aerie freed)',()=>playCutscene('aerie')],
+    ['The WARDING VEIL (Jaist casts)',()=>playCutscene('veil')],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)
