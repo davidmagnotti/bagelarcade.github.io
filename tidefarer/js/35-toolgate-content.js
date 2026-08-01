@@ -216,7 +216,9 @@ function placeToolChest(id, tc){
   if((P.tools && P.tools[tc.tier] || 0) >= 2) return; // already own the tier-2 tool
   var def=WORLD_DEFS[id]; if(!def || !def.spawn) return;
   var sx=Math.round(def.spawn.x), sy=Math.round(def.spawn.y);
-  var pos=(typeof findOpenNear==='function' && (findOpenNear(sx+5,sy,10)||findOpenNear(sx,sy+5,10)||findOpenNear(sx,sy,14))) || null;
+  // deep in the dungeon, never at the entrance (see deepDungeonSpot in 37-dungeon-hideaways.js)
+  var pos=(typeof deepDungeonSpot==='function' && deepDungeonSpot([sx,sy], id+':tool'))
+        || (typeof findOpenNear==='function' && findOpenNear(sx,sy+8,14)) || null;
   if(!pos) return;
   var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5, tgid:id+':toolchest'};
   o[tc.flag]=1;

@@ -41,6 +41,35 @@ function occ(x,y){
   return false;
 }
 function spawnOf(id){ var d=WORLD_DEFS[id]; return d&&d.spawn ? [Math.round(d.spawn.x),Math.round(d.spawn.y)] : null; }
+function nearChest(x,y,r){
+  for(var i=0;i<G.decor.length;i++){ var b=G.decor[i];
+    if((b.kind==='chest'||b.kind==='chestOpen') && Math.abs(Math.round(b.x-0.5)-x)+Math.abs(Math.round(b.y-0.5)-y)<=r) return true; }
+  return false;
+}
+// A reward tile DEEP in the dungeon - never at the entrance. BFS from the spawn, then
+// pick (seeded by salt, so multiple chests spread out) among the far half of the floor,
+// avoiding tiles that already hold a chest so two prizes never stack at the door.
+function deepDungeonSpot(spawn, salt){
+  if(!spawn) return null;
+  var sx=spawn[0], sy=spawn[1];
+  if(!walkable(sx,sy)){ var op=(typeof findOpenNear==='function') && findOpenNear(sx,sy,10); if(op){ sx=op[0]; sy=op[1]; } else return null; }
+  var seen={}, q=[[sx,sy,0]], head=0, tiles=[], maxD=0;
+  seen[sx+','+sy]=1;
+  while(head<q.length){ var cur=q[head++]; tiles.push(cur); if(cur[2]>maxD) maxD=cur[2];
+    for(var k=0;k<4;k++){ var nx=cur[0]+DIRS[k][0], ny=cur[1]+DIRS[k][1], key=nx+','+ny;
+      if(seen[key] || !walkable(nx,ny)) continue; seen[key]=1; q.push([nx,ny,cur[2]+1]); } }
+  function pool(minFrac, chestGap){
+    var out=[], thr=Math.max(6, maxD*minFrac);
+    for(var i=0;i<tiles.length;i++){ var t=tiles[i];
+      if(t[2]>=thr && !occ(t[0],t[1]) && !nearChest(t[0],t[1],chestGap)) out.push(t); }
+    return out;
+  }
+  var deep=pool(0.55,5); if(!deep.length) deep=pool(0.35,4); if(!deep.length) deep=pool(0.2,2);
+  if(!deep.length) return null;
+  var rng=mulberry32((SEED ^ strHash(salt||'d'))>>>0);
+  var pick=deep[(rng()*deep.length)|0];
+  return [pick[0], pick[1]];
+}
 
 function floodSide(sx,sy,bx,by,cap){
   var seen={}, st=[[sx,sy]], out=[]; seen[sx+','+sy]=1;
@@ -119,7 +148,8 @@ function placeRelicChest(id){
   if(P.unlocked && P.unlocked[rc.unlock]) return;
   if(tg()[id+':relic']) return;
   var sp=spawnOf(id); if(!sp) return;
-  var pos=(typeof findOpenNear==='function' && (findOpenNear(sp[0]+4,sp[1]+4,10)||findOpenNear(sp[0]-4,sp[1]+3,10)||findOpenNear(sp[0],sp[1]+6,14)))||null;
+  // deep in the dungeon, never at the entrance
+  var pos=deepDungeonSpot(sp, id+':relic') || (typeof findOpenNear==='function' && findOpenNear(sp[0],sp[1]+8,14)) || null;
   if(!pos) return;
   var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5, tgid:id+':relic'}; o[rc.flag]=1;
   G.decor.push(o);
@@ -162,5 +192,6 @@ function placeDungeonHideaways(id){
 }
 
 window.placeDungeonHideaways=placeDungeonHideaways;
+window.deepDungeonSpot=deepDungeonSpot;
 
 })();

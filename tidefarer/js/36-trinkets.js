@@ -77,8 +77,9 @@ function placeDungeonItems(id){
     if(P.inv && P.inv[key]) return;             // already own it
     var def=WORLD_DEFS[id]; if(!def || !def.spawn) return;
     var sx=Math.round(def.spawn.x), sy=Math.round(def.spawn.y);
-    var pos=(typeof findOpenNear==='function' &&
-      (findOpenNear(sx-5,sy+3,10)||findOpenNear(sx+4,sy+4,10)||findOpenNear(sx,sy+6,12)||findOpenNear(sx,sy,16))) || null;
+    // deep in the dungeon, never at the entrance (see deepDungeonSpot in 37-dungeon-hideaways.js)
+    var pos=(typeof deepDungeonSpot==='function' && deepDungeonSpot([sx,sy], id+':item'))
+      || (typeof findOpenNear==='function' && findOpenNear(sx,sy+8,16)) || null;
     if(!pos) return;
     G.decor.push({kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5, itemgift:key, tgid:id+':item'});
   }catch(e){ try{ console.warn('placeDungeonItems failed', e); }catch(_){ } }
