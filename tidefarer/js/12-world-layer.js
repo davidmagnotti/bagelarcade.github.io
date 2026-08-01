@@ -410,6 +410,24 @@ function genMainland(){
   ];
   for(const r of ROADS) landBridge(r[0],r[1],r[2],r[3]);
   for(const r of ROADS) carveLine(r[0],r[1],r[2],r[3], T.PATH,0);
+  // ---- Greyharbor's harbor promenade ----
+  // The town's houses now ring the shoreline (placed in placeObjectsMain), each out
+  // at the water's edge instead of huddled by the well. This coastal lane threads
+  // between them and ties into the four King's Roads (dock, forest, east, keep) so
+  // every door still has a road home. carveLine only paves land, so any stretch that
+  // grazes the shallows is simply left unpaved - the shore stays a shore.
+  const HARBOR_LANE=[
+    [68,256],[69,250],[74,245],[79,245],[83,248],[86,251],
+    [86,256],[83,260],[78,263],[72,262],[68,258],[68,256]
+  ];
+  for(let i=0;i<HARBOR_LANE.length-1;i++)
+    carveLine(HARBOR_LANE[i][0],HARBOR_LANE[i][1],HARBOR_LANE[i+1][0],HARBOR_LANE[i+1][1], T.PATH,0);
+  const HARBOR_SPURS=[
+    [66,257,68,256],[65,251,69,250],[71,244,74,245],[77,243,79,245],  // shore doors -> ring
+    [83,244,83,248],[86,262,83,260],[72,264,72,262],[67,261,68,258],
+    [68,256,65,256],[86,254,88,256],[85,249,88,250],[80,262,82,262]   // ring -> the radial roads
+  ];
+  for(const s of HARBOR_SPURS) carveLine(s[0],s[1],s[2],s[3], T.PATH,0);
   // ambush knolls on the long spire road - guaranteed dry ground for the packs below
   carveDisc(150,316,5,T.GRASS,false); carveDisc(172,325,5,T.GRASS,false);
   // the brigands' pines, north of Blackpine
@@ -483,14 +501,19 @@ function placeObjectsMain(){
     if(walkTile(tileAt(x,y))&&!solidAt(x,y)){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:br()<0.7}); setSolid(x,y,1); } }
   // Greyharbor, port town of Barik
   const V=ZONES.village;
-  // Greyharbor's core, spread a touch wider so the town doesn't feel cramped
-  addBuilding('house', V.x-4.2,V.y-2.8,"Harbor house");
-  addBuilding('house2',V.x+4.2,V.y-4.2,"Warden's post");
-  addBuilding('barn',  V.x+5.6,V.y+4.2,'Trade hall');
-  addBuilding('house', V.x-7,V.y+4.2,"Sela's Provisions");
-  addBuilding('house2',V.x+9.8,V.y,"Ivo's Herbary");
-  addBuilding('house2',V.x-2.8,V.y+7,'The Gull & Anchor (Inn)');
-  addBuilding('lamp',V.x-0.7,V.y+8.4,'');
+  // Greyharbor rings its harbor: every house sits out on the shoreline rather than
+  // huddled around the well, strung along the promenade lane (carved in genMainland,
+  // which also links the ring to the King's Roads). Going round the shore:
+  addBuilding('house', V.x-11,V.y+3, "Harbor house");                 // (66,257) west shore, over the docks
+  addBuilding('house', V.x-12,V.y-3, 'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”'; // (65,251) north-west shore
+  addBuilding('house2',V.x-6, V.y-10,"Ivo's Herbary");               // (71,244) north shore
+  addBuilding('house2',V.x,   V.y-11,"Warden's post");               // (77,243) north point
+  addBuilding('barn',  V.x+6, V.y-10,'Trade hall');                  // (83,244) north-east shore
+  addBuilding('house', V.x+9, V.y+8, "Rook's Range");                // (86,262) south-east shore
+  addBuilding('house2',V.x-5, V.y+10,'The Gull & Anchor (Inn)');     // (72,264) south shore
+  addBuilding('house', V.x-10,V.y+7, "Sela's Provisions");           // (67,261) south-west shore
+  addBuilding('lamp',  V.x-9, V.y+5, '');
+  addBuilding('lamp',  V.x+2, V.y-8, '');
   const FZ=ZONES.farm;
   addBuilding('barn', FZ.x+4,FZ.y-4,"Hedda's barn");
   addBuilding('house',FZ.x-6,FZ.y+5,'Farmhouse').closedMsg='The <b>Farmhouse</b> is dark - early to bed, early to the fields. A dog barks once, then thinks better of it.';
@@ -509,9 +532,9 @@ function placeObjectsMain(){
   const SP=ZONES.spire;
   addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
   addBuilding('lamp',SP.x-2,SP.y+2,'');
-  // the archery range, on Greyharbor's edge
-  addBuilding('house', V.x+9,V.y+7,"Rook's Range");
-  for(let i=0;i<3;i++){ G.decor.push({kind:'target',x:V.x+12+i*2,y:V.y+9+i*0.5}); setSolid(Math.floor(V.x+12+i*2),Math.floor(V.y+9+i*0.5),1); }
+  // Rook's Range butts, on the open grass behind the range (Rook's Range itself is
+  // now part of the shoreline ring above)
+  for(let i=0;i<3;i++){ const tx=V.x+5-i*2, ty=V.y+6-i; G.decor.push({kind:'target',x:tx,y:ty}); setSolid(Math.floor(tx),Math.floor(ty),1); }
   // the Undermaw mouth - enter if you dare
   const UM=ZONES.undermaw;
   G.decor.push({kind:'cavemouth',x:UM.x+0.5,y:UM.y+0.5});
@@ -533,8 +556,7 @@ function placeObjectsMain(){
   // Captain Corvo's cove on the far shore; his sloop rides at anchor
   addBuilding('lamp',330,244,'');
   addBuilding('boat',338.5,249.5,'');
-  // Thimble & Thread, Greyharbor's clothier
-  addBuilding('house',V.x-9.8,V.y-1.4,'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”';
+  // (Thimble & Thread is placed with the shoreline ring above)
   // a hermit hides in the deep pines - chop through the ring to find him
   { const HX=ZONES.forest.x+9, HY=ZONES.forest.y-7;
     carveDisc(HX,HY,4,T.FOREST,false);
@@ -547,7 +569,10 @@ function placeObjectsMain(){
   G.decor.push({kind:'pillar',x:VM.x-3.5,y:VM.y+2.5,broken:true}); setSolid(VM.x-4,VM.y+2,1);
   G.decor.push({kind:'pillar',x:MZ.x-1.5,y:MZ.y+0.5,broken:true}); setSolid(MZ.x-2,MZ.y,1);
   G.decor.push({kind:'pillar',x:MZ.x+2.5,y:MZ.y+1.5,broken:false}); setSolid(MZ.x+2,MZ.y+1,1);
-  addBuilding('lamp',V.x-1.4,V.y-1.4,''); addBuilding('lamp',V.x+2.8,V.y+1.4,'');
+  // lamps strung along the harbor promenade so the shore-front ring reads at night
+  addBuilding('lamp',V.x-8,V.y-4,''); addBuilding('lamp',V.x-1,V.y-8,'');
+  addBuilding('lamp',V.x+6,V.y-6,''); addBuilding('lamp',V.x+7,V.y+5,'');
+  addBuilding('lamp',V.x-3,V.y+8,''); addBuilding('lamp',V.x-8,V.y+4,'');
   addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y-1,''); addBuilding('lamp',ZONES.dock.x+3,ZONES.dock.y+2,'');
   addBuilding('boat', ZONES.dock.x-5.5,ZONES.dock.y+0.5,'');
   // the relic chest on Stormwatch Peak
@@ -563,7 +588,7 @@ function placeObjectsMain(){
 }
 function spawnNPCsMain(){
   const V=ZONES.village;
-  G.npcs.push(makeNPC('kell','Warden Kell', V.x+3.5,V.y-1.4,
+  G.npcs.push(makeNPC('kell','Warden Kell', V.x+2,V.y-9,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a3f52',pants:'#2f2b33',hat:'hood',pauldrons:true,trim:'#8a8f9a',cloak:'#3a3542',armor:1},
     ["Mind the roads, stranger. The wilds here don't forgive.",
      "Elites wear a crimson ring. You'll know them when they charge."],1.5));
@@ -583,11 +608,11 @@ function spawnNPCsMain(){
 }
 function spawnBarikFolk(){
   const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
-  G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-6.3,V.y+2.1,
+  G.npcs.push(makeNPC('sela','Sela the Provisioner', V.x-9,V.y+9,
     {skin:'#d3a377',hair:'#3c2f22',shirt:'#7a4a36',pants:'#4a3a2c',apron:'#c9b48e',hairstyle:'bun'},
     ["Bread, fish, and no questions - Greyharbor's finest counter.",
      "The farmsteads east keep us fed. Mostly."],1.2));
-  G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x+9.1,V.y+2.5,
+  G.npcs.push(makeNPC('ivo','Ivo the Herbalist', V.x-5,V.y-8,
     {skin:'#c9a884',hair:'#5a6a4a',shirt:'#46603c',pants:'#35402c',robe:'#3f5a3a',trim:'#9ab87a'},
     ["Everything on Barik either heals you or bites you. I sell the first kind.",
      "Bluecaps, tonics, tidebalm. The wilds provide - I just bottle it."],1.0));
@@ -638,11 +663,11 @@ function spawnRealmFolk(){
     {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
     ["Magic is grammar for the world's oldest language. I teach conjugation.",
      "The Spire takes students, not worshippers. Bring coin and humility."],0.6));
-  G.npcs.push(makeNPC('rook','Fletcher Rook', V.x+10.5,V.y+8.2,
+  G.npcs.push(makeNPC('rook','Fletcher Rook', V.x+7,V.y+6,
     {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',quiver:true},
     ["Breathe out, loose, and never apologize to the target.",
      "Twenty gold buys a hundred arrows' worth of lessons."],0.8));
-  G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-9,V.y-0.6,
+  G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-10,V.y-1,
     {skin:'#c9a081',hair:'#2c2030',shirt:'#5e3a6a',pants:'#3a2c44',hairstyle:'long'},
     ['Silk holds a memory of every hand that touches it.',
      'My whole shipment, taken on the north road. The pines have thieves in them now.'],0.5));
@@ -655,7 +680,7 @@ function spawnRealmFolk(){
     {skin:'#c9a27b',hair:'#9aa08a',shirt:'#4a5a3a',pants:'#3a4230',robe:'#54644a'},
     ['Sixty years the pines kept my secret. You brought an axe to a riddle - fair enough.',
      'The forest regrows what you take. Remember that about yourself, too.'],0); hm.nightOwl=true; return hm; })());
-  G.npcs.push(makeNPC('bree','Goldwarden Bree', V.x+5.5,V.y+3.8,
+  G.npcs.push(makeNPC('bree','Goldwarden Bree', V.x+6,V.y-8,
     {skin:'#d3a377',hair:'#5a4a3a',shirt:'#4a3a5a',pants:'#332c3c',apron:'#8a7a5a',hairstyle:'bun'},
     ["The vault holds what the grave cannot take. Deposit while you breathe.",
      "Greyharbor's ledger balances daily. Unlike its taverns."],0.5));
@@ -687,7 +712,7 @@ function challengeCastellan(npc){
 }
 function spawnBarikInn(){
   const V=ZONES.village;
-  const inn=makeNPC('saffi','Saffi of the Gull', V.x-1.5,V.y+6.2,
+  const inn=makeNPC('saffi','Saffi of the Gull', V.x-4,V.y+8,
     {skin:'#caa27b',hair:'#2e2624',shirt:'#5a4a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
     ["Sailors, wardens, wanderers - everyone sleeps under my roof eventually.",
      "Ten gold buys the best bed on Barik. The second-best is the floor."],0.8);
