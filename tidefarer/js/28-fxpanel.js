@@ -26,7 +26,7 @@ const GROUPS = [
 
 function build(){
   if(document.getElementById('fxPanel')) return true;
-  const anchor=document.getElementById('cfgPerfOn');           // the Performance-mode row
+  const anchor=document.getElementById('cfgFastOn');           // the Fast-graphics row
   const row=anchor && anchor.closest('.pRow');
   if(!row) return false;
   let html='<div id="fxPanel" style="margin:8px 0 2px;padding:9px 11px;border-radius:9px;'+

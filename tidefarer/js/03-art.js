@@ -903,12 +903,12 @@ function drawHumanoid(g,sx,sy,o){
   const stF=_bd.stoop||0;               // forward head lean, local units (aged / hunched)
 
   g.save();
-  // Slight vividness boost for the figure. MUST be set inside this save() so the
-  // matching restore() clears it - setting ctx.filter before the save (and never
-  // resetting it) leaked the filter onto the whole scene for the rest of the
-  // frame (setTransform does not clear ctx.filter), softening/over-saturating the
-  // ground, houses and everything drawn after the first character.
-  try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){}
+  // NOTE: the old per-character ctx.filter='saturate/brightness' vividness boost
+  // was REMOVED entirely. A per-draw ctx.filter forces each figure into its own
+  // offscreen layer + post-process pass - one of the very worst per-entity GPU
+  // costs on desktop Skia (Edge/Chrome), scaling with character count (it was the
+  // dominant cost that pinned a Surface at ~15fps). The look change is tiny; the
+  // shaded bodies below carry the depth on their own.
   g.translate(sx,sy);
   if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean);
@@ -939,9 +939,10 @@ function drawHumanoid(g,sx,sy,o){
   /* ---------------- stubby legs & big boots ---------------- */
   const bootC='#5a3d28', bootD='#3e2a1c';
   const drawBoot=(botD)=>{
-    const btg=g.createLinearGradient(0,-1.2,0,3.4);
-    btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10));
-    g.fillStyle=btg; g.lineWidth=1.7;
+    if(LOWFX){ g.fillStyle=bootC; }
+    else{ const btg=g.createLinearGradient(0,-1.2,0,3.4);
+      btg.addColorStop(0,shade(bootC,12)); btg.addColorStop(1,shade(bootC,-10)); g.fillStyle=btg; }
+    g.lineWidth=1.7;
     g.beginPath(); g.roundRect(-3.6,-1.2,7.2,4.6,2.1); g.fill(); g.stroke();
     g.fillStyle='rgba(255,245,225,0.25)'; // gloss
     g.beginPath(); g.ellipse(-1.2,0,1.5,0.75,-0.3,0,TAU); g.fill();
@@ -1043,9 +1044,9 @@ function drawHumanoid(g,sx,sy,o){
   g.save(); if(bwF!==1) g.scale(bwF,1);   // body girth: the torso, belt, apron & armour widen together
   if(o.robe){
     const hem=Math.sin(step||G.time*1.6)*1.2;
-    const rg2=g.createLinearGradient(0,-27,0,0);
-    rg2.addColorStop(0,shade(o.robe,10)); rg2.addColorStop(0.6,o.robe); rg2.addColorStop(1,shade(o.robe,-12));
-    g.fillStyle=rg2;
+    if(LOWFX){ g.fillStyle=o.robe; }
+    else{ const rg2=g.createLinearGradient(0,-27,0,0);
+      rg2.addColorStop(0,shade(o.robe,10)); rg2.addColorStop(0.6,o.robe); rg2.addColorStop(1,shade(o.robe,-12)); g.fillStyle=rg2; }
     g.beginPath();
     g.moveTo(-7.5,-24+B);
     g.quadraticCurveTo(-11,-10, -9.5+hem,-0.5);
@@ -1062,9 +1063,9 @@ function drawHumanoid(g,sx,sy,o){
       g.beginPath(); g.arc(0,-16+B,2.4,0,TAU); g.fill();
     }
   } else {
-    const bg2=g.createLinearGradient(0,-26,0,-6);
-    bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11));
-    g.fillStyle=bg2;
+    if(LOWFX){ g.fillStyle=shirt; }
+    else{ const bg2=g.createLinearGradient(0,-26,0,-6);
+      bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11)); g.fillStyle=bg2; }
     g.beginPath();
     g.moveTo(-8.2,-23.5+B);
     g.quadraticCurveTo(-10.4,-15.5, -8.6,-7.5);
@@ -1116,9 +1117,9 @@ function drawHumanoid(g,sx,sy,o){
     }
     if((o.armor|0)>=1){
       const a2=(o.armor|0)>=2;
-      const pg=g.createLinearGradient(-8,-24,8,-8);
-      pg.addColorStop(0,'#cdd3dd'); pg.addColorStop(1,'#848b97');
-      g.fillStyle=pg;
+      if(LOWFX){ g.fillStyle='#aab1bd'; }
+      else{ const pg=g.createLinearGradient(-8,-24,8,-8);
+        pg.addColorStop(0,'#cdd3dd'); pg.addColorStop(1,'#848b97'); g.fillStyle=pg; }
       g.beginPath();
       g.moveTo(-7.6,-23+B);
       g.quadraticCurveTo(-9.4,-15.5, -7.8,-9.5);
@@ -1232,9 +1233,9 @@ function drawHumanoid(g,sx,sy,o){
   if(walking) g.rotate(sw1*0.035);
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
   // ball with soft top-light - round, not flat
-  const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
-  hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
-  g.fillStyle=hg;
+  if(LOWFX){ g.fillStyle=skin; }
+  else{ const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
+    hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9)); g.fillStyle=hg; }
   g.beginPath(); // wide cranium narrowing through the cheeks to a soft chin
   g.ellipse(0,-1.5,HR,HRY*0.92,0,Math.PI,0);
   g.quadraticCurveTo(HR*0.90,6.8, HR*0.42,11.2);
@@ -1250,9 +1251,9 @@ function drawHumanoid(g,sx,sy,o){
         g.fillStyle='rgba(255,255,255,0.16)';
         g.beginPath(); g.ellipse(-3.5,-4,4.5,3.2,-0.4,0,TAU); g.fill();
       } else {
-        const hgb=g.createLinearGradient(0,-13,0,9);
-        hgb.addColorStop(0,shade(hc,12)); hgb.addColorStop(1,shade(hc,-6));
-        g.fillStyle=hgb;
+        if(LOWFX){ g.fillStyle=hc; }
+        else{ const hgb=g.createLinearGradient(0,-13,0,9);
+          hgb.addColorStop(0,shade(hc,12)); hgb.addColorStop(1,shade(hc,-6)); g.fillStyle=hgb; }
         g.beginPath();
         g.ellipse(0,-1.2,HR*0.98,HRY*0.95,0,Math.PI,0);
         g.lineTo(HR*0.95,4.5);
