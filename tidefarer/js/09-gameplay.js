@@ -171,10 +171,6 @@ function nearestInteract(){
       const d=dist(P.x,P.y,b.x,b.y+1);
       if(d<2.2 && d<bd){ bd=d; best={type:'lore',key:'crypt',o:b,label:'Read'}; }
     }
-    if(b.kind==='woodpile'){
-      const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'lore',key:'woodpile@isle',o:b,label:'Inspect'}; }
-    }
     if(b.kind==='tunnelmouth'){
       const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.0 && d<bd){ bd=d; best= b.deep? {type:'aeriedeep',o:b,label:b.up?'Climb out':'Descend'} : {type:'warp',o:b,label:'Enter'}; }
