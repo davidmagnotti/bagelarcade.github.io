@@ -78,6 +78,35 @@ const MC_STORM = [
     calm:1 },
 ];
 
+// Vath, beaten on the Emberwick green, bound by his own compulsion into the old
+// standing stone - sealed, not slain, vowing return. `dive` = how far he is folded
+// into the stone (0 standing, 1 gone).
+const MC_VATH = [
+  { who:'', html:'', ens:1, calm:0, dive:0, shake:0.55, hold:1400 },
+  { who:'', html:'<i>You cut the violet cords one by one — and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i>',
+    ens:1, dive:0, shatter:1, flash:0.7, shake:0.6 },
+  { who:'Vath', html:'<b style="color:#c9a0ff">“Clever. Cruel. You’d have woven a fine binding yourself.”</b>',
+    ens:0.9, dive:0.25 },
+  { who:'', html:'', ens:0.7, dive:0.7, flash:0.95, shake:0.5, hold:1500 },
+  { who:'Vath', html:'<b style="color:#c9a0ff">“No stone holds forever, first mate. Your blood has caged me before — a lifetime ago, and lifetimes before that. Every seal your line ever set, I have outwaited. I will thaw. I will come back.”</b>',
+    ens:0.4, dive:0.9, title:'VATH IS BOUND' },
+  { who:'', html:'<i>Then quiet — the violet light dying in the grass, and the old stone standing as it has always stood.</i>',
+    ens:0.08, dive:1, calm:1 },
+];
+
+// The cursed tome of the Underclimb, burning at last - the maddened sky remembers
+// itself and the raptors' minds return. Same enthrall/freed family, but the victim
+// (the whole aerie) is off-screen above; a robed after-image gives the Vath reveal.
+const MC_AERIE = [
+  { who:'', html:'', ens:1, calm:0, shake:0.4, hold:1400 },
+  { who:'', html:'', ens:0.3, calm:0.4, shatter:1, flash:1.0, shake:0.5, hold:1600 },
+  { who:'', html:'<i>The cursed tome curls to violet ash. Far above — all at once, and mid-cry — the screaming stops. The raptors’ minds are their own again.</i>',
+    ens:0.1, calm:0.85 },
+  { who:'', html:'', calm:1, title:'THE TOME BURNS', hold:1800 },
+  { who:'', html:'<i>A </i><b style="color:#c9a0ff">robed man</b><i> climbed the Underclimb quiet as smoke, they will tell you — </i><b style="color:#c9a0ff">violet at his sleeves</b><i> — worked this ruin on the sky, and never came down the same. He was here.</i>',
+    vath:0.5, calm:1 },
+];
+
 /* ---------- driver ---------- */
 function mcResize(){
   const cv=MC.cv; if(!cv) return;
@@ -131,7 +160,8 @@ function mcShow(i){
     if(tap){
       const last=(i>=MC.beats.length-1);
       tap.textContent = last
-        ? (MC.kind==='storm'?'take the high road ›' : MC.kind==='rime'?'let it rest in the deep ›' : 'walk back down ›')
+        ? (MC.kind==='storm'?'take the high road ›' : MC.kind==='rime'?'let it rest in the deep ›'
+           : MC.kind==='vath'?'turn to your brother ›' : MC.kind==='aerie'?'climb to the light ›' : 'walk back down ›')
         : 'click to continue ›';
     }
     if(sub){ sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show'); }
@@ -177,7 +207,7 @@ function mcLoop(ts){
   MC.calm = e(MC.calm, b.calm!=null?b.calm:MC.calm, 1.6);
   MC.vath = e(MC.vath, b.vath!=null?b.vath:MC.vath, 1.8);
   MC.snow = e(MC.snow, b.snow!=null?b.snow:MC.snow, 1.4);
-  MC.dive = e(MC.dive, MC.ended?1:0,                1.1);
+  MC.dive = e(MC.dive, (b.dive!=null?b.dive:(MC.ended?1:0)), 1.1);
   MC.flash  = Math.max(0, MC.flash  - dt*2.6);
   MC.shake  = Math.max(0, MC.shake*(1-MC.calm*0.5) - dt*1.8);
   MC.shatter= Math.max(0, MC.shatter- dt*1.2);
@@ -188,9 +218,23 @@ function mcLoop(ts){
 
 /* ---------- particles: violet clings while bound; cold/bright spray blows out on the break ---- */
 function mcMotes(dt){
-  const cxm=MC.W*0.5, cy=MC.H*(MC.kind==='storm'?0.40:0.5);
-  const cold = MC.kind!=='storm';
-  if(MC.shatter>0.02){
+  const cxm=MC.W*0.5, cy=MC.H*(MC.kind==='storm'?0.40:MC.kind==='aerie'?0.52:0.5);
+  const cold = (MC.kind==='warden'||MC.kind==='rime');
+  if(MC.kind==='vath'){
+    // Vath's violet does not blow free - it collapses INWARD, dragging him into the stone.
+    // A steady inward rain of violet motes, thicker as he is folded in (dive) or on the snap.
+    const rate = 22*MC.ens + 40*MC.shatter + 30*(MC.dive*(1-MC.dive)*4);
+    MC._macc+=dt*rate; let n=Math.floor(MC._macc); MC._macc-=n; if(n>4) n=4;
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=Math.max(MC.W,MC.H)*(0.18+Math.random()*0.22);
+      MC.motes.push({x:cxm+Math.cos(a)*r, y:cy+Math.sin(a)*r*0.7, tx:cxm, ty:cy, life:1,
+        col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.4)}); }
+  } else if(MC.kind==='aerie' && MC.shatter>0.02){
+    // the tome burns: violet-and-ember embers stream UP off the pyre
+    MC._macc+=dt*54*MC.shatter; let n=Math.floor(MC._macc); MC._macc-=n; if(n>5) n=5;
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, sp=rnd(40,150);
+      MC.motes.push({x:cxm+rnd(-18,18), y:cy, vx:Math.cos(a)*sp*0.5, vy:-rnd(60,180), life:1,
+        col:Math.random()<0.5?'199,123,255':'255,150,70', size:rnd(2,4.6)}); }
+  } else if(MC.shatter>0.02){
     MC._macc+=dt*46*MC.shatter; let n=Math.floor(MC._macc); MC._macc-=n; if(n>4) n=4;
     for(let i=0;i<n;i++){ const a=Math.random()*TAU, sp=rnd(80,260);
       MC.motes.push({x:cxm, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-60, life:1,
@@ -204,7 +248,7 @@ function mcMotes(dt){
   }
   for(const m of MC.motes){
     if(m.tx!=null){ m.x+=(m.tx-m.x)*Math.min(1,dt*2.0); m.y+=(m.ty-m.y)*Math.min(1,dt*2.0); m.life-=dt*1.1; }
-    else { m.x+=m.vx*dt; m.y+=m.vy*dt; m.vy+=(cold?64:30)*dt; m.life-=dt*0.85; }
+    else { m.x+=m.vx*dt; m.y+=m.vy*dt; m.vy+=(cold?64:MC.kind==='aerie'?-6:30)*dt; m.life-=dt*0.85; }
   }
   MC.motes=MC.motes.filter(m=>m.life>0);
 }
@@ -218,6 +262,8 @@ function mcDraw(){
   if(MC.kind==='warden')      drawWardenScene(cx,W,H,t);
   else if(MC.kind==='rime')   drawRimeScene(cx,W,H,t);
   else if(MC.kind==='storm')  drawStormScene(cx,W,H,t);
+  else if(MC.kind==='vath')   drawVathScene(cx,W,H,t);
+  else if(MC.kind==='aerie')  drawAerieScene(cx,W,H,t);
 
   // motes
   cx.save(); cx.globalCompositeOperation='lighter';
@@ -228,8 +274,11 @@ function mcDraw(){
   }
   cx.globalAlpha=1; cx.restore();
 
-  // the break flash (cold-white / bright)
-  if(MC.flash>0.01){ cx.fillStyle='rgba(226,244,255,'+(0.5*MC.flash).toFixed(3)+')'; cx.fillRect(0,0,W,H); }
+  // the break flash - tinted to the scene (cold for frost/sky, violet for Vath, warm for the pyre)
+  if(MC.flash>0.01){
+    const fc = MC.kind==='vath' ? '199,140,255' : MC.kind==='aerie' ? '255,196,120' : '226,244,255';
+    cx.fillStyle='rgba('+fc+','+(0.5*MC.flash).toFixed(3)+')'; cx.fillRect(0,0,W,H);
+  }
   cx.restore();  // shake
 
   // vignette
@@ -460,6 +509,148 @@ function drawStormEye(cx,x,y,s,ens,dive,t){
   cx.restore();
 }
 
+/* ===================== VATH BOUND ===================== */
+function drawVathScene(cx,W,H,t){
+  const ens=MC.ens, dive=MC.dive, calm=MC.calm, horizon=H*0.72;
+  // Emberwick green at dusk: a warm-dark sky bruised violet while he still burns
+  const sky=cx.createLinearGradient(0,0,0,horizon);
+  sky.addColorStop(0, mixHex('#141020','#241236', Math.min(1,ens*0.6)));
+  sky.addColorStop(1, mixHex('#3a2a34','#3a1c44', Math.min(1,ens*0.5)));
+  cx.fillStyle=sky; cx.fillRect(0,0,W,horizon+2);
+  // the grass green
+  const gr=cx.createLinearGradient(0,horizon,0,H);
+  gr.addColorStop(0, mixHex('#243a24','#241832', Math.min(1,ens*0.5)));
+  gr.addColorStop(1, '#0d150c');
+  cx.fillStyle=gr; cx.fillRect(0,horizon,W,H-horizon);
+
+  const sx=W*0.5, baseY=horizon+10, sh=Math.min(W,H)*0.34;
+  // the old standing stone - a tall weathered monolith, glowing violet as he is folded in
+  drawStandingStone(cx, sx, baseY, sh, dive, ens, t);
+  // Vath before the stone, dissolving into it as dive rises
+  const va=Math.max(0,(1-dive)*0.9 + 0.1*(1-calm));
+  if(va>0.02){
+    // violet cords whipping around him while he still stands
+    if(ens>0.1) drawVathCords(cx, sx, baseY - sh*0.42, sh*0.4, ens, t);
+    drawVathFigure(cx, sx, baseY - sh*0.42, sh*0.30, va);
+  }
+}
+function drawStandingStone(cx,x,footY,s,dive,ens,t){
+  const w=s*0.34, h=s*0.95;
+  // the stone body
+  cx.save();
+  const g=cx.createLinearGradient(x-w,footY-h,x+w,footY);
+  g.addColorStop(0,'#3b3a42'); g.addColorStop(0.5, mixHex('#4a4852','#3a2456',Math.min(1,dive))); g.addColorStop(1,'#26252c');
+  cx.fillStyle=g;
+  cx.beginPath();
+  cx.moveTo(x-w*0.8, footY);
+  cx.lineTo(x-w*0.66, footY-h*0.9);
+  cx.lineTo(x-w*0.1, footY-h);
+  cx.lineTo(x+w*0.7, footY-h*0.82);
+  cx.lineTo(x+w*0.82, footY);
+  cx.closePath(); cx.fill();
+  cx.strokeStyle='rgba(20,18,26,0.7)'; cx.lineWidth=Math.max(1,s*0.01); cx.stroke();
+  // carved violet sigils that light as he is sealed in
+  cx.strokeStyle='rgba(199,123,255,'+(0.25+0.55*dive)*(0.7+0.3*Math.sin(t*3)).toFixed(3)+')';
+  cx.lineWidth=Math.max(1,s*0.016);
+  cx.beginPath();
+  cx.moveTo(x-w*0.2, footY-h*0.8); cx.lineTo(x-w*0.05, footY-h*0.55); cx.lineTo(x-w*0.22, footY-h*0.35);
+  cx.moveTo(x+w*0.2, footY-h*0.7); cx.lineTo(x+w*0.05, footY-h*0.45);
+  cx.stroke();
+  // inner violet glow as he is folded in
+  if(dive>0.05){ cx.save(); cx.globalCompositeOperation='lighter';
+    const vg=cx.createRadialGradient(x,footY-h*0.5,2,x,footY-h*0.5,s*0.5);
+    vg.addColorStop(0,'rgba(180,120,255,'+(0.5*dive*(1-0.4*(dive>0.9?(dive-0.9)*10:0))).toFixed(3)+')'); vg.addColorStop(1,'rgba(180,120,255,0)');
+    cx.fillStyle=vg; cx.beginPath(); cx.arc(x,footY-h*0.5,s*0.5,0,TAU); cx.fill(); cx.restore(); }
+  cx.restore();
+}
+// violet leash-cords whipping around Vath - his own binding, turned on him
+function drawVathCords(cx,x,y,s,ens,t){
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
+  for(let k=0;k<4;k++){
+    cx.strokeStyle='rgba(199,123,255,'+(0.4*ens).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.05);
+    cx.beginPath();
+    const a0=t*2 + k*TAU/4;
+    let px=x+Math.cos(a0)*s*1.1, py=y+Math.sin(a0)*s*0.7;
+    cx.moveTo(px,py);
+    for(let seg=1;seg<=5;seg++){ const f=seg/5; const ang=a0 + f*3.4;
+      px = x + Math.cos(ang)*s*1.1*(1-f*0.9); py = y + Math.sin(ang)*s*0.7*(1-f*0.9) + Math.sin(t*3+seg)*s*0.05;
+      cx.lineTo(px,py); }
+    cx.stroke();
+  }
+  cx.restore();
+}
+
+/* ===================== AERIE / THE TOME BURNS ===================== */
+function drawAerieScene(cx,W,H,t){
+  const ens=MC.ens, calm=MC.calm, floorY=H*0.74;
+  // the Underclimb crypt: near-black bone-and-stone, a violet cast while the tome holds
+  const bg=cx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#070609');
+  bg.addColorStop(0.55, mixHex('#12100f','#170e24', Math.min(1,ens*0.7)));
+  bg.addColorStop(1, mixHex('#1a1512','#140b1e', Math.min(1,ens*0.5)));
+  cx.fillStyle=bg; cx.fillRect(0,0,W,H);
+  // a cold shaft of daylight down from the Underclimb mouth, brightening as the sky clears
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const shX=W*0.5, shW=W*0.16;
+  const sg=cx.createLinearGradient(shX,0,shX,floorY);
+  sg.addColorStop(0,'rgba(200,215,240,'+(0.06+0.16*calm).toFixed(3)+')'); sg.addColorStop(1,'rgba(200,215,240,0)');
+  cx.fillStyle=sg;
+  cx.beginPath(); cx.moveTo(shX-shW*0.35,0); cx.lineTo(shX+shW*0.35,0); cx.lineTo(shX+shW,floorY); cx.lineTo(shX-shW,floorY); cx.closePath(); cx.fill();
+  cx.restore();
+  // wheeling fowl silhouettes up in the light as the sky remembers itself
+  if(calm>0.4){ cx.save(); cx.globalAlpha=Math.min(1,(calm-0.4)/0.6)*0.8; cx.strokeStyle='rgba(40,44,54,0.9)'; cx.lineWidth=2;
+    for(let i=0;i<4;i++){ const bx=shX+Math.sin(t*0.6+i*1.7)*W*0.09, by=H*0.14+i*H*0.05+Math.sin(t*1.1+i)*6;
+      cx.beginPath(); cx.moveTo(bx-8,by); cx.quadraticCurveTo(bx,by-5,bx+0,by); cx.quadraticCurveTo(bx,by-5,bx+8,by); cx.stroke(); }
+    cx.restore(); }
+  // bone-and-stone pillars flanking
+  cx.fillStyle='#0b0a0d';
+  for(const sgn of [-1,1]){ const bx=sgn<0?W*0.12:W*0.88, w=W*0.09;
+    cx.beginPath(); cx.moveTo(bx-w,H); cx.lineTo(bx-w*0.6,H*0.1); cx.lineTo(bx+w*0.5,H*0.06);
+    cx.lineTo(bx+w,H*0.28); cx.lineTo(bx+w*0.6,H); cx.closePath(); cx.fill(); }
+  // the pedestal
+  cx.fillStyle='#1a1720';
+  cx.fillRect(W*0.5-W*0.05, floorY-8, W*0.1, H-floorY+8);
+  cx.fillStyle='#241f2c'; cx.fillRect(W*0.5-W*0.07, floorY-14, W*0.14, 10);
+
+  // the tome, burning
+  drawBurningTome(cx, W*0.5, floorY-14, Math.min(W,H)*0.13, ens, calm, t);
+
+  // a robed after-image resolving in the smoke (the Vath reveal)
+  if(MC.vath>0.02) drawVathFigure(cx, W*0.68, floorY-6, Math.min(W,H)*0.085, MC.vath*0.85);
+}
+function drawBurningTome(cx,x,y,s,ens,calm,t){
+  const consumed=calm;   // 0 = whole book, 1 = ash
+  // fire plume (violet at first, ember as it roars up, guttering to nothing as it becomes ash)
+  const fire=Math.max(0, 1-Math.abs(consumed-0.45)*2.0);   // peaks mid-burn
+  if(fire>0.02){ cx.save(); cx.globalCompositeOperation='lighter';
+    for(let i=0;i<3;i++){ const fw=s*(0.5-i*0.1), fh=s*(1.4-i*0.3)*(0.6+0.4*Math.sin(t*6+i));
+      const fg=cx.createLinearGradient(x,y,x,y-fh);
+      fg.addColorStop(0,'rgba(255,150,70,'+(0.5*fire).toFixed(3)+')');
+      fg.addColorStop(0.5,'rgba(199,123,255,'+(0.4*fire).toFixed(3)+')');
+      fg.addColorStop(1,'rgba(199,123,255,0)');
+      cx.fillStyle=fg; cx.beginPath();
+      cx.moveTo(x-fw,y); cx.quadraticCurveTo(x-fw*0.4,y-fh*0.6, x+Math.sin(t*5+i)*s*0.1, y-fh);
+      cx.quadraticCurveTo(x+fw*0.4,y-fh*0.6, x+fw,y); cx.closePath(); cx.fill(); }
+    cx.restore(); }
+  // the book itself, blackening to ash
+  const bookA=Math.max(0,1-consumed*1.1);
+  if(bookA>0.02){ cx.save(); cx.globalAlpha=bookA;
+    cx.fillStyle=mixHex('#5a3a2a','#2a1a1a',consumed); cx.strokeStyle='#1a1010'; cx.lineWidth=Math.max(1,s*0.02);
+    cx.beginPath(); cx.moveTo(x-s*0.5,y); cx.lineTo(x-s*0.42,y-s*0.14); cx.lineTo(x+s*0.42,y-s*0.14); cx.lineTo(x+s*0.5,y); cx.closePath(); cx.fill(); cx.stroke();
+    // pages / a violet sigil on the cover while it still holds
+    if(consumed<0.5){ cx.strokeStyle='rgba(199,123,255,'+(0.6*ens).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.02);
+      cx.beginPath(); cx.arc(x,y-s*0.07,s*0.08,0,TAU); cx.moveTo(x,y-s*0.15); cx.lineTo(x,y+s*0.01); cx.stroke(); }
+    cx.restore(); }
+  // a heap of embered ash once it's gone
+  if(consumed>0.4){ cx.save(); cx.globalAlpha=Math.min(1,(consumed-0.4)/0.6);
+    cx.fillStyle='#1a1414'; cx.beginPath(); cx.ellipse(x,y+s*0.02,s*0.5,s*0.08,0,0,TAU); cx.fill();
+    cx.save(); cx.globalCompositeOperation='lighter';
+    for(let i=0;i<6;i++){ const ex=x+rndSteady(i,3)*s*0.4; const gg=cx.createRadialGradient(ex,y,0,ex,y,s*0.06);
+      gg.addColorStop(0,'rgba(255,140,60,'+(0.4*Math.max(0,1-consumed)).toFixed(3)+')'); gg.addColorStop(1,'rgba(255,140,60,0)');
+      cx.fillStyle=gg; cx.beginPath(); cx.arc(ex,y,s*0.06,0,TAU); cx.fill(); }
+    cx.restore(); cx.restore(); }
+}
+
 /* ---------- shared helpers ---------- */
 // a robed figure with violet cuffs, resolving and fading (the Vath reveal)
 function drawVathFigure(cx,x,y,s,amt){
@@ -509,8 +700,12 @@ function rndSteady(a,b){ const s=Math.sin(a*12.9898+b*78.233)*43758.5453; return
 function wardenFreedCutscene(m, onDone){ mcPlay('warden', MC_WARDEN, {ens:1, calm:0, snow:0}, onDone, m); }
 function rimeboundFreedCutscene(m, onDone){ mcPlay('rime', MC_RIME, {ens:1, calm:0}, onDone, m); }
 function stormEyeCutscene(onDone){ mcPlay('storm', MC_STORM, {ens:1, calm:0}, onDone, null); }
+function vathBoundCutscene(m, onDone){ mcPlay('vath', MC_VATH, {ens:1, calm:0, dive:0}, onDone, m); }
+function aerieFreedCutscene(m, onDone){ mcPlay('aerie', MC_AERIE, {ens:1, calm:0}, onDone, m); }
 window.wardenFreedCutscene=wardenFreedCutscene;
 window.rimeboundFreedCutscene=rimeboundFreedCutscene;
 window.stormEyeCutscene=stormEyeCutscene;
+window.vathBoundCutscene=vathBoundCutscene;
+window.aerieFreedCutscene=aerieFreedCutscene;
 
 })();

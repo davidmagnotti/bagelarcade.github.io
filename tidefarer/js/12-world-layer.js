@@ -1978,7 +1978,15 @@ function destroyTome(b){
   }
   banner('THE TOME BURNS','THE SKY REMEMBERS ITSELF - THE AERIE IS QUIET');
   if(qs('roost')==='active') completeQuest('roost');
-  setTimeout(()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. When you climb back into daylight the falconers of Rookhaven crowd round, near weeping as their birds settle to the glove: “Our sky is ours again - <b>thank you</b>. It was a <b>robed man</b> did this to us, they say. Climbed the Underclimb quiet as smoke, violet at his sleeves, and never came down the same. If you cross him, friend - give him nothing.”',10000),1500);
+  // The burning now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the cursed
+  // tome flares and curls to violet ash, the maddened sky remembers itself, and a robed
+  // after-image gives the Vath reveal. The falconers' account follows when it ends. Falls
+  // back to the old toast if the overlay layer is absent.
+  const falconers=()=>toast('The cursed tome curls to violet ash, and outside the screaming <b>stops</b> - all at once, mid-cry. When you climb back into daylight the falconers of Rookhaven crowd round, near weeping as their birds settle to the glove: “Our sky is ours again - <b>thank you</b>. It was a <b>robed man</b> did this to us, they say. Climbed the Underclimb quiet as smoke, violet at his sleeves, and never came down the same. If you cross him, friend - give him nothing.”',10000);
+  setTimeout(()=>{
+    if(typeof aerieFreedCutscene==='function') aerieFreedCutscene(b, falconers);
+    else falconers();
+  },1500);
 }
 function genAerieAll(){
   genAerie(); bakeSolids(); placeObjectsAerie(); buildFoam();
@@ -4568,8 +4576,17 @@ function bindVath(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.8),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
   banner('VATH IS BOUND','SEALED BY HIS OWN COMPULSION');
   if(typeof updateBossUI==='function') updateBossUI();
-  setTimeout(()=>storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. Your blood has caged me before - a lifetime ago, and lifetimes before that - and every seal your line ever set, I have outwaited. Delayed. Never once undone. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
-    {onOk:()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head. <b style="color:var(--ember)">Speak with him.</b>',7000)}),1200);
+  // The binding now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the violet
+  // cords whip back and take him, the enchantment folds him into the old standing stone, and
+  // he vows to return. When it ends, the nudge to the Woodworker follows. Falls back to the
+  // old story-card if the overlay layer is absent. The enchanter-quest credit below is a
+  // separate, unchanged timer - the cutscene does not touch any story/quest state.
+  const woodyNudge=()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head. <b style="color:var(--ember)">Speak with him.</b>',7000);
+  setTimeout(()=>{
+    if(typeof vathBoundCutscene==='function') vathBoundCutscene(m, woodyNudge);
+    else storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. Your blood has caged me before - a lifetime ago, and lifetimes before that - and every seal your line ever set, I have outwaited. Delayed. Never once undone. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
+      {onOk:woodyNudge});
+  },1200);
   // credit the kill quest cleanly (death was intercepted). Delayed so the bind
   // banner is read before the QUEST COMPLETE banner lands.
   setTimeout(()=>{ if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); } }, 3000);

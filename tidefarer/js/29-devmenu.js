@@ -54,6 +54,8 @@ function playCutscene(kind){
     case 'warden':         if(typeof wardenFreedCutscene==='function')    wardenFreedCutscene(null, done('Weeping Warden freed')); break;
     case 'rimebound':      if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(null, done('Rimebound freed')); break;
     case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
+    case 'vath':           if(typeof vathBoundCutscene==='function')      vathBoundCutscene(null, done('Vath bound')); break;
+    case 'aerie':          if(typeof aerieFreedCutscene==='function')     aerieFreedCutscene(null, done('The tome burns')); break;
     default: return;
   }
   note('Playing cutscene: '+kind);
@@ -273,6 +275,8 @@ const SECTIONS=[
     ['Weeping Warden FREED (frost)',()=>playCutscene('warden')],
     ['Rimebound FREED (deep ice)',()=>playCutscene('rimebound')],
     ['Storm-Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
+    ['Vath BOUND (Act I villain sealed)',()=>playCutscene('vath')],
+    ['The TOME BURNS (aerie freed)',()=>playCutscene('aerie')],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)
