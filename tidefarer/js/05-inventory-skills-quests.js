@@ -263,7 +263,7 @@ function questTargetPos(id){
     if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
     if(id==='sharpen') return {x:52,y:47};
-    if(id==='bladeoath'){ const r=G.npcs&&G.npcs.find(n=>n.id==='rask'); return r? {x:r.x,y:r.y} : {x:ZONES.meadow.x,y:ZONES.meadow.y}; }
+    if(id==='bladeoath'){ const r=G.npcs&&G.npcs.find(n=>n.id==='rask'); return r? {x:r.x,y:r.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : {x:ZONES.meadow.x,y:ZONES.meadow.y}); }
   }
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }

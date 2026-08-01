@@ -12,7 +12,8 @@ let ZONES = {
   tower:  {x:57,y:35,r:4,  name:'Orin\'s Tower'},
   ruins:  {x:46,y:20,r:9,  name:'Old Ruins'},
   meadow: {x:69,y:49,r:7,  name:'Slime Meadow'},
-  forest: {x:33,y:38,r:9,  name:'Whisperwood'}
+  forest: {x:33,y:38,r:9,  name:'Whisperwood'},
+  grove:  {x:89,y:50,r:6,  name:"Rask's Grove"}
 };
 
 /* The Hollow King's arena, at the isle's cold northern tip. The ruins reach
@@ -86,11 +87,24 @@ function genWorld(){
   carveDisc(ZONES.cove.x,ZONES.cove.y,ZONES.cove.r,T.GRASS,false);
   carveDisc(ZONES.cove.x+2,ZONES.cove.y-2,3,T.SAND,false);
   carveDisc(ZONES.orchard.x,ZONES.orchard.y,ZONES.orchard.r,T.GRASS,false);
+  // --- Rask's Grove: the island's FAR-EAST woods, carved out past the Slime Meadow.
+  // The coastline is pushed east here (carveDisc lays land straight over open sea) into
+  // a little forest with a grass clearing at its heart, where the blade-master Rask
+  // drills newcomers. Trees auto-scatter onto the FOREST tiles (see placeObjects). ---
+  {
+    const GX=ZONES.grove.x, GY=ZONES.grove.y;
+    carveDisc(GX,GY,11,T.SHALLOW,false);   // shoals
+    carveDisc(GX,GY,10,T.SAND,false);      // a pale beach ringing the new cape
+    for(let x=74;x<=GX;x++) for(let y=GY-3;y<=GY+3;y++) if(inb(x,y)) setTile(x,y,T.GRASS);  // a land bridge from the meadow's east edge
+    carveDisc(GX,GY,7,T.FOREST,false);     // the woods
+    carveDisc(GX,GY,2.6,T.GRASS,false);    // the training clearing at its heart
+  }
   // paths
   const V=ZONES.village;
   carveLine(V.x,V.y, ZONES.dock.x+1,62, T.PATH,0);
   carveLine(V.x+2,V.y+1, ZONES.farm.x-1,ZONES.farm.y-1, T.PATH,0);
   carveLine(V.x+3,V.y-2, ZONES.meadow.x-3,ZONES.meadow.y, T.PATH,0);
+  carveLine(ZONES.meadow.x+3,ZONES.meadow.y, ZONES.grove.x-3,ZONES.grove.y, T.PATH,0);   // on east, past the meadow, to Rask's Grove
   carveLine(V.x,V.y-3, ZONES.tower.x,ZONES.tower.y+2, T.PATH,0);
   carveLine(ZONES.tower.x,ZONES.tower.y-2, ZONES.ruins.x,ZONES.ruins.y+6, T.PATH,0);
   // farm soil plots (two rows of plots, south of Willa's barn, with walking gaps).

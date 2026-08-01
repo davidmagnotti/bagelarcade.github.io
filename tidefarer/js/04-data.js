@@ -69,7 +69,7 @@ const QUESTS = {
     rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['bladeoath'] },
   bladeoath:{ giver:'rask', title:'The Turning of the Blade', kind:'special',
     brief:'So Bram sent me another one with a new sword and no idea what to do when it\'s the OTHER fellow swinging. Sit down. A dash carries you out of a blow you can see coming - but you won\'t always get the room, and some strikes come faster than feet. For those you PARRY: brace the blade, meet the strike, and turn it. Do it clean and an arrow flies back the way it came and a swordsman\'s left staggered on his own missed swing. Take up your steel. I\'ll show you the turning.',
-    log:'Learn to parry from Rask, the blade-master east of the Slime Meadow.',
+    log:'Learn to parry from Rask, in his grove at the island\'s far east - past the Slime Meadow.',
     doneText:'There it is - you felt that, the whole blow just… gone, turned off your edge. That\'s the turning. Time it late, right as the strike arrives, not early. Now you\'re fit to go down into that crypt. Off to Maren.',
     rw:{gold:10, xp:{melee:120}}, unlocks:['king'] },
   // - Captain Brant's shipwright chain -
@@ -195,10 +195,12 @@ function spawnNPCs(){
       inn.nightOwl=true; return inn; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
-    // Rask the Bladesworn - an old sword-master who keeps the quiet meadow on the
-    // isle's east side. Bram sends new blades to him to learn the parry.
-    makeNPC('rask','Rask the Bladesworn',64,51,{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',size:1.06,build:{w:0.94,head:0.88}},
-      ['A blade that only knows how to swing knows half its trade.','The dash is for the blow you see. The parry is for the one you don\'t.','I turned strikes on three isles before this one. My feet are tired; my hands still remember.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3),
+    // Rask the Bladesworn - an old sword-master who keeps a wooded clearing in the
+    // grove at the island's FAR EAST. Bram sends new blades out here to learn the parry.
+    (()=>{ const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
+      const sp=(typeof findOpenNear==='function' && findOpenNear(g.x,g.y,5)) || [g.x,g.y];
+      return makeNPC('rask','Rask the Bladesworn',sp[0],sp[1],{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',size:1.06,build:{w:0.94,head:0.88}},
+      ['A blade that only knows how to swing knows half its trade.','The dash is for the blow you see. The parry is for the one you don\'t.','I turned strikes on three isles before this one. My feet are tired; my hands still remember.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3); })(),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long',build:{w:0.9,head:1.16}},
@@ -294,10 +296,15 @@ function spawnMob(kind,x,y,elite){
   G.mobs.push(m); return m;
 }
 function spawnMobs(){
-  const slimeSpots=[[66,47],[70,50],[68,52],[72,47],[67,44],[71,53]];
+  // the meadow slimes - the eastern few were cleared out when Rask took the grove
+  // beyond them for his training ground; these keep to the mid- and west meadow now
+  const slimeSpots=[[66,47],[68,52],[67,44]];
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
+  // Rask's training ground: a couple of practice dummies in the far-east grove clearing
+  { const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
+    for(const [x,y] of [[g.x-2,g.y-1],[g.x+2,g.y+1]]){ const s=findOpenNear(x,y,3); if(s) spawnMob('dummy',s[0],s[1]); } }
   // a lone wolf pair still dens in the Whisperwood to the west, prowling the shade
   // where the bluecaps grow - a little teeth to watch for while you gather for Orin.
   const wolfSpots=[[29,37],[36,42]];
