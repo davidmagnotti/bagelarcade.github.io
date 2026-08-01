@@ -473,7 +473,7 @@ function placeObjectsMain(){
   G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
   // Aelin's Spire - the magic tower
   const SP=ZONES.spire;
-  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave");
+  addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
   addBuilding('lamp',SP.x-2,SP.y+2,'');
   // the archery range, on Greyharbor's edge
   addBuilding('house', V.x+9,V.y+7,"Rook's Range");
