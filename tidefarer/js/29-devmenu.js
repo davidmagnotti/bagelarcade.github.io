@@ -237,6 +237,7 @@ const SECTIONS=[
     ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
     ['★ Act II return phase (Veil + 4 gifts + refresh isles)',()=>enterReturnPhase()],
     ['Reset Act I ending (replay)',()=>resetActOneEnding()],
+    ['Play mask reveal (memory flood)',()=>{ if(typeof maskRevealCutscene==='function') maskRevealCutscene(()=>toast('(dev) mask-reveal cutscene ended',3000)); }],
     ['Play Act I climax (throne)',()=>{ if(typeof throneCutscene==='function') throneCutscene(); }],
     ['Play Act I epilogue (boat)',()=>{ if(typeof sailEpilogue==='function') sailEpilogue(); }],
   ]],

@@ -127,11 +127,11 @@ const EPI = {
   // Each beat: who is speaking ('' = narration), the line, and the target sea-state the visuals
   // ease toward while it is on screen. storm 0..1 = rain/lightning; near 0..1 = island approach.
   beats: [
-    { who:'', html:'<i>Six months of open water. The charted isles are long gone behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.05 },
-    { who:'Jaist', html:'“There &mdash; past the bow.” <i>He steadies the chart against the wind.</i> “That smudge on the horizon isn\'t cloud, sister. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.2, near:0.24 },
-    { who:'Joan', html:'“Land.” <i>She squints into the wind.</i> “No gulls, though. A tempest that never breaks, sitting over one lone rock. The charts give it a single name, right at the edge &mdash; <b>Stormreach</b>.”', storm:0.42, near:0.46 },
-    { who:'Jaist', html:'<i>He looks from the chart to the dark smudge and back.</i> “This far out? Vath\'s reach shouldn\'t run anywhere near here. We\'ve sailed clean off the edge of everything he holds.”', storm:0.62, near:0.64 },
-    { who:'Joan', html:'<i>She laughs, full-throated, into the breaking storm.</i> “Good. Then it\'s ours, little brother. Hold her steady &mdash; whatever\'s waiting on that rock, we make landfall together.”', storm:0.86, near:0.84 },
+    { who:'', html:'<i>Six months of open water. The charted isles are long behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.05 },
+    { who:'Joan', html:'“There &mdash; off the bow. See it?” <i>She holds the tiller steady into the wind.</i> “That dark line isn\'t weather, Jaist. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.24, near:0.26 },
+    { who:'Jaist', html:'<i>He doesn\'t look up from the chart in his lap.</i> “…Father would have had its name before we cleared the swell. I keep starting to turn and ask him.”', storm:0.44, near:0.48 },
+    { who:'Joan', html:'<i>She sets a hand over his.</i> “It\'s the last name on Orin\'s chart &mdash; <b>Stormreach</b>. One rock under a storm that never breaks, past anywhere Vath\'s reach can follow.” <i>Her voice goes quiet and hard.</i> “Father spent everything to buy us this water. We don\'t waste it grieving where he can\'t see.”', storm:0.66, near:0.68 },
+    { who:'Joan', html:'“So we take the rock. We get strong. And one day we come back for him.” <i>She turns the bow into the black swell.</i> “Hold on to something, little brother. We land together.”', storm:0.88, near:0.86 },
     { who:'', html:'<i>The keel comes up out of the dark and grinds onto black shingle. High above the rain, a single light is burning. You have reached the last name on the map.</i>', storm:1, near:1, land:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
@@ -420,20 +420,25 @@ const THR = {
     // holding Vath off, cuts him down: they can't win this, not yet. The siblings stay put
     // (flee held low) through the argument; only the princess's resolve breaks it.
     { who:'Jaist',
-      html:'“We can’t leave him!!!”',
-      vath:0.78, gold:0.98, violet:0.5, clash:0.98, flee:0.08, guards:0 },
+      html:'“No, Father — we won’t leave you to face Vath alone!”',
+      vath:0.78, gold:0.98, violet:0.5, clash:0.98, flee:0.06, guards:0 },
     { who:'King Aldous',
       html:'“You don’t stand a chance against him, not as you are.”',
-      vath:0.8, gold:0.95, violet:0.55, clash:0.92, flee:0.08, guards:0 },
+      vath:0.8, gold:0.95, violet:0.55, clash:0.92, flee:0.06, guards:0 },
+    // Joan makes the call - she crosses the hall and SEIZES her brother by the arm.
     { who:'Joan',
-      html:'“We have to go — WE HAVE TO GO.”',
-      vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.42, guards:0 },
+      html:'“Then we live to come back for him! Jaist — with me, NOW.”',
+      vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.4, guards:0 },
+    // wordless: she HAULS him up the nave toward the east doors, the camera tracking the drag.
+    { who:'', html:'',
+      vath:0.8, gold:0.92, violet:0.55, clash:0.85, flee:0.74, guards:0 },
     { who:'King Aldous',
       html:'“…Gone. They’re gone, Vath. Whatever else you take from me today — you did not take them. You never will.”',
       vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:1, guards:0 },
+    // the bait revealed - and Vath looses ONE massive beam that hurls the spent King to the floor.
     { who:'Vath',
       html:'“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”',
-      vath:1, gold:0.68, violet:0.6, clash:0.18, flee:1, guards:0 },
+      vath:1, gold:0.3, violet:0.85, clash:0, flee:1, guards:0, bigStrike:1 },
     { who:'Vath', title:'THE TIDEGLASS TAKEN',
       html:'“You have just tired yourself out enough for me to TAKE it.”',
       vath:1, gold:0.1, violet:0.95, clash:0, flee:1, guards:0, takeFlash:1 },
@@ -455,7 +460,7 @@ const THR = {
   kHand:0, vHand:0,   // casting gesture: how far the King's / Vath's hands are raised (0..1)
   fx:1.3, fy:0.9, zoom:1.18, stepH:0, stepP:0, stepK:0, stepV:0,
   hero:null, prince:null, king:null, vath:null, _ph:null, _pp:null, _pk:null, _pv:null,
-  flash:0, flashT:5, pulseR:0, take:0, strike:0, sparks:[],
+  flash:0, flashT:5, pulseR:0, take:0, strike:0, bigStrike:0, sparks:[],
   running:false, ended:false, started:false,
 };
 /* Per-beat staging the beats table doesn't carry: how far the King has stepped down
@@ -470,14 +475,15 @@ const THR_STAGE=[
   {kAdv:1,    foc:[1.9,1.5], zoom:1.26, kingDown:0},  // 5  the surge / RUN
   {kAdv:0.98, foc:[3.2,2.7], zoom:1.14, kingDown:0},  // 6  the Prince refuses to leave
   {kAdv:0.95, foc:[2.4,2.0], zoom:1.18, kingDown:0},  // 7  the King's warning
-  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 8  the grab-and-haul
-  {kAdv:0.9,  foc:[4.3,4.1], zoom:1.10, kingDown:0},  // 9  burst the doors
-  {kAdv:0.8,  foc:[2.3,1.7], zoom:1.20, kingDown:0},  // 10 Vath laughs
-  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 11 the Tideglass taken
-  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 12 guards flood in
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 13 the memory pulse
-  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 14 Vath's lie
-  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 15 END OF ACT I
+  {kAdv:0.95, foc:[3.1,2.9], zoom:1.16, kingDown:0},  // 8  Joan seizes her brother
+  {kAdv:0.92, foc:[5.0,4.7], zoom:1.10, kingDown:0},  // 9  she hauls him up the nave to the doors
+  {kAdv:0.9,  foc:[2.2,1.6], zoom:1.18, kingDown:0},  // 10 the King watches them go (still on his feet)
+  {kAdv:0.6,  foc:[1.9,1.4], zoom:1.27, kingDown:1},  // 11 the bait - one great beam fells the King
+  {kAdv:0.55, foc:[1.9,1.4], zoom:1.28, kingDown:1},  // 12 the Tideglass taken
+  {kAdv:0.5,  foc:[2.6,2.1], zoom:1.12, kingDown:1},  // 13 guards flood in
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.14, kingDown:1},  // 14 the memory pulse
+  {kAdv:0.5,  foc:[2.4,1.9], zoom:1.16, kingDown:1},  // 15 Vath's lie
+  {kAdv:0.5,  foc:[2.2,1.7], zoom:1.22, kingDown:1},  // 16 END OF ACT I
 ];
 /* --- staging: the throne hall laid out on the iso grid (world tiles) ---------
    The nave runs down the line x==y (which projects straight down the screen);
@@ -512,7 +518,7 @@ function throneCutscene(){
   THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
   THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
   THR._ph={...HERO0}; THR._pp={...PRIN0}; THR._pk={...KING0}; THR._pv={...VATH0};
-  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.strike=0; THR.sparks.length=0;
+  THR.flash=0; THR.flashT=5; THR.pulseR=0; THR.take=0; THR.strike=0; THR.bigStrike=0; THR.sparks.length=0;
   THR.ended=false; THR.started=false; THR.running=true;
   sub.classList.remove('show'); title.classList.remove('show');
   ov.style.display='flex';
@@ -540,6 +546,7 @@ function _thrShow(i){
   clearTimeout(THR._autoTO);
   if(b.takeFlash){ THR.flash=1.2; THR.take=1; }
   if(b.strike){ THR.strike=1; }      // Vath's violet lash, aimed past the King at the children
+  if(b.bigStrike){ THR.bigStrike=1; THR.flash=Math.max(THR.flash,0.7); if(Snd&&Snd.magic)try{Snd.magic();}catch(e){} }  // the killing bolt that fells the King
   if(b.pulse){ THR.pulseR=0.001; }   // kick off the memory-rewrite ring
   document.getElementById('thrWho').textContent=b.who||'';
   document.getElementById('thrLine').innerHTML=b.html||'';
@@ -615,15 +622,16 @@ function _thrLoop(ts){
   // The King faces Vath for the whole confrontation (back-to-camera), so his cast-hands would
   // only ever render as a mis-placed pair behind him - keep them down for good once Vath is here.
   const kHandT = 0;
-  // Vath lifts his hands to LOOSE the beam: fully raised from his threat through the strike
-  // and the clash (beats 2-10), high again as he seizes the Tideglass (11), lowered after (12+).
-  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=10) ? 1 : _i===11 ? 0.85 : 0;
+  // Vath lifts his hands to LOOSE the beam: fully raised from his threat through the clash and
+  // the great bait-beam (beats 2-11), high again as he seizes the Tideglass (12), lowered after (13+).
+  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=11) ? 1 : _i===12 ? 0.85 : 0;
   THR.kHand = e(THR.kHand, kHandT, 3.2);
   THR.vHand = e(THR.vHand, vHandT, 3.2);
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
   THR.zoom=e(THR.zoom,st.zoom||1.15,1.4);
   THR.take=Math.max(0,THR.take-dt*0.5);
   THR.strike=Math.max(0,THR.strike-dt*0.9);  // the lash retracts to the King as he catches it
+  THR.bigStrike=Math.max(0,THR.bigStrike-dt*0.6);  // the great bait-beam lingers, then fades
   // storm-lightning through the high windows, keener as the violet rises
   THR.flash=Math.max(0,THR.flash-dt*3.0);
   THR.flashT-=dt*(0.35+THR.violet*1.4);
@@ -707,7 +715,7 @@ function _thrDraw(){
       {aura:gold*0.95, auraCol:'255,170,46', lift:12*Z*(1-THR.kAdv), drop:5*Z*down,
        scale:1-0.12*down, hurt:down>0.15&&down<0.6, tip: ds*1.5})}); }   // topples over, lies dead on the floor
   if(THR.vAdv>0.03){   // Vath is absent for the homecoming, then strides in
-    const dir=THR.idx>=12?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
+    const dir=THR.idx>=13?_thrFace(THR.vath,{x:6.5,y:6.5}):_thrFace(THR.vath,THR.king);
     items.push({d:THR.vath.x+THR.vath.y, fn:()=>_thrActor(SC,Z,THR.vath,LOOK_VATH,dir,THR.stepV,
       {aura:0.3+violet*0.6, auraCol:'150,66,238'})}); }
   const sibA=THR.flee>0.68?Math.max(0,1-(THR.flee-0.68)*4.8):1;  // clear the doors and be GONE by ~0.9
@@ -747,6 +755,8 @@ function _thrDraw(){
   }
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
+  // the killing bolt: one great beam from Vath that hurls the spent King to the floor
+  if(THR.bigStrike>0.01) _thrBigStrike(SC,Z,THR.bigStrike,t);
   // the clash of the two magics, drawn between the King and Vath
   if(clash>0.03) _thrClash(SC,Z,clash,t);
   // the memory-rewrite pulse sweeping out from Vath
@@ -947,6 +957,37 @@ function _thrStrike(SC,Z,strike,t){
   cx.strokeStyle=g2; cx.lineWidth=(1.5+2.5*strike)*Z;
   cx.beginPath(); cx.moveTo(kx,ky);
   cx.lineTo(kx+(tx-kx)*strike, ky+(ty-ky)*strike); cx.stroke();
+  cx.restore();
+}
+// The killing bolt: where the opening lash was thrown PAST the King at the children, this is
+// one massive beam aimed squarely AT the spent King. It lands full on his chest and hurls him
+// down. `amt` 1->0 flares white on impact, then fades as he falls.
+function _thrBigStrike(SC,Z,amt,t){
+  const cx=THR.cx;
+  const v=SC(THR.vath.x,THR.vath.y), k=SC(THR.king.x,THR.king.y);
+  const vx=v.x, vy=v.y-30*Z, kx=k.x, ky=k.y-26*Z;
+  const jitter=Math.sin(t*46)*2.2*amt;
+  cx.save(); cx.globalCompositeOperation='lighter'; cx.lineCap='round';
+  // the wide violet outer wash - a beam far heavier than the opening lash
+  const g0=cx.createLinearGradient(vx,vy,kx,ky);
+  g0.addColorStop(0,`rgba(150,66,238,${0.5*amt})`);
+  g0.addColorStop(1,`rgba(120,40,220,${0.5*amt})`);
+  cx.strokeStyle=g0; cx.lineWidth=(10+18*amt)*Z;
+  cx.beginPath(); cx.moveTo(vx,vy); cx.lineTo(kx,ky+jitter); cx.stroke();
+  // the searing inner core
+  const g1=cx.createLinearGradient(vx,vy,kx,ky);
+  g1.addColorStop(0,`rgba(205,160,255,${0.95*amt})`);
+  g1.addColorStop(0.6,`rgba(178,108,250,${0.95*amt})`);
+  g1.addColorStop(1,`rgba(255,255,255,${0.95*amt})`);
+  cx.strokeStyle=g1; cx.lineWidth=(3+7*amt)*Z + jitter*0.5;
+  cx.beginPath(); cx.moveTo(vx,vy); cx.lineTo(kx,ky+jitter); cx.stroke();
+  // the impact flare bursting on the King's chest as it drives him to the floor
+  const ir=(16+30*amt)*Z*(0.9+0.1*Math.sin(t*30));
+  const ig=cx.createRadialGradient(kx,ky,1,kx,ky,ir);
+  ig.addColorStop(0,`rgba(255,255,255,${amt})`);
+  ig.addColorStop(0.4,`rgba(190,130,250,${0.8*amt})`);
+  ig.addColorStop(1,'rgba(150,66,238,0)');
+  cx.fillStyle=ig; cx.beginPath(); cx.arc(kx,ky,ir,0,TAU); cx.fill();
   cx.restore();
 }
 // the violet memory-rewrite ring washing across the whole hall
