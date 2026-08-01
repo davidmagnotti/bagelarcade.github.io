@@ -627,6 +627,11 @@ function damageMob(m,dmg,knock,skill){
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
   const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0);
   if(Math.random()<critCh){ dmg=Math.round(dmg*1.6); crit=true; }
+  // RIPOSTE: a perfectly-timed dodge (see tryRoll) empowers the very next blow that lands -
+  // a guaranteed, heavy crit. Consumed on use, so it rewards reading the telegraph.
+  if(P.empower){ dmg=Math.round(dmg*1.8); crit=true; P.empower=0; P.empowerT=0;
+    addFloat('RIPOSTE!', m.x, m.y-2.7, '#bfe8ff', 1.5); if(Snd.crit) Snd.crit();
+    shockwave(m.x,m.y,'rgba(191,232,255,0.9)',30); G.hitStop=Math.max(G.hitStop,0.1); }
   // Executioner perk (melee L5): heavy bonus versus badly-wounded foes
   if(skill==='melee' && P.perks && P.perks.executioner && m.maxhp && m.hp/m.maxhp < 0.30) dmg=Math.round(dmg*1.5);
   const lvdiff=Math.max(0,(m.lvl||1)-(P.level||1));
@@ -646,10 +651,23 @@ function damageMob(m,dmg,knock,skill){
     }
   }
   m.hp-=dmg; m.hurtT=0.18; m.state='chase'; m.noAggroT=0;
+  // POISE / STAGGER: sustained blows break a foe's footing for a brief opening. Marquee
+  // bosses and scripted-AI foes keep their footing (their phases drive the fight instead).
+  if(!m.boss && !m.bigBoss && !m.customAI && !m.stormeye && !m.bat && (m.stunT||0)<=0 && (m.poiseCd||0)<=0){
+    m.poise=(m.poise||0)+dmg;
+    if(m.poise >= Math.max(20,(m.maxhp||30)*0.7)){
+      m.poise=0; m.poiseCd=2.0; m.stunT=Math.max(m.stunT||0,0.4); m.windup=0; m.lunge=0;
+      addFloat('STAGGER!', m.x, m.y-2.5, '#ffe6a0', 1.2);
+      burst(m.x,m.y-0.4,'#ffe6a0',10,2); if(Snd.crit) Snd.crit();
+      G.hitStop=Math.max(G.hitStop,0.08);
+      if(knock) moveEntity(m, knock.x*0.6, knock.y*0.6);
+    }
+  }
   addFloat(crit? dmg+'!' : dmg, m.x, m.y-1.3, crit?'#ff5c48':'#ffb26b', crit?1.5:1.05);
   if(backstab) addFloat('BACKSTAB!', m.x, m.y-2.4, '#ff9a5a', 1.2);
   if(crit){ Snd.crit(); shockwave(m.x,m.y,'rgba(255,200,120,0.9)',26); }
   if(skill==='melee') G.hitStop=Math.max(G.hitStop, crit?0.09:0.045);
+  else G.hitStop=Math.max(G.hitStop, crit?0.06:0.03);   // bow/staff hits used to feel flat - give them a beat of chunk too
   burst(m.x,m.y-0.5, m.kind==='slime'?'#7fca6a': m.kind==='wolf'?'#8a8d96':'#eceee6', 6, 2);
   // ranged hits chain a combo too - melee builds it in the swing code, but bow
   // and staff never did, so the archery/magic training drills (which ask for a
@@ -1240,6 +1258,8 @@ function updatePlayer(dt){
   P.swing=Math.max(0,P.swing-dt);
   P.gatherT=Math.max(0,(P.gatherT||0)-dt);
   P.hurtT=Math.max(0,P.hurtT-dt);
+  P.healCd=Math.max(0,(P.healCd||0)-dt);   // draughts share a short cooldown - no chugging mid-swing
+  if((P.empowerT||0)>0){ P.empowerT-=dt; if(P.empowerT<=0){ P.empowerT=0; P.empower=0; } } // a riposte window that lapses if unused
   if(P.cheerT) P.cheerT=Math.max(0,P.cheerT-dt);
   if(input.attack || (input.mouseDown && !isTouch)) tryAttack(input.mouseDown);
   // scorpion venom: damage over time, never lethal, times out on its own
@@ -1401,6 +1421,14 @@ function updateNPCs(dt){
   }
 }
 
+/* ---- combat-feel overhaul ----
+   Trash-mob fights used to be one identical "walk up, wind up, poke" for every
+   melee kind. These two rosters give the common foes real behaviour:
+   - LUNGERS close the gap in a fast telegraphed dash you must read and dodge.
+   - HEAVIES telegraph a slower, bigger blow and are then rooted in a recovery
+     window - the reward for baiting it out is a free punish. */
+const LUNGERS={wolf:1,raptor:1,boar:1,brigand:1,raider:1,wraith:1};
+const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -1420,6 +1448,10 @@ function updateMobs(dt){
     m.anim+=dt; m.hitCd=Math.max(0,m.hitCd-dt); m.hurtT=Math.max(0,m.hurtT-dt);
     m.swing=Math.max(0,(m.swing||0)-dt);
     if((m.stunT||0)>0){ m.stunT-=dt; m.windup=0; }   // stormlight-stunned: no attack this beat
+    m.recover=Math.max(0,(m.recover||0)-dt);          // a heavy's post-swing punish window
+    // POISE: staggers reset it and lock it out for a beat so nothing gets perma-stunned
+    m.poiseCd=Math.max(0,(m.poiseCd||0)-dt);
+    if((m.poiseCd||0)<=0) m.poise=Math.max(0,(m.poise||0)-dt*6);
     // Emberdeep: the denned boars keep to the puzzle chambers - they never cross the
     // Dragon Gate line (y=19) into Ashwing's chamber; that fight is the player's alone
     if(G.worldId==='eastdeep' && m.kind==='boar' && m.y<20){ m.y=20; if(m.ty!=null && m.ty<20) m.ty=20; }
@@ -1461,8 +1493,11 @@ function updateMobs(dt){
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
+      // archetypes only reshape ordinary foes - boss variants of these kinds keep their scripted fight
+      const heavy = HEAVIES[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
+      const lunger = LUNGERS[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       // stormlight-stunned foes freeze where they stand - no advance and (below) no attack
-      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0)){
+      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
@@ -1480,15 +1515,30 @@ function updateMobs(dt){
         } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
-      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0)){
-        m.windup = m.elite?0.26 : m.boss?0.42 : 0.34;
+      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+        // HEAVIES telegraph slower and hit harder; everyone else keeps the old snappy poke
+        m.windup = m.elite?0.26 : m.boss?0.42 : (heavy?0.52:0.34);
         m.hitCd= m.boss?1.1:1.25;
       }
       if(m.windup>0){
         m.windup-=dt;
         if(m.windup<=0){
           m.windup=0; m.swing=0.3;
-          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(d.dmg, m);
+          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(heavy?Math.round(d.dmg*1.25):d.dmg, m);
+          if(heavy) m.recover=0.8;   // rooted after the big swing - punish it
+        }
+      }
+      // LUNGER archetype: a fast telegraphed dash that closes the gap - dodge it or reposition
+      if(lunger && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+        m.lungeCd=(m.lungeCd||rnd(2.5,4.5))-dt;
+        if(m.lungeCd<=0 && (m.lunge||0)<=0 && l>2.0 && l<6.5){
+          m.lungeCd=rnd(3,5); m.lunge=0.38; m.face=dx<0?-1:1;
+          addFloat('LUNGE!', m.x, m.y-2.2, '#ffcf8a', 1.0);
+          if(Snd.noise) Snd.noise(0.20,0.06,300,0.5);
+        }
+        if((m.lunge||0)>0){ m.lunge-=dt;
+          moveEntity(m, dx/l*d.speed*2.4*dt, dy/l*d.speed*2.4*dt);
+          if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.28,color:'rgba(200,190,160,0.5)',size:2.4});
         }
       }
       if(m.kind==='archer'){

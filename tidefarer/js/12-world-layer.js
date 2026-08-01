@@ -6494,8 +6494,26 @@ function tryRoll(){
   // the Gale Spire's Swiftstep charm (P.unlocked.swiftstep) quickens your FOOTING, not your
   // reach: the dash recovers faster, so you can roll again sooner. The reach itself is fixed
   // (no more half-again dash), so no gap anywhere depends on it.
+  // PERFECT DODGE: rolling at the last instant before a blow lands rewards the read -
+  // a flash of slow-mo, a refunded cooldown, and a RIPOSTE that empowers your next strike.
+  let imminent=false;
+  for(const m of G.mobs){ if(m.dead||m.sealed) continue;
+    const md=dist(P.x,P.y,m.x,m.y);
+    if((m.windup||0)>0 && (m.windup||0)<0.22 && md<2.3){ imminent=true; break; }
+    if((m.lunge||0)>0 && md<2.5){ imminent=true; break; }
+  }
+  if(!imminent && G.projs){ for(const p of G.projs){ if(p.from==='mob' && dist(P.x,P.y,p.x,p.y)<1.7){ imminent=true; break; } } }
   P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?0.62:1.0; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
+  if(imminent){
+    P.empower=1; P.empowerT=3;
+    G.slowmo=Math.max(G.slowmo||0, 0.3);
+    P.rollCd=Math.min(P.rollCd, (P.unlocked&&P.unlocked.swiftstep)?0.3:0.5);   // reward: roll again sooner
+    addFloat('PERFECT!', P.x, P.y-2.4, '#bfe8ff', 1.4);
+    if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(191,232,255,0.85)',30);
+    if(Snd.crit) Snd.crit();
+    buzz(18);
+  }
   for(let i=0;i<6;i++) G.parts.push({x:P.x+rnd(-0.3,0.3),y:P.y+rnd(-0.3,0.3),
     vx:-P.dir.x*rnd(0.5,1.2),vy:-P.dir.y*rnd(0.5,1.2),life:0.35,color:'rgba(200,190,160,0.6)',size:2.6});
 }
