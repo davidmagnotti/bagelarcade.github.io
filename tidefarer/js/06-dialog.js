@@ -512,6 +512,11 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Buy sky-tonics…', fn:()=>vendorShop(npc,'Bottled calm off the cloud-tops, friend - blue for your mana, red for your hurts. The high road drinks both.',
       [{item:'manapot',price:10},{item:'potion',price:30}])});
   }
+  // Pia runs a food stall on Trade Row - fresh fish off the boats and island-grown fare.
+  if(npc.id==='pia'){
+    btns.unshift({label:'Buy from the stall…', fn:()=>vendorShop(npc,'Fresh off the boats and the orchards, friend - fish, a grilled fillet, an apple, a loaf, a sweet coconut. A stall with no customers is just a sad little roof - so what\'ll it be?',
+      [{item:'fish',price:4},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'bread',price:5},{item:'coconut',price:4}])});
+  }
   // Mira the seamstress does not sell the recovered Stolen Silk - it's the one-off bolt
   // the brigands took, meant for Wren's ribbon, not stock to buy back over the counter.
   if(npc.id==='brant' && qs('wreck')==='done'){

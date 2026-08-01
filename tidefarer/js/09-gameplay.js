@@ -152,6 +152,9 @@ function nearestInteract(){
   for(const n of G.npcs){ if(n.hidden) continue; const d=dist(P.x,P.y,n.x,n.y); if(d<1.9 && d<bd){bd=d;best={type:'npc',o:n,label:'Talk'};} }
   if(G.cat && !G.cat.following){ const d=dist(P.x,P.y,G.cat.x,G.cat.y);
     if(d<1.9 && d<bd){bd=d;best={type:'cat',o:G.cat,label:'Pet'};} }
+  // any wandering cat (the ambient village/plaza critters) can be petted for a 'meow'
+  for(const c of (G.critters||[])){ if(c.kind!=='cat') continue; const d=dist(P.x,P.y,c.x,c.y);
+    if(d<1.6 && d<bd){bd=d;best={type:'petcat',o:c,label:'Pet'};} }
   for(const n of G.nodes){
     if(n.dead) continue;
     const d=dist(P.x,P.y,n.x,n.y);
@@ -324,9 +327,10 @@ function doInteract(){
       burst(G.cat.x,G.cat.y-0.4,'#ffd76a',12); Snd.quest();
       toast('<b style="color:var(--ember)">Pip found!</b> He trots along behind you - back to Nia!');
       updateQuestUI();
-    } else { addFloat('mrrp~',G.cat.x,G.cat.y-1,'#ffd76a'); Snd.pickup(); }
+    } else { addFloat('meow',G.cat.x,G.cat.y-1,'#ffd76a'); Snd.pickup(); }
     return;
   }
+  if(it.type==='petcat'){ facePoint(it.o.x,it.o.y); addFloat('meow',it.o.x,it.o.y-1,'#ffd76a'); if(Snd.pickup)Snd.pickup(); return; }
   if(it.type==='node') hitNode(it.o);
   if(it.type==='plot') usePlot(it.o);
 }
@@ -1529,9 +1533,9 @@ function updateMobs(dt){
         m.rooted=1;   // generic land-chase stays off; it swims via the water-only step here
         if(l>2.4 && !((m.stunT||0)>0) && !((m.snareT||0)>0)){
           const spd=(m.hp<m.maxhp*0.5)?2.6:1.8;   // enraged and faster once wounded
-          // only advance onto LIGHT water (shallows - the surf arena), so it stays where
-          // you can reach it and never crawls onto land or dives off into the dark deep
-          const swim=(nx,ny)=>{ const tx=nx|0, ty=ny|0; return inb(tx,ty) && tileAt(tx,ty)===T.SHALLOW; };
+          // it swims through ANY water - the surf shallows or the dark deep beyond the
+          // breakwater - so it can chase you across the whole harbour; it just can't crawl onto land
+          const swim=(nx,ny)=>{ const tx=nx|0, ty=ny|0; return inb(tx,ty) && tileAt(tx,ty)<=T.SHALLOW; };
           const sx=m.x+dx/l*spd*dt; if(swim(sx,m.y)) m.x=sx;
           const sy=m.y+dy/l*spd*dt; if(swim(m.x,sy)) m.y=sy;
         }

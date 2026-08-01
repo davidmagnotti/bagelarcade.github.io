@@ -236,7 +236,7 @@ const MOBDEF = {
   boar:{hp:160, dmg:16, speed:3.5, aggro:7, xp:130, gold:[6,14], lvl:5, name:'Bristleback Boar'},
   dragon:{hp:680, dmg:40, speed:3.1, aggro:11, xp:600, gold:[90,140], lvl:9, name:'Ashwing, the Enthralled'},
   mage:{hp:200, dmg:26, speed:2.7, aggro:12, xp:260, gold:[30,55], lvl:8, name:'Vath the Enchanter'},
-  leviathan:{hp:1500, dmg:42, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
+  leviathan:{hp:750, dmg:42, speed:0, aggro:16, xp:700, gold:[0,0], lvl:11, name:'The Bound Leviathan'},
   raptor:{hp:64, dmg:24, speed:4.5, aggro:11, xp:70, gold:[0,0], lvl:12, name:'Screaming Raptor'},
   bat:{hp:16, dmg:12, speed:5.2, aggro:14, xp:14, gold:[0,0], lvl:11, name:'Cave Bat'},   // a flying swooper - its hit shoves you (off a platform, into the pit)
   serpent:{hp:920, dmg:36, speed:2.7, aggro:12, xp:0, gold:[0,0], lvl:13, name:'The Tome-Warden Serpent'},

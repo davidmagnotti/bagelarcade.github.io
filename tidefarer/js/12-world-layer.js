@@ -1653,7 +1653,7 @@ function updateWind(dt){
     const lv=spawnLeviathan();
     // the shake + banner now ride the 'surface' entrance (fires as it breaches); keep the
     // toast for the gameplay hint, delayed until control returns to the player
-    if(lv){ setTimeout(()=>toast('Something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - stay on the light water and end it.',6000),2800); }
+    if(lv){ setTimeout(()=>toast('Something vast breaks the surface off the breakwater, ringed in <b style="color:#c9a0ff">violet light</b>. The <b>Bound Leviathan</b> has you now - it can chase you across any water, so keep to your board and end it.',6000),2800); }
   }
 }
 function spawnLeviathan(){
