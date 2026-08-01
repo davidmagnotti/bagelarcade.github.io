@@ -127,7 +127,10 @@ function openHollowGate(announce){
   G.hollowSealed=false;
   if(typeof WARD_GATE!=='undefined' && WARD_GATE) for(const [x,y] of WARD_GATE) setSolid(x,y,0);
   G.decor = G.decor.filter(b=>b.kind!=='wardgate');
-  for(const m of G.mobs) if(m.hollowGuard) m.sealed=false;
+  // the bone-guard rise to meet you when the gate opens - but the KING himself stays
+  // hidden in the barrow-earth until you come for him (revealed + risen on approach,
+  // see updateHollowSeal), so he isn't just standing there waiting.
+  for(const m of G.mobs) if(m.hollowGuard && !m.boss) m.sealed=false;
   if(typeof invalidateScenery==='function') invalidateScenery();
   if(announce){
     if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW KING STIRS');
@@ -140,6 +143,16 @@ function openHollowGate(announce){
 function updateHollowSeal(){
   if(G.worldId!=='isle') return;
   if(G.hollowSealed && kingQuestBegun()) openHollowGate(false);
+  // the King waits hidden in the earth until you draw near: reveal him and start his
+  // rise the moment you close on the barrow, so he never stands about before the fight
+  if(!G.hollowSealed && kingQuestBegun() && !G.bossIntro){
+    const k=G.mobs.find(m=>m.boss && m.hollowGuard && m.sealed && !m.dead);
+    if(k && dist(P.x,P.y,k.x,k.y)<10){
+      k.sealed=false;
+      if(typeof startBossIntro==='function' && k.entrance && !k.entranceDone)
+        startBossIntro(k,{kind:k.entrance,title:k.entranceTitle,sub:k.entranceSub});
+    }
+  }
 }
 
 /* ---- nearest interactable ---- */
@@ -532,7 +545,7 @@ function tryAttack(useMouse){
     // PARRY is a matter of TIMING now: a swing opens a brief guard window, so a blow
     // or arrow that lands in that window (from the front) is turned aside. Strike as
     // the enemy's blow arrives to parry it. (Also active during Rask's drill.)
-    if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=0.4; P.parryMax=0.4; }   // a forgiving window: react to the red ! and swing
+    if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=PARRY_WIN; P.parryMax=PARRY_WIN; }   // swing on the WHITE flash to turn the blow
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
     // Cleaver perk (melee L5): the finisher sweeps a wide, deep arc instead of a lunge
@@ -616,12 +629,18 @@ function unlockDash(msg){
    is turned aside - melee attackers are staggered, and arrows/bolts are batted
    back the way they came. It is the sword's answer to a ranged or telegraphed
    attack, where the dash is the answer to an unavoidable one. */
+// The parry timing window. A foe's wind-up ends with its blow landing; for the LAST
+// PARRY_WIN seconds of that wind-up the tell flares WHITE - that white flash is the
+// parry moment. A swing opens a guard of exactly this length, so swinging on the
+// white flash (a hair early or late is fine) turns the blow; swinging during the
+// earlier red build-up is too early - the guard lapses before the strike lands.
+const PARRY_WIN = 0.32;
 function unlockParry(msg){
   P.unlocked=P.unlocked||{};
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> There\'s no separate button - it\'s all in the <b>timing</b>. <b>Attack the instant an enemy\'s blow lands</b> and you turn it aside instead of taking it: a parried arrow flies back, and a parried striker is left staggered wide open. Watch for the red <b style="color:#ff5a4a">!</b> - that\'s your moment.';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up, a red <b style="color:#ff5a4a">!</b> builds over it, then flares <b style="color:#fff">WHITE</b> - <b>that white flash is your moment</b>. <b>Attack on the flash</b> to turn the blow instead of taking it: a parried arrow flies back, a parried striker is left staggered wide open. (A hair early or late is fine - just don\'t swing during the red build-up.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -656,7 +675,7 @@ function beginParryDrill(){
   P.parryDrill={count:0, need:3, phase:'rest', t:0.9};
   rask.drillWarn=0;
   if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s blade - three times');
-  toast('Watch Rask\'s blade. When it flashes red <b style="color:#ff5a4a">!</b> and comes down, <b>attack at that instant</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap ⚔':'Space / click')+') to turn it. <b>Parry 3.</b>',7000);
+  toast('Watch Rask\'s blade: a red <b style="color:#ff5a4a">!</b> builds, then flares <b style="color:#fff">WHITE</b> - <b>attack on the white flash</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap ⚔':'Space / click')+') to turn it. <b>Parry 3.</b>',7000);
 }
 function updateParryDrill(dt){
   const D=P.parryDrill; if(!D) return;
@@ -668,9 +687,10 @@ function updateParryDrill(dt){
   D.t-=dt;
   if(D.phase==='rest'){
     rask.drillWarn=0;
-    if(D.t<=0){ D.phase='wind'; D.t=0.7; rask.drillWarn=0.001; }
+    if(D.t<=0){ D.phase='wind'; D.t=0.72; D.rung=0; rask.drillWarn=0.001; }
   } else if(D.phase==='wind'){
-    rask.drillWarn=Math.max(0.001, D.t/0.7);   // the telegraph fills 1 -> 0
+    rask.drillWarn=Math.max(0.001, D.t);   // SECONDS until the strike (red build, then white flash under PARRY_WIN)
+    if(D.t<=PARRY_WIN && !D.rung){ D.rung=1; Snd.tone&&Snd.tone(1180,0.05,'square',0.03,240); }  // the cue: NOW
     if(D.t<=0){
       rask.drillWarn=0; rask.swing=0.3;         // the blade comes down
       const near = dist(P.x,P.y,rask.x,rask.y) < 3.8;
@@ -709,14 +729,31 @@ function drawMobBars(m,s){
     cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
     cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
   }
-  // PARRY TELL: a red ! flashes over a foe in its wind-up - the moment to time your
-  // attack and turn the blow. Bright and pulsing so it reads at a glance.
+  // PARRY TELL, in two stages: a red ! BUILDS through the early wind-up (get ready),
+  // then flares WHITE for the last PARRY_WIN seconds - THAT white flash is the moment
+  // to swing and turn the blow. Reads at a glance so the timing is legible.
   if(!m.dead && (m.windup||0)>0 && dist(P.x,P.y,m.x,m.y)<11){
     const top3= m.bigBoss? -108 : m.kind==='dragon'? -134 : m.kind==='scorpion'? -42 : -66;
-    const pulse=0.72+0.28*Math.sin(G.time*22);
-    cx.save(); cx.globalAlpha=pulse; cx.font='bold 20px Georgia'; cx.textAlign='center';
-    cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=3.5;
-    cx.strokeText('!', s.x, s.y+top3); cx.fillStyle='#ff5a4a'; cx.fillText('!', s.x, s.y+top3);
+    const flash = (m.windup||0) <= (typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32);
+    cx.save(); cx.textAlign='center';
+    if(flash){
+      // the strike moment: a big, bright WHITE ! + a quick expanding ring shouting NOW
+      const p=0.85+0.15*Math.sin(G.time*40);
+      cx.globalAlpha=1; cx.font='bold 30px Georgia';
+      cx.strokeStyle='rgba(0,0,0,0.85)'; cx.lineWidth=5.5;
+      cx.strokeText('!', s.x, s.y+top3);
+      cx.fillStyle='rgba(255,255,255,'+p.toFixed(2)+')'; cx.fillText('!', s.x, s.y+top3);
+      const rr=6+18*(1-Math.max(0,m.windup)/(typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32));
+      cx.globalAlpha=0.5; cx.strokeStyle='#fff6c8'; cx.lineWidth=2.5;
+      cx.beginPath(); cx.arc(s.x, s.y+top3-8, rr, 0, TAU); cx.stroke();
+    } else {
+      // the build-up: a red ! that grows as the flash nears
+      const grow = 1 - Math.min(1, (m.windup - PARRY_WIN)/0.34);   // 0 early -> ~1 just before the flash
+      cx.globalAlpha=0.55+0.3*Math.sin(G.time*13);
+      cx.font='bold '+Math.round(15+9*grow)+'px Georgia';
+      cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=3.5;
+      cx.strokeText('!', s.x, s.y+top3); cx.fillStyle='#ff7a4a'; cx.fillText('!', s.x, s.y+top3);
+    }
     cx.restore();
   }
 }
@@ -1713,6 +1750,10 @@ function updateMobs(dt){
         } else {
           moveEntity(m, dx/l*d.speed*dt, dy/l*d.speed*dt);
         }
+        // the Hollow King's bone-guard never leave the gray ruins: a step that would
+        // carry a guard off the ruin-stone (onto the grass approach) is snapped back,
+        // so they hold the barrow and never chase you out onto the meadow
+        if(m.hollowGuard && tileAt(m.x|0, m.y|0)!==T.RUIN){ m.x=ox2; m.y=oy2; }
         if(Math.hypot(m.x-ox2,m.y-oy2) < d.speed*dt*0.2){
           // no progress: flip the shoulder and commit to the slide
           m.detour = -(m.detour||(((m.x*7+m.y*13)|0)%2? 1:-1));
@@ -1723,12 +1764,16 @@ function updateMobs(dt){
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
-        // HEAVIES telegraph slower and hit harder; everyone else keeps the old snappy poke
-        m.windup = m.elite?0.26 : m.boss?0.42 : (heavy?0.52:0.34);
+        // Wind-ups are long enough to read: a red ! builds, then the last PARRY_WIN
+        // seconds flare WHITE (the parry moment). HEAVIES telegraph slowest and hit hard.
+        m.windup = m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
         m.hitCd= m.boss?1.1:1.25;
       }
       if(m.windup>0){
+        const preFlash = m.windup > PARRY_WIN;
         m.windup-=dt;
+        // ring the parry-cue the instant the tell flares white (once per swing, close foes only)
+        if(preFlash && m.windup<=PARRY_WIN && l<9){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
         if(m.windup<=0){
           m.windup=0; m.swing=0.3;
           if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(heavy?Math.round(d.dmg*1.25):d.dmg, m);
@@ -1937,7 +1982,13 @@ function updateProjs(dt){
         // it came - now a PLAYER projectile that bites whatever loosed it.
         if((P.parryT||0)>0 && !p.parried && parryCovers(p.x,p.y)){
           p.parried=1; p.from='player'; p.skill='melee';
-          p.vx=-p.vx; p.vy=-p.vy; p.life=Math.max(p.life,1.0);
+          // bat it back INTO the nearest foe (usually whoever threw it) so a parried
+          // bone reliably bites the King, not just the empty air he stepped out of
+          const sp=Math.hypot(p.vx,p.vy)||8; let tgt=null,tb=99;
+          for(const m2 of G.mobs){ if(m2.dead||m2.sealed) continue; const dd=dist(p.x,p.y,m2.x,m2.y); if(dd<tb){tb=dd;tgt=m2;} }
+          if(tgt){ const ddx=tgt.x-p.x, ddy=(tgt.y-0.3)-p.y, dl=Math.hypot(ddx,ddy)||1; p.vx=ddx/dl*sp; p.vy=ddy/dl*sp; }
+          else { p.vx=-p.vx; p.vy=-p.vy; }
+          p.life=Math.max(p.life,1.3);
           p.dmg=Math.round((p.dmg||6)*1.5)+meleeDmg();   // a turned shot hits hard
           onParry(p.x,p.y);
         } else { hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }

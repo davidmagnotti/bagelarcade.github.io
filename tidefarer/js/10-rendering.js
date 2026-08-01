@@ -3626,6 +3626,17 @@ function drawPlayerFigure(s){
   }
 }
 function drawProj(p,s){
+  // PARRY TELL for shots: an enemy projectile flares WHITE as it closes on you - the
+  // cue to swing and bat it back. Only once you can parry, and only for real threats.
+  if(p.from && p.from!=='player' && !p.parried && P.unlocked && P.unlocked.parry && !P.dead){
+    const pd=dist(p.x,p.y,P.x,P.y-0.3);
+    if(pd<1.5){
+      const g=1-(pd/1.5), r=7+9*g, a=0.35+0.55*g;
+      cx.save(); cx.globalAlpha=a; cx.strokeStyle='#fff6c8'; cx.lineWidth=2.4;
+      cx.beginPath(); cx.arc(s.x, s.y-2, r, 0, TAU); cx.stroke();
+      cx.restore();
+    }
+  }
   // airborne arc (item 3): thrown/loosed shots ride a parabola in p.z; keep a
   // shadow on the ground that separates from the shot as it climbs.
   if(p.z){
@@ -3701,18 +3712,32 @@ function drawPickup(pt,s){
 
 /* interact prompt + quest direction */
 function drawMarkers(){
-  // Rask's parry drill: telegraph his practice strike over his head - a red ! that
-  // swells as the blow nears, so the student learns to read the tell and time the turn.
+  // Rask's parry drill: the same two-stage tell the real foes use - a red ! BUILDS as
+  // his blade rises, then flares WHITE for the last PARRY_WIN seconds. Swing on the
+  // white flash to turn it; that's the lesson.
   if(P.parryDrill){
     const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
+    const PW=(typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32);
     if(rask && (rask.drillWarn||0)>0){
-      const w=rask.drillWarn, grow=1-w;                 // 0 at the start of the wind, 1 at the strike
+      const secs=rask.drillWarn, flash=secs<=PW;         // drillWarn is SECONDS until the strike
       const rs=worldToScreen(rask.x,rask.y);
       cx.save(); cx.textAlign='center';
-      cx.globalAlpha=0.55+0.45*grow;
-      cx.font='bold '+Math.round(16+16*grow)+'px Georgia';
-      cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=4;
-      cx.strokeText('!', rs.x, rs.y-58); cx.fillStyle='#ff5a4a'; cx.fillText('!', rs.x, rs.y-58);
+      if(flash){
+        const p=0.85+0.15*Math.sin(G.time*40);
+        cx.globalAlpha=1; cx.font='bold 32px Georgia';
+        cx.strokeStyle='rgba(0,0,0,0.85)'; cx.lineWidth=5.5;
+        cx.strokeText('!', rs.x, rs.y-60);
+        cx.fillStyle='rgba(255,255,255,'+p.toFixed(2)+')'; cx.fillText('!', rs.x, rs.y-60);
+        const rr=6+18*(1-Math.max(0,secs)/PW);
+        cx.globalAlpha=0.5; cx.strokeStyle='#fff6c8'; cx.lineWidth=2.5;
+        cx.beginPath(); cx.arc(rs.x, rs.y-68, rr, 0, TAU); cx.stroke();
+      } else {
+        const grow=1-Math.min(1,(secs-PW)/0.4);
+        cx.globalAlpha=0.55+0.3*Math.sin(G.time*13);
+        cx.font='bold '+Math.round(16+9*grow)+'px Georgia';
+        cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=4;
+        cx.strokeText('!', rs.x, rs.y-60); cx.fillStyle='#ff7a4a'; cx.fillText('!', rs.x, rs.y-60);
+      }
       cx.restore();
     }
   }
