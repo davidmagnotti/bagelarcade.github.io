@@ -49,6 +49,7 @@ function build(){
       const k=cb.getAttribute('data-fx');
       FX[k]=cb.checked?1:0;
       try{ SafeStore.set('tf_fx_'+k, FX[k]?'1':'0'); }catch(e){}
+      if(typeof tfGfxLock==='function') tfGfxLock();  // honor this deliberate choice
     };
   });
   return true;

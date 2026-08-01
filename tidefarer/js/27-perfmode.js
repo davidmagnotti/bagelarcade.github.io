@@ -23,6 +23,7 @@ function setPerfMode(on){
   PERF = !!on;
   if(PERF) LOWFX = true;   // engage aggressive low-gfx stripping immediately
   try{ SafeStore.set('tf_perf', PERF?'1':'0'); }catch(e){}
+  if(typeof tfGfxLock==='function') tfGfxLock();  // honor this deliberate choice
   if(typeof resize==='function') resize();
   syncPerfUI();
   if(typeof toast==='function') toast(PERF

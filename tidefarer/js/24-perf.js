@@ -10,6 +10,11 @@
    few FPS ratchets down within ~1s instead of tens of seconds, and can jump
    several tiers at once when frames are catastrophically slow. One-way down.
 
+   Player override: once the player picks display settings in the pause menu
+   (Performance mode, effect toggles) the tuner freezes to that choice and only
+   steps in if frames collapse to a near-slideshow (~1 FPS) - so a deliberate
+   choice isn't auto-downgraded a second later. See USERGFX / tfGfxLock().
+
    Escape hatch: tidefarer/?safe (or ?lo) pins the lowest tier + minimal-GPU
    mode (no dynamic lighting) from the first frame.
    ===================================================================== */
@@ -25,6 +30,17 @@ const TIERS=[
 ];
 const MAX=TIERS.length-1;
 
+// avg ms/frame this high is an unplayable slideshow (~1.4 FPS). Even when the
+// player has locked their display choice we still rescue past this point.
+const CATASTROPHIC=700;
+
+// Called when the player changes a display setting in the pause menu. Freezes
+// the auto-tuner to their choice (see USERGFX) unless frames turn catastrophic.
+window.tfGfxLock=function(){
+  USERGFX=true;
+  try{ SafeStore.set('tf_gfxlock','1'); }catch(e){}
+};
+
 let safe=false;
 try{
   const q=(location.search||'').toLowerCase();
@@ -38,7 +54,7 @@ if(safe) SAFE=true;
    Kept to a single, near-invisible step so a false positive on a capable machine
    costs almost nothing (the tuner is one-way-down and can't climb back up). */
 const softCanvas = (typeof SOFTCANVAS!=='undefined') && SOFTCANVAS;
-let tier = safe ? MAX : (softCanvas ? 1 : 0);
+let tier = safe ? MAX : (softCanvas && !USERGFX ? 1 : 0);
 let acc=0, cnt=0, prev=0, cooldownUntil=0;
 
 function apply(){
@@ -61,6 +77,9 @@ frame=function(ts){
   if((acc>=600 || cnt>=60) && cnt>0){
     const avg=acc/cnt; acc=0; cnt=0;
     if(ts<cooldownUntil) return;
+    // The player locked their display choice: leave it alone unless frames have
+    // collapsed to a slideshow, in which case rescue regardless of the lock.
+    if(USERGFX && avg<CATASTROPHIC) return;
     if(avg>22 && tier<MAX){                 // under ~45fps: step down
       const jump = avg>120 ? 3 : avg>55 ? 2 : 1;   // very slow => drop harder
       tier=Math.min(MAX, tier+jump);

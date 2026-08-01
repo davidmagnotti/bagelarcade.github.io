@@ -142,6 +142,12 @@ let RQ=1, LOWFX=false, SAFE=false;
    full-viewport canvas (fewer on-screen pixels to present each frame). LB holds
    the letterbox offset so input coords map back into the smaller canvas. */
 let PERF = false; try{ PERF = SafeStore.get('tf_perf')==='1'; }catch(e){}
+/* USERGFX: the player deliberately picked their display settings in the pause
+   menu (Performance mode, per-effect toggles). Once set, the adaptive tuner
+   (js/24-perf.js) stops auto-downgrading and only steps in if frames collapse
+   to a near-slideshow (~1 FPS) - so a deliberate choice survives instead of
+   being silently overridden a second later. Persisted so it sticks on reload. */
+let USERGFX = false; try{ USERGFX = SafeStore.get('tf_gfxlock')==='1'; }catch(e){}
 const PERF_CAP = 640;   // max displayed longest-edge in Performance Mode
 const LB = {x:0, y:0};
 /* Per-effect toggles for Performance mode (checkboxes in the pause menu).
