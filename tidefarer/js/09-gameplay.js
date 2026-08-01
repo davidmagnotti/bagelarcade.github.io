@@ -864,8 +864,16 @@ function killMob(m,skill){
     if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
     banner('THE STORM-EYE CLOSES','THE HIGH WIND FALLS STILL');
     if(typeof autoSave==='function') autoSave();
-    setTimeout(()=>storyCard('The storm-eye guts itself into harmless mist. The high wind falls still and the rainbow runs quiet at last. <i>North of the Broken Crown a ward of light unknots, and a small vault opens onto the cloud - something the crown kept, waiting there for you.</i> <b style="color:#c9b0ff">Take what it kept, then carry it down to Ashwing.</b>',
-      {label:'OK'}), 1400);
+    // The Rainbow Road's finale now plays as a full-overlay cutscene (js/39-more-cutscenes.js):
+    // the shielded storm-core guts itself into mist, the high wind falls still, the rainbow runs
+    // quiet, and the cloud-vault opens north. When it ends, the pointer card (take the vault's
+    // prize down to Ashwing) follows. Falls back to the old story-card if the overlay is absent.
+    const skyCard=()=>storyCard('<i>North of the Broken Crown the little vault stands open on the cloud, its ward unknotted - something the crown kept, waiting there for you.</i> <b style="color:#c9b0ff">Take what it kept, then carry it down to Ashwing.</b>',
+      {label:'OK'});
+    setTimeout(()=>{
+      if(typeof stormEyeCutscene==='function') stormEyeCutscene(skyCard);
+      else skyCard();
+    }, 1400);
   }
   // THE WIND SPIRIT on the Cloudreach - felling it lifts the ward on the Gale-Shrine, so you
   // can take the bow (the one arm that can strike the Storm-Eye up on the rainbow road).

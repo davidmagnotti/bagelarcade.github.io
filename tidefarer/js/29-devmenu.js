@@ -51,6 +51,9 @@ function playCutscene(kind){
     case 'dragonEnthrall': if(typeof dragonEnthrallCutscene==='function') dragonEnthrallCutscene(done('Ashwing enthralled')); break;
     case 'dragonFreed':    if(typeof dragonFreedCutscene==='function')    dragonFreedCutscene(done('Ashwing freed')); break;
     case 'leviathan':      if(typeof leviathanFreedCutscene==='function') leviathanFreedCutscene(null, done('Leviathan freed')); break;
+    case 'warden':         if(typeof wardenFreedCutscene==='function')    wardenFreedCutscene(null, done('Weeping Warden freed')); break;
+    case 'rimebound':      if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(null, done('Rimebound freed')); break;
+    case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
     default: return;
   }
   note('Playing cutscene: '+kind);
@@ -267,6 +270,9 @@ const SECTIONS=[
     ['Ashwing ENTHRALLED (dragon bound)',()=>playCutscene('dragonEnthrall')],
     ['Ashwing FREED (dragon)',()=>playCutscene('dragonFreed')],
     ['Leviathan UNBOUND (freed)',()=>playCutscene('leviathan')],
+    ['Weeping Warden FREED (frost)',()=>playCutscene('warden')],
+    ['Rimebound FREED (deep ice)',()=>playCutscene('rimebound')],
+    ['Storm-Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)

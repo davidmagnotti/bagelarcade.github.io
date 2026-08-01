@@ -2402,8 +2402,17 @@ function freeWarden(m){
   // from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
   // rune in the Rimefissure's reward chest, worked into a spell by your brother.
   // Sigrid points the way down. (see openChest `veiltome` + the 'brother' scene.)
-  setTimeout(()=>storyCard('The violet sloughs away like rotten ice, and the Warden lifts its head - itself again. The killing cold breaks, and a clean, ordinary winter settles back over Hearthhold: the snow still falls, soft now, and the life creeps back into the ice - seals on the floes, fish beneath them. On the road down, <b>Sigrid</b> catches your hands. “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
-    {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }}),1400);
+  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js) - the same
+  // freed-victim bookend the Leviathan got: the violet sloughs off, the Warden weeps clean
+  // meltwater, a soft winter returns, and Vath is glimpsed on the glacier road. When it ends,
+  // Sigrid's pointer card (the trail down to the Rimefissure) follows. Falls back to the old
+  // story-card if the overlay layer is absent.
+  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
+    {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }});
+  setTimeout(()=>{
+    if(typeof wardenFreedCutscene==='function') wardenFreedCutscene(m, sigridCard);
+    else sigridCard();
+  },1400);
 }
 // The WARDING VEIL: a warding woven from the freed Rimebound's hush-frost that hides its
 // bearer from Vath's eye, letting you steal back to the old islands (all but the capital,
@@ -2649,7 +2658,15 @@ function freeColossus(m){
   giveGold(150); give('elixir',2);
   if(typeof openRewardRoom==='function') openRewardRoom();   // the sealed vault at the arena's back grinds open - prize + climb-out within
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
-  setTimeout(()=>storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>'),1400);
+  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the violet
+  // bleeds out of the great ice-whale and it settles calm into the melt, then sinks. It
+  // carries the "Vath is one island ahead" beat the old story-card held, so the card is
+  // dropped (as the Leviathan's "Where it sank..." card was) - the old card stays only as a
+  // fallback if the overlay layer is missing.
+  setTimeout(()=>{
+    if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(m, ()=>{ if(typeof autoSave==='function') autoSave(); });
+    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It sinks calm into the melt. <i>Whoever bound it - the <b>robed man</b> the whole strait speaks of - is always one island ahead. But the trail is warming.</i>');
+  },1400);
 }
 
 /* =====================================================================
