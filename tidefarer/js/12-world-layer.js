@@ -2524,9 +2524,12 @@ function placeObjectsFrostDeep(){
   buildRewardRoom({ x0:30, x1:58, wallY:16, gx0:40, gx1:42, floorT:T.ICE,
     chest:{kind:'chest', x:36.5, y:14.5, deep:1, veiltome:1}, exitX:52, exitY:14,
     cleared:!!(P.story && P.story.deepDone) });
-  // frostdeep has no ewall wall-faces (its arena is ringed by void, not stone), so dress the
-  // partition as a visible wall of ice-spires - the tiles are already solid from buildRewardRoom
-  for(let x=30;x<=58;x++){ if(x>=40 && x<=42) continue; G.decor.push({kind:'icespire', x:x+0.5, y:16.5}); }
+  // frostdeep has no ewall wall-faces of its own (its arena is ringed by void, not stone), so dress
+  // the reward-room partition with explicit ewall blocks - a chunky raised wall that reads clearly as
+  // a barrier (cold 'brine' palette to sit right in the ice). The tiles are already solid.
+  for(let x=30;x<=58;x++){ if(x>=40 && x<=42) continue; G.decor.push({kind:'ewall', x:x+0.5, y:16.5, s:((x*7+208)%5), theme:'brine'}); }
+  // lamps flanking the gate, on the boss side, so the sealed vault door reads clearly during the fight
+  for(const [lx,ly] of [[38,17],[44,17]]) if(inb(lx,ly)) G.decor.push({kind:'lamp', x:lx+0.5, y:ly+0.5});
   // ---- THE ARENA'S SPIKED EDGE: a ring of spiked freezing water round the Frozen Heart. Step
   // onto it and you plunge (see frostPlungeStart). The entry lane (x40-48) stays clear. ----
   for(let y=10;y<=33;y++) for(let x=28;x<=60;x++){
@@ -5687,8 +5690,9 @@ function placeEmberTombObjects(){
   G.decor.push({kind:'shoottarget', x:40.5, y:34.5, thornbud:1});       // the bud you burn with a flame-snare
   // THE REWARD ROOM: wall off the top of the Tideward Vault - the founders' hoard + the climb-out
   // stand within, sealed until the Tideward Guardian falls (killMob -> openRewardRoom).
-  buildRewardRoom({ x0:20, x1:60, wallY:5, gx0:38, gx1:42, floorT:T.RUIN,
-    chest:{kind:'chest', x:34.5, y:3.5, tidewardHoard:1}, exitX:46, exitY:3,
+  // a shallow reward vault (y2-3) so the Tideward Guardian keeps the deeper half of the hall (y5-10)
+  buildRewardRoom({ x0:20, x1:60, wallY:4, gx0:38, gx1:42, floorT:T.RUIN,
+    chest:{kind:'chest', x:34.5, y:2.5, tidewardHoard:1}, exitX:46, exitY:2,
     cleared:!!(P.story && P.story.tidewardDone) });
   G.critters=[];
   if(P.story && P.story.tidewardDone){ tombBurnThorns(true); }           // a cleared run stands open
@@ -5696,7 +5700,7 @@ function placeEmberTombObjects(){
 function spawnEmberTombMobs(){
   for(const [zx,zy] of [[34,34],[46,34],[30,20],[50,20]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   if(!(P.story && P.story.tidewardDone)){
-    const sp=findOpenNear(40, 8, 6) || [40,8];   // below the reward-room wall (y5) so the guardian rises in its arena
+    const sp=findOpenNear(40, 8, 6) || [40,8];   // below the reward-room wall (y4) so the guardian rises in its deeper arena (y5-10)
     const b=spawnMob('wardking', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.title='THE TIDEWARD GUARDIAN'; b.subtitle='THE FOUNDERS\' LAST WARD'; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.wardking=1; b.customAI=1; b.gateboss=1; b.gateDone='tidewardDone'; b.tidewardboss=1; b.sealed=true; b.arena=1; b.wphase=1; b.entrance='rise'; }
   }
