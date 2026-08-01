@@ -401,9 +401,17 @@ rendering the game's own `drawDragon` art with its `ensAmt` violet wash):
 > **The reusable bookend.** The freed-victim shape (enthralled → beaten →
 > freed, "a victim, not a foe") is shared by the **Leviathan**, the **Weeping
 > Warden**, and the **Rimebound** (all `enthrall`-entrance bosses that already
-> run the lightweight on-canvas wash + a story-card freeing). If the Ashwing
-> pair reads well, the same overlay-cutscene template is the natural upgrade
-> for those three.
+> run the lightweight on-canvas wash + a story-card freeing). The same
+> overlay-cutscene template is the natural upgrade for those three.
+>
+> The **Leviathan** now takes it (`js/38-leviathan-cutscene.js`,
+> `leviathanFreedCutscene`): a sea-surface mirror of the Ashwing FREED scene.
+> The binding shatters and the violet drains from its hide, and — the reveal
+> that used to live in a "Where it sank…" story-card afterward — the beast
+> names the hand that bound it and we **see him**: a robed man on the
+> breakwater, violet at his wrists, who turns and is gone. The thanks and the
+> Vath reveal are one scene now; the story-card is retired. The **Weeping
+> Warden** and the **Rimebound** are the two still on the old wash + card.
 
 ### The prophecy and the weapon — [new]
 
