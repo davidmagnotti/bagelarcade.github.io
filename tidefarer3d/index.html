@@ -117,6 +117,7 @@
   <div id="toast"></div>
   <div id="fps"></div>
   <div id="hint"></div>
+  <div id="build" style="position:absolute;left:12px;bottom:9px;font-size:9px;opacity:.42;letter-spacing:1px;text-shadow:0 1px 2px #000;">build 8 · collision + parry</div>
 </div>
 <div id="dmgVig"></div>
 <div id="dlg"><div class="dn"></div><div class="dt"></div><div class="dc">continue</div></div>
@@ -162,6 +163,7 @@ import { OutputPass } from './vendor/jsm/postprocessing/OutputPass.js';
 try{ const c=document.createElement('canvas'); if(!(c.getContext('webgl2')||c.getContext('webgl'))) throw 0; }
 catch(e){ document.getElementById('err').style.display='flex'; document.getElementById('start').style.display='none'; throw e; }
 
+console.log('%cTidefarer 3D — build 8 (collision + parry). If you can walk through buildings, you have a cached old copy: hard-refresh (Ctrl/Cmd+Shift+R).','color:#ff9a3c;font-weight:bold');
 const isTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0||matchMedia('(pointer:coarse)').matches;
 const isMobile=isTouch||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 const DPR=Math.min(devicePixelRatio, isMobile?1.6:2);
@@ -311,7 +313,7 @@ const waterBase=waterGeo.attributes.position.array.slice();
 function onGround(o,x,z,yOff=0){ o.position.set(x,heightAt(x,z)+yOff,z); world.add(o); return o; }
 function ground(g,r){ g.add(contactShadow(r)); return g; }
 // ---- solid obstacles: circle colliders the player can't walk through ----
-const colliders=[]; function solid(x,z,r){ colliders.push({x,z,r}); }
+const colliders=[]; function solid(x,z,r,big){ colliders.push({x,z,r,big:!!big}); }
 
 // ---------- prop builders ----------
 const foliage=[], lampFlames=[], beacons=[];
@@ -334,16 +336,16 @@ function cottage(x,z,rot=0,roof=COL.slate){ const g=new THREE.Group();
   g.add(pos(toon(box(1.4,2.4,.25),COL.timberDk,{outline:0.02}),0,1.7,2.65));
   for(const wx of[-2,2]){ g.add(pos(new THREE.Mesh(box(1,1,.15),glowMat(COL.windowGlow)),wx,2.9,2.62)); g.add(pos(toon(box(1.25,1.25,.1),COL.timber,{outline:0}),wx,2.9,2.55)); }
   g.add(pos(toon(box(1,2.6,1),COL.stoneDk,{outline:0.03}),2.1,6.9,-1.6));
-  rotY(g,rot); ground(g,4.2); onGround(g,x,z); solid(x,z,4.0); return g; }
+  rotY(g,rot); ground(g,4.2); onGround(g,x,z); solid(x,z,4.0,true); return g; }
 function well(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(1.8,2,1.7,16),COL.stone,{outline:0.03}),0,.85,0)); g.add(pos(toon(cyl(1.5,1.5,.2,16),COL.sea,{outline:0}),0,1.7,0));
   for(const sx of[-1.7,1.7])g.add(pos(toon(box(.35,3.6,.35),COL.timber,{outline:0.03}),sx,2.6,0));
-  g.add(pos(rotY(toon(cyl(.02,2.3,1.2,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,4.7,0)); ground(g,2.2); onGround(g,x,z); solid(x,z,2.1); return g; }
+  g.add(pos(rotY(toon(cyl(.02,2.3,1.2,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,4.7,0)); ground(g,2.2); onGround(g,x,z); solid(x,z,2.1,true); return g; }
 function tower(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(2.7,3.2,16,14),COL.stone,{outline:0.025}),0,8,0));
   for(const y of[4,9,13])g.add(pos(toon(cyl(3.15,3.15,.5,14),COL.stoneDk,{outline:0}),0,y,0));
   g.add(pos(toon(cyl(3.6,3.3,1.5,14),COL.stoneDk,{outline:0.025}),0,16.3,0));
   g.add(pos(rotY(toon(cyl(.02,4,5,14),COL.slate,{outline:0.03,flat:true}),0),0,19.3,0));
   const win=pos(new THREE.Mesh(box(1.5,2.2,.4),glowMat(COL.windowGlow)),0,11.5,3.05); g.add(win); beacons.push(win);
-  const l=new THREE.PointLight(0xffcf7a,26,50,2); l.position.set(0,12,3.5); g.add(l); ground(g,3.6); onGround(g,x,z); solid(x,z,3.4); return g; }
+  const l=new THREE.PointLight(0xffcf7a,26,50,2); l.position.set(0,12,3.5); g.add(l); ground(g,3.6); onGround(g,x,z); solid(x,z,3.4,true); return g; }
 function lamp(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(.12,.18,4.4,8),COL.timberDk,{outline:0.03}),0,2.2,0));
   g.add(pos(toon(box(.15,.15,1),COL.timberDk,{outline:0}),0,4.3,.4)); g.add(pos(toon(cyl(.42,.42,.9,6),COL.timber,{outline:0.03}),0,4.2,.8));
   const fl=pos(new THREE.Mesh(ico(.28,0),glowMat(COL.flame)),0,4.2,.8); g.add(fl);
@@ -539,7 +541,7 @@ function inn(x,z){ const g=new THREE.Group();
   const arm=pos(toon(box(2.2,.2,.2),COL.timber,{outline:0}),4.0,4.0,3.4); g.add(arm);
   g.add(pos(toon(box(2.0,1.3,.14),COL.walnut||0x5a3d28,{outline:0.03}),3.1,3.1,3.4));
   const sign=textSprite('Gull & Anchor','#ffdca0',30); sign.scale.set(3.4,0.9,1); sign.position.set(3.1,3.1,3.55); g.add(sign);
-  ground(g,5.4); onGround(g,x,z); solid(x,z,5.4); return g; }
+  ground(g,5.4); onGround(g,x,z); solid(x,z,5.4,true); return g; }
 inn(zc.village.x-9,zc.village.z-13);
 
 // ============================================================
@@ -630,7 +632,7 @@ function forge(x,z){ const g=new THREE.Group();
   const l=new THREE.PointLight(0xff8a3a,12,13,2); l.position.set(0,1.7,1.7); g.add(l);
   g.add(pos(toon(box(0.8,3.4,0.8),COL.stoneDk,{outline:0.03}),0,3.6,-0.5));       // chimney
   const an=new THREE.Group(); an.add(pos(toon(box(0.7,0.9,0.7),COL.timberDk,{outline:0.03}),0,0.45,0)); an.add(pos(toon(box(1.5,0.5,0.7),0x3b3e46,{outline:0.03}),0,1.1,0)); an.add(pos(rotZ(toon(cyl(.03,.34,.7,6),0x3b3e46,{outline:0}),Math.PI/2),0.85,1.15,0)); an.position.set(2.4,0,0.4); g.add(an);
-  ground(g,2.6); onGround(g,x,z); solid(x,z,2.6); return g; }
+  ground(g,2.6); onGround(g,x,z); solid(x,z,2.6,true); return g; }
 const bramX=zc.village.x+18, bramZ=zc.village.z+5;
 forge(bramX+3,bramZ-1);
 addNPC(bramX,bramZ,'Bram the Smith',[],{tunic:0x8f4a3a,tunicDk:0x5a2f24,scarf:0x4a3322,hair:0x3a2a1c,cape:false,id:'bram'});
@@ -918,7 +920,9 @@ function step(dt,time){
       else if(d>e.reach){ vx=dx/d; vz=dz/d; }
     }
     else { e.phase+=dt; vx=Math.cos(e.phase*0.6)*0.3; vz=Math.sin(e.phase*0.5)*0.3; const hd=Math.hypot(e.g.position.x-e.home.x,e.g.position.z-e.home.y); if(hd>10){ vx=(e.home.x-e.g.position.x)/hd; vz=(e.home.y-e.g.position.z)/hd; } setTell(e); }
-    const nx=e.g.position.x+vx*e.spd*dt, nz=e.g.position.z+vz*e.spd*dt; if(heightAt(nx,nz)>0.4){ e.g.position.x=nx; e.g.position.z=nz; }
+    let nx=e.g.position.x+vx*e.spd*dt, nz=e.g.position.z+vz*e.spd*dt;
+    for(const c of colliders){ if(!c.big)continue; const ddx=nx-c.x,ddz=nz-c.z,rr=c.r+1.0; if(ddx*ddx+ddz*ddz<rr*rr){ const dd=Math.hypot(ddx,ddz)||0.0001; nx=c.x+ddx/dd*rr; nz=c.z+ddz/dd*rr; } }  // foes can't walk through buildings either
+    if(heightAt(nx,nz)>0.4){ e.g.position.x=nx; e.g.position.z=nz; }
     e.g.position.y=heightAt(e.g.position.x,e.g.position.z);
     e.cd=Math.max(0,e.cd-dt); if(e.hurt>0)e.hurt-=dt;
     e.g.rotation.z = e.stagger>0 ? -0.5*Math.min(1,e.stagger) : e.g.rotation.z*0.8;   // reel back when parried
@@ -963,7 +967,8 @@ if(location.hash.includes('dbg')) window.__dbg={ drill:()=>drill.active, parry:(
   anyTellWhite:()=>enemies.some(e=>e.tell&&e.tell.visible&&e.tell.material.color.getHex()===0xffffff),
   hp:()=>Math.round(P.hp), px:()=>P.x, pz:()=>P.z, started:()=>started,
   giveSword:()=>{P.hasSword=true; if(rig.sword)rig.sword.visible=true; setStage('done');},
-  insideSolid:()=>colliders.some(c=>Math.hypot(P.x-c.x,P.z-c.z)<c.r-0.05), nSolid:()=>colliders.length };
+  insideSolid:()=>colliders.some(c=>Math.hypot(P.x-c.x,P.z-c.z)<c.r-0.05), nSolid:()=>colliders.length,
+  setPos:(x,z)=>{P.x=x;P.z=z;}, distTo:(x,z)=>Math.hypot(P.x-x,P.z-z), setYaw:(y)=>{camYaw=y;} };
 tick();
 </script>
 </body>
