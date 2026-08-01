@@ -14,7 +14,6 @@ const ITEMS = {
   wardplate:{name:'Deepiron Ward', desc:'A cold slab of deep-iron. Turns aside 15% of every blow while carried, atop any armour you wear.'},
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
-  stormrune:{name:'Snare Rune', desc:'The Storm-Wraith\'s spark. Your staff-bolts now snare a foe fast where it stands for a heartbeat.'},
   veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
   blastcharge:{name:'Blast Charge', desc:'A clay pot of ground fire-salt. Set it down and stand clear - it cracks open fissured walls, trips distant plates, and staggers what stands near. (Q / the ✸ button.)'},
   lodestone:{name:'Lodestone', desc:'A lump of the quake-spirit\'s heart-iron. It calls to iron: drag a lodeblock toward you, onto a plate or out of your road. (G / the ❖ button.)'},
@@ -257,7 +256,7 @@ const MOBDEF = {
   skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches (Storm Temple storm-shades reuse this)
   skybat:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Storm Bat'},               // the Rainbow Road's roosting swarm - same fight as the old sky wraith, now a winged cloud-bat
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank
-  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // mini-boss; its stormlight lets your staff stun
+  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // (retired) old Rainbow Road mini-boss - no longer spawned
   skyspirit:{hp:980, dmg:30, speed:3.2, aggro:13, xp:820, gold:[0,0], lvl:13, name:'The Corrupted Spirit'}, // (retired) old final sky boss
   stormeye:{hp:900, dmg:24, speed:1.4, aggro:20, xp:900, gold:[0,0], lvl:13, name:'The Storm-Eye'},         // final sky boss: shielded, hurls dodge-only gale-wisps; only vulnerable when it discharges
   galewisp:{hp:1, dmg:18, speed:0, aggro:0, xp:0, gold:[0,0], lvl:12, name:'Gale-Wisp'}                     // its spat minions (spawned as dodge-only projectiles)

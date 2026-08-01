@@ -457,7 +457,7 @@ function updateInterior(dt){
   P.swing=Math.max(0,P.swing-dt);
   P.hurtT=Math.max(0,P.hurtT-dt);
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
-  if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
+  if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
 }
 function iBox(s,w,d,h,top,lft,rgt){
   // iso box at screen point s: footprint w×d tiles, height h px

@@ -540,7 +540,6 @@ function tryAttack(useMouse){
     // Emberburst perk (magic L5): bigger splash. Overcharge perk: the bolt strikes twice as hard.
     const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
     const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:oc?magicDmg()*2:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
-    if(P.spells && P.spells.stun) bolt.stun=1.1;   // the Storm-Wraith's stormlight: bolts freeze a foe for a beat
     if(P.spells && P.spells.flamesnare){ bolt.snare=1.6; bolt.flame=1; }   // Sunward's Emberdeep gift: bolts root a foe in a snare of fire
     G.projs.push(bolt);
     refreshUI();
@@ -729,7 +728,7 @@ const OVERWORLD_PARENT = { frostvault:'frost', frostdeep:'frost', aeriedeep:'aer
 // must never touch. Keep this list in step with the isle-clear check below.
 function isBossMob(m){
   return !!(m && (m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
-    ||m.skyminiboss||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
+    ||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
 }
 // Record that this isle's boss has fallen. Once cleared, the wilds stop sending
 // night-wraiths here after dark, and any still abroad quietly disperse. This is
@@ -837,17 +836,8 @@ function killMob(m,skill){
       else toast('The Storm Roc folds out of the sky and does not rise - the eyrie is yours, and 120 gold with it.',7000); }, 1500);
     if(typeof autoSave==='function') autoSave();
   }
-  // THE STORM-WRAITH (Rainbow Road mini-boss) - drops its stormlight as a bead you pick
-  // up (see updateSkyDungeon); the gate opens now, but the stun is granted on pickup.
-  if(m.skyminiboss){
-    P.story=P.story||{}; P.story.skyG4=1;
-    if(typeof openSkyGate==='function') openSkyGate('g4');
-    Snd.magic&&Snd.magic();
-    banner('THE STORM-WRAITH FALLS','A SNARE-SPARK DROPS');
-    // drop the bead on its isle home, not wherever a lunge left it (open sky isn't walkable)
-    G.decor.push({kind:'stormbead', x:(m.hx||m.x), y:(m.hy||m.y)});
-    if(typeof autoSave==='function') autoSave();
-  }
+  // (The Storm-Wraith mini-boss on the Rainbow Road was cut - the fourth isle is a quiet
+  //  waypoint now, so there is no mid-road boss kill to handle here.)
   // THE STORM-EYE (Rainbow Road final boss) - felling it calms the high wind, and the
   // calmed sky is what bears you DOWN off the Cloudreach: it grants the stormsail and
   // opens The Leap. Running the rainbow road is now the way onward to Windsurf.
@@ -1277,7 +1267,7 @@ function updatePlayer(dt){
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
-  if(G.time-P.lastCombat>5) P.hp=Math.min(P.maxhp,P.hp+dt*2.2);
+  if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
   // fishing timer
   if(P.fishing){
     const f=P.fishing; f.t+=dt;
@@ -1405,7 +1395,6 @@ function updateMobs(dt){
       if(m.entrance && !m.entranceDone && !G.bossIntro && typeof startBossIntro==='function' && dist(m.x,m.y,P.x,P.y)<11)
         startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub});   // it descends out of the storm
       m.face=(P.x<m.x?-1:1); continue; }
-    if(m.skyminiboss && (((m.tele||0)>0) || ((m.lunge||0)>0))){ m.face=(P.x<m.x?-1:1); continue; }   // its lunge special drives it (updateSkyDungeon) - no generic move/melee mid-lunge
     if(m.customAI){ m.face=(P.x<m.x?-1:1); continue; }   // bespoke returned-isle bosses: driven by their dungeon's update hook
     const d0=MOBDEF[m.kind], pd=dist(m.x,m.y,P.x,P.y);
     const d={dmg:m.dmg||d0.dmg, speed:m.speed||d0.speed, aggro:m.aggro||d0.aggro};
