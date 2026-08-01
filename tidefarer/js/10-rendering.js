@@ -2642,6 +2642,33 @@ function drawMob(m,s){
     g.restore();
     drawMobBars&&drawMobBars(m,s); return;
   }
+  if(m.kind==='skybat'){
+    // the Rainbow Road roost: a larger, storm-hued cave-bat - dusky violet body, electric-cyan
+    // eyes, a faint stormlight shimmer that fits the sky-road palette. Same silhouette as the
+    // cave bat, scaled up to read as a real threat between the isles.
+    const g=cx, fl=(m.face||1), t=G.time+(m.anim||0), flap=Math.sin((m.bob||0)+t*4.2);
+    const sc=(m.bscale||1)*1.7, hurt=m.hurtT>0;
+    drawShadowAt(g,s.x,s.y,7*sc);
+    g.save(); g.translate(s.x, s.y-19*sc+Math.sin((m.bob||0)+t*2)*2.2); g.scale(sc,sc);
+    // membranous wings, flapping
+    g.fillStyle= hurt? '#e6b0d0' : '#2b2440';
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(-11,-6-flap*7,-16,-1+flap*3); g.quadraticCurveTo(-9,0,-3,2); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(0,-1); g.quadraticCurveTo(11,-6+flap*7,16,-1-flap*3); g.quadraticCurveTo(9,0,3,2); g.closePath(); g.fill();
+    // wing-strut highlight
+    g.strokeStyle= hurt? 'rgba(255,200,230,0.5)' : 'rgba(150,200,255,0.4)'; g.lineWidth=0.8;
+    g.beginPath(); g.moveTo(-3,1); g.quadraticCurveTo(-10,-3-flap*5,-15,-1+flap*3); g.moveTo(3,1); g.quadraticCurveTo(10,-3+flap*5,15,-1-flap*3); g.stroke();
+    // body + ears
+    g.fillStyle= hurt? '#f0c0dc' : '#3a3252'; g.beginPath(); g.ellipse(0,0,4,5,0,0,TAU); g.fill();
+    g.beginPath(); g.moveTo(-2.5,-4); g.lineTo(-3.5,-8); g.lineTo(-0.5,-5); g.closePath();
+    g.moveTo(2.5,-4); g.lineTo(3.5,-8); g.lineTo(0.5,-5); g.closePath(); g.fill();
+    // electric-cyan eyes with a soft glow
+    const eg=0.6+0.4*Math.sin(t*7);
+    g.fillStyle='rgba(150,220,255,'+(0.3*eg).toFixed(2)+')'; g.beginPath(); g.arc(-1.6,-1,2,0,TAU); g.arc(1.6,-1,2,0,TAU); g.fill();
+    g.fillStyle= hurt? '#fff' : '#8fe4ff'; g.beginPath(); g.arc(-1.6,-1,1,0,TAU); g.arc(1.6,-1,1,0,TAU); g.fill();
+    g.restore();
+    if(Math.random()<0.12) burst(m.x+rnd(-0.3,0.3), m.y-rnd(0.4,1.0), 'rgba(170,205,255,0.5)', 1, 1.0);
+    drawMobBars&&drawMobBars(m,s); return;
+  }
   if(m.kind==='bat'){
     const g=cx, fl=(m.face||1), t=G.time+(m.anim||0), flap=Math.sin((m.bob||0)+t*4);
     drawShadowAt(g,s.x,s.y,5);

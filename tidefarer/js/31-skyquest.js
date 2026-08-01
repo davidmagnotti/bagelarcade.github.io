@@ -5,17 +5,17 @@
    blows her off course. Run her rainbow road, clear six tiny sky-isles of
    their trials, and put the Storm-Eye out; the wind calms and her roost is
    hers again. Puzzle 4 wins THE SNARE: your staff-bolts now snare foes.
-   The open stretches BETWEEN the isles are patrolled by drifting road-shades
+   The open stretches BETWEEN the isles are patrolled by drifting storm-bats
    (see spawnRoadShades) - the storm scattered them the length of the run, so
    the road has to be fought through, not just dashed across.
    ===================================================================== */
 const SKY_ISLES = [
   {key:'start', x:60, y:156, r:5},
-  {key:'i1',    x:60, y:134, r:4, puzzle:1}, // defeat four sky wraiths
+  {key:'i1',    x:60, y:134, r:4, puzzle:1}, // defeat four storm bats
   {key:'i2',    x:76, y:112, r:5, puzzle:2}, // tread the rune-tiles in order
   {key:'i3',    x:44, y:92,  r:5, puzzle:3}, // dodge the cloud-snatcher, cross over
   {key:'i4',    x:76, y:72,  r:6, puzzle:4}, // the Storm-Wraith mini-boss
-  {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more sky wraiths
+  {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more storm bats
   {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
 ];
 function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
@@ -48,7 +48,7 @@ const SKY_GATES = [
 ];
 const SKYDUNGEON_ZONES = {
   start: {x:60, y:156, r:6, name:'The Rainbow Landing', lv:[9,11]},
-  i1:    {x:60, y:134, r:5, name:'The Wraith-Perch',    lv:[9,11]},
+  i1:    {x:60, y:134, r:5, name:'The Bat-Perch',       lv:[9,11]},
   i2:    {x:76, y:112, r:5, name:'The Rune-Tiles',      lv:[9,11]},
   i3:    {x:44, y:92,  r:6, name:"The Snatcher's Isle", lv:[10,11]},
   i4:    {x:76, y:72,  r:7, name:'The Storm-Perch',     lv:[10,12]},
@@ -205,7 +205,7 @@ function rotateSkyPrism(b){
 }
 function spawnSkyWraith(x,y,puzzle,elite){
   const sp=findOpenNear(Math.round(x),Math.round(y),4) || [Math.round(x),Math.round(y)];
-  const m=spawnMob('skywraith', sp[0], sp[1], elite);
+  const m=spawnMob('skybat', sp[0], sp[1], elite);
   if(m){ m.puzzle=puzzle; m.respawnT=-1; m.lvl=Math.max(9,Math.min(12,P.level)); m.hx=m.x; m.hy=m.y; }
   return m;
 }
@@ -225,12 +225,12 @@ function ensureSnatcher(){
   const g=spawnMob('skygrabber', sp[0], sp[1]);
   if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=gcx; g.gcy=gcy; g.gr=gr; g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
 }
-/* ---------- roaming road-shades: patrol the open stretches between the isles ----------
+/* ---------- roaming storm-bats: patrol the open stretches between the isles ----------
    The rainbow road used to be a quiet dash-and-cross with nothing to fight in-between.
-   These drifting sky-shades post along each open stretch and give chase as you near, so
+   These drifting storm-bats post along each open stretch and give chase as you near, so
    you meet them one segment at a time AS YOU PROGRESS up the road. The fading bridge
    (i2 -> i3) is left clear on purpose: that crossing is a timing puzzle, and a chasing
-   shade there would be unfair. Posts are snapped to solid road so the shades don't nest
+   bat there would be unfair. Posts are snapped to solid road so the bats don't nest
    in the dash-gap pits. */
 const SKY_ROAD_PATROLS = [
   {a:'start', b:'i1', n:1},   // the first climb off the landing - one lone shade
@@ -267,7 +267,7 @@ function spawnRoadShades(){
     for(let i=0;i<seg.n;i++){
       const t=(seg.n===1)?0.5:i/(seg.n-1);
       const sx=lerp(pA[0],pB[0],t), sy=lerp(pA[1],pB[1],t);
-      const m=spawnMob('skywraith', Math.floor(sx), Math.floor(sy));
+      const m=spawnMob('skybat', Math.floor(sx), Math.floor(sy));
       if(!m) continue;
       m.roadwraith=1; m.respawnT=-1;
       m.lvl=Math.max(9,Math.min(12,P.level));
@@ -280,7 +280,7 @@ function spawnRoadShades(){
 function spawnMobsSkyDungeon(){
   P.story=P.story||{};
   const done=!!P.story.skyDungeonDone;
-  // P1 - four sky wraiths bar the perch
+  // P1 - four storm bats bar the perch
   if(!P.story.skyG1){ const s=skyIsle('i1');
     for(let i=0;i<4;i++){ const a=i/4*TAU, r2=2.2; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 1); } }
   // P3 - the cloud-snatcher: held back until you're further in (see ensureSnatcher).
@@ -293,7 +293,7 @@ function spawnMobsSkyDungeon(){
     const b=spawnMob('stormwraith', sp[0], sp[1]);
     if(b){ b.boss=true; b.bigBoss=true; b.skyminiboss=1; b.bscale=1.7; b.title='THE STORM-WRAITH';
       b.hp=b.maxhp=300; b.dmg=26; b.lvl=11; b.hx=b.x; b.hy=b.y; b.respawnT=-1; b.entrance='descend'; } }
-  // P5 - three more sky wraiths
+  // P5 - three more storm bats
   if(!P.story.skyG5){ const s=skyIsle('i5');
     for(let i=0;i<3;i++){ const a=i/3*TAU, r2=2.0; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 5); } }
   // P6 - the Storm-Eye: a shielded storm-core that hovers over its isle. It can't be
@@ -343,10 +343,10 @@ function pressSkyTile(b){
     if(Snd.hit) Snd.hit(); if(Snd.boss) Snd.boss(); G.shake=0.35;
     burst(b.x,b.y-0.3,'#3a2a4a',14,2);
     const sp=findOpenNear(Math.round(b.x),Math.round(b.y)-1,4) || [Math.round(b.x),Math.round(b.y)];
-    const m=spawnMob('skywraith', sp[0], sp[1]);
+    const m=spawnMob('skybat', sp[0], sp[1]);
     if(m){ m.state='chase'; m.respawnT=-1; m.noAggroT=0; m.lvl=Math.max(9,Math.min(12,P.level)); m.hx=m.x; m.hy=m.y;
       shockwave(m.x,m.y,'rgba(140,180,255,0.7)',22); burst(m.x,m.y-0.4,'#bcd8ff',14,1.8); }
-    toast('Wrong tile! It sours and a <b>sky wraith</b> tears free of the cloud. The runes go dark - the order resets, and you must guess anew.',4200);
+    toast('Wrong tile! It sours and a <b>storm bat</b> tears free of the cloud. The runes go dark - the order resets, and you must guess anew.',4200);
   }
 }
 

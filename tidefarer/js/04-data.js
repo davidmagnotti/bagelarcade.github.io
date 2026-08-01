@@ -254,7 +254,8 @@ const MOBDEF = {
   thundercaller:{hp:960, dmg:34, speed:2.8, aggro:14, xp:840, gold:[0,0], lvl:12, name:'The Thundercaller'}, // Cloudreach's Storm Temple: a storm-herald; hunting strikes + a charge/discharge shield
   wardking:{hp:1600, dmg:40, speed:2.5, aggro:12, xp:1200, gold:[0,0], lvl:16, name:'The Tideward Guardian'}, // Emberwick capstone: the founders' sentinel; sweep, shard-fan, and a summoning slam across three phases
   // -- the Rainbow Road (sky-dungeon) --
-  skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches
+  skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches (Storm Temple storm-shades reuse this)
+  skybat:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Storm Bat'},               // the Rainbow Road's roosting swarm - same fight as the old sky wraith, now a winged cloud-bat
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank
   stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // mini-boss; its stormlight lets your staff stun
   skyspirit:{hp:980, dmg:30, speed:3.2, aggro:13, xp:820, gold:[0,0], lvl:13, name:'The Corrupted Spirit'}, // (retired) old final sky boss
