@@ -670,7 +670,7 @@ function damageMob(m,dmg,knock,skill){
     m.hurtT=0.1;
     if(Math.random()<0.35) addFloat('BOW ONLY', m.x, m.y-2.2, '#bfe8ff');
     if(!P._eyeBowHint){ P._eyeBowHint=1;
-      toast('Blade and bolt scatter off the Storm-Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
+      toast('Blade and bolt scatter off the Hurricane Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
     return;
   }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
@@ -961,7 +961,7 @@ function killMob(m,skill){
     }, 1400);
   }
   // THE WIND SPIRIT on the Cloudreach - felling it lifts the ward on the Gale-Shrine, so you
-  // can take the bow (the one arm that can strike the Storm-Eye up on the rainbow road).
+  // can take the bow (the one arm that can strike the Hurricane Eye up on the rainbow road).
   if(m.windspirit){
     P.story=P.story||{}; P.story.skyWindSpiritDown=1;
     const g=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='windward');
@@ -2002,6 +2002,9 @@ function updateWorld(dt){
   if(G.worldId==='skydeep' && typeof updateSkyDeep==='function') updateSkyDeep(dt);
   if(G.worldId==='embertomb' && typeof updateEmberTomb==='function') updateEmberTomb(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
+  // THE CLOUDREACH: the same soured high wind that fouls the rainbow road grips the hub
+  // too - a constant gale shoving you around until the Hurricane Eye is put out.
+  if(G.worldId==='sky' && typeof skyWindPush==='function') skyWindPush(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);
 }

@@ -3605,7 +3605,7 @@ function drawProj(p,s){
     s={x:s.x, y:s.y - p.z};
   }
   if(p.kind==='galewisp'){
-    // a little dodge-only flier the Storm-Eye spits: a comet-wisp with flitting wings
+    // a little dodge-only flier the Hurricane Eye spits: a comet-wisp with flitting wings
     const g=cx, t=G.time, a=Math.atan2(p.vy, p.vx), flap=Math.sin(t*22+(p.ph||0))*3;
     g.save(); g.translate(s.x, s.y-12);
     // glow + tail

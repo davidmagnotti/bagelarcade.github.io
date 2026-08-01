@@ -1,6 +1,6 @@
 /* =====================================================================
    THREE MORE FREEING CUTSCENES - the Weeping Warden, the Rimebound, and
-   the Storm-Eye.
+   the Hurricane Eye.
    -----------------------------------------------------------------------
    The same self-contained rAF overlay the Leviathan freeing uses
    (38-leviathan-cutscene.js): one paused-world scene over the shared dgOv
@@ -476,7 +476,7 @@ function drawStormScene(cx,W,H,t){
     vg.addColorStop(0,'rgba(255,240,190,'+(0.5*(calm-0.6)/0.4).toFixed(3)+')'); vg.addColorStop(1,'rgba(255,240,190,0)');
     cx.fillStyle=vg; cx.beginPath(); cx.arc(vx,vy,vr*2.4,0,TAU); cx.fill(); cx.restore(); }
 
-  // the Storm-Eye core, guttering into mist as dive rises
+  // the Hurricane Eye core, guttering into mist as dive rises
   drawStormEye(cx, W*0.5, H*0.40, Math.min(W,H)*0.16, ens, dive, t);
 }
 function drawStormEye(cx,x,y,s,ens,dive,t){

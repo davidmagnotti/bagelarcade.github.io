@@ -1,9 +1,9 @@
 /* =====================================================================
    THE RAINBOW ROAD - a bird's plea and a "sky dungeon" strung across the
    cloud-sea. A wind-lost bird on the Cloudreach can no longer glide down to
-   her favourite islands - the Storm-Eye, a bound storm-core, has soured the high wind and
+   her favourite islands - the Hurricane Eye, a bound storm-core, has soured the high wind and
    blows her off course. Run her rainbow road, clear six tiny sky-isles of
-   their trials, and put the Storm-Eye out; the wind calms and her roost is
+   their trials, and put the Hurricane Eye out; the wind calms and her roost is
    hers again.
    The open stretches BETWEEN the isles are patrolled by drifting storm-bats
    (see spawnRoadShades) - the storm scattered them the length of the run, so
@@ -16,10 +16,10 @@ const SKY_ISLES = [
   {key:'i3',    x:44, y:92,  r:5, puzzle:3}, // dodge the cloud-snatcher, cross over
   {key:'i4',    x:76, y:72,  r:6, puzzle:4}, // a quiet waypoint perch (ward parts on arrival)
   {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more storm bats
-  {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
+  {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Hurricane Eye
 ];
 // THE CROWN-VAULT: a small still room north of the Broken Crown, walled off until the
-// Storm-Eye falls. Holds the Cloud-Chart and the bird that bears you down. Kept OUT of
+// Hurricane Eye falls. Holds the Cloud-Chart and the bird that bears you down. Kept OUT of
 // SKY_ISLES on purpose so the platformize/sway passes never touch it (it's a solid room).
 const SKY_VAULT = {x:60, y:12, r:4};
 function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
@@ -160,15 +160,15 @@ function placeObjectsSkyDungeon(){
     if(g.gate==='g2') continue;
     const m=skyGateMid(g), tiles=skyGatePlugTiles(g);
     let open=!!P.story[g.flag];
-    // g5 (i5 -> i6) doubles as the Storm-Eye ARENA SEAL: once you step onto the Broken
+    // g5 (i5 -> i6) doubles as the Hurricane Eye ARENA SEAL: once you step onto the Broken
     // Crown it slams shut behind you and holds while the fight is on; it reopens only
-    // after the Storm-Eye falls (so you can come back for the chart if you left early).
+    // after the Hurricane Eye falls (so you can come back for the chart if you left early).
     if(g.gate==='g5' && P.story.skyEyeSealed && !P.story.skyEyeDone) open=false;
     G.decor.push({kind:'skygate', gate:g.gate, x:m.x, y:m.y, tiles, open, label:'a wind-ward'});
     for(const [x,y] of tiles){ setSolid(x,y, open?0:1); }
   }
   // THE CROWN-WARD: the ward between the Broken Crown and the Crown-Vault beyond. Sealed
-  // until the Storm-Eye is put out (see killMob's skyfinalboss branch, which opens 'gEye').
+  // until the Hurricane Eye is put out (see killMob's skyfinalboss branch, which opens 'gEye').
   { const gx=SKY_VAULT.x, gy=19, tiles=[];
     for(let x=gx-2;x<=gx+2;x++) for(let y=gy-1;y<=gy+1;y++){
       if(inb(x,y) && tileAt(x,y)===T.SNOW && !skyVaultTile(x,y)) tiles.push([x,y]); }
@@ -177,7 +177,7 @@ function placeObjectsSkyDungeon(){
     for(const [x,y] of tiles) setSolid(x,y, open?0:1);
   }
   // THE CROWN-VAULT: the Cloud-Chart the crown kept, and the wind-lost bird waiting to bear
-  // you down. Both sit beyond the crown-ward, so they're walled off until the Storm-Eye falls.
+  // you down. Both sit beyond the crown-ward, so they're walled off until the Hurricane Eye falls.
   if(!(P.story && P.story.skyMapTaken))
     G.decor.push({kind:'chest', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-0.5, skymap:1});
   G.decor.push({kind:'skybird', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-2.0, up:1, name:'THE WIND-LOST BIRD', labelY:-46});
@@ -318,12 +318,12 @@ function spawnMobsSkyDungeon(){
   // P5 - three more storm bats
   if(!P.story.skyG5){ const s=skyIsle('i5');
     for(let i=0;i<3;i++){ const a=i/3*TAU, r2=2.0; spawnSkyWraith(s.x+Math.cos(a)*r2, s.y+Math.sin(a)*r2, 5); } }
-  // P6 - the Storm-Eye: a shielded storm-core that hovers over its isle. It can't be
+  // P6 - the Hurricane Eye: a shielded storm-core that hovers over its isle. It can't be
   // struck while its shield holds - it spits dodge-only gale-wisps at you, and only drops
   // its guard for a moment each time it DISCHARGES (a telegraphed shockwave). Strike then.
   if(!done){ const s=skyIsle('i6');
     const b=spawnMob('stormeye', s.x, s.y-1);
-    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE STORM-EYE'; b.ach='stormbreaker';
+    if(b){ b.boss=true; b.bigBoss=true; b.skyfinalboss=1; b.bscale=2.4; b.title='THE HURRICANE EYE'; b.ach='stormbreaker';
       b.hp=b.maxhp=440; b.dmg=24; b.lvl=13; b.hx=s.x; b.hy=s.y-1; b.respawnT=-1;
       b.invuln=1; b.stormeye=1; b.eyeState='hover'; b.eyeT=2.6; b.hover=1; b.float=0; b.entrance='descend'; } }
   // roaming road-shades between the isles - unless the road's already calm
@@ -390,25 +390,47 @@ function skyFallRespawn(){
   if(z.hint) toast(z.hint,5600);
 }
 
-/* ---------- the high wind: a steady sideways gale down the rainbow road that shoves you
-   off your line (and off the narrow platforms) until the Storm-Eye is put out. ---------- */
+/* ---------- the high wind: a CONSTANT gale that grips the whole Cloudreach AND the
+   rainbow road, shoving you around until the Hurricane Eye is put out. Unlike the old
+   road-only gust, this never lets up (a steady pressure, only rippled by a light gust
+   on top) and its heading WANDERS slowly around the compass, so it buffets you from
+   changing quarters rather than along one fixed line - it blows you around. It stills
+   the instant the eye falls (skyEyeDone / skyDungeonDone). ---------- */
+function skyWindActive(){
+  if(G.worldId!=='sky' && G.worldId!=='skydungeon') return false;
+  if(P.dead || dlg.open || G._skyFall) return false;
+  if(P.story && (P.story.skyEyeDone || P.story.skyDungeonDone)) return false;   // the sky calms once the eye is out
+  return true;
+}
+// the wind's heading: a slow wander around the compass (a second, slower term keeps it
+// from ever settling into a clean circle), so the gale comes at you from every quarter.
+function skyWindDir(){
+  const a = (G.time||0)*0.34 + 1.3*Math.sin((G.time||0)*0.11);
+  return {x:Math.cos(a), y:Math.sin(a), a};
+}
 function skyWindPush(dt){
-  if(G.worldId!=='skydungeon' || P.dead || dlg.open || G._skyFall) return;
-  if(P.story && (P.story.skyEyeDone || P.story.skyDungeonDone)) return;   // the sky is calm once the eye is out
-  const gust = 0.8 + 0.7*Math.max(0, Math.sin((G.time||0)*0.6));          // a pulsing gale
-  const dir = 1;                                                         // blows steadily east, across the road
-  const nx = P.x + dir*gust*dt;
-  if(typeof circleBlocked==='function'){ if(!circleBlocked(nx, P.y, 0.28)) P.x=nx; } else { P.x=nx; }
-  // sideways wind-streaks so the gale reads on screen
-  if(Math.random() < dt*34){ const sy=P.y-6+Math.random()*12;
-    G.parts.push({x:P.x-8, y:sy, vx:dir*rnd(7,12), vy:rnd(-0.3,0.3), life:rnd(0.5,1.0), color:'rgba(210,225,245,0.55)', size:rnd(1.2,2.6), grav:0}); }
+  if(!skyWindActive()) return;
+  const d=skyWindDir();
+  // constant base pressure with a light gust ripple on top - it never drops to nothing.
+  // A shade stronger out on the exposed rainbow road than on the sheltered Cloudreach hub.
+  const mag = (G.worldId==='skydungeon' ? 1.15 : 0.85) * (1 + 0.22*Math.sin((G.time||0)*1.7));
+  const nx = P.x + d.x*mag*dt, ny = P.y + d.y*mag*dt;
+  if(typeof circleBlocked==='function'){
+    if(!circleBlocked(nx, P.y, 0.28)) P.x=nx;   // walls (and the cloud's solid edge) stop the drift
+    if(!circleBlocked(P.x, ny, 0.28)) P.y=ny;
+  } else { P.x=nx; P.y=ny; }
+  // wind-streaks blown along the current heading so the gale reads on screen
+  if(Math.random() < dt*40){ const perpx=-d.y, perpy=d.x, off=rnd(-7,7);
+    G.parts.push({x:P.x - d.x*8 + perpx*off, y:P.y - d.y*4 + perpy*off*0.5,
+      vx:d.x*rnd(8,13), vy:d.y*rnd(8,13)*0.6, life:rnd(0.5,1.0),
+      color:'rgba(210,225,245,0.55)', size:rnd(1.2,2.6), grav:0}); }
 }
 /* ---------- per-frame dungeon logic ---------- */
 function updateSkyDungeon(dt){
   P.story=P.story||{};
   // a fall in progress plays out (control frozen), then bears you back to the target isle
   if(G._skyFall){ G._skyFall.t+=dt; if(G._skyFall.t>=G._skyFall.dur) skyFallRespawn(); return; }
-  skyWindPush(dt);   // the high wind shoves you sideways down the road - stills once the Storm-Eye is out
+  skyWindPush(dt);   // the high wind shoves you sideways down the road - stills once the Hurricane Eye is out
   // fall between the floating rainbow platforms -> the wind bears you back to the isle behind you
   if(G._skyPits && G._skyPits.size && !P.dead && (P.rollT||0)<=0 && G._skyPits.has(Math.floor(P.x)+','+Math.floor(P.y))){
     let best=null,bd=1e9;
@@ -501,7 +523,7 @@ function updateSkyDungeon(dt){
       if(typeof autoSave==='function') autoSave();
     }
   }
-  // THE BROKEN CROWN ARENA SEAL: stepping onto i6 while the Storm-Eye lives slams the wind-ward
+  // THE BROKEN CROWN ARENA SEAL: stepping onto i6 while the Hurricane Eye lives slams the wind-ward
   // (g5) shut behind you and holds it - no retreat until the eye is out. It reopens on the kill.
   if(!P.story.skyEyeSealed && !P.story.skyEyeDone && !P.story.skyDungeonDone){
     const s6=skyIsle('i6');
@@ -511,7 +533,7 @@ function updateSkyDungeon(dt){
       if(g){ g.open=false; for(const [x,y] of (g.tiles||[])) setSolid(x,y,1);
         shockwave(g.x,g.y,'rgba(190,170,255,0.9)',44); }
       G.shake=0.4; if(Snd.boss) Snd.boss();
-      toast('The wind-ward slams shut behind you - the <b>Broken Crown</b> is sealed. <b style="color:#bfe8ff">Put out the Storm-Eye.</b>',4600);
+      toast('The wind-ward slams shut behind you - the <b>Broken Crown</b> is sealed. <b style="color:#bfe8ff">Put out the Hurricane Eye.</b>',4600);
     }
   }
   // P3 - the cloud-snatcher: leashed to its isle, and a touch throws you back to the landing
@@ -689,9 +711,9 @@ function skyBirdDialog(){
     return;
   }
   const haveBow = !!(P.unlocked && P.unlocked.bow);
-  // The Storm-Eye up on the road can ONLY be struck by the bow - so the bird will not fly you
+  // The Hurricane Eye up on the road can ONLY be struck by the bow - so the bird will not fly you
   // up until you carry one. She sends you to the wind spirit at the north shrine to win it.
-  const needBowLine = '<i>The bird tilts her head at your hands.</i> But not yet - not empty-handed! The thing that soured the wind, the <b>Storm-Eye</b>, turns aside blade and spell alike; only a <b>true arrow</b> will bite it. A <b>wind spirit</b> haunts the little shrine to the <b>north</b> - put it down and take the <b>bow</b> it guards. Come back with a bow in hand, and we\'ll run the rainbow road together.';
+  const needBowLine = '<i>The bird tilts her head at your hands.</i> But not yet - not empty-handed! The thing that soured the wind, the <b>Hurricane Eye</b>, turns aside blade and spell alike; only a <b>true arrow</b> will bite it. A <b>wind spirit</b> haunts the little shrine to the <b>north</b> - put it down and take the <b>bow</b> it guards. Come back with a bow in hand, and we\'ll run the rainbow road together.';
   const offerRoad=()=>{
     setDialog('<i>The bird beats up onto a rising ribbon of colour that was not there a moment ago.</i> You carry a bow - good! Follow me, then, up the rainbow road. Step onto it when you\'re ready, and stay close.',
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
@@ -732,7 +754,7 @@ function exitSkyDungeon(){
     G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },220); }, 300);
 }
-/* after the Storm-Eye falls: mend the hero and set them at the landing */
+/* after the Hurricane Eye falls: mend the hero and set them at the landing */
 function offerSkyReturn(){
   if(G.state!=='play' || P.dead || G.worldId!=='skydungeon' || dlg.open) return;
   const st=skyIsle('start');

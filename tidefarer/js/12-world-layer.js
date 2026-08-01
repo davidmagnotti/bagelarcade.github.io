@@ -125,7 +125,7 @@ const EMBERGIFT_ZONES = { // THE ASHEN FORGE - a lava-worked vault under Mount K
 const STORMTEMPLE_ZONES = { // THE STORM TEMPLE - a lightning-wracked temple on the Cloudreach (grants the double dash)
   entry:  {x:36, y:88, r:7,  name:'The Thunderstair',  lv:[9,11]},
   nave:   {x:36, y:54, r:12, name:'The Storm Nave',    lv:[10,12]}, // strike-lanes you double-dash between
-  sanctum:{x:36, y:20, r:12, name:'The Stormheart',    lv:[11,13]}  // the Storm-Eye + the twin-dash chest
+  sanctum:{x:36, y:20, r:12, name:'The Stormheart',    lv:[11,13]}  // the Stormheart boss + the twin-dash chest
 };
 const TIDEWARD_ZONES = { // THE TIDEWARD CRYPT - the Emberwick capstone, opened only with all four gifts
   entry:  {x:40, y:96, r:8,  name:'The Founders\' Stair', lv:[12,14]},
@@ -3429,7 +3429,7 @@ function exitUndermaw(){
 /* =====================================================================
    THE CLOUDREACH (sky) + STORMREACH (reach) - a two-island arc:
    Ashwing flies you UP into the cloud-sea to the Cloudreach. Run the
-   Wind-Lost Bird's RAINBOW ROAD (the sky-dungeon) and put out the Storm-Eye
+   Wind-Lost Bird's RAINBOW ROAD (the sky-dungeon) and put out the Hurricane Eye
    to calm the high wind - that wins you a stormsail and opens THE LEAP, the
    way DOWN through the cloud onto Windsurf, then Stormreach far below. (The
    Storm Roc that rules the eyrie is an optional trophy hunt, not the road
@@ -3483,7 +3483,7 @@ function placeObjectsSky(){
     G.decor.push({kind:'skybird', x:sp[0]+0.5, y:sp[1]+0.5, name:'A WIND-LOST BIRD', labelY:-44}); }
   // THE GALE-SHRINE: a little stone-ringed shrine at the north where a WIND SPIRIT guards a
   // chest. Beat the spirit and the wind-ward across the throat lifts (see killMob's windspirit
-  // branch), and the chest gives up the BOW - the one arm that can strike the Storm-Eye.
+  // branch), and the chest gives up the BOW - the one arm that can strike the Hurricane Eye.
   { const cx0=32, cy0=15;
     const walls=[[31,13],[32,13],[33,13],[30,14],[30,15],[30,16],[34,14],[34,15],[34,16],[30,17],[34,17]];
     for(const [x,y] of walls){ if(inb(x,y)){ G.decor.push({kind:'pillar', x:x+0.5, y:y+0.5, broken:false}); setSolid(x,y,1); } }
@@ -3502,8 +3502,8 @@ function spawnSkyFolk(){
   G.npcs.push(makeNPC('aeron','Aeron the Skyward', Z.landing.x-2.5, Z.landing.y+2.5,
     {skin:'#c2a488',hair:'#d8d0c0',shirt:'#5a6a8a',pants:'#33384a',hairstyle:'long'},
     ['Few climb Ashwing’s wing this high. Fewer still leave - the wind up here is soured, and a soured sky suffers no guests.',
-     'There\'s a wind <b>spirit</b> haunting the shrine to the north - it guards an old <b>bow</b>. Mind it if you mean to run the road: the Storm-Eye up there laughs at steel, and only an arrow will reach it.',
-     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Storm-Eye</b> that fouled the sky. Bring the chart down from the crown, and <b>Ashwing</b> will bear you on to <b>Windsurf</b>, bright on the water below.'],0.4));
+     'There\'s a wind <b>spirit</b> haunting the shrine to the north - it guards an old <b>bow</b>. Mind it if you mean to run the road: the Hurricane Eye up there laughs at steel, and only an arrow will reach it.',
+     'See the little wind-lost bird by the landing? Run her <b>rainbow road</b> and put out the <b>Hurricane Eye</b> that fouled the sky. Bring the chart down from the crown, and <b>Ashwing</b> will bear you on to <b>Windsurf</b>, bright on the water below.'],0.4));
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
@@ -3909,7 +3909,7 @@ function askSkyDragon(){
 // is Ashwing's work, unlocked by the Cloud-Chart. The shelf points you to him.
 function useLeapPoint(){
   if(!(P.story && P.story.skyMapTaken)){
-    toast('You lean over the shelf-lip - nothing below but cold cloud and, far down, a city bright on the water. <b>It is far too far to jump.</b> Run the <b>Wind-Lost Bird</b>\'s rainbow road, put out the Storm-Eye, and bring the <b>Cloud-Chart</b> back to <b>Ashwing</b> at the landing - he\'ll bear you down.',6600);
+    toast('You lean over the shelf-lip - nothing below but cold cloud and, far down, a city bright on the water. <b>It is far too far to jump.</b> Run the <b>Wind-Lost Bird</b>\'s rainbow road, put out the Hurricane Eye, and bring the <b>Cloud-Chart</b> back to <b>Ashwing</b> at the landing - he\'ll bear you down.',6600);
   } else {
     toast('The high wind is tamed, but it is still a long drop. <b>Ashwing</b> waits at the landing - show him the <b>Cloud-Chart</b> and he\'ll fly you down to Windsurf, on to the Sunward Isle, or back up here whenever you like.',6000);
   }
@@ -5916,7 +5916,7 @@ function openChest(b){
     setTimeout(autoSave,300); return;
   }
   // THE GALE-SHRINE (Cloudreach): the bow - moved here from the old world, and the ONLY arm
-  // that can strike the Storm-Eye up on the rainbow road. A genuine surprise behind the spirit.
+  // that can strike the Hurricane Eye up on the rainbow road. A genuine surprise behind the spirit.
   if(b.skybow){
     bumpStat('chests');
     P.story=P.story||{}; P.story.skyBowTaken=1;
@@ -5928,12 +5928,12 @@ function openChest(b){
       if(typeof refreshUI==='function') refreshUI();
       Snd.levelup&&Snd.levelup();
       banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> refills slowly, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
-        else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> refills slowly, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Hurricane Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+        else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Hurricane Eye ahead.',7000); },400);
     } else {
       giveGold(30); give('potion',1); Snd.quest&&Snd.quest();
       banner('THE SHRINE OPENS','A QUIVER AND A TONIC');
-      setTimeout(()=>toast('You carry a bow already - the shrine\'s spare goes to the pack with a tonic and a few coins. (Its long shafts are the one thing the <b>Storm-Eye</b> will feel.)',6000),400);
+      setTimeout(()=>toast('You carry a bow already - the shrine\'s spare goes to the pack with a tonic and a few coins. (Its long shafts are the one thing the <b>Hurricane Eye</b> will feel.)',6000),400);
     }
     setTimeout(autoSave,300); return;
   }

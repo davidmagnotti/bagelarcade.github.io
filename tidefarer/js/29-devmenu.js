@@ -53,7 +53,7 @@ function playCutscene(kind){
     case 'leviathan':      if(typeof leviathanFreedCutscene==='function') leviathanFreedCutscene(null, done('Leviathan freed')); break;
     case 'warden':         if(typeof wardenFreedCutscene==='function')    wardenFreedCutscene(null, done('Weeping Warden freed')); break;
     case 'rimebound':      if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(null, done('Rimebound freed')); break;
-    case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
+    case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Hurricane Eye closes')); break;
     case 'vath':           if(typeof vathBoundCutscene==='function')      vathBoundCutscene(null, done('Vath bound')); break;
     case 'aerie':          if(typeof aerieFreedCutscene==='function')     aerieFreedCutscene(null, done('The tome burns')); break;
     default: return;
@@ -274,7 +274,7 @@ const SECTIONS=[
     ['Leviathan UNBOUND (freed)',()=>playCutscene('leviathan')],
     ['Weeping Warden FREED (frost)',()=>playCutscene('warden')],
     ['Rimebound FREED (deep ice)',()=>playCutscene('rimebound')],
-    ['Storm-Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
+    ['Hurricane Eye CLOSES (sky finale)',()=>playCutscene('stormeye')],
     ['Vath BOUND (Act I villain sealed)',()=>playCutscene('vath')],
     ['The TOME BURNS (aerie freed)',()=>playCutscene('aerie')],
   ]],

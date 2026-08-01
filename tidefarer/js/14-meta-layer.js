@@ -28,7 +28,7 @@ const ACH={
   rocslayer:{t:'Roc-Slayer',d:'Down the Storm Roc atop the Cloudreach.'},
   brutebane:{t:'Brute-Bane',d:'Put the Barrow Brute back in its barrow.'},
   deepwarden:{t:'Maze-Breaker',d:'Put down the Drowned Minotaur in the Stormreach catacomb.'},
-  stormbreaker:{t:'Storm-Breaker',d:'Close the Storm-Eye and calm the high wind.'},
+  stormbreaker:{t:'Storm-Breaker',d:'Close the Hurricane Eye and calm the high wind.'},
   enchantersbane:{t:"The Enchanter's Bane",d:'Bind Vath the enchanter for good.'}
 };
 function award(id){

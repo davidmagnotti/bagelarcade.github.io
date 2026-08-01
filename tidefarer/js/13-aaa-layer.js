@@ -20,7 +20,7 @@ function shockwave(x,y,color,r){ G.parts.push({x,y,vx:0,vy:0,life:0.35,max:0.35,
    scripted-camera beat in 21-exploration.js: the camera eases onto the boss, a
    title banner lands, an impact beat hits, then it hands straight to the fight.
    Damage immunity during the beat rides on m.introKind (NOT m.invuln, which the
-   Storm-Eye's shield and the snatcher's grab-guard already own). */
+   Hurricane Eye's shield and the snatcher's grab-guard already own). */
 const BOSS_INTRO_KIND = {
   enthrall:{ col:'199,123,255', dur:2.8 },   // Vath's violet washes over the beast
   surface: { col:'150,220,245', dur:2.7 },   // rises breaching out of the water
