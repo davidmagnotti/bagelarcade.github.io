@@ -310,18 +310,20 @@ const waterBase=waterGeo.attributes.position.array.slice();
 
 function onGround(o,x,z,yOff=0){ o.position.set(x,heightAt(x,z)+yOff,z); world.add(o); return o; }
 function ground(g,r){ g.add(contactShadow(r)); return g; }
+// ---- solid obstacles: circle colliders the player can't walk through ----
+const colliders=[]; function solid(x,z,r){ colliders.push({x,z,r}); }
 
 // ---------- prop builders ----------
 const foliage=[], lampFlames=[], beacons=[];
 function tree(x,z,s=1){ const g=new THREE.Group(); const tr=toon(cyl(0.32,0.62,3.4,7),COL.timber,{outline:0.04}); tr.position.y=1.7; g.add(tr);
   const greens=[0x50783a,0x5e8a42,0x6d9a4d,0x82a857]; const foli=[];
   [[0,4.3,0,2.6],[1.5,3.9,.5,1.9],[-1.4,4.1,-.5,1.85],[.4,5.5,.2,1.95],[-.5,4,1.2,1.65],[.9,4.7,-1.2,1.6]].forEach((b,i)=>{ const f=toon(ico(b[3],1),greens[i%4],{outline:0.028}); f.position.set(b[0],b[1],b[2]); f.scale.y=0.92; g.add(f); foli.push(f);});
-  g.userData.foliage=foli; foliage.push(g); g.scale.setScalar(s); ground(g,2.4*s); onGround(g,x,z); return g; }
+  g.userData.foliage=foli; foliage.push(g); g.scale.setScalar(s); ground(g,2.4*s); onGround(g,x,z); solid(x,z,1.2*s); return g; }
 function pine(x,z,s=1){ const g=new THREE.Group(); const tr=toon(cyl(0.3,0.5,3,6),COL.timberDk,{outline:0.03}); tr.position.y=1.5; g.add(tr);
-  for(let i=0;i<3;i++){ const c=toon(cyl(0.02,2.2-i*0.5,2.0,7),0x3f6630,{outline:0.03,flat:true}); c.position.y=3+i*1.5; g.add(c);} ground(g,1.8*s); g.scale.setScalar(s); onGround(g,x,z); return g; }
+  for(let i=0;i<3;i++){ const c=toon(cyl(0.02,2.2-i*0.5,2.0,7),0x3f6630,{outline:0.03,flat:true}); c.position.y=3+i*1.5; g.add(c);} ground(g,1.8*s); g.scale.setScalar(s); onGround(g,x,z); solid(x,z,1.1*s); return g; }
 function bush(x,z){ const g=new THREE.Group(); [[0,.9,0,1.2],[.9,.8,.2,.9],[-.7,.85,.4,.85]].forEach(b=>{const f=toon(ico(b[3],1),0x4f7838,{outline:0.03}); f.position.set(b[0],b[1],b[2]); g.add(f);});
-  for(let i=0;i<6;i++){ const d=new THREE.Mesh(ico(0.14,0),new THREE.MeshToonMaterial({color:0xd0473f,gradientMap:ramp})); d.position.set((Math.random()-.5)*2,.7+Math.random()*.8,(Math.random()-.5)*2); g.add(d);} ground(g,1.3); onGround(g,x,z); return g; }
-function rock(x,z,s=1){ const g=toon(ico(1.3*s,0),COL.rock,{outline:0.03,flat:true}); g.scale.y=0.7; ground2(g,1.2*s); onGround(g,x,z,0.3*s); return g; }
+  for(let i=0;i<6;i++){ const d=new THREE.Mesh(ico(0.14,0),new THREE.MeshToonMaterial({color:0xd0473f,gradientMap:ramp})); d.position.set((Math.random()-.5)*2,.7+Math.random()*.8,(Math.random()-.5)*2); g.add(d);} ground(g,1.3); onGround(g,x,z); solid(x,z,1.0); return g; }
+function rock(x,z,s=1){ const g=toon(ico(1.3*s,0),COL.rock,{outline:0.03,flat:true}); g.scale.y=0.7; ground2(g,1.2*s); onGround(g,x,z,0.3*s); solid(x,z,1.25*s); return g; }
 function ground2(m,r){ const s=contactShadow(r); m.add(s); return m; }
 function cottage(x,z,rot=0,roof=COL.slate){ const g=new THREE.Group();
   g.add(pos(toon(box(6.8,1.0,5.8),COL.stoneDk,{outline:0.02}),0,.5,0));
@@ -332,16 +334,16 @@ function cottage(x,z,rot=0,roof=COL.slate){ const g=new THREE.Group();
   g.add(pos(toon(box(1.4,2.4,.25),COL.timberDk,{outline:0.02}),0,1.7,2.65));
   for(const wx of[-2,2]){ g.add(pos(new THREE.Mesh(box(1,1,.15),glowMat(COL.windowGlow)),wx,2.9,2.62)); g.add(pos(toon(box(1.25,1.25,.1),COL.timber,{outline:0}),wx,2.9,2.55)); }
   g.add(pos(toon(box(1,2.6,1),COL.stoneDk,{outline:0.03}),2.1,6.9,-1.6));
-  rotY(g,rot); ground(g,4.2); onGround(g,x,z); return g; }
+  rotY(g,rot); ground(g,4.2); onGround(g,x,z); solid(x,z,4.0); return g; }
 function well(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(1.8,2,1.7,16),COL.stone,{outline:0.03}),0,.85,0)); g.add(pos(toon(cyl(1.5,1.5,.2,16),COL.sea,{outline:0}),0,1.7,0));
   for(const sx of[-1.7,1.7])g.add(pos(toon(box(.35,3.6,.35),COL.timber,{outline:0.03}),sx,2.6,0));
-  g.add(pos(rotY(toon(cyl(.02,2.3,1.2,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,4.7,0)); ground(g,2.2); onGround(g,x,z); return g; }
+  g.add(pos(rotY(toon(cyl(.02,2.3,1.2,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,4.7,0)); ground(g,2.2); onGround(g,x,z); solid(x,z,2.1); return g; }
 function tower(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(2.7,3.2,16,14),COL.stone,{outline:0.025}),0,8,0));
   for(const y of[4,9,13])g.add(pos(toon(cyl(3.15,3.15,.5,14),COL.stoneDk,{outline:0}),0,y,0));
   g.add(pos(toon(cyl(3.6,3.3,1.5,14),COL.stoneDk,{outline:0.025}),0,16.3,0));
   g.add(pos(rotY(toon(cyl(.02,4,5,14),COL.slate,{outline:0.03,flat:true}),0),0,19.3,0));
   const win=pos(new THREE.Mesh(box(1.5,2.2,.4),glowMat(COL.windowGlow)),0,11.5,3.05); g.add(win); beacons.push(win);
-  const l=new THREE.PointLight(0xffcf7a,26,50,2); l.position.set(0,12,3.5); g.add(l); ground(g,3.6); onGround(g,x,z); return g; }
+  const l=new THREE.PointLight(0xffcf7a,26,50,2); l.position.set(0,12,3.5); g.add(l); ground(g,3.6); onGround(g,x,z); solid(x,z,3.4); return g; }
 function lamp(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(.12,.18,4.4,8),COL.timberDk,{outline:0.03}),0,2.2,0));
   g.add(pos(toon(box(.15,.15,1),COL.timberDk,{outline:0}),0,4.3,.4)); g.add(pos(toon(cyl(.42,.42,.9,6),COL.timber,{outline:0.03}),0,4.2,.8));
   const fl=pos(new THREE.Mesh(ico(.28,0),glowMat(COL.flame)),0,4.2,.8); g.add(fl);
@@ -350,7 +352,7 @@ function dock(x,z){ const g=new THREE.Group(); for(let i=0;i<8;i++){ g.add(pos(t
   const boat=new THREE.Group(); boat.add(pos(toon(box(7,2,3),COL.timber,{outline:0.03}),0,1,0)); boat.add(pos(rotZ(toon(cyl(.02,1.5,3,3),COL.timber,{outline:0.03}),-Math.PI/2),4.2,1,0));
   boat.add(pos(toon(box(7.1,.4,3.1),COL.roofWarm,{outline:0}),0,1.9,0)); boat.add(pos(toon(cyl(.2,.2,7,6),COL.timberDk,{outline:0.03}),-.5,4.4,0)); boat.add(pos(toon(box(.18,4,3.4),0xece0c2,{outline:0.02,cast:false}),-.5,4.6,0));
   boat.position.set(-24,-1.0,4.6); boat.rotation.y=.18; boat.userData.bob=Math.random()*6; g.add(boat); g.userData.boat=boat; onGround(g,x,z,0.2); return g; }
-function ruinPillar(x,z,h){ const g=new THREE.Group(); const seg=Math.max(1,Math.round(h)); for(let i=0;i<seg;i++)g.add(pos(rotY(toon(cyl(.9,1.0,1.4,8),i%2?COL.stoneDk:COL.stone,{outline:0.03}),Math.random()),0,.7+i*1.4,0)); ground(g,1.1); onGround(g,x,z); return g; }
+function ruinPillar(x,z,h){ const g=new THREE.Group(); const seg=Math.max(1,Math.round(h)); for(let i=0;i<seg;i++)g.add(pos(rotY(toon(cyl(.9,1.0,1.4,8),i%2?COL.stoneDk:COL.stone,{outline:0.03}),Math.random()),0,.7+i*1.4,0)); ground(g,1.1); onGround(g,x,z); solid(x,z,1.1); return g; }
 function fold(x,z){ const g=new THREE.Group(),R=6; for(let a=0;a<Math.PI*2-.35;a+=.5){ g.add(pos(toon(box(.28,1.5,.28),COL.timber,{outline:0}),Math.cos(a)*R,.75,Math.sin(a)*R)); }
   for(const[sx,sz]of[[-2,1],[2,-1.5],[.5,2.5]]){ const s=new THREE.Group(); s.add(pos(scl(toon(ico(1.2,1),COL.wool,{outline:0.04}),1.3,1,1.05),0,1.35,0)); s.add(pos(toon(box(.65,.75,.85),COL.sheepFace,{outline:0.04}),1.35,1.25,0)); for(const[lx,lz]of[[-.7,-.5],[-.7,.5],[.7,-.5],[.7,.5]])s.add(pos(toon(box(.26,1,.26),COL.sheepFace,{outline:0}),lx,.5,lz)); ground(s,1.4); s.position.set(sx,0,sz); g.add(s);} ground(g,6.4); onGround(g,x,z); return g; }
 // small helpers
@@ -470,7 +472,7 @@ while(planted<(isMobile?140:280) && tries<4000){ tries++;
 const npcs=[];
 function addNPC(x,z,name,lines,opts){ const g=figure(opts||{tunic:COL.npcRobe,tunicDk:0x4a3a63,scarf:0x8a76a8,cape:false});
   const label=textSprite(name,'#ffdca0',38); label.position.y=5.2; label.visible=false; g.add(label);
-  ground(g,1.3); onGround(g,x,z); g.userData={name,lines,label,li:0,face:Math.random()*7,id:(opts&&opts.id)||name}; npcs.push(g); return g; }
+  ground(g,1.3); onGround(g,x,z); g.userData={name,lines,label,li:0,face:Math.random()*7,id:(opts&&opts.id)||name}; npcs.push(g); solid(x,z,0.8); return g; }
 addNPC(zc.village.x+1,zc.village.z-1,'Elder Maren',[
  "Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back.",
  "The meadow slimes have gone bold with the warm snap. Thin them, would you?",
@@ -478,10 +480,10 @@ addNPC(zc.village.x+1,zc.village.z-1,'Elder Maren',[
 addNPC(zc.farm.x+2,zc.farm.z+1,'Willa',[
  "Six slime-trails round the fold this morning. SIX. They spook the flock something awful.",
  "Squash a few in the meadow and I'll see you right."],{tunic:0x7c5a3a,tunicDk:0x53381f,scarf:0xc79a5e,hair:0x8a5a2a,cape:false});
-addNPC(zc.grove.x,zc.grove.z,'Rask',[
+const rask=addNPC(zc.grove.x,zc.grove.z,'Rask',[
  "A blade that only knows how to swing knows half its trade.",
  "A parry is only a strike with perfect timing — meet their blade with yours.",
- "Late. Always parry LATE — meet the strike, don't reach for it."],{tunic:0x3a4048,tunicDk:0x33342e,scarf:0xe05648,hair:0x8f8a80,beard:0x8f8a80,sword:true,size:1.06});
+ "Late. Always parry LATE — meet the strike, don't reach for it."],{tunic:0x3a4048,tunicDk:0x33342e,scarf:0xe05648,hair:0x8f8a80,beard:0x8f8a80,sword:true,size:1.06,id:'rask'});
 // Sage Orin — the isle's wizard, at his tower
 addNPC(zc.tower.x+4,zc.tower.z+4,'Sage Orin',[
  "Magic is just patience, pronounced quickly.",
@@ -537,7 +539,7 @@ function inn(x,z){ const g=new THREE.Group();
   const arm=pos(toon(box(2.2,.2,.2),COL.timber,{outline:0}),4.0,4.0,3.4); g.add(arm);
   g.add(pos(toon(box(2.0,1.3,.14),COL.walnut||0x5a3d28,{outline:0.03}),3.1,3.1,3.4));
   const sign=textSprite('Gull & Anchor','#ffdca0',30); sign.scale.set(3.4,0.9,1); sign.position.set(3.1,3.1,3.55); g.add(sign);
-  ground(g,5.4); onGround(g,x,z); return g; }
+  ground(g,5.4); onGround(g,x,z); solid(x,z,5.4); return g; }
 inn(zc.village.x-9,zc.village.z-13);
 
 // ============================================================
@@ -547,13 +549,13 @@ const enemies=[];
 function spawnSlime(x,z){ const g=new THREE.Group(); const body=toon(new THREE.SphereGeometry(1.5,20,14),COL.slime,{outline:0.045}); body.position.y=1.4; g.add(body);
   g.add(pos(new THREE.Mesh(ico(.5,1),new THREE.MeshBasicMaterial({color:0xdff5cf,transparent:true,opacity:.35})),-.5,2,.6));
   for(const ex of[-.5,.5])g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.2,10,10),new THREE.MeshBasicMaterial({color:0x20301a})),ex,1.7,1.35));
-  ground(g,1.6); onGround(g,x,z); enemies.push({g,body,kind:'slime',hp:60,max:60,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:3.4,dmg:8,reach:2.6}); }
+  ground(g,1.6); onGround(g,x,z); enemies.push({g,body,kind:'slime',hp:60,max:60,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:3.4,spd:3.4,dmg:8,reach:2.6}); }
 function spawnWolf(x,z){ const g=new THREE.Group();
   const body=toon(box(2.2,1.2,1.1),COL.wolf,{outline:0.04}); body.position.y=1.5; g.add(body);
   g.add(pos(toon(box(1,1,.9),COL.wolf,{outline:0.04}),1.2,1.9,0)); // head
   g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,.25)); g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,-.25));
   const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(box(.32,1.2,.32),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
-  ground(g,1.5); onGround(g,x,z); enemies.push({g,body,legs,kind:'wolf',hp:85,max:85,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:6.5,dmg:14,reach:3.0,face:0}); }
+  ground(g,1.5); onGround(g,x,z); enemies.push({g,body,legs,kind:'wolf',hp:85,max:85,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:3.6,spd:6.5,dmg:14,reach:3.0,face:0}); }
 for(let i=0;i<6;i++){ const a=Math.random()*7,r=Math.random()*10; spawnSlime(zc.meadow.x+Math.cos(a)*r,zc.meadow.z+Math.sin(a)*r); }
 for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*8; spawnSlime(zc.springs.x+Math.cos(a)*r,zc.springs.z+Math.sin(a)*r); }
 for(let i=0;i<4;i++){ const a=Math.random()*7,r=Math.random()*12; spawnWolf(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r); }
@@ -572,7 +574,7 @@ function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4
   if(boss){ g.add(pos(toon(cyl(.52*s,.58*s,.42*s,7),0xd9b24a,{outline:0.04,emissive:0x6a4a00}),0,4.25*s,0));   // crown
     const aura=new THREE.PointLight(0x8fffc0,12,30,2); aura.position.y=3*s; g.add(aura); rib.material.emissive=new THREE.Color(0x0f3324); }
   ground(g,1.4*s); onGround(g,x,z);
-  enemies.push({g,body:rib,legs,kind:'skeleton',boss:!!boss,hp:boss?600:120,max:boss?600:120,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,spd:boss?4.6:4.0,dmg:boss?26:13,reach:boss?4.0:3.0,face:0}); return enemies[enemies.length-1]; }
+  enemies.push({g,body:rib,legs,kind:'skeleton',boss:!!boss,hp:boss?600:120,max:boss?600:120,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:boss?9.5:5.4,spd:boss?4.6:4.0,dmg:boss?26:13,reach:boss?4.0:3.0,face:0}); return enemies[enemies.length-1]; }
 for(let i=0;i<4;i++){ const a=Math.random()*7,r=6+Math.random()*10; spawnSkeleton(zc.ruins.x+Math.cos(a)*r,zc.ruins.z+Math.sin(a)*r,false); }
 const hollowKing=spawnSkeleton(zc.ruins.x, zc.ruins.z-4, true);   // the crowned King, at the cold heart of the ruins
 let kingSeen=false;
@@ -586,6 +588,23 @@ function hitSpark(x,y,z,color){ const mat=new THREE.MeshBasicMaterial({color,ton
 const dmgNums=[];
 function dmgNum(x,y,z,val,color){ const sp=textSprite(String(val),color,52); sp.position.set(x,y,z); sp.userData={life:0.9,vy:6}; world.add(sp); dmgNums.push(sp); }
 
+// ---- PARRY: it's all TIMING, no separate button ----
+// A foe winds up; a red ! builds over it, then flares WHITE for the last
+// PARRY_WIN seconds. Your SWING opens a guard of exactly that length — swing on
+// the white flash and your guard meets the blow: you turn it instead of taking it.
+const PARRY_WIN=0.38, WINDUP=0.9;
+const tellTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d');
+  g.font='bold 52px Georgia'; g.textAlign='center'; g.textBaseline='middle'; g.lineWidth=6; g.strokeStyle='rgba(10,6,4,.9)'; g.strokeText('!',32,34); g.fillStyle='#fff'; g.fillText('!',32,34); return new THREE.CanvasTexture(c); })();
+function makeTell(){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tellTex,transparent:true,depthTest:false,toneMapped:false})); s.scale.set(1.4,1.4,1); s.renderOrder=998; s.visible=false; return s; }
+// drive an enemy's tell from its remaining wind-up time
+function setTell(e){ if(!e.tell){ e.tell=makeTell(); e.tell.position.y=e.tellY||4; e.g.add(e.tell); }
+  if(e.windup>0){ e.tell.visible=true; const white=e.windup<=PARRY_WIN; e.tell.material.color.setHex(white?0xffffff:0xff5a4a);
+    e.tell.material.opacity=white?1:0.9; e.tell.scale.setScalar(white?1.9:1.4); if(e.body&&e.body.material.emissive) e.body.material.emissive.setRGB(white?0.5:0.28, white?0.5:0.05, white?0.5:0.05); }
+  else { e.tell.visible=false; if(e.body&&e.body.material.emissive&&e.hurt<=0) e.body.material.emissive.setRGB(0,0,0); } }
+function onParrySuccess(e){ e.stagger=1.4; P.inv=Math.max(P.inv,0.45); const hy=e.g.position.y+(e.tellY||4)*0.6;
+  hitSpark(e.g.position.x,hy,e.g.position.z,0xffffff); dmgNum(e.g.position.x,hy+0.6,e.g.position.z,'PARRY!','#ffe08a');
+  e.hp-=28; if(e.hp<=0&&e.dead<=0){ e.dead=0.001; e.state='dead'; P.coins+=e.kind==='wolf'?5:(e.kind==='skeleton'?4:2); } }
+
 // ============================================================
 //  PLAYER
 // ============================================================
@@ -598,7 +617,8 @@ const pShadow=contactShadow(1.6); player.add(pShadow);
 world.add(player);
 // spawn on the village green beside Elder Maren, where she wakes
 const P={x:zc.village.x-2,z:zc.village.z+5,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,dash:0,dashCd:0,dead:0,
-  hasSword:false,hasTools:false,hasDash:false,wood:0,stone:0};
+  hasSword:false,hasTools:false,hasDash:false,hasParry:false,parryT:0,wood:0,stone:0};
+const drill={active:false,phase:'rest',t:0,count:0,need:3,swung:false};   // Rask's parry lesson
 player.position.set(P.x,heightAt(P.x,P.z),P.z);
 
 // ============================================================
@@ -610,7 +630,7 @@ function forge(x,z){ const g=new THREE.Group();
   const l=new THREE.PointLight(0xff8a3a,12,13,2); l.position.set(0,1.7,1.7); g.add(l);
   g.add(pos(toon(box(0.8,3.4,0.8),COL.stoneDk,{outline:0.03}),0,3.6,-0.5));       // chimney
   const an=new THREE.Group(); an.add(pos(toon(box(0.7,0.9,0.7),COL.timberDk,{outline:0.03}),0,0.45,0)); an.add(pos(toon(box(1.5,0.5,0.7),0x3b3e46,{outline:0.03}),0,1.1,0)); an.add(pos(rotZ(toon(cyl(.03,.34,.7,6),0x3b3e46,{outline:0}),Math.PI/2),0.85,1.15,0)); an.position.set(2.4,0,0.4); g.add(an);
-  ground(g,2.6); onGround(g,x,z); return g; }
+  ground(g,2.6); onGround(g,x,z); solid(x,z,2.6); return g; }
 const bramX=zc.village.x+18, bramZ=zc.village.z+5;
 forge(bramX+3,bramZ-1);
 addNPC(bramX,bramZ,'Bram the Smith',[],{tunic:0x8f4a3a,tunicDk:0x5a2f24,scarf:0x4a3322,hair:0x3a2a1c,cape:false,id:'bram'});
@@ -651,8 +671,44 @@ function talkTo(npc){ const id=npc.userData.id;
       {who:'Bram the Smith',text:"…There. Your first true blade — an iron sword, no letter-opener. Go put it to use."}],
       ()=>{ P.wood--; P.stone--; P.hasSword=true; if(rig.sword)rig.sword.visible=true; toast('<b style="color:#ffd27a">Iron Sword forged!</b> Press SPACE / SWING to strike.'); setStage('done'); });
     else startDialogue([{who:'Bram the Smith',text:"Keep that edge keen. The meadow's crawling — Willa will thank you for thinning it."}]);
+  } else if(id==='rask'){
+    if(!P.hasSword) startDialogue([{who:'Rask the Bladesworn',text:"Come back with a blade in your hand. Bram's forge, west of here. Then I'll teach you to keep it."}]);
+    else if(P.hasParry) startDialogue([{who:'Rask the Bladesworn',text:"Your guard's honest now. Turn a foe's blade on the white flash and they're yours."}]);
+    else startDialogue([
+      {who:'Rask the Bladesworn',text:"So Bram sent me another new blade. Anyone can hack away — the trade is knowing what to do when the blow comes back at YOU."},
+      {who:'Rask the Bladesworn',text:"You PARRY. Watch my strike: a red ! builds, then flares WHITE. On that white flash — SWING. Meet the blow and turn it."},
+      {who:'Rask the Bladesworn',text:"No trick to it but timing. Turn my blade three times and the guard is yours. Ready your steel."}],
+      ()=>beginDrill());
   } else { const seq=(npc.userData.lines||[]).map(t=>({who:npc.userData.name,text:t})); startDialogue(seq); }
 }
+// ---- Rask's parry drill ----
+const raskRig=rask.userData.rig;
+function beginDrill(){ drill.active=true; drill.phase='rest'; drill.t=1.0; drill.count=0; drill.swung=false;
+  banner('THE TURNING','parry Rask\'s blade — three times'); toast('Watch Rask\'s blade: a red <b style="color:#ff5a4a">!</b> builds, then flares <b>WHITE</b> — <b>SWING on the white flash</b> to turn it. Parry 3.'); }
+function unlockParry(){ drill.active=false; P.hasParry=true; if(raskRig) raskRig.arm.rotation.x=0;
+  banner('PARRY LEARNED','turn a blow on the white flash'); P.coins+=30;
+  toast('<b style="color:#ffe08a">Parry learned!</b> No button — it\'s timing. When a foe winds up, a red <b style="color:#ff5a4a">!</b> flares <b>WHITE</b>. <b>Swing on the flash</b> to turn the blow instead of taking it.'); }
+function updateDrill(dt,time){ if(!drill.active) return;
+  // face Rask to the player and animate his tell
+  const fy=Math.atan2(P.x-rask.position.x,P.z-rask.position.z); rask.rotation.y+=(fy-rask.rotation.y)*Math.min(1,dt*6);
+  drill.t-=dt;
+  if(drill.phase==='wind'){
+    const prog=1-clamp(drill.t/WINDUP,0,1); if(raskRig) raskRig.arm.rotation.x=-prog*2.2;   // arm rises through the wind-up
+    const white=drill.t<=PARRY_WIN; driveRaskTell(white);
+    function endRep(){ drill.swung=false; drill.phase='rest'; drill.t=0.9; hideRaskTell(); if(raskRig) raskRig.arm.rotation.x=0; }
+    if(drill.swung){ drill.swung=false;
+      if(white){ drill.count++; hitSpark(rask.position.x,rask.position.y+4,rask.position.z,0xffffff); dmgNum(rask.position.x,rask.position.y+4.6,rask.position.z,'TURNED! '+drill.count+'/3','#ffe08a'); endRep(); if(drill.count>=drill.need) unlockParry(); }
+      else { toast('Too early — wait for the <b>WHITE</b> flash, not the red build.'); endRep(); }
+    } else if(drill.t<=0){ toast('Too slow — <b>swing on the WHITE flash</b>.'); endRep(); }
+  } else { // rest between swings
+    if(raskRig) raskRig.arm.rotation.x*=0.8; drill.swung=false;
+    if(drill.t<=0){ drill.phase='wind'; drill.t=WINDUP; }
+  }
+}
+let raskTell=null;
+function driveRaskTell(white){ if(!raskTell){ raskTell=makeTell(); raskTell.position.y=5.6; rask.add(raskTell); } raskTell.visible=true; raskTell.material.color.setHex(white?0xffffff:0xff5a4a); raskTell.scale.setScalar(white?1.9:1.4); }
+function hideRaskTell(){ if(raskTell) raskTell.visible=false; }
+
 function gather(e){ if(!e.ready)return; e.ready=false; e.cd=8; e.g.scale.copy(e.base).multiplyScalar(0.14);
   if(e.type==='wood'){ P.wood++; toast('<b>+1 wood</b>'); hitSpark(e.g.position.x,e.g.position.y+3,e.g.position.z,0x8a5a2a); }
   else { P.stone++; toast('<b>+1 stone</b>'); hitSpark(e.g.position.x,e.g.position.y+1,e.g.position.z,0x9a9384); }
@@ -705,11 +761,14 @@ function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitc
 
 function doSwing(){ if(!started||paused||dlgActive||P.dead>0||P.swCd>0)return;
   if(!P.hasSword){ toast('You have no blade yet — see <b>Bram</b> at the forge.'); return; }
-  P.swing=0.001; P.swCd=0.42; const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);
+  P.swing=0.001; P.swCd=0.42;
+  if(P.hasParry||drill.active) P.parryT=PARRY_WIN;   // the swing opens a guard — swing on the WHITE flash to parry
+  if(drill.active) drill.swung=true;                 // Rask's drill scores this swing against his tell
+  const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);
   for(const e of enemies){ if(e.dead>0)continue; const dx=e.g.position.x-P.x,dz=e.g.position.z-P.z,d=Math.hypot(dx,dz); if(d>6)continue; if((dx/d)*fx+(dz/d)*fz<0.25)continue;
     e.hp-=34; e.hurt=0.25; e.g.position.x+=dx/d*1.2; e.g.position.z+=dz/d*1.2; const hy=e.g.position.y+2;
     hitSpark(e.g.position.x,hy,e.g.position.z, e.kind==='slime'?0x9ff07a:0xffd27a); dmgNum(e.g.position.x,hy+1,e.g.position.z,34,'#ffe6a8');
-    if(e.hp<=0&&e.dead<=0){ e.dead=0.001; e.state='dead'; P.coins+=e.kind==='wolf'?5:2; banner(e.kind==='wolf'?'WOLF DOWNED':'SLIME SQUASHED', e.kind==='wolf'?'the pack thins':'the meadow menace, thinned'); } }
+    if(e.hp<=0&&e.dead<=0){ e.dead=0.001; e.state='dead'; P.coins+=e.kind==='wolf'?5:(e.kind==='skeleton'?4:2); banner(e.kind==='wolf'?'WOLF DOWNED':(e.kind==='skeleton'?'BONES SCATTERED':'SLIME SQUASHED'), e.boss?'the King falls':''); } }
 }
 function doInteract(){ if(!started||paused)return; if(dlgActive){ advanceDialogue(); return; }
   const it=getInteract(); if(!it)return; if(it.type==='talk') talkTo(it.t); else gather(it.t); }
@@ -776,21 +835,24 @@ paintSky(new THREE.Color(0x4f97dd),new THREE.Color(0xd4ecf7));
 // ============================================================
 let started=false, paused=false; const startEl=document.getElementById('start'), playBtn=document.getElementById('playBtn');
 document.getElementById('loadNote').textContent='ready';
-document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag or Q/E/R/C look · SPACE swing · F talk/act · ESC pause · 1–9 warp';
+document.getElementById('hint').innerHTML = isTouch? '' : 'WASD move · drag or Q/E/R/C look · SPACE swing (parry on the WHITE flash) · F talk/act · ESC pause · 1–9 warp';
 // pause
 const pauseMenu=document.getElementById('pauseMenu');
 document.getElementById('pmHelp').innerHTML = isTouch? 'Left stick move · right stick look · SWING / talk buttons' : 'WASD move · drag or Q/E/R/C look · SPACE swing · F talk/act · ESC pause · 1–9 warp';
 function togglePause(){ if(!started)return; paused=!paused; pauseMenu.style.display=paused?'flex':'none'; }
 document.getElementById('pauseBtn').addEventListener('click',togglePause);
 document.getElementById('resumeBtn').addEventListener('click',togglePause);
-playBtn.addEventListener('click',()=>{ started=true; startEl.style.opacity='0'; setTimeout(()=>startEl.style.display='none',800);
+// No title gate — drop straight into the isle. Elder Maren wakes you on the green.
+startEl.style.display='none';
+let intro=false;
+function beginGame(){ if(started)return; started=true;
   banner('EMBERWICK ISLE','HOME SHORES — CHAPTER I');
-  // the wake-up: Elder Maren speaks, and you can't move until she's done
-  setTimeout(()=>startDialogue([
+  if(!intro){ intro=true; setTimeout(()=>startDialogue([
     {who:'Elder Maren',text:"Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back."},
     {who:'Elder Maren',text:"You'll get nowhere on these shores bare-handed. Our smith Bram keeps his forge east of the well — start with him. He'll set you right."}
-  ], ()=>setStage('seeBram')), 700);
-});
+  ], ()=>setStage('seeBram')), 600); }
+}
+beginGame();
 
 const clock=new THREE.Clock(); let fpsT=0,fpsN=0; const fpsEl=document.getElementById('fps');
 const camP=new THREE.Vector3(), camA=new THREE.Vector3(), fwd=new THREE.Vector3();
@@ -818,13 +880,17 @@ function step(dt,time){
   let mag=Math.hypot(ix,iz); if(mag>1){ix/=mag;iz/=mag;mag=1;} const moving=mag>0.06;
   let speed=8.5; if(P.dash>0){ speed=18; P.dash-=dt; }
   if(moving){ const cs=Math.cos(camYaw),sn=Math.sin(camYaw); const wx=-ix*cs-iz*sn, wz=ix*sn-iz*cs; P.yaw=Math.atan2(wx,wz);   // (ix negated: strafe was inverted)
-    const nx=P.x+wx*speed*dt, nz=P.z+wz*speed*dt; if(heightAt(nx,nz)>0.4&&Math.hypot(nx,nz)<ISLR-2){ P.x=nx; P.z=nz; } }
+    let nx=P.x+wx*speed*dt, nz=P.z+wz*speed*dt;
+    const PR=0.8;   // push out of any solid prop we'd overlap (circle collision → natural sliding)
+    for(const c of colliders){ const ddx=nx-c.x, ddz=nz-c.z, rr=c.r+PR; if(ddx*ddx+ddz*ddz<rr*rr){ const dd=Math.hypot(ddx,ddz)||0.0001; nx=c.x+ddx/dd*rr; nz=c.z+ddz/dd*rr; } }
+    if(heightAt(nx,nz)>0.4&&Math.hypot(nx,nz)<ISLR-2){ P.x=nx; P.z=nz; } }
   const gy=heightAt(P.x,P.z); player.position.set(P.x, gy+(moving?Math.abs(Math.sin(time*11))*0.12:0), P.z);
   player.rotation.y+=(P.yaw-player.rotation.y)*Math.min(1,dt*12);
   const bob=moving?Math.sin(time*11)*0.5:0; rig.legL.rotation.x=bob; rig.legR.rotation.x=-bob; pShadow.position.y=0.06-(player.position.y-gy);
   // swing anim + cooldowns
   if(P.swing>0){ P.swing+=dt*3.6; const a=Math.sin(Math.min(P.swing,1)*Math.PI); rig.arm.rotation.x=-a*2.6; if(P.swing>=1){P.swing=0;rig.arm.rotation.x=0;} } else rig.arm.rotation.x+=(0-rig.arm.rotation.x)*dt*8;
-  P.swCd=Math.max(0,P.swCd-dt); P.dashCd=Math.max(0,P.dashCd-dt); P.inv=Math.max(0,P.inv-dt);
+  P.swCd=Math.max(0,P.swCd-dt); P.dashCd=Math.max(0,P.dashCd-dt); P.inv=Math.max(0,P.inv-dt); P.parryT=Math.max(0,P.parryT-dt);
+  updateDrill(dt,time);
   // gatherables respawn (felled tree / broken rock grows back)
   for(const e of gathers){ if(!e.ready){ e.cd-=dt; const f=e.cd>1.2?0.14:clamp(0.14+0.86*(1.2-e.cd)/1.2,0.14,1); e.g.scale.copy(e.base).multiplyScalar(f); if(e.cd<=0){ e.ready=true; e.g.scale.copy(e.base); } } }
   P.st=Math.min(P.max, P.st+dt*(moving?6:14)); if(P.hp<P.max) P.hp=Math.min(P.max,P.hp+dt*1.2);
@@ -841,16 +907,25 @@ function step(dt,time){
     if(P.dead>0){ e.state='idle'; }
     else if(d<aggro) e.state='chase'; else if(d>aggro*1.4) e.state='idle';
     let vx=0,vz=0;
-    if(e.state==='chase'){ if(d>e.reach){ vx=dx/d; vz=dz/d; } e.face=Math.atan2(dx,dz);
-      if(d<e.reach&&e.cd<=0){ e.cd=1.1; hurtPlayer(e.dmg); } }
-    else { e.phase+=dt; vx=Math.cos(e.phase*0.6)*0.3; vz=Math.sin(e.phase*0.5)*0.3; const hd=Math.hypot(e.g.position.x-e.home.x,e.g.position.z-e.home.y); if(hd>10){ vx=(e.home.x-e.g.position.x)/hd; vz=(e.home.y-e.g.position.z)/hd; } }
+    if(e.stagger>0){ e.stagger-=dt; e.windup=0; setTell(e); }   // reeling from a parry — no move, no attack
+    else if(e.state==='chase'){ e.face=Math.atan2(dx,dz);
+      if(e.windup>0){                       // winding up a telegraphed strike
+        e.windup-=dt; setTell(e);
+        if(e.windup<=0){                     // the blow lands — did your guard meet it?
+          if(P.parryT>0 && P.hasParry) onParrySuccess(e); else hurtPlayer(e.dmg);
+        }
+      } else if(d<e.reach && e.cd<=0){ e.windup=WINDUP; e.cd=WINDUP+1.0; }   // plant + begin the wind-up
+      else if(d>e.reach){ vx=dx/d; vz=dz/d; }
+    }
+    else { e.phase+=dt; vx=Math.cos(e.phase*0.6)*0.3; vz=Math.sin(e.phase*0.5)*0.3; const hd=Math.hypot(e.g.position.x-e.home.x,e.g.position.z-e.home.y); if(hd>10){ vx=(e.home.x-e.g.position.x)/hd; vz=(e.home.y-e.g.position.z)/hd; } setTell(e); }
     const nx=e.g.position.x+vx*e.spd*dt, nz=e.g.position.z+vz*e.spd*dt; if(heightAt(nx,nz)>0.4){ e.g.position.x=nx; e.g.position.z=nz; }
     e.g.position.y=heightAt(e.g.position.x,e.g.position.z);
     e.cd=Math.max(0,e.cd-dt); if(e.hurt>0)e.hurt-=dt;
+    e.g.rotation.z = e.stagger>0 ? -0.5*Math.min(1,e.stagger) : e.g.rotation.z*0.8;   // reel back when parried
     if(e.kind==='slime'){ e.phase+=dt*0.0; const t=time*5+e.home.x; const sq=1+Math.sin(t)*0.16; e.body.scale.set(1/Math.sqrt(sq),sq,1/Math.sqrt(sq)); e.g.position.y+=Math.max(0,Math.sin(t))*0.4;
       const fy=Math.atan2(dx,dz); if(e.state==='chase') e.g.rotation.y+=(fy-e.g.rotation.y)*Math.min(1,dt*6); }
     else { e.g.rotation.y+=(e.face-e.g.rotation.y)*Math.min(1,dt*8); if(e.legs){ const tr=Math.sin(time*12+e.home.x)*(e.state==='chase'?0.7:0.25); e.legs.forEach((l,i)=>l.rotation.x=(i%2?-tr:tr)); } }
-    if(e.hurt>0) e.body.material.emissive.setRGB(0.4,0.1,0.1); else e.body.material.emissive.setRGB(0,0,0);
+    if(e.hurt>0) e.body.material.emissive.setRGB(0.4,0.1,0.1); else if(e.windup<=0&&e.stagger<=0&&!e.boss) e.body.material.emissive.setRGB(0,0,0);
   }
 
   // ---- npcs (labels when near, idle sway) ----
@@ -883,6 +958,12 @@ function step(dt,time){
   checkZone();
 }
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); fxc.setSize(innerWidth,innerHeight); });
+if(location.hash.includes('dbg')) window.__dbg={ drill:()=>drill.active, parry:()=>P.hasParry,
+  raskWhite:()=>!!(raskTell&&raskTell.visible&&raskTell.material.color.getHex()===0xffffff),
+  anyTellWhite:()=>enemies.some(e=>e.tell&&e.tell.visible&&e.tell.material.color.getHex()===0xffffff),
+  hp:()=>Math.round(P.hp), px:()=>P.x, pz:()=>P.z, started:()=>started,
+  giveSword:()=>{P.hasSword=true; if(rig.sword)rig.sword.visible=true; setStage('done');},
+  insideSolid:()=>colliders.some(c=>Math.hypot(P.x-c.x,P.z-c.z)<c.r-0.05), nSolid:()=>colliders.length };
 tick();
 </script>
 </body>

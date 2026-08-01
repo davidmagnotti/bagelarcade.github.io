@@ -42,9 +42,16 @@ effort — this island is the populated, playable template they'd follow.
   coordinates: the Village, Orin's Tower, Driftwood Dock, Willa's Farm, the
   Slime Meadow, Whisperwood, the Old Ruins, Rask's Grove, Ember Springs,
   Smuggler's Cove and the Old Orchard.
-- **Combat** — swing your sword to squash **slimes** and see off **wolves**;
-  enemies wander, aggro, chase and hit back, with damage numbers, knockback,
-  death and respawn. You have vigour, stamina, a dodge **roll**, and coins.
+- **Combat** — swing your sword to squash **slimes**, **wolves** and
+  **skeletons**; enemies wander, aggro, chase, and **telegraph** their strikes
+  (a red **!** that flares **WHITE**), with damage numbers, knockback, death and
+  respawn. Vigour, stamina, and coins.
+- **Parry** — pure timing, no extra button: swing on a foe's **white flash** and
+  your guard turns the blow (staggers them, no damage taken). Taught by
+  **Rask's drill** in the grove — turn his blade three times to learn it.
+- **Solid collision** — you can't walk through buildings, trees, rocks, the
+  forge, or people.
+- Drops **straight into the isle** (no title screen); Elder Maren wakes you.
 - **NPCs** — Elder Maren, Willa and Rask, with floating name labels and real
   lines lifted from the game; walk up and **talk**.
 - **A day/night cycle** — a moving sun, shifting sky and fog, lamplight and
