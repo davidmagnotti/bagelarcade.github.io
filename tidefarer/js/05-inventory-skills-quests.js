@@ -13,7 +13,9 @@ function giveGold(n){ n=Math.round(+n)||0; P.gold=(Math.round(+P.gold)||0)+n; P.
   addFloat('+'+n+' gold', P.x, P.y-1.4, '#ffd76a'); Snd.coin(); refreshUI(); }
 
 function addXP(skill,amt){
-  const sk=P.skills[skill]; if(!sk) return;
+  // SKILLS is the source of truth for what can gain XP. Retired skills (Mining,
+  // Woodcutting) may still be named by old quest rewards or legacy saves - no-op them.
+  const sk=P.skills[skill]; if(!sk || !SKILLS[skill]) return;
   const cap=(typeof MAX_SKILL_LVL!=='undefined')?MAX_SKILL_LVL:100;
   if(sk.lvl>=cap){ sk.lvl=cap; sk.xp=0; return; }   // already mastered - no more XP to gain
   sk.xp+=amt;

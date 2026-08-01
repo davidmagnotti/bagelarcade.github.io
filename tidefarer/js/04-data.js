@@ -25,8 +25,8 @@ const SKILLS = {
   melee:{name:'Melee', perk:'+2 dmg / lvl'},
   archery:{name:'Archery', perk:'+2 dmg / lvl'},
   magic:{name:'Magic', perk:'+3 dmg / lvl'},
-  mining:{name:'Mining', perk:'+ore & speed'},
-  woodcut:{name:'Woodcutting', perk:'+logs & speed'},
+  // Mining & Woodcutting no longer level - their speed is fixed and set by the tool
+  // (see hitNode in 09-gameplay.js), so they're intentionally absent from the skill list.
   fishing:{name:'Fishing', perk:'bigger catches'},
   farming:{name:'Farming', perk:'+crop yield'}
 };
