@@ -1812,7 +1812,7 @@ function updateMobs(dt){
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>2 && l<10.5){
           m.shootCd=2.3; m.swing=0.3;
-          G.projs.push({kind:'bone',x:m.x,y:m.y-0.8,vx:dx/l*8,vy:dy/l*8,life:1.7,dmg:d.dmg,from:'mob'});
+          G.projs.push({kind:'bone',x:m.x,y:m.y-0.8,vx:dx/l*8,vy:dy/l*8,life:1.7,dmg:d.dmg,from:'mob',owner:m});
           Snd.bow();
         }
       }
@@ -1936,7 +1936,7 @@ function updateMobs(dt){
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>2){
           m.shootCd=2.6;
-          G.projs.push({kind:'bone',x:m.x,y:m.y-0.8,vx:dx/l*7,vy:dy/l*7,life:1.8,dmg:12,from:'mob'});
+          G.projs.push({kind:'bone',x:m.x,y:m.y-0.8,vx:dx/l*7,vy:dy/l*7,life:1.8,dmg:12,from:'mob',owner:m});
           Snd.bow();
         }
         if(!m.summoned[0] && m.hp<m.maxhp*0.66){ m.summoned[0]=true; bossSummon(m); }
@@ -1977,8 +1977,16 @@ function updateProjs(dt){
     }
     if(G.solid[ty*MAPW+tx]===1 && tileAt(tx,ty)>=T.SAND){ p.life=0; burst(p.x,p.y-0.3,'#c9b990',4,1.5); continue; }
     if(p.from==='player'){
+      // A homing riposte (a parried bone sent back at its thrower) curves toward its
+      // mark each frame and phases through every other mob until it reaches him.
+      if(p.homeTo){
+        if(p.homeTo.dead || p.homeTo.sealed){ p.homeTo=null; }   // thrower fell - collide normally again
+        else { const sp=Math.hypot(p.vx,p.vy)||9, ddx=p.homeTo.x-p.x, ddy=(p.homeTo.y-0.3)-p.y, dl=Math.hypot(ddx,ddy)||1;
+          p.vx=ddx/dl*sp; p.vy=ddy/dl*sp; }
+      }
       for(const m of G.mobs){
         if(m.dead||m.sealed) continue;
+        if(p.homeTo && m!==p.homeTo) continue;   // seeking the thrower - ignore bystanders
         if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
           if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && !m2.sealed && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
@@ -1998,13 +2006,24 @@ function updateProjs(dt){
       // well-timed swing bats the bone away before it ever reaches the body.
       if((P.parryT||0)>0 && !p.parried && dP<1.05 && parryCovers(p.x,p.y)){
           p.parried=1; p.from='player'; p.skill='melee';
-          // bat it back INTO the nearest foe (usually whoever threw it) so a parried
-          // bone reliably bites the King, not just the empty air he stepped out of
-          const sp=Math.hypot(p.vx,p.vy)||8; let tgt=null,tb=99;
-          for(const m2 of G.mobs){ if(m2.dead||m2.sealed) continue; const dd=dist(p.x,p.y,m2.x,m2.y); if(dd<tb){tb=dd;tgt=m2;} }
-          if(tgt){ const ddx=tgt.x-p.x, ddy=(tgt.y-0.3)-p.y, dl=Math.hypot(ddx,ddy)||1; p.vx=ddx/dl*sp; p.vy=ddy/dl*sp; }
-          else { p.vx=-p.vx; p.vy=-p.vy; }
-          p.life=Math.max(p.life,1.3);
+          // Send the bone straight back to whoever threw it - so a parried King bone
+          // flies at the KING even when his skeletons crowd you. When we know the thrower,
+          // the returned bone HOMES to him and punches through lesser bones in the way,
+          // so a body-blocking skeleton can't swallow your riposte. No thrower -> just bat
+          // it back at the nearest foe the old way.
+          const sp=Math.max(Math.hypot(p.vx,p.vy)||8, 9);   // a turned bone flies back briskly
+          if(p.owner && !p.owner.dead && !p.owner.sealed){
+            p.homeTo=p.owner;   // seek the thrower; collision loop ignores everyone else
+            const ddx=p.owner.x-p.x, ddy=(p.owner.y-0.3)-p.y, dl=Math.hypot(ddx,ddy)||1;
+            p.vx=ddx/dl*sp; p.vy=ddy/dl*sp;
+            p.life=Math.max(p.life, dl/sp + 0.6);   // live long enough to reach a distant King
+          } else {
+            let tgt=null,tb=99;
+            for(const m2 of G.mobs){ if(m2.dead||m2.sealed) continue; const dd=dist(p.x,p.y,m2.x,m2.y); if(dd<tb){tb=dd;tgt=m2;} }
+            if(tgt){ const ddx=tgt.x-p.x, ddy=(tgt.y-0.3)-p.y, dl=Math.hypot(ddx,ddy)||1; p.vx=ddx/dl*sp; p.vy=ddy/dl*sp; }
+            else { p.vx=-p.vx; p.vy=-p.vy; }
+            p.life=Math.max(p.life,1.3);
+          }
           p.dmg=Math.round((p.dmg||6)*1.5)+meleeDmg();   // a turned shot hits hard
           onParry(p.x,p.y);
         } else if(dP<0.55){ hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy}); p.life=0; }
