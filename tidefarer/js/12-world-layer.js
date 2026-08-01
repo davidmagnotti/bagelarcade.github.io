@@ -981,21 +981,12 @@ function awakenDragon(alreadyBound){
   // the banner + shake now ride the 'enthrall' entrance (fires as he rouses) - see startBossIntro
 }
 function startMageHunt(){
+  // Freeing Ashwing no longer triggers a grove hunt. Vath simply flees the Sunward
+  // Isle when the chain breaks - he is not present as a mob afterward. This is kept
+  // as a harmless no-op so any older reference/save that calls it does nothing.
   if(P.mageHuntStarted) return;
   P.mageHuntStarted=1;
-  const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); // he flees the village
-  P.quests.vhunt='active'; P.prog.vhunt=0;
-  // Vath fled up into the palm grove on the SURFACE - only spawn him there when we
-  // are actually on the Sunward Isle (the fight is freed deep inside Mount Kea);
-  // spawnMobsEast re-places him when you climb back out.
-  if(G.worldId==='east'){
-    const GR=EAST_ZONES.grove;
-    if(!G.mobs.some(m=>m.kind==='mage' && !m.dead)){
-      const sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
-      const mg=spawnMob('mage', sp[0], sp[1]);
-      if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
-    }
-  }
+  const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); // he leaves the village for good
 }
 function freeDragon(x,y){
   // he dissolves into warm light and beats back to his mountain, himself again
@@ -1021,12 +1012,8 @@ function spawnMobsEast(){
   const yd2=findOpenNear(Math.round(EAST_ZONES.village.x+12), Math.round(EAST_ZONES.village.y+7), 5);
   if(yd1) spawnMob('dummy',yd1[0],yd1[1]);
   if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
-  // if the hunt is underway and Vath hasn't yet been driven off (reload case),
-  // he waits in the grove. Once bested (prog>=1) he's fled for good - no respawn.
-  if(qs('vhunt')==='active' && (P.prog.vhunt||0)<1){
-    const GR=EAST_ZONES.grove, sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x,GR.y];
-    const mg=spawnMob('mage', sp[0], sp[1]); if(mg){ mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
-  }
+  // (Vath no longer lurks in the grove after the dragon quest - he flees the isle
+  // entirely when Ashwing is freed, so there's no mage mob to place here.)
 }
 function genEastAll(){
   genEast(); bakeSolids(); placeObjectsEast(); buildFoam();
@@ -6304,14 +6291,9 @@ function switchWorld(id){
   if(id==='main' && !P.quests.duchesslove && !(P.story&&P.story.duchessWed)) P.quests.duchesslove='avail';
   if(id==='east') for(const q3 of ['hunt1','wyrm']) if(!P.quests[q3] && QUESTS[q3]) P.quests[q3]='avail';
   if(id==='east'){
-    // the wyrm fight now happens deep inside Mount Kea (the Emberdeep), so when you
-    // climb back out with the hunt underway, make sure Vath has surfaced in the
-    // grove and left the village - spawnMobsEast only runs on the isle's first gen.
-    if(P.mageHuntStarted){ const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); }
-    if(qs('vhunt')==='active' && (P.prog.vhunt||0)<1 && !G.mobs.some(m=>m.kind==='mage' && !m.dead)){
-      const GR=EAST_ZONES.grove, sp=findOpenNear(Math.round(GR.x), Math.round(GR.y), 8) || [GR.x, GR.y];
-      const mg=spawnMob('mage', sp[0], sp[1]); if(mg){ mg.state='idle'; mg.hx=sp[0]; mg.hy=sp[1]; mg.respawnT=-1; }
-    }
+    // Vath leaves the Sunward village for good once the wyrm quest is behind you; he
+    // does NOT reappear as a grove mob (the dragon-freeing no longer starts a hunt).
+    if(P.mageHuntStarted || qs('wyrm')==='done'){ const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); }
   }
   if(id==='wind'){
     const hasBoard = !!(P.unlocked && P.unlocked.surf);

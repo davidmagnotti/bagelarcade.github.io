@@ -64,7 +64,7 @@ const DG_FREED = [
     html:'“You broke it. <b>My thanks, little flame.</b>” <i>His great eye clears, gold again.</i>',
     ens:0, violet:0.05, fire:1 },
   { who:'Ashwing',
-    html:'“The binder’s fire reached for your mind on the climb — and found no hold. That is not luck. He fled into the palm grove. <b>Do not let him bind another.</b>”',
+    html:'“The binder’s fire reached for your mind on the climb — and found no hold. That is not luck. He fled the moment the chain broke — <b>gone from the isle entirely</b>, the way his kind goes. You will meet him again, I think. But not here.”',
     ens:0, violet:0, fire:1, title:'ASHWING, FREED' },
 ];
 
