@@ -239,9 +239,19 @@ function useHotspot(h){
       toast('You stretch out on the Spire\u2019s spare cot. \u201cSleep, then,\u201d Aelin murmurs. \u201cThe weave keeps better hours than you do.\u201d',4200);
       sleepInBed(false);
     }
-    else toast(['You smooth the quilt back down. Not your bed.',
-      'Tempting - but the whole village would hear of it by lunch.',
-      'Someone\u2019s slippers wait beside it. You leave the bed be.'][rndi(0,2)],3600);
+    else {
+      // it belongs to someone else - a proper click-to-continue line, not a fleeting toast
+      P.click=null; dlg.open=true; dlg.npc=null;
+      document.getElementById('dialog').style.display='block';
+      document.getElementById('dname').textContent='A stranger\u2019s bed';
+      const pg=document.getElementById('dportrait').getContext('2d');
+      pg.fillStyle='#241a10'; pg.fillRect(0,0,72,72);
+      pg.fillStyle='#6a4a34'; pg.fillRect(12,40,48,16);       // bed frame
+      pg.fillStyle='#efe6d0'; pg.fillRect(14,33,22,11);       // pillow
+      pg.fillStyle='#7a6a8f'; pg.fillRect(32,37,26,15);       // blanket
+      setDialog('You can\u2019t sleep here - this is someone else\u2019s bed, and you won\u2019t crawl under a stranger\u2019s blankets. Rest in your own home, or pay for a room at an inn.',
+        [{label:'Leave it be', cls:'gold', fn:closeDialog}], true);
+    }
   }
   else if(f.type==='aelin'){ spireAelinSpeak(); }
   else if(f.type==='dragon'){ if(typeof dragonLairSpeak==='function') dragonLairSpeak(); }

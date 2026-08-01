@@ -109,7 +109,7 @@ function selectWeapon(w){
   P.weapon=w; buildHotbar();
 }
 function useItem(item){
-  if(!has(item,1)) { toast(item==='potion'? 'No tonics left - Elder Maren sells them for 8 gold.' : 'No '+(ITEMS[item]?ITEMS[item].name.toLowerCase():item)+' left - tap the \u21c4 badge to swap the quick slot.'); return; }
+  if(!has(item,1)) { toast(item==='potion'? 'No tonics left - Elder Maren sells them for 30 gold.' : 'No '+(ITEMS[item]?ITEMS[item].name.toLowerCase():item)+' left - tap the \u21c4 badge to swap the quick slot.'); return; }
   const def=ITEMS[item];
   if(def.use==='heal'){
     if(P.hp>=P.maxhp){ toastErr('You\'re already at full health.'); return; }

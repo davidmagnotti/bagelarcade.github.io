@@ -281,9 +281,9 @@ function placeObjects(){
       if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<5)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
     }
   }
-  // ruin pillars & crypt platform - clustered around the King's northern spit,
-  // with a pair framing the fire-gate at the ruin's mouth
-  const pillars=[[43,9],[49,9],[41,13],[51,13],[43,17],[49,17],[39,20],[53,20]];
+  // ruin pillars & crypt platform - just a single pair framing the King's ground
+  // at the northern spit (kept sparse so the ruin reads clean, not cluttered)
+  const pillars=[[43,9],[49,9]];
   for(const [x,y] of pillars){ G.decor.push({kind:'pillar',x:x+0.5,y:y+0.5,broken:r()<0.5}); setSolid(x,y,1); }
   // a ruined stone arch framing the King's ground - scenery only (noRead), so no
   // "Read" prompt competes for your attention mid-boss-fight

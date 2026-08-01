@@ -163,9 +163,11 @@ function nearestInteract(){
     }
   }
   for(const b of G.decor){
-    if(b.kind==='pillar'){
+    // only pillars carrying an intentional lore note are readable now; plain ruin
+    // pillars (the crypt/ruins dressing) are scenery, with no generic "Read" text
+    if(b.kind==='pillar' && b.loreKey){
       const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey||('stone@'+(G.worldId==='main'?'main':'isle')),o:b,label:'Read'}; }
+      if(d<1.6 && d<bd){ bd=d; best={type:'lore',key:b.loreKey,o:b,label:'Read'}; }
     }
     if(b.kind==='crypt' && !b.noRead){
       const d=dist(P.x,P.y,b.x,b.y+1);
@@ -778,7 +780,7 @@ function killMob(m,skill){
     // the isle's victory screen
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
-    banner('THE HOLLOW KING FALLS','THE ISLE BREATHES AGAIN');
+    banner('THE HOLLOW KING FALLS','THE CURSE BREAKS - THE STRAIT LIES OPEN');
     dropHollowFire();   // the seal breaks with him
     // his risen court crumbles with him FOR GOOD: clear every skeleton on the isle -
     // alive or merely waiting to respawn - so the northern spit stays quiet, and drop
