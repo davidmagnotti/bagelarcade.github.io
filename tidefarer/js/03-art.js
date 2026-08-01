@@ -1934,8 +1934,9 @@ function drawDragon(cx,sx,sy,m){
   cx.lineWidth=6; cx.beginPath(); cx.moveTo(-20,-24); cx.quadraticCurveTo(-16,-34,-24,-38); cx.stroke();
   cx.fillStyle=eyeCol;
   cx.beginPath(); cx.moveTo(-24,-38); cx.lineTo(-30,-46); cx.lineTo(-19,-44); cx.closePath(); cx.fill();
-  // near wing
-  cx.save(); cx.translate(6,-40); cx.rotate(-0.5+wing);
+  // near wing - scaled up from the shoulder root (more along its length than its
+  // breadth) so it reads as a big, long dragon wing rather than a stub
+  cx.save(); cx.translate(6,-40); cx.rotate(-0.5+wing); cx.scale(1.6,1.42);
   cx.fillStyle=wingMem;
   cx.beginPath(); cx.moveTo(0,0);
   cx.quadraticCurveTo(34,-30, 52,-14); cx.lineTo(44,-2); cx.quadraticCurveTo(40,-12,30,-6);
@@ -1944,8 +1945,9 @@ function drawDragon(cx,sx,sy,m){
   cx.strokeStyle=shade(wingMem,26); cx.lineWidth=2.2;
   cx.beginPath(); cx.moveTo(2,2); cx.lineTo(46,-10); cx.moveTo(4,4); cx.lineTo(30,0); cx.moveTo(4,6); cx.lineTo(16,6); cx.stroke();
   cx.restore();
-  // far wing hint
-  cx.save(); cx.translate(-2,-42); cx.rotate(0.4-wing); cx.scale(-0.7,0.8);
+  // far wing hint - grown to match the bigger near wing (kept a touch smaller so it
+  // still reads as the far side, tucked behind the body)
+  cx.save(); cx.translate(-2,-42); cx.rotate(0.4-wing); cx.scale(-1.12,1.14);
   cx.fillStyle=shade(wingMem,-14);
   cx.beginPath(); cx.moveTo(0,0); cx.quadraticCurveTo(30,-26,46,-12); cx.lineTo(38,2); cx.quadraticCurveTo(20,-4,0,8); cx.closePath(); cx.fill();
   cx.restore();
