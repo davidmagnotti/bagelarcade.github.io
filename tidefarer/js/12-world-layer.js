@@ -260,6 +260,41 @@ function useFastExit(){
   toast('You climb out of the dungeon - whole again, and a level the wiser.',4200);
 }
 
+// ---- THE REWARD ROOM: the way every dungeon SHOULD pay off - not a portal dropped where the
+// boss falls, but a separate chamber the guardian was warding, with the dungeon's prize in a
+// chest and the climb-out inside it. Generalizes the Undermill's sail-vault to every dungeon.
+// A dungeon that carries a `gate:'reward'` catgate uses this pattern; killMob opens it on the
+// boss's death (see openRewardRoom) instead of dropping THE WAY UP.
+function hasRewardRoom(){ return !!(G.decor && G.decor.some(d=>d.kind==='catgate' && d.gate==='reward')); }
+// Wall off a reward room at the top of a boss arena: a stone partition row across [x0..x1] at
+// wallY with a gated gap [gx0..gx1], then the prize chest + a climb-out placed inside the room
+// (above the wall). The gap is a `gate:'reward'` catgate, sealed until the boss falls.
+//   sealInGen: the partition row was already laid in the dungeon's gen (so its wall-face pass
+//   enclosed the room) - skip re-laying it here and only add the gate/contents.
+function buildRewardRoom(o){
+  const wallT=(typeof T!=='undefined' && T.RUIN!=null)?T.RUIN:0, floorT=(o.floorT!=null)?o.floorT:wallT;
+  const gap=[]; for(let x=o.gx0;x<=o.gx1;x++) gap.push([x,o.wallY]);
+  if(!o.sealInGen){ for(let x=o.x0;x<=o.x1;x++){ setTile(x,o.wallY,wallT); setSolid(x,o.wallY,1); } }
+  G.decor.push({kind:'catgate', x:(o.gx0+o.gx1)/2, y:o.wallY, open:!!o.cleared, gate:'reward',
+    tiles:gap.slice(), openTile:floorT, label:o.label||'the vault gate'});
+  for(const [x,y] of gap){ setSolid(x,y, o.cleared?0:1); if(o.cleared) setTile(x,y,floorT); }
+  if(o.chest && !o.chestTaken) G.decor.push(o.chest);
+  G.decor.push({kind:'fastexit', x:o.exitX+0.5, y:o.exitY+0.5, name:'CLIMB OUT', labelY:-46});
+}
+// Grind the reward-room gate up when the guardian falls: unseal the gap so the prize + climb-out
+// stand open, right where the boss was warding them.
+function openRewardRoom(){
+  const g=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='reward');
+  if(!g || g.open) return false;
+  g.open=true;
+  for(const [x,y] of (g.tiles||[])){ setSolid(x,y,0); setTile(x,y, g.openTile!=null?g.openTile:T.RUIN); }
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(typeof Snd!=='undefined' && Snd.quest) Snd.quest(); G.shake=Math.max(G.shake||0,0.45);
+  if(typeof shockwave==='function') shockwave(g.x+0.5, g.y+0.5, 'rgba(201,176,255,0.9)', 50);
+  setTimeout(()=>{ if(typeof toast==='function') toast('The guardian is down. Behind it, a sealed vault grinds open - <b style="color:#c9b0ff">the prize it warded and the way up</b> stand within. Take what it guarded, then step in to <b>climb out</b>, <b>mended and a level stronger</b>.',6500); },1200);
+  return true;
+}
+
 function addCrowsFor(){
   G.crows.length=0;
   for(let i=0;i<5;i++) G.crows.push({cx:ZONES.ruins.x,cy:ZONES.ruins.y,r:rnd(2.5,6),h:rnd(90,140),
@@ -2680,6 +2715,9 @@ function placeObjectsFrostVault(){
   // hunt (the great queen's hidden grave and the sealing weapon); the side chest is gold.
   G.decor.push({kind:'chest', x:44.5, y:9.5, deep:1, tidechart:1});
   G.decor.push({kind:'chest', x:34.5, y:12.5, deep:1, rich:8});
+  // THE WAY UP stands here IN the hoard - not dropped where a boss fell. You clear the last hall,
+  // the gate grinds up, and the prize + the climb-out are waiting in the vault beyond.
+  G.decor.push({kind:'fastexit', x:50.5, y:10.5, name:'CLIMB OUT', labelY:-46});
   spire(30,5); spire(58,5); spire(30,15); spire(58,15);
   G.critters=[];
   // an already-cleared run keeps every gate open and skips the fights
@@ -2722,7 +2760,7 @@ function openVaultGate(r){
   invalidateScenery&&invalidateScenery();
   shockwave(40.5, r.gy+0.5, 'rgba(180,225,245,0.9)', 52); G.shake=Math.max(G.shake||0,0.5); Snd.quest&&Snd.quest();
   if(r.key==='C'){ P.story=P.story||{}; P.story.vaultDone=1; autoSave&&autoSave();
-    if(typeof spawnFastExit==='function') spawnFastExit(P.x, P.y);   // THE WAY UP opens, same as every dungeon
+    // the climb-out already waits inside the Hoard (placeObjectsFrostVault) - no portal dropped here
     banner('THE HALLS ARE CLEARED','THE HOARFROST HOARD LIES OPEN');
     toast('The last of the ice-beasts falls and the final gate hauls up into the ceiling. <b>The Hoarfrost Hoard is yours.</b>',5000);
   } else banner('THE HALL IS CLEARED','THE GATES GRIND UP');
@@ -4997,7 +5035,8 @@ function _dungWalls(theme){
   const NB=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
   const taken=new Set();
   for(const d of (G.decor||[])){
-    if(d.kind==='pillar'||d.kind==='catgate'||d.kind==='ewall'||d.kind==='dungeonmouth') taken.add(Math.floor(d.x)+','+Math.floor(d.y));
+    if(d.kind==='catgate' && d.tiles){ for(const [tx,ty] of d.tiles) taken.add(tx+','+ty); }   // a gate's gap tiles are never walls
+    else if(d.kind==='pillar'||d.kind==='catgate'||d.kind==='ewall'||d.kind==='dungeonmouth') taken.add(Math.floor(d.x)+','+Math.floor(d.y));
     else if(d.kind==='dgate'){ for(let x=d.x0;x<=d.x1;x++) taken.add(x+','+d.gy); }   // a closed gate's solid tiles aren't walls
   }
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
@@ -5120,7 +5159,12 @@ function placeObjectsWindDeep(){
   G._windGusts.push({x0:20,x1:52,y0:51,y1:54, dir:-1, push:3.0, period:4.0, t:2.0});   // ROOM 4 blows WEST
   G._windSealed=0; G._windCleared=(P.story&&P.story.galeDeepDone)?1:0;
   G.decor.push({kind:'catgate', x:36, y:37, open:true, gate:'galeeye', tiles:WIND_SEAL.slice(), label:'the Eye-gate'});
-  G.decor.push({kind:'chest', x:36.5, y:11.5, dashgift:1});   // the Swiftstep charm - QUICKER DASH (faster recovery)
+  // THE REWARD ROOM: wall off the top of the Eye and stand the Swiftstep charm (QUICKER DASH) +
+  // the climb-out inside it, sealed until the Skirl falls (killMob -> openRewardRoom). No portal
+  // dropped where the boss dies - the prize was always in the chamber it warded.
+  buildRewardRoom({ x0:18, x1:54, wallY:13, gx0:35, gx1:37, floorT:T.RUIN,
+    chest:{kind:'chest', x:32.5, y:10.5, dashgift:1}, exitX:40, exitY:10,
+    cleared:!!(P.story && P.story.galeDeepDone) });
   G.critters=[];
   if(P.story && P.story.galeDeepDone){ for(const [x,y] of WIND_SEAL) setSolid(x,y,0);
     const cg=G.decor.find(d=>d.kind==='catgate'&&d.gate==='galeeye'); if(cg) cg.open=true; dungOpenAllGates(true); }

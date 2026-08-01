@@ -939,12 +939,14 @@ function killMob(m,skill){
     banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
     if(typeof autoSave==='function') autoSave();
   }
-  // After felling ANY dungeon boss, open THE WAY UP - the same fast-exit portal in every
-  // dungeon, right where the boss fell. No dialogue: step into it to rise, mended and a level
-  // stronger. (Overworld bosses stay put; the sky's Rainbow Road has its own descent; the
-  // Undermill's Cog-Bound has no drop - its sail-vault opens with the exit already inside it.)
-  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon() && typeof spawnFastExit==='function'){
-    spawnFastExit(m.x, m.y);
+  // After felling ANY dungeon boss, open the way up. Dungeons that carry a REWARD ROOM (a
+  // `gate:'reward'` catgate) grind that room open instead - the prize + the climb-out stand in a
+  // sealed chamber the guardian was warding, not a portal dropped where it fell. Dungeons not yet
+  // on that pattern fall back to the old fast-exit drop. (Overworld bosses stay put; the Undermill
+  // opens its own sail-vault via m.millboss.)
+  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon()){
+    if(typeof hasRewardRoom==='function' && hasRewardRoom()){ if(typeof openRewardRoom==='function') openRewardRoom(); }
+    else if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
   }
   // the four tier-2 tool prizes are BOSS DROPS - one per dungeon (see 37-dungeon-hideaways.js)
   if(typeof awardDungeonTool==='function') awardDungeonTool(m);
