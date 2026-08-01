@@ -45,7 +45,11 @@ var TG_WORLDS={
   reach:[ {mat:'basalt',   gid:'reach:c0', loot:'trove'},
           {mat:'ironwood', gid:'reach:c1', loot:'default'} ],
   frost:[ {mat:'basalt',   gid:'frost:c0', loot:'materials'},
-          {mat:'ironwood', gid:'frost:c1', loot:'elixirs'} ]
+          {mat:'ironwood', gid:'frost:c1', loot:'elixirs'} ],
+  aerie:[ {mat:'basalt',   gid:'aerie:c0', loot:'trove'},
+          {mat:'ironwood', gid:'aerie:c1', loot:'default'} ],
+  crown:[ {mat:'basalt',   gid:'crown:c0', loot:'elixirs'},
+          {mat:'ironwood', gid:'crown:c1', loot:'materials'} ]
 };
 // the two tools themselves, each in a fitting dungeon
 var TG_TOOLCHEST={ undermaw:{flag:'axegift', tier:'axe'}, eastdeep:{flag:'pickgift', tier:'pick'} };
