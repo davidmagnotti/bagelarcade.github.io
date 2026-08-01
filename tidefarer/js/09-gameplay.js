@@ -532,7 +532,7 @@ function tryAttack(useMouse){
     // PARRY is a matter of TIMING now: a swing opens a brief guard window, so a blow
     // or arrow that lands in that window (from the front) is turned aside. Strike as
     // the enemy's blow arrives to parry it. (Also active during Rask's drill.)
-    if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=0.22; P.parryMax=0.22; }
+    if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=0.4; P.parryMax=0.4; }   // a forgiving window: react to the red ! and swing
     const finisher=(P.combo||0)>=2;
     const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
     // Cleaver perk (melee L5): the finisher sweeps a wide, deep arc instead of a lunge
