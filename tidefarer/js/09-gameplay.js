@@ -694,8 +694,12 @@ function damageMob(m,dmg,knock,skill){
   dmg=Math.max(1,Math.round(dmg*Math.max(0.5,1-0.07*lvdiff))); // high-level foes shrug (softened - the old 0.35/0.09 floor turned late bosses into 25-hit slogs)
   // big setpiece fights (any 300+ HP boss) yield to a determined blade - a targeted
   // boss-damage bonus that leaves trash-mob tuning untouched. Keeps marquee fights
-  // decisive (~10-15 hits) instead of attrition sponges.
-  if((m.maxhp||0)>=300) dmg=Math.round(dmg*1.3);
+  // decisive instead of attrition sponges. TUNE: softened from 1.3 as part of the
+  // late-game difficulty pass (dmgLvl's diminishing returns already keep bosses
+  // from melting, so this bonus no longer needs to carry as much). Lower toward
+  // 1.0 to make bosses tankier, raise it if they start to feel like slogs.
+  const BOSS_DMG_MULT = 1.2;
+  if((m.maxhp||0)>=300) dmg=Math.round(dmg*BOSS_DMG_MULT);
   // Backstab: a melee blow from behind bites half again as deep. Marquee bosses
   // (bigBoss) wheel to face you and are immune. Taught in Rook's yard drill.
   let backstab=false;
