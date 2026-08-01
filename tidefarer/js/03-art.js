@@ -903,16 +903,12 @@ function drawHumanoid(g,sx,sy,o){
   const stF=_bd.stoop||0;               // forward head lean, local units (aged / hunched)
 
   g.save();
-  // Slight vividness boost for the figure. MUST be set inside this save() so the
-  // matching restore() clears it - setting ctx.filter before the save (and never
-  // resetting it) leaked the filter onto the whole scene for the rest of the
-  // frame (setTransform does not clear ctx.filter), softening/over-saturating the
-  // ground, houses and everything drawn after the first character.
-  // A per-character ctx.filter forces each figure into its own offscreen layer +
-  // post-process pass - one of the biggest per-entity GPU costs on desktop Skia
-  // (Edge/Chrome), and it scales with the number of characters on screen. Skip it
-  // in Fast graphics / low-gfx; the flat-shaded bodies below already read fine.
-  if(!LOWFX){ try{ if(typeof g.filter==='string') g.filter='saturate(1.22) brightness(1.04)'; }catch(e){} }
+  // NOTE: the old per-character ctx.filter='saturate/brightness' vividness boost
+  // was REMOVED entirely. A per-draw ctx.filter forces each figure into its own
+  // offscreen layer + post-process pass - one of the very worst per-entity GPU
+  // costs on desktop Skia (Edge/Chrome), scaling with character count (it was the
+  // dominant cost that pinned a Surface at ~15fps). The look change is tiny; the
+  // shaded bodies below carry the depth on their own.
   g.translate(sx,sy);
   if(hurtF){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean);

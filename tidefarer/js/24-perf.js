@@ -88,14 +88,10 @@ frame=function(ts){
       tier=Math.min(MAX, tier+jump);
       apply();
       cooldownUntil=ts+900;                 // let the new tier settle
-    } else if(avg>28 && tier>=MAX && !PERF){
-      // Already at the lowest tier and STILL slow: the GPU can't composite a
-      // full-viewport canvas fast enough. Shrink the displayed area.
-      PERF=true; try{ SafeStore.set('tf_perf','1'); }catch(e){}
-      if(typeof resize==='function') resize();
-      if(typeof syncPerfUI==='function') syncPerfUI();
-      cooldownUntil=ts+1500;
     }
+    // (The old "shrink the window" fallback at the lowest tier was removed with
+    //  Performance mode - the lowest tier already engages the Fast-graphics
+    //  pipeline at full size, which is the better answer.)
   }
 };
 })();
