@@ -411,13 +411,25 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // Rask the Bladesworn teaches the parry. Once his oath-quest is underway and the
-  // guard is not yet learned, his lesson is a single choice that grants it - after
-  // which the quest reads Ready and turns in through the ordinary path below.
-  if(npc.id==='rask' && qs('bladeoath')==='active' && !(P.unlocked&&P.unlocked.parry)){
-    setDialog('<b style="color:var(--ember)">'+QUESTS.bladeoath.title+'</b><br>“'+QUESTS.bladeoath.brief+'”',
-      shopButtons(npc,[{label:'Show me the turning', cls:'gold', fn:()=>{ closeDialog(); unlockParry(); }},
-                       {label:'Not yet', ghost:true, fn:closeDialog}]));
+  // Rask the Bladesworn teaches the parry in ONE smooth lesson. The moment Bram's
+  // kit is done (bladeoath offered or accepted), a single choice accepts, teaches,
+  // AND completes it - so the guard is his in one conversation and the King unlocks.
+  // If the newcomer arrives with no blade yet, he sends them to Bram to be armed first.
+  if(npc.id==='rask' && !(P.unlocked&&P.unlocked.parry) && qs('bladeoath')!=='done'){
+    if(qs('bladeoath')==='avail' || qs('bladeoath')==='active'){
+      setDialog('<b style="color:var(--ember)">'+QUESTS.bladeoath.title+'</b><br>“'+QUESTS.bladeoath.brief+'”',
+        shopButtons(npc,[{label:'Show me the turning', cls:'gold', fn:()=>{
+            P.quests.bladeoath='active'; P.prog.bladeoath=0;   // make sure it's underway
+            closeDialog();
+            unlockParry();                                     // teach the guard (its own popup)
+            if(qs('bladeoath')==='active' && questReady('bladeoath')) completeQuest('bladeoath');   // reward + unlock the King
+          }},
+          {label:'Maybe later', ghost:true, fn:closeDialog}]));
+      return;
+    }
+    // no sword yet - the lesson would be wasted, so point them back to the forge
+    setDialog('<i>The old swordsman looks you up and down and finds no blade on your hip.</i> “I teach the turning of a sword, friend - and you\'ve none to turn. Go see <b>Bram</b> at the forge; earn your iron off him and he\'ll send you back to me. Come find me when there\'s steel on your hip.”',
+      shopButtons(npc,[{label:'I\'ll find Bram', ghost:true, fn:closeDialog}]));
     return;
   }
   // 1) talk-quest completion

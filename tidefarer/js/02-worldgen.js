@@ -247,9 +247,9 @@ function placeObjects(){
   spawnMob('slime',Math.floor(cv2.x-2),Math.floor(cv2.y-1));
   spawnMob('slime',Math.floor(cv2.x+3),Math.floor(cv2.y+3));
   spawnMob('slime',Math.floor(cv2.x-1),Math.floor(cv2.y+4));
-  // springs: an old marker stone with its own story
-  G.decor.push({kind:'pillar',x:ZONES.springs.x+2.8,y:ZONES.springs.y+0.5,broken:false,loreKey:'springs'});
-  setSolid(Math.floor(ZONES.springs.x+2.3),Math.floor(ZONES.springs.y),1);
+  // (the old readable marker-stone by the springs is gone - the hot spring itself
+  // is now a place to REST: fully heal and take on a warm +10 buffer. See the
+  // 'springrest' interact in 09-gameplay.js / 07-input.js.)
   // living meadow: grass tufts and wildflowers
   const gr2=mulberry32(SEED+83);
   const FLC=['#e0708a','#e8c14d','#c9d6ff','#e8855a'];

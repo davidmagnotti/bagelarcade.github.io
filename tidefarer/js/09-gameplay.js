@@ -248,6 +248,12 @@ function nearestInteract(){
       if(lbl){ bd=d; best={type:'plot',o:pl,label:lbl}; }
     }
   }
+  // the hot springs: a place to REST - full heal plus a warm yellow buffer.
+  // Zone-based (no marker stone), so stand at the pool's edge and interact.
+  if(ZONES.springs && G.worldId==='isle'){
+    const d=dist(P.x,P.y,ZONES.springs.x,ZONES.springs.y);
+    if(d<3.2 && d<bd){ bd=d; best={type:'springrest',label:(P.springCd>0)?'Rest ('+Math.ceil(P.springCd)+'s)':'Rest'}; }
+  }
   return best;
 }
 
@@ -279,6 +285,14 @@ function doInteract(){
     P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
+    return;
+  }
+  if(it.type==='springrest'){
+    if(P.springCd>0){ blockMsg('The spring must gather its warmth again - <b>'+Math.ceil(P.springCd)+'s</b> before you can rest here anew.'); return; }
+    P.hp=P.maxhp; P.arrows=P.maxArrows||20; P.overheal=10; P.springCd=45;
+    addFloat('Rested - fully mended',P.x,P.y-1.8,'#7fe07f',1.2);
+    addFloat('+10 warmth',P.x,P.y-2.5,'#f0d24a',1.25);   // the yellow bonus buffer
+    burst(P.x,P.y-0.6,'#f0d24a',16,2.2); Snd.pickup(); refreshUI();
     return;
   }
   if(it.type==='shop'){ facePoint(it.o.x,it.o.y); openStallShop(it.o); return; }
@@ -1078,6 +1092,14 @@ function hurtPlayer(dmg,src){
   if(has('wardstone',1)) dmg=Math.max(1, dmg-2);   // the Warden's Wardstone turns aside a sliver of every blow
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
   dmg=Math.round(dmg*Math.min(1.8,1+0.08*lvUp)); // and hit harder
+  // the hot-spring buffer (yellow overheal) soaks the blow before HP does - it lets
+  // you shrug off an extra hit, but it does not regenerate: rest at the spring to renew it
+  if((P.overheal||0)>0){
+    const absorb=Math.min(P.overheal, dmg);
+    P.overheal-=absorb; dmg-=absorb;
+    if(absorb>0){ addFloat('-'+absorb, P.x, P.y-1.9, '#f0d24a', 1.15); burst(P.x,P.y-0.5,'#f0d24a',6,1.8); }
+    if(dmg<=0){ P.hurtT=0.55; P.lastCombat=G.time; Snd.hurt&&Snd.hurt(); G.shake=Math.max(G.shake,0.18); refreshUI&&refreshUI(); return; }
+  }
   P.hp-=dmg; P.hurtT=0.7; P.lastCombat=G.time;
   // grit: every so many hits taken, your hide toughens - the bar rises each level,
   // and each level grants a bigger slab of max HP
@@ -1347,6 +1369,7 @@ function updatePlayer(dt){
   }
   }
   P.wellCd=Math.max(0,(P.wellCd||0)-dt);
+  P.springCd=Math.max(0,(P.springCd||0)-dt);   // the hot-spring rest recharges
   P.comboT=Math.max(0,(P.comboT||0)-dt); if(P.comboT===0) P.combo=0;
   P.atkCd=Math.max(0,P.atkCd-dt);
   P.swing=Math.max(0,P.swing-dt);

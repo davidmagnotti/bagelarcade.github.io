@@ -101,6 +101,10 @@ function pickClickTarget(wx,wy){
       const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
       cand.push({type:'inter',x:doorX,y:doorY,r:1.5,range:b.grand?2.6:1.7,go:()=>enterHouse(b)}); }
   }
+  // the hot springs: click near the pool to Rest (zone-based, no marker object)
+  if(ZONES.springs && G.worldId==='isle'){
+    cand.push({type:'inter',x:ZONES.springs.x,y:ZONES.springs.y,r:3.0,range:3.4,go:()=>doInteract()});
+  }
   let bi=null; bd=999;
   for(const c of cand){ const d=dist(wx,wy,c.x,c.y); if(d<c.r && d<bd){ bd=d; bi=c; } }
   if(bi) return bi;

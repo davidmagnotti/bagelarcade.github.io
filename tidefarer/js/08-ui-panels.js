@@ -402,8 +402,12 @@ function updateQuestUI(){
 }
 /* HUD */
 function refreshUI(){
-  document.getElementById('hpFill').style.width=(P.hp/P.maxhp*100)+'%';
-  document.getElementById('hpLbl').textContent=Math.ceil(P.hp)+' / '+P.maxhp;
+  document.getElementById('hpFill').style.width=(Math.min(P.hp,P.maxhp)/P.maxhp*100)+'%';
+  // the yellow overheal buffer sits over the right end of a full bar and drains first
+  const oh=document.getElementById('hpOver');
+  if(oh) oh.style.width=((P.overheal||0)/P.maxhp*100)+'%';
+  document.getElementById('hpLbl').innerHTML=Math.ceil(P.hp)+' / '+P.maxhp
+    + ((P.overheal||0)>0 ? ' <span style="color:#f0d24a">+'+Math.ceil(P.overheal)+'</span>' : '');
   // the old mana bar is repurposed as the QUIVER gauge - shown only once the bow
   // is earned, filling toward the 20-arrow cap
   const mpBar=document.getElementById('mpBar');

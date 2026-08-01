@@ -36,6 +36,7 @@ const MAX_SKILL_LVL = 100;   // every skill climbs to a shared mastery cap of 10
 const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,
   hp:100, maxhp:100, mp:30, maxmp:30,
+  overheal:0, // a yellow bonus buffer (from resting at the hot springs) that soaks a hit before HP does
   arrows:20, maxArrows:20, // the quiver: a hard-hitting bow, rationed to 20 shafts that slowly refill
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
@@ -296,8 +297,10 @@ function spawnMobs(){
   // Emberwick slimes are hardier than the base mob - double health, so the meadow
   // fight is a real warm-up (other isles' slimes keep the standard stat block)
   for(const [x,y] of slimeSpots){ const s=spawnMob('slime',x,y); if(s){ s.maxhp=s.hp=(s.maxhp||18)*2; } }
-  // Emberwick's wolf packs were cleared from the isle - the old dog-runs on the
-  // hills and at the cove now stand quiet. (Wolves still den on the far isles.)
+  // a lone wolf pair still dens in the Whisperwood to the west, prowling the shade
+  // where the bluecaps grow - a little teeth to watch for while you gather for Orin.
+  const wolfSpots=[[29,37],[36,42]];
+  for(const [x,y] of wolfSpots){ const s=findOpenNear(x,y,3); if(s) spawnMob('wolf',s[0],s[1]); }
   // bone-guard the ground between the fire-gate and the King, at the northern spit.
   // They and the King wear .hollowGuard so the ward-seal can hide them all together
   // while the causeway stands sealed (see sealHollowKing in 09-gameplay).
