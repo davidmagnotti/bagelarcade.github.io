@@ -3685,9 +3685,11 @@ function placeObjectsReachDeep(){
   // THE REWARD ROOM: the warden's hoard + the climb-out, walled off across the top of the vault
   // (partition laid in genReachDeep), sealed until the Drowned Minotaur falls (killMob -> openRewardRoom).
   buildRewardRoom({ x0:28, x1:52, wallY:13, gx0:38, gx1:42, floorT:T.RUIN, sealInGen:true,
-    chest:{kind:'chest', x:34.5, y:9.5, deep:1, rich:12}, exitX:46, exitY:9,
+    chest:{kind:'chest', x:34.5, y:9.5, deep:1, reachverse:1}, exitX:46, exitY:9,
     cleared:!!(P.story && P.story.tombBossDown) });
-  G.decor.push({kind:'chest', x:31.5, y:16.5, deep:1, rich:7});   // a bonus hoard chest, down in the vault
+  // No loose loot chest down in the vault: the catacomb's one true keeping is the Tidefarer's
+  // verse, sealed in the reward room past the warden (the 'reachverse' branch in openChest) -
+  // the thing Jaist sent you down here to find, not a stray tonic on the boss-room floor.
   G.critters=[];
   // a cleared run (the warden is down) tears the dance down and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
@@ -6025,6 +6027,27 @@ function openChest(b){
     P.story.veilTome=1; give('veilrune',1);
     banner('A WARDING, WEPT IN ICE','THE RUNE OF HUSH-FROST');
     setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a single plate of ice that will not thaw - <b>the hush-frost the warden wept</b>, scored deep in the shape of a warding.</i> The marks are old royal script, the kind your father made you both learn and only <b>Jaist</b> ever loved. You cannot read a word of it. <i>But you know in your blood what it is: a spell to slip a hunter\'s eye - to go unseen, even by <b>Vath</b>.</i> <b style="color:#c9b0ff">You take the Rune of Hush-Frost.</b> <i>Carry it up out of the ice to your brother. Jaist could read this. Jaist could cast it.</i>'); },520);
+    setTimeout(autoSave,300);
+    return;
+  }
+  // THE DROWNED CATACOMB'S REWARD: the Tidefarer's verse, cut into a stone deep in the warden's
+  // vault. This - not a coffer of coin - is what Jaist sent you down here to find. The princess
+  // copies it off the wall to carry up to her brother the scholar, who reads the old royal script
+  // (see the 'brother' scene in 06-dialog.js): the Act II clue that turns the isle-by-isle
+  // freeing into a HUNT for the great queen's hidden grave and the sealing weapon in it.
+  if(b.reachverse){
+    bumpStat('chests');
+    P.story=P.story||{};
+    shockwave(b.x,b.y,'rgba(201,176,255,0.9)',56); burst(b.x,b.y-0.5,'#c9b0ff',20,2.7); if(Snd.levelup) Snd.levelup();
+    if(P.story.reachProphecy){
+      // already copied and carried up - the picked-over vault keeps only its old coin now
+      giveGold(rndi(120,180)); if(Math.random()<0.5) give('potion',1);
+      banner('THE DROWNED VAULT','PICKED CLEAN BUT FOR OLD COIN');
+      setTimeout(autoSave,300); return;
+    }
+    P.story.reachProphecy=1; give('reachverse',1); giveGold(rndi(80,130));
+    banner("THE TIDEFARER'S VERSE",'THE THING THIS PLACE WAS HIDING');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The warden\'s hoard is a scatter of old coin and rot - but the vault\'s true keeping is graven into the wall it died guarding: a verse-stone older than the catacomb around it, cut by a hand that knew the deep.</i> <b>WHEN THE ISLES CRY OUT AND THE CROWN GOES DARK, A DAUGHTER OF THE TIDE SHALL SAIL THEM FREE - ISLE BY ISLE, CURSE BY CURSE, TILL SHE FINDS THE WEAPON THE GREAT QUEEN FORGED TO SEAL THE SHADOW.</b> <i>Beneath the old cutting, a fresher hand has scratched, unquiet: the queen forged it and the queen lies buried with it - and she does not rest where the histories have laid her.</i> <b style="color:#c9b0ff">You copy the Tidefarer\'s verse.</b> <i>The old royal script runs on past your reading - but <b>Jaist</b> lived in these letters. Carry it up out of the dark to your brother on the strand; this is the thing he sent you to find.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }

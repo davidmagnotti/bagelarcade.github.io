@@ -16,6 +16,7 @@ const ITEMS = {
   crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
   veilrune:{name:'Rune of Hush-Frost', desc:'A warding cut from the ice the Rimebound wept, scored in the old royal script. Only a scholar could read it - carry it to your brother.'},
+  reachverse:{name:"The Tidefarer's Verse", desc:'A copy of the prophecy cut into the deep vault beneath Stormreach, in the old royal script: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. Show it to Jaist; the scholar can read what you cannot.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
   cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},

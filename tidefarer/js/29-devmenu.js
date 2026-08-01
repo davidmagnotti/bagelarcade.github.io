@@ -112,6 +112,7 @@ function enterReturnPhase(){
   P.story.royalGarb=1; P.story.act1End=1; P.story.vathAscendant=1; P.story.kingFallen=1; P.story.framed=1;
   P.story.vathMet=1; P.story.vathNamed=1; P.story.reachArrived=1;
   P.story.reachBossDown=1; P.story.tombBossDown=1;                 // Stormreach cleared (opens the Frozen Isle)
+  P.story.reachProphecy=1; P.story.reachProphecyRead=1;            // the Tidefarer's verse found + read to Jaist
   P.story.frostFreed=1; P.story.deepDone=1; P.story.veilTome=1;    // Frozen Isle done, the rune found
   if(typeof grantVathVeil==='function') grantVathVeil(true); else { P.story.vathVeil=1; P.spells.veil=1; }
   // the four returned-isle gifts, so every Act II dungeon + the capstone is testable

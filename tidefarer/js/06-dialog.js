@@ -375,6 +375,23 @@ function buildDialogContent(npc){
        {label:'Hold - not yet', ghost:true, fn:closeDialog}]);
     return;
   }
+  // === THE TIDEFARER'S VERSE: the princess brings the prophecy up from the catacomb ====
+  // On the strand Jaist told her to "find what this place is hiding." This is her answer:
+  // the verse-stone copied out of the Drowned Vault. He reads the old royal script their
+  // father made them both learn - and names the hunt it sets them on. Fires once.
+  if(npc.id==='brother' && P.story && P.story.reachProphecy && !P.story.reachProphecyRead){
+    const read=()=>{
+      P.story.reachProphecyRead=1;
+      if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.85)',52);
+      if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',18,2.4);
+      banner("THE HUNT HAS A HEADING",'FIND THE TIDEFARER, FIND THE WEAPON');
+      setDialog('<i>His eyes race the lines, then race them again.</i> “…the weapon the great queen forged to seal the shadow. And beneath it - <i>she lies buried with it, and does not rest where the histories laid her.</i>” <i>He looks up, gone pale.</i> “Joan, this isn\'t a grave-song. It\'s a heading. The Tidefarer did EXACTLY what you\'ve been doing - isle by isle, curse by curse - and she made a thing that could end Vath for good, then took it into a hidden grave. Find her, and we find it.” <i>He rolls the copy careful and tucks it into his chart-case.</i> “I\'ll keep this safe and keep reading it. Go on freeing the isles - only now we know what we\'re freeing them TOWARD.”',
+        [{label:'A heading at last', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog(); }}]);
+    };
+    setDialog('<i>You lay the copied verse in your brother\'s hands. Jaist goes still the moment he sees the letters.</i> “This is old royal script - Grandmother\'s hand, or near enough. Where did you-” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
+      [{label:'Read it, brother', fn:read}]);
+    return;
+  }
   // === THE WARDING VEIL: the brother casts the hush-frost rune =============
   // The princess brings the Rune of Hush-Frost up from the Rimefissure; Jaist, the
   // scholar, reads the old royal script and works it into the warding that hides them
@@ -403,6 +420,14 @@ function buildDialogContent(npc){
     };
     setDialog('<i>You lay the rune-scored plate of ice in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Where did you - this is old script. Grandmother\'s hand, or near enough.” <i>His scholar\'s eyes are already devouring it.</i>',
       [{label:'It was in the deep ice, past the Rimebound', fn:p2}]);
+    return;
+  }
+  // Stormreach, after the verse is read: Jaist holds the boat with the hunt in mind, so his
+  // idle chatter no longer sends you to "find what this place is hiding" - you already did.
+  // (Reach-world only, so it never overrides the Frozen-Isle Jaist's landing lines.)
+  if(npc.id==='brother' && typeof G!=='undefined' && G.worldId==='reach' && P.story && P.story.reachProphecyRead){
+    setDialog('<i>Jaist keeps the copied verse close and an eye on the moored boat.</i> “Every curse you break is a step nearer her grave - the Tidefarer\'s, and the weapon in it. Keep pulling Vath\'s hooks out of the isles, sister. I\'ll hold the way home, and I\'ll keep reading.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
   // After the Veil is cast: the brother holds the Frozen landing and points you home.
