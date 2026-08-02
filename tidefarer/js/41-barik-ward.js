@@ -28,7 +28,12 @@
    Persistence: the moment any stone falls, clearGateNode records
    P.story.tg['main:heddaward']=1. On reload the world regen's and this placer
    sees the flag and leaves the wall out for good (the way stays open), exactly
-   like every other felled tool-gate.
+   like every other felled tool-gate. But the flag alone is not trusted: the wall
+   only stays down if the player actually carries a dungeon-forged pick (pick tier
+   >= 2 - the only thing that can shatter wardstone). A flag set WITHOUT that pick
+   is an inconsistent save (a legacy save, or one left from dev testing), so the
+   placer drops the bad flag and re-raises the wall - a brand-new, pick-less run
+   always finds Hedda and Corvo walled off, as intended.
    ===================================================================== */
 (function(){
 'use strict';
@@ -83,7 +88,19 @@ function placeBarikWard(id){
   try{
     if(id!=='main') return;
     P.story=P.story||{}; P.story.tg=P.story.tg||{};
-    if(P.story.tg[WARD_GID]) return;                 // ward already shattered - way stays open
+    // The ward can ONLY be down if it was legitimately shattered, and the only thing
+    // that shatters wardstone is a dungeon-forged pick (tier >= 2 - the Undermaw's
+    // Delvebreaker or the Emberdeep's Cragbreaker). Tool tiers never fall, so a real
+    // ward-breaker carries that pick for good. If the felled flag is set WITHOUT such a
+    // pick, the save is in an inconsistent state (a stale/legacy save, or one left over
+    // from dev testing) - the wall would wrongly stay down, letting you walk to Hedda
+    // and Corvo on what should be a fresh, pick-less run. Heal it: drop the bad flag so
+    // the wall goes back up, exactly as a brand-new game expects.
+    var pickTier=(P.tools && P.tools.pick) || 0;
+    if(P.story.tg[WARD_GID]){
+      if(pickTier>=2) return;                        // legitimately shattered - the way stays open for good
+      delete P.story.tg[WARD_GID];                   // inconsistent flag with no dungeon pick - re-raise the ward
+    }
     if(typeof addGateNode!=='function') return;
     var H=findHedda(); if(!H) return;
     var hx=Math.round(H.x-0.5), hy=Math.round(H.y-0.5);
