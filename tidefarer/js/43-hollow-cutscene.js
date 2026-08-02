@@ -50,9 +50,6 @@ const HS_BEATS = [
   // the strait beyond falls flat (wordless, the big beat)
   { who:'', html:'', ens:0.12, calm:0.5, crown:0, shatter:1, flash:1.05, shake:0.65, hold:1800 },
   { who:'The Hollow Spirit',
-    html:'<i>The violet gutters out of its eye-lights and the crown lies broken at its feet. What straightens in the ghost-glow is no monster now - only a dead king, weary past telling, and glad to be done.</i>',
-    ens:0, calm:0.85 },
-  { who:'The Hollow Spirit',
     html:'<b style="color:#a9e0b8">"…quiet. The crown is quiet at last. I kept it, breaker - and it kept me, long past my grave, and would not let me lie."</b>',
     ens:0, calm:0.95 },
   // the seed of Vath: it names the shadow that woke it - no more than that
