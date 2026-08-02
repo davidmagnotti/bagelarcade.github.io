@@ -1876,7 +1876,7 @@ function updateMobs(dt){
         m.lungeCd=(m.lungeCd||rnd(3,4))-dt;
         if(m.lungeCd<=0 && (m.lunge||0)<=0 && l>2.0 && l<8.5 && !((m.stunT||0)>0)){
           m.lungeCd=rnd(3.2,4.8); m.lunge=0.5; m.face=dx<0?-1:1;
-          addFloat('SKITTER!', m.x, m.y-2.8, '#ffd08a', 1.2);
+          addFloat('SKITTER', m.x, m.y-2.8, '#ffd08a', 1.2);
           if(Snd.noise) Snd.noise(0.30,0.07,270,0.6);
           G.shake=Math.max(G.shake||0,0.2);
         }

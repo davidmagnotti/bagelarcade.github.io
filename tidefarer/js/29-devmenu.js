@@ -316,6 +316,14 @@ const SECTIONS=[
     ['Grant Cograzor Pick (tier 3)',()=>{ if(typeof grantCograzor==='function') grantCograzor(); ui(); }],
     ['Grant Emberbreaker Pick (tier 4)',()=>{ if(typeof grantEmberbreaker==='function') grantEmberbreaker(); ui(); }],
     ['Reset tools to iron (tier 1)',()=>{ P.tools=P.tools||{}; P.tools.axe=Math.min(P.tools.axe||0,1); P.tools.pick=Math.min(P.tools.pick||0,1); ui(); note('Tools reset to iron'); }],
+    ['Reset Barik ward (re-wall the farm + Corvo)',()=>{ P.story=P.story||{}; P.story.tg=P.story.tg||{}; delete P.story.tg['main:heddaward'];
+      // force a true fresh regen of Barik so the full placer sequence (incl. placeBarikWard) runs.
+      // if we're standing on main, leave first (that snapshots the ward-less copy), THEN drop the
+      // cache so the return trip regenerates from scratch.
+      if(G.worldId==='main'){ switchWorld('isle'); }
+      if(typeof WORLDS!=='undefined') delete WORLDS.main;
+      switchWorld('main');
+      ui(); note('Barik ward reset - the violet wall is back up (needs a tier-2 pick again)'); }],
   ]],
   ['System', [
     ['Save now',()=>saveNow()], ['Reload page',()=>location.reload()],
