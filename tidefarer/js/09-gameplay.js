@@ -366,13 +366,8 @@ const BUILDING_KINDS={house:1,house2:1,igloo:1,forge:1,barn:1,tower:1,castle:1,h
 // blocker in-world - if a building is close by, the player almost certainly meant
 // its door, so point them at it; otherwise a plain "nothing here" line.
 function noActionMsg(){
-  let bld=null, bd=4.2;
-  for(const b of G.decor){
-    if(!BUILDING_KINDS[b.kind]) continue;
-    const d=dist(P.x,P.y,b.x,b.y); if(d<bd){ bd=d; bld=b; }
-  }
-  if(bld){ blockMsg('You can’t get in from here. <b>Step right up to the door</b> and try again.'); Snd.step&&Snd.step(5); return; }
-  blockMsg('There’s nothing here to use.');
+  /* Pressing E / the interact button with nothing in reach is now silent - no
+     "there's nothing here to use" (or "step up to the door") nag popup at all. */
 }
 function facePoint(x,y){ const dx=x-P.x, dy=y-P.y, l=Math.hypot(dx,dy)||1; P.dir={x:dx/l,y:dy/l}; }
 function warpTo(b){ // step through a tunnel to its far end (same world), with a fade
