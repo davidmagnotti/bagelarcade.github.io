@@ -37,6 +37,10 @@ function startBossIntro(m, opts){
     title:opts.title||m.title||(m.name||'').toUpperCase()||'A CHALLENGER APPROACHES',
     sub:opts.sub||m.subtitle||'', fired:false, impact:false, _acc:0 };
   m.introKind=kind; m.introT=0; m.entranceDone=true;
+  // Boss checkpoint: rousing a boss in a dungeon drops a respawn point right where you're
+  // standing, so a death sends you back to the boss - not the whole gauntlet from the mouth.
+  // (Cleared on every world change in switchWorld; the fallback bind/spawn takes over elsewhere.)
+  if(typeof inDungeon==='function' && inDungeon()) P.bossCheck={w:G.worldId, x:P.x, y:P.y};
   m.state='idle'; m.tx=null; m.ty=null; m.windup=0; m.swing=0; m.noAggroT=1e9;
   if(kind==='enthrall' && m.ensAmt==null && !m.enspelled) m.ensAmt=0;   // the violet washes in (dragon)
   if(kind==='surface') m.surf=0;

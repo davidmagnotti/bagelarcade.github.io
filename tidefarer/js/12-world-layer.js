@@ -3069,6 +3069,9 @@ function updateMillDeep(dt){
   // the halls to kite it; the gate reopens only when it falls.
   if(!G._millSealed && !(P.story&&P.story.millDone) && P.y>=4 && P.y<=8 && P.x>=9 && P.x<=31){
     if(typeof spawnCogBound==='function') spawnCogBound();
+    // the Cog-Bound has no marquee entrance, so stamp the boss respawn point here as the
+    // Cog-Gate shuts (see startBossIntro for the same idea on entrance bosses)
+    P.bossCheck={w:G.worldId, x:P.x, y:P.y};
     G._millSealed=1; for(const [x,y] of MILL_BOSS_SEAL) setSolid(x,y,1);
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
@@ -6619,6 +6622,7 @@ function snapshotWorld(){
 }
 function switchWorld(id){
   const prevWorld=G.worldId;
+  P.bossCheck=null;   // a boss respawn point belongs to the run that set it - leaving the world clears it
   G._flying=0; G._flyUntil=0;   // arriving anywhere clears the in-flight lock, so a throw mid-flight can never strand the dragon/parachute
   snapshotWorld();
   G.projs.length=0; G.parts.length=0; G.floats.length=0; G.fogs.length=0; G.fireflies.length=0;

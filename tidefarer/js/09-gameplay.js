@@ -1298,11 +1298,15 @@ document.getElementById('respawnBtn').onclick=()=>{
     if(lost.length) setTimeout(()=>toast('Scavengers picked your satchel while you lay senseless: <b>'+lost.join(', ')+'</b> gone. <i>(Goods in Bree\u2019s vault are safe.)</i>',7500),1200);
   }
   // respawn on the shore you fell on - never yank the hero across the sea to
-  // another island. Honour a bind only if it's on this world; else its village.
-  const b=P.bind;
-  if(b && b.w===G.worldId){ P.x=b.x; P.y=b.y; }
-  else { const home=ZONES.village||ZONES.town||(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
-    P.x=home.x+0.5; P.y=home.y+2.5; }
+  // another island. A boss checkpoint (set when you roused a dungeon boss) wins first,
+  // so dying to the boss means another go at the boss, not the whole gauntlet again;
+  // then honour a bind if it's on this world; else the world's village/spawn.
+  const bc=P.bossCheck;
+  if(bc && bc.w===G.worldId){ P.x=bc.x; P.y=bc.y; if(typeof unstickEntity==='function') unstickEntity(P); }
+  else { const b=P.bind;
+    if(b && b.w===G.worldId){ P.x=b.x; P.y=b.y; }
+    else { const home=ZONES.village||ZONES.town||(WORLD_DEFS[G.worldId]&&WORLD_DEFS[G.worldId].spawn)||{x:P.x,y:P.y};
+      P.x=home.x+0.5; P.y=home.y+2.5; } }
   P.hurtT=1.5; refreshUI(); autoSave();
 };
 document.getElementById('winBtn').onclick=()=>{ document.getElementById('winOv').style.display='none'; G.paused=false; G.victory=false; };

@@ -41,7 +41,7 @@ const P = {
   arrows:20, maxArrows:20, // the quiver: a hard-hitting bow, rationed to 20 shafts that slowly refill
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
-  level:1, xpL:0, bank:0, vault:{}, quickItem:'potion', bind:null, horse:0, riding:0, home:0, homeUp:{},
+  level:1, xpL:0, bank:0, vault:{}, quickItem:'potion', bind:null, bossCheck:null, horse:0, riding:0, home:0, homeUp:{},
   swordTier:0, // 0 rusty, 1 iron
   atkCd:0, swing:0, hurtT:0, lastCombat:-99, regenT:0,
   inv:{potion:2, seed:0}, gold:0,
