@@ -1179,7 +1179,7 @@ function edeepLava(x,y,r){ // a molten pool that both glows and blocks the floor
 function placeObjectsEastDeep(){
   G.decor=G.decor||[];
   // the whole dungeon turns on the DASH - make sure it's available so the crossings can't soft-lock
-  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The heat quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> / the dodge button).',4200); }
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The heat quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> or <b>L</b> / the dodge button).',4200); }
   const Z=EASTDEEP_ZONES;
   // the basalt walls that give the rooms their shape (baked static scenery)
   for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
@@ -2551,7 +2551,7 @@ function placeObjectsFrostDeep(){
   G.decor.push({kind:'dungeonmouth', x:44.5, y:112.5, exit:1, label:'the way up'});  // back to the surface
   setSolid(44,112,0); setTile(44,112,T.ICE);
   // the long drift turns on the DASH (to board the rotating slabs) - guarantee it so nothing soft-locks
-  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The cold quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> / the dodge button).',4200); }
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The cold quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> or <b>L</b> / the dodge button).',4200); }
   for(const [tx,ty] of [[36,44],[52,44],[40,64],[48,64],[36,90],[52,90],[31,14],[57,14],[31,30],[57,30],[38,108],[50,108]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   const spire=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5}); setSolid(x,y,1); } };
   for(const [px,py] of [[38,110],[50,110]]) spire(px,py);
@@ -3246,7 +3246,7 @@ function placeObjectsUndermaw(){
   // (No bow is granted here: R2's old ward-eye - the one puzzle that needed a ranged shot -
   // was replaced by the conveyor crossing, so the maw no longer hands out a "magical" bow.
   // The bow lives on the Cloudreach now, at the Gale-Shrine.)
-  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> / the dodge button).',4200); }
+  if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> or <b>L</b> / the dodge button).',4200); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
@@ -6993,10 +6993,10 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The warren has flooded into a channel of freezing black water.</i> Cross it on the sliding <b>drift-ice floes</b>: <b>board a floe</b> as it drifts to your ledge, ride it, and <b>step to the next floe</b> (or the far ledge) when they line up. The floe-ice is <b>slick - your steps carry momentum</b>, so time each hop and don\'t over-run it. Fall in and the cold flings you back to the landing to try again.',9000),1800); }
   if(id==='eastdeep' && !P.prog.emberSeen && !(P.story && P.story.emberDone)){ P.prog.emberSeen=1;
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
-    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Ctrl</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
+    setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
     setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
-    setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Ctrl</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
+    setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
     setTimeout(()=>toast('<i>Each chamber is a maze of solid stone, its corridors snaking north.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Touch a lit lance and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }

@@ -637,7 +637,7 @@ function unlockDash(msg){
   P.unlocked.dash=true;
   if(typeof updateMountBtn==='function') updateMountBtn();
   Snd.quest&&Snd.quest();
-  const dashMsg = msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Ctrl')+' to dart aside - a breath of speed and no damage taken mid-dash.';
+  const dashMsg = msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Ctrl or L')+' to dart aside - a breath of speed and no damage taken mid-dash.';
   // a click-to-dismiss popup (not a passing toast) so the lesson can't be missed
   const showDashCard=()=>{ if(typeof storyCard==='function') storyCard(dashMsg, {label:'OK'}); else toast(dashMsg, 4600); };
   // If the dash is granted mid-dialogue (Orin's quest turn-in), hold this card until the
@@ -1410,7 +1410,7 @@ function updatePlayer(dt){
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(P.rollCd<=0) P.dashChain=0;
-  if(keys['control']) tryRoll();
+  if(keys['control'] || keys['l']) tryRoll();   // dash: Ctrl OR L (L avoids the Ctrl+W tab-close risk)
   // parry timers: the short guard window a swing opens, and the clean-parry flash.
   // No movement freeze now - the parry rides your attack, so you keep your footing.
   P.parryT=Math.max(0,(P.parryT||0)-dt);
