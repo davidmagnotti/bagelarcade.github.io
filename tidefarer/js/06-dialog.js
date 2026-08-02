@@ -449,9 +449,9 @@ function buildDialogContent(npc){
     if(qs('bladeoath')==='avail' || qs('bladeoath')==='active'){
       const drilling = !!P.parryDrill;
       setDialog('<b style="color:var(--ember)">'+QUESTS.bladeoath.title+'</b><br>“'+QUESTS.bladeoath.brief+'”',
-        shopButtons(npc,[{label: drilling?'Ready - come at me':'Take up your blade - drill me', cls:'gold', fn:()=>{
+        shopButtons(npc,[{label: drilling?'Ready - pitch it':'Take up your blade - drill me', cls:'gold', fn:()=>{
             closeDialog();
-            if(typeof beginParryDrill==='function') beginParryDrill();   // the hands-on lesson: parry 3 telegraphed strikes
+            if(typeof beginParryDrill==='function') beginParryDrill();   // the hands-on lesson: parry 3 thrown billets
           }},
           {label:'Maybe later', ghost:true, fn:closeDialog}]));
       return;

@@ -527,6 +527,12 @@ function tryAttack(useMouse){
     for(const m of G.mobs){ if(m.dead||m.sealed) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bm=m;} }
     aim = bm? {x:bm.x-P.x,y:bm.y-P.y} : {...P.dir};
   }
+  // Rask's drill tests TIMING, not aim: a swing always turns to meet the billet in
+  // flight, so the student only has to get the moment right (parry needs a front-facing
+  // guard - see parryCovers).
+  if(P.parryDrill && P.parryDrill.proj && !P.parryDrill.proj.parried){
+    const pj=P.parryDrill.proj; aim={x:pj.x-P.x, y:pj.y-P.y};
+  }
   const l=Math.hypot(aim.x,aim.y)||1; aim.x/=l; aim.y/=l;
   P.dir={...aim};
   P.lastCombat=G.time;
@@ -665,46 +671,54 @@ function onParry(sx,sy){
   Snd.crit&&Snd.crit(); buzz(14);
   return true;
 }
-/* Rask's parry lesson - a hands-on DRILL, not a lecture. He slashes at you with a
-   practice blade; watch for the red !, and ATTACK on the strike to turn it. Land 3
-   clean parries and the guard is yours. Timed-attack parry is enabled for the drill
-   even before it's formally learned (see tryAttack). */
+/* Rask's parry lesson - a hands-on DRILL, not a lecture. He PITCHES a practice billet
+   (a length of wood) at you; watch it close, and ATTACK as it reaches you to turn it
+   back. Land 3 clean parries and the guard is yours. A billet that gets past your
+   swing just thumps you for 1 hp. Timed-attack parry is enabled for the drill even
+   before it's formally learned (see tryAttack). */
 function beginParryDrill(){
   const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(!rask) return;
   if(qs('bladeoath')!=='active'){ P.quests.bladeoath='active'; P.prog.bladeoath=0; }
-  P.parryDrill={count:0, need:3, phase:'rest', t:0.9};
+  P.parryDrill={count:0, need:3, phase:'rest', t:1.0, proj:null};
   rask.drillWarn=0;
-  if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s blade - three times');
-  toast('Watch Rask\'s blade: a red <b style="color:#ff5a4a">!</b> builds, then flares <b style="color:#fff">WHITE</b> - <b>attack on the white flash</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap ⚔':'Space / click')+') to turn it. <b>Parry 3.</b>',7000);
+  if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s billet - three times');
+  toast('Rask <b>pitches a wooden billet</b> at you: watch it close, and <b>attack as it reaches you</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap ⚔':'Space / click')+') to turn it back. A white ring flares on the billet at the moment to swing. <b>Parry 3.</b>',7000);
+}
+// Rask hurls a practice billet at the student. It's a normal enemy projectile, so the
+// existing shot-parry (updateProjs) turns it back and the shot-tell (drawProj) flares
+// its white ring - the drill just watches whether the billet gets parried or lands.
+function throwPracticeBillet(rask,D){
+  const dx=P.x-rask.x, dy=(P.y-0.3)-(rask.y-0.3), l=Math.hypot(dx,dy)||1;
+  const sp=4.8;   // a gentle lob - the billet is visible its whole flight, so timing reads fair
+  const pr={ x:rask.x, y:rask.y-0.3, vx:dx/l*sp, vy:dy/l*sp, life:l/sp+1.0,
+             kind:'woodblock', from:'rask', owner:rask, dmg:1, skill:'melee' };
+  G.projs.push(pr);
+  D.proj=pr; D.phase='watch';
+  rask.swing=0.3;                                   // a short pitching motion
+  { const l2=Math.hypot(dx,dy)||1; rask.face={x:dx/l2, y:dy/l2}; }
+  Snd.tone&&Snd.tone(430,0.06,'square',0.03,180);   // the release
 }
 function updateParryDrill(dt){
   const D=P.parryDrill; if(!D) return;
   const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
-  if(!rask || P.dead || G.interior){ if(rask) rask.drillWarn=0; P.parryDrill=null; return; }
-  // Rask keeps his eyes on the student, and his practice slash plays out (decays)
+  if(!rask || P.dead || G.interior){ if(rask){ rask.drillWarn=0; } P.parryDrill=null; return; }
+  // Rask keeps his eyes on the student, and his pitching motion plays out (decays)
   { const dx=P.x-rask.x, dy=P.y-rask.y, l=Math.hypot(dx,dy)||1; rask.face={x:dx/l,y:dy/l}; }
   if((rask.swing||0)>0) rask.swing=Math.max(0,(rask.swing||0)-dt);
   D.t-=dt;
   if(D.phase==='rest'){
-    rask.drillWarn=0;
-    if(D.t<=0){ D.phase='wind'; D.t=0.72; D.rung=0; rask.drillWarn=0.001; }
-  } else if(D.phase==='wind'){
-    rask.drillWarn=Math.max(0.001, D.t);   // SECONDS until the strike (red build, then white flash under PARRY_WIN)
-    if(D.t<=PARRY_WIN && !D.rung){ D.rung=1; Snd.tone&&Snd.tone(1180,0.05,'square',0.03,240); }  // the cue: NOW
-    if(D.t<=0){
-      rask.drillWarn=0; rask.swing=0.3;         // the blade comes down
-      const near = dist(P.x,P.y,rask.x,rask.y) < 3.8;
-      if((P.parryT||0)>0 && near){              // a swing was timed to the strike
-        D.count++;
-        onParry(rask.x,rask.y);
-        addFloat('PARRY  '+D.count+' / '+D.need, P.x, P.y-2.7, '#ffe08a', 1.45);
-        if(D.count>=D.need){ finishParryDrill(); return; }
-        D.phase='rest'; D.t=rnd(0.65,1.05);
-      } else {                                   // missed the window - harmless, try again
-        addFloat(near?'too slow - watch the blade':'stay close and watch the blade', P.x, P.y-2.3, '#ffd0a0', 1.05);
-        Snd.hit&&Snd.hit(); G.shake=Math.max(G.shake||0,0.12);
-        D.phase='rest'; D.t=rnd(0.75,1.15);
-      }
+    if(D.t<=0) throwPracticeBillet(rask,D);
+  } else if(D.phase==='watch'){
+    const p=D.proj;
+    if(p && p.parried){                          // turned it back with a timed swing
+      D.count++;
+      addFloat('PARRY  '+D.count+' / '+D.need, P.x, P.y-2.7, '#ffe08a', 1.45);
+      D.proj=null;
+      if(D.count>=D.need){ finishParryDrill(); return; }
+      D.phase='rest'; D.t=rnd(0.7,1.1);
+    } else if(!p || p.life<=0){                   // it thumped you (1 hp) or fell short - try again
+      addFloat('watch the billet - swing as it reaches you', P.x, P.y-2.3, '#ffd0a0', 1.05);
+      D.proj=null; D.phase='rest'; D.t=rnd(0.75,1.15);
     }
   }
 }

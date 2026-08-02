@@ -3628,7 +3628,7 @@ function drawPlayerFigure(s){
 function drawProj(p,s){
   // PARRY TELL for shots: an enemy projectile flares WHITE as it closes on you - the
   // cue to swing and bat it back. Only once you can parry, and only for real threats.
-  if(p.from && p.from!=='player' && !p.parried && P.unlocked && P.unlocked.parry && !P.dead){
+  if(p.from && p.from!=='player' && !p.parried && ((P.unlocked && P.unlocked.parry) || P.parryDrill) && !P.dead){
     const pd=dist(p.x,p.y,P.x,P.y-0.3);
     if(pd<1.5){
       const g=1-(pd/1.5), r=7+9*g, a=0.35+0.55*g;
@@ -3696,6 +3696,16 @@ function drawProj(p,s){
     cx.fillStyle='#e6f6ff'; cx.beginPath(); cx.arc(s.x-1.5,s.y-13.5,2.2,0,TAU); cx.fill();
     for(let i=0;i<3;i++){ cx.fillStyle='rgba(190,232,255,0.7)';
       cx.beginPath(); cx.arc(s.x-p.vx*i*0.7, s.y-12-p.vy*i*0.7, 1.5,0,TAU); cx.fill(); }
+  } else if(p.kind==='woodblock'){
+    // Rask's practice billet: a stubby length of wood he pitches for the parry drill,
+    // tumbling end over end. Parry it back or take a bruise (1 hp).
+    cx.save(); cx.translate(s.x,s.y-12); cx.rotate((p.spin||(p.spin=(p.x+p.y)))+G.time*9);
+    cx.fillStyle='#9c6b3f'; cx.fillRect(-7,-3,14,6);
+    cx.fillStyle='#7a5230'; cx.fillRect(-7,1,14,2);           // shadowed underside
+    cx.strokeStyle='#5e3d22'; cx.lineWidth=1; cx.strokeRect(-7,-3,14,6);
+    cx.strokeStyle='rgba(94,61,34,0.6)';                       // a grain line or two
+    cx.beginPath(); cx.moveTo(-7,-0.6); cx.lineTo(7,-0.6); cx.stroke();
+    cx.restore();
   } else { // bone
     cx.save(); cx.translate(s.x,s.y-12); cx.rotate(G.time*10);
     cx.fillStyle='#eceee6'; cx.fillRect(-6,-1.6,12,3.2);
@@ -3712,35 +3722,8 @@ function drawPickup(pt,s){
 
 /* interact prompt + quest direction */
 function drawMarkers(){
-  // Rask's parry drill: the same two-stage tell the real foes use - a red ! BUILDS as
-  // his blade rises, then flares WHITE for the last PARRY_WIN seconds. Swing on the
-  // white flash to turn it; that's the lesson.
-  if(P.parryDrill){
-    const rask=G.npcs&&G.npcs.find(n=>n.id==='rask');
-    const PW=(typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32);
-    if(rask && (rask.drillWarn||0)>0){
-      const secs=rask.drillWarn, flash=secs<=PW;         // drillWarn is SECONDS until the strike
-      const rs=worldToScreen(rask.x,rask.y);
-      cx.save(); cx.textAlign='center';
-      if(flash){
-        const p=0.85+0.15*Math.sin(G.time*40);
-        cx.globalAlpha=1; cx.font='bold 32px Georgia';
-        cx.strokeStyle='rgba(0,0,0,0.85)'; cx.lineWidth=5.5;
-        cx.strokeText('!', rs.x, rs.y-60);
-        cx.fillStyle='rgba(255,255,255,'+p.toFixed(2)+')'; cx.fillText('!', rs.x, rs.y-60);
-        const rr=6+18*(1-Math.max(0,secs)/PW);
-        cx.globalAlpha=0.5; cx.strokeStyle='#fff6c8'; cx.lineWidth=2.5;
-        cx.beginPath(); cx.arc(rs.x, rs.y-68, rr, 0, TAU); cx.stroke();
-      } else {
-        const grow=1-Math.min(1,(secs-PW)/0.4);
-        cx.globalAlpha=0.55+0.3*Math.sin(G.time*13);
-        cx.font='bold '+Math.round(16+9*grow)+'px Georgia';
-        cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=4;
-        cx.strokeText('!', rs.x, rs.y-60); cx.fillStyle='#ff7a4a'; cx.fillText('!', rs.x, rs.y-60);
-      }
-      cx.restore();
-    }
-  }
+  // Rask's parry drill telegraphs through the thrown billet itself - it flares a white
+  // ring as it closes (see drawProj), the cue to swing and turn it. No floating '!'.
   const it=nearestInteract();
   const ib=document.getElementById('interactBtn');
   if(it){
