@@ -2446,6 +2446,21 @@ function drawMobEntity(m,s){
   let dy=0, sc=1;
   if(k==='descend'){ dy=-105*(1-easeOut(p)); }
   else if(k==='loom'){ sc=0.7+0.3*easeOut(p); }
+  // The Maw-Stalker heaves up wreathed in Vath's violet - a purple halo that swells with
+  // the rise and tracks the sprite, with a few motes drifting off it. (Themed to the pick
+  // it guards, the one that shatters Vath's violet ward on Barik.)
+  if(m.undermawBeast && k==='loom'){
+    const vr=(m.bigBoss?72:54)*(0.5+0.62*p);
+    cx.save(); cx.globalCompositeOperation='lighter';
+    const vg=cx.createRadialGradient(s.x,s.y-28,3,s.x,s.y-28,vr);
+    vg.addColorStop(0,'rgba(190,96,255,'+(0.40*p+0.08).toFixed(2)+')');
+    vg.addColorStop(0.55,'rgba(140,60,220,'+(0.18*p).toFixed(2)+')');
+    vg.addColorStop(1,'rgba(140,60,220,0)');
+    cx.fillStyle=vg; cx.beginPath(); cx.arc(s.x,s.y-28,vr,0,TAU); cx.fill(); cx.restore();
+    if(typeof G!=='undefined' && G.parts && Math.random()<0.5)
+      G.parts.push({x:m.x+rnd(-0.5,0.5), y:m.y-rnd(0.2,1.6), vx:rnd(-0.15,0.15), vy:-rnd(0.3,0.8),
+        life:0.8, color:'rgba(200,120,255,0.9)', size:2.4, grav:0});
+  }
   cx.save(); cx.globalAlpha*=clamp(p*2.2,0,1);
   if(sc!==1){ cx.translate(s.x,s.y); cx.scale(sc,sc); cx.translate(-s.x,-s.y); }
   drawMob(m,{x:s.x,y:s.y+dy});

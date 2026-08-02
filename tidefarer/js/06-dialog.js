@@ -98,6 +98,17 @@ function buildDialogContent(npc){
   // A skill card (e.g. "Dash learned!") raised mid-dialogue is held until the player clicks
   // through the speaker's line - it fires here, on the "Continue" that rebuilds the dialog.
   if(P._dashCardPending){ const f=P._dashCardPending; P._dashCardPending=null; try{ f(); }catch(e){} }
+  // Farmer Hedda, the FIRST time you reach her after shattering Vath's violet ward that
+  // sealed her steading off. A proper thank-you (and a sack of the harvest), shown once -
+  // the flag is set so later talks fall through to her quests and idle chatter as normal.
+  if(npc.id==='hedda' && P.story && P.story.tg && P.story.tg['main:heddaward'] && !P.story.heddaThanked){
+    P.story.heddaThanked=1; npc.farmer=1;
+    setDialog('<i>Hedda drops her hoe and hurries over the moment she sees you.</i> “You BROKE it! Oh, bless you - thank you, thank you. I woke one morning to that <b style="color:#c04bff">violet stone</b> shot up clean across my lane, humming and cold, walling me right out of my own fields till I couldn\'t reach the road nor the road reach me. Some soft-spoken fellow all in violet had walked my fences the night before and never said a word - and by daybreak I was penned into my own steading like a beetle in a jar. I\'d have starved in sight of my own crop. And you just <i>cut me loose</i>. Here - take a sack of the first harvest, and I\'ll not hear one word against it.”',
+      [{label:'Continue', fn:()=>{ if(typeof give==='function') give('bread',3);
+          if(typeof addFloat==='function' && typeof P!=='undefined') addFloat('+3 Bread', P.x, P.y-2, '#e8dcbd', 1.1);
+          buildDialogContent(npc); }}]);
+    return;
+  }
   // Castellan of the Vael: once you carry Maelis's writ (feud2), calling on him
   // is a challenge - a taunt, then a boss fight. Otherwise he only warns you off.
   // A first-hour necklace moment: rare, short, and never explained (until Act 3).

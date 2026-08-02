@@ -49,6 +49,15 @@ function findHedda(){
   return null;
 }
 function nodeAt(x,y){ for(var i=0;i<G.nodes.length;i++){ if(G.nodes[i].tx===x && G.nodes[i].ty===y) return G.nodes[i]; } return null; }
+// an ORDINARY tree/rock (no tool-gate) blocking this tile - the kind a starting axe/pick
+// fells in a swing. If such a node is holding part of the ward line, the player can cut it
+// down and walk through the hole, so the wall must never lean on one (see the border loop).
+function fellableAt(x,y){
+  for(var i=0;i<G.nodes.length;i++){ var n=G.nodes[i];
+    if(n.tx===x && n.ty===y && !n.gone && !n.gate && (n.kind==='tree'||n.kind==='rock')) return n; }
+  return null;
+}
+function removeNode(n){ n.dead=true; n.gone=true; var i=G.nodes.indexOf(n); if(i>=0) G.nodes.splice(i,1); }
 function npcAt(x,y,exceptId){ for(var i=0;i<G.npcs.length;i++){ var n=G.npcs[i]; if(n.id!==exceptId && Math.round(n.x-0.5)===x && Math.round(n.y-0.5)===y) return true; } return false; }
 // a building/critical decor tile inside the footprint would be wrong to seal
 function criticalDecorAt(x,y){
@@ -129,6 +138,66 @@ function placeBarikWard(id){
         var g=addGateNode('vathward', bx, by);
         if(g){ g.gid=WARD_GID; g.ward=1; wards.push(g); } } }
     if(!wards.length) return;
+
+    // ---- no CHOPPABLE tree/rock may hold the line. The border above skipped every solid
+    //      tile as a natural wall, but an ordinary tree/rock is solid only until the player
+    //      fells it - cut it down and the ward springs a hole (the reported bypass). So, with
+    //      the wardstones standing, probe what the OUTSIDE could reach if every tree/rock were
+    //      chopped (they count as passable here), never stepping INTO the interior (IN tiles
+    //      are sinks). Any fellable node the outside can reach that also touches the interior
+    //      is load-bearing: wall it. Repeat until nothing bridges outside->in. A tree buried
+    //      inside the pocket is never touched - the probe can't reach it without first crossing
+    //      the interior, which it won't. ----
+    var spawn0=(WORLD_DEFS.main && WORLD_DEFS.main.spawn) || {x:57.5,y:259.5};
+    var wspx=Math.round(spawn0.x-0.5), wspy=Math.round(spawn0.y-0.5);
+    function crossable(x,y){                          // can the player get onto this tile, chopping if need be?
+      if(!inb(x,y)) return false;
+      if(isWater(tileAt(x,y)) || !walkTile(tileAt(x,y))) return false;   // water / cliff - never
+      if(!solidAt(x,y)) return true;                  // open ground
+      return !!fellableAt(x,y);                       // solid: only if it's a choppable tree/rock
+    }
+    for(var wpass=0; wpass<60; wpass++){
+      var OUT={}, ost=[[wspx,wspy]]; OUT[wspx+','+wspy]=1;
+      while(ost.length){ var op=ost.pop();
+        for(var ok=0;ok<4;ok++){ var ox=op[0]+DIRS[ok][0], oy=op[1]+DIRS[ok][1], okk=ox+','+oy;
+          if(OUT[okk] || IN[okk]) continue;           // seen, or an interior sink (do not expand through it)
+          if(!crossable(ox,oy)) continue;
+          OUT[okk]=1; ost.push([ox,oy]); } }
+      var frontier=[];
+      for(var fni=0; fni<G.nodes.length; fni++){ var fnn=G.nodes[fni];
+        if(fnn.gone || fnn.gate || !(fnn.kind==='tree'||fnn.kind==='rock')) continue;
+        if(!OUT[fnn.tx+','+fnn.ty]) continue;          // the outside can't even reach this tree
+        var touches=false;
+        for(var tq=0;tq<4;tq++){ if(IN[(fnn.tx+DIRS[tq][0])+','+(fnn.ty+DIRS[tq][1])]){ touches=true; break; } }
+        if(touches && !npcAt(fnn.tx,fnn.ty,null)) frontier.push(fnn);
+      }
+      if(!frontier.length) break;                      // nothing bridges outside -> inside: the line holds
+      for(var fk=0; fk<frontier.length; fk++){ var ft=frontier[fk], ftx=ft.tx, fty=ft.ty;
+        removeNode(ft);                                // fell the choppable node...
+        var gt=addGateNode('vathward', ftx, fty);      // ...and wall its tile with unbreakable violet
+        if(gt){ gt.gid=WARD_GID; gt.ward=1; wards.push(gt); } }
+    }
+
+    // ---- close 1-tile notches in the violet line: a lone walkable tile flanked by
+    //      wardstone on two opposite sides (E-W or N-S) reads as a hole in the wall.
+    //      It happens where the border logic had nothing to hang a stone on - e.g. a
+    //      tree standing just behind the gap, so the open tile borders no IN cell. Fill
+    //      it too, sharing the ward gid so it shatters with the rest. ----
+    var wardTiles={}; for(var wi=0; wi<wards.length; wi++) wardTiles[wards[wi].tx+','+wards[wi].ty]=1;
+    var fills=[];
+    for(var wj=0; wj<wards.length; wj++){ var wn=wards[wj];
+      var probes=[[1,0],[0,1]];                          // +x and +y from each stone catches every axis-aligned 1-tile gap
+      for(var pi=0; pi<probes.length; pi++){ var pdx=probes[pi][0], pdy=probes[pi][1];
+        var gx=wn.tx+pdx, gy=wn.ty+pdy, gk=gx+','+gy;
+        if(wardTiles[gk] || IN[gk]) continue;            // already a stone, or open interior
+        if(!walkableTile(gx,gy)) continue;               // already sealed by solid/water
+        if(npcAt(gx,gy,null)) continue;                  // never wall an npc's tile
+        if(!wardTiles[(wn.tx+2*pdx)+','+(wn.ty+2*pdy)]) continue;   // needs a stone on the far side: a true 1-tile gap
+        fills.push([gx,gy,gk]); } }
+    for(var fi=0; fi<fills.length; fi++){ var fc=fills[fi];
+      if(wardTiles[fc[2]]) continue;
+      var gf=addGateNode('vathward', fc[0], fc[1]);
+      if(gf){ gf.gid=WARD_GID; gf.ward=1; wards.push(gf); wardTiles[fc[2]]=1; } }
 
     // ---- SAFETY VERIFY: from the world spawn, with the wall solid, Hedda AND Corvo
     //      must be SEALED, and the Undermaw + the northern roads must stay REACHABLE.
