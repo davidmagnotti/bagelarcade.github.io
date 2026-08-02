@@ -232,6 +232,75 @@ function copyDungeonLink(id){
   note(done?'Link copied ✓':'Copy failed - see console');
 }
 
+/* ---- incremental unlocks: grant ONE thing at a time so a tester can walk the
+        gates in order instead of the all-at-once "Unlock all abilities" ---- */
+function unlockSword(){ P.unlocked=P.unlocked||{}; P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1); P.kit=true; ui(); note('Sword unlocked (iron)'); }
+function unlockBowDev(){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; ui(); note('Bow unlocked'); }
+function unlockDashDev(){ if(typeof unlockDash==='function') unlockDash(); else { P.unlocked=P.unlocked||{}; P.unlocked.dash=true; } ui(); note('Dash unlocked'); }
+function unlockParryDev(){ if(typeof unlockParry==='function') unlockParry(); else { P.unlocked=P.unlocked||{}; P.unlocked.parry=true; } ui(); note('Parry unlocked'); }
+function grantIronAxe(){ P.tools=P.tools||{axe:0,pick:0}; P.tools.axe=Math.max(P.tools.axe||0,1); P.kit=true; ui(); note('Iron axe granted (tier 1)'); }
+function grantIronPick(){ P.tools=P.tools||{axe:0,pick:0}; P.tools.pick=Math.max(P.tools.pick||0,1); P.kit=true; ui(); note('Iron pickaxe granted (tier 1)'); }
+
+/* ---- bosses: mark a named boss "defeated" without grinding the fight ---- */
+// Run the REAL death sequence on any boss standing on the current map (Hollow Spirit
+// on Emberwick, a dungeon boss while you're in its hall, a regional foe, ...). killMob
+// fires every side effect: kill-credit completes its quest, banners play, flags set.
+function defeatBossesHere(){
+  let n=0;
+  for(const m of (G.mobs||[])){
+    if(!m.dead && typeof isBossMob==='function' && isBossMob(m)){
+      try{ killMob(m); }catch(e){ m.dead=true; m.respawnT=-1; }
+      n++;
+    }
+  }
+  ui(); note(n? 'Defeated '+n+' boss(es) on this map (real fall)' : 'No boss on this map');
+}
+// Hollow Spirit (Emberwick's main-story boss) from ANYWHERE. On the isle with the boss
+// still up, kill it for real; off-isle, set the flags a true kill would leave so the
+// quest reads done, the isle is cleared, and its warded fire lifts.
+function markHollowDefeated(){
+  P.story=P.story||{}; P.prog=P.prog||{};
+  P.story.bossCleared=P.story.bossCleared||{}; P.story.bossCleared.isle=1;
+  let killed=false;
+  for(const m of (G.mobs||[])){ if(!m.dead && m.kind==='boss'){ try{ killMob(m); killed=true; }catch(e){ m.dead=true; m.respawnT=-1; } } }
+  if(!killed){
+    if(QUESTS && QUESTS.king) P.quests.king='done';
+    P.prog.king=1;
+    if(typeof dropHollowFire==='function') dropHollowFire();
+  }
+  ui(); note(killed? 'Hollow Spirit slain (real fall)' : 'Hollow Spirit marked defeated');
+}
+
+/* ---- quests: mark every quest for a whole island done at once ---- */
+// Island -> the quest-givers who live on it (derived from each isle's NPC spawns in
+// 04-data.js / 12-world-layer.js). "Complete <island>" finishes every quest whose
+// giver is on that isle, whatever file defines the quest.
+const ISLAND_GIVERS={
+  isle: ['maren','bram','brant','finn','willa','rask','orin','nia','woody'],   // Emberwick
+  main: ['kell','moss','sela','ivo','hedda','torv','maelis','mira','corvo'],   // Barik
+  east: ['huk','kaia','moli','elias','vath'],                                  // Sunward
+  wind: ['rell','coralie','tolen','nessa'],                                    // Windsurf
+  sky:  ['aeron'],                                                             // Cloudreach
+  reach:['mora','tibb'],                                                       // Stormreach
+  aerie:['wrenna'],                                                            // Aerie
+  frost:['bryn','sigrid'],                                                     // Frozen
+  crown:['aldous','halvard','brea','isolde','doran','gale','odo'],             // Aldermere
+};
+function completeIslandQuests(island){
+  const givers=ISLAND_GIVERS[island]||[]; let n=0;
+  // Two passes: completing a quest can OFFER its follow-up (also on this isle), so a
+  // second sweep catches anything the first turned 'avail'. completeQuest runs the full
+  // turn-in (rewards + unlocks); if state won't allow it, fall back to a plain "done".
+  for(let pass=0; pass<2; pass++){
+    for(const id in QUESTS){ const q=QUESTS[id];
+      if(!q || givers.indexOf(q.giver)<0 || P.quests[id]==='done') continue;
+      try{ completeQuest(id); }catch(e){ P.quests[id]='done'; }
+      n++;
+    }
+  }
+  ui(); note('Completed '+n+' quest(s) on '+island);
+}
+
 setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P.maxhp; P.mp=P.maxmp; } }catch(e){} }, 400);
 
 /* ---- panel ---- */
@@ -291,6 +360,10 @@ const SECTIONS=[
     ['Reset Dragon',()=>resetCurse('dragon')], ['Reset Leviathan',()=>resetCurse('tide')],
     ['Reset Aerie',()=>resetCurse('aerie')], ['Reset Frozen',()=>resetCurse('frost')],
     ['Reset ALL',()=>resetCurse('all')], ['Clear foes here',()=>clearMobs()],
+    // named bosses (Hollow Spirit & co.): fell whatever boss stands on THIS map for
+    // real, or mark the Hollow Spirit down from anywhere.
+    ['★ Defeat boss(es) on THIS map',()=>defeatBossesHere()],
+    ['Mark Hollow Spirit defeated',()=>markHollowDefeated()],
   ]],
   ['Dungeons Act I (tap to toggle won / not)',
     DUNGEONS.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
@@ -301,8 +374,21 @@ const SECTIONS=[
   ['Dungeons Act II · returned isles (toggle won / not)',
     DUNGEONS2.map(([name,id,flag])=> [name, ()=>toggleDungeon(id,flag), {dflag:flag,dname:name}])
   ],
+  // Grant one ability at a time - so a tester can step through the gates in order
+  // instead of the all-at-once "Unlock all abilities" in the Hero section.
+  ['Unlock (one at a time)', [
+    ['Sword (iron)',()=>unlockSword()], ['Axe (iron · t1)',()=>grantIronAxe()],
+    ['Pickaxe (iron · t1)',()=>grantIronPick()], ['Dash',()=>unlockDashDev()],
+    ['Bow',()=>unlockBowDev()], ['Parry',()=>unlockParryDev()],
+  ]],
   ['Quests', [
     ['Complete active quests',()=>completeActive()],
+    // mark every quest for a whole island done (see ISLAND_GIVERS)
+    ['✓ Emberwick',()=>completeIslandQuests('isle')], ['✓ Barik',()=>completeIslandQuests('main')],
+    ['✓ Sunward',()=>completeIslandQuests('east')], ['✓ Windsurf',()=>completeIslandQuests('wind')],
+    ['✓ Cloudreach',()=>completeIslandQuests('sky')], ['✓ Stormreach',()=>completeIslandQuests('reach')],
+    ['✓ Aerie',()=>completeIslandQuests('aerie')], ['✓ Frozen',()=>completeIslandQuests('frost')],
+    ['✓ Aldermere',()=>completeIslandQuests('crown')],
   ]],
   ['Hero', [
     ['+1000 gold',()=>gold(1000)], ['+2000 XP',()=>xp(2000)], ['Full heal',()=>heal()],
