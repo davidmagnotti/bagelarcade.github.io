@@ -696,7 +696,7 @@ function spawnRealmFolk(){
      'My whole shipment, taken on the north road. The pines have thieves in them now.'],0.5));
   G.npcs.push((()=>{ const cv2=makeNPC('corvo','Captain Corvo', 330.5,243.2,
     {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
-    ['East past the shoals sits an island the charts pretend not to see.',
+    ['You cracked that wizard\'s violet stones for me - I\'ll not soon forget it. Bring my Wren her ribbon from Mira and I\'ll sail you out to his uncharted isle, free of charge.',
      'My girl Wren turns twelve at the next full tide. I promised her something fine.',
      'Think on it: first my ribbons go missing, so my ferry sits idle. Then they say a dragon shut the eastern sky. Now word is Windsurf\'s own harbor has turned deadly. One door after another, latched between the isles - and always, they say, by some soft-spoken fellow who never raises his voice.'],0.3); cv2.nightOwl=true; return cv2; })());
   G.npcs.push((()=>{ const hm=makeNPC('hermit','Moss-Brother Fen', ZONES.forest.x+9.5,ZONES.forest.y-6.6,

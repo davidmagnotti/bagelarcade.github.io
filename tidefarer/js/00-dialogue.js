@@ -119,7 +119,7 @@ const DIALOGUE = {
       "My whole shipment, taken on the north road. The pines have thieves in them now."
     ],
     "corvo": [
-      "East past the shoals sits an island the charts pretend not to see.",
+      "You cracked that wizard's violet stones for me - I'll not soon forget it. Bring my Wren her ribbon from Mira and I'll sail you out to his uncharted isle, free of charge.",
       "My girl Wren turns twelve at the next full tide. I promised her something fine.",
       "Think on it: first my ribbons go missing, so my ferry sits idle. Then they say a dragon shut the eastern sky. Now word is Windsurf's own harbor has turned deadly. One door after another, latched between the isles - and always, they say, by some soft-spoken fellow who never raises his voice."
     ],
