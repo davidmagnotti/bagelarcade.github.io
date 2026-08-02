@@ -274,13 +274,18 @@ function baseHeight(x,z){
   const fall=clamp(1-Math.pow(r/ISLR,3.0),-1,1);
   let H=(Math.pow(h,1.2)*1.25-0.10)*AMP; H=H*fall-(1-Math.max(0,fall))*9; return H;
 }
+// the northern ruin spit — like the 2D isle, a ruined causeway pushes out to the cold
+// tip where the Hollow King stands. Raise a north-reaching finger so the tip is solid land.
+const SPIT={x:(46-56)*3.0, z:(14-56)*3.0, r:34};   // ≈ tile (46,14)
 function heightAt(x,z){
   let H=baseHeight(x,z);
   for(const zn of ZONES3){ const d=Math.hypot(x-zn.x,z-zn.z); if(d<zn.r){ const t=smooth(d/zn.r*0.9,0,1); H=lerp(zn.flat,H,t); } }
+  const sd=Math.hypot((x-SPIT.x)*0.85,z-SPIT.z); if(sd<SPIT.r){ const t=smooth(sd/SPIT.r,0,1); H=lerp(11.0,Math.max(H,-1),t); }
   return H;
 }
 function biomeAt(x,z,H){
   for(const zn of ZONES3){ if(Math.hypot(x-zn.x,z-zn.z)<zn.r*0.75) return zn.biome; }
+  if(Math.hypot((x-SPIT.x)*0.85,z-SPIT.z)<SPIT.r*0.7) return 'rock';   // the spit reads as ruin-stone
   if(H<1.0) return 'sand'; if(H>18) return 'rock';
   const m=nM(x*0.02,z*0.02); return m>0.58?'forest':'grass';
 }
@@ -400,7 +405,10 @@ function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.ha
   g.add(pos(toon(box(1.5,1.9,.9),tunic,{outline:0.04}),0,2.4,0));
   g.add(pos(toon(box(1.6,.4,1),boot,{outline:0}),0,1.6,0));
   if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
-    const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl); }  // castaway cloak, not the ember cape
+    const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl);   // castaway cloak, not the ember cape
+    // her mother's pendant — worn from the moment she washes ashore (fine old gold, a green stone)
+    g.add(pos(toon(cyl(.5,.54,.12,10),0xc9a24e,{outline:0.02}),0,3.2,.34));
+    g.add(pos(new THREE.Mesh(ico(.13,0),glowMat(0x9be07f)),0,2.9,.5)); }
   else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
     if(hat!=='wizard') g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
     g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
@@ -433,20 +441,25 @@ function textSprite(text,color='#f0e2c0',size=44,bold=true){
 // ============================================================
 document.getElementById('loadNote').textContent='planting the isle…';
 const zc={}; for(const zn of ZONES3) zc[zn.name]=zn;
-// Village — houses spaced generously around a central green + well
-cottage(zc.village.x-16,zc.village.z-10,0.4,COL.slate);   cottage(zc.village.x+15,zc.village.z-9,-0.5,COL.roofWarm);
-cottage(zc.village.x+5,zc.village.z+16,Math.PI,COL.slate); cottage(zc.village.x-18,zc.village.z+11,0.5,COL.roofWarm);
-cottage(zc.village.x+19,zc.village.z+6,-1.9,COL.slate);
-well(zc.village.x,zc.village.z+1);
-for(const[dx,dz]of[[-6,-4],[8,7],[-13,4],[11,-8],[0,13]]) lamp(zc.village.x+dx,zc.village.z+dz);
+// tile→world helper (same mapping the zones use) so everything can sit on the 2D isle's exact tiles
+const TW=(tx,ty)=>T2W(tx,ty);
+// Village — Emberwick's tight cluster around the well, on the 2D isle's building tiles
+cottage(...TW(44,54),0.3,COL.roofWarm);   // Elder Maren's cottage
+cottage(...TW(44,61),-0.4,COL.slate);     // fisher row
+cottage(...TW(52,54),Math.PI,COL.slate);
+cottage(...TW(52,62),0.5,COL.roofWarm);
+well(...TW(48,58));                        // the village well
+// lantern trail west→east from the inn out to Bram's forge (2D lamp tiles) + dock + farm lane
+for(const[tx,ty]of[[41,58.5],[46,57],[50,59],[51,56],[54,56],[56,54],[30,62],[60,64]]) lamp(...TW(tx,ty));
 for(const[dx,dz]of[[-22,7],[18,14],[-3,-12],[22,-5]]) bush(zc.village.x+dx,zc.village.z+dz);
-// Tower + Dock + Farm
-tower(zc.tower.x,zc.tower.z); dock(zc.dock.x,zc.dock.z); fold(zc.farm.x,zc.farm.z);
+// Tower (north, twice-tall) + Dock + Willa's barn — on the 2D tiles
+tower(...TW(56,33)); dock(zc.dock.x,zc.dock.z); fold(...TW(63,66));
 // Whisperwood (dense) + orchard + scattered
 for(let i=0;i<40;i++){ const a=Math.random()*7,r=Math.random()*zc.whisperwood.r*0.9; tree(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r,0.8+Math.random()*0.6); }
 for(let i=0;i<10;i++){ const a=Math.random()*7,r=Math.random()*zc.orchard.r*0.8; tree(zc.orchard.x+Math.cos(a)*r,zc.orchard.z+Math.sin(a)*r,0.9); }
-// Ruins pillars
+// Ruins pillars — the tor, plus a broken colonnade reaching north up the spit to the King's tip
 for(let i=0;i<12;i++){ const a=Math.random()*7,r=Math.random()*zc.ruins.r*0.85; ruinPillar(zc.ruins.x+Math.cos(a)*r,zc.ruins.z+Math.sin(a)*r,1+Math.floor(Math.random()*3)); }
+for(const[tx,ty]of[[44,16],[48,16],[45,13],[47,13],[46,11]]) ruinPillar(...TW(tx,ty),1+Math.floor(Math.random()*3));
 // scatter across island by biome
 let planted=0, tries=0;
 while(planted<(isMobile?140:280) && tries<4000){ tries++;
@@ -475,46 +488,53 @@ const npcs=[];
 function addNPC(x,z,name,lines,opts){ const g=figure(opts||{tunic:COL.npcRobe,tunicDk:0x4a3a63,scarf:0x8a76a8,cape:false});
   const label=textSprite(name,'#ffdca0',38); label.position.y=5.2; label.visible=false; g.add(label);
   ground(g,1.3); onGround(g,x,z); g.userData={name,lines,label,li:0,face:Math.random()*7,id:(opts&&opts.id)||name}; npcs.push(g); solid(x,z,0.8); return g; }
-addNPC(zc.village.x+1,zc.village.z-1,'Elder Maren',[
- "Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back.",
- "The meadow slimes have gone bold with the warm snap. Thin them, would you?",
- "Orin keeps his tower to the north. If any hand can read old work, it's his."],{tunic:0x8a5a86,tunicDk:0x5e3b5c,scarf:0xd9b0d0,hair:0xded6cc,cape:false});
-addNPC(zc.farm.x+2,zc.farm.z+1,'Willa',[
- "Six slime-trails round the fold this morning. SIX. They spook the flock something awful.",
- "Squash a few in the meadow and I'll see you right."],{tunic:0x7c5a3a,tunicDk:0x53381f,scarf:0xc79a5e,hair:0x8a5a2a,cape:false});
-const rask=addNPC(zc.grove.x,zc.grove.z,'Rask',[
+addNPC(...TW(47,56),'Elder Maren',[
+ "The well water tastes of iron. Always has.",
+ "Lanterns out by the dock mean rain, they say.",
+ "You walk like someone the island wanted."],{tunic:0x8a5a86,tunicDk:0x5e3b5c,scarf:0xd9b0d0,hair:0xded6cc,cape:false});
+addNPC(...TW(58,69),'Willa the Farmer',[
+ "Wheat here grows in minutes, not months. Old island magic.",
+ "Rain does half my work and takes all the credit.",
+ "You can eat wheat raw in a pinch. Farmer's secret."],{tunic:0x7c5a3a,tunicDk:0x53381f,scarf:0xc79a5e,hair:0x8a5a2a,cape:false});
+const rask=addNPC(...TW(96,50),'Rask the Bladesworn',[
  "A blade that only knows how to swing knows half its trade.",
  "A parry is only a strike with perfect timing — meet their blade with yours.",
+ "I turned strikes on three isles before this one. My hands still remember every one.",
  "Late. Always parry LATE — meet the strike, don't reach for it."],{tunic:0x3a4048,tunicDk:0x33342e,scarf:0xe05648,hair:0x8f8a80,beard:0x8f8a80,sword:true,size:1.06,id:'rask'});
 // Sage Orin — the isle's wizard, at his tower
-addNPC(zc.tower.x+4,zc.tower.z+4,'Sage Orin',[
+addNPC(...TW(56.5,36.5),'Sage Orin',[
  "Magic is just patience, pronounced quickly.",
  "The ruins hum at dusk. Listen, but don't answer.",
  "Mana returns with calm breath. Stop flailing."],{tunic:0x33415e,tunicDk:0x2c3852,scarf:0x3a4a6f,hair:0xcfcfd6,hat:'wizard',beard:0xcfcfd6,cape:false,size:1.05,id:'orin'});
 // Captain Brant — his wrecked ship, the Tidewalker, is moored at the dock
-addNPC(zc.dock.x+5,zc.dock.z+3,'Captain Brant',[
+addNPC(...TW(27.5,63.8),'Captain Brant',[
  "The Tidewalker's taken worse. Not much worse, mind.",
+ "Gull Reef gave her that gash. Reef always collects a toll.",
  "A captain without a ship is just a man who stares at the sea.",
- "Greyharbor, cross the strait — finest port this side of anywhere. If we can ever sail again."],{tunic:0x2e4a5e,tunicDk:0x274052,scarf:0x274052,hair:0x8a8578,beard:0x8a8578,size:1.04,id:'brant'});
+ "Greyharbor, cross the strait. Finest port this side of anywhere.",
+ "There's an old sailing-hymn my crew's grandfathers hummed — the Tide-Queen's anthem, for the warrior-queen who first calmed these waters. Fine tune. But her name, in the last verse? Worn clean out of the song. Nobody living can call it back.",
+ "That five-point star some folk stitch for luck — older than luck, that. The old blood-mark of the tide-queen's line, passed hand to hand down her whole house. You don't earn a mark like that. You're born owed it."],{tunic:0x2e4a5e,tunicDk:0x274052,scarf:0x274052,hair:0x8a8578,beard:0x8a8578,size:1.04,id:'brant'});
 // Finn the Fisher — down by the water
-addNPC(zc.dock.x-3,zc.dock.z-4,'Finn the Fisher',[
+addNPC(...TW(31.5,61),'Finn the Fisher',[
  "Fish bite best where the water ripples.",
+ "Night fish are the honest ones — they bite from hunger, not habit.",
  "Salt cures fish and moods alike.",
- "Used to be a ship a week put in here. Now nobody arrives. Nobody leaves. Strange tide."],{tunic:0x3e6f8f,tunicDk:0x2e5470,scarf:0x5a4632,hair:0xc98f1e,hat:'straw',beard:0xa8791c,rod:true,cape:false,id:'finn'});
-// Perrin the Innkeep — by the Gull & Anchor
-addNPC(zc.village.x-7,zc.village.z-12,'Perrin the Innkeep',[
+ "Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that."],{tunic:0x3e6f8f,tunicDk:0x2e5470,scarf:0x5a4632,hair:0xc98f1e,hat:'straw',beard:0xa8791c,rod:true,cape:false,id:'finn'});
+// Perrin the Innkeep — by the Ember Hearth
+addNPC(...TW(41.5,59.4),'Perrin the Innkeep',[
  "A bed, a hearth, and no questions past dark. Ten gold.",
  "Night's for wolves and worries. Neither gets past my door."],{tunic:0x7a5a3a,tunicDk:0x4a3a2c,scarf:0xc9b48e,hair:0x6a5038,beard:0x6a5038,cape:false,id:'perrin'});
 // Nia — a curious village child
-addNPC(zc.village.x+2,zc.village.z-3,'Nia',[
+addNPC(...TW(52,62),'Nia',[
  "Pip can catch moths RIGHT out of the air.",
  "I'm not allowed past the meadow. Yet.",
  "Did you know slimes bounce? I know everything."],{tunic:0xc96f8a,tunicDk:0x9a4f68,scarf:0xc96f8a,hair:0x2c2018,cape:false,size:0.72,id:'nia'});
 // The Woodworker — the most forgettable soul on the island (and far more than that)
-addNPC(zc.village.x+12,zc.village.z-6,'The Woodworker',[
- "I carve little boats, mostly. For someone. I forget who — but they'll turn up.",
- "Woke here one morning, the wood needed chopping, so I chopped. Been happy since.",
- "That tune in my head? No idea the name. My hands seem to, though."],{tunic:0x6a5a44,tunicDk:0x4a3f30,scarf:0x6a5a44,hair:0x7a5a3a,cape:false,id:'woody'});
+addNPC(...TW(57.5,50.5),'The Woodworker',[
+ "Nice day for it. Every day is a nice day for it, really.",
+ "I carve little boats, mostly. For someone. I forget who — but they will turn up.",
+ "Where am I from? Ha. Woke here one morning, the wood needed chopping, so I chopped. Been happy since.",
+ "That tune in my head? No idea the name. My hands seem to, though — I stack the logs to it."],{tunic:0x6a5a44,tunicDk:0x4a3f30,scarf:0x6a5a44,hair:0x7a5a3a,cape:false,id:'woody'});
 
 // Pip the cat — Nia's, prowling the north
 function catCritter(x,z){ const g=new THREE.Group(); const c=0xd98a4a;
@@ -525,9 +545,9 @@ function catCritter(x,z){ const g=new THREE.Group(); const c=0xd98a4a;
   g.add(pos(rotZ(toon(cyl(.06,.02,.9,5),c,{outline:0}),.8),-.6,1.0,0));   // tail
   for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(box(.14,.5,.14),c,{outline:0}),lx,.25,lz));
   ground(g,.7); onGround(g,x,z); g.userData.face=Math.random()*7; return g; }
-const pip=catCritter(zc.springs.x+3, zc.springs.z-4);
+const pip=catCritter(...TW(34.5,31.5));   // Pip prowls the Whisperwood, where Nia lost him
 
-// The Gull & Anchor inn (a bigger hall + a hanging sign) near Perrin
+// The Ember Hearth inn (a bigger hall + a hanging sign) near Perrin
 function inn(x,z){ const g=new THREE.Group();
   g.add(pos(toon(box(9,1.0,7),COL.stoneDk,{outline:0.02}),0,.5,0));
   g.add(pos(toon(box(8.4,4.6,6.4),COL.plaster,{outline:0.028}),0,3.3,0));
@@ -540,9 +560,9 @@ function inn(x,z){ const g=new THREE.Group();
   const post=pos(toon(box(.3,4.2,.3),COL.timber,{outline:0.03}),5.0,2.1,3.4); g.add(post);
   const arm=pos(toon(box(2.2,.2,.2),COL.timber,{outline:0}),4.0,4.0,3.4); g.add(arm);
   g.add(pos(toon(box(2.0,1.3,.14),COL.walnut||0x5a3d28,{outline:0.03}),3.1,3.1,3.4));
-  const sign=textSprite('Gull & Anchor','#ffdca0',30); sign.scale.set(3.4,0.9,1); sign.position.set(3.1,3.1,3.55); g.add(sign);
+  const sign=textSprite('Ember Hearth','#ffdca0',30); sign.scale.set(3.4,0.9,1); sign.position.set(3.1,3.1,3.55); g.add(sign);
   ground(g,5.4); onGround(g,x,z); solid(x,z,5.4,true); return g; }
-inn(zc.village.x-9,zc.village.z-13);
+inn(...TW(41,57));   // The Ember Hearth, west of the well (2D tile 41,57)
 
 // ============================================================
 //  ENEMIES
@@ -558,9 +578,12 @@ function spawnWolf(x,z){ const g=new THREE.Group();
   g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,.25)); g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,-.25));
   const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(box(.32,1.2,.32),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
   ground(g,1.5); onGround(g,x,z); enemies.push({g,body,legs,kind:'wolf',hp:85,max:85,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:3.6,spd:6.5,dmg:14,reach:3.0,face:0}); }
-for(let i=0;i<6;i++){ const a=Math.random()*7,r=Math.random()*10; spawnSlime(zc.meadow.x+Math.cos(a)*r,zc.meadow.z+Math.sin(a)*r); }
-for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*8; spawnSlime(zc.springs.x+Math.cos(a)*r,zc.springs.z+Math.sin(a)*r); }
-for(let i=0;i<4;i++){ const a=Math.random()*7,r=Math.random()*12; spawnWolf(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r); }
+// Slime Meadow — the 2D isle's six hardy slimes, at their exact tiles
+for(const[tx,ty]of[[73,45],[75,44],[74,46],[72,47],[76,45],[73,43]]) spawnSlime(...TW(tx,ty));
+// Smuggler's Cove — three slimes oozed in from an abandoned camp
+for(const[tx,ty]of[[80,23],[85,27],[81,28]]) spawnSlime(...TW(tx,ty));
+// Whisperwood — the lone wolf pair
+for(const[tx,ty]of[[29,37],[36,42]]) spawnWolf(...TW(tx,ty));
 // The Old Ruins: the Hollow King's hollow guard — skeletons, and the crowned King himself.
 function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4; const g=new THREE.Group();
   const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(box(.28*s,1.6*s,.28*s),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
@@ -577,8 +600,9 @@ function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4
     const aura=new THREE.PointLight(0x8fffc0,12,30,2); aura.position.y=3*s; g.add(aura); rib.material.emissive=new THREE.Color(0x0f3324); }
   ground(g,1.4*s); onGround(g,x,z);
   enemies.push({g,body:rib,legs,kind:'skeleton',boss:!!boss,hp:boss?600:120,max:boss?600:120,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:boss?9.5:5.4,spd:boss?4.6:4.0,dmg:boss?26:13,reach:boss?4.0:3.0,face:0}); return enemies[enemies.length-1]; }
-for(let i=0;i<4;i++){ const a=Math.random()*7,r=6+Math.random()*10; spawnSkeleton(zc.ruins.x+Math.cos(a)*r,zc.ruins.z+Math.sin(a)*r,false); }
-const hollowKing=spawnSkeleton(zc.ruins.x, zc.ruins.z-4, true);   // the crowned King, at the cold heart of the ruins
+// The Old Ruins — the Hollow King's five bone-guard, at the 2D isle's tiles
+for(const[tx,ty]of[[43,18],[49,18],[45,14],[48,15],[46,12]]) spawnSkeleton(...TW(tx,ty),false);
+const hollowKing=spawnSkeleton(...TW(46,10), true);   // the crowned King, at the northern ruin spit
 let kingSeen=false;
 
 // particles: pollen motes (day) + fireflies (dusk), hit sparks
@@ -617,8 +641,9 @@ const rig=player.userData.rig;
 if(rig.sword) rig.sword.visible=false;   // she has no blade until Bram forges it
 const pShadow=contactShadow(1.6); player.add(pShadow);
 world.add(player);
-// spawn on the village green beside Elder Maren, where she wakes
-const P={x:zc.village.x-2,z:zc.village.z+5,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,dash:0,dashCd:0,dead:0,
+// she washes up beside Bram's forge (2D tile ≈56.5,58.5), Elder Maren seated at her side
+const [pSpawnX,pSpawnZ]=TW(56.5,58.5);
+const P={x:pSpawnX,z:pSpawnZ,yaw:Math.PI*0.5,hp:100,max:100,st:100,coins:0,swing:0,swCd:0,inv:0,dash:0,dashCd:0,dead:0,
   hasSword:false,hasTools:false,hasDash:false,hasParry:false,parryT:0,wood:0,stone:0};
 const drill={active:false,phase:'rest',t:0,count:0,need:3,swung:false};   // Rask's parry lesson
 player.position.set(P.x,heightAt(P.x,P.z),P.z);
@@ -633,15 +658,18 @@ function forge(x,z){ const g=new THREE.Group();
   g.add(pos(toon(box(0.8,3.4,0.8),COL.stoneDk,{outline:0.03}),0,3.6,-0.5));       // chimney
   const an=new THREE.Group(); an.add(pos(toon(box(0.7,0.9,0.7),COL.timberDk,{outline:0.03}),0,0.45,0)); an.add(pos(toon(box(1.5,0.5,0.7),0x3b3e46,{outline:0.03}),0,1.1,0)); an.add(pos(rotZ(toon(cyl(.03,.34,.7,6),0x3b3e46,{outline:0}),Math.PI/2),0.85,1.15,0)); an.position.set(2.4,0,0.4); g.add(an);
   ground(g,2.6); onGround(g,x,z); solid(x,z,2.6,true); return g; }
-const bramX=zc.village.x+18, bramZ=zc.village.z+5;
-forge(bramX+3,bramZ-1);
-addNPC(bramX,bramZ,'Bram the Smith',[],{tunic:0x8f4a3a,tunicDk:0x5a2f24,scarf:0x4a3322,hair:0x3a2a1c,cape:false,id:'bram'});
+const [bramX,bramZ]=TW(59,57);   // Bram stands by his forge, 2D tile (59,57)
+forge(...TW(58,55));             // the forge, 2D tile (58,55)
+addNPC(bramX,bramZ,'Bram the Smith',[
+ "A dull blade is a heavy blade.",
+ "Hear that ring? That's good iron talking.",
+ "Stone from the north road takes an edge best."],{tunic:0x8f4a3a,tunicDk:0x5a2f24,scarf:0x4a3322,hair:0x3a2a1c,cape:false,id:'bram'});
 
 const gathers=[];
 function gatherTree(x,z){ const t=tree(x,z,1.05); gathers.push({g:t,type:'wood',ready:true,cd:0,base:t.scale.clone()}); }
 function gatherRock(x,z){ const r=rock(x,z,1.2); gathers.push({g:r,type:'stone',ready:true,cd:0,base:r.scale.clone()}); }
-gatherTree(zc.village.x+8,zc.village.z+5); gatherTree(zc.village.x+24,zc.village.z+11);
-gatherRock(zc.village.x+13,zc.village.z+5); gatherRock(zc.village.x+27,zc.village.z-4);
+gatherTree(...TW(54,60)); gatherTree(...TW(63,60));
+gatherRock(...TW(61,59)); gatherRock(...TW(54,52));
 
 // dialogue — locks movement while active; advance by tap / click / Space / F
 const dlgEl=document.getElementById('dlg'), dlgName=dlgEl.querySelector('.dn'), dlgText=dlgEl.querySelector('.dt');
@@ -658,28 +686,27 @@ function updateQuest(){ if(stage==='wake'){ questEl.style.display='none'; return
   if(stage==='seeBram'){ t='Tools of the Trade'; o='Speak with Bram at the forge, east of the well.'; }
   else if(stage==='gather'){ t='Tools of the Trade'; o='Fell a tree for wood, break a rock for stone.'; p='Wood '+Math.min(P.wood,1)+'/1   ·   Stone '+Math.min(P.stone,1)+'/1'; }
   else if(stage==='forge'){ t='Tools of the Trade'; o='Bring the wood and stone back to Bram.'; }
-  else if(stage==='done'){ t='Blade in Hand'; o='Thin the meadow slimes — or find Rask to learn the parry.'; }
+  else if(stage==='done'){ t='Blade in Hand'; o="Go east, past the Slime Meadow, to Rask's Grove — learn to turn a blade."; }
   qtEl.textContent=t; qoEl.textContent=o; qpEl.textContent=p; }
 
 function talkTo(npc){ const id=npc.userData.id;
   if(id==='bram'){
     if(!P.hasTools) startDialogue([
-      {who:'Bram the Smith',text:"You'll get nowhere on this isle bare-handed — take these, a woodsman's axe and a miner's pick off my own rack."},
-      {who:'Bram the Smith',text:"Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I'll forge you a proper iron sword."}],
+      {who:'Bram the Smith',text:"You'll get nowhere on this isle bare-handed — take these, a woodsman's axe and a miner's pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I'll forge you a proper iron sword."}],
       ()=>{ P.hasTools=true; toast('<b>Woodsman\'s kit received</b> — axe &amp; pick. You can CHOP trees and MINE rocks now.'); setStage('gather'); });
     else if(!P.hasSword && (P.wood<1||P.stone<1)) startDialogue([{who:'Bram the Smith',text:"Not yet. Bring me 1 wood and 1 stone — fell a tree, break a rock — then we'll talk steel."}]);
     else if(!P.hasSword) startDialogue([
-      {who:'Bram the Smith',text:"There it is — good seasoned wood and honest stone. Stand back from the sparks now."},
-      {who:'Bram the Smith',text:"…There. Your first true blade — an iron sword, no letter-opener. Go put it to use."}],
-      ()=>{ P.wood--; P.stone--; P.hasSword=true; if(rig.sword)rig.sword.visible=true; toast('<b style="color:#ffd27a">Iron Sword forged!</b> Press SPACE / SWING to strike.'); setStage('done'); });
-    else startDialogue([{who:'Bram the Smith',text:"Keep that edge keen. The meadow's crawling — Willa will thank you for thinning it."}]);
+      {who:'Bram the Smith',text:"Good hands — I can see the work in them already. *CLANG* — here's your steel, balanced and mean."},
+      {who:'Bram the Smith',text:"Now, a blade's only half of it — anyone can swing. Go east, past the meadow, and find old Rask. Bladesworn, before he came to keep the quiet out there. He'll teach you to TURN a strike aside — the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you."}],
+      ()=>{ P.wood--; P.stone--; P.hasSword=true; if(rig.sword)rig.sword.visible=true; toast('<b style="color:#ffd27a">Iron Sword forged!</b> Press SPACE / SWING to strike. Now find <b>Rask</b>, east past the meadow.'); setStage('done'); });
+    else { const L=npc.userData.lines; startDialogue([{who:'Bram the Smith',text:L[(npc.userData.li++)%L.length]}]); }
   } else if(id==='rask'){
-    if(!P.hasSword) startDialogue([{who:'Rask the Bladesworn',text:"Come back with a blade in your hand. Bram's forge, west of here. Then I'll teach you to keep it."}]);
-    else if(P.hasParry) startDialogue([{who:'Rask the Bladesworn',text:"Your guard's honest now. Turn a foe's blade on the white flash and they're yours."}]);
+    if(!P.hasSword) startDialogue([{who:'Rask the Bladesworn',text:"Come back with a blade in your hand. Bram's forge, west of here — then I'll teach you to keep it."}]);
+    else if(P.hasParry) startDialogue([{who:'Rask the Bladesworn',text:"Your guard's honest now. Watch for the strike and meet it LATE, right as it lands. Off to Maren."}]);
     else startDialogue([
-      {who:'Rask the Bladesworn',text:"So Bram sent me another new blade. Anyone can hack away — the trade is knowing what to do when the blow comes back at YOU."},
-      {who:'Rask the Bladesworn',text:"You PARRY. Watch my strike: a red ! builds, then flares WHITE. On that white flash — SWING. Meet the blow and turn it."},
-      {who:'Rask the Bladesworn',text:"No trick to it but timing. Turn my blade three times and the guard is yours. Ready your steel."}],
+      {who:'Rask the Bladesworn',text:"So Bram sent me another one with a new sword and no idea what to do when it's the OTHER fellow swinging. Anyone can hack away — the trade is knowing what to do when the blow comes back at YOU."},
+      {who:'Rask the Bladesworn',text:"You PARRY: watch the strike, and meet it with your own edge at the very instant it lands. Time it true and you turn the blow — an arrow flies back the way it came, a swordsman left staggered on his own missed swing."},
+      {who:'Rask the Bladesworn',text:"No trick to it but timing. Take up your steel and come at my blade — turn it three times and it's yours."}],
       ()=>beginDrill());
   } else { const seq=(npc.userData.lines||[]).map(t=>({who:npc.userData.name,text:t})); startDialogue(seq); }
 }
@@ -688,8 +715,9 @@ const raskRig=rask.userData.rig;
 function beginDrill(){ drill.active=true; drill.phase='rest'; drill.t=1.0; drill.count=0; drill.swung=false;
   banner('THE TURNING','parry Rask\'s blade — three times'); toast('Watch Rask\'s blade: a red <b style="color:#ff5a4a">!</b> builds, then flares <b>WHITE</b> — <b>SWING on the white flash</b> to turn it. Parry 3.'); }
 function unlockParry(){ drill.active=false; P.hasParry=true; if(raskRig) raskRig.arm.rotation.x=0;
-  banner('PARRY LEARNED','turn a blow on the white flash'); P.coins+=30;
-  toast('<b style="color:#ffe08a">Parry learned!</b> No button — it\'s timing. When a foe winds up, a red <b style="color:#ff5a4a">!</b> flares <b>WHITE</b>. <b>Swing on the flash</b> to turn the blow instead of taking it.'); }
+  banner('PARRY LEARNED','turn a blow on the white flash'); P.coins+=10;
+  toast('<b style="color:#ffe08a">Parry learned!</b> No button — it\'s timing. When a foe winds up, a red <b style="color:#ff5a4a">!</b> flares <b>WHITE</b>. <b>Swing on the flash</b> to turn the blow instead of taking it.');
+  startDialogue([{who:'Rask the Bladesworn',text:"There it is — you felt that, the whole blow just… gone, turned off your edge. That's the turning. Watch for the strike and meet it LATE, right as it lands, not early. Now you're fit to go down into that crypt. Off to Maren."}]); }
 function updateDrill(dt,time){ if(!drill.active) return;
   // face Rask to the player and animate his tell
   const fy=Math.atan2(P.x-rask.position.x,P.z-rask.position.z); rask.rotation.y+=(fy-rask.rotation.y)*Math.min(1,dt*6);
@@ -850,9 +878,11 @@ let intro=false;
 function beginGame(){ if(started)return; started=true;
   banner('EMBERWICK ISLE','HOME SHORES — CHAPTER I');
   if(!intro){ intro=true; setTimeout(()=>startDialogue([
-    {who:'Elder Maren',text:"Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back."},
-    {who:'Elder Maren',text:"You'll get nowhere on these shores bare-handed. Our smith Bram keeps his forge east of the well — start with him. He'll set you right."}
-  ], ()=>setStage('seeBram')), 600); }
+    {who:'Elder Maren',text:"You come to face-down in the surf, salt raw in your throat. A pair of old, steady hands draws you up onto the sand. “Easy now — easy. You're alive. I felt the tide turn in the night and knew it had given something back.”"},
+    {who:'Elder Maren',text:"Your ship went down on the strait in the night — I watched its lanterns swallowed from the headland. That reef has fed on hulls longer than I've been grey — and it's hungrier of late. A curse lies on the water now; no boat has made the crossing off Emberwick in a long while. You washed in wearing that mask, and reached for it before your eyes were open. Keep it, if it steadies you — you're the only soul the sea gave back. Do you know it? Your ship, your name, where you were bound?"},
+    {who:'Elder Maren',text:"…Nothing. Not even your own name. The strait does that — takes the ship, the crew, and the memory with them. Don't claw at it: a name washes back, child, or you earn a new one."},
+    {who:'Elder Maren',text:"Here's what I know: you're on Emberwick, and you're breathing — which is more than the reef usually allows. Get your feet under you, then see Bram the smith, at the forge just here — he'll put a blade in your hand. This isle has need of one."}
+  ], ()=>{ setStage('seeBram'); toast("Emberwick's folk each need a hand. Start with <b>Bram the Smith</b> at the forge; he'll arm you for what's coming."); }), 600); }
 }
 beginGame();
 

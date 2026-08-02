@@ -20,8 +20,8 @@ would be ported into region by region — that remains a large ongoing effort.
   Willa the Farmer, Rask the Bladesworn, **Sage Orin** (wizard), **Captain
   Brant**, **Finn the Fisher**, **Perrin the Innkeep**, **Nia**, **the
   Woodworker** — plus **Pip the cat**.
-- Buildings: cottages, the well, Orin's Tower, the forge, and the **Gull &
-  Anchor** inn.
+- Buildings: cottages, the well, Orin's Tower, the forge, and the **Ember
+  Hearth** inn.
 - Enemies: **slimes**, **wolves**, **skeletons**, and the **Hollow King** boss
   (crowned, with a ghostlight aura) at the ruins — his dread grays the sky as
   you approach and lifts as you leave.
@@ -75,16 +75,28 @@ effort — this island is the populated, playable template they'd follow.
 | Pause | Esc / P | ❚❚ button |
 | Warp to a zone | keys 1–9 | — |
 
-**First quest — the sword.** You wake on the green as **Elder Maren** speaks
-(you can't move until she's done). She sends you to **Bram** at the forge east
-of the well; he hands you an axe and pick and asks for **1 wood + 1 stone** —
-**chop** a tree and **mine** a rock, bring them back, and he forges your **iron
-sword**. Only then can you fight. The action button is contextual — it shows
+**First quest — the sword.** You wash ashore **beside Bram's forge**, exactly as
+in the 2D game, and **Elder Maren** is at your side (you can't move until her
+four-page wake-speech — lifted verbatim — is done). She sends you to **Bram** at
+the forge east of the well; he hands you an axe and pick and asks for **1 wood +
+1 stone** — **chop** a tree and **mine** a rock, bring them back, and he forges
+your **iron sword**, then sends you **east past the meadow to Rask** to learn the
+parry. Only then can you fight. The action button is contextual — it shows
 **TALK / CHOP / MINE** only when something's in reach.
 
 The player is **the masked princess** — the castaway who is secretly royalty,
 in her pale Emberwick mask (dark eye-slits, the red warrior's sigil, her bound
-ponytail) with eyes that blink, matching the 2D game's protagonist.
+ponytail) with eyes that blink, and **her mother's pendant at her throat**,
+matching the 2D game's protagonist.
+
+**Parity with the 2D isle.** Emberwick's layout and opening are ported 1:1 from
+the 2D game: every zone, building, NPC and enemy sits at its original in-game
+tile, every NPC speaks its **verbatim** 2D lines, and the sword-quest and Rask's
+parry-drill dialogue are the 2D game's own text. The Old Ruins reach north to a
+**cold spit** where the **Hollow King** and his five bone-guard stand, as they do
+in the 2D isle; the **Ember Hearth** inn, **Willa's Farm**, **Driftwood Dock**,
+**Orin's Tower**, **Rask's Grove**, **Smuggler's Cove** and the **Whisperwood**
+(where **Pip** prowls) all keep their 2D positions.
 
 ## Running it
 
