@@ -350,7 +350,12 @@ function genMainland(){
   carveDisc(ZONES.tower.x,ZONES.tower.y,ZONES.tower.r,T.RUIN,false);
   carveDisc(ZONES.farm.x,ZONES.farm.y,ZONES.farm.r,T.GRASS,false);
   carveDisc(ZONES.mines.x,ZONES.mines.y,ZONES.mines.r,T.RUIN,false);
-  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.GRASS,false);   // keep grounds - an open grass meadow before the keep, not a dirt courtyard
+  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.GRASS,false);   // keep grounds - the open meadow the King's Road crosses
+  // The keep itself now stands on a headland extended WEST of the through-road, so
+  // travellers pass to the EAST of it and never have to round its back to reach the
+  // gate. Extend the land to carry the keep and the apron before its south gate.
+  carveDisc(ZONES.castle.x-11,ZONES.castle.y,12,T.GRASS,false);            // the western keep headland
+  carveDisc(ZONES.castle.x-9, ZONES.castle.y+7,7,T.GRASS,false);           // a broad apron of ground before the gate
   carveDisc(ZONES.spire.x,ZONES.spire.y,ZONES.spire.r,T.GRASS,false);
   carveDisc(ZONES.desert.x,ZONES.desert.y,ZONES.desert.r,T.SAND,false);   // Sunscour
   carveDisc(ZONES.desert.x-14,ZONES.desert.y+16,16,T.SAND,false);
@@ -410,6 +415,15 @@ function genMainland(){
   ];
   for(const r of ROADS) landBridge(r[0],r[1],r[2],r[3]);
   for(const r of ROADS) carveLine(r[0],r[1],r[2],r[3], T.PATH,0);
+  // ---- Barik Keep approach ----
+  // Tie the village and spire roads together with a short link that runs EAST of the
+  // keep, so the King's Road skirts the grounds rather than driving past the keep's
+  // back. A cobbled walkway then branches west off that link, straight up to a small
+  // forecourt at the south gate - visitors approach the gate head-on and no one has
+  // to walk behind the keep.
+  carveLine(ZONES.castle.x-6,ZONES.castle.y-4, ZONES.castle.x+6,ZONES.castle.y+4, T.PATH,0);
+  carveLine(ZONES.castle.x+4,ZONES.castle.y+3, ZONES.castle.x-10,ZONES.castle.y+3, T.PATH,1);
+  carveDisc(ZONES.castle.x-11,ZONES.castle.y+2,3,T.PATH,true);   // the cobbled forecourt at the gate
   // ---- Greyharbor's harbor promenade ----
   // The town's houses now ring the shoreline (placed in placeObjectsMain), each out
   // at the water's edge instead of huddled by the well. This coastal lane threads
@@ -455,6 +469,7 @@ function placeObjectsMain(){
     if(dist(x,y,ZONES.village.x,ZONES.village.y)<ZONES.village.r) continue;
     if(dist(x,y,ZONES.tower.x,ZONES.tower.y)<ZONES.tower.r) continue;
     if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // keep the keep's grass meadow clear
+    if(dist(x,y,ZONES.castle.x-11,ZONES.castle.y)<8) continue;             // and the western keep headland
     // leave a one-tile margin along the King's Roads so no tree overhangs and blocks the path
     let byRoad=false;
     for(let ry=-1;ry<=1&&!byRoad;ry++) for(let rx=-1;rx<=1;rx++) if(tileAt(x+rx,y+ry)===T.PATH){ byRoad=true; break; }
@@ -465,6 +480,7 @@ function placeObjectsMain(){
   for(let i=0;i<300;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     const t=tileAt(x,y);
     if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // no stone strewn across the keep meadow
+    if(dist(x,y,ZONES.castle.x-11,ZONES.castle.y)<8) continue;             // nor across the western keep headland
     if((t===T.GRASS||t===T.FOREST||t===T.RUIN)&&!solidAt(x,y)&&r()<0.7) addNode('rock',x,y); }
   for(let i=0;i<50;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     if(tileAt(x,y)===T.FOREST&&!solidAt(x,y)) addNode('mushroom',x,y); }
@@ -526,14 +542,15 @@ function placeObjectsMain(){
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
-  // Barik Keep - the Duchess's seat
-  const CK=ZONES.castle;
-  addBuilding('castle', CK.x,CK.y-3,'Barik Keep - Hall of Duchess Maelis');
-  addBuilding('house2',CK.x-6,CK.y+2,'Keep barracks');
-  addBuilding('house2',CK.x+6,CK.y+2,'Keep granary');
-  addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
-  G.decor.push({kind:'pillar',x:CK.x-4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x-5,CK.y-2,1);
-  G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
+  // Barik Keep - the Duchess's seat, set on the western headland with its gate
+  // opening south onto the cobbled forecourt (see the approach carved in genMainland).
+  const CK=ZONES.castle, KX=CK.x-11, KY=CK.y-3;   // KX,KY = the keep's anchor, shifted west of the through-road
+  addBuilding('castle', KX,KY,'Barik Keep - Hall of Duchess Maelis');
+  addBuilding('house2',KX-7,KY+2,'Keep barracks');   // service buildings on the landward (west) side, clear of the walkway
+  addBuilding('house2',KX-7,KY+6,'Keep granary');
+  addBuilding('lamp',KX-2,KY+4,''); addBuilding('lamp',KX+2,KY+4,'');   // lamps at the gate mouth
+  G.decor.push({kind:'pillar',x:KX-4.5,y:KY+1.5,broken:false}); setSolid(KX-5,KY+1,1);
+  G.decor.push({kind:'pillar',x:KX+4.5,y:KY+1.5,broken:false}); setSolid(KX+4,KY+1,1);
   // Aelin's Spire - the magic tower
   const SP=ZONES.spire;
   addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
@@ -638,7 +655,7 @@ function wedDuke(){
   if(G.worldId!=='main') return;
   if(G.npcs && G.npcs.some(n=>n.id==='dukeElias')) return;
   const mae = G.npcs && G.npcs.find(n=>n.id==='maelis');
-  const bx = mae? Math.round(mae.x-1.6) : Math.round(ZONES.castle.x-1);
+  const bx = mae? Math.round(mae.x-1.6) : Math.round(ZONES.castle.x-12);
   const by = mae? Math.round(mae.y) : Math.round(ZONES.castle.y+1);
   const sp = (typeof findOpenNear==='function' && findOpenNear(bx,by,3)) || [bx,by];
   const duke = makeNPC('dukeElias','Duke Elias of Barik', sp[0], sp[1],
@@ -651,8 +668,9 @@ function wedDuke(){
 }
 function spawnRealmFolk(){
   const CK=ZONES.castle, SP=ZONES.spire, V=ZONES.village, VM=ZONES.vael;
+  const KX=CK.x-11, KY=CK.y-3;   // the relocated keep's anchor (matches placeObjectsMain)
   const wed = !!(P.story && P.story.duchessWed);
-  G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', CK.x+0.5,CK.y+0.8,
+  G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', KX+0.5,KY+3.8,
     {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
     wed
     ? ["My Duke charts the tides from the west solar now. Strange, to rule beside someone at last.",
@@ -660,7 +678,7 @@ function spawnRealmFolk(){
     : ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
        "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
   wedDuke();
-  { const kw=makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
+  { const kw=makeNPC('guardc1','Keep Warden', KX-2.5,KY+5.2,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
     ["Her Majesty receives travelers. Mind your manners and your mud."],0.4);
     kw.nightOwl=true; G.npcs.push(kw); }   // the keep is guarded round the clock
