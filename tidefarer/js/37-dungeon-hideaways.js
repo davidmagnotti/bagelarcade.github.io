@@ -172,6 +172,12 @@ function awardDungeonTool(m){
     var pos=t.spot || ((typeof findOpenNear==='function' && findOpenNear(Math.round(m.x),Math.round(m.y),6)) || [Math.round(m.x),Math.round(m.y)]);
     var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5}; o[t.flag]=1;
     G.decor.push(o);
+    // The Undermaw yields TWO prizes: its Rivenedge Axe AND the Delvebreaker Pick that
+    // shatters Vath's wardstone - so the whole Hedda-ward loop stays inside Barik.
+    if(G.worldId==='undermaw' && (P.tools&&P.tools.pick||0)<2 && !G.decor.some(function(d){return d.delvegift;})){
+      var pp=(typeof findOpenNear==='function' && findOpenNear(pos[0]-2,pos[1],5)) || (typeof findOpenNear==='function' && findOpenNear(pos[0]+2,pos[1],5)) || [pos[0],pos[1]+1];
+      G.decor.push({kind:'chest', x:pp[0]+0.5, y:pp[1]+0.5, delvegift:1});
+    }
     if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){}
 }

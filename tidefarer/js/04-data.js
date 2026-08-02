@@ -19,6 +19,7 @@ const ITEMS = {
   reachverse:{name:"The Tidefarer's Verse", desc:'A copy of the prophecy cut into the deep vault beneath Stormreach, in the old royal script: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. Show it to Jaist; the scholar can read what you cannot.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
+  delvebreaker:{name:'Delvebreaker Pick', desc:'A pick of star-dark iron from the Undermaw\'s deep hoard. Shatters the bright-violet wardstone Vath raised to cut Barik off - and splits common basalt the same.'},
   cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},
   emberbreaker:{name:'Emberbreaker Pick', desc:'A pick quenched in the Ashen Forge, its head still smoking. Shatters the molten emberstone that fused the old vaults shut - and any lesser stone gives at a touch.'}
 };

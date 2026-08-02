@@ -1000,6 +1000,9 @@ function applyIdleDialogue(){
   }
   // The capital, after the royal audience
   if(w==='crown' && st.kingTold) applyCrownMood();
+  // Barik: while Vath's wardstone still boxes Hedda in, Kell & Corvo point you at it
+  // (41-barik-ward.js). Re-applied here because we just reset every NPC's idle lines.
+  if(w==='main' && typeof attachBarikWardRumours==='function') attachBarikWardRumours();
 }
 // Overlay quest brief/log/doneText. Called once at boot, after all QUESTS are defined.
 function applyQuestDialogue(){

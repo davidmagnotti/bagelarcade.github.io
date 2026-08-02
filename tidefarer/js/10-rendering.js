@@ -577,6 +577,35 @@ function drawNode(n,s){
     cx.restore();
     if(n.hp<n.maxhp) drawNodeHp(n,s);
   } else if(n.kind==='rock'){
+    if(n.dead){ if(n.gate!=='vathward') cx.drawImage(SPR.rockLow, s.x-35, s.y-44); return; }
+    // VATH-WARD: not gray rock but a bright-violet crystal thrust up out of the ground -
+    // sorcery made solid. A cluster of faceted shards with a breathing inner glow.
+    if(n.gate==='vathward'){
+      const shk=n.shake? Math.sin(G.time*45)*2.4*n.shake*4:0;
+      const pulse=0.55+0.45*Math.sin(G.time*2.2+n.tx*0.7+n.ty*0.5);
+      drawShadowAt(cx,s.x,s.y,13);
+      cx.save(); cx.translate(s.x+shk,s.y);
+      cx.fillStyle='rgba(150,60,235,'+(0.16*pulse).toFixed(3)+')';           // ground glow
+      cx.beginPath(); cx.ellipse(0,-4,20,11,0,0,TAU); cx.fill();
+      const shard=(dx,bh,bw,rot,col)=>{ cx.save(); cx.translate(dx,0); cx.rotate(rot);
+        cx.fillStyle=col; cx.beginPath();
+        cx.moveTo(0,-bh); cx.lineTo(bw,-bh*0.34); cx.lineTo(bw*0.62,2); cx.lineTo(-bw*0.62,2); cx.lineTo(-bw,-bh*0.34); cx.closePath(); cx.fill();
+        cx.strokeStyle='rgba(46,14,78,0.85)'; cx.lineWidth=1.6; cx.stroke();
+        cx.strokeStyle='rgba(232,190,255,'+(0.5+0.4*pulse).toFixed(2)+')'; cx.lineWidth=1.2;   // facet catch-light
+        cx.beginPath(); cx.moveTo(-bw*0.18,-bh*0.9); cx.lineTo(-bw*0.18,0); cx.stroke();
+        cx.restore(); };
+      shard(-7, 20, 6.5, -0.16, '#8a2fc8');                                  // back-left shard
+      shard( 8, 17, 5.5,  0.22, '#9a3fd6');                                  // back-right shard
+      shard( 0, 30, 8.5,  0.02, '#c04bff');                                  // tall bright center
+      if(n.hp<n.maxhp){ // fracture lines as it's mined
+        cx.strokeStyle='rgba(20,6,36,0.7)'; cx.lineWidth=1.4;
+        const cr=mulberry32(n.tx*31+n.ty*7), cracks=n.maxhp-n.hp;
+        for(let i=0;i<cracks;i++){ let px=-6+cr()*12, py=-24+cr()*20; cx.beginPath(); cx.moveTo(px,py);
+          for(let sg=0;sg<3;sg++){ px+=(cr()-0.5)*8; py+=3+cr()*5; cx.lineTo(px,py);} cx.stroke(); }
+      }
+      cx.restore();
+      return;
+    }
     if(n.dead){ cx.drawImage(SPR.rockLow, s.x-35, s.y-44); return; }
     drawShadowAt(cx,s.x,s.y,15);
     const sh=n.shake? Math.sin(G.time*45)*2.4*n.shake*4:0;

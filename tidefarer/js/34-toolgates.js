@@ -37,7 +37,15 @@ var GATES={
              need:'the mill-forged <b>Cograzor Pick</b>', drop:'ore', dropN:3, skill:'mining' },
   emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE',
              color:'#ff7a4a', glow:'rgba(235,70,25,1)', spark:'#ffc078',
-             need:'the forge-tempered <b>Emberbreaker Pick</b>', drop:'crystal', dropN:2, skill:'mining' }
+             need:'the forge-tempered <b>Emberbreaker Pick</b>', drop:'crystal', dropN:2, skill:'mining' },
+  // VATH-WARD: not natural stone but sorcery made solid - a bright-violet ward Vath
+  // raised to cut Barik off from itself. Any dungeon-forged pickaxe (pick tier >= 2)
+  // shatters it; the Undermaw's own Delvebreaker is the nearest one. Used by the
+  // authored Hedda-ward ring in 41-barik-ward.js, whose stones share one gid so the
+  // whole ward falls together when any single stone is broken (see clearGateNode).
+  vathward:{ tool:'pick', req:2, kind:'rock', hp:22, tag:'WARDSTONE', noTag:true, crystal:true,
+             color:'#c04bff', glow:'rgba(150,60,235,1)', spark:'#e0a0ff',
+             need:'a dungeon-forged <b>pickaxe</b>', drop:'ore', dropN:1, skill:'mining' }
 };
 function tierOf(tool){ return (P.tools && P.tools[tool]) || 0; }
 
@@ -69,6 +77,17 @@ function clearGateNode(n){
   n.dead=true; n.gone=true; setSolid(n.tx,n.ty,0);
   // persist: a placed gate (n.gid) stays felled across save/reload (35-toolgate-content.js)
   if(n.gid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[n.gid]=1; }
+  // MULTI-TILE WARD: a ward wall whose stones share one gid falls as one - break any
+  // stone and the rest of the ring shatters with it (the Hedda-ward; see 41-barik-ward.js).
+  if(n.ward && n.gid){
+    for(var i=0;i<G.nodes.length;i++){ var o=G.nodes[i];
+      if(o!==n && o.gone!==true && o.gid===n.gid){
+        o.dead=true; o.gone=true; setSolid(o.tx,o.ty,0);
+        shockwave(o.x,o.y,cfg.glow||'rgba(150,60,235,0.9)',26);
+        burst(o.x,o.y-0.5, cfg.spark||'#e0a0ff', 10, 2.2);
+      } }
+    if(typeof onWardBroken==='function'){ try{ onWardBroken(n); }catch(e){} }
+  }
   if(typeof invalidateScenery==='function') invalidateScenery();
   shockwave(n.x,n.y,cfg.glow||'rgba(200,200,200,0.8)',40);
   burst(n.x,n.y-(cfg.kind==='rock'?0.5:1.4), cfg.spark||'#ccc', 18, 2.6);
@@ -90,9 +109,11 @@ function drawGateAura(n,s){
   cx.globalAlpha=1;
   // drifting motes in the gate colour
   if(Math.random()<0.06) G.parts.push({x:n.x+rnd(-0.3,0.3), y:n.y-rnd(0.2,1.4), vx:rnd(-0.1,0.1), vy:-rnd(0.2,0.5), life:0.7, color:cfg.spark, size:2.2, grav:0});
-  // a colour-keyed tag above the node, fading in as you approach
+  // a colour-keyed tag above the node, fading in as you approach. A ward WALL of many
+  // stones (vathward) suppresses the per-stone tag - it'd be 19 labels of noise; the
+  // crystals read for themselves and Kell's word names them.
   var d=dist(P.x,P.y,n.x,n.y);
-  if(d<9){
+  if(d<9 && !cfg.noTag){
     var top=(cfg.kind==='rock')? -52 : -106;
     cx.globalAlpha=Math.max(0,Math.min(1,(9-d)/3.2));
     cx.font='bold 10px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
@@ -118,6 +139,17 @@ function grantCragbreaker(){
   P.tools.pick=2; give('cragbreaker',1);
   banner('THE CRAGBREAKER PICK','BASALT WILL SPLIT');
   storyCard('<i>A pick of blackened steel, heavy as a grudge, hafted for two hands.</i> <b style="color:#c79bff">You take the Cragbreaker Pick.</b> <i>The violet <b>basalt</b> that sealed the deep ways shatters under it - and ordinary stone gives up far faster. The sealed passages you passed are open to you now.</i>');
+  if(typeof refreshUI==='function') refreshUI();
+}
+function grantDelvebreaker(){
+  // the Undermaw's pickaxe: a tier-2 pick, twin to the Cragbreaker, whose edge bites
+  // the violet Vath-ward that seals Barik off. Grants the same tier so it also splits
+  // ordinary basalt - one dungeon-forged pick, come by in Barik's own deep.
+  P.tools=P.tools||{axe:0,pick:0}; P.kit=true;
+  if((P.tools.pick||0)>=2) return;
+  P.tools.pick=2; give('delvebreaker',1);
+  banner('THE DELVEBREAKER PICK','THE WARD WILL SHATTER');
+  storyCard('<i>Cold in the Undermaw\'s deep hoard, a pick of star-dark iron, its head chased with old miners\' marks.</i> <b style="color:#c04bff">You take the Delvebreaker Pick.</b> <i>The bright-violet <b>wardstone</b> Vath raised to cut this isle off from itself is only rock to it now - and common basalt splits the same. Go and break what the ward keeps from you.</i>');
   if(typeof refreshUI==='function') refreshUI();
 }
 function grantCograzor(){
@@ -168,6 +200,7 @@ function spawnToolgateSandbox(){
 window.GATES=GATES; window.addGateNode=addGateNode;
 window.gateBlocked=gateBlocked; window.clearGateNode=clearGateNode; window.drawGateAura=drawGateAura;
 window.grantRivenedge=grantRivenedge; window.grantCragbreaker=grantCragbreaker;
+window.grantDelvebreaker=grantDelvebreaker;
 window.grantCograzor=grantCograzor; window.grantEmberbreaker=grantEmberbreaker;
 window.spawnToolgateSandbox=spawnToolgateSandbox;
 

@@ -6385,6 +6385,10 @@ function openChest(b){
     if((P.tools&&P.tools.pick||0)<2){ if(typeof grantCragbreaker==='function') grantCragbreaker(); }
     else { giveGold(rndi(120,180)); give('ore',2); banner('THE DELVER\'S HOARD','ORE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
+  if(b.delvegift){ bumpStat('chests');   // the Undermaw's pickaxe - shatters Vath's wardstone
+    if((P.tools&&P.tools.pick||0)<2){ if(typeof grantDelvebreaker==='function') grantDelvebreaker(); }
+    else { giveGold(rndi(120,180)); give('ore',2); banner('THE MAW\'S DEEP HOARD','ORE AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
   // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the trail to the weapon.
   if(b.tidewardHoard){
     bumpStat('chests'); P.story=P.story||{};
@@ -6774,6 +6778,9 @@ function switchWorld(id){
     if(typeof placeToolgates==='function') placeToolgates(id);
     // a farm & farmer you can work with on every overworld isle (36-island-farms.js)
     if(typeof placeIslandFarms==='function') placeIslandFarms(id);
+    // Vath's wardstone ring around Hedda's steading on Barik (41-barik-ward.js) - after
+    // the farms so Hedda already exists to box in; self-verifies or bails, never soft-locks.
+    if(typeof placeBarikWard==='function') placeBarikWard(id);
     if(typeof placeDungeonHideaways==='function') placeDungeonHideaways(id);
   }
   G.worldId=id;
