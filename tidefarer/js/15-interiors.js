@@ -155,20 +155,15 @@ function enterHouse(b){
     blockMsg('The tower door won’t give - a faint ward hums under your palm, holding it fast. <b>Locked.</b> <i>Old Orin opens it for those who\'ve done as he asked.</i>');
     Snd.step(5); return;
   }
-  // Aelin's Spire is a school, not a lobby: by day the door only knows students. Train
-  // with her on the range at least once and it opens for good. BUT she won't leave a
-  // weave-hopeful out in the dark: after nightfall she opens up for REST (not lessons) -
-  // a cot by the hearth till the bells, restoring you and passing the night to dawn.
-  if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire') && !(P.prog && P.prog.spireTrainedEver)){
-    if(nightAmount()>0.5){
-      const fadeS=document.getElementById('fadeOv'); fadeS.style.opacity=1; Snd.tone(200,0.5,'sine',0.04,-60);
-      setTimeout(()=>{ G.dayT=0.09; P.hp=P.maxhp; G.fireflies.length=0; refreshUI(); autoSave();
-        blockMsg('<b>Aelin</b> opens the door at your knock, candle in hand. “Out after dark, and no bed? The Spire keeps no lessons at this hour - but I’ll not leave a hopeful on the step. The cot by the hearth is yours till the bells. Rest - and come to the range when it’s light.”');
-        setTimeout(()=>{ fadeS.style.opacity=0; },120); },750);
-      return;
+  // Aelin's Spire: by day she keeps to the range and her work, and the door stays shut.
+  // After dark she's in by candlelight and opens up - step inside to talk with the Weaver
+  // and rest the cot by the hearth. (You go IN now; the interior places her + the cot at night.)
+  if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire')){
+    if(nightAmount()<=0.5){
+      blockMsg('The Spire door is shut. <b>Aelin:</b> “I keep to the range by day, not the door. If it’s a roof or a word you’re after, come back after dark - I’ll be in.”');
+      Snd.step(5); return;
     }
-    blockMsg('The Spire door is sealed with a soft weave. <b>Aelin:</b> “Students inside, not gawkers. Train with me on the range first - then the door will know you.”');
-    Snd.step(5); return;
+    // at night: fall through and enter the Spire proper
   }
   // b.lockMsg: barred at ALL hours with its own line (private homes, guild halls,
   // the Mint...). b.locked keeps the old Vael war-tent default.

@@ -107,8 +107,8 @@ const DIALOGUE = {
       "Her Majesty receives travelers. Mind your manners and your mud."
     ],
     "aelin": [
-      "Magic is grammar for the world's oldest language. I teach conjugation.",
-      "The Spire takes students, not worshippers. Bring coin and humility."
+      "The Spire's mine to keep - old glass, older books, and a candle that won't quite die.",
+      "I hold the range by day and the tower by night. Caught out after dark? Knock - there's a cot by the hearth."
     ],
     "rook": [
       "A good tonic asks no questions and mends what it finds.",

@@ -701,9 +701,11 @@ function shopButtons(npc,btns){
         [{label:'Begin the lesson ('+f+'g)', cls:'gold', fn:beginLesson},
          {label:'Not yet', ghost:true, fn:closeDialog}]);
     };
-    const trained = P.prog && P.prog.spireTrainedEver;
-    btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
-    // (Snare removed - the staff casts only Bolt now.)
+    // Magic training removed - that art is gone from the isles, so there's no "Train at the
+    // Spire" button anymore. Aelin is a character now: her lines carry the interaction, and after
+    // dark you can step inside the Spire to talk and rest the cot. (aelinStudy/aelinFee above are
+    // now unused, left harmless; nothing references P.skills.magic at runtime.)
+    void aelinStudy; void aelinFee;
   }
   if(npc.id==='rook'){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Straight off the shelf, friend - the red Ember Tonic for the small hurts, the blue elixir for when the small hurts aren\'t. What\'ll it be?',

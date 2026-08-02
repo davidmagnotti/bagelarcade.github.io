@@ -666,8 +666,8 @@ function spawnRealmFolk(){
     kw.nightOwl=true; G.npcs.push(kw); }   // the keep is guarded round the clock
   G.npcs.push(makeNPC('aelin','Aelin the Weaver', SP.x+1.5,SP.y+2.2,
     {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
-    ["Magic is grammar for the world's oldest language. I teach conjugation.",
-     "The Spire takes students, not worshippers. Bring coin and humility."],0.6));
+    ["The Spire's mine to keep - old glass, older books, and a candle that won't quite die.",
+     "I hold the range by day and the tower by night. Caught out after dark? Knock - there's a cot by the hearth."],0.6));
   G.npcs.push(makeNPC('rook','Rook the Apothecary', V.x+7,V.y+6,
     {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',apron:'#7a5a3a'},
     ["A good tonic asks no questions and mends what it finds.",
