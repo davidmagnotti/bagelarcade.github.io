@@ -1675,7 +1675,7 @@ function spawnWindFolk(){
   // Innkeep of the Windsurf Inn - keeps the fire lit though no guest has rung the
   // bell in a season. Rooms are TEN GOLD (dialog handles 'Rest the night'), and
   // she keeps night hours (nightOwl) so a storm-late traveller can always rouse her.
-  { const inn=makeNPC('wenna','Wenna the Innkeep', T2.x-4.5, T2.y+6.3,
+  { const inn=makeNPC('wenna','Wenna the Innkeeper', T2.x-4.5, T2.y+6.3,
       {skin:'#caa27b',hair:'#4a3a2c',shirt:'#4a6a7a',pants:'#3a3a44',apron:'#d8cbb2',hairstyle:'bun'},
       ['Beds made, fire lit, and not a soul to fill them since the strait turned. Habit\'s a stubborn thing.',
        'Ten gold buys a bed and a hot breakfast - same as it\'s been thirty years. I\'ll not gouge a castaway.'],0.6);
