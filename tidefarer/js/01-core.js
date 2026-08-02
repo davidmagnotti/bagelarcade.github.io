@@ -217,6 +217,15 @@ function resize(){
   const BUDGET = 2000000; // ~1080p worth of device pixels
   const px = VW*VH*dpr*dpr;
   if(px > BUDGET) dpr *= Math.sqrt(BUDGET/px);
+  /* ...but the budget is only meant to strip *supersampling* (DPR>1) on huge or
+     high-DPI panels. It must never push the backing store *below* the display's
+     native 1:1 resolution: a big non-HiDPI monitor (e.g. 3440x1440, DPR 1) has
+     ~5M logical pixels and would otherwise be scaled to ~0.64, then stretched by
+     CSS to fill the screen - which just looks blurry. Floor at native so the
+     canvas is never upscaled. The auto-tuner (RQ) and the player's Render-
+     resolution slider (URQ) stay free to go below 1 as a deliberate perf trade,
+     since that floor tracks them. */
+  dpr = Math.max(dpr, Math.min(base*RQ*URQ, 1));
   DPR = Math.max(0.4, dpr);
   cv.width = Math.round(VW*DPR); cv.height = Math.round(VH*DPR);
   cv.style.width = dispW+'px'; cv.style.height = dispH+'px';
