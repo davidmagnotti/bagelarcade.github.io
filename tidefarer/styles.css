@@ -65,13 +65,12 @@
   /* menu buttons */
   #menuBtns{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:13;opacity:.92;}
   .mbtn{min-width:38px;height:32px;padding:0 9px;background:
-    radial-gradient(circle at 25% 18%, rgba(255,255,255,.08), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#494640 50%,#3a3831 100%);
-    border:1px solid #26241f;border-radius:7px;
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 100%);
+    border:1px solid #4a3826;border-radius:5px;
     color:var(--parch);font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:4px;
-    text-shadow:0 -1px 0 rgba(0,0,0,.7);
+    text-shadow:0 1px 2px rgba(0,0,0,.8);
     pointer-events:auto;cursor:pointer;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 3px rgba(0,0,0,.45), 0 2px 4px rgba(0,0,0,.5);}
+    box-shadow: inset 0 1px 0 rgba(240,226,192,.07), inset 0 -2px 3px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.45);}
   .mbtn:active{transform:translateY(1px);
     box-shadow: inset 0 2px 5px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.4);}
   .mbtn .tx{pointer-events:none;}
@@ -89,29 +88,27 @@
   #joyKnob{position:absolute;width:50px;height:50px;border-radius:50%;
     background:rgba(240,226,192,.35);border:2px solid rgba(240,226,192,.5);display:none;}
   #actBtns{position:absolute;right:14px;bottom:84px;display:flex;flex-direction:column;gap:12px;align-items:center;pointer-events:auto;}
-  .abtn{width:72px;height:72px;border-radius:50%;background:
-    radial-gradient(circle at 50% 46%, rgba(200,55,42,.75) 0%, rgba(140,35,26,.85) 42%, transparent 46%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);
-    border:2px solid #26241f;color:#ffe9d0;font-size:13px;font-weight:bold;
+  /* Action buttons: worn brass-and-walnut discs. A muted colour-coded core still tells
+     them apart at a glance, but the loud gloss and app-bubble sheen are gone. */
+  .abtn{width:66px;height:66px;border-radius:50%;background:
+    radial-gradient(circle at 50% 46%, rgba(190,58,44,.5) 0%, rgba(130,38,28,.55) 42%, transparent 46%),
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);
+    border:2px solid #4a3826;color:#ffe9d0;font-size:13px;font-weight:bold;
     display:flex;align-items:center;justify-content:center;
-    text-shadow:0 -1px 0 rgba(0,0,0,.8), 0 1px 2px rgba(0,0,0,.6);
-    box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -4px 6px rgba(0,0,0,.5), 0 4px 8px rgba(0,0,0,.55);}
+    text-shadow:0 1px 2px rgba(0,0,0,.8);
+    box-shadow: inset 0 1px 0 rgba(240,226,192,.08), inset 0 -3px 5px rgba(0,0,0,.5), 0 3px 6px rgba(0,0,0,.5);}
   #interactBtn{background:
-    radial-gradient(circle at 50% 46%, rgba(88,150,74,.8) 0%, rgba(58,105,48,.9) 42%, transparent 46%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);}
+    radial-gradient(circle at 50% 46%, rgba(88,150,74,.5) 0%, rgba(58,105,48,.55) 42%, transparent 46%),
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);}
   #dodgeBtn{background:
-    radial-gradient(circle at 50% 46%, rgba(70,110,170,.8) 0%, rgba(45,72,115,.9) 42%, transparent 46%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.12), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);
+    radial-gradient(circle at 50% 46%, rgba(70,110,170,.5) 0%, rgba(45,72,115,.55) 42%, transparent 46%),
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);
     transition:opacity .14s ease, filter .14s ease;}
   /* dash on cooldown: dimmed & desaturated, lights back up the instant it's ready */
   #dodgeBtn.cooldown{opacity:.4;filter:grayscale(.9) brightness(.8);}
   #mountBtn{font-size:15px;background:
-    radial-gradient(circle at 50% 46%, rgba(206,158,60,.85) 0%, rgba(150,108,40,.9) 42%, transparent 46%),
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,.14), transparent 45%),
-    linear-gradient(160deg,#5c5951 0%,#454239 55%,#33312b 100%);}
+    radial-gradient(circle at 50% 46%, rgba(206,158,60,.55) 0%, rgba(150,108,40,.6) 42%, transparent 46%),
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);}
   .abtn:active{transform:scale(.92);
     box-shadow: inset 0 3px 8px rgba(0,0,0,.65), 0 2px 4px rgba(0,0,0,.45);}
   .abtn{touch-action:none;}
@@ -136,19 +133,19 @@
      (Older browsers that don't know dvh ignore this and keep the 82vh fallback.) */
   #invPanel{max-height:min(82vh, calc(100dvh - 24px));overscroll-behavior:contain;
     -webkit-overflow-scrolling:touch;}
-  .btn{background:
-    radial-gradient(circle at 22% 16%, rgba(255,255,255,.09), transparent 42%),
-    radial-gradient(circle at 80% 88%, rgba(0,0,0,.28), transparent 46%),
-    linear-gradient(160deg,#6b675f 0%,#57544c 45%,#454239 100%);
-    color:var(--parch);border:1px solid #2c2a25;border-radius:8px;
+  /* Buttons read as tooled walnut plaques edged in brass - matte, squared-off and
+     framed like the panels, not glossy rounded app-chrome. */
+  .btn{background:linear-gradient(180deg,#3a2c1c 0%,#2a1e12 55%,#20160c 100%);
+    color:var(--parch);border:1.5px solid #4a3826;border-radius:4px;
     padding:10px 18px;font-weight:bold;font-size:13px;cursor:pointer;font-family:inherit;
     letter-spacing:.5px;
-    text-shadow:0 -1px 0 rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.10);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 4px rgba(0,0,0,.45),
-      inset 2px 0 3px rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.55);}
-  .btn::first-letter{color:#e8c98f;}
-  .btn:active{transform:translateY(2px);
-    box-shadow: inset 0 2px 6px rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.5);}
+    text-shadow:0 1px 2px rgba(0,0,0,.85);
+    box-shadow: inset 0 1px 0 rgba(240,226,192,.08), inset 0 -2px 5px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.5);
+    transition:border-color .12s, background .12s;}
+  .btn:hover{border-color:var(--ember-dk);
+    background:linear-gradient(180deg,#43331f 0%,#31240f 55%,#251a0c 100%);}
+  .btn:active{transform:translateY(1px);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.5);}
   .btn.ghost{filter:brightness(.8) saturate(.8);}
   .btn.gold{border-color:#6b5218;background:
     radial-gradient(circle at 22% 16%, rgba(255,235,180,.16), transparent 42%),

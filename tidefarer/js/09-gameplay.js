@@ -396,7 +396,7 @@ function hitNode(n){
     if(!P.kit) hintOnce('needtool', n.kind==='tree'
       ? 'You hack at the trunk with what you have - it barely marks. A proper <b>axe</b> from <b>Bram</b>\'s forge would make short work of it.'
       : 'You scrape at the stone with what you have - it barely chips. A proper <b>pick</b> from <b>Bram</b>\'s forge would split it far faster.');
-    P.gatherT=0.4; P.gatherKind = n.kind==='tree'? 'axe':'pick';
+    P.gatherT=0.32; P.gatherKind = n.kind==='tree'? 'axe':'pick';   // a touch quicker swing cadence - wood & stone come in a little faster
     P.swing=Math.max(P.swing||0, 0.26);
   }
   if(n.kind==='fish'){ fishAction(n); return; }
@@ -746,7 +746,9 @@ function drawMobBars(m,s){
   // PARRY TELL, in two stages: a red ! BUILDS through the early wind-up (get ready),
   // then flares WHITE for the last PARRY_WIN seconds - THAT white flash is the moment
   // to swing and turn the blow. Reads at a glance so the timing is legible.
-  if(!m.dead && (m.windup||0)>0 && dist(P.x,P.y,m.x,m.y)<11){
+  // Night-wraiths strike WITHOUT a tell - no red/white ! builds over them (their blow
+  // can't be parried either; see hurtPlayer). They're read by their lunge and closing, not a cue.
+  if(!m.dead && (m.windup||0)>0 && m.kind!=='wraith' && dist(P.x,P.y,m.x,m.y)<11){
     const top3= m.bigBoss? -108 : m.kind==='dragon'? -134 : m.kind==='scorpion'? -42 : -66;
     const flash = (m.windup||0) <= (typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32);
     cx.save(); cx.textAlign='center';
@@ -1200,7 +1202,7 @@ function hurtPlayer(dmg,src){
   // pass a plain source and cut straight through the guard. Projectiles are turned
   // separately, in updateProjs (they get batted back). Marquee bosses (bigBoss)
   // hit too hard to fully turn - a parry only softens their blow, never negates it.
-  if((P.parryT||0)>0 && src && src.kind && src.x!=null && parryCovers(src.x,src.y)){
+  if((P.parryT||0)>0 && src && src.kind && src.kind!=='wraith' && src.x!=null && parryCovers(src.x,src.y)){
     if(src.bigBoss){ dmg*=0.35; onParry(src.x,src.y); }   // chip through - can't be fully turned
     else {
       onParry(src.x,src.y);
@@ -1804,14 +1806,15 @@ function updateMobs(dt){
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         // Wind-ups are long enough to read: a red ! builds, then the last PARRY_WIN
         // seconds flare WHITE (the parry moment). HEAVIES telegraph slowest and hit hard.
-        m.windup = m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
+        // wraiths get a short, tell-less wind-up (no parry cue, no red !); everything else telegraphs to read
+        m.windup = m.kind==='wraith'?0.34 : m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
         m.hitCd= m.boss?1.1:1.25;
       }
       if(m.windup>0){
         const preFlash = m.windup > PARRY_WIN;
         m.windup-=dt;
-        // ring the parry-cue the instant the tell flares white (once per swing, close foes only)
-        if(preFlash && m.windup<=PARRY_WIN && l<9){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
+        // ring the parry-cue the instant the tell flares white (once per swing, close foes only) - never for the un-parryable wraith
+        if(preFlash && m.windup<=PARRY_WIN && l<9 && m.kind!=='wraith'){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
         if(m.windup<=0){
           m.windup=0; m.swing=0.3;
           if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(heavy?Math.round(d.dmg*1.25):d.dmg, m);
@@ -1823,7 +1826,7 @@ function updateMobs(dt){
         m.lungeCd=(m.lungeCd||rnd(2.5,4.5))-dt;
         if(m.lungeCd<=0 && (m.lunge||0)<=0 && l>2.0 && l<6.5){
           m.lungeCd=rnd(3,5); m.lunge=0.38; m.face=dx<0?-1:1;
-          addFloat('LUNGE!', m.x, m.y-2.2, '#ffcf8a', 1.0);
+          if(m.kind!=='wraith') addFloat('LUNGE!', m.x, m.y-2.2, '#ffcf8a', 1.0);   // the wraith closes in silence - no shout, no !
           if(Snd.noise) Snd.noise(0.20,0.06,300,0.5);
         }
         if((m.lunge||0)>0){ m.lunge-=dt;
@@ -2199,7 +2202,7 @@ function updateWorld(dt){
       if(inb(nx,ny) && walkTile(tileAt(nx,ny)) && !solidAt(nx,ny) && !inSafeZone(nx,ny)){
         const m=spawnMob('wraith', nx,ny, Math.random()<0.15);
         m.night=1;
-        m.lvl=Math.max(3,Math.min(8,P.level)); // the dark measures you before it strikes
+        m.lvl=Math.max(2,Math.min(8,(P.level||1)-2)); // the dark measures you, but stays two rungs under - never scales up to your level
         m.maxhp=90+m.lvl*12; m.hp=m.maxhp;
         burst(nx+0.5,ny,'#8fa8d8',12,2.2);
       }
