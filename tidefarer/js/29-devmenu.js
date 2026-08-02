@@ -51,6 +51,8 @@ function playCutscene(kind){
     case 'dragonEnthrall': if(typeof dragonEnthrallCutscene==='function') dragonEnthrallCutscene(done('Ashwing enthralled')); break;
     case 'dragonFreed':    if(typeof dragonFreedCutscene==='function')    dragonFreedCutscene(done('Ashwing freed')); break;
     case 'leviathan':      if(typeof leviathanFreedCutscene==='function') leviathanFreedCutscene(null, done('Leviathan freed')); break;
+    case 'hollow':         if(typeof hollowSpiritCutscene==='function')   hollowSpiritCutscene(done('Hollow Spirit fell')); break;
+    case 'shore':          if(typeof shoreCutscene==='function')          shoreCutscene(done('washed ashore')); break;
     case 'warden':         if(typeof wardenFreedCutscene==='function')    wardenFreedCutscene(null, done('Weeping Warden freed')); break;
     case 'rimebound':      if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(null, done('Rimebound freed')); break;
     case 'stormeye':       if(typeof stormEyeCutscene==='function')       stormEyeCutscene(done('Storm-Eye closes')); break;
@@ -367,6 +369,8 @@ const SECTIONS=[
   // scenes are given a harmless no-op continuation here so previewing them has no side
   // effects (no dragon awoken, no leviathan sunk, no act advanced).
   ['Cutscenes (play any)', [
+    ['Washed ashore - the wreck (Act I open)',()=>playCutscene('shore')],
+    ['Hollow Spirit FALLS - the curse breaks',()=>playCutscene('hollow')],
     ['Mask reveal - memory flood (Act I)',()=>playCutscene('mask')],
     ['Act I climax - throne hall',()=>playCutscene('throne')],
     ['Act I epilogue - the sea crossing',()=>playCutscene('epilogue')],

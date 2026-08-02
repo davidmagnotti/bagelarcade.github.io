@@ -13,7 +13,7 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
-<link rel="stylesheet" href="styles.css?v=298">
+<link rel="stylesheet" href="styles.css?v=299">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -253,52 +253,84 @@
   </div>
 </div>
 
-<script src="js/00-dialogue.js?v=298"></script>
-<script src="js/01-core.js?v=298"></script>
-<script src="js/01b-gpu-probe.js?v=298"></script>
-<script src="js/02-worldgen.js?v=298"></script>
-<script src="js/03-art.js?v=298"></script>
-<script src="js/04-data.js?v=298"></script>
-<script src="js/05-inventory-skills-quests.js?v=298"></script>
-<script src="js/06-dialog.js?v=298"></script>
-<script src="js/07-input.js?v=298"></script>
-<script src="js/08-ui-panels.js?v=298"></script>
-<script src="js/09-gameplay.js?v=298"></script>
-<script src="js/10-rendering.js?v=298"></script>
-<script src="js/11-main-loop.js?v=298"></script>
-<script src="js/12-world-layer.js?v=298"></script>
-<script src="js/13-aaa-layer.js?v=298"></script>
-<script src="js/14-meta-layer.js?v=298"></script>
-<script src="js/15-interiors.js?v=298"></script>
-<script src="js/16-autosave.js?v=298"></script>
-<script src="js/17-pause-menu.js?v=298"></script>
-<script src="js/18-economy.js?v=298"></script>
-<script src="js/19-purpose.js?v=298"></script>
-<script src="js/20-lore.js?v=298"></script>
-<script src="js/21-exploration.js?v=298"></script>
-<script src="js/22-definitive-edition.js?v=298"></script>
-<script src="js/23-pause-affordance.js?v=298"></script>
-<script src="js/24-perf.js?v=298"></script>
-<script src="js/25-debug.js?v=298"></script>
-<script src="js/26-bench.js?v=298"></script>
-<script src="js/27-perfmode.js?v=298"></script>
-<script src="js/28-fxpanel.js?v=298"></script>
-<script src="js/29-devmenu.js?v=298"></script>
-<script src="js/30-perks.js?v=298"></script>
-<script src="js/31-skyquest.js?v=298"></script>
-<script src="js/32-cinematic.js?v=298"></script>
-<script src="js/33-elevation.js?v=298"></script>
-<script src="js/34-atmosphere.js?v=298"></script>
-<script src="js/35-dragon-cutscenes.js?v=298"></script>
-<script src="js/34-toolgates.js?v=298"></script>
-<script src="js/35-toolgate-content.js?v=298"></script>
-<script src="js/36-island-farms.js?v=298"></script>
-<script src="js/37-dungeon-hideaways.js?v=298"></script>
-<script src="js/38-mask-reveal.js?v=298"></script>
-<script src="js/38-leviathan-cutscene.js?v=298"></script>
-<script src="js/39-more-cutscenes.js?v=298"></script>
-<script src="js/40-home-interiors.js?v=298"></script>
-<script src="js/41-barik-ward.js?v=298"></script>
-<script src="js/42-sail-transition.js?v=298"></script>
+<!-- The Hollow Spirit's fall: the crowned revenant's ghostlight guts out, the jagged
+     crown splits, and the curse over the strait breaks - the sea goes calm at last.
+     Plays before the victory card. See js/43-hollow-cutscene.js -->
+<div class="overlay" id="hsOv" style="display:none;">
+  <canvas id="hsCv"></canvas>
+  <div class="epiTitle" id="hsTitle"><h1 id="hsTitleT"></h1></div>
+  <div class="epiSub" id="hsSub">
+    <div class="capbox">
+      <p class="who" id="hsWho"></p>
+      <p class="line" id="hsLine"></p>
+      <span class="tap" id="hsTap">click to continue &rsaquo;</span>
+    </div>
+  </div>
+</div>
+
+<!-- The wash-up-on-shore prologue: the storm, the ship's lanterns swallowed by the
+     strait, the masked castaway rolled onto Emberwick's sand. Plays before Maren's
+     first words on the shore. See js/44-shore-cutscene.js -->
+<div class="overlay" id="shOv" style="display:none;">
+  <canvas id="shCv"></canvas>
+  <div class="epiTitle" id="shTitle"><h1 id="shTitleT"></h1></div>
+  <div class="epiSub" id="shSub">
+    <div class="capbox">
+      <p class="who" id="shWho"></p>
+      <p class="line" id="shLine"></p>
+      <span class="tap" id="shTap">click to continue &rsaquo;</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/00-dialogue.js?v=299"></script>
+<script src="js/01-core.js?v=299"></script>
+<script src="js/01b-gpu-probe.js?v=299"></script>
+<script src="js/02-worldgen.js?v=299"></script>
+<script src="js/03-art.js?v=299"></script>
+<script src="js/04-data.js?v=299"></script>
+<script src="js/05-inventory-skills-quests.js?v=299"></script>
+<script src="js/06-dialog.js?v=299"></script>
+<script src="js/07-input.js?v=299"></script>
+<script src="js/08-ui-panels.js?v=299"></script>
+<script src="js/09-gameplay.js?v=299"></script>
+<script src="js/10-rendering.js?v=299"></script>
+<script src="js/11-main-loop.js?v=299"></script>
+<script src="js/12-world-layer.js?v=299"></script>
+<script src="js/13-aaa-layer.js?v=299"></script>
+<script src="js/14-meta-layer.js?v=299"></script>
+<script src="js/15-interiors.js?v=299"></script>
+<script src="js/16-autosave.js?v=299"></script>
+<script src="js/17-pause-menu.js?v=299"></script>
+<script src="js/18-economy.js?v=299"></script>
+<script src="js/19-purpose.js?v=299"></script>
+<script src="js/20-lore.js?v=299"></script>
+<script src="js/21-exploration.js?v=299"></script>
+<script src="js/22-definitive-edition.js?v=299"></script>
+<script src="js/23-pause-affordance.js?v=299"></script>
+<script src="js/24-perf.js?v=299"></script>
+<script src="js/25-debug.js?v=299"></script>
+<script src="js/26-bench.js?v=299"></script>
+<script src="js/27-perfmode.js?v=299"></script>
+<script src="js/28-fxpanel.js?v=299"></script>
+<script src="js/29-devmenu.js?v=299"></script>
+<script src="js/30-perks.js?v=299"></script>
+<script src="js/31-skyquest.js?v=299"></script>
+<script src="js/32-cinematic.js?v=299"></script>
+<script src="js/33-elevation.js?v=299"></script>
+<script src="js/34-atmosphere.js?v=299"></script>
+<script src="js/35-dragon-cutscenes.js?v=299"></script>
+<script src="js/34-toolgates.js?v=299"></script>
+<script src="js/35-toolgate-content.js?v=299"></script>
+<script src="js/36-island-farms.js?v=299"></script>
+<script src="js/37-dungeon-hideaways.js?v=299"></script>
+<script src="js/38-mask-reveal.js?v=299"></script>
+<script src="js/38-leviathan-cutscene.js?v=299"></script>
+<script src="js/39-more-cutscenes.js?v=299"></script>
+<script src="js/40-home-interiors.js?v=299"></script>
+<script src="js/41-barik-ward.js?v=299"></script>
+<script src="js/42-sail-transition.js?v=299"></script>
+<script src="js/43-hollow-cutscene.js?v=299"></script>
+<script src="js/44-shore-cutscene.js?v=299"></script>
 </body>
 </html>

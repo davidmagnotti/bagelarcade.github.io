@@ -315,7 +315,17 @@ function startFresh(){
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   openingQuests();
   updateQuestUI();
-  startIntro();
+  // Open on the wreck the intro only ever described: the storm, the ship's lanterns
+  // swallowed by the cursed strait, the masked castaway washed onto the sand - then
+  // hand off to Elder Maren's first words (startIntro). The cutscene layer
+  // (js/44-shore-cutscene.js) loads AFTER this file, so on the very first boot() it
+  // is not defined yet - wait for DOMContentLoaded (which blocks on every classic
+  // script) before playing it, or run at once if the page is already loaded (a
+  // "Start Over" restart). Falls straight through to the first words if the layer is
+  // truly absent, so the opening never stalls.
+  const beginIntro=()=>{ if(typeof shoreCutscene==='function') shoreCutscene(startIntro); else startIntro(); };
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', beginIntro, {once:true});
+  else beginIntro();
 }
 // Each villager offers a single task from the start; Bram's (tools + a sword) and
 // Orin's (the fire staff) are the two that matter for the Hollow Spirit - Maren will

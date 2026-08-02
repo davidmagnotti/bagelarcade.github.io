@@ -603,11 +603,12 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
       [{item:'potion',price:30},{item:'elixir',price:70}])});
   }
-  // The Cloud-Tender keeps a little sky-stall at the landing - sheaves of arrows for
-  // the Rainbow Road's long shots, and a few fire-tonics besides.
+  // The Cloud-Tender keeps a little sky-stall at the landing - fire-tonics off the
+  // cloud-tops for the Rainbow Road's long climb. (No more quiver bundles - arrows
+  // are found and looted now, not bought off the cloud.)
   if(npc.id==='wisp'){
-    btns.unshift({label:'Buy sky-goods…', fn:()=>vendorShop(npc,'Straight shafts and healing off the cloud-tops, friend - a bundle for your quiver, red for your hurts. The high road drinks both.',
-      [{item:'manapot',price:10},{item:'potion',price:30}])});
+    btns.unshift({label:'Buy sky-goods…', fn:()=>vendorShop(npc,'Healing off the cloud-tops, friend - red for your hurts. The high road drinks deep, and there\'s no better balm up here.',
+      [{item:'potion',price:30}])});
   }
   // Pia runs a food stall on Trade Row - fresh fish off the boats and island-grown fare.
   if(npc.id==='pia'){

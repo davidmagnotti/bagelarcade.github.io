@@ -1050,8 +1050,15 @@ function killMob(m,skill){
     for(let i=G.projs.length-1;i>=0;i--){ if(G.projs[i].kind==='bone') G.projs.splice(i,1); }
     G.victory=true;   // invulnerable through the win sequence (see hurtPlayer)
     if(qs('king')!=='done'){ P.quests.king='active'; P.prog.king=1; updateQuestUI(); } // rushed the boss? still counts
-    // freeze the world once the victory screen is up so you can read it in peace
-    setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; },2400);
+    // After a short victory lap, play the Hollow Spirit's fall cutscene (the crown
+    // splits, the curse lifts, the strait goes calm) and only then raise the victory
+    // card. Falls straight through to the card if the cutscene layer is absent, so
+    // the win screen is never skipped.
+    const showWin=()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; };
+    setTimeout(()=>{
+      if(typeof hollowSpiritCutscene==='function') hollowSpiritCutscene(showWin);
+      else showWin();
+    },2400);
   } else if(m.boss){
     // any other named regional boss (the Tome-Warden snake, the Leviathan, the
     // Castellan...) falls under its own name - never the Hollow Spirit's
