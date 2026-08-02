@@ -78,7 +78,7 @@ const LORE={
   'inn@crown':{title:'The Coin & Cup', text:'“The capital\'s oldest inn register - kings have drunk here in plain cloaks, if you trust the margins. The newest entry, in the innkeep\'s delighted hand: <i>strait\'s open, the ships are back, and last night we ran clean OUT of ale for the first time in thirty years. Best shortage I ever had the joy to pour.</i>”'},
   'garrison@crown':{title:'The Garrison Roster', text:'“The watch-roster of the capital\'s last wall. Beneath the duty-list, an old captain\'s oath, re-inked by every hand that has held the post since: <i>we guard a grieving king and an empty nursery. We will keep guarding them until both are full again.</i>”'},
   'highrow@crown':{title:'A House on Highrow', text:'“A comfortable house on the high row, where the capital\'s easy folk look down on the harbour lights. A child\'s sampler hangs framed by the door, the stitches long grown crooked with age: <i>THE SEA GIVES, THE SEA KEEPS, THE SEA GIVES BACK. HOME BY THE TIDE.</i>”'},
-  'range@main':{title:"Rook's Range-Book", text:'“Fletcher Rook\'s ledger, all wind-doping and arrow-spines. <i>My cousin teaches the bow proper, out east past the water - I only keep the butts and the tally. Straight shaft, true feather, patient eye. The wind will lie to you; the arrow doesn\'t have to.</i>”'}
+  'remedies@main':{title:"Rook's Remedy-Book", text:'“Rook\'s apothecary ledger, all steeping-times and measures. <i>My cousin took to the bow, out east past the water; I took to the kettle. Ember Tonic for the field, the blue elixir for the worst of it. A steady flame, a patient hand, and honest coin over the counter - that is the whole trade.</i>”'}
 };
 function readLore(key){
   if(!LORE[key] && key.endsWith('@m')) key=key.slice(0,-2);

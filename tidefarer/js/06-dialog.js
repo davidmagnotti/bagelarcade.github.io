@@ -703,18 +703,10 @@ function shopButtons(npc,btns){
     // (Snare removed - the staff casts only Bolt now.)
   }
   if(npc.id==='rook'){
-    btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
-      if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      P.gold-=20; Snd.coin(); refreshUI(); closeDialog();
-      P.x=npc.x-2.5; P.y=npc.y-2.7; unstickEntity(P);
-      // face every yard dummy the same way so "get behind it" is a clear, learnable spot
-      for(const m of G.mobs) if(m.kind==='dummy') m.face={x:0,y:1};
-      TRAIN={who:'rook', stage:0, combo:0, backstabs:0, x:P.x, y:P.y,
-        dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-      toast('<b>Rook\'s drill.</b> <i>He scuffs a chalk ring around the yard.</i> “Stay inside the ring till I say. First - <b>deal 30 damage</b> to the dummies. Strike!”',5200); Snd.quest();
-    }});
-    btns.unshift({label:'\u201cArchery lessons?\u201d', fn:()=>{
-      setDialog('\u201cBows? My cousin teaches archery across the eastern water. Proper range, proper wind. When the strait opens, sail out and tell her I still owe her twenty gold.\u201d',
+    btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Straight off the shelf, friend - the red Ember Tonic for the small hurts, the blue elixir for when the small hurts aren\'t. What\'ll it be?',
+      [{item:'potion',price:30},{item:'elixir',price:70}])});
+    btns.unshift({label:'“Weren’t you a fletcher?”', fn:()=>{
+      setDialog('“Arrows? That was more my cousin\'s calling than mine - she kept the bow, I kept the kettle, out east past the water. Steadier work, this: mending folk instead of putting holes in them. Tell her I still owe her twenty gold.”',
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }

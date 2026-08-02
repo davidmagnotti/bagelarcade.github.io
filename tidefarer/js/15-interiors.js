@@ -362,8 +362,8 @@ function enterHouse(b){
     else if(lblL.includes('garrison')||lblL.includes('armory')) I.loreKey='garrison@crown';
     else I.loreKey='highrow@crown';
   }
-  // Greyharbor: Rook's archery range reads a fletcher's book, not a sailor's letters
-  if(G.worldId==='main' && lblL.includes('range')) I.loreKey='range@main';
+  // Greyharbor: Rook's apothecary reads a remedy-book, not a sailor's letters
+  if(G.worldId==='main' && lblL.includes('remed')) I.loreKey='remedies@main';
   G.interior=I;
   P.click=null;
   P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;

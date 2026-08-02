@@ -509,7 +509,7 @@ function placeObjectsMain(){
   addBuilding('house2',V.x-6, V.y-10,"Ivo's Herbary");               // (71,244) north shore
   addBuilding('house2',V.x,   V.y-11,"Warden's post");               // (77,243) north point
   addBuilding('barn',  V.x+6, V.y-10,'Trade hall');                  // (83,244) north-east shore
-  addBuilding('house', V.x+9, V.y+8, "Rook's Range");                // (86,262) south-east shore
+  addBuilding('house', V.x+9, V.y+8, "Rook's Remedies (Apothecary)"); // (86,262) south-east shore
   addBuilding('house2',V.x-5, V.y+10,'The Gull & Anchor (Inn)');     // (72,264) south shore
   addBuilding('house', V.x-10,V.y+7, "Sela's Provisions");           // (67,261) south-west shore
   addBuilding('lamp',  V.x-9, V.y+5, '');
@@ -532,9 +532,8 @@ function placeObjectsMain(){
   const SP=ZONES.spire;
   addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
   addBuilding('lamp',SP.x-2,SP.y+2,'');
-  // Rook's Range butts, on the open grass behind the range (Rook's Range itself is
-  // now part of the shoreline ring above)
-  for(let i=0;i<3;i++){ const tx=V.x+5-i*2, ty=V.y+6-i; G.decor.push({kind:'target',x:tx,y:ty}); setSolid(Math.floor(tx),Math.floor(ty),1); }
+  // (Rook's old archery butts are gone - he trades in tonics now, not arrows;
+  // Rook's Remedies stands in the shoreline ring above.)
   // the Undermaw mouth - enter if you dare
   const UM=ZONES.undermaw;
   G.decor.push({kind:'cavemouth',x:UM.x+0.5,y:UM.y+0.5});
@@ -663,10 +662,10 @@ function spawnRealmFolk(){
     {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
     ["Magic is grammar for the world's oldest language. I teach conjugation.",
      "The Spire takes students, not worshippers. Bring coin and humility."],0.6));
-  G.npcs.push(makeNPC('rook','Fletcher Rook', V.x+7,V.y+6,
-    {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',quiver:true},
-    ["Breathe out, loose, and never apologize to the target.",
-     "Twenty gold buys a hundred arrows' worth of lessons."],0.8));
+  G.npcs.push(makeNPC('rook','Rook the Apothecary', V.x+7,V.y+6,
+    {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',apron:'#7a5a3a'},
+    ["A good tonic asks no questions and mends what it finds.",
+     "Ember Tonic for the small hurts, the blue elixir for the big ones."],0.8));
   G.npcs.push(makeNPC('mira','Mira the Seamstress', V.x-10,V.y-1,
     {skin:'#c9a081',hair:'#2c2030',shirt:'#5e3a6a',pants:'#3a2c44',hairstyle:'long'},
     ['Silk holds a memory of every hand that touches it.',
