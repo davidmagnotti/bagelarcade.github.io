@@ -3645,7 +3645,7 @@ function spawnMobsReach(){
     const sp=findOpenNear(Math.round(Z.barrow.x+Math.cos(a)*r2), Math.round(Z.barrow.y+Math.sin(a)*r2), 5);
     if(sp) spawnMob('raider', sp[0], sp[1]); }
 }
-function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
+function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); placeReachHazard(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
 // ---------- THE DROWNED CATACOMB (reachdeep) - THE OSSUARY DANCE ----------
 // The Ossuary is cut into three stacked button-chambers. On first setting foot in each,
 // a spectral BONEWRIGHT treads the chamber's floor-stones in a set order (a cut scene);
@@ -4585,6 +4585,11 @@ QUESTS.skyRestore={ giver:'aeron', title:'The Storm That Will Not Break', kind:'
   log:'Descend the Storm Temple by the landing and quiet the caged thunder, and the endless storm will break.',
   doneText:'It broke. The storm just - broke, clean away to blue, like a held breath let go. First clear sky over the Cloudreach in a season. You have my thanks, Skyward, and the whole cloud\'s besides - we thought we\'d lost the sun for good.',
   rw:{gold:150, item:{elixir:1, potion:2}, xp:{melee:300, archery:220}} };
+QUESTS.reachRestore={ giver:'mora', title:'The Storm That Drowns the Coast', kind:'special', xpL:470,
+  brief:'You come back to a Stormreach the sea has half-swallowed, warrior. The storm that always tested us will not break now - it drives the surge up over the shingle and the wrack with it, and the coast drowns by inches. It is no weather; it is the thing our fathers sealed under the graveyard, churning the deep awake again. The Drowned Minotaur wardens the catacomb below the graves - go down, put the beast down for good, and the sea will fall back off our shore.',
+  log:'Descend the Drowned Catacomb below the graveyard, fell the Drowned Minotaur that churns the surge, and Stormreach\'s storm will break.',
+  doneText:'The storm broke the moment it fell - I felt the wind drop and the surge start pulling back off the shingle. You have given the whole coast its shore back, warrior, and a hundred stranded souls their sea. Stormreach will name a cove for you and mean it.',
+  rw:{gold:160, item:{elixir:1, potion:2}, xp:{melee:320, archery:220}} };
 
 // Act I isle side-work that RETIRES when Act II opens: the returned isles have moved past these
 // errands, so they never re-offer once you sail back under the Veil, and any left sitting 'avail'
@@ -6004,6 +6009,41 @@ function placeSkyHazard(){
   _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'skydeep', 'the Storm Temple', 'THE STORM TEMPLE ▼');
   if(!restored) _curseHint('skyCurseSeen','<b>A storm has seized the Cloudreach</b> and will not break - lightning walks the cloud and the old standing stones lie split and smoking.');
 }
+// STORMREACH - Vath's storm never breaks: the sea has climbed the shingle and swamped the low
+// coast in surge and wrack. The spirit that churns it dens in the Drowned Catacomb below the
+// graveyard (its warden, the Drowned Minotaur), so felling that boss (tombBossDown) lifts the
+// surge - a restored isle regenerates dry. No new dungeon or mouth is placed here: Stormreach
+// already ships the catacomb and its tomb-mouth (placeObjectsReach), so the reef "sits alongside"
+// it exactly as the roadmap invites, and adds NO fifth returned-isle gift.
+function placeReachHazard(){
+  if(!(P.story && P.story.vathVeil)) return;
+  if(P.story && P.story.tombBossDown) return;   // the surge lifts once the catacomb warden falls
+  const Z=(typeof REACH_ZONES!=='undefined') ? REACH_ZONES : {strand:{x:60,y:98},dock:{x:98,y:82}};
+  // THE STORM-SURGE: the sea climbs the outermost shingle - just the shoreline band, so nothing
+  // inland is ever cut off (the tiles behind the new tideline are still land, and the coast roads
+  // are PATH tiles the surge skips). A dry berth is kept at the landing and the ferry dock so you
+  // can always put in. Computed in TWO passes off the ORIGINAL coastline: pass 1 marks the low-land
+  // tiles that border the sea, pass 2 drowns them - so the surge never cascades inland tile-by-tile
+  // (an in-place single pass would chain each new shallow into the next and flood the whole isle).
+  const sea=(u,v)=>{ const tt=tileAt(u,v); return tt===T.SHALLOW||tt===T.DEEP; };
+  const surged=[];
+  for(let y=1;y<MAPH-1;y++) for(let x=1;x<MAPW-1;x++){
+    const t=tileAt(x,y);
+    if((t===T.SAND||t===T.GRASS) && !solidAt(x,y)
+       && (sea(x+1,y)||sea(x-1,y)||sea(x,y+1)||sea(x,y-1))
+       && !(dist(x,y,Z.strand.x,Z.strand.y)<5 || dist(x,y,Z.dock.x,Z.dock.y)<5))
+      surged.push([x,y]);
+  }
+  for(const [x,y] of surged){ setTile(x,y,T.SHALLOW); setSolid(x,y,1); }
+  // stormwrack driven up the new tideline: snapped keels + driftwood, thinned so it never fences a route
+  const RS=mulberry32(((SEED||1)+9137)>>>0); let placed=0;
+  for(let i=0;i<surged.length && placed<26;i++){ const [x,y]=surged[(i*13+3)%surged.length];
+    const roll=RS();
+    if(roll<0.13){ G.decor.push({kind:'snag', x:x+0.5, y:y+0.5, ph:RS()*6.28, h:9+RS()*7, lean:(RS()-0.5)*1.7}); placed++; }
+    else if(roll<0.19){ G.decor.push({kind:'woodpile', x:x+0.5, y:y+0.5}); placed++; }
+  }
+  _curseHint('reachCurseSeen','<b>The storm over Stormreach will not break</b> - the sea has climbed the shingle and the coast lies half-drowned in surge and wrack. Whatever churns the water dens below the graveyard, in the <b>Drowned Catacomb</b>.');
+}
 
 /* ---- Act II returned-isle DIALOGUE: the folk speak the wound while it stands, and speak
    their relief once you break it. Each is gated on the Warding Veil (so it never touches the
@@ -6143,6 +6183,21 @@ function updateSkyCurseMood(){
      'The endless thunder sets my teeth on edge and thins the cloud beneath our very feet. I do what a cloud-tender can and it isn\'t enough. Still it, Skyward, before the plateau itself comes apart.'],
     ['The cloud knits thick and gentle again and the sky-drift\'s drifting home - I can hear myself think for the first time in a season. That\'s your gift, and I\'ll tend it well.',
      'Calm sky, whole cloud, quiet stones. You gave the Cloudreach back to the cloud-folk. There\'s no thanks light enough to float up here and carry all I mean by it.']);
+}
+// STORMREACH - Vath's storm-surge drowns the coast until the Drowned Minotaur is felled (tombBossDown lifts it).
+function updateReachCurseMood(){
+  if(!(P.story && P.story.vathVeil)) return;
+  const set=_curseMoodSetter(!!(P.story && P.story.tombBossDown));
+  set('mora',
+    ['You come back to a drowned coast, warrior. The storm that always tested us will not break now - it drives the sea up over the shingle faster than we can haul the boats clear. It is the thing under the graveyard, our fathers\' old prisoner, churning the deep awake. Put the Drowned Minotaur down and the surge will fall.',
+     'I count heads by lantern on the high strand and watch the water take another yard of shore by morning. It is all a coast-elder can do while the storm rules the tideline. Go down into that catacomb, warrior, and give us our shore back.'],
+    ['The storm broke the hour you felled it and the surge is pulling back off the shingle by the yard. You gave Stormreach its coast again, warrior - the boats are already going back down to real water.',
+     'Clear tideline, falling water, and a coast worth living on for the first time in weeks. Whatever you put down under the graves, it stayed down - and Stormreach is Stormreach again because of it.']);
+  set('tibb',
+    ['Every hull I drag up the strand, the surge climbs and takes it back by dark. There is no raftwright\'s trade to be had while the sea walks up the shingle like this. Still the thing churning it and I can work again.',
+     'I mend what the wrack throws up and the water swallows it by dawn. It is heartbreak, not carpentry. Break the storm at its source, warrior, and I\'ll keep this coast in sound keels for good.'],
+    ['Dry strand to work on and the tide sitting where it ought - I\'ve two hulls up on the blocks and neither\'s floated off since. You gave a raftwright back his trade, and the coast back its keels.',
+     'The surge is gone and the salvage is ours again, high and dry up the shingle. Take a raftwright\'s thanks - and a berth here, sound and safe, whenever your sail needs it.']);
 }
 // The Emberwick capstone opens only once all four returned-isle gifts are in hand.
 function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.swiftstep && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
@@ -6780,7 +6835,13 @@ function switchWorld(id){
     // the castaways' two tormentors: the Brute on the barrow road (Mora) and the
     // Drowned Minotaur in the catacomb below (Tibb).
     if(qs('barrowbrute')!=='done' && !P.quests.barrowbrute) P.quests.barrowbrute='avail';
-    if(qs('drownedwarden')!=='done' && !P.quests.drownedwarden) P.quests.drownedwarden='avail';
+    // Tibb's Act I catacomb bounty; under the Veil the same descent is reframed as Mora's Act II
+    // restoration (reachRestore) below, so don't freshly re-offer this one in Act II.
+    if(!(P.story&&P.story.vathVeil) && qs('drownedwarden')!=='done' && !P.quests.drownedwarden) P.quests.drownedwarden='avail';
+    // Act II: under the Veil, Stormreach's storm never breaks and the surge drowns the coast until
+    // the catacomb warden is felled - Mora's restoration plea (offered only while the surge stands).
+    if(P.story && P.story.vathVeil && !P.story.tombBossDown && qs('reachRestore')!=='done' && !P.quests.reachRestore) P.quests.reachRestore='avail';
+    if(typeof updateReachCurseMood==='function') updateReachCurseMood();
   }
   // Dungeons keep their mystery, but a single atmospheric hint on first entry
   // points the way without solving anything - a compass, not a walkthrough.

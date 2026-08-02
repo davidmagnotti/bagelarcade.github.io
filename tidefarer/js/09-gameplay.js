@@ -1098,9 +1098,16 @@ function killMob(m,skill){
     toast('The wind spirit unravels into still air, and the ward on the little shrine winks out. <b>Something waits in the chest within.</b>',5200);
     if(typeof autoSave==='function') autoSave();
   }
-  // The Drowned Minotaur dens in the Stormreach catacomb
+  // The Drowned Minotaur dens in the Stormreach catacomb. In Act II it is Stormreach's
+  // spirit-boss: felling it breaks Vath's storm-surge over the coast. Drop the cached isle so
+  // it regenerates restored (the surge drains, the wrack clears) the next time you land - the
+  // same revert the other four returned isles do off their own dungeon clears.
   if(m.tombboss){
     P.story=P.story||{}; P.story.tombBossDown=1;
+    if(P.story.vathVeil){
+      if(typeof WORLDS!=='undefined' && WORLDS.reach) delete WORLDS.reach;
+      banner('THE DROWNED MINOTAUR FALLS','THE STORM-SURGE BREAKS OVER STORMREACH');
+    }
     if(typeof autoSave==='function') autoSave();
   }
   // THE TIDEMAW wardening Barik's Drowned Vault - felling it stills the flooded halls,
@@ -2129,7 +2136,7 @@ function updateWorld(dt){
   // Gated on the isle's own spirit-dungeon clear flag, not just the Veil: winning the dungeon
   // drains the flood / cools the lava / breaks the storm, so the matching weather must stop too -
   // the same revert the terrain (place*Hazard) and the folk's dialogue (update*CurseMood) already do.
-  const _curseFlag={east:'ashenForgeDone', wind:'galeDeepDone', main:'barikDeepDone', sky:'stormTempleDone'}[G.worldId];
+  const _curseFlag={east:'ashenForgeDone', wind:'galeDeepDone', main:'barikDeepDone', sky:'stormTempleDone', reach:'tombBossDown'}[G.worldId];
   if(P.story && P.story.vathVeil && !G.interior && _curseFlag && !P.story[_curseFlag]){
     // SUNWARD: drifting ash blown across the whole isle while Kea erupts
     if(G.worldId==='east' && Math.random()<dt*6){
@@ -2152,6 +2159,14 @@ function updateWorld(dt){
         life:rnd(0.4,0.9), color:Math.random()<0.5?'rgba(190,215,255,0.7)':'rgba(150,200,255,0.5)', size:rnd(1,2.4), grav:0});
       if(Math.random()<dt*0.5){ G.shake=Math.max(G.shake,0.18);
         for(let k=0;k<10;k++) G.parts.push({x:P.x+rnd(-9,9), y:P.y-9+k*0.7, vx:rnd(-0.2,0.2), vy:0, life:0.2, color:k%2?'#eaf2ff':'#bcd8ff', size:rnd(1.5,3), grav:0}); }
+    }
+    // STORMREACH: the storm-surge won't break - wind-driven rain slants across the drowned coast
+    if(G.worldId==='reach'){
+      if(Math.random()<dt*9) G.parts.push({x:P.x+rnd(-14,14), y:P.y-rnd(6,12), vx:rnd(1.5,3.5), vy:rnd(4,7),
+        life:rnd(0.3,0.6), color:'rgba(180,205,222,0.45)', size:rnd(0.8,1.8), grav:0.25});
+      if(Math.random()<dt*4) G.parts.push({x:P.x+rnd(-13,13), y:P.y-rnd(2,7), vx:rnd(1,3), vy:rnd(-0.3,0.3),
+        life:rnd(0.5,1.0), color:'rgba(206,224,236,0.45)', size:rnd(1.5,3), grav:0});
+      if(Math.random()<dt*0.3) G.shake=Math.max(G.shake,0.14);
     }
   }
   // ---- per-dungeon ambience: each new Act II dungeon breathes its own element ----

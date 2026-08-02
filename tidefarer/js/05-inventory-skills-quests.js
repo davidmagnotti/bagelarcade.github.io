@@ -79,6 +79,7 @@ function questReady(id){
     if(id==='sunRestore')  return !!(P.story&&P.story.ashenForgeDone);
     if(id==='barikRestore')return !!(P.story&&P.story.barikDeepDone);
     if(id==='skyRestore')  return !!(P.story&&P.story.stormTempleDone);
+    if(id==='reachRestore')return !!(P.story&&P.story.tombBossDown);
   }
   return false;
 }
