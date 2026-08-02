@@ -3684,6 +3684,11 @@ function genReachDeep(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
   carve(30,76,50,90);   // R1 THE SUNKEN STAIR - entry landing
+  // OPTIONAL SIDE BRANCH - THE BONE ANNEX: a winding grave-crypt off the Sunken Stair (east, then
+  // up, then back west to the cache) - the catacomb's one true detour. Dead-end, never gates a route.
+  carve(50,84,64,86);   // east passage from the landing
+  carve(60,70,66,86);   // the crypt-shaft, turning north
+  carve(52,70,66,73);   // the annex gallery (the cache waits here)
   carve(38,60,42,78);   // corridor A
   carve(26,40,54,62);   // R2 THE OSSUARY - the three dance-chambers
   carve(38,34,42,42);   // corridor B (the sealed gate at y37)
@@ -3715,7 +3720,10 @@ function placeObjectsReachDeep(){
   for(const [x,y] of REACHDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
   G.decor.push({kind:'tombmouth', x:40.5, y:88.5, up:1, label:'the way up'});   // back to the graveyard
   setSolid(40,88,0); setTile(40,88,T.RUIN);
-  for(const [tx,ty] of [[32,80],[48,80],[28,58],[52,58],[28,50],[52,50],[28,44],[52,44],[30,10],[50,10],[40,8]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  for(const [tx,ty] of [[32,80],[48,80],[28,58],[52,58],[28,50],[52,50],[28,44],[52,44],[30,10],[50,10],[40,8],[56,85],[63,78],[57,72]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // THE BONE ANNEX cache (off the Sunken Stair's east passage) - optional detour loot
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.reach))
+    G.decor.push({kind:'chest', x:54.5, y:71.5, sideCache:'reach', loot:'bone', title:'THE BONE ANNEX', sub:'GRAVE-GOODS THE CATACOMB KEPT'});
   const grave=(x,y)=>{ if(inb(x,y)&&!solidAt(x,y)){ G.decor.push({kind:'grave',x:x+0.5,y:y+0.5,s:(x+y)%3}); setSolid(x,y,1); } };
   G._reachGateOpen=false;
   // ---- THE OSSUARY DANCE: three floor-stone memory chambers (see setupReachDance) ----
@@ -3902,6 +3910,9 @@ function spawnMobsReachDeep(){
   for(let i=0;i<3;i++){ const z=Z.heart, a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
     const sp=findOpenNear(Math.round(z.x+Math.cos(a)*r2), Math.round(z.y+Math.sin(a)*r2), 5);
     if(sp) spawnMob('skeleton', sp[0], sp[1]); }
+  // THE BONE ANNEX side-crypt: three dead guarding the grave-goods (skip once the warden's down)
+  if(!(P.story && P.story.tombBossDown))
+    for(const [zx,zy] of [[55,71],[62,73],[62,81]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
 }
 function genReachDeepAll(){ genReachDeep(); placeObjectsReachDeep(); spawnMobsReachDeep(); buildMapBase(); }
 function enterReachDeep(){
@@ -4945,6 +4956,10 @@ function genBarikDeep(){
   carve(28,89,44,96);            // THE SUNKEN STAIR - entry landing
   carve(34,86,38,90);            // corridor
   carve(20,80,52,86);            // ROOM 1 - THE WEEPING HALL (dead + the sluice-lever for gate A)
+  // OPTIONAL SIDE BRANCH - THE OSSUARY DRAIN: a dead-end silt-crypt off the Weeping Hall's west
+  // wall, holding a diver's cache. Purely off the main climb (never gates a route).
+  carve(9,82,20,84);             // west passage from Room 1
+  carve(3,79,11,87);             // the drain-crypt (the cache in the silt)
   carve(34,77,38,81);            // GATE-A corridor (barred at y78)
   carve(20,71,52,77);            // ROOM 2 - THE TIDE RACE
   flood(20,72,52,76);            //   race water, FULL WIDTH
@@ -4971,6 +4986,9 @@ function placeObjectsBarikDeep(){
   G._barikCross={sx:36.5, sy:76.5};   // default respawn (updates to the last dry ledge you reach)
   // ---- THE LOCKS: clearing room 1 of its drowned dead raises gate A (no lever - the fight is
   // the key); a ward-plate in room 3 raises gate B. ----
+  // the Ossuary Drain's cache (off Room 1's west passage) - optional detour loot
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.barik))
+    G.decor.push({kind:'chest', x:6.5, y:83.5, sideCache:'barik', loot:'water', title:'THE OSSUARY DRAIN', sub:'A DIVER\'S CACHE IN THE SILT'});
   dungGate('barA', 78, 34, 38, 'The last of the drowned dead falls - the barred gate grinds up into the vault roof.');
   dungGate('barB', 60, 34, 38, 'The ward-plate sinks - the inner gate hauls open.');
   G.decor.push({kind:'dplate', x:36.5, y:64.5, gate:'barB', pressed:false, label:'a ward-plate'});
@@ -4998,6 +5016,8 @@ function spawnMobsBarikDeep(){
     for(const [zx,zy,k] of [[28,83,'skeleton'],[42,84,'skeleton'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='barA'; mm.respawnT=-1; } } }
     // ROOM 3: dead guarding the ward-plate
     for(const [zx,zy] of [[28,65],[44,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
+    // THE OSSUARY DRAIN side-crypt: two dead guarding the diver's cache
+    for(const [zx,zy] of [[5,84],[8,81]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
     // ROOM 5: a last stand of the dead before the Cistern
     for(const [zx,zy] of [[28,49],[44,49]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   }
@@ -5279,6 +5299,10 @@ function genWindDeep(){
   carve(20,70,52,77);            // ROOM 2 - THE UPDRAFT (abyss + platform + gale EAST)
   carve(34,67,38,71);            // corridor
   carve(20,60,52,67);            // ROOM 3 - THE LEE (combat guarding a vane-plate for gate B)
+  // OPTIONAL SIDE BRANCH - THE VENTWAY: a dead-end wind-shaft off the Lee's east wall, holding a
+  // stash in the lee of the gale. Off the main climb (never gates a route).
+  carve(52,62,63,64);            // east passage from Room 3
+  carve(61,58,69,68);            // the ventway pocket (the cache)
   carve(34,57,38,61);            // GATE-B corridor (barred at y58)
   carve(20,49,52,57);            // ROOM 4 - THE HIGH CROSSING (abyss + platform + gale WEST)
   carve(34,45,38,50);            // corridor
@@ -5289,6 +5313,9 @@ function genWindDeep(){
 function placeObjectsWindDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'wind', exit:1, label:'the way up'});
+  // the Ventway's cache (off Room 3's east passage) - optional detour loot
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.wind))
+    G.decor.push({kind:'chest', x:65.5, y:63.5, sideCache:'wind', loot:'mat', title:'THE VENTWAY', sub:'A STASH IN THE LEE OF THE GALE'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // ---- THE LOCKS: clearing room 1 of its cave-bats raises gate A (no lever - the fight is the
@@ -5329,6 +5356,8 @@ function spawnMobsWindDeep(){
     for(const [zx,zy] of [[28,83],[44,83],[36,82],[30,84]]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob('bat',sp[0],sp[1]); if(mm){ mm.room1gate='winA'; mm.respawnT=-1; } } }
     // ROOM 3: bats swarming the vane-plate
     for(const [zx,zy] of [[28,64],[44,64],[36,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
+    // THE VENTWAY side-shaft: bats roosting over the cache
+    for(const [zx,zy] of [[64,62],[66,65]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
     // ROOM 5: a last swarm on the Eye step
     for(const [zx,zy] of [[28,41],[44,41]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('bat',sp[0],sp[1]); }
   }
@@ -5456,6 +5485,10 @@ function genSunwardDeep(){
   carve(20,80,52,86);            // ROOM 1 - THE SLAG YARD (combat + the bellows-lever for gate A)
   carve(34,77,38,81);            // GATE-A corridor (barred at y78)
   carve(20,70,52,77);            // ROOM 2 - THE FORGE CAUSEWAY (lava pool + spinning platform)
+  // OPTIONAL SIDE BRANCH - THE CINDER NOOK: a dead-end slag-gallery off the Causeway's west wall,
+  // holding a cache among the clinker. Off the main climb (never gates a route).
+  carve(9,72,20,74);             // west passage from Room 2
+  carve(3,68,11,78);             // the cinder nook (the cache)
   carve(34,67,38,71);            // corridor
   carve(20,60,52,67);            // ROOM 3 - THE STOKEHOLD (combat guarding a heat-plate for gate B)
   carve(34,57,38,61);            // GATE-B corridor (barred at y58)
@@ -5468,6 +5501,9 @@ function genSunwardDeep(){
 function placeObjectsSunwardDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'east', exit:1, label:'the way up'});
+  // the Cinder Nook's cache (off Room 2's west passage) - optional detour loot
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.sun))
+    G.decor.push({kind:'chest', x:6.5, y:73.5, sideCache:'sun', loot:'fire', title:'THE CINDER NOOK', sub:'A CACHE AMONG THE CLINKER'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
@@ -5521,6 +5557,8 @@ function spawnMobsSunwardDeep(){
     for(const [zx,zy,k] of [[28,83,'scorpion'],[42,84,'skeleton'],[30,82,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='sunA'; mm.respawnT=-1; } } }
     // ROOM 3: a stoker guarding the heat-plate
     for(const [zx,zy,k] of [[28,64,'skeleton'],[44,64,'scorpion']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // THE CINDER NOOK side-gallery: a scorpion and dead over the cache
+    for(const [zx,zy,k] of [[5,73,'scorpion'],[8,76,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // ROOM 5: a last stand on the clinker stair
     for(const [zx,zy] of [[28,41],[44,41]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   }
@@ -5658,12 +5696,19 @@ function genSkyDeep(){
   carve(20,49,52,57);            // ROOM 4 - THE CHANCEL (hunting strikes + pillars)
   carve(34,45,38,50);            // corridor
   carve(20,38,52,45);            // ROOM 5 - THE SANCTUARY STEP (a last stand before the Stormheart)
+  // OPTIONAL SIDE BRANCH - THE RELIQUARY: a dead-end side-chapel off the Sanctuary Step's east
+  // wall (kept clear of the boss arena above), holding a cache. Off the main climb (never gates a route).
+  carve(52,41,63,43);            // east passage from Room 5
+  carve(61,39,69,46);            // the reliquary pocket (the cache)
   carve(34,34,38,39);            // boss corridor (Stormheart-gate at y37)
   carve(18,8,54,36);             // THE STORMHEART (boss arena)
 }
 function placeObjectsSkyDeep(){
   G.decor=G.decor||[];
   G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:'sky', exit:1, label:'the way up'});
+  // the Reliquary's cache (off Room 5's east passage) - optional detour loot
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.sky))
+    G.decor.push({kind:'chest', x:65.5, y:42.5, sideCache:'sky', loot:'storm', title:'THE RELIQUARY', sub:'A CACHE BEHIND THE CHAPEL'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // ---- THE LOCKS: clearing room 1 of its storm-shades raises gate A (no lever - the fight is
@@ -5693,6 +5738,8 @@ function spawnMobsSkyDeep(){
     for(const [zx,zy,k] of [[28,83,'skywraith'],[42,84,'skywraith'],[30,82,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp){ const mm=spawnMob(k,sp[0],sp[1]); if(mm){ mm.room1gate='skyA'; mm.respawnT=-1; } } }
     // ROOM 3: storm-shades guarding the rune-plate
     for(const [zx,zy] of [[28,64],[44,64]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
+    // THE RELIQUARY side-chapel: two storm-shades over the cache
+    for(const [zx,zy] of [[64,41],[66,44]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
     // ROOM 5: a last stand on the sanctuary step
     for(const [zx,zy,k] of [[28,41,'skywraith'],[44,41,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
   }
@@ -6428,6 +6475,22 @@ function openChest(b){
     banner('A CACHE OF TONICS','THREE EMBER TONICS');
     shockwave(b.x,b.y,'rgba(255,150,120,0.85)',44); burst(b.x,b.y-0.5,'#ff9a7a',16,2.4); Snd.levelup&&Snd.levelup();
     setTimeout(()=>toast('Three <b style="color:var(--ember)">Ember Tonics</b> stashed here for the last push - stow them for the Maw-Stalker.',5200),400);
+    setTimeout(autoSave,300);
+    return;
+  }
+  // OPTIONAL SIDE-BRANCH CACHES: the "get stuff" detour chests tucked off the main line of the
+  // returned-isle spirit dungeons and the Drowned Catacomb. One per dungeon, themed loot, taken-state
+  // persisted per id so a re-descent never re-hands it. Placed by each dungeon's gen side-branch.
+  if(b.sideCache){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.sideCacheTaken=P.story.sideCacheTaken||{}; P.story.sideCacheTaken[b.sideCache]=1;
+    giveGold(rndi(70,120)); give('elixir',1); give('potion',2);
+    if(b.loot==='water') give('pearl',1);
+    else if(b.loot==='mat'){ give('bar',1); give('ore',2); }
+    else if(b.loot==='bone') giveGold(rndi(60,100));
+    else give('crystal',1);   // fire / storm
+    banner(b.title||'A HIDDEN CACHE', b.sub||'STOWED OFF THE MAIN WAY');
+    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',50); burst(b.x,b.y-0.5,'#ffd76a',18,2.6); Snd.levelup&&Snd.levelup();
     setTimeout(autoSave,300);
     return;
   }
