@@ -376,7 +376,7 @@ function buildSprites(){
     g.fillStyle='rgba(255,255,255,0.85)';
     g.beginPath(); g.arc(w/2-5,h-24,2,0,TAU); g.arc(w/2+4,h-22,1.6,0,TAU); g.fill();
   });
-  // redcap (a crimson Blackpine toadstool - Aelin's spell reagent)
+  // redcap (a crimson Blackpine toadstool - Aelin the herbalist buys them)
   SPR.redcap = makeCanvas(40,44,(g,w,h)=>{
     g.fillStyle='#efe7d6'; g.fillRect(w/2-3,h-18,6,12);
     const grad=g.createRadialGradient(w/2,h-22,2,w/2,h-20,14);

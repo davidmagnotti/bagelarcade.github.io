@@ -8,7 +8,7 @@ const ITEMS = {
   wheat:{name:'Wheat', desc:'Eat to restore 10 HP.', use:'heal', heal:10},
   seed:{name:'Wheat Seeds', desc:'Plant in tilled soil at the farm.'},
   mushroom:{name:'Bluecap', desc:'A glowing mushroom from the Whisperwood.'},
-  redcap:{name:'Redcap', desc:'A crimson-capped toadstool from the Blackpine woods - prized at the Spire as a spell reagent.'},
+  redcap:{name:'Redcap', desc:'A crimson-capped toadstool from the Blackpine woods - Aelin the herbalist pays good coin for a basketful.'},
   potion:{name:'Ember Tonic', desc:'Restores 30 HP.', use:'heal', heal:30},
   manapot:{name:'Quiver Bundle', desc:'A tied sheaf of fletched shafts. Refills your quiver by 12 arrows.', use:'arrows', arrows:12},
   goo:{name:'Slime Goo', desc:'A quivering green glob. Render three down at a brewing cellar and they thicken into a tonic.'},
@@ -33,7 +33,12 @@ const SKILLS = {
   farming:{name:'Farming', perk:'+crop yield'}
 };
 const xpForLevel = lv => Math.round(60*Math.pow(lv,1.55));
-const MAX_SKILL_LVL = 100;   // every skill climbs to a shared mastery cap of 100
+// Mastery cap. Was 100 - but weapon damage soft-caps at level 15 and the only perk sat
+// at level 5, so levels ~15-100 were an empty grind (the "dead tail"). Pulled down to 25
+// so EVERY level pays: damage still climbs to the soft cap, and perk milestones now land
+// at 5 / 12 / 20 (see 30-perks.js). Reaching 25 is a real "mastered" achievement, not a
+// slog. Older saves above 25 clamp to 25 and immediately unlock the new perk tiers.
+const MAX_SKILL_LVL = 25;
 
 const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,

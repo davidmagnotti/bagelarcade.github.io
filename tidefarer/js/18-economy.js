@@ -18,7 +18,9 @@ ACH.loremaster={t:'Loremaster',d:'Read every text and stone on both islands.'};
 ACH.ironclad={t:'Ironclad',d:'Wear the steel plate.'};
 ACH.delver={t:'Delver',d:'Claim the heart of the Undermaw.'};   // awarded at the cave chest (20-lore) - was never registered, so the award silently no-op'd
 
-const SELL_PRICES={fish:3, cookedfish:4, wood:1, stone:1, hardwood:4, ore:5, bar:14, pearl:25, crystal:15, mushroom:2, redcap:3, wheat:2, apple:2, stew:7, roast:7};
+// Sell prices cut down hard - selling is a gold faucet too, and coin is meant to be scarce
+// now (a bigger sink is coming). Everything floors at 1 so goods still fetch *something*.
+const SELL_PRICES={fish:1, cookedfish:2, wood:1, stone:1, hardwood:2, ore:3, bar:7, pearl:12, crystal:8, mushroom:1, redcap:2, wheat:1, apple:1, stew:4, roast:4};
 
 function costText(need){ return Object.keys(need).map(k=>need[k]+' '+ITEMS[k].name.toLowerCase()).join(' + '); }
 function canPay(need){ for(const k in need) if(!has(k,need[k])) return false; return true; }

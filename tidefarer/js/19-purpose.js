@@ -66,13 +66,15 @@ function projectsMenu(npc){
 }
 
 /* ---------- rolling supply contracts: gathering always pays ---------- */
+/* Contract coin roughly halved - these are a repeatable faucet, and gold is scarce now.
+   The XP is left intact, so contracts stay worth running for progression. */
 const CONTRACTS=[
-  {need:{wood:10},   gold:20, skill:'woodcut', xp:50, line:'Bram wants pine for tool hafts.'},
-  {need:{stone:8},   gold:18, skill:'mining',  xp:50, line:'The well wall wants shoring.'},
-  {need:{fish:5},    gold:24, skill:'fishing', xp:60, line:'Nia\'s begged for a fish supper all week.'},
-  {need:{hardwood:3},gold:24, skill:'woodcut', xp:70, line:'Orin needs heartwood for staff blanks.'},
-  {need:{ore:4},     gold:28, skill:'mining',  xp:70, line:'Bram\'s stockpile of raw iron runs thin.'},
-  {need:{wheat:6},   gold:20, skill:'farming', xp:60, line:'The village ovens are hungry.'}
+  {need:{wood:10},   gold:10, skill:'woodcut', xp:50, line:'Bram wants pine for tool hafts.'},
+  {need:{stone:8},   gold:9,  skill:'mining',  xp:50, line:'The well wall wants shoring.'},
+  {need:{fish:5},    gold:12, skill:'fishing', xp:60, line:'Nia\'s begged for a fish supper all week.'},
+  {need:{hardwood:3},gold:12, skill:'woodcut', xp:70, line:'Orin needs heartwood for staff blanks.'},
+  {need:{ore:4},     gold:14, skill:'mining',  xp:70, line:'Bram\'s stockpile of raw iron runs thin.'},
+  {need:{wheat:6},   gold:10, skill:'farming', xp:60, line:'The village ovens are hungry.'}
 ];
 function contractMenu(npc){
   const c=CONTRACTS[P.contract%CONTRACTS.length];

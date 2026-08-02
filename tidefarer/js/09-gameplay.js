@@ -651,7 +651,7 @@ function unlockParry(msg){
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up, a <b style="color:#ff5a4a">red ring</b> pulses under it and a soft chime sounds just as the blow becomes turnable. <b>Attack as the blow lands</b> to turn it instead of taking it: a parried arrow flies back, a parried striker is left staggered wide open. (A hair early or late is fine - read the wind-up and strike into it.)';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up a slow, heavy blow, a <b style="color:#ff5a4a">red ring</b> pulses under it and a soft <b>chime</b> sounds the instant it can be turned. <b>Attack as that blow lands</b> to parry it - a turned arrow flies back, a turned striker is left staggered wide open. Watch out: quick <b>jabs</b> come too fast to parry and give no chime - <b>dodge-roll</b> those or keep your distance. (A hair early or late on a parry is fine - read the wind-up and strike into it.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -785,7 +785,7 @@ function damageMob(m,dmg,knock,skill){
   }
   let crit=false;
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
-  const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0);
+  const critCh = 0.12 + ((skill==='archery' && P.perks && P.perks.deadeye)?0.18:0) + ((skill==='archery' && P.perks && P.perks.hawkeye)?0.18:0);
   if(Math.random()<critCh){ dmg=Math.round(dmg*1.6); crit=true; }
   // RIPOSTE: a perfectly-timed dodge (see tryRoll) empowers the very next blow that lands -
   // a guaranteed, heavy crit. Consumed on use, so it rewards reading the telegraph.
@@ -943,6 +943,9 @@ function killMob(m,skill){
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
+  // Bloodthirst perk (melee tier): a felled foe returns a sliver of your own blood.
+  if(P.perks && P.perks.bloodthirst && skill==='melee' && P.hp<P.maxhp){
+    P.hp=Math.min(P.maxhp, P.hp+3); addFloat('+3', P.x, P.y-1.9, '#9be07f', 1.0); }
   // named bosses (the Hollow King & Greymaw by kind, every other boss by its
   // ach tag) grant their achievement AND a one-time +max-mana on defeat
   bossReward(m);
@@ -954,7 +957,9 @@ function killMob(m,skill){
   killCredit(m.kind);
   if(m.elite) killCredit('elite');
   // drops
-  const g=rndi(d.gold[0],d.gold[1])*(m.elite?3:1);
+  // gold is scarce now: scale the drop by GOLD_RATE (rounded), so most trash pays little
+  // or nothing and coin has to be earned. Elites still pay a premium (their 3x, then scaled).
+  const g=Math.round(rndi(d.gold[0],d.gold[1])*(m.elite?3:1)*(typeof GOLD_RATE!=='undefined'?GOLD_RATE:1));
   if(m.kind==='boar' && Math.random()<0.7){ give('boarmeat',1); addFloat('+1 boar meat',m.x,m.y-1.6,'#e0a070',1.0); }
   if(m.kind==='slime' && Math.random()<0.7){ give('goo',1); addFloat('+1 slime goo',m.x,m.y-1.6,'#7fca6a',1.0); }
   if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
@@ -1175,7 +1180,7 @@ function hurtPlayer(dmg,src){
   // pass a plain source and cut straight through the guard. Projectiles are turned
   // separately, in updateProjs (they get batted back). Marquee bosses (bigBoss)
   // hit too hard to fully turn - a parry only softens their blow, never negates it.
-  if((P.parryT||0)>0 && src && src.kind && src.x!=null && parryCovers(src.x,src.y)){
+  if((P.parryT||0)>0 && src && src.kind && src.x!=null && !src.unparryable && parryCovers(src.x,src.y)){
     if(src.bigBoss){ dmg*=0.35; onParry(src.x,src.y); }   // chip through - can't be fully turned
     else {
       onParry(src.x,src.y);
@@ -1674,6 +1679,19 @@ const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
 function ruinsBound(m){ return !!(m.hollowGuard || (G.worldId==='isle' && (m.kind==='skeleton'||m.kind==='gravelord'))); }
 const ISLE_SKELE_CAP=6;   // keep the barrow from filling with an endless bone-heap if you ignore them
 function liveIsleSkeletons(){ let n=0; for(const x of G.mobs) if(x.kind==='skeleton' && !x.dead) n++; return n; }
+// How many OTHER foes near the player are already committed to a strike (a real, non-feint
+// wind-up or a lunge)? Enemy AI uses this to cap simultaneous attackers, so a crowd
+// pressures you through spacing and staggered strikes instead of a wall of instant hits.
+function committedAttackers(self){
+  let n=0;
+  for(const o of G.mobs){
+    if(o===self || o.dead) continue;
+    if(((o.windup||0)>0 && !o.feint) || (o.lunge||0)>0){
+      if(dist(o.x,o.y,P.x,P.y) < 5) n++;
+    }
+  }
+  return n;
+}
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -1771,22 +1789,55 @@ function updateMobs(dt){
           if(m.wedgeT>3){ m.wedgeT=0; m.detourLock=0; unstickEntity(m); }
         } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
       }
-      // telegraphed strike: wind up, then the blow lands - roll through it!
+      // TELEGRAPHED STRIKE: pick an attack SHAPE, wind up, then the blow lands.
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
-        // Wind-ups are long enough to read from the danger ring; the last PARRY_WIN
-        // seconds are the parry moment. HEAVIES telegraph slowest and hit hard.
-        m.windup = m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
-        m.hitCd= m.boss?1.1:1.25;
+        const ordinary = !m.boss && !m.bigBoss && !m.customAI;
+        // GROUP DISCIPLINE: only a couple of foes commit to a swing at once - the rest
+        // circle and pressure. A crowd is then about spacing, not simultaneous alpha strikes.
+        if(ordinary && committedAttackers(m) >= 2){
+          m.hitCd = 0.25 + Math.random()*0.4;   // hang back a beat, then reconsider
+        } else {
+          // ATTACK SHAPE - ordinary foes mix a slow, parryable HEAVY telegraph with a fast,
+          // unparryable JAB (dodge or space it), and sometimes FEINT to bait a panicked
+          // dodge/parry. Bosses keep their single scripted swing (shape stays 'heavy').
+          let shape='heavy';
+          if(ordinary){ const r=Math.random();
+            if(r<0.20) shape='feint';
+            else if(r<0.58) shape='jab'; }
+          m.atkShape=shape;
+          if(shape==='jab'){
+            m.windup = heavy?0.30:0.24;   // too quick to parry - must be dodged or out-spaced
+            m.unparryable=1; m.feint=0; m.hitCd= m.boss?1.0:0.95;
+          } else if(shape==='feint'){
+            m.windup = 0.36; m.unparryable=0; m.feint=1; m.hitCd=0.9;
+          } else {
+            // the readable heavy - HEAVIES telegraph slowest and hit hardest
+            m.windup = m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
+            m.unparryable=0; m.feint=0; m.hitCd= m.boss?1.1:1.25;
+          }
+        }
       }
       if(m.windup>0){
         const preFlash = m.windup > PARRY_WIN;
         m.windup-=dt;
-        // ring the parry-cue the instant the blow becomes parryable (once per swing, close foes only)
-        if(preFlash && m.windup<=PARRY_WIN && l<9){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
+        // parry chime the instant the blow becomes parryable - only for a real, parryable
+        // heavy (never a jab or a feint), close foes only
+        if(!m.unparryable && !m.feint && preFlash && m.windup<=PARRY_WIN && l<9){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
         if(m.windup<=0){
-          m.windup=0; m.swing=0.3;
-          if(l<1.95+(m.boss?0.6:0) && !P.dead) hurtPlayer(heavy?Math.round(d.dmg*1.25):d.dmg, m);
-          if(heavy) m.recover=0.8;   // rooted after the big swing - punish it
+          m.windup=0;
+          if(m.feint){
+            // a FEINT: no blow lands. The bait is spent - pause a beat, then press again.
+            m.feint=0; m.swing=0.12; m.hitCd=Math.max(m.hitCd, 0.45+Math.random()*0.4);
+            if(l<9 && Snd.noise) Snd.noise(0.06,0.02,220,0.6);   // a soft shuffle - the fake reads in hindsight
+          } else {
+            const jab = m.atkShape==='jab';
+            m.swing = jab?0.2:0.3;
+            const reach  = jab ? 1.7 : 1.95+(m.boss?0.6:0);
+            const dmgOut = jab ? Math.max(1,Math.round(d.dmg*0.6)) : (heavy?Math.round(d.dmg*1.25):d.dmg);
+            if(l<reach && !P.dead) hurtPlayer(dmgOut, m);
+            if(heavy && !jab) m.recover=0.8;   // rooted after the big swing - punish it
+            m.unparryable=0;
+          }
         }
       }
       // LUNGER archetype: a fast telegraphed dash that closes the gap - dodge it or reposition

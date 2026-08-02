@@ -1,7 +1,7 @@
 "use strict";
 /* Build number - bump on every change so a cached/stale load is obvious.
    Shown in the ?perf overlay and logged to the console on load. */
-const BUILD = '115';
+const BUILD = '116';
 try{ console.log('%cTidefarer  build '+BUILD, 'color:#7CFC00;font-weight:bold;font-size:14px'); }catch(e){}
 // A tiny always-visible build tag, so a stale/cached load is obvious at a glance:
 // if this number doesn't match the latest, the device is running old cached code.
@@ -44,6 +44,11 @@ const dist = (ax,ay,bx,by)=> Math.hypot(ax-bx, ay-by);
 const rndi = (a,b)=> a + Math.floor(Math.random()*(b-a+1));
 const rnd  = (a,b)=> a + Math.random()*(b-a);
 const TAU = Math.PI*2;
+/* Coin is meant to be SCARCE now (a bigger sink is coming). GOLD_RATE scales the
+   repeatable faucets - mob drops especially - so trash kills rarely pay and gold has
+   to be earned. One-time story/quest gold is left at face value; only the grind is
+   throttled. Raise toward 1 to loosen the purse again. */
+const GOLD_RATE = 0.4;
 
 function mulberry32(seed){ let a = seed>>>0;
   return function(){ a|=0; a = a + 0x6D2B79F5 | 0;

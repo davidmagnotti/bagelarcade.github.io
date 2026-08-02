@@ -4294,14 +4294,14 @@ QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', ki
   log:'Slay 8 wolves along Barik\'s roads and highlands.',
   doneText:'The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin.',
   rw:{gold:80, item:{wardstone:1}, xp:{melee:200, archery:120}} };
-// Aelin the Weaver won't teach the weave to a stranger with empty hands - she sends
-// you into the Blackpine woods for reagents first. Only once the redcaps are on her
-// shelf does the Spire open its lessons (the Train button is gated on this being done).
-QUESTS.redcaps={ giver:'aelin', title:'Reagents for the Weave', kind:'gather', need:{redcap:5},
-  brief:'Before I teach you a single cantrip, you can restock my shelf - a teacher is only as good as the reagents on hand, and mine stands bare. Redcaps grow in the shade of the Blackpine Reach, the woods north of here. Five crimson caps, stems whole, and the Spire opens its lessons to you.',
+// Aelin the Weaver keeps an alchemist's shelf on Barik - no spellcraft taught here any
+// more, just good coin for good foraging. She sends you into the Blackpine woods for
+// redcaps and pays out in gold and hard-won experience.
+QUESTS.redcaps={ giver:'aelin', title:'Reagents for the Shelf', kind:'gather', need:{redcap:5},
+  brief:'My reagent shelf stands bare, and my knees are past climbing for it. Redcaps grow in the shade of the Blackpine Reach, the woods north of here - five crimson caps, stems whole. Bring them and there is good coin in it, and you\'ll be the wiser for the walk.',
   log:'Gather 5 redcaps in the Blackpine Reach (the Barik woods) for Aelin.',
-  doneText:'Firm, and not a wormhole in them - good picking. The shelf is stocked and the Spire is yours to study now. Come speak with me and we\'ll put a staff through its paces.',
-  rw:{gold:30, xp:{magic:120}}, xpL:70 };
+  doneText:'Firm, and not a wormhole in them - good picking. Here\'s your coin, and my thanks. The Reach always gives back to a careful hand.',
+  rw:{gold:40, xp:{farming:200}}, xpL:150 };
 QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushroom:6},
   brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
   log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',

@@ -676,38 +676,9 @@ function shopButtons(npc,btns){
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
-  if(npc.id==='aelin'){
-    // tuition scales with mastery (25g \u00d7 magic level) and the Spire caps out at level 7
-    const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
-    const aelinStudy=()=>{
-      if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      // one lesson, ever - a single true lesson is all the Spire gives
-      if(P.prog && P.prog.spireTrainedEver){
-        setDialog('“You\'ve had my lesson, and the weave keeps it - there\'s nothing more I can drill into you here. Go and practice what you know. And if you haven\'t yet - step inside; the orb has a gift for a student who\'s earned it.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      const f=aelinFee();
-      if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      // she gives the lesson aloud first - a click-to-continue brief - then the drill begins
-      const beginLesson=()=>{
-        P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
-        P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
-        TRAIN={who:'aelin', stage:0, rolls:0, combo:0, casts:0, _r:0, x:P.x, y:P.y,
-          dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-        toast('<b>Aelin\'s lesson:</b> strike the dummy with <b>5 bolts</b>. Attune your staff with <b>3</b>.',5000); Snd.quest();
-      };
-      setDialog('<i>Aelin sets a practice dummy at the heart of the ring and steps clear.</i> “Here is the whole of today\'s lesson: attune your staff - <b>press 3</b> - and strike that dummy with <b>five clean bolts</b>. No footwork, no flourish - just the weave, loosed true, five times over. Ready your staff, and begin when you are.”',
-        [{label:'Begin the lesson ('+f+'g)', cls:'gold', fn:beginLesson},
-         {label:'Not yet', ghost:true, fn:closeDialog}]);
-    };
-    // The Spire opens its lessons only AFTER you've run Aelin's reagent errand (the
-    // 'redcaps' quest) - or if you'd already trained here on an older save. Until then
-    // she has nothing to teach a stranger, and the quest flow above does the talking.
-    const canTrain = qs('redcaps')==='done' || (P.prog && P.prog.spireTrainedEver);
-    if(canTrain){
-      const trained = P.prog && P.prog.spireTrainedEver;
-      btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
-    }
-    // (Snare removed - the staff casts only Bolt now.)
-  }
+  // Aelin no longer trains the weave - magic isn't taught on Barik anymore. She keeps
+  // an alchemist's shelf now, and her only offer is the redcap errand (handled by the
+  // generic quest flow above), which pays out in coin and experience - no training button.
   if(npc.id==='rook'){
     btns.unshift({label:'Drill in the yard (20g \u2192 melee)', fn:()=>{
       if(P.gold<20){ setDialog('\u201cSweat is free. My time is twenty gold.\u201d',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }

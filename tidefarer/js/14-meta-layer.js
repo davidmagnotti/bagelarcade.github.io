@@ -73,18 +73,65 @@ function worldFlagsFrom(mobs,decor){
     chests: decor.filter(b=>b.kind==='chestOpen').map(b=>[Math.round(b.x*2),Math.round(b.y*2)])
   };
 }
+/* SAVE MANIFEST - the single source of truth for the flat P fields the save round-trips.
+   To persist a new simple P field, add ONE entry here: saveCode writes it and loadCode
+   restores it automatically, so you can no longer add it to one side and forget the other
+   (the old bug that silently dropped fields from saves). Each entry: {k: save-key, f: P
+   field, enc: value->stored (optional), dec: stored->value (default fallback)}.
+   Fields that need cross-field ordering or extra processing (x/y, hp&mp clamps, skills
+   clamp, armorOwn, kit derivation, arrows, dayT) stay hand-written in save/loadCode below;
+   loadCode also keeps its explicit restore lines as a safety net, so this manifest changes
+   nothing for existing saves - it only makes future fields one-line to add. */
+const SAVE_SPEC = [
+  {k:'gold',      f:'gold',       dec:v=>Math.round(+v)||0},
+  {k:'maxhp',     f:'maxhp',      dec:v=>v||100},
+  {k:'maxmp',     f:'maxmp',      dec:v=>v||30},
+  {k:'inv',       f:'inv',        dec:v=>v||{}},
+  {k:'quests',    f:'quests',     dec:v=>v||{}},
+  {k:'prog',      f:'prog',       dec:v=>v||{}},
+  {k:'unlocked',  f:'unlocked',   dec:v=>v||{}},
+  {k:'swordTier', f:'swordTier',  dec:v=>v||0},
+  {k:'armor',     f:'armor',      dec:v=>v||0},
+  {k:'es',        f:'earlySail',  enc:v=>v?1:0, dec:v=>!!v},
+  {k:'ek',        f:'earlyKit',   enc:v=>v?1:0, dec:v=>!!v},
+  {k:'lv',        f:'level',      dec:v=>v||1},
+  {k:'xl',        f:'xpL',        dec:v=>v||0},
+  {k:'bk',        f:'bank',       dec:v=>v||0},
+  {k:'vault',     f:'vault',      enc:v=>v||{}, dec:v=>v||{}},
+  {k:'gritLv',    f:'gritLv',     enc:v=>v||0,  dec:v=>v||0},
+  {k:'gritN',     f:'gritN',      enc:v=>v||0,  dec:v=>v||0},
+  {k:'spell',     f:'spell',      enc:v=>v||'bolt',   dec:v=>v||'bolt'},
+  {k:'spells',    f:'spells',     enc:v=>v||{}, dec:v=>v||{}},
+  {k:'qi',        f:'quickItem',  enc:v=>v||'potion', dec:v=>v||'potion'},
+  {k:'bind',      f:'bind',       dec:v=>v||null},
+  {k:'hs',        f:'horse',      enc:v=>v?1:0, dec:v=>v?1:0},
+  {k:'hm',        f:'home',       enc:v=>v?1:0, dec:v=>v?1:0},
+  {k:'hu',        f:'homeUp',     dec:v=>v||{}},
+  {k:'tools',     f:'tools',      dec:v=>v||{axe:0,pick:0}},
+  {k:'rr',        f:'resortRoom', enc:v=>v?1:0, dec:v=>v?1:0},
+  {k:'projects',  f:'projects',   dec:v=>v||{}},
+  {k:'contract',  f:'contract',   dec:v=>v||0},
+  {k:'lore',      f:'loreRead',   dec:v=>v||{}},
+  {k:'stats',     f:'stats',      dec:v=>v||{}},
+  {k:'ach',       f:'ach',        dec:v=>v||{}},
+  {k:'perks',     f:'perks',      enc:v=>v||{}, dec:v=>v||{}},
+  {k:'perkAvail', f:'perkAvail',  enc:v=>v||{}, dec:v=>v||{}},
+  {k:'story',     f:'story',      enc:v=>v||{act:1,necklace:true}, dec:v=>v||{act:1,necklace:true}},
+  {k:'disc',      f:'disc',       enc:v=>v||{}, dec:v=>v||{}}
+];
+function saveApply(d){ for(const s of SAVE_SPEC){ const v=P[s.f]; d[s.k]= s.enc? s.enc(v) : v; } }
+function loadApply(d){ for(const s of SAVE_SPEC){ P[s.f]= s.dec ? s.dec(d[s.k]) : d[s.k]; } }
 function saveCode(){
   const flags={};
   flags[G.worldId]=worldFlagsFrom(G.mobs,G.decor);
   for(const id in WORLDS){ if(id!==G.worldId) flags[id]=worldFlagsFrom(WORLDS[id].mobs,WORLDS[id].decor); }
+  // Fields needing a transform or cross-field ordering stay explicit; the rest come from
+  // the SAVE_SPEC manifest via saveApply (so save & load can never drift apart on them).
   const d={v:2,world:G.worldId,x:+P.x.toFixed(2),y:+P.y.toFixed(2),
-    gold:P.gold,hp:Math.round(P.hp),maxhp:P.maxhp,mp:Math.round(P.mp),maxmp:P.maxmp,arrows:Math.floor(P.arrows||0),maxArrows:P.maxArrows||20,
-    inv:P.inv,skills:P.skills,quests:P.quests,prog:P.prog,
-    unlocked:P.unlocked,swordTier:P.swordTier,armor:P.armor,armorOwn:P.armorOwn||0,kit:!!P.kit,es:P.earlySail?1:0,ek:P.earlyKit?1:0,dyt:+(G.dayT||0).toFixed(3),lv:P.level,xl:P.xpL,bk:P.bank,vault:P.vault||{},gritLv:P.gritLv||0,gritN:P.gritN||0,spell:P.spell||'bolt',spells:P.spells||{},qi:P.quickItem||'potion',bind:P.bind,hs:P.horse?1:0,hm:P.home?1:0,hu:P.homeUp,tools:P.tools,rr:P.resortRoom?1:0,
-    projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
-    perks:P.perks||{},perkAvail:P.perkAvail||{},
-    story:P.story||{act:1,necklace:true},
-    disc:P.disc||{},expl:packExpl(),flags};
+    hp:Math.round(P.hp),mp:Math.round(P.mp),arrows:Math.floor(P.arrows||0),maxArrows:P.maxArrows||20,
+    skills:P.skills,armorOwn:P.armorOwn||0,kit:!!P.kit,dyt:+(G.dayT||0).toFixed(3),
+    expl:packExpl(),flags};
+  saveApply(d);
   // Remember an open conversation so exiting mid-dialogue resumes it on return
   // (only a real NPC talk - transient stalls/shop sub-menus are not restored).
   if(typeof dlg!=='undefined' && dlg.open && dlg.npc && dlg.npc.id) d.dnpc=dlg.npc.id;
@@ -117,6 +164,11 @@ function loadCode(str){
   P.projects={}; // cleared before regen; restored (and re-placed) below
   iso.gen();
   // restore hero first (switchWorld reads quest state)
+  // Manifest baseline: pull every flat field the SAVE_SPEC covers into P in one pass.
+  // The explicit lines below then refine the special ones (clamps, derivations, migrations)
+  // - they set identical values for existing fields, so this is a no-op for current saves
+  // and only matters for fields added to SAVE_SPEC that have no explicit line of their own.
+  loadApply(d);
   P.gold=Math.round(+d.gold)||0; // saves from the string-gold era heal on load
   P.maxhp=d.maxhp||100; P.hp=Math.min(d.hp||d.maxhp||100,P.maxhp);
   // maxmp must be restored too, or every permanent mana boost (quest rewards AND

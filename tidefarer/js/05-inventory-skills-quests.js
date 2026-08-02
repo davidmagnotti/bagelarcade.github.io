@@ -47,11 +47,20 @@ function dmgLvl(lvl){
   if(lvl <= s) return lvl;
   return s + 2*Math.sqrt(s)*(Math.sqrt(lvl) - Math.sqrt(s));
 }
-function meleeDmg(){ return Math.round(6 + P.swordTier*4 + dmgLvl(P.skills.melee.lvl)*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0)); }
+// Damage perks (the level-12 / level-20 tiers in 30-perks.js) fold in here as a flat
+// multiplier, so every weapon reads its bonuses from one place.
+function perkDmgMult(skill){
+  const pk=P.perks||{}; let m=1;
+  if(skill==='melee'   && pk.reaver)       m*=1.15;
+  if(skill==='archery' && pk.sharpshooter) m*=1.15;
+  if(skill==='magic'){ if(pk.arcanist) m*=1.15; if(pk.channeler) m*=1.20; }
+  return m;
+}
+function meleeDmg(){ return Math.round((6 + P.swordTier*4 + dmgLvl(P.skills.melee.lvl)*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0)) * perkDmgMult('melee')); }
 // The bow is now a hard-hitting, rationed weapon (a quiver of 20 that trickles
 // back) - so each shaft bites far deeper than the old free-fire bow did.
-function bowDmg(){ return Math.round(28 + dmgLvl(P.skills.archery.lvl)*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0)); }
-function magicDmg(){ return Math.round(8 + dmgLvl((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0)); }
+function bowDmg(){ return Math.round((28 + dmgLvl(P.skills.archery.lvl)*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0)) * perkDmgMult('archery')); }
+function magicDmg(){ return Math.round((8 + dmgLvl((P.skills&&P.skills.magic)?P.skills.magic.lvl:1)*3 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0)) * perkDmgMult('magic')); }
 
 /* quest state: undefined=locked, 'avail','active','done' */
 function qs(id){ return P.quests[id]; }
