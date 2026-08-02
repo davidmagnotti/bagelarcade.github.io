@@ -17,11 +17,13 @@
 (function(){
   'use strict';
 
-  // Timeline (ms). Kept inside the 1-2s the brief asked for.
-  const FADE_IN   = 320;   // overlay wipes up to fully opaque
-  const SWITCH_AT = 540;   // world swap - safely after we're opaque, hidden
-  const FADE_OUT  = 340;   // overlay wipes back to reveal the new isle
-  const TOTAL     = 1600;  // whole voyage, start to hidden
+  // Timeline (ms) - a ~2.5s voyage. The heavy world generation runs during the
+  // opaque hold (see SWITCH_AT), so the boat keeps sailing smoothly while the
+  // destination loads underneath the cover, then the overlay wipes to reveal it.
+  const FADE_IN   = 420;   // overlay wipes up to fully opaque
+  const SWITCH_AT = 640;   // world swap - safely after we're opaque, hidden
+  const FADE_OUT  = 460;   // overlay wipes back to reveal the new isle
+  const TOTAL     = 2500;  // whole voyage, start to hidden
 
   const reduced = (function(){
     try{ return window.matchMedia &&
@@ -34,7 +36,6 @@
   function playSailTransition(title, onSwitch, onDone){
     const ov  = document.getElementById('sailOv');
     const cv  = document.getElementById('sailCv');
-    const cap = document.getElementById('sailCap');
     // No overlay in the DOM -> let the caller keep its fallback fade.
     if(!ov || !cv || !cv.getContext){ if(onSwitch) onSwitch(); if(onDone) onDone(); return false; }
     // Re-entrancy guard mirrors the `sailing` latch in world-layer, but be safe.
@@ -55,8 +56,6 @@
     }
     resize();
     window.addEventListener('resize', resize);
-
-    if(cap) cap.textContent = title ? ('Sailing to ' + niceCase(title)) : 'Sailing…';
 
     // Prime the first frame BEFORE showing, so nothing flashes empty.
     draw(0);
@@ -81,7 +80,15 @@
       ov.style.opacity = op.toFixed(3);
 
       // Swap only once we are certainly opaque (el >= FADE_IN guarantees op===1).
-      if(!switched && el >= SWITCH_AT){ switched = true; try{ onSwitch && onSwitch(); }catch(_){} }
+      // The swap (world generation) is the heavy, blocking work; defer it to its
+      // OWN frame so this frame's opaque cover paints first and no boat frame
+      // stalls mid-fade. It then runs hidden behind the overlay - the "loading in
+      // the background" while the boat keeps sailing - with ~1.4s of cover left
+      // for even a slow device to finish before the reveal.
+      if(!switched && el >= SWITCH_AT){
+        switched = true;
+        requestAnimationFrame(()=>{ try{ onSwitch && onSwitch(); }catch(_){} });
+      }
 
       if(el < TOTAL){ requestAnimationFrame(tick); }
       else { finish(); }
@@ -249,11 +256,6 @@
       g.beginPath(); g.moveTo(-34, -6); g.lineTo(34, -6); g.stroke();
     }
     return true;
-  }
-
-  // "EMBERWICK ISLE" -> "Emberwick Isle" for the caption line.
-  function niceCase(s){
-    return String(s).toLowerCase().replace(/\b([a-z])/g, function(m, c){ return c.toUpperCase(); });
   }
 
   window.playSailTransition = playSailTransition;
