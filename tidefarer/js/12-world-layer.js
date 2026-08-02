@@ -3437,7 +3437,7 @@ function updateUndermaw(dt){
     if(Math.random()<0.4) burst(G._mawDrop.x+rnd(-0.3,0.3), G._mawDrop.y+rnd(-0.2,0.2), '#1a1512', 1, 1.2);
     if(G._mawDrop.t>=G._mawDrop.dur) mawRespawn();
     return; }
-  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
+  if(P.dead || (P.rollT||0)>0 || window.DEVFLOAT) return;   // mid-dash / dev-float: airborne over the scar
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
   if(wheelCarry(G._mawWheels, dt)) return;                 // riding a rotating slab

@@ -458,8 +458,8 @@ function updateInterior(dt){
   if(P.moving){
     mx/=ml; my/=ml;
     const sp=3.8;
-    let nx=P.x+mx*sp*dt; if(!interiorBlocked(nx,P.y,0.28)) P.x=nx;
-    let ny=P.y+my*sp*dt; if(!interiorBlocked(P.x,ny,0.28)) P.y=ny;
+    let nx=P.x+mx*sp*dt; if(window.DEVFLOAT || !interiorBlocked(nx,P.y,0.28)) P.x=nx;   // dev float: noclip
+    let ny=P.y+my*sp*dt; if(window.DEVFLOAT || !interiorBlocked(P.x,ny,0.28)) P.y=ny;
     P.dir={x:mx,y:my}; P.anim+=dt*9;
   }
   P.swing=Math.max(0,P.swing-dt);
