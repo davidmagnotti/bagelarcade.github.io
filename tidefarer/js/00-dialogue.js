@@ -722,7 +722,7 @@ const DIALOGUE = {
     "ribbon1": {
       brief: "How did you break those pesky violet stones? Ha - I should have known better than to trust the word of that wicked wizard. I promised to sail him to an island east of every chart, and leaving those cursed stones strewn across my cove is how he repays me. ... You want me to take you there? I'd love nothing more, truly - but my girl Wren has been asking after a ribbon from Mira in the village, and I can't leave my boat to sail out that way. Tell you what: you get me a ribbon, and I'll take you out to that isle whenever you want, free of charge. Mira weaves the best at Thimble and Thread in Greyharbor.",
       log: "(1/3) Ask Mira the Seamstress in Greyharbor about a ribbon.",
-      doneText: "A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come. Here - take a couple of tonics for the road; the pines are no place to go dry."
+      doneText: "A ribbon? Oh, I'd weave you the prettiest on Barik in a heartbeat - but my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come. Here - take a couple of tonics for the road; the pines are no place to go dry."
     },
     "ribbon2": {
       brief: "If you can walk into that camp and walk out again: my silk sits in a chest they guard, north of the deep pines. Bring me one bolt and I will weave the finest ribbon Barik has seen.",
