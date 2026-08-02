@@ -675,8 +675,8 @@ const DIALOGUE = {
       doneText: "Quieter already. This ember charm rides your strikes - every blow burns a little brighter now."
     },
     "king": {
-      brief: "Rask says you can turn a blade, and Orin says your feet are quick? <i>Elder Maren's brow climbs.</i> Neither man takes to strangers, yet both vouch for a castaway they've known a week - so they see something in you, and neither is a fool. Then it's true: the Hollow Spirit stirs beneath the crypt, who long ago traded his heart for a crown. My folk warded the causeway gate to seal him in, and I am the last who knows the word to open it. His curse locks the strait - no boat leaves Emberwick while he churns the deep. Break him, and the sea opens again. Say you'll face him and I'll speak the gate open. Emberwick believes in you.",
-      log: "Defeat the Hollow Spirit at the crypt in the Old Ruins.",
+      brief: "Rask says you can turn a blade, and Orin says your feet are quick? <i>Elder Maren's brow climbs.</i> Neither man takes to strangers, yet both vouch for a castaway they've known a week - so they see something in you, and neither is a fool. Then it's time you knew the whole of it. The <b>Hollow Spirit</b> woke in the old graveyard on the north tip - a crowned thing we buried lifetimes ago, that long since traded its heart for a crown - and its rising is what turned the strait deadly. That is the curse that took your ship, child; the sea has swallowed every hull that tried the crossing since. My folk warded the causeway gate to seal it in, and as elder those keys are mine - I am the last alive who knows the word that opens it. Say you'll face the spirit, and I'll speak the gate open. Break it, and the sea calms, and the horizon is yours again. Emberwick believes in you.",
+      log: "Elder Maren will open the warded gate: defeat the Hollow Spirit in the old graveyard at the isle's north tip.",
       doneText: "The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit's curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing."
     },
     "welcome2": {
