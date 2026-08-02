@@ -55,7 +55,10 @@ const P = {
 };
 for(const k in SKILLS) P.skills[k]={lvl:1,xp:0};
 
-/* ---------- quests ---------- */
+/* ---------- quests ----------
+   NOTE: quest wording (brief / log / doneText) is the SOURCE OF TRUTH in
+   js/00-dialogue.js and is applied over these defaults at boot (applyQuestDialogue).
+   To change what a quest says, edit js/00-dialogue.js - not the strings below. */
 const QUESTS = {
   welcome:{ giver:'maren', title:'Welcome Ashore', kind:'talk', talkTo:'bram',
     brief:'New boots on old sand - welcome, traveler. Two of us could use a hand: our smith <b>Bram</b> at the forge east of the well, and <b>Willa</b> at the farm down the lane south of his forge. Start with Bram - he\'ll set you right - then go see what Willa needs.',
@@ -171,7 +174,11 @@ const QUESTS = {
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
 };
 
-/* ---------- NPCs ---------- */
+/* ---------- NPCs ----------
+   NOTE: NPC idle/chatter lines (the arrays passed below and in 12-world-layer.js /
+   36-island-farms.js) are the SOURCE OF TRUTH in js/00-dialogue.js and are applied
+   over these defaults whenever a world loads (applyIdleDialogue). To change what a
+   character says, edit js/00-dialogue.js - not the strings here. */
 function makeNPC(id,name,x,y,look,idleLines,wander){
   return {id,name,x:x+0.5,y:y+0.5,hx:x+0.5,hy:y+0.5,look,idleLines,wander:wander||0,
     face:{x:0,y:1}, anim:0, wt:rnd(1,4), li:0};
