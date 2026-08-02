@@ -364,10 +364,14 @@ function enterHouse(b){
   }
   // Greyharbor: Rook's apothecary reads a remedy-book, not a sailor's letters
   if(G.worldId==='main' && lblL.includes('remed')) I.loreKey='remedies@main';
+  // generic homes take on a deterministic theme (fisher, herbalist, weaver...) -
+  // its own walls, floor mood, furniture and loot. Bespoke homes are left alone.
+  if(typeof applyHomeTheme==='function') applyHomeTheme(I,b);
   G.interior=I;
   P.click=null;
   P.x=I.w/2; P.y=I.h-1.6; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>'+(b.label||'Inside')+'</b>', 2400);
+  toast('<b>'+(b.label||'Inside')+'</b>'+(I.theme?'<br><i style="opacity:.85">'+I.theme.line+'</i>':''), I.theme?3400:2400);
+  if(typeof _revealFromBlack==='function') _revealFromBlack();   // step in through the door, don't teleport
   Snd.step(8);
 }
 function enterCave(){
@@ -407,6 +411,7 @@ function exitHouse(){
   G.interior=null;
   P.x=r.x; P.y=r.y;
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
+  if(typeof _revealFromBlack==='function') _revealFromBlack();   // ease back out into daylight
   Snd.step(8);
 }
 function interiorBlocked(x,y,r){
@@ -569,6 +574,9 @@ function drawResortScene(w2s,I){
   }
 }
 function drawFurniture(f,s){
+  // themed props (chest, urn, drawers, cupboard, sack, loom, herb-table) live in
+  // js/40-home-interiors.js; let it claim its own types before the core switch
+  if(typeof drawExtraFurniture==='function' && drawExtraFurniture(f,s)) return;
   switch(f.type){
     case 'bed':
       iBox(s,2.0,1.3,10,'#6e5738','#4a3322','#3e2b1c');
@@ -907,6 +915,10 @@ function renderInterior(){
       cx.strokeStyle= court? 'rgba(40,70,30,0.25)':'rgba(40,36,30,0.35)'; cx.lineWidth=1; cx.stroke();
     } else {
       cx.drawImage(TILE_SPR[T.PLANK][(x*7+y*13)%4], s.x-TW/2, s.y-TH/2);
+      if(I.theme && I.theme.floorTint){                 // themed home: a wash over the boards
+        cx.fillStyle=I.theme.floorTint;
+        cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
+      }
     }
   }
   // walls: north (y=0) and west (x=0). The resort draws its own zoned walls
@@ -915,15 +927,30 @@ function renderInterior(){
   if(!I.resort && !I.sky){   // the ramparts are open to the sky - no enclosing walls
     for(let x=0;x<I.w;x++){
       const a=w2s(x,0), b=w2s(x+1,0);
-      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : I.palace? (x%2?'#6e6a63':'#615d57') : (x%2? '#4a3626':'#443122');
+      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : I.palace? (x%2?'#6e6a63':'#615d57') : I.theme? (x%2?I.theme.wall[0]:I.theme.wall[1]) : (x%2? '#4a3626':'#443122');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
     }
     for(let y=0;y<I.h;y++){
       const a=w2s(0,y), b=w2s(0,y+1);
-      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : I.palace? (y%2?'#615d57':'#55524c') : (y%2? '#3a2a1c':'#352718');
+      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : I.palace? (y%2?'#615d57':'#55524c') : I.theme? (y%2?shade(I.theme.wall[0],-14):shade(I.theme.wall[1],-14)) : (y%2? '#3a2a1c':'#352718');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
+    }
+    // baseboard strip + faint vertical studs, so the two walls read as built
+    // timber-and-plaster surfaces instead of flat colour fills (skip snow/stone/lair)
+    if(!I.lair && !I.igloo && !I.palace){
+      const base = (I.theme && typeof shade==='function') ? shade(I.theme.wall[1],-26) : '#2b1f14';
+      cx.fillStyle=base;
+      for(let x=0;x<I.w;x++){ const a=w2s(x,0), b=w2s(x+1,0);
+        cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+        cx.lineTo(b.x-TW/2,b.y-TH/2-6); cx.lineTo(a.x-TW/2,a.y-TH/2-6); cx.closePath(); cx.fill(); }
+      for(let y=0;y<I.h;y++){ const a=w2s(0,y), b=w2s(0,y+1);
+        cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
+        cx.lineTo(b.x-TW/2,b.y-TH/2-6); cx.lineTo(a.x-TW/2,a.y-TH/2-6); cx.closePath(); cx.fill(); }
+      cx.strokeStyle='rgba(0,0,0,0.13)'; cx.lineWidth=1;
+      for(let x=1;x<I.w;x++){ const a=w2s(x,0); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2-6); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.stroke(); }
+      for(let y=1;y<I.h;y++){ const a=w2s(0,y); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2-6); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.stroke(); }
     }
   }
   if(I.lair) drawLairScene(w2s,I);
@@ -948,25 +975,50 @@ function renderInterior(){
   }
   // window with moody light on the north wall
   if(!I.lair && !I.resort && !I.igloo && !I.palace){ const s=w2s(7.0,0.05);
-    const night=nightAmount();
+    const night=nightAmount(), day=1-night;
+    // by day, a soft shaft of daylight spills from the window onto the floorboards
+    // (drawn under the furniture, so people and props stand in the light)
+    if(day>0.15){
+      cx.save(); cx.globalCompositeOperation='lighter';
+      const sg=cx.createLinearGradient(s.x,s.y-32,s.x+14,s.y+42);
+      sg.addColorStop(0,'rgba(222,238,255,'+(0.17*day).toFixed(3)+')');
+      sg.addColorStop(1,'rgba(222,238,255,0)');
+      cx.fillStyle=sg;
+      cx.beginPath(); cx.moveTo(s.x-10,s.y-32); cx.lineTo(s.x+10,s.y-32);
+      cx.lineTo(s.x+27,s.y+42); cx.lineTo(s.x-3,s.y+42); cx.closePath(); cx.fill();
+      cx.restore();
+    }
     cx.fillStyle= night>0.4? '#1c2a4a' : '#c9d8e8';
     cx.fillRect(s.x-12,s.y-52,24,20);
     cx.strokeStyle='#241b12'; cx.lineWidth=3; cx.strokeRect(s.x-12,s.y-52,24,20);
     cx.beginPath(); cx.moveTo(s.x,s.y-52); cx.lineTo(s.x,s.y-32); cx.moveTo(s.x-12,s.y-42); cx.lineTo(s.x+12,s.y-42); cx.stroke();
   }
-  // hearth fire (house & forge)
-  if(I.kind==='house'||I.kind==='forge'||I.kind==='kitchen'){
+  // hearth fire + the warm light it throws on the floor - any home that has a
+  // hearth (some themed homes have none, so guard on the furniture, not the kind).
+  // Ordinary hearths used to draw flame but cast NO light pool; only the igloo pit
+  // glowed. This nestles a proper flickering firelight pool under every hearth.
+  if(!I.lair && !I.igloo && !I.resort){
     const hf=I.furn.find(f=>f.type==='hearth');
-    const s=w2s(hf.x,0.1);
-    cx.fillStyle='#57534c'; cx.fillRect(s.x-26,s.y-56,52,40);
-    cx.fillStyle='#1c1712'; cx.fillRect(s.x-16,s.y-42,32,26);
-    for(let i=0;i<3;i++){
-      const fl=Math.sin(I.t*8+i*2.1)*3;
-      cx.fillStyle=['#ff9a3c','#ffce7a','#e05648'][i];
-      cx.beginPath();
-      cx.moveTo(s.x-10+i*8,s.y-18);
-      cx.quadraticCurveTo(s.x-8+i*8+fl,s.y-32-i*3, s.x-6+i*8,s.y-18);
-      cx.closePath(); cx.fill();
+    if(hf){
+      const s=w2s(hf.x,0.1);
+      const fl0=0.9+0.1*Math.sin(I.t*7);
+      cx.save(); cx.globalCompositeOperation='lighter';
+      const R=120*fl0, gg=cx.createRadialGradient(s.x,s.y-6,6,s.x,s.y-6,R);
+      gg.addColorStop(0,'rgba(255,184,96,'+(0.22*fl0).toFixed(3)+')');
+      gg.addColorStop(0.5,'rgba(255,150,66,'+(0.10*fl0).toFixed(3)+')');
+      gg.addColorStop(1,'rgba(255,150,60,0)');
+      cx.fillStyle=gg; cx.beginPath(); cx.arc(s.x,s.y-6,R,0,TAU); cx.fill();
+      cx.restore();
+      cx.fillStyle='#57534c'; cx.fillRect(s.x-26,s.y-56,52,40);
+      cx.fillStyle='#1c1712'; cx.fillRect(s.x-16,s.y-42,32,26);
+      for(let i=0;i<3;i++){
+        const fl=Math.sin(I.t*8+i*2.1)*3;
+        cx.fillStyle=['#ff9a3c','#ffce7a','#e05648'][i];
+        cx.beginPath();
+        cx.moveTo(s.x-10+i*8,s.y-18);
+        cx.quadraticCurveTo(s.x-8+i*8+fl,s.y-32-i*3, s.x-6+i*8,s.y-18);
+        cx.closePath(); cx.fill();
+      }
     }
   }
   drawWallDecor(I.kind,w2s,I);
@@ -984,7 +1036,9 @@ function renderInterior(){
   items.sort((a,b)=>a.d-b.d);
   for(const it of items){
     if(it.player){ const s=w2s(P.x,P.y); drawShadowAt(cx,s.x,s.y,11); drawPlayer(s); }
-    else drawFurniture(it.f, w2s(it.f.x,it.f.y));
+    else { const fs=w2s(it.f.x,it.f.y);
+      if(typeof furnShadow==='function') furnShadow(it.f, fs);   // ground every prop with a soft contact shadow
+      drawFurniture(it.f, fs); }
   }
   // ambient grade: volcanic red-orange for the lair, cozy warm elsewhere
   const wg=cx.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,Math.max(VW,VH)*0.62);

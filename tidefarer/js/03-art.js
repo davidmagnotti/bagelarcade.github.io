@@ -10,8 +10,8 @@ function diamond(g,cxx,cyy,w,h){ g.beginPath();
 
 const PAL = {
   deep:'#1e4066', deep2:'#1a3a5e', shallow:'#39708f', shallow2:'#427a99',
-  sand:'#c8b482', sand2:'#bda873', grass:'#5b8544', grass2:'#527b3c', grassHi:'#688f4b',
-  forest:'#3e6030', forest2:'#38592b', ruin:'#6f6a63', ruin2:'#66615a',
+  sand:'#d0bb83', sand2:'#c6ac74', grass:'#5c8c42', grass2:'#4e833a', grassHi:'#719c50',
+  forest:'#3c6a2c', forest2:'#345f28', ruin:'#6f6a63', ruin2:'#66615a',
   path:'#9a7d51', path2:'#8f7348', soil:'#61411f', soil2:'#573a1c', plank:'#7d5834', plank2:'#71502e',
   snow:'#e9eef6', snow2:'#dce4ef', ice:'#b7d6e8', ice2:'#a3c8df'
 };
@@ -239,6 +239,7 @@ function buildSprites(){
       g.beginPath(); g.arc(w/2-8,h-62,18,Math.PI*1.0,Math.PI*1.9); g.fill();
       g.fillStyle='rgba(10,15,8,0.16)';
       g.beginPath(); g.ellipse(w/2,h-30,26,10,0,0,Math.PI); g.fill();
+      spriteGrain(g,w,h,0.7);   // leaf-tooth over the canopy
     }));
   }
   // palms x3 variants - pre-rendered like the trees so the Sunward Isle grove
@@ -361,6 +362,7 @@ function buildSprites(){
         g.beginPath(); g.ellipse(px,py,2.2+r()*1.6,1.5+r(),0,0,TAU); g.fill();
         g.fillStyle='rgba(255,255,255,0.25)';
         g.beginPath(); g.ellipse(px-0.6,py-0.7,1,0.6,0,0,TAU); g.fill(); }
+      spriteGrain(g,w,h,0.8);   // stone tooth
     }));
   }
   SPR.rockLow = makeCanvas(70,56,(g,w,h)=>{
@@ -786,6 +788,7 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     g.moveTo(chX-6*scale, roofY+3*scale); g.lineTo(chX+6*scale, roofY+7*scale);
     g.stroke();
   }
+  spriteGrain(g,w,h,1);   // plaster/timber tooth so walls & roof aren't flat gradients
 }
 /* tower dressing, shared by SPR.tower and SPR.towerTall: staggered stone
    joints, weathered stone tints, shingled cone, sunlit roof rim, framed
@@ -838,6 +841,28 @@ function shade(hex,amt){
   let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
   r=clamp(r,0,255); g=clamp(g,0,255); b=clamp(b,0,255);
   return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+/* material pass: a faint tooth of grain (and optional fine hatch) baked onto a
+   FINISHED sprite. Uses source-atop so it only touches pixels the sprite already
+   drew - so smooth vector fills pick up a little surface texture instead of reading
+   as flat gradients. Baked once per sprite, so it costs nothing per frame. */
+function spriteGrain(g,w,h,amt,hatch){
+  amt=amt||1;
+  g.save();
+  g.globalCompositeOperation='source-atop';
+  const n=Math.floor(w*h*0.045*amt);
+  for(let i=0;i<n;i++){
+    const x=Math.random()*w, y=Math.random()*h;
+    g.fillStyle = Math.random()<0.6
+      ? 'rgba(22,16,9,'+(0.05+Math.random()*0.06).toFixed(3)+')'
+      : 'rgba(255,248,232,'+(0.03+Math.random()*0.05).toFixed(3)+')';
+    g.fillRect(x,y,1,1);
+  }
+  if(hatch){                                   // faint diagonal weave for cloth/thatch
+    g.strokeStyle='rgba(0,0,0,0.05)'; g.lineWidth=1;
+    for(let x=-h;x<w;x+=3){ g.beginPath(); g.moveTo(x,0); g.lineTo(x+h,h); g.stroke(); }
+  }
+  g.restore();
 }
 /* ---- characters: drawn live for animation ---- */
 /* Every entity draws a soft contact shadow every frame. The old code built a

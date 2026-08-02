@@ -156,7 +156,7 @@ function placeDungeonHideaways(id){
           Emberbreaker Pick(Ashen Forge / Cinderwrought)-> emberstone gate rooms (isles)
 ---- */
 var BOSS_TOOL={
-  undermaw:    {flag:'axegift',   have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
+  undermaw:    {flag:'axegift',   spot:[22,4], have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
   eastdeep:    {flag:'pickgift',  have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
   sunwarddeep: {flag:'embergift', have:function(){return (P.tools&&P.tools.pick||0)>=4;}, is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
   milldeep:    {flag:'slaggift',  have:function(){return (P.tools&&P.tools.pick||0)>=3;}, is:function(m){return !!m.millboss;}}
@@ -167,7 +167,9 @@ function awardDungeonTool(m){
   try{
     var t=BOSS_TOOL[G.worldId]; if(!t || !m || !t.is(m) || t.have()) return;
     if(G.decor.some(function(d){return d[t.flag];})) return;   // already dropped
-    var pos=(typeof findOpenNear==='function' && findOpenNear(Math.round(m.x),Math.round(m.y),6)) || [Math.round(m.x),Math.round(m.y)];
+    // most dungeons drop the prize where the boss falls; a dungeon with a fixed reward-room `spot`
+    // (the Undermaw's Deep Hoard) drops it there instead, so the chest lands in the hoard, not the den.
+    var pos=t.spot || ((typeof findOpenNear==='function' && findOpenNear(Math.round(m.x),Math.round(m.y),6)) || [Math.round(m.x),Math.round(m.y)]);
     var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5}; o[t.flag]=1;
     G.decor.push(o);
     if(typeof invalidateScenery==='function') invalidateScenery();
