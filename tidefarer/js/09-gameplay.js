@@ -589,7 +589,6 @@ function tryAttack(useMouse){
         G.shake=Math.max(G.shake,0.3); G.hitStop=Math.max(G.hitStop,0.1);
         shockwave(P.x+aim.x,P.y+aim.y,'rgba(255,235,200,0.9)',44);
         Snd.noise(0.2,0.06,900,1);
-        addFloat('FINISHER!',P.x,P.y-2.2,'#ffd76a',1.5);
       } else {
         P.combo=(P.combo||0)+1;
         if(P.combo===2) addFloat('COMBO x2',P.x,P.y-2,'#ffce7a',1.1);
@@ -884,7 +883,6 @@ function damageMob(m,dmg,knock,skill){
     m.poise=(m.poise||0)+dmg;
     if(m.poise >= Math.max(20,(m.maxhp||30)*0.7)){
       m.poise=0; m.poiseCd=2.0; m.stunT=Math.max(m.stunT||0,0.4); m.windup=0; m.lunge=0;
-      addFloat('STAGGER!', m.x, m.y-2.5, '#ffe6a0', 1.2);
       burst(m.x,m.y-0.4,'#ffe6a0',10,2); if(Snd.crit) Snd.crit();
       G.hitStop=Math.max(G.hitStop,0.08);
       if(knock) moveEntity(m, knock.x*0.6, knock.y*0.6);
