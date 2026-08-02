@@ -2,24 +2,32 @@
    THE HEDDA-WARD  -  Vath's violet wardstone, cutting Barik off from itself.
 
    An AUTHORED story gate (the kind 35-toolgate-content.js flags as "the next
-   content step"): a ring of bright-violet WARDSTONE walls Farmer Hedda's
-   steading off, so you can see her farm but not reach her until you carry a
-   dungeon-forged pickaxe. The Undermaw drops that pick (the Delvebreaker), so
-   the whole loop stays inside Barik: hear the rumour -> take the Undermaw ->
-   shatter the ward -> Hedda thanks you (and a sailor swears a man in violet
-   raised the stone - Vath).
+   content step"): a WALL of bright-violet WARDSTONE seals off the whole
+   southeast shoulder of Barik - Farmer Hedda's steading, the causeway, AND
+   Captain Corvo's cove with his sloop - so you can see it all but reach none
+   of it until you carry a dungeon-forged pickaxe. The Undermaw drops that pick
+   (the Cragbreaker), so the whole loop stays inside Barik: hear the rumour ->
+   take the Undermaw -> shatter the ward -> reach Hedda and Corvo. Because the
+   only way to sail east (Corvo's sloop -> the Sunward Isle) runs through this
+   walled corner, Chapter III itself is gated behind clearing the Undermaw.
+   (Sailing home from Sunward is always safe: you must break the ward to reach
+   Corvo in the first place, so it is already down before any return.)
 
    Placement (main/Barik only, deterministic on the fixed seed):
-     - box Hedda in with a rectangular ring of vathward stones (all sharing one
-       gid, so breaking any one shatters the whole ward - see clearGateNode),
-     - clear the small interior to open ground + a couple of soil plots,
-     - then VERIFY by flood-fill that the ring truly seals Hedda AND that the
-       Undermaw (the pick's source) stays reachable without her. If either
-       check fails, the ring is torn back out - it can NEVER soft-lock.
+     - flood the SE corner from Hedda + Corvo, kept inside cut lines (x>=XCUT,
+       y>=YCUT) so it grabs the farm+causeway+cove but never the Undermaw or the
+       northern roads (Sunscour, the Vael March),
+     - lay a vathward stone on every walkable tile bordering that region (all
+       sharing one gid, so breaking any one shatters the whole wall - see
+       clearGateNode); water and cliffs seal the rest of the perimeter,
+     - then VERIFY by flood-fill that the wall truly seals Hedda AND Corvo AND
+       that the Undermaw (the pick's source) and the northern roads stay
+       reachable. If any check fails, the wall is torn back out - it can NEVER
+       soft-lock.
 
    Persistence: the moment any stone falls, clearGateNode records
    P.story.tg['main:heddaward']=1. On reload the world regen's and this placer
-   sees the flag and leaves the ring out for good (the way stays open), exactly
+   sees the flag and leaves the wall out for good (the way stays open), exactly
    like every other felled tool-gate.
    ===================================================================== */
 (function(){
@@ -58,6 +66,19 @@ function flood(sx,sy,blocked,cap){
   return out;
 }
 
+// the two cut lines that pen the seal into Barik's SE corner. Chosen (and
+// verified, below) so the flood grabs the farm + causeway + Corvo's cove but
+// never the Undermaw (x<XCUT) or the northern roads to Sunscour / the Vael
+// March (y<YCUT). Deterministic: the main map is a fixed seed.
+var WARD_XCUT=284, WARD_YCUT=201;
+
+function findNpcById(id){ for(var i=0;i<G.npcs.length;i++){ if(G.npcs[i].id===id) return G.npcs[i]; } return null; }
+// nearest walkable tile to (px,py) - so a seed / probe point that lands on a
+// building or the water's edge still resolves to open ground.
+function nearOpen(px,py){ if(walkableTile(px,py)) return [px,py];
+  for(var r=1;r<=6;r++) for(var oy=-r;oy<=r;oy++) for(var ox=-r;ox<=r;ox++){ var x=px+ox,y=py+oy; if(walkableTile(x,y)) return [x,y]; }
+  return [px,py]; }
+
 function placeBarikWard(id){
   try{
     if(id!=='main') return;
@@ -66,72 +87,50 @@ function placeBarikWard(id){
     if(typeof addGateNode!=='function') return;
     var H=findHedda(); if(!H) return;
     var hx=Math.round(H.x-0.5), hy=Math.round(H.y-0.5);
+    var C=findNpcById('corvo');
+    var cx=C?Math.round(C.x-0.5):null, cy=C?Math.round(C.y-0.5):null;
 
-    // ---- footprint: a compact pen around Hedda (interior IW x IH, ring one tile out) ----
-    var IW=5, IH=3;                                   // interior 5 wide x 3 tall, Hedda centred
-    var x0=hx-((IW-1)>>1), y0=hy-((IH-1)>>1);
-    var ix1=x0+IW-1, iy1=y0+IH-1;                     // interior bounds (inclusive)
-    var bx0=x0-1, by0=y0-1, bx1=ix1+1, by1=iy1+1;     // border bounds (inclusive)
+    // ---- flood the SE corner from Hedda (+ Corvo), staying inside the cut lines ----
+    var IN={}, st=[], seeds=[[hx,hy]]; if(cx!=null) seeds.push([cx,cy]);
+    for(var si=0; si<seeds.length; si++){ var s0=nearOpen(seeds[si][0],seeds[si][1]);
+      if(s0[0]>=WARD_XCUT && s0[1]>=WARD_YCUT && walkableTile(s0[0],s0[1])){ IN[s0[0]+','+s0[1]]=1; st.push(s0); } }
+    var guard=40000;
+    while(st.length){ var q=st.pop(); if(--guard<0) break;
+      for(var k=0;k<4;k++){ var nx=q[0]+DIRS[k][0], ny=q[1]+DIRS[k][1], key=nx+','+ny;
+        if(IN[key]) continue; if(nx<WARD_XCUT||ny<WARD_YCUT) continue; if(!walkableTile(nx,ny)) continue;
+        IN[key]=1; st.push([nx,ny]); } }
+    if(!Object.keys(IN).length) return;
 
-    // interior must be sane: in-bounds, no water, no other npc / critical building.
-    var interior=[];
-    for(var y=y0;y<=iy1;y++) for(var x=x0;x<=ix1;x++){
-      if(!inb(x,y)) return;
-      if(isWater(tileAt(x,y))) return;               // don't box a pond - bail (fail-safe)
-      if((x!==hx||y!==hy) && npcAt(x,y,'hedda')) return;
-      if(criticalDecorAt(x,y)) return;
-      interior.push([x,y]);
-    }
+    // ---- the wall: a vathward on every walkable tile bordering that region
+    //      (water / cliffs on the border need no stone - they seal on their own) ----
+    var wards=[], seenRing={};
+    for(var kk in IN){ var pr=kk.split(','), x=+pr[0], y=+pr[1];
+      for(var d=0; d<4; d++){ var bx=x+DIRS[d][0], by=y+DIRS[d][1], bk=bx+','+by;
+        if(IN[bk] || seenRing[bk]) continue; seenRing[bk]=1;
+        if(!walkableTile(bx,by)) continue;           // already solid/water -> natural wall
+        if(npcAt(bx,by,null)) continue;              // never wall an npc's tile
+        var g=addGateNode('vathward', bx, by);
+        if(g){ g.gid=WARD_GID; g.ward=1; wards.push(g); } } }
+    if(!wards.length) return;
 
-    // ---- carve the interior open + a couple of soil plots (skip Hedda's own tile) ----
-    var carved=[];
-    for(var ii=0;ii<interior.length;ii++){ var t=interior[ii]; var cx=t[0], cy=t[1];
-      var nn=nodeAt(cx,cy); if(nn){ nn.dead=true; nn.gone=true; carved.push(['node',nn]); }
-      if(solidAt(cx,cy)){ setSolid(cx,cy,0); carved.push(['solid',cx,cy]); }
-    }
-    // a small field: the interior row south of Hedda, where it's still bare ground
-    var plots=[];
-    for(var py=hy+1;py<=iy1;py++) for(var px=x0;px<=ix1;px++){
-      if(px===hx && py===hy) continue;
-      if(tileAt(px,py)!==T.PATH && tileAt(px,py)!==T.PLANK && !nodeAt(px,py)){
-        var already=false; for(var q=0;q<G.plots.length;q++){ if(G.plots[q].x===px && G.plots[q].y===py){ already=true; break; } }
-        if(!already && walkableTile(px,py)){ setTile(px,py,T.SOIL); G.plots.push({x:px,y:py,stage:0,t:0}); plots.push([px,py]); }
-      }
-    }
-
-    // ---- lay the ring: a vathward stone on every walkable border tile (existing
-    //      solids / water on the border seal the rest) ----
-    var wards=[];
-    for(var bx=bx0;bx<=bx1;bx++) for(var by=by0;by<=by1;by++){
-      var onBorder=(bx===bx0||bx===bx1||by===by0||by===by1);
-      if(!onBorder) continue;
-      if(!inb(bx,by)) continue;
-      if(!walkableTile(bx,by)) continue;             // already solid/water -> natural wall, leave it
-      if(npcAt(bx,by,'hedda')) continue;
-      var g=addGateNode('vathward', bx, by);
-      if(g){ g.gid=WARD_GID; g.ward=1; wards.push(g); }
-    }
-    if(!wards.length){ return; }                     // nothing placed - nothing to verify
-
-    // ---- SAFETY VERIFY: from the world spawn, with the ring solid, Hedda must be
-    //      SEALED and the Undermaw mouth must stay REACHABLE. Else tear it all back out. ----
+    // ---- SAFETY VERIFY: from the world spawn, with the wall solid, Hedda AND Corvo
+    //      must be SEALED, and the Undermaw + the northern roads must stay REACHABLE.
+    //      Else tear it all back out (never a soft-lock, never a half-open wall). ----
     var sp=(WORLD_DEFS.main && WORLD_DEFS.main.spawn) || {x:57.5,y:259.5};
     var spx=Math.round(sp.x-0.5), spy=Math.round(sp.y-0.5);
-    // seed the flood from the nearest open tile to spawn (spawn tile itself is walkable)
-    var reach=flood(spx,spy,{}, 60000);
-    var um=(typeof ZONES!=='undefined' && ZONES.undermaw) ? [Math.round(ZONES.undermaw.x),Math.round(ZONES.undermaw.y)] : [212,196];
-    // find an open tile at/near the undermaw mouth to test reachability
-    var umReach=false; for(var r=0;r<=4 && !umReach;r++){ for(var oy=-r;oy<=r && !umReach;oy++) for(var ox=-r;ox<=r && !umReach;ox++){
-      var ux=um[0]+ox, uy=um[1]+oy; if(reach[ux+','+uy]) umReach=true; } }
-    var heddaSealed = !reach[hx+','+hy];
+    var reach=flood(spx,spy,{}, 300000);             // wards are already solid, so flood routes around them
+    function reachNear(px,py){ if(px==null) return true; var n=nearOpen(px,py);
+      for(var r=0;r<=4;r++) for(var oy=-r;oy<=r;oy++) for(var ox=-r;ox<=r;ox++){ if(reach[(n[0]+ox)+','+(n[1]+oy)]) return true; } return false; }
+    function zone(z,dx,dy){ return (typeof ZONES!=='undefined' && ZONES[z]) ? [Math.round(ZONES[z].x),Math.round(ZONES[z].y)] : [dx,dy]; }
+    var um=zone('undermaw',212,196), des=zone('desert',300,112), vl=zone('vael',318,40);
+    var heddaSealed=!reachNear(hx,hy);
+    var corvoSealed=(cx==null)?true:!reachNear(cx,cy);
+    var umReach=reachNear(um[0],um[1]), desReach=reachNear(des[0],des[1]), vaelReach=reachNear(vl[0],vl[1]);
 
-    if(!(heddaSealed && umReach)){
-      // undo everything (fail-safe: never soft-lock, never a half-open ward)
+    if(!(heddaSealed && corvoSealed && umReach && desReach && vaelReach)){
       for(var w=0;w<wards.length;w++){ var wd=wards[w]; wd.dead=true; wd.gone=true; setSolid(wd.tx,wd.ty,0);
         var idx=G.nodes.indexOf(wd); if(idx>=0) G.nodes.splice(idx,1); }
-      for(var c=0;c<carved.length;c++){ var e=carved[c]; if(e[0]==='solid') setSolid(e[1],e[2],1); }
-      for(var pp=0;pp<plots.length;pp++){ for(var pj=G.plots.length-1;pj>=0;pj--){ if(G.plots[pj].x===plots[pp][0] && G.plots[pj].y===plots[pp][1]){ G.plots.splice(pj,1); break; } } }
-      try{ console.warn('placeBarikWard: seal/verify failed (sealed='+heddaSealed+' undermaw='+umReach+') - ward not placed'); }catch(_){}
+      try{ console.warn('placeBarikWard: SE-corner verify failed (hedda='+heddaSealed+' corvo='+corvoSealed+' um='+umReach+' des='+desReach+' vael='+vaelReach+') - wall not placed'); }catch(_){}
       if(typeof invalidateScenery==='function') invalidateScenery();
       return;
     }
@@ -152,8 +151,8 @@ function addLine(id, line){
 // lines), and only while the ward still stands.
 window.attachBarikWardRumours=function(){
   if(P.story && P.story.tg && P.story.tg[WARD_GID]) return;   // ward already down - no rumours
-  // Warden Kell - the "you can't reach the farmer, the stone cut us off" beat
-  addLine('kell', 'And there\'s the other thing - you\'ll not reach Farmer Hedda\'s steading. Some strange <b style="color:#c04bff">violet stone</b> came up in the night and walled the whole farm off, like the isle\'s been cut off from itself. No pick on Barik so much as scratches it. If anything down the Undermaw has an edge for it, bring it back.');
+  // Warden Kell - the "you can't reach the farmer OR the cove, the stone cut us off" beat
+  addLine('kell', 'And there\'s the other thing - the whole east shoulder\'s sealed off. Some strange <b style="color:#c04bff">violet stone</b> came up in the night and walled it all in: Farmer Hedda\'s steading, the causeway, Captain Corvo\'s cove and his sloop with it. There\'s no reaching the farm and no sailing east till it\'s down - and no pick on Barik so much as scratches it. If anything down the Undermaw has an edge for it, bring it back.');
   // Captain Corvo - the sailor who swears a man in violet raised it (Vath breadcrumb)
   addLine('corvo', 'You\'ll think me deep in the rum, but I saw it: a man all in <b style="color:#c04bff">violet</b> standing out on the headland the night that stone came up. He pointed at Hedda\'s fields, and the ground <i>answered</i> him - rose up purple and humming. Vath, the old folk are whispering. I\'ve sailed thirty years and never wanted the horizon more.');
 };
@@ -162,7 +161,7 @@ window.attachBarikWardRumours=function(){
 window.onWardBroken=function(n){
   try{
     if(!n || n.gid!==WARD_GID) return;
-    if(typeof toast==='function') toast('<b style="color:#c04bff">The ward shatters.</b> The violet stone crumbles to dust, and the way to Hedda\'s steading opens for good.', 5200);
+    if(typeof toast==='function') toast('<b style="color:#c04bff">The ward shatters.</b> The violet stone crumbles to dust the length of the wall, and the whole east shoulder opens for good - Hedda\'s steading, and the cove where Corvo\'s sloop can carry you east.', 5600);
     var hd=findHedda();
     if(hd){ hd.idleLines=[
       'You cut me LOOSE! I woke to that violet stone growing round my steading like frost - humming, cold, right across the lane till I couldn\'t see the road. I\'d have starved in my own field. Bless that pick of yours, love. Take a sack of the first crop, and don\'t you dare argue.',
