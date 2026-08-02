@@ -194,7 +194,7 @@ const scene=new THREE.Scene();
 const fog=new THREE.FogExp2(0xdfd0ab,0.0034); scene.fog=fog;
 // Slightly TELEPHOTO (narrow FOV) so depth compresses into a storybook diorama
 // rather than a wide free-roam FPS view — the 2D game's fixed iso 3/4 heritage.
-const camera=new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.5, 2000);
+const camera=new THREE.PerspectiveCamera(46, innerWidth/innerHeight, 0.5, 2000);
 
 // sky dome
 const skyMat=new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.BackSide, fog:false, toneMapped:false});
@@ -473,32 +473,33 @@ function maskedHead(skin,hair){
 // beard: colour; rod: a fisher's pole; size: overall scale.
 function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false,hat=null,beard=null,rod=false,size=1}={}){
   const g=new THREE.Group(); const rig={};
-  // rounded, organic body — capsules & tapered forms, never lego boxes
-  { const torso=pos(toon(cap(0.66,0.95,12),tunic,{outline:0.04}),0,2.42,0); torso.scale.set(1.08,1,0.82); g.add(torso); }
-  { const belt=pos(toon(ico(0.6,1),boot,{outline:0.03}),0,1.72,0); belt.scale.set(1.12,0.55,0.92); g.add(belt); }
+  // rounded, organic body — slim, upright capsules & tapered forms, never lego
+  // boxes and never blobby: a narrow deep-flattened torso reads as a shirt, not a barrel.
+  { const torso=pos(toon(cap(0.5,1.2,12),tunic,{outline:0.04}),0,2.5,0); torso.scale.set(1.16,1,0.64); g.add(torso); }
+  { const belt=pos(toon(ico(0.5,1),boot,{outline:0.03}),0,1.66,0); belt.scale.set(1.18,0.34,0.66); g.add(belt); }
   if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
-    const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl);   // castaway cloak, not the ember cape
+    const cl=pos(toon(box(1.02,1.55,.18),tunicDk,{outline:0.03}),0,2.45,-.5); cl.rotation.x=.16; g.add(cl);   // castaway cloak, not the ember cape
     // her mother's pendant — worn from the moment she washes ashore (fine old gold, a green stone)
     g.add(pos(toon(cyl(.5,.54,.12,10),0xc9a24e,{outline:0.02}),0,3.2,.34));
     g.add(pos(new THREE.Mesh(ico(.13,0),glowMat(0x9be07f)),0,2.9,.5)); }
   else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
     if(hat!=='wizard') g.add(pos(toon(new THREE.SphereGeometry(.78,14,12,0,7,0,Math.PI*.62),hair,{outline:0.04}),0,3.95,0));
-    g.add(pos(toon(cyl(.55,.62,.45,12),scarf,{outline:0.03}),0,3.25,0));
+    g.add(pos(toon(cyl(.4,.5,.42,12),scarf,{outline:0.03}),0,3.32,0));
     // eyes so NPCs aren't faceless
     for(const ex of[-.28,.28]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.1,8,8),new THREE.MeshBasicMaterial({color:0x201810})),ex,3.9,0.66));
     if(beard){ const bd=toon(new THREE.SphereGeometry(.5,12,10),beard,{outline:0.04}); bd.scale.set(1,1.25,0.7); bd.position.set(0,3.35,0.42); g.add(bd); }
     if(hat==='wizard'){ g.add(pos(toon(cyl(1.0,1.08,.16,12),tunicDk,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.02,.7,1.9,12),tunicDk,{outline:0.04,flat:true}),0,5.2,0)); }
     else if(hat==='straw'){ g.add(pos(toon(cyl(.95,1.12,.1,12),0xb8965a,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.5,.85,.42,12),0xcaa860,{outline:0.03,flat:true}),0,4.45,0)); }
-    if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
-  rig.arm=new THREE.Group(); { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),0,-.62,0); a.scale.set(0.94,1,0.94); rig.arm.add(a); } rig.arm.position.set(1.05,3.05,0); g.add(rig.arm);
+    if(cape){ const cp=pos(toon(box(0.95,1.5,.16),scarf,{outline:0.03}),0,2.5,-.58); cp.rotation.x=.22; g.add(cp); } }
+  rig.arm=new THREE.Group(); { const a=pos(toon(cap(0.15,1.25,9),tunicDk,{outline:0.035}),0,-.66,0); rig.arm.add(a); } rig.arm.position.set(0.72,3.05,0); g.add(rig.arm);
   if(sword){ const sw=new THREE.Group(); sw.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); sw.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); rig.arm.add(sw); rig.sword=sw; }
   if(rod){ const rd=pos(toon(box(.08,4.4,.08),COL.timber,{outline:0}),1.5,4.2,.6); rd.rotation.z=-0.4; g.add(rd); }
-  { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),-1.05,2.43,0); a.scale.set(0.94,1,0.94); g.add(a); }
+  { const a=pos(toon(cap(0.15,1.25,9),tunicDk,{outline:0.035}),-0.72,2.39,0); g.add(a); }
   const legF=(sx)=>{ const lg=new THREE.Group();
-    const sh=toon(cap(0.24,1.02,9),boot,{outline:0.035}); sh.scale.set(0.96,1,0.96); lg.add(sh);
-    const ft=pos(toon(ico(0.24,1),boot,{outline:0.03}),0,-0.8,0.18); ft.scale.set(1.0,0.6,1.55); lg.add(ft);   // a rounded foot, not a cut box
-    lg.position.set(sx,0.9,0); g.add(lg); return lg; };
-  rig.legL=legF(-.42); rig.legR=legF(.42);
+    const sh=toon(cap(0.19,1.12,9),boot,{outline:0.035}); lg.add(sh);
+    const ft=pos(toon(ico(0.2,1),boot,{outline:0.03}),0,-0.82,0.16); ft.scale.set(1.0,0.55,1.5); lg.add(ft);   // a rounded foot, not a cut box
+    lg.position.set(sx,0.92,0); g.add(lg); return lg; };
+  rig.legL=legF(-.3); rig.legR=legF(.3);
   g.scale.setScalar(size); g.userData.rig=rig; return g;
 }
 
@@ -838,7 +839,7 @@ addEventListener('keydown',e=>{ keys[e.code]=true; if(['Space','KeyF','ShiftLeft
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 // Default to a fixed-ish iso 3/4 angle; the pitch is clamped to a narrow band so
 // you can't flatten to an FPS view or drop to top-down — it stays a diorama.
-let camYaw=P.yaw+Math.PI, camPitch=0.62, camDist=24;
+let camYaw=P.yaw+Math.PI, camPitch=0.62, camDist=32;
 // mouse: drag = look.  touch: LEFT half = move stick, RIGHT half = look stick (both analog, same feel).
 const look={a:false,id:-1,x:0,y:0}, mv={a:false,id:-1,ox:0,oy:0,x:0,y:0}, lk={a:false,id:-1,ox:0,oy:0,x:0,y:0};
 const stickBase=document.getElementById('stickBase'), stickKnob=document.getElementById('stickKnob');
@@ -860,7 +861,7 @@ function onUp(e){ if(e.pointerId===mv.id){mv.a=false;mv.x=mv.y=0;stickBase.style
   if(e.pointerId===lk.id){lk.a=false;lk.x=lk.y=0;lookBase.style.display=lookKnob.style.display='none';}
   if(e.pointerId===look.id)look.a=false; }
 addEventListener('pointerdown',onDown); addEventListener('pointermove',onMove); addEventListener('pointerup',onUp); addEventListener('pointercancel',onUp);
-addEventListener('wheel',e=>{ camDist=clamp(camDist+e.deltaY*0.02,16,32); },{passive:true});
+addEventListener('wheel',e=>{ camDist=clamp(camDist+e.deltaY*0.02,20,54); },{passive:true});
 // apply the look stick (touch) + Q/E yaw, R/C pitch (keyboard) — camera adjusts continuously, like the move stick
 function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitch+lk.y*1.7*dt,0.5,0.85); }
   if(keys['KeyQ'])camYaw+=1.9*dt; if(keys['KeyE'])camYaw-=1.9*dt;
