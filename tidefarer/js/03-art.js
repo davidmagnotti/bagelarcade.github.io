@@ -1097,11 +1097,11 @@ function drawHumanoid(g,sx,sy,o){
     g.restore();
   }
 
-  // 3/4 turn on the whole standing figure (everything above the ground shadow):
-  // foreshorten across as it turns side-on, and slide the mass toward the leading
-  // side so the stance reads as rotated, not just narrowed. The head then leads a
-  // touch further below, completing the yaw.
-  if(turnQ){ g.scale(1-turnQ*0.16, 1); g.translate(_lead*turnQ*0.9, 0); }
+  // 3/4 turn: the FEET stay planted and centred on the shadow (no whole-figure
+  // shrink or slide - that read as "smaller / off-centre"); instead the torso and
+  // head twist toward the heading below, so the figure reads as rotated at full
+  // size. Only a whisper of overall foreshorten keeps the silhouette honest.
+  if(turnQ){ g.scale(1-turnQ*0.05, 1); }
 
   if(o.quiver && !away){
     g.save(); g.translate(-7,-24+B); g.rotate(0.5);
@@ -1218,7 +1218,9 @@ function drawHumanoid(g,sx,sy,o){
   }
 
   /* ---------------- tiny round body ---------------- */
-  g.save(); if(bwF!==1) g.scale(bwF,1);   // body girth: the torso, belt, apron & armour widen together
+  g.save();
+  if(turnQ){ g.translate(_lead*turnQ*1.15,0); g.scale(1-turnQ*0.11,1); }   // torso twists toward the heading (reads even from behind)
+  if(bwF!==1) g.scale(bwF,1);   // body girth: the torso, belt, apron & armour widen together
   if(o.robe){
     const hem=Math.sin(step||G.time*1.6)*1.2;
     const rg2=g.createLinearGradient(0,-27,0,0);
@@ -1405,7 +1407,7 @@ function drawHumanoid(g,sx,sy,o){
   /* ---------------- THE HEAD: half the hero ---------------- */
   g.save();
   g.translate(flip*stF,-34.6+B*1.15+stF*0.6);           // stoop leans the head forward & down
-  if(turnQ){ g.translate(_lead*turnQ*1.6, 0); g.rotate(_lead*turnQ*0.07); } // head leads the turn
+  if(turnQ){ g.translate(_lead*turnQ*1.85, 0); g.rotate(_lead*turnQ*0.09); } // head leads the turn
   const headScale=hdF*(o.hero?1.12:1);                  // hero head grander; build.head resizes per character
   if(headScale!==1) g.scale(headScale,headScale);
   if(walking) g.rotate(sw1*0.035);
