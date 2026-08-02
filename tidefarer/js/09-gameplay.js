@@ -383,8 +383,25 @@ function warpTo(b){ // step through a tunnel to its far end (same world), with a
 }
 
 /* ---- gathering ---- */
+// Gathering is Bram's craft to grant: no chopping wood or mining stone until you've been
+// to the forge and spoken with Bram the Smith. Old saves are grandfathered generously so
+// no returning player is suddenly locked out (met him, holds a weapon, or off Emberwick).
+function hasMetBram(){
+  if(P.story && P.story.bramMet) return true;
+  if(P.kit || qs('kit')==='done' || qs('kit')==='active') return true;
+  if(P.unlocked && (P.unlocked.melee || P.unlocked.bow)) return true;
+  if(typeof G!=='undefined' && G.worldId && G.worldId!=='isle') return true;
+  return false;
+}
 function hitNode(n){
   facePoint(n.x,n.y);
+  // hold gathering behind the smith - hack a tree or a rock before seeing Bram and you're
+  // told to go find him first (a soft nag, throttled so it doesn't spam every swing).
+  if((n.kind==='tree' || n.kind==='rock') && !hasMetBram()){
+    if(!P._bramNagT || G.time>P._bramNagT){ P._bramNagT=G.time+3;
+      toastErr('You\'ve nothing to work it with yet - see <b>Bram the Smith</b> at the forge first.',3600); }
+    P.click=null; return;
+  }
   // GATED MATERIAL: ironwood pines / basalt stone bounce your current tool until
   // you carry the right tier (a dungeon-forged Rivenedge Axe / Cragbreaker Pick).
   // gateBlocked() shows the "your tool barely marks it" feedback itself.
@@ -625,10 +642,13 @@ function unlockDash(msg){
   P.unlocked.dash=true;
   if(typeof updateMountBtn==='function') updateMountBtn();
   Snd.quest&&Snd.quest();
-  const dashMsg = msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Shift')+' to dart aside - a breath of speed and no damage taken mid-dash.';
+  const dashMsg = msg || '<b style="color:#c9b0ff">Dash learned!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the dodge button':'Press Ctrl')+' to dart aside - a breath of speed and no damage taken mid-dash.';
   // a click-to-dismiss popup (not a passing toast) so the lesson can't be missed
-  if(typeof storyCard==='function') storyCard(dashMsg, {label:'OK'});
-  else toast(dashMsg, 4600);
+  const showDashCard=()=>{ if(typeof storyCard==='function') storyCard(dashMsg, {label:'OK'}); else toast(dashMsg, 4600); };
+  // If the dash is granted mid-dialogue (Orin's quest turn-in), hold this card until the
+  // player has clicked "Continue" through Orin's own line - then it pops (see buildDialogContent).
+  if(typeof dlg!=='undefined' && dlg.open){ P._dashCardPending=showDashCard; }
+  else showDashCard();
 }
 /* PARRY - a TRAINED, timed defence taught by the isle's blade-master (Rask). A
    brief braced stance: any blow or shot that lands from the front while it holds
@@ -679,6 +699,13 @@ function onParry(sx,sy){
 function beginParryDrill(){
   const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(!rask) return;
   if(qs('bladeoath')!=='active'){ P.quests.bladeoath='active'; P.prog.bladeoath=0; }
+  // step the student back a few paces so Rask's billet has room to fly - you want to SEE it
+  // cross the gap and read the timing, not have it in your face the instant he lets go.
+  { const dx=P.x-rask.x, dy=P.y-rask.y, l=Math.hypot(dx,dy)||1;
+    if(l<5.5 && typeof findOpenNear==='function'){
+      const s=findOpenNear(Math.round(rask.x+dx/l*5.5), Math.round(rask.y+dy/l*5.5), 4);
+      if(s){ P.x=s[0]+0.5; P.y=s[1]+0.5; P.click=null; P.moving=false; } }
+    if(typeof facePoint==='function') facePoint(rask.x,rask.y); }
   P.parryDrill={count:0, need:3, phase:'rest', t:1.0, proj:null};
   rask.drillWarn=0;
   if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s billet - three times');
@@ -725,8 +752,26 @@ function updateParryDrill(dt){
 function finishParryDrill(){
   const rask=G.npcs&&G.npcs.find(n=>n.id==='rask'); if(rask){ rask.drillWarn=0; rask.swing=0; }
   P.parryDrill=null;
-  unlockParry();
+  // The guard is learned - but no "Parry learned!" skill card. Set it silently, then let
+  // Rask close the lesson himself, in character (his line still teaches the timing).
+  P.unlocked=P.unlocked||{}; P.unlocked.parry=true;
+  Snd.quest&&Snd.quest();
   if(qs('bladeoath')==='active' && questReady('bladeoath')) completeQuest('bladeoath');
+  if(typeof questReadySweep==='function') questReadySweep();
+  if(typeof updateQuestUI==='function') updateQuestUI();
+  if(typeof autoSave==='function') autoSave();
+  if(rask && typeof setDialog==='function'){
+    // open Rask's dialog panel directly (skipping buildDialogContent) so his "nice work"
+    // line shows instead of his normal chatter.
+    P.click=null;
+    { const dl=Math.hypot(P.x-rask.x,P.y-rask.y)||1; rask.face={x:(P.x-rask.x)/dl, y:(P.y-rask.y)/dl}; }
+    dlg.open=true; dlg.npc=rask;
+    document.getElementById('dialog').style.display='block';
+    document.getElementById('dname').textContent = (typeof npcDisplayName==='function')? npcDisplayName(rask) : rask.name;
+    if(typeof drawPortrait==='function') drawPortrait(rask);
+    setDialog('<i>Rask lowers his billet and gives a short, satisfied nod.</i> “Nice work - that\'s the turning. No button to it, just the eye and the timing: when a foe winds up, watch for the white flash and swing on it. You\'ll knock the blow aside and leave the striker wide open. A thrown shot\'s the same - time your swing and you\'ll bat it right back the way it came.”',
+      [{label:'Got it', ghost:true, fn:closeDialog}]);
+  }
 }
 function drawMobBars(m,s){
   if(m.hp<m.maxhp){
@@ -1368,7 +1413,7 @@ function updatePlayer(dt){
   // dodge roll
   P.rollT=Math.max(0,(P.rollT||0)-dt); P.rollCd=Math.max(0,(P.rollCd||0)-dt);
   if(P.rollCd<=0) P.dashChain=0;
-  if(keys['shift']) tryRoll();
+  if(keys['control']) tryRoll();
   // parry timers: the short guard window a swing opens, and the clean-parry flash.
   // No movement freeze now - the parry rides your attack, so you keep your footing.
   P.parryT=Math.max(0,(P.parryT||0)-dt);

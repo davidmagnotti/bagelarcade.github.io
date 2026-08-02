@@ -172,7 +172,7 @@ function boot(){
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
     ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather (time it to an enemy\'s blow to parry) · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Shift</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
@@ -296,9 +296,19 @@ function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
-  // start beside Bram at the forge - your first stop for tools and a blade
-  const bram=(G.npcs||[]).find(n=>n.id==='bram');
-  if(bram){ P.x=bram.x-3; P.y=bram.y+1; } else { P.x=56.5; P.y=58.5; }
+  // wash ashore right beside Elder Maren, down by the water - she is the one who draws
+  // you out of the surf, so the castaway wakes at her side on the shore (not at the forge).
+  const greeter=(G.npcs||[]).find(n=>n.id==='maren');
+  let sp=null;
+  if(greeter && typeof findOpenNear==='function'){
+    for(const off of [[1,1],[0,1],[1,0],[-1,1],[1,-1],[0,2],[2,0],[-1,0],[0,-1]]){
+      const c=findOpenNear(Math.round(greeter.x+off[0]), Math.round(greeter.y+off[1]), 2);
+      if(c && dist(c[0]+0.5,c[1]+0.5,greeter.x,greeter.y)>=1){ sp=c; break; }
+    }
+  }
+  if(sp){ P.x=sp[0]+0.5; P.y=sp[1]+0.5; }
+  else if(greeter){ P.x=greeter.x+1.5; P.y=greeter.y+0.5; }
+  else { P.x=56.5; P.y=58.5; }
   P.dir={x:1,y:0};
   if(typeof unstickEntity==='function') unstickEntity(P);   // never wake wedged in a wall
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;

@@ -293,6 +293,10 @@ function toastErr(html,ms=3200){ _renderToast(html,ms); }
 function storyCard(html, opts){
   opts=opts||{};
   const ov=document.getElementById('storyOv'); if(!ov) return;
+  // Present speech plainly here too: the rest of the game strips the “ ” speech-quotes
+  // via cleanSpeech, but story cards set innerHTML directly - so drop the curly quotes
+  // here as well (the italic narration stays). No more quote marks anywhere.
+  if(typeof html==='string') html=html.replace(/[“”]/g,'').replace(/ {2,}/g,' ');
   document.getElementById('storyText').innerHTML=html;
   const bt=document.getElementById('storyBtn');
   bt.textContent=opts.label||'Continue';
