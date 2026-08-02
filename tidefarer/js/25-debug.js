@@ -69,6 +69,7 @@ frame=function(ts){
           'state '+(typeof G!=='undefined'?G.state:'?')+mem+
           '   worstframe '+worst.toFixed(0)+'ms\n'+
           'RQ='+(typeof RQ!=='undefined'?RQ.toFixed(2):'?')+' LOWFX='+(typeof LOWFX!=='undefined'?LOWFX:'?')+
+          ' gfx='+(typeof GFXMODE!=='undefined'?GFXMODE:'?')+' waterHi='+(typeof WATERHI!=='undefined'?WATERHI:'?')+'\n'+
           ' DPR='+DPR.toFixed(2)+'  canvas '+cv.width+'x'+cv.height+'\n'+
           (typeof GPUINFO==='object'? 'canvas raster: '+GPUINFO.class+
             ' ('+(GPUINFO.perIter||0).toFixed(2)+'ms/iter)\n' : '');

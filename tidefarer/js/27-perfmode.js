@@ -1,13 +1,18 @@
 /* =====================================================================
-   DISPLAY performance control (pause-menu Settings) - FAST GRAPHICS
-   One lever: the cheap render pipeline (cached ground+scenery blits, flat-shaded
-   characters, costly passes stripped) at FULL window size. It's the fix for a
-   desktop panel that runs WebGL games fine but chokes on our Canvas2D per-frame
-   work when the window is large. Persists the choice and locks the auto-tuner
-   to it (js/24-perf.js).
+   DISPLAY performance control (pause-menu Settings) - GRAPHICS QUALITY
+   Three modes on one lever:
+     HIGH   - full detail, crisp per-tile render (nothing stripped).
+     MEDIUM - the cheap render pipeline (cached ground+scenery blits, flat-shaded
+              characters, costly passes stripped) at FULL window size, BUT with
+              full-detail water drawn back on top. The experiment: the cheap
+              pipeline's speed with a sea that still looks good.
+     LOW    - the cheap pipeline throughout (water is a light animated overlay).
+   The cheap pipeline is the fix for a desktop panel that runs WebGL games fine
+   but chokes on our Canvas2D per-frame work when the window is large. Persists the
+   choice (tf_gfx) and locks the auto-tuner to it (js/24-perf.js).
 
    Performance mode (shrank the window) and the Render-resolution slider were
-   removed - Fast graphics covers their cases at full size, so any persisted
+   removed - the cheap pipeline covers their cases at full size, so any persisted
    value for them is cleared here to recover a previously shrunk/soft display.
    ===================================================================== */
 (function(){
@@ -18,59 +23,69 @@
 PERF=false; try{ SafeStore.set('tf_perf','0'); }catch(e){}
 URQ=1;      try{ SafeStore.del('tf_urq'); }catch(e){}
 
-// Convenience query flags at load (?fast / ?lowgfx / ?perfmode all now mean
-// "Fast graphics"), so the mode can be set without opening the pause menu.
+// Convenience query flags at load, so a mode can be set without opening the menu.
+// ?high / ?medium / ?low pick a mode directly; the older ?fast / ?lowgfx /
+// ?perfmode all map to LOW (their historical "cheap pipeline" meaning).
 try{
   const q=(location.search||'').toLowerCase();
-  if(q.indexOf('fast')>=0 || q.indexOf('lowgfx')>=0 || q.indexOf('perfmode')>=0){
-    FASTGFX=true; try{ SafeStore.set('tf_fast','1'); }catch(e){}
-  }
+  let m=null;
+  if(q.indexOf('medium')>=0) m='medium';
+  else if(q.indexOf('high')>=0) m='high';
+  else if(q.indexOf('low')>=0||q.indexOf('fast')>=0||q.indexOf('lowgfx')>=0||q.indexOf('perfmode')>=0) m='low';
+  if(m){ GFXMODE=m; FASTGFX=(m!=='high'); try{ SafeStore.set('tf_gfx',m); }catch(e){} }
 }catch(e){}
 if(typeof refreshLOWFX==='function') refreshLOWFX();
 if(typeof resize==='function') resize();
 
-function setFastMode(on){
-  FASTGFX = !!on;
+function setGfxMode(mode){
+  if(mode!=='high'&&mode!=='medium'&&mode!=='low') return;
+  GFXMODE = mode;
+  FASTGFX = (mode!=='high');
   if(typeof refreshLOWFX==='function') refreshLOWFX();
-  try{ SafeStore.set('tf_fast', FASTGFX?'1':'0'); }catch(e){}
+  try{ SafeStore.set('tf_gfx', mode); }catch(e){}
   // The bake scale (GC_S) depends on FASTGFX, so the cached ground/scenery must
-  // be re-baked at the new scale - otherwise the old-scale blit draws at the
-  // wrong size. (See gcScale in js/10-rendering.js.)
+  // be re-baked when the pipeline changes - otherwise the old-scale blit draws at
+  // the wrong size. (See gcScale in js/10-rendering.js.)
   if(typeof invalidateGround==='function') invalidateGround();
   if(typeof invalidateScenery==='function') invalidateScenery();
   if(typeof tfGfxLock==='function') tfGfxLock();   // honor this deliberate choice
   if(typeof resize==='function') resize();
   syncPerfUI();
-  if(typeof toast==='function') toast(FASTGFX
-    ? 'Fast graphics on - full size, lighter rendering.'
-    : 'Fast graphics off - full detail.');
+  if(typeof toast==='function') toast(
+    mode==='high'   ? 'Graphics: High - full detail.' :
+    mode==='medium' ? 'Graphics: Medium - lighter render, full-detail water.' :
+                      'Graphics: Low - lightest render, best for slow machines.');
 }
-window.setFastMode = setFastMode;
+window.setGfxMode = setGfxMode;
+// Back-compat shim for any old caller: on => Low (cheap pipeline), off => High.
+window.setFastMode = function(on){ setGfxMode(on?'low':'high'); };
 
 window.syncPerfUI = function(){
-  const fon=document.getElementById('cfgFastOn'), foff=document.getElementById('cfgFastOff');
-  if(fon){ fon.classList.toggle('on', FASTGFX); foff.classList.toggle('on', !FASTGFX); }
+  const ids={high:'cfgGfxHigh', medium:'cfgGfxMedium', low:'cfgGfxLow'};
+  for(const m in ids){ const b=document.getElementById(ids[m]); if(b) b.classList.toggle('on', GFXMODE===m); }
 };
 
-// Fold Fast graphics into the existing settings sync so it updates on menu open.
+// Fold the graphics control into the existing settings sync so it updates on menu open.
 if(typeof syncCfgUI==='function'){
   const _sync=syncCfgUI;
   syncCfgUI=function(){ _sync(); syncPerfUI(); };
 }
 
 function inject(){
-  if(document.getElementById('cfgFastOn')) return true;
+  if(document.getElementById('cfgGfxHigh')) return true;
   const anchor=document.getElementById('cfgFlashOff');
   const row=anchor && anchor.closest('.pRow');
   if(!row) return false;
   const dim='text-transform:none;letter-spacing:0;color:var(--parch-dim);font-size:10px;';
   row.insertAdjacentHTML('afterend',
-    '<div class="pRow"><span>Fast graphics '+
-      '<span style="'+dim+'">(full size, smoother - best for slow machines)</span></span>'+
-    '<div class="pSeg"><button class="btn" id="cfgFastOn">On</button>'+
-    '<button class="btn" id="cfgFastOff">Off</button></div></div>');
-  document.getElementById('cfgFastOn').onclick=()=>setFastMode(true);
-  document.getElementById('cfgFastOff').onclick=()=>setFastMode(false);
+    '<div class="pRow"><span>Graphics '+
+      '<span style="'+dim+'">(Medium &amp; Low are lighter for slow machines; Medium keeps nice water)</span></span>'+
+    '<div class="pSeg"><button class="btn" id="cfgGfxHigh">High</button>'+
+    '<button class="btn" id="cfgGfxMedium">Medium</button>'+
+    '<button class="btn" id="cfgGfxLow">Low</button></div></div>');
+  document.getElementById('cfgGfxHigh').onclick=()=>setGfxMode('high');
+  document.getElementById('cfgGfxMedium').onclick=()=>setGfxMode('medium');
+  document.getElementById('cfgGfxLow').onclick=()=>setGfxMode('low');
   syncPerfUI();
   return true;
 }

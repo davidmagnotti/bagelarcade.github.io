@@ -148,15 +148,35 @@ let PERF = false; try{ PERF = SafeStore.get('tf_perf')==='1'; }catch(e){}
    to a near-slideshow (~1 FPS) - so a deliberate choice survives instead of
    being silently overridden a second later. Persisted so it sticks on reload. */
 let USERGFX = false; try{ USERGFX = SafeStore.get('tf_gfxlock')==='1'; }catch(e){}
-/* FASTGFX: the player chose the fast render pipeline (cached ground+scenery
-   blits, costly per-frame passes stripped) but WITHOUT shrinking the window -
-   Performance Mode's speed at full display size. The one lever for a big desktop
-   panel (e.g. a Surface) that runs a WebGL game fine but chokes on our Canvas2D
-   per-tile draw storm when the window is large. TIER_LOW mirrors the auto-tuner's
-   lowest tier; LOWFX is derived from all three so any one engages the cheap path. */
-let FASTGFX = false; try{ FASTGFX = SafeStore.get('tf_fast')==='1'; }catch(e){}
+/* GFXMODE: the player's explicit quality choice.
+     'high'   - full detail, crisp per-tile render (nothing stripped).
+     'medium' - the cheap render pipeline (baked ground blit, flat characters,
+                costly per-frame passes stripped) BUT full-detail water on top.
+     'low'    - the cheap pipeline throughout (water is a light animated overlay).
+   Persisted as tf_gfx; the older tf_fast boolean is honoured as a fallback so an
+   existing "Fast graphics ON" reads as 'low'. */
+let GFXMODE = 'high';
+try{
+  const m=SafeStore.get('tf_gfx');
+  if(m==='high'||m==='medium'||m==='low') GFXMODE=m;
+  else if(SafeStore.get('tf_fast')==='1') GFXMODE='low';
+}catch(e){}
+/* FASTGFX: the cheap render pipeline is engaged (cached ground+scenery blits,
+   costly per-frame passes stripped) - true for both medium and low. Kept as a
+   derived flag because lots of code (e.g. the bake scale in js/10-rendering.js)
+   already keys off it. TIER_LOW mirrors the auto-tuner's lowest tier; LOWFX is
+   derived so any of user-choice / tuner / Performance-mode engages the cheap path. */
+let FASTGFX = (GFXMODE!=='high');
 let TIER_LOW = false;
-function refreshLOWFX(){ LOWFX = TIER_LOW || PERF || FASTGFX; }
+/* WATERHI: draw full-detail water (animated sheen, shore-lap, coastline bleed,
+   foam, reflections). True in high (drawn inline in the live tile pass) and in
+   medium (drawn as an overlay over the baked ground). Low - and any machine the
+   auto-tuner has forced down - get the cheap animated overlay instead. */
+let WATERHI = true;
+function refreshLOWFX(){
+  LOWFX = TIER_LOW || PERF || FASTGFX;
+  WATERHI = !LOWFX || GFXMODE==='medium';
+}
 refreshLOWFX();
 /* URQ: user render-resolution multiplier (Display slider, 0.5..1.0). Lets a
    player trade sharpness for fill-rate speed while staying full-screen - the

@@ -91,14 +91,16 @@ function buildGroundCache(){
   }
   groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
 }
-/* Animated water for the LOWFX path. The ground blit bakes the sea in flat (its
-   depth grade only), so the live per-tile sheen/sparkles/shore-lap were lost when
-   the tile loop was skipped. Those are cheap path ops on the FEW water tiles in
-   view (not the thousands of ground drawImages that were the real low-gfx cost),
-   so we run them here as a small overlay after the blit - the sea stays alive in
-   Fast graphics without giving back the win. Mirrors the full-detail effects in
-   the live tile pass below; keep the two in sync. */
-function drawWaterFXLow(minX,maxX,minY,maxY,EL){
+/* Water overlay for the cheap pipeline (medium + low). The ground blit bakes the
+   sea in flat (its depth grade only), so the live per-tile animation is lost when
+   the tile loop is skipped. These are cheap path ops on the FEW water tiles in
+   view (not the thousands of ground drawImages that were the real cost), so we run
+   them here after the blit - the sea stays alive without giving back the perf win.
+
+   When `full` (medium / WATERHI) the overlay mirrors EVERYTHING the live high-detail
+   tile pass does for water; keep the two in sync. In low we keep the lighter subset
+   (sheen, ripples, shore-lap, twinkle) and add back more only as it proves safe. */
+function drawWaterOverlay(minX,maxX,minY,maxY,EL,full){
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
   if(CLOUD) return;   // cloud worlds have open sky where the sea would be
   for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
@@ -138,6 +140,16 @@ function drawWaterFXLow(minX,maxX,minY,maxY,EL){
         cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
         cx.beginPath(); cx.moveTo(sx-3,sy); cx.lineTo(sx+3,sy);
         cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
+      }
+      // full water (medium): the ragged coastline bleed - sand/grass banks overhang
+      // the waterline instead of stopping at a crisp diamond edge. (Baked flat in the
+      // ground cache, so it's re-added live here to match high detail.)
+      if(full){
+        const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+        for(const nb of nbs){
+          const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
+          if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
+        }
       }
     }
   }
@@ -246,9 +258,10 @@ function render(){
     // drawImage). Scenery - trees, rocks and buildings, all cheap sprite blits -
     // is drawn LIVE in the depth-sorted object pass, so every actor (player,
     // enemies, chests, pickups) occludes and is occluded correctly.
-    // The sea baked in flat; re-animate it with a cheap per-water-tile overlay so
-    // it still sparkles and laps the shore in Fast graphics (see drawWaterFXLow).
-    drawWaterFXLow(minX,maxX,minY,maxY,EL);
+    // The sea baked in flat; re-animate it with a per-water-tile overlay so it
+    // still sparkles and laps the shore. WATERHI (medium) gets the full high-detail
+    // treatment; low gets the lighter subset. (see drawWaterOverlay.)
+    drawWaterOverlay(minX,maxX,minY,maxY,EL,WATERHI);
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
@@ -333,7 +346,7 @@ function render(){
     }
   }
   }
-  if(fxOn('foam')) drawFoam(minX,maxX,minY,maxY);
+  if(WATERHI || fxOn('foam')) drawFoam(minX,maxX,minY,maxY);   // full water (high/medium) keeps shoreline foam
   if(fxOn('decals')) drawDecals(minX,maxX,minY,maxY);
   // ground-plane atmosphere: daytime hearth light cast on the grass, building
   // contact AO, and terrain break-up scatter - drawn UNDER the actors that
@@ -3532,7 +3545,7 @@ function drawPlayer(s){
   // ---- water reflection + wake ----
   // When wading, surfing or sailing over water, cast a wobbling, flipped mirror of
   // the figure and open a V-wake behind the stride. Water only, top tier only.
-  if(!LOWFX && !G.interior && !P.dead && G.worldId!=='skydungeon' && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
+  if(WATERHI && !G.interior && !P.dead && G.worldId!=='skydungeon' && tileAt(P.x|0,P.y|0)<=T.SHALLOW){
     cx.save();
     cx.globalAlpha=0.20;
     const wob=Math.sin(G.time*3)*1.3;
