@@ -95,7 +95,7 @@ function drawGateAura(n,s){
   if(d<9){
     var top=(cfg.kind==='rock')? -52 : -106;
     cx.globalAlpha=Math.max(0,Math.min(1,(9-d)/3.2));
-    cx.font='bold 10px Georgia'; cx.textAlign='center';
+    cx.font='bold 10px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
     cx.lineWidth=3.2; cx.strokeStyle='rgba(0,0,0,0.82)'; cx.strokeText(cfg.tag, s.x, s.y+top);
     cx.fillStyle=cfg.color; cx.fillText(cfg.tag, s.x, s.y+top);
     cx.globalAlpha=1;

@@ -736,7 +736,7 @@ function drawMobBars(m,s){
   }
   if(!m.dead && dist(P.x,P.y,m.x,m.y)<8){
     const dl=(m.lvl||1)-(P.level||1);
-    cx.font='bold 9px Georgia'; cx.textAlign='center';
+    cx.font='bold 9px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
     cx.fillStyle= dl>=3?'#ff6a5a': dl>=1?'#ffd76a': dl<=-3?'#8a94a0':'#e8e0d0';
     const top2= m.kind==='scorpion'? -36 : m.kind==='dragon'? -128 : m.boss?-102: m.kind==='alpha'?-94: -58;
     cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=2.6;
@@ -755,7 +755,7 @@ function drawMobBars(m,s){
     if(flash){
       // the strike moment: a big, bright WHITE ! + a quick expanding ring shouting NOW
       const p=0.85+0.15*Math.sin(G.time*40);
-      cx.globalAlpha=1; cx.font='bold 30px Georgia';
+      cx.globalAlpha=1; cx.font='bold 30px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif';
       cx.strokeStyle='rgba(0,0,0,0.85)'; cx.lineWidth=5.5;
       cx.strokeText('!', s.x, s.y+top3);
       cx.fillStyle='rgba(255,255,255,'+p.toFixed(2)+')'; cx.fillText('!', s.x, s.y+top3);
@@ -766,7 +766,7 @@ function drawMobBars(m,s){
       // the build-up: a red ! that grows as the flash nears
       const grow = 1 - Math.min(1, (m.windup - PARRY_WIN)/0.34);   // 0 early -> ~1 just before the flash
       cx.globalAlpha=0.55+0.3*Math.sin(G.time*13);
-      cx.font='bold '+Math.round(15+9*grow)+'px Georgia';
+      cx.font='bold '+Math.round(15+9*grow)+'px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif';
       cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=3.5;
       cx.strokeText('!', s.x, s.y+top3); cx.fillStyle='#ff7a4a'; cx.fillText('!', s.x, s.y+top3);
     }

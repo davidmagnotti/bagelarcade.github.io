@@ -2,16 +2,21 @@
     --walnut:#241a10; --walnut2:#33251a; --parch:#f0e2c0; --parch-dim:#c9b990;
     --ember:#ff9a3c; --ember-dk:#c96f1e; --leaf:#7fb05b; --blood:#e05648; --mana:#5aa7e8;
     --shadow:0 6px 24px rgba(0,0,0,.55);
+    /* Typography - self-contained system stacks (the game ships no font files).
+       Display: a Palatino humanist serif - warmer & more crafted than Georgia.
+       Body: Trebuchet MS - a friendly humanist sans with more character than Verdana. */
+    --font-serif:'Palatino Linotype','Book Antiqua',Palatino,'URW Palladio L','Iowan Old Style',Georgia,serif;
+    --font-sans:'Trebuchet MS','Segoe UI',Candara,'Gill Sans','Gill Sans MT',Verdana,sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:100%;height:100%;overflow:hidden;background:#0d1420;
-    font-family:Verdana,Geneva,sans-serif;color:var(--parch);
+    font-family:var(--font-sans);color:var(--parch);
     -webkit-user-select:none;user-select:none;touch-action:none;
     overscroll-behavior:none;overscroll-behavior-y:contain;}
   body{position:fixed;inset:0;}
   #game{position:fixed;left:0;top:0;display:block;background:#16283e;}
   html,body{background:#07090d;}
-  .serif{font-family:Georgia,'Times New Roman',serif;}
+  .serif{font-family:var(--font-serif);}
   /* ---------- HUD ---------- */
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10;}
   #hud *{pointer-events:none;}
@@ -44,7 +49,7 @@
   .qcard.mini .qt{font-size:12px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .qcard.mini .qp{font-size:10.5px;margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .qcard .qmore{font-size:9.5px;color:var(--parch-dim);margin-top:2px;letter-spacing:.4px;}
-  .qcard .qt{font-family:Georgia,serif;font-size:13px;color:var(--ember);margin-bottom:2px;}
+  .qcard .qt{font-family:var(--font-serif);font-size:13px;color:var(--ember);margin-bottom:2px;}
   .qcard .qd{font-size:11px;color:var(--parch);line-height:1.35;}
   .qcard .qp{font-size:11px;color:#9be07f;margin-top:2px;font-weight:bold;}
   /* hotbar */
@@ -119,7 +124,7 @@
     background:linear-gradient(180deg,#2c2013,#1c130a);border:3px solid #4a3826;border-radius:14px;
     box-shadow:0 20px 60px rgba(0,0,0,.7);padding:16px;width:min(480px,92vw);max-height:82vh;overflow-y:auto;
     display:none;pointer-events:auto;}
-  .panel h2{font-family:Georgia,serif;color:var(--ember);font-size:19px;letter-spacing:1px;margin-bottom:10px;
+  .panel h2{font-family:var(--font-serif);color:var(--ember);font-size:19px;letter-spacing:1px;margin-bottom:10px;
     border-bottom:1px solid #4a3826;padding-bottom:7px;}
   .panel .closeX{position:absolute;top:10px;right:12px;width:28px;height:28px;border-radius:8px;
     background:#4a3826;color:var(--parch);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;}
@@ -212,7 +217,7 @@
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
   #dportrait{border-radius:10px;background:#170f07;border:2px solid #4a3826;flex:0 0 auto;}
-  #dname{font-family:Georgia,serif;color:var(--ember);font-size:16px;margin-bottom:4px;}
+  #dname{font-family:var(--font-serif);color:var(--ember);font-size:16px;margin-bottom:4px;}
   #dtext{font-size:13.5px;line-height:1.5;color:var(--parch);}
   #dbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   /* inventory grid */
@@ -228,10 +233,10 @@
   /* skills */
   .skrow{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .skrow .skn{width:98px;font-size:13px;font-weight:bold;}
-  .skrow .sklv{width:52px;font-family:Georgia,serif;color:var(--ember);font-size:15px;text-align:center;line-height:1.05;}
+  .skrow .sklv{width:52px;font-family:var(--font-serif);color:var(--ember);font-size:15px;text-align:center;line-height:1.05;}
   .skrow .sklv.maxed{color:#ffd76a;}
-  .skrow .sklv .skcap{font-family:Verdana,Geneva,sans-serif;font-size:9px;color:var(--parch-dim);}
-  .skrow .sklv .skmax{display:block;font-family:Verdana,Geneva,sans-serif;font-size:8px;font-weight:bold;
+  .skrow .sklv .skcap{font-family:var(--font-sans);font-size:9px;color:var(--parch-dim);}
+  .skrow .sklv .skmax{display:block;font-family:var(--font-sans);font-size:8px;font-weight:bold;
     letter-spacing:1px;color:#ffd76a;text-shadow:0 0 6px rgba(255,215,106,.6);}
   .skbar{flex:1;height:12px;background:#170f07;border-radius:6px;overflow:hidden;border:1px solid #4a3826;}
   .skbar .fill{height:100%;background:linear-gradient(90deg,#8bc34a,#c8e06a);}
@@ -243,7 +248,7 @@
   .qlogItem.open .qdet{display:block;}
   .qlogItem.open{border-color:var(--ember);}
   .qlogItem.done{opacity:.55;}
-  .qlogItem .qt{font-family:Georgia,serif;color:var(--ember);font-size:14px;}
+  .qlogItem .qt{font-family:var(--font-serif);color:var(--ember);font-size:14px;}
   .qlogItem .qd{font-size:12px;color:var(--parch);margin-top:3px;line-height:1.4;}
   .qlogItem .qp{font-size:12px;color:#9be07f;margin-top:3px;font-weight:bold;}
   /* map */
@@ -264,7 +269,7 @@
   .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at 50% 40%, rgba(30,42,60,.62), rgba(8,10,16,.88));pointer-events:auto;}
   .ovCard{text-align:center;max-width:560px;padding:28px;}
-  .ovCard h1{font-family:Georgia,serif;font-size:clamp(34px,7vw,58px);color:var(--parch);letter-spacing:2px;
+  .ovCard h1{font-family:var(--font-serif);font-size:clamp(34px,7vw,58px);color:var(--parch);letter-spacing:2px;
     text-shadow:0 0 24px rgba(255,154,60,.35),0 4px 10px #000;}
   .ovCard h1 span{color:var(--ember);}
   .ovCard p{font-size:14px;line-height:1.6;color:var(--parch-dim);margin:14px 0 22px;}
@@ -282,7 +287,7 @@
   .epiTitle{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;
     opacity:0;transition:opacity 1.4s ease;}
   .epiTitle.show{opacity:1;}
-  .epiTitle h1{font-family:Georgia,serif;font-size:clamp(26px,6vw,52px);letter-spacing:6px;
+  .epiTitle h1{font-family:var(--font-serif);font-size:clamp(26px,6vw,52px);letter-spacing:6px;
     color:var(--parch);margin:0;text-shadow:0 0 26px rgba(120,150,220,.45),0 4px 14px #000;}
   .epiSub{position:absolute;left:0;right:0;bottom:3%;text-align:center;padding:0 22px;
     pointer-events:none;opacity:0;transition:opacity .55s ease;}
@@ -292,7 +297,7 @@
   .epiSub .capbox{display:inline-block;max-width:680px;margin:0 auto;padding:14px 22px;
     background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.08);border-radius:12px;
     box-shadow:0 8px 30px rgba(0,0,0,.55);}
-  .epiSub .who{font-family:Georgia,serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;
+  .epiSub .who{font-family:var(--font-serif);font-size:13px;letter-spacing:3px;text-transform:uppercase;
     color:var(--ember);margin:0 0 8px;min-height:16px;}
   .epiSub .who:empty{display:none;}
   .epiSub .line{max-width:640px;margin:0 auto;font-size:clamp(15px,2.4vw,19px);line-height:1.7;
@@ -307,14 +312,14 @@
   .abtn.small{width:54px;height:54px;font-size:20px;}
   /* ---------- AAA layer ---------- */
   #bossBar{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:min(440px,72vw);z-index:12;display:none;pointer-events:none;}
-  #bossBar .bn{font-family:Georgia,serif;font-size:13px;letter-spacing:3px;text-align:center;color:#bfe8cd;
+  #bossBar .bn{font-family:var(--font-serif);font-size:13px;letter-spacing:3px;text-align:center;color:#bfe8cd;
     text-shadow:0 0 12px rgba(120,220,160,.6),0 2px 4px #000;margin-bottom:3px;}
   #bossBar .bbar{height:14px;border:2px solid #1e3527;border-radius:7px;background:rgba(8,14,10,.8);overflow:hidden;
     box-shadow:0 0 18px rgba(120,220,160,.25), var(--shadow);}
   #bossBar .bfill{height:100%;width:100%;background:linear-gradient(180deg,#9ef0bd,#3f9c68);transition:width .12s;}
   #banner{position:fixed;top:26%;left:50%;transform:translate(-50%,-50%);z-index:45;text-align:center;pointer-events:none;opacity:0;}
   #banner.show{animation:bannerIn 2.8s ease forwards;}
-  #banner .bt{font-family:Georgia,serif;font-size:clamp(24px,5vw,40px);color:var(--parch);letter-spacing:4px;
+  #banner .bt{font-family:var(--font-serif);font-size:clamp(24px,5vw,40px);color:var(--parch);letter-spacing:4px;
     text-shadow:0 0 26px rgba(255,154,60,.55),0 3px 8px #000;}
   #banner .bs{font-size:13px;color:var(--ember);letter-spacing:2px;margin-top:4px;text-shadow:0 1px 3px #000;}
   #banner .rule{width:180px;height:2px;margin:8px auto 0;background:linear-gradient(90deg,transparent,var(--ember),transparent);}
