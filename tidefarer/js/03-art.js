@@ -1038,8 +1038,22 @@ function drawHumanoid(g,sx,sy,o){
   const B=-bounce/s; // bounce offset in local units
   const stride=walking? sw1 : 0;
   if(!o.ride){ // a mounted rider has no ground contact - the mount draws its own shadow
-    g.fillStyle='rgba(10,6,3,0.20)'; // tight contact shadow under the boots
-    g.beginPath(); g.ellipse(0,0.6,7.8,2.5,0,0,TAU); g.fill();
+    // Soft contact shadow that REACTS to the bounce: as the figure lifts on a
+    // stride (or the idle breath) the pool tightens and fades - the classic
+    // "grounded" read that sells the vertical motion. bounce is deterministic
+    // from the gait, so this bakes consistently across an NPC's cached frames.
+    const liftF = clamp(bounce/(2.2*s), 0, 1);
+    const shR = 7.8*(1-0.16*liftF), shA = 1-0.34*liftF;
+    g.save(); g.translate(0,0.6); g.scale(1, 2.5/7.8); // squash a circular pool into the ground ellipse
+    let shg; try{
+      shg=g.createRadialGradient(0,0,0.6, 0,0,shR);
+      shg.addColorStop(0,   'rgba(8,5,3,'+(0.30*shA).toFixed(3)+')');
+      shg.addColorStop(0.62,'rgba(8,5,3,'+(0.19*shA).toFixed(3)+')');
+      shg.addColorStop(1,   'rgba(8,5,3,0)');            // soft feathered rim, no hard edge
+      g.fillStyle=shg;
+    }catch(e){ g.fillStyle='rgba(10,6,3,'+(0.20*shA).toFixed(3)+')'; }
+    g.beginPath(); g.arc(0,0,shR,0,TAU); g.fill();
+    g.restore();
   }
 
   if(o.quiver && !away){
@@ -1850,7 +1864,10 @@ function drawHumanoid(g,sx,sy,o){
     g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=1;
     g.beginPath(); g.moveTo(-2.1,-0.2); g.lineTo(2.1,-0.2); g.stroke();
     // weapon
-    g.rotate((isSword? 0.0 : -0.5) + swv*(isSword? -0.6 : 0.2));
+    // Sword rest: cancel the arm's inward -0.5 tilt and lean the blade a touch
+    // OUTWARD (+0.62) so it points up past the shoulder and never crosses the
+    // face. The swing term still sweeps it forward/down into the slash.
+    g.rotate((isSword? 0.62 : -0.5) + swv*(isSword? -0.6 : 0.2));
     if(o.weapon==='sword'){
       const wt=o.wtier==null?1:o.wtier;
       const bl= wt>=3? 21 : wt===2? 19 : wt===1? 16 : 13;   // Rimefang is the longest blade
