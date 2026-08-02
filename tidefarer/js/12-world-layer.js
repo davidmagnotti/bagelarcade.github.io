@@ -717,7 +717,7 @@ function challengeCastellan(npc){
 }
 function spawnBarikInn(){
   const V=ZONES.village;
-  const inn=makeNPC('saffi','Saffi of the Gull', V.x-4,V.y+8,
+  const inn=makeNPC('saffi','Saffi the Innkeeper', V.x-4,V.y+8,
     {skin:'#caa27b',hair:'#2e2624',shirt:'#5a4a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
     ["Sailors, wardens, wanderers - everyone sleeps under my roof eventually.",
      "Ten gold buys the best bed on Barik. The second-best is the floor."],0.8);
@@ -942,7 +942,7 @@ function spawnEastFolk(){
        'There is a lady in Barik I have written to for three years. Her letters smell of ink and iron. I would cross an ocean for the next one - if my nerve ever caught up to my heart.',
        'If you are ever bound for Barik... no. Never mind. Some letters a man must send himself. Or wishes he would.'],0.4));
   // Lani keeps the Kohana longhut - rest here to mend and set your waking-place
-  { const inn=makeNPC('lani','Lani of the Longhut', V.x-4, V.y-1.1,
+  { const inn=makeNPC('lani','Lani the Innkeeper', V.x-4, V.y-1.1,
       {skin:'#b58a5e',hair:'#241a14',shirt:'#3f7a5e',pants:'#3a3026',apron:'#c9b48a',hairstyle:'bun'},
       ['Eh, down off Kea in one piece? Come in, come in - the mat is soft and the hearth is warm.',
        'Ten gold, a woven mat, and the reef to hum you under. Sleep as long as the tide pleases.'],0.7);
@@ -1681,7 +1681,7 @@ function spawnWindFolk(){
   // Innkeep of the Windsurf Inn - keeps the fire lit though no guest has rung the
   // bell in a season. Rooms are TEN GOLD (dialog handles 'Rest the night'), and
   // she keeps night hours (nightOwl) so a storm-late traveller can always rouse her.
-  { const inn=makeNPC('wenna','Wenna the Innkeep', T2.x-4.5, T2.y+6.3,
+  { const inn=makeNPC('wenna','Wenna the Innkeeper', T2.x-4.5, T2.y+6.3,
       {skin:'#caa27b',hair:'#4a3a2c',shirt:'#4a6a7a',pants:'#3a3a44',apron:'#d8cbb2',hairstyle:'bun'},
       ['Beds made, fire lit, and not a soul to fill them since the strait turned. Habit\'s a stubborn thing.',
        'Ten gold buys a bed and a hot breakfast - same as it\'s been thirty years. I\'ll not gouge a castaway.'],0.6);
