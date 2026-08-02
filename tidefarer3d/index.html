@@ -170,13 +170,16 @@ const DPR=Math.min(devicePixelRatio, isMobile?1.6:2);
 const clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp, smooth=THREE.MathUtils.smoothstep;
 
 // ---------- palette ----------
+// Palette LOCKED to the 2D game's canonical hex (PAL in 03-art.js + styles.css
+// :root). Every value is a muted, knocked-back-toward-parchment tone — the 2D
+// world has NO full-saturation stock colours, and those are the Roblox tell.
 const COL={
-  sand:0xd8c193, grass:0x6f9048, grassDk:0x53743a, forest:0x3f6630, rock:0x8b8377, rockDk:0x625b50, snow:0xe9e6dc,
-  sea:0x2f7288, seaDeep:0x1d4a5c, foam:0xd6ece6,
-  plaster:0xd8b981, timber:0x5a3d28, timberDk:0x412b1c, slate:0x4c5666, roofWarm:0x9c5638, stone:0x9a9384, stoneDk:0x6a655b,
-  ember:0xff9a3c, flame:0xffbe63, windowGlow:0xffcf87,
-  slime:0x86c66a, wolf:0x6d7078, wolfDk:0x4a4d54, wool:0xece3cf, sheepFace:0x4a4038,
-  skin:0xe0ac7e, tunic:0x5f7f3f, tunicDk:0x415a2a, scarf:0xff9a3c, boot:0x5a3d24, hair:0x4a3220, ink:0x211812,
+  sand:0xc8b482, grass:0x5b8544, grassDk:0x527b3c, forest:0x3e6030, rock:0x736c62, rockDk:0x5a554c, snow:0xe9eef6,
+  sea:0x33708f, seaDeep:0x1e4066, foam:0xdfeee9,
+  plaster:0xceb891, timber:0x5a3d28, timberDk:0x412b1c, slate:0x4a5a6e, roofWarm:0xa3502f, stone:0x9a968e, stoneDk:0x6a655b,
+  ember:0xff9a3c, flame:0xffd76a, windowGlow:0xffce84,
+  slime:0x7fb05b, wolf:0x6f6a66, wolfDk:0x494640, wool:0xece3cf, sheepFace:0x4a4038,
+  skin:0xe0ac7e, tunic:0x5f7f3f, tunicDk:0x415a2a, scarf:0xff9a3c, boot:0x5a3d24, hair:0x4a3220, ink:0x241a10,
   npcRobe:0x6b5a86, npcRobe2:0x7c5a3a,
 };
 
@@ -189,7 +192,9 @@ document.body.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const fog=new THREE.FogExp2(0xdfd0ab,0.0034); scene.fog=fog;
-const camera=new THREE.PerspectiveCamera(52, innerWidth/innerHeight, 0.5, 2000);
+// Slightly TELEPHOTO (narrow FOV) so depth compresses into a storybook diorama
+// rather than a wide free-roam FPS view — the 2D game's fixed iso 3/4 heritage.
+const camera=new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.5, 2000);
 
 // sky dome
 const skyMat=new THREE.MeshBasicMaterial({vertexColors:true, side:THREE.BackSide, fog:false, toneMapped:false});
@@ -201,41 +206,107 @@ function paintSky(top,low){ const p=skyGeo.attributes.position, col=skyGeo.attri
   for(let i=0;i<p.count;i++){ const t=clamp((p.getY(i)/900)*0.5+0.5,0,1); c.copy(low).lerp(top,Math.pow(t,0.8)); col.setXYZ(i,c.r,c.g,c.b);} col.needsUpdate=true; }
 
 // lights
-const sun=new THREE.DirectionalLight(0xffe1b0,1.55); sun.castShadow=true;
+// Warm KEY light — one committed, low golden-hour / firelight sun (its capped
+// low angle is set in updateDay). Strong and warm so the whole lit side of the
+// world reads as firelight, casting long, committed shadows.
+const sun=new THREE.DirectionalLight(0xffdca8,1.7); sun.castShadow=true;
 sun.shadow.mapSize.set(isMobile?1024:2048,isMobile?1024:2048);
 { const s=sun.shadow.camera; s.near=10; s.far=520; s.left=-180; s.right=180; s.top=180; s.bottom=-180; }
 sun.shadow.bias=-0.0005; sun.shadow.normalBias=1.1; sun.shadow.radius=isMobile?3:8;
 scene.add(sun); scene.add(sun.target);
-const hemi=new THREE.HemisphereLight(0xcbdcec,0x6a6038,1.0); scene.add(hemi);
-const amb=new THREE.AmbientLight(0xfff2dc,0.18); scene.add(amb);
+// COOL fill — a tideglass-blue sky over a warm-brown ground bounce: shade skews
+// sea-blue while undersides keep a little hearth warmth. Never neutral grey.
+const hemi=new THREE.HemisphereLight(0x8fb6e0,0x5a4632,0.9); scene.add(hemi);
+// cool blue ambient fill — lifts cast shadows so they never crush to black,
+// tinted tideglass rather than a flat neutral lift.
+const amb=new THREE.AmbientLight(0x9ab8dc,0.22); scene.add(amb);
 const moon=new THREE.DirectionalLight(0x9fb6e0,0.0); moon.position.set(40,60,-30); scene.add(moon);
+
+// ---- SELECTIVE bloom — ONLY ember light sources glow (lanterns, the forge, lit
+// windows). A luminance threshold can't isolate warm orange (it's dimmer than
+// white, so a threshold either blooms everything or misses the hearths), so we
+// bloom a dedicated layer: render the frame with everything-but-emitters blacked
+// out, bloom that, and add it back over the full scene. The 2D game leans hard on
+// hearth glow — this reproduces it without smearing bloom across the whole world.
+const BLOOM_LAYER=1;
+const emit=(m)=>{ m.layers.enable(BLOOM_LAYER); return m; };   // tag a mesh as an ember light source
+const bloomLayer=new THREE.Layers(); bloomLayer.set(BLOOM_LAYER);
+const darkMat=new THREE.MeshBasicMaterial({color:0x000000,fog:false});
+const _stashMat={}, _stashVis=[];
+function darkenNonBloom(o){
+  if(o.isMesh){ if(!bloomLayer.test(o.layers)){ _stashMat[o.uuid]=o.material; o.material=darkMat; } }
+  else if((o.isSprite||o.isPoints)&&!bloomLayer.test(o.layers)&&o.visible){ o.visible=false; _stashVis.push(o); }
+}
+function restoreNonBloom(o){ if(o.isMesh&&_stashMat[o.uuid]!==undefined){ o.material=_stashMat[o.uuid]; delete _stashMat[o.uuid]; } }
+
+const bloomComposer=new EffectComposer(renderer); bloomComposer.setPixelRatio(DPR); bloomComposer.setSize(innerWidth,innerHeight); bloomComposer.renderToScreen=false;
+bloomComposer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), isMobile?0.6:0.9, 0.8, 0.0); bloomComposer.addPass(bloom);
+const combine=new ShaderPass(new THREE.ShaderMaterial({
+  uniforms:{ baseTexture:{value:null}, bloomTexture:{value:bloomComposer.renderTarget2.texture} },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`uniform sampler2D baseTexture, bloomTexture; varying vec2 vUv;
+    void main(){ gl_FragColor = texture2D(baseTexture,vUv) + texture2D(bloomTexture,vUv); }`
+}),'baseTexture'); combine.needsSwap=true;
 
 const fxc=new EffectComposer(renderer); fxc.setPixelRatio(DPR); fxc.setSize(innerWidth,innerHeight);
 fxc.addPass(new RenderPass(scene,camera));
-const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), isMobile?0.42:0.55, 0.6, 0.75); fxc.addPass(bloom);
+fxc.addPass(combine);
 fxc.addPass(new OutputPass());
-const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.03},uSat:{value:1.14},uLift:{value:0.015},uNight:{value:0.0},uDread:{value:0.0}},
+// Grade pulls saturation BELOW 1 (kills full-sat stock colour, the Roblox tell)
+// and warms the whole frame toward parchment — never the punchy uSat>1 look.
+const Grade={ uniforms:{tDiffuse:{value:null},uVig:{value:1.45},uWarm:{value:0.05},uSat:{value:0.96},uLift:{value:0.02},uNight:{value:0.0},uDread:{value:0.0},uPaper:{value:0.032},uGrain:{value:0.05},uAspect:{value:innerWidth/innerHeight},uTime:{value:0.0}},
   vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight,uDread;varying vec2 v;
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float uVig,uWarm,uSat,uLift,uNight,uDread,uPaper,uGrain,uAspect,uTime;varying vec2 v;
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
     void main(){ vec3 c=texture2D(tDiffuse,v).rgb; c=c*(1.0-0.10*c); c=mix(vec3(uLift),c,1.0-uLift);
       c+=vec3(uWarm,uWarm*0.35,-uWarm*0.5); float l=dot(c,vec3(.299,.587,.114)); c=mix(vec3(l),c,uSat);
-      c=mix(c, vec3(l)*vec3(0.55,0.68,1.05), uNight*0.5);          // cool the night
+      // cool ALL shadows toward tideglass (#243642), soft-light style — the 2D
+      // drawGritGrade lays this over the whole frame; heaviest in the darks.
+      float sh=1.0-smoothstep(0.0,0.55,l);
+      c=mix(c, c*vec3(0.82,0.92,1.06), sh*0.30);
+      c=mix(c, vec3(l)*vec3(0.55,0.68,1.05), uNight*0.5);          // deepen the night cool
       c=mix(c, vec3(l)*0.82, uDread*0.7);                          // the King's pall: desaturate + darken
+      // faint paper/canvas tooth — a hand-drawn surface, fixed to screen like ink
+      vec2 pv=v*vec2(uAspect,1.0);
+      float fib=(sin(pv.x*760.0)*0.5+0.5)*(sin(pv.y*720.0+1.7)*0.5+0.5);
+      float mottle=hash(floor(pv*90.0))-0.5;
+      c*=1.0+((fib-0.5)*0.6+mottle*0.7)*uPaper;
+      // film grain — animated, jittered per frame (subtle overlay, 2D-style)
+      float g=hash(v*vec2(uAspect,1.0)*vec2(1024.0,1024.0)+fract(uTime)*57.0)-0.5;
+      c+=g*uGrain*0.5;
       vec2 d=v-0.5; float vg=smoothstep(0.9,0.2,dot(d,d)*uVig); c*=mix(0.7,1.0,vg);
       gl_FragColor=vec4(clamp(c,0.,1.),1.);}` };
 const gradePass=new ShaderPass(Grade); fxc.addPass(gradePass);
 
 // ---------- cel toolkit ----------
-const ramp=(()=>{ const t=new THREE.DataTexture(new Uint8Array([64,64,64,255,128,128,128,255,205,205,205,255,255,255,255,255]),4,1,THREE.RGBAFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.needsUpdate=true; return t; })();
+// Toon ramp with a COOL shadow. Same luminance steps as a neutral grey ramp, but
+// the hue is split: the two shadow bands are tinted tideglass-blue (red pulled
+// down, blue pushed up) and the two lit bands run warm parchment. MeshToonMaterial
+// multiplies this ramp per-channel by each surface colour, so EVERY material's
+// shadow skews sea-blue and its lit side skews firelight-warm — the ember/tideglass
+// warm-cool split reproduced in the shading itself (Wind Waker / Okami), not grey.
+const ramp=(()=>{ const t=new THREE.DataTexture(new Uint8Array([
+    46,62,86,255,      // deep shadow — tideglass blue
+    108,122,138,255,   // mid shadow  — cool slate
+    210,202,184,255,   // lit         — warm parchment
+    255,250,238,255    // hot         — warm firelight white
+  ]),4,1,THREE.RGBAFormat); t.minFilter=t.magFilter=THREE.NearestFilter; t.needsUpdate=true; return t; })();
+// Warm walnut ink (#241a10) — a dark WALNUT BROWN, never pure black. This is the
+// single biggest anti-Roblox lever, so the hull runs a touch heavy and its weight
+// varies slightly per prop, the way a hand-inked line does — never machine-uniform.
 const outlineMat=new THREE.MeshBasicMaterial({color:COL.ink,side:THREE.BackSide,fog:true,toneMapped:false});
-const OM=1.5;
-function toon(geo,color,{outline=0.035,flat=false,emissive=0,cast=true,receive=true}={}){
+const OM=1.7;
+function toon(geo,color,{outline=0.04,flat=false,emissive=0,cast=true,receive=true}={}){
   const mat=new THREE.MeshToonMaterial({color,gradientMap:ramp}); mat.flatShading=flat; if(emissive)mat.emissive=new THREE.Color(emissive);
   const m=new THREE.Mesh(geo,mat); m.castShadow=cast; m.receiveShadow=receive;
-  if(outline>0){ const o=new THREE.Mesh(geo,outlineMat); o.scale.multiplyScalar(1+outline*OM); m.add(o);} return m;
+  if(outline>0){ const o=new THREE.Mesh(geo,outlineMat);
+    o.scale.multiplyScalar(1+outline*OM*(0.88+Math.random()*0.28)); m.add(o);} return m;
 }
 const glowMat=c=>new THREE.MeshBasicMaterial({color:c,toneMapped:false});
 const box=(w,h,d)=>new THREE.BoxGeometry(w,h,d), cyl=(a,b,h,s=10)=>new THREE.CylinderGeometry(a,b,h,s), ico=(r,d=1)=>new THREE.IcosahedronGeometry(r,d);
+// rounded capsule — the anti-lego primitive for bodies/limbs (soft, organic)
+const cap=(r,l,s=10)=>new THREE.CapsuleGeometry(r,l,4,s);
 const shadowTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
   const gr=g.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(20,14,8,.5)'); gr.addColorStop(1,'rgba(20,14,8,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
 const shadowMat=new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,fog:true});
@@ -318,7 +389,7 @@ const colliders=[]; function solid(x,z,r,big){ colliders.push({x,z,r,big:!!big})
 // ---------- prop builders ----------
 const foliage=[], lampFlames=[], beacons=[];
 function tree(x,z,s=1){ const g=new THREE.Group(); const tr=toon(cyl(0.32,0.62,3.4,7),COL.timber,{outline:0.04}); tr.position.y=1.7; g.add(tr);
-  const greens=[0x50783a,0x5e8a42,0x6d9a4d,0x82a857]; const foli=[];
+  const greens=[0x3e7c47,0x4f9457,0x4c8a3f,0x74a04e]; const foli=[];   /* 2D canopy greens (03-art.js) */
   [[0,4.3,0,2.6],[1.5,3.9,.5,1.9],[-1.4,4.1,-.5,1.85],[.4,5.5,.2,1.95],[-.5,4,1.2,1.65],[.9,4.7,-1.2,1.6]].forEach((b,i)=>{ const f=toon(ico(b[3],1),greens[i%4],{outline:0.028}); f.position.set(b[0],b[1],b[2]); f.scale.y=0.92; g.add(f); foli.push(f);});
   g.userData.foliage=foli; foliage.push(g); g.scale.setScalar(s); ground(g,2.4*s); onGround(g,x,z); solid(x,z,1.2*s); return g; }
 function pine(x,z,s=1){ const g=new THREE.Group(); const tr=toon(cyl(0.3,0.5,3,6),COL.timberDk,{outline:0.03}); tr.position.y=1.5; g.add(tr);
@@ -334,7 +405,7 @@ function cottage(x,z,rot=0,roof=COL.slate){ const g=new THREE.Group();
   g.add(pos(toon(box(6.5,.4,5.5),COL.timber,{outline:0}),0,4.4,0));
   g.add(pos(rotY(toon(cyl(.02,5,3,4),roof,{outline:0.03,flat:true}),Math.PI/4),0,6.1,0));
   g.add(pos(toon(box(1.4,2.4,.25),COL.timberDk,{outline:0.02}),0,1.7,2.65));
-  for(const wx of[-2,2]){ g.add(pos(new THREE.Mesh(box(1,1,.15),glowMat(COL.windowGlow)),wx,2.9,2.62)); g.add(pos(toon(box(1.25,1.25,.1),COL.timber,{outline:0}),wx,2.9,2.55)); }
+  for(const wx of[-2,2]){ g.add(pos(emit(new THREE.Mesh(box(1,1,.15),glowMat(COL.windowGlow))),wx,2.9,2.62)); g.add(pos(toon(box(1.25,1.25,.1),COL.timber,{outline:0}),wx,2.9,2.55)); }
   g.add(pos(toon(box(1,2.6,1),COL.stoneDk,{outline:0.03}),2.1,6.9,-1.6));
   rotY(g,rot); ground(g,4.2); onGround(g,x,z); solid(x,z,4.0,true); return g; }
 function well(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(1.8,2,1.7,16),COL.stone,{outline:0.03}),0,.85,0)); g.add(pos(toon(cyl(1.5,1.5,.2,16),COL.sea,{outline:0}),0,1.7,0));
@@ -344,11 +415,11 @@ function tower(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(2.7,3.2,16,14
   for(const y of[4,9,13])g.add(pos(toon(cyl(3.15,3.15,.5,14),COL.stoneDk,{outline:0}),0,y,0));
   g.add(pos(toon(cyl(3.6,3.3,1.5,14),COL.stoneDk,{outline:0.025}),0,16.3,0));
   g.add(pos(rotY(toon(cyl(.02,4,5,14),COL.slate,{outline:0.03,flat:true}),0),0,19.3,0));
-  const win=pos(new THREE.Mesh(box(1.5,2.2,.4),glowMat(COL.windowGlow)),0,11.5,3.05); g.add(win); beacons.push(win);
+  const win=pos(emit(new THREE.Mesh(box(1.5,2.2,.4),glowMat(COL.windowGlow))),0,11.5,3.05); g.add(win); beacons.push(win);
   const l=new THREE.PointLight(0xffcf7a,26,50,2); l.position.set(0,12,3.5); g.add(l); ground(g,3.6); onGround(g,x,z); solid(x,z,3.4,true); return g; }
 function lamp(x,z){ const g=new THREE.Group(); g.add(pos(toon(cyl(.12,.18,4.4,8),COL.timberDk,{outline:0.03}),0,2.2,0));
   g.add(pos(toon(box(.15,.15,1),COL.timberDk,{outline:0}),0,4.3,.4)); g.add(pos(toon(cyl(.42,.42,.9,6),COL.timber,{outline:0.03}),0,4.2,.8));
-  const fl=pos(new THREE.Mesh(ico(.28,0),glowMat(COL.flame)),0,4.2,.8); g.add(fl);
+  const fl=pos(emit(new THREE.Mesh(ico(.28,0),glowMat(COL.flame))),0,4.2,.8); g.add(fl);
   const l=new THREE.PointLight(0xffb24d,10,15,2); l.position.set(0,4.2,.8); g.add(l); lampFlames.push({fl,l,ph:Math.random()*7}); ground(g,.9); onGround(g,x,z); return g; }
 function dock(x,z){ const g=new THREE.Group(); for(let i=0;i<8;i++){ g.add(pos(toon(box(3.2,.4,5,1),COL.timber,{outline:0.02,cast:false}),-i*3,.2,0)); if(i%2===0)for(const sz of[-2.2,2.2])g.add(pos(toon(cyl(.28,.28,4,6),COL.timberDk,{outline:0}),-i*3,-1.6,sz)); }
   const boat=new THREE.Group(); boat.add(pos(toon(box(7,2,3),COL.timber,{outline:0.03}),0,1,0)); boat.add(pos(rotZ(toon(cyl(.02,1.5,3,3),COL.timber,{outline:0.03}),-Math.PI/2),4.2,1,0));
@@ -356,7 +427,7 @@ function dock(x,z){ const g=new THREE.Group(); for(let i=0;i<8;i++){ g.add(pos(t
   boat.position.set(-24,-1.0,4.6); boat.rotation.y=.18; boat.userData.bob=Math.random()*6; g.add(boat); g.userData.boat=boat; onGround(g,x,z,0.2); return g; }
 function ruinPillar(x,z,h){ const g=new THREE.Group(); const seg=Math.max(1,Math.round(h)); for(let i=0;i<seg;i++)g.add(pos(rotY(toon(cyl(.9,1.0,1.4,8),i%2?COL.stoneDk:COL.stone,{outline:0.03}),Math.random()),0,.7+i*1.4,0)); ground(g,1.1); onGround(g,x,z); solid(x,z,1.1); return g; }
 function fold(x,z){ const g=new THREE.Group(),R=6; for(let a=0;a<Math.PI*2-.35;a+=.5){ g.add(pos(toon(box(.28,1.5,.28),COL.timber,{outline:0}),Math.cos(a)*R,.75,Math.sin(a)*R)); }
-  for(const[sx,sz]of[[-2,1],[2,-1.5],[.5,2.5]]){ const s=new THREE.Group(); s.add(pos(scl(toon(ico(1.2,1),COL.wool,{outline:0.04}),1.3,1,1.05),0,1.35,0)); s.add(pos(toon(box(.65,.75,.85),COL.sheepFace,{outline:0.04}),1.35,1.25,0)); for(const[lx,lz]of[[-.7,-.5],[-.7,.5],[.7,-.5],[.7,.5]])s.add(pos(toon(box(.26,1,.26),COL.sheepFace,{outline:0}),lx,.5,lz)); ground(s,1.4); s.position.set(sx,0,sz); g.add(s);} ground(g,6.4); onGround(g,x,z); return g; }
+  for(const[sx,sz]of[[-2,1],[2,-1.5],[.5,2.5]]){ const s=new THREE.Group(); s.add(pos(scl(toon(ico(1.2,1),COL.wool,{outline:0.04}),1.3,1,1.05),0,1.35,0)); s.add(pos(scl(toon(ico(.42,1),COL.sheepFace,{outline:0.04}),0.9,1.0,1.15),1.32,1.2,0)); for(const[lx,lz]of[[-.7,-.5],[-.7,.5],[.7,-.5],[.7,.5]])s.add(pos(toon(cap(.12,.7,7),COL.sheepFace,{outline:0}),lx,.5,lz)); ground(s,1.4); s.position.set(sx,0,sz); g.add(s);} ground(g,6.4); onGround(g,x,z); return g; }
 // small helpers
 function pos(o,x,y,z){ o.position.set(x,y,z); return o; }
 function rotY(o,a){ o.rotation.y=a; return o; }
@@ -397,8 +468,9 @@ function maskedHead(skin,hair){
 // beard: colour; rod: a fisher's pole; size: overall scale.
 function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.hair,skin=COL.skin,boot=COL.boot,cape=true,sword=false,princess=false,hat=null,beard=null,rod=false,size=1}={}){
   const g=new THREE.Group(); const rig={};
-  g.add(pos(toon(box(1.5,1.9,.9),tunic,{outline:0.04}),0,2.4,0));
-  g.add(pos(toon(box(1.6,.4,1),boot,{outline:0}),0,1.6,0));
+  // rounded, organic body — capsules & tapered forms, never lego boxes
+  { const torso=pos(toon(cap(0.66,0.95,12),tunic,{outline:0.04}),0,2.42,0); torso.scale.set(1.08,1,0.82); g.add(torso); }
+  { const belt=pos(toon(ico(0.6,1),boot,{outline:0.03}),0,1.72,0); belt.scale.set(1.12,0.55,0.92); g.add(belt); }
   if(princess){ const mh=maskedHead(skin,hair); mh.group.position.set(0,3.85,0); g.add(mh.group); rig.eyes=mh.eyes;
     const cl=pos(toon(box(1.35,1.7,.22),tunicDk,{outline:0.03}),0,2.4,-.62); cl.rotation.x=.18; g.add(cl); }  // castaway cloak, not the ember cape
   else { g.add(pos(toon(new THREE.SphereGeometry(.72,16,14),skin,{outline:0.045}),0,3.85,0));
@@ -410,12 +482,15 @@ function figure({tunic=COL.tunic,tunicDk=COL.tunicDk,scarf=COL.scarf,hair=COL.ha
     if(hat==='wizard'){ g.add(pos(toon(cyl(1.0,1.08,.16,12),tunicDk,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.02,.7,1.9,12),tunicDk,{outline:0.04,flat:true}),0,5.2,0)); }
     else if(hat==='straw'){ g.add(pos(toon(cyl(.95,1.12,.1,12),0xb8965a,{outline:0.03}),0,4.2,0)); g.add(pos(toon(cyl(.5,.85,.42,12),0xcaa860,{outline:0.03,flat:true}),0,4.45,0)); }
     if(cape){ const cp=pos(toon(box(1.2,1.6,.2),scarf,{outline:0.03}),0,2.5,-.7); cp.rotation.x=.25; g.add(cp); } }
-  rig.arm=new THREE.Group(); rig.arm.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),0,-.7,0)); rig.arm.position.set(1.05,3.1,0); g.add(rig.arm);
+  rig.arm=new THREE.Group(); { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),0,-.62,0); a.scale.set(0.94,1,0.94); rig.arm.add(a); } rig.arm.position.set(1.05,3.05,0); g.add(rig.arm);
   if(sword){ const sw=new THREE.Group(); sw.add(pos(toon(box(.16,2.2,.16),0xd7dbe0,{outline:0.03}),0,-1.9,0)); sw.add(pos(toon(box(.7,.24,.24),COL.ember,{outline:0.03}),0,-.9,0)); rig.arm.add(sw); rig.sword=sw; }
   if(rod){ const rd=pos(toon(box(.08,4.4,.08),COL.timber,{outline:0}),1.5,4.2,.6); rd.rotation.z=-0.4; g.add(rd); }
-  g.add(pos(toon(box(.5,1.6,.5),tunicDk,{outline:0.035}),-1.05,2.4,0));
-  rig.legL=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),-.42,.85,0); g.add(rig.legL);
-  rig.legR=pos(toon(box(.55,1.7,.6),boot,{outline:0.035}),.42,.85,0); g.add(rig.legR);
+  { const a=pos(toon(cap(0.2,1.12,9),tunicDk,{outline:0.035}),-1.05,2.43,0); a.scale.set(0.94,1,0.94); g.add(a); }
+  const legF=(sx)=>{ const lg=new THREE.Group();
+    const sh=toon(cap(0.24,1.02,9),boot,{outline:0.035}); sh.scale.set(0.96,1,0.96); lg.add(sh);
+    const ft=pos(toon(ico(0.24,1),boot,{outline:0.03}),0,-0.8,0.18); ft.scale.set(1.0,0.6,1.55); lg.add(ft);   // a rounded foot, not a cut box
+    lg.position.set(sx,0.9,0); g.add(lg); return lg; };
+  rig.legL=legF(-.42); rig.legR=legF(.42);
   g.scale.setScalar(size); g.userData.rig=rig; return g;
 }
 
@@ -518,12 +593,12 @@ addNPC(zc.village.x+12,zc.village.z-6,'The Woodworker',[
 
 // Pip the cat — Nia's, prowling the north
 function catCritter(x,z){ const g=new THREE.Group(); const c=0xd98a4a;
-  g.add(pos(toon(box(1.0,.55,.5),c,{outline:0.04}),0,.7,0));
+  { const bd=rotZ(toon(cap(.27,.5,10),c,{outline:0.04}),Math.PI/2); bd.scale.set(1,1,0.92); g.add(pos(bd,0,.72,0)); }
   g.add(pos(toon(new THREE.SphereGeometry(.36,10,8),c,{outline:0.04}),.6,1.0,0));
   for(const ez of[-.15,.15]) g.add(pos(toon(cyl(.02,.14,.22,4),c,{outline:0}),.75,1.35,ez));
   for(const ex of[-.1,.1]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.05,6,6),new THREE.MeshBasicMaterial({color:0x203010})),.9+0,1.05,ex));
   g.add(pos(rotZ(toon(cyl(.06,.02,.9,5),c,{outline:0}),.8),-.6,1.0,0));   // tail
-  for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(box(.14,.5,.14),c,{outline:0}),lx,.25,lz));
+  for(const[lx,lz]of[[.35,.18],[.35,-.18],[-.35,.18],[-.35,-.18]]) g.add(pos(toon(cap(.075,.34,6),c,{outline:0}),lx,.25,lz));
   ground(g,.7); onGround(g,x,z); g.userData.face=Math.random()*7; return g; }
 const pip=catCritter(zc.springs.x+3, zc.springs.z-4);
 
@@ -534,7 +609,7 @@ function inn(x,z){ const g=new THREE.Group();
   for(const sx of[-3.9,3.9])for(const sz of[-3.0,3.0])g.add(pos(toon(box(.5,4.8,.5),COL.timber,{outline:0}),sx,3.3,sz));
   g.add(pos(rotY(toon(cyl(.02,6.6,3.4,4),COL.roofWarm,{outline:0.03,flat:true}),Math.PI/4),0,7.4,0));
   g.add(pos(toon(box(1.7,3.0,.3),COL.timberDk,{outline:0.02}),0,2.0,3.25));
-  for(const wx of[-2.6,2.6]){ g.add(pos(new THREE.Mesh(box(1.2,1.3,.15),glowMat(COL.windowGlow)),wx,3.4,3.22)); }
+  for(const wx of[-2.6,2.6]){ g.add(pos(emit(new THREE.Mesh(box(1.2,1.3,.15),glowMat(COL.windowGlow))),wx,3.4,3.22)); }
   g.add(pos(toon(box(1.2,3.2,1.2),COL.stoneDk,{outline:0.03}),3.0,8.0,-1.8));
   // hanging sign
   const post=pos(toon(box(.3,4.2,.3),COL.timber,{outline:0.03}),5.0,2.1,3.4); g.add(post);
@@ -553,26 +628,26 @@ function spawnSlime(x,z){ const g=new THREE.Group(); const body=toon(new THREE.S
   for(const ex of[-.5,.5])g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.2,10,10),new THREE.MeshBasicMaterial({color:0x20301a})),ex,1.7,1.35));
   ground(g,1.6); onGround(g,x,z); enemies.push({g,body,kind:'slime',hp:60,max:60,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:3.4,spd:3.4,dmg:8,reach:2.6}); }
 function spawnWolf(x,z){ const g=new THREE.Group();
-  const body=toon(box(2.2,1.2,1.1),COL.wolf,{outline:0.04}); body.position.y=1.5; g.add(body);
-  g.add(pos(toon(box(1,1,.9),COL.wolf,{outline:0.04}),1.2,1.9,0)); // head
+  const body=rotZ(toon(cap(.55,1.05,10),COL.wolf,{outline:0.04}),Math.PI/2); body.scale.set(1,1,0.9); body.position.y=1.5; g.add(body);
+  g.add(pos(scl(toon(ico(.56,1),COL.wolf,{outline:0.04}),1.05,1.0,0.95),1.2,1.85,0)); // head
   g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,.25)); g.add(pos(toon(cyl(.02,.3,.5,4),COL.wolfDk,{outline:0}),1.5,2.6,-.25));
-  const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(box(.32,1.2,.32),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
+  const legs=[]; for(const[lx,lz]of[[.7,.4],[.7,-.4],[-.7,.4],[-.7,-.4]]){ const l=pos(toon(cap(.16,.9,7),COL.wolfDk,{outline:0.03}),lx,.6,lz); g.add(l); legs.push(l);} g.add(pos(rotZ(toon(cyl(.06,.18,1.2,5),COL.wolf,{outline:0}),.7),-1.4,1.7,0));
   ground(g,1.5); onGround(g,x,z); enemies.push({g,body,legs,kind:'wolf',hp:85,max:85,home:new THREE.Vector2(x,z),phase:Math.random()*7,state:'idle',cd:0,hurt:0,dead:0,windup:0,stagger:0,tellY:3.6,spd:6.5,dmg:14,reach:3.0,face:0}); }
 for(let i=0;i<6;i++){ const a=Math.random()*7,r=Math.random()*10; spawnSlime(zc.meadow.x+Math.cos(a)*r,zc.meadow.z+Math.sin(a)*r); }
 for(let i=0;i<3;i++){ const a=Math.random()*7,r=Math.random()*8; spawnSlime(zc.springs.x+Math.cos(a)*r,zc.springs.z+Math.sin(a)*r); }
 for(let i=0;i<4;i++){ const a=Math.random()*7,r=Math.random()*12; spawnWolf(zc.whisperwood.x+Math.cos(a)*r,zc.whisperwood.z+Math.sin(a)*r); }
 // The Old Ruins: the Hollow King's hollow guard — skeletons, and the crowned King himself.
 function spawnSkeleton(x,z,boss){ const s=boss?1.9:1, bone=0xe7e2d2, dk=0xbdb7a4; const g=new THREE.Group();
-  const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(box(.28*s,1.6*s,.28*s),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
-  g.add(pos(toon(box(1.0*s,.4*s,.5*s),bone,{outline:0.03}),0,1.7*s,0));
-  const rib=pos(toon(box(1.1*s,1.4*s,.7*s),bone,{outline:0.03}),0,2.6*s,0); g.add(rib);
+  const legs=[]; for(const lx of[-0.38,0.38]){ const l=pos(toon(cap(.14*s,1.32*s,7),bone,{outline:0.03}),lx*s,.8*s,0); g.add(l); legs.push(l); }
+  g.add(pos(scl(toon(ico(.34*s,1),bone,{outline:0.03}),1.45,0.7,0.95),0,1.72*s,0));
+  const rib=pos(toon(cap(.48*s,.6*s,10),bone,{outline:0.03}),0,2.6*s,0); rib.scale.set(1.05,1,0.7); g.add(rib);
   for(let i=0;i<3;i++) g.add(pos(toon(box(1.16*s,.1*s,.75*s),dk,{outline:0}),0,(2.15+i*0.42)*s,0.02));
   g.add(pos(toon(new THREE.SphereGeometry(.55*s,12,10),bone,{outline:0.04}),0,3.7*s,0));
   for(const ex of[-0.22,0.22]) g.add(pos(new THREE.Mesh(new THREE.SphereGeometry(.13*s,8,8),new THREE.MeshBasicMaterial({color:boss?0x8fffcf:0x120c08,toneMapped:!boss})),ex*s,3.72*s,0.42*s));
   g.add(pos(toon(box(.5*s,.18*s,.4*s),dk,{outline:0}),0,3.4*s,0.34*s));  // jaw
-  const armR=new THREE.Group(); armR.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),0,-.6*s,0)); armR.position.set(.78*s,3.1*s,0); g.add(armR);
-  armR.add(pos(toon(box(.15*s,1.9*s,.15*s),0x9a9384,{outline:0.03}),0,-1.7*s,0));   // rusty blade
-  g.add(pos(toon(box(.24*s,1.5*s,.24*s),bone,{outline:0.03}),-.78*s,2.5*s,0));
+  const armR=new THREE.Group(); armR.add(pos(toon(cap(.12*s,1.28*s,6),bone,{outline:0.03}),0,-.6*s,0)); armR.position.set(.78*s,3.1*s,0); g.add(armR);
+  armR.add(pos(toon(box(.15*s,1.9*s,.15*s),0x9a9384,{outline:0.03}),0,-1.7*s,0));   // rusty blade (a weapon stays angular)
+  g.add(pos(toon(cap(.12*s,1.28*s,6),bone,{outline:0.03}),-.78*s,2.5*s,0));
   if(boss){ g.add(pos(toon(cyl(.52*s,.58*s,.42*s,7),0xd9b24a,{outline:0.04,emissive:0x6a4a00}),0,4.25*s,0));   // crown
     const aura=new THREE.PointLight(0x8fffc0,12,30,2); aura.position.y=3*s; g.add(aura); rib.material.emissive=new THREE.Color(0x0f3324); }
   ground(g,1.4*s); onGround(g,x,z);
@@ -628,7 +703,7 @@ player.position.set(P.x,heightAt(P.x,P.z),P.z);
 // ============================================================
 function forge(x,z){ const g=new THREE.Group();
   g.add(pos(toon(box(2.4,2.6,2.0),COL.stoneDk,{outline:0.03}),0,1.3,0));
-  g.add(pos(new THREE.Mesh(box(1.0,0.9,0.35),glowMat(0xff7a2a)),0,1.35,1.02));   // furnace mouth (bloom)
+  g.add(pos(emit(new THREE.Mesh(box(1.0,0.9,0.35),glowMat(0xff7a2a))),0,1.35,1.02));   // furnace mouth (bloom)
   const l=new THREE.PointLight(0xff8a3a,12,13,2); l.position.set(0,1.7,1.7); g.add(l);
   g.add(pos(toon(box(0.8,3.4,0.8),COL.stoneDk,{outline:0.03}),0,3.6,-0.5));       // chimney
   const an=new THREE.Group(); an.add(pos(toon(box(0.7,0.9,0.7),COL.timberDk,{outline:0.03}),0,0.45,0)); an.add(pos(toon(box(1.5,0.5,0.7),0x3b3e46,{outline:0.03}),0,1.1,0)); an.add(pos(rotZ(toon(cyl(.03,.34,.7,6),0x3b3e46,{outline:0}),Math.PI/2),0.85,1.15,0)); an.position.set(2.4,0,0.4); g.add(an);
@@ -733,7 +808,9 @@ addEventListener('keydown',e=>{ keys[e.code]=true; if(['Space','KeyF','ShiftLeft
   if(e.code==='Escape'||e.code==='KeyP') togglePause();
   const n=e.code.match(/^Digit([1-9])$/); if(n){ const zn=ZONES3[+n[1]-1]; if(zn){ P.x=zn.x;P.z=zn.z; banner(zn.name);} } });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
-let camYaw=P.yaw+Math.PI, camPitch=0.5, camDist=22;
+// Default to a fixed-ish iso 3/4 angle; the pitch is clamped to a narrow band so
+// you can't flatten to an FPS view or drop to top-down — it stays a diorama.
+let camYaw=P.yaw+Math.PI, camPitch=0.62, camDist=24;
 // mouse: drag = look.  touch: LEFT half = move stick, RIGHT half = look stick (both analog, same feel).
 const look={a:false,id:-1,x:0,y:0}, mv={a:false,id:-1,ox:0,oy:0,x:0,y:0}, lk={a:false,id:-1,ox:0,oy:0,x:0,y:0};
 const stickBase=document.getElementById('stickBase'), stickKnob=document.getElementById('stickKnob');
@@ -750,16 +827,16 @@ function onDown(e){ const id=e.target.id;
   else if(e.clientX>=innerWidth*0.5&&!lk.a){ lk.a=true; lk.id=e.pointerId; lk.ox=e.clientX; lk.oy=e.clientY; lk.x=lk.y=0; lookHint.style.display='none'; lookBase.style.display=lookKnob.style.display='block'; lookBase.style.left=lookKnob.style.left=e.clientX+'px'; lookBase.style.top=lookKnob.style.top=e.clientY+'px'; } }
 function onMove(e){ if(mv.a&&e.pointerId===mv.id){ let dx=e.clientX-mv.ox,dy=e.clientY-mv.oy; const g=Math.hypot(dx,dy),mx=54; if(g>mx){dx*=mx/g;dy*=mx/g;} mv.x=dx/mx; mv.y=dy/mx; stickKnob.style.left=(mv.ox+dx)+'px'; stickKnob.style.top=(mv.oy+dy)+'px'; }
   if(lk.a&&e.pointerId===lk.id){ let dx=e.clientX-lk.ox,dy=e.clientY-lk.oy; const g=Math.hypot(dx,dy),mx=54; if(g>mx){dx*=mx/g;dy*=mx/g;} lk.x=dx/mx; lk.y=dy/mx; lookKnob.style.left=(lk.ox+dx)+'px'; lookKnob.style.top=(lk.oy+dy)+'px'; }
-  if(look.a&&e.pointerId===look.id){ camYaw-=(e.clientX-look.x)*0.006; camPitch=clamp(camPitch+(e.clientY-look.y)*0.005,0.2,1.15); look.x=e.clientX; look.y=e.clientY; } }
+  if(look.a&&e.pointerId===look.id){ camYaw-=(e.clientX-look.x)*0.006; camPitch=clamp(camPitch+(e.clientY-look.y)*0.005,0.5,0.85); look.x=e.clientX; look.y=e.clientY; } }
 function onUp(e){ if(e.pointerId===mv.id){mv.a=false;mv.x=mv.y=0;stickBase.style.display=stickKnob.style.display='none';}
   if(e.pointerId===lk.id){lk.a=false;lk.x=lk.y=0;lookBase.style.display=lookKnob.style.display='none';}
   if(e.pointerId===look.id)look.a=false; }
 addEventListener('pointerdown',onDown); addEventListener('pointermove',onMove); addEventListener('pointerup',onUp); addEventListener('pointercancel',onUp);
-addEventListener('wheel',e=>{ camDist=clamp(camDist+e.deltaY*0.02,10,44); },{passive:true});
+addEventListener('wheel',e=>{ camDist=clamp(camDist+e.deltaY*0.02,16,32); },{passive:true});
 // apply the look stick (touch) + Q/E yaw, R/C pitch (keyboard) — camera adjusts continuously, like the move stick
-function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitch+lk.y*1.7*dt,0.2,1.15); }
+function updateCamCtl(dt){ if(lk.a){ camYaw-=lk.x*2.4*dt; camPitch=clamp(camPitch+lk.y*1.7*dt,0.5,0.85); }
   if(keys['KeyQ'])camYaw+=1.9*dt; if(keys['KeyE'])camYaw-=1.9*dt;
-  if(keys['KeyR'])camPitch=clamp(camPitch+1.3*dt,0.2,1.15); if(keys['KeyC'])camPitch=clamp(camPitch-1.3*dt,0.2,1.15); }
+  if(keys['KeyR'])camPitch=clamp(camPitch+1.3*dt,0.5,0.85); if(keys['KeyC'])camPitch=clamp(camPitch-1.3*dt,0.5,0.85); }
 
 function doSwing(){ if(!started||paused||dlgActive||P.dead>0||P.swCd>0)return;
   if(!P.hasSword){ toast('You have no blade yet — see <b>Bram</b> at the forge.'); return; }
@@ -817,16 +894,21 @@ function updateDay(dt){ dayT=(dayT+dt/DAYLEN)%1;
   const kd=(started&&hollowKing&&hollowKing.dead<=0)?Math.hypot(P.x-hollowKing.g.position.x,P.z-hollowKing.g.position.z):999;
   const dreadT=kd<44?clamp(1-(kd-12)/32,0,1):0;
   dread+=(dreadT-dread)*Math.min(1,dt*1.6);
-  sun.position.set(Math.cos(ang)*130, Math.max(8,sunH*150), 60); sun.target.position.set(0,0,0);
-  sun.intensity=lerp(0.05,1.75,up)*(1-dread*0.4); const warm=new THREE.Color().setHSL(0.09,0.5,0.6).lerp(new THREE.Color(0xffe6c0),up); sun.color.copy(warm);
-  hemi.intensity=lerp(0.35,1.05,up)*(1-dread*0.2); amb.intensity=lerp(0.10,0.20,up); moon.intensity=night*0.35+dread*0.25; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
+  // Keep the sun LOW — a raking golden-hour/firelight angle, never straight
+  // overhead — so every form throws a long, committed shadow and catches a warm
+  // rim. Height is capped hard (sunH*70) and it's pushed well out on Z.
+  const shY=Math.max(10, sunH*70);
+  sun.position.set(Math.cos(ang)*150, shY, 82); sun.target.position.set(0,0,0);
+  sun.intensity=lerp(0.05,1.95,up)*(1-dread*0.4); const warm=new THREE.Color().setHSL(0.07,0.62,0.55).lerp(new THREE.Color(0xffdca0),up); sun.color.copy(warm);
+  // fill stays low so the warm key dominates and shadows deepen (cool, not black)
+  hemi.intensity=lerp(0.30,0.82,up)*(1-dread*0.2); amb.intensity=lerp(0.12,0.20,up); moon.intensity=night*0.35+dread*0.25; bloom.strength=lerp(0.85,isMobile?0.42:0.55,up*0.6+0.4);
   // sky — a clear blue day (bluer top, pale-blue horizon), warm only at dawn/dusk
   const daytop=new THREE.Color(0x4f97dd), daylow=new THREE.Color(0xd4ecf7), nighttop=new THREE.Color(0x18213e), nightlow=new THREE.Color(0x39344f), dusk=new THREE.Color(0xff9a5a);
   const top=nighttop.clone().lerp(daytop,up), low=nightlow.clone().lerp(daylow,up).lerp(dusk, clamp((1-up)*(1-night)*1.6,0,0.55));
   top.lerp(GRAY,dread*0.9); low.lerp(GRAYLOW,dread*0.9);            // gray out under the King
   paintSky(top,low);
   fog.color.copy(low).lerp(new THREE.Color(0xcfe2ee),0.35).lerp(GRAY,dread*0.7); sky.material.needsUpdate=true;
-  Grade.uniforms.uNight.value=night; Grade.uniforms.uDread.value=dread;
+  gradePass.uniforms.uNight.value=night; gradePass.uniforms.uDread.value=dread;   // ShaderPass clones uniforms — drive the live copy
   const hr=Math.floor(((dayT*24)+6)%24); document.getElementById('clock').textContent=(hr<12?(hr===0?12:hr)+' AM':(hr===12?12:hr-12)+' PM');
   motes.material.opacity=lerp(0.15,0.5,up); motes.material.color.setHex(night>0.3?0x9fd0ff:0xfff0c0);
 }
@@ -858,8 +940,15 @@ beginGame();
 
 const clock=new THREE.Clock(); let fpsT=0,fpsN=0; const fpsEl=document.getElementById('fps');
 const camP=new THREE.Vector3(), camA=new THREE.Vector3(), fwd=new THREE.Vector3();
+// selective-bloom render: black out everything but the emitter layer, bloom it,
+// restore, then render the full frame and add the bloom back (inside fxc).
+function renderScene(){
+  scene.traverse(darkenNonBloom); bloomComposer.render(); scene.traverse(restoreNonBloom);
+  for(const o of _stashVis) o.visible=true; _stashVis.length=0;
+  fxc.render();
+}
 function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta(),0.05), time=clock.elapsedTime;
-  if(paused){ fxc.render(); return; }
+  if(paused){ renderScene(); return; }
   updateDay(started?dt:dt*0.15);
   if(started) step(dt,time);
   // camera
@@ -871,7 +960,8 @@ function tick(){ requestAnimationFrame(tick); const dt=Math.min(clock.getDelta()
   // water ripple
   if(waterSeg>1){ const p=water.geometry.attributes.position; for(let i=0;i<p.count;i++){ const x=waterBase[i*3],z=waterBase[i*3+2]; p.array[i*3+1]=Math.sin(x*0.05+time*1.1)*0.3+Math.cos(z*0.06+time*0.9)*0.28; } p.needsUpdate=true; }
   else water.position.y=SEA_Y-0.15+Math.sin(time*1.2)*0.06;
-  fxc.render();
+  gradePass.uniforms.uTime.value=time;   // drive animated film grain
+  renderScene();
   fpsN++; fpsT+=dt; if(fpsT>=0.5){ fpsEl.textContent=Math.round(fpsN/fpsT)+' fps'; fpsN=0;fpsT=0; }
 }
 
@@ -961,7 +1051,7 @@ function step(dt,time){
   mmT-=dt; if(mmT<=0){ drawMini(); mmT=0.12; }
   checkZone();
 }
-addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); fxc.setSize(innerWidth,innerHeight); });
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); fxc.setSize(innerWidth,innerHeight); bloomComposer.setSize(innerWidth,innerHeight); gradePass.uniforms.uAspect.value=innerWidth/innerHeight; });
 if(location.hash.includes('dbg')) window.__dbg={ drill:()=>drill.active, parry:()=>P.hasParry,
   raskWhite:()=>!!(raskTell&&raskTell.visible&&raskTell.material.color.getHex()===0xffffff),
   anyTellWhite:()=>enemies.some(e=>e.tell&&e.tell.visible&&e.tell.material.color.getHex()===0xffffff),
