@@ -3,6 +3,9 @@
    ===================================================================== */
 function moveEntity(e,dx,dy,rad,waterOK,diveOK){
   rad=rad||0.28;
+  // DEV float / noclip: the player drifts through everything - walls, water, land-solids,
+  // pits - with no collision at all. Toggled from the dev menu (window.DEVFLOAT).
+  if(e===P && window.DEVFLOAT){ e.x+=dx; e.y+=dy; return; }
   // In the Undermaw the black scar is a bottomless pit the hero crosses on platforms.
   // Mobs have no falling logic, so left alone they wander out and float over the void.
   // Hold every non-player entity back at the pit's edge; the player still crosses freely.

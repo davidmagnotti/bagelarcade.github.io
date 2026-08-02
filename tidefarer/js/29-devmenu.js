@@ -220,6 +220,15 @@ function gold(n){ if(typeof giveGold==='function') giveGold(n); else P.gold=(P.g
 function xp(n){ if(typeof gainLXP==='function') gainLXP(n); ui(); note('+'+n+' level XP'); }
 function maxSkills(){ for(const s in (P.skills||{})){ if(typeof addXP==='function') addXP(s, 9999); } ui(); note('Skills boosted'); }
 function toggleGod(btn){ god=!god; btn.textContent='God mode: '+(god?'ON':'off'); btn.style.color=god?'#9be07f':''; note('God mode '+(god?'on':'off')); }
+// FLOAT / noclip: the player drifts through walls, water, land, and pits (see moveEntity /
+// updateInterior / the Undermaw pit-fall, all gated on window.DEVFLOAT).
+function toggleFloat(btn){
+  window.DEVFLOAT=!window.DEVFLOAT;
+  // turning it OFF while parked inside a wall would wedge the hero - pop to open ground
+  if(!window.DEVFLOAT && typeof unstickEntity==='function'){ try{ unstickEntity(P); }catch(e){} }
+  btn.textContent='Float mode: '+(window.DEVFLOAT?'ON':'off'); btn.style.color=window.DEVFLOAT?'#8fd0ff':'';
+  note('Float mode '+(window.DEVFLOAT?'on - noclip':'off'));
+}
 function saveNow(){ try{ autoSave&&autoSave(); note('Saved'); }catch(e){} }
 // build + copy a shareable deep-link that drops a tester straight into a dungeon
 function copyDungeonLink(id){
@@ -413,7 +422,7 @@ const SECTIONS=[
   ['Hero', [
     ['+1000 gold',()=>gold(1000)], ['+2000 XP',()=>xp(2000)], ['Full heal',()=>heal()],
     ['Unlock all abilities',()=>unlockAll()], ['Boost skills',()=>maxSkills()],
-    ['God mode: off',(b)=>toggleGod(b)],
+    ['God mode: off',(b)=>toggleGod(b)], ['Float mode: off',(b)=>toggleFloat(b)],
   ]],
   ['Gathering tools & gates', [
     ['★ Sandbox: spawn gated walls here (no tools yet)',()=>{ if(typeof spawnToolgateSandbox==='function') spawnToolgateSandbox(); ui(); }],
