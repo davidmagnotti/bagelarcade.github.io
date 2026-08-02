@@ -1011,6 +1011,31 @@ function drawHumanoid(g,sx,sy,o){
   const bounce= o.ride? 0 : (walking? Math.abs(sw1)*2.2*s : (o._bake? 0 : (Math.sin(G.time*2.1+ph)*0.5+0.5)*0.9*s));
   const lean=walking? sw1*0.03 : 0;
   const hurtF=o.hurt?1:0;
+  // ---- launch / settle / swing springs (player-feel; frozen for baked NPCs) ----
+  // Anticipation & follow-through: a crouch as you break into a run, a damped
+  // rebound when you plant to a stop, and a body dip that drives the swing.
+  // Driven by movement timers the caller passes (moveT / stillT / swing); baked
+  // NPC frames get none of it, so their cached pose stays clean & neutral.
+  let springSq=0, swingDip=0;
+  if(!o._bake){
+    const mt=o.moveT, st=o.stillT, swv0=o.swing||0;
+    if(walking && mt!=null && mt<0.20){               // launch: quick crouch that springs up
+      springSq -= 0.11*Math.sin((mt/0.20)*Math.PI);
+    }
+    if(!walking && st!=null && st>0.0001 && st<0.5){   // settle: damped rebound on the plant
+      springSq -= 0.14*Math.exp(-st*10)*Math.cos(st*26);
+    }
+    if(swv0>0){                                        // swing: torso dips into the cut
+      const sp=clamp(swv0/0.3,0,1);
+      swingDip = sp;
+      springSq -= 0.05*Math.sin(sp*Math.PI);
+    }
+  }
+  // ---- hair/tail secondary motion: hanging hair LAGS the stride, swinging like a
+  // pendulum a beat behind the body. Derived from the gait phase (not time), so it
+  // bakes consistently across an NPC's cached frames and animates as they walk.
+  const hairSway = walking ? (Math.sin(step-0.8)*0.15 + Math.sin(step*2)*0.03) : 0;
+  const swayHair = (fn)=>{ if(!hairSway){ fn(); return; } g.save(); g.translate(0,-6); g.rotate(hairSway); g.translate(0,6); fn(); g.restore(); };
   // ---- build: per-character proportion, the axis that makes the cast read as
   // individuals instead of one recoloured doll. Every factor defaults to the
   // original figure, so any caller that omits `build` renders byte-identically.
@@ -1028,18 +1053,32 @@ function drawHumanoid(g,sx,sy,o){
   // shaded bodies below carry the depth on their own.
   g.translate(sx,sy);
   if(hurtF && !o._bake){ g.translate(rnd(-1.2,1.2),0); }
-  g.rotate(lean);
+  g.rotate(lean + swingDip*flip*0.05); // a slight lunge into the swing, toward the facing
   g.scale(s,s);
   g.scale(1,0.93); // seen from the isometric camera above - slight vertical foreshorten
-  // squash & stretch on the whole body - mascot bounce
-  const sq=walking? 1+0.045*sw2 : 1;
+  // squash & stretch on the whole body - mascot bounce + the launch/settle/swing springs
+  const sq=Math.max(0.6, (walking? 1+0.045*sw2 : 1) + springSq);
   g.scale(1/Math.sqrt(sq), sq);
 
   const B=-bounce/s; // bounce offset in local units
   const stride=walking? sw1 : 0;
   if(!o.ride){ // a mounted rider has no ground contact - the mount draws its own shadow
-    g.fillStyle='rgba(10,6,3,0.20)'; // tight contact shadow under the boots
-    g.beginPath(); g.ellipse(0,0.6,7.8,2.5,0,0,TAU); g.fill();
+    // Soft contact shadow that REACTS to the bounce: as the figure lifts on a
+    // stride (or the idle breath) the pool tightens and fades - the classic
+    // "grounded" read that sells the vertical motion. bounce is deterministic
+    // from the gait, so this bakes consistently across an NPC's cached frames.
+    const liftF = clamp(bounce/(2.2*s), 0, 1);
+    const shR = 7.8*(1-0.16*liftF), shA = 1-0.34*liftF;
+    g.save(); g.translate(0,0.6); g.scale(1, 2.5/7.8); // squash a circular pool into the ground ellipse
+    let shg; try{
+      shg=g.createRadialGradient(0,0,0.6, 0,0,shR);
+      shg.addColorStop(0,   'rgba(8,5,3,'+(0.30*shA).toFixed(3)+')');
+      shg.addColorStop(0.62,'rgba(8,5,3,'+(0.19*shA).toFixed(3)+')');
+      shg.addColorStop(1,   'rgba(8,5,3,0)');            // soft feathered rim, no hard edge
+      g.fillStyle=shg;
+    }catch(e){ g.fillStyle='rgba(10,6,3,'+(0.20*shA).toFixed(3)+')'; }
+    g.beginPath(); g.arc(0,0,shR,0,TAU); g.fill();
+    g.restore();
   }
 
   if(o.quiver && !away){
@@ -1696,6 +1735,7 @@ function drawHumanoid(g,sx,sy,o){
       }
     }
     if(o.hairstyle==='long'){
+      swayHair(()=>{
       for(const e of (away?[-1,1]:[-1,1])){
         g.fillStyle=hc;
         g.beginPath();
@@ -1706,6 +1746,7 @@ function drawHumanoid(g,sx,sy,o){
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
       }
+      });
     }
     if(o.hairstyle==='bun'){
       g.fillStyle=hc;
@@ -1717,6 +1758,7 @@ function drawHumanoid(g,sx,sy,o){
     if(o.hairstyle==='ponytail'){
       g.strokeStyle=OUT; g.lineWidth=1.2;
       if(away){
+        swayHair(()=>{
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(-2.8,-9);
@@ -1725,7 +1767,9 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(5.0,3, 2.8,-9);
         g.closePath(); g.fill(); g.stroke();
         g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(0,-8,3.1,1.9,0,0,TAU); g.fill();
+        });
       } else if(profile){
+        swayHair(()=>{
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(flip*-HR*0.5,-8);
@@ -1734,11 +1778,13 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(flip*-HR*0.7,-1, flip*-HR*0.34,-7);
         g.closePath(); g.fill(); g.stroke();
         g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(flip*-HR*0.44,-6.5,2.6,1.7,0,0,TAU); g.fill();
+        });
       } else {
         // front: a high gather at the crown, plus a peek of the tail past the shoulder
         g.fillStyle=hc;
         g.beginPath(); g.ellipse(0,-11.6,4.2,2.6,0,0,TAU); g.fill(); g.stroke();
         g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(0,-9.7,3.0,1.7,0,0,TAU); g.fill();
+        swayHair(()=>{  // only the falling tail swings; the crown gather stays put
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(HR*0.70,-2);
@@ -1746,12 +1792,14 @@ function drawHumanoid(g,sx,sy,o){
         g.lineTo(HR*0.58,13.5);
         g.quadraticCurveTo(HR*0.78,5, HR*0.60,-2.5);
         g.closePath(); g.fill(); g.stroke();
+        });
       }
     }
     if(o.fem){
       // The front curtains are drawn above, under the crown dome. Here we only add
       // the side/back fall for the profile and rear views.
       if(profile){
+        swayHair(()=>{
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(-flip*HR*0.10,-12.5);
@@ -1760,7 +1808,9 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(-flip*HR*0.20,15, -flip*HR*0.14,-2);
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        });
       } else if(away){
+        swayHair(()=>{
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(-HR*0.72,-8);
@@ -1770,6 +1820,7 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(0,-4, -HR*0.72,-8);
         g.closePath(); g.fill();
         g.strokeStyle=OUT; g.lineWidth=1.2; g.stroke();
+        });
       }
     }
   }
@@ -1839,7 +1890,10 @@ function drawHumanoid(g,sx,sy,o){
     // Sword rests out to the side (blade angled up & away from the body) so it
     // reads as held in the hand instead of floating over the chest; its swing
     // sweeps up into that rest. Bow/staff/tools keep the original arm pose.
-    g.rotate((isSword? -0.5 : 0.35) + swv*(isSword? -1.6 : 1.9) + (walking? -sw1*0.18:0));
+    // Sword swing is a real slash: at impact (swv peak) the blade thrusts forward &
+    // down, extended toward the target, then as swv decays it retracts to the upright
+    // guard - a committed arc that stays outboard and never crosses the face.
+    g.rotate((isSword? -0.5 : 0.35) + swv*(isSword? -1.4 : 1.9) + (walking? -sw1*0.18:0));
     g.fillStyle=o.robe? o.robe : shirt;
     g.beginPath(); g.roundRect(-2.1,0,4.2,7.6,2.1); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
@@ -1850,10 +1904,29 @@ function drawHumanoid(g,sx,sy,o){
     g.strokeStyle='rgba(30,20,12,0.35)'; g.lineWidth=1;
     g.beginPath(); g.moveTo(-2.1,-0.2); g.lineTo(2.1,-0.2); g.stroke();
     // weapon
-    g.rotate((isSword? 0.0 : -0.5) + swv*(isSword? -0.6 : 0.2));
+    // Sword rest: cancel the arm's inward -0.5 tilt and lean the blade a touch
+    // OUTWARD (+0.62) so it points up past the shoulder and never crosses the
+    // face. The swing term still sweeps it forward/down into the slash.
+    g.rotate((isSword? 0.62 : -0.5) + swv*(isSword? 2.8 : 0.2));
     if(o.weapon==='sword'){
       const wt=o.wtier==null?1:o.wtier;
       const bl= wt>=3? 21 : wt===2? 19 : wt===1? 16 : 13;   // Rimefang is the longest blade
+      // motion smear: faint blade after-images fanned along the arc it just swept,
+      // fading back - the streak that gives a fast cut its "whoosh". Drawn behind
+      // the solid blade so the real edge stays crisp on top.
+      if(swv>0.02){
+        const sp=clamp(swv/0.3,0,1);
+        for(let k=1;k<=3;k++){
+          g.save();
+          g.rotate(k*0.34*sp);                    // ghosts trail back into the arc
+          g.globalAlpha=0.18*sp*(1-k*0.26);
+          g.fillStyle= wt>=3? '#dff4ff' : '#eef3fb';
+          g.beginPath();
+          g.moveTo(-1.2,-3); g.lineTo(0,-3-bl); g.lineTo(1.2,-3); g.closePath(); g.fill();
+          g.restore();
+        }
+        g.globalAlpha=1;
+      }
       g.fillStyle= wt>=3? '#cdebff' : wt===2? '#e8edf4' : wt===1? '#cfd4dc' : '#9a9689';
       g.beginPath();
       g.moveTo(-1.6,-3); g.lineTo(-1.6,-3-bl+3); g.lineTo(0,-3-bl); g.lineTo(1.6,-3-bl+3); g.lineTo(1.6,-3);
@@ -1946,28 +2019,60 @@ function drawSlime(g,sx,sy,m){
   g.restore();
 }
 function drawWolf(g,sx,sy,m){
-  const flip = m.face<0?-1:1, trot=Math.sin(m.anim*10)*2;
+  const flip = m.face<0?-1:1, trot=Math.sin(m.anim*10)*2, OUT='rgba(22,22,28,0.8)';
+  const base='#5d6068', dk='#3f4249', lt='#82868f';
   g.save(); g.translate(sx,sy); g.scale(flip,1);
   if(m.hurtT>0) g.globalAlpha=0.6;
-  g.fillStyle='#5d6068';
-  g.fillRect(-14,-20+Math.max(0,trot)*0.4,4,10); g.fillRect(8,-20+Math.max(0,-trot)*0.4,4,10);
+  // far-side legs first (darker, tucked behind the body) - reads as depth
+  g.fillStyle=dk;
+  const legF=(x,ph)=>{ const yo=Math.max(0,ph)*0.4; g.beginPath(); g.roundRect(x,-20+yo,3.6,10,1.6); g.fill();
+    g.fillStyle=shade(dk,-6); g.beginPath(); g.ellipse(x+1.8,-10.4+yo,2.6,1.5,0,0,TAU); g.fill(); g.fillStyle=dk; };
+  legF(-11.5,-trot); legF(10.5,trot);
+  // near legs - a touch lighter, with paws
+  const legN=(x,ph)=>{ const yo=Math.max(0,ph)*0.4;
+    let lg; try{ lg=g.createLinearGradient(0,-20,0,-10); lg.addColorStop(0,base); lg.addColorStop(1,dk); }catch(e){ lg=base; }
+    g.fillStyle=lg; g.strokeStyle=OUT; g.lineWidth=1.2;
+    g.beginPath(); g.roundRect(x,-20+yo,4,10.5,1.8); g.fill(); g.stroke();
+    g.fillStyle='#2c2e34'; g.beginPath(); g.ellipse(x+2,-10+yo,2.7,1.6,0,0,TAU); g.fill(); };
+  legN(-14,trot); legN(8,-trot);
+  // bushy tail (behind torso) - tapered gradient wedge with a pale tip
+  g.save(); g.translate(-16,-24); g.rotate((trot)*0.03);
+  let ttg; try{ ttg=g.createLinearGradient(0,0,-10,-12); ttg.addColorStop(0,dk); ttg.addColorStop(1,lt); }catch(e){ ttg=base; }
+  g.fillStyle=ttg; g.strokeStyle=OUT; g.lineWidth=1.3;
+  g.beginPath(); g.moveTo(0,2);
+  g.quadraticCurveTo(-11,-2,-9,-14+trot*0.5);
+  g.quadraticCurveTo(-6,-11,-4,-9);
+  g.quadraticCurveTo(-3,-4,0,-4); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle='rgba(220,226,236,0.6)'; g.beginPath(); g.ellipse(-8,-12+trot*0.5,2,2.6,-0.5,0,TAU); g.fill();
+  g.restore();
   // torso: vertical gradient (top-lit fur) + a rim light along the spine
   let wg; try{ wg=g.createLinearGradient(0,-28,0,-14);
-    wg.addColorStop(0,'#7a7e88'); wg.addColorStop(1,'#484b53'); }catch(e){ wg='#5d6068'; }
-  g.fillStyle=wg; g.beginPath(); g.roundRect(-16,-28,30,14,6); g.fill();
-  g.strokeStyle='rgba(212,222,236,0.38)'; g.lineWidth=1.3;
+    wg.addColorStop(0,lt); wg.addColorStop(1,dk); }catch(e){ wg=base; }
+  g.fillStyle=wg; g.strokeStyle=OUT; g.lineWidth=1.4;
+  g.beginPath(); g.roundRect(-16,-28,30,14,6); g.fill(); g.stroke();
+  g.strokeStyle='rgba(212,222,236,0.42)'; g.lineWidth=1.3;
   g.beginPath(); g.moveTo(-13,-27.2); g.quadraticCurveTo(-2,-29.4,12,-27); g.stroke();
-  // head
-  g.fillStyle='#5d6068'; g.beginPath(); g.roundRect(8,-36,16,13,5); g.fill();
-  g.fillStyle='#4a4d54'; g.beginPath(); g.moveTo(10,-36); g.lineTo(13,-42); g.lineTo(16,-36); g.closePath(); g.fill();
-  g.beginPath(); g.moveTo(17,-36); g.lineTo(20,-42); g.lineTo(23,-36); g.closePath(); g.fill();
+  // haunch shading toward the rear
+  g.fillStyle='rgba(30,32,38,0.35)'; g.beginPath(); g.ellipse(-11,-20,4.5,6,0,0,TAU); g.fill();
+  // head - gradient + outline + rim
+  let hg; try{ hg=g.createLinearGradient(8,-36,20,-23); hg.addColorStop(0,lt); hg.addColorStop(1,base); }catch(e){ hg=base; }
+  g.fillStyle=hg; g.strokeStyle=OUT; g.lineWidth=1.4;
+  g.beginPath(); g.roundRect(8,-36,16,13,5); g.fill(); g.stroke();
+  // ears with dark inner
+  g.fillStyle=base; g.strokeStyle=OUT; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(10,-36); g.lineTo(13,-42); g.lineTo(16,-36); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(17,-36); g.lineTo(20,-42); g.lineTo(23,-36); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle=dk;
+  g.beginPath(); g.moveTo(12,-36.5); g.lineTo(13.4,-40); g.lineTo(14.8,-36.5); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(18.4,-36.5); g.lineTo(19.8,-40); g.lineTo(21.2,-36.5); g.closePath(); g.fill();
   if(!mobAway(m)){   // snout & eye only when it faces the camera; a back-of-head otherwise
-    g.fillStyle='#3a3d43'; g.fillRect(22,-31,4,4);
-    g.fillStyle='#ffd0d0'; g.beginPath(); g.arc(17,-31,1.7,0,TAU); g.fill();
+    g.fillStyle=shade(base,-16); g.beginPath(); g.roundRect(21,-32.5,5.5,5,2); g.fill();
+    g.fillStyle='#1a1c20'; g.beginPath(); g.arc(26,-31,1.2,0,TAU); g.fill();   // nose
+    g.fillStyle='#ffd0d0'; g.beginPath(); g.arc(17,-31,1.8,0,TAU); g.fill();   // eye glow
+    g.fillStyle='#7a1e1e'; g.beginPath(); g.arc(17,-31,0.8,0,TAU); g.fill();
+  } else {
+    g.fillStyle=dk; g.beginPath(); g.arc(16,-31,2.4,0,TAU); g.fill();          // back of head tuft
   }
-  // tail
-  g.strokeStyle='#5d6068'; g.lineWidth=4; g.beginPath();
-  g.moveTo(-16,-24); g.quadraticCurveTo(-24,-28,-22,-34+trot); g.stroke();
   g.restore();
 }
 function drawSkeleton(g,sx,sy,m){
@@ -2135,17 +2240,55 @@ function drawDragon(cx,sx,sy,m){
   cx.restore();
 }
 function drawCat(g,sx,sy,c){
-  const flip=c.face<0?-1:1;
+  const flip=c.face<0?-1:1, OUT='rgba(28,18,10,0.85)';
+  const base='#e8933a', dk='#c9752a', lt='#f4ab52', cream='#f4e0c0';
+  const t=(c.anim||0), breath=Math.sin(G.time*2.2)*0.5, tailW=Math.sin(G.time*3)*2;
   g.save(); g.translate(sx,sy); g.scale(flip,1);
-  g.fillStyle='#e8933a';
-  g.beginPath(); g.roundRect(-10,-14,18,10,5); g.fill();
-  g.beginPath(); g.arc(9,-14,6,0,TAU); g.fill();
-  g.beginPath(); g.moveTo(5,-18); g.lineTo(7,-24); g.lineTo(10,-18); g.closePath(); g.fill();
-  g.beginPath(); g.moveTo(10,-18); g.lineTo(13,-23); g.lineTo(14,-17); g.closePath(); g.fill();
-  g.strokeStyle='#e8933a'; g.lineWidth=3;
-  g.beginPath(); g.moveTo(-10,-10); g.quadraticCurveTo(-17,-12,-15,-20+Math.sin(G.time*3)*2); g.stroke();
-  g.fillStyle='#fff'; g.beginPath(); g.arc(9,-9,3.4,0,TAU); g.fill();
-  g.fillStyle='#203018'; g.beginPath(); g.arc(10.5,-14.5,1.2,0,TAU); g.arc(7,-14.5,1.2,0,TAU); g.fill();
+  if(c.hurtT>0) g.globalAlpha=0.6;
+  // tail (behind the body) - tapered & gradient, with a cream tip
+  let tg; try{ tg=g.createLinearGradient(-16,-20,-8,-8); tg.addColorStop(0,lt); tg.addColorStop(1,dk); }catch(e){ tg=base; }
+  g.strokeStyle=tg; g.lineWidth=4.2; g.lineCap='round';
+  g.beginPath(); g.moveTo(-9,-9); g.quadraticCurveTo(-18,-11,-15.5,-20+tailW); g.stroke();
+  g.strokeStyle=cream; g.lineWidth=3.2;
+  g.beginPath(); g.moveTo(-15.9,-16.5+tailW*0.7); g.lineTo(-15.5,-20+tailW); g.stroke();
+  g.lineCap='butt';
+  // paws peeking under the body
+  g.fillStyle=dk;
+  for(const px of [-5,-0.5,4]){ g.beginPath(); g.ellipse(px,-4.4,2.0,1.4,0,0,TAU); g.fill(); }
+  // body - top-lit gradient loaf + outline
+  let bg; try{ bg=g.createLinearGradient(0,-15+breath,0,-4); bg.addColorStop(0,lt); bg.addColorStop(0.6,base); bg.addColorStop(1,dk); }catch(e){ bg=base; }
+  g.fillStyle=bg; g.strokeStyle=OUT; g.lineWidth=1.6;
+  g.beginPath(); g.roundRect(-11,-14.5+breath,19,10.5,5.2); g.fill(); g.stroke();
+  // faint tabby striping over the back
+  g.strokeStyle='rgba(150,86,26,0.5)'; g.lineWidth=1.2;
+  for(const rx of [-6,-2,2]){ g.beginPath(); g.moveTo(rx,-14+breath); g.quadraticCurveTo(rx+1.5,-11+breath,rx,-8.5+breath); g.stroke(); }
+  // white chest bib
+  g.fillStyle=cream; g.beginPath(); g.ellipse(7.5,-8.5,3.2,3.6,0,0,TAU); g.fill();
+  // head - gradient ball + outline
+  let hg; try{ hg=g.createRadialGradient(7,-16,1,9,-14,8); hg.addColorStop(0,lt); hg.addColorStop(1,base); }catch(e){ hg=base; }
+  g.fillStyle=hg; g.strokeStyle=OUT; g.lineWidth=1.6;
+  g.beginPath(); g.arc(9,-14.5,6.2,0,TAU); g.fill(); g.stroke();
+  // ears with pink inner
+  g.fillStyle=base; g.strokeStyle=OUT; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(4.6,-18); g.lineTo(6.4,-24.4); g.lineTo(10,-19); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(9.6,-19); g.lineTo(13.4,-23.6); g.lineTo(14.4,-17.6); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle='#e79a9a';
+  g.beginPath(); g.moveTo(6.2,-19); g.lineTo(7.1,-22.4); g.lineTo(8.8,-19.4); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(10.8,-19.2); g.lineTo(12.7,-22); g.lineTo(13.2,-18.6); g.closePath(); g.fill();
+  // muzzle, nose, whiskers
+  g.fillStyle=cream; g.beginPath(); g.ellipse(11,-11.5,3.0,2.3,0,0,TAU); g.fill();
+  g.fillStyle='#c0603a'; g.beginPath(); g.moveTo(10.3,-12.2); g.lineTo(11.7,-12.2); g.lineTo(11,-11.2); g.closePath(); g.fill();
+  g.strokeStyle='rgba(255,255,255,0.5)'; g.lineWidth=0.7;
+  g.beginPath(); g.moveTo(12,-11.6); g.lineTo(16,-12.4); g.moveTo(12,-10.8); g.lineTo(16,-10.6); g.stroke();
+  // eyes - almond with a bright slit pupil + catch-light
+  if(!mobAway(c)){
+    g.fillStyle='#3a5a24';
+    g.beginPath(); g.ellipse(7,-14.6,1.7,2.1,0,0,TAU); g.ellipse(11.3,-14.6,1.7,2.1,0,0,TAU); g.fill();
+    g.fillStyle='#1a2410';
+    g.beginPath(); g.ellipse(7,-14.4,0.6,1.7,0,0,TAU); g.ellipse(11.3,-14.4,0.6,1.7,0,0,TAU); g.fill();
+    g.fillStyle='rgba(255,255,255,0.9)';
+    g.beginPath(); g.arc(6.4,-15.4,0.5,0,TAU); g.arc(10.7,-15.4,0.5,0,TAU); g.fill();
+  }
   g.restore();
 }
 /* ---- friendly island critters that just wander ---- */

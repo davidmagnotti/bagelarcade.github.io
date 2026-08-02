@@ -1566,6 +1566,7 @@ function updatePlayer(dt){
     }
   }
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
+  P.moveT  = P.moving? (P.moveT||0)+dt : 0;   // ...and how long we've been under way (launch spring)
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
   // the quiver slowly refills toward its cap (~1 shaft every 1.7s) so the bow is a
