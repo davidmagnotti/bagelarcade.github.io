@@ -1,7 +1,7 @@
 # Tidefarer — Art Direction Spec
 
 The visual identity of the 2D game (`/tidefarer/`), extracted from the source so
-the 3D build (`/tidefarer3d/`) can be graded to read as the **same world,
+the 3D build (`/td3d/`) can be graded to read as the **same world,
 authored by the same hand** — not generic cel-shading, not Roblox.
 
 Sources read: `js/03-art.js` (procedural sprites), `js/10-rendering.js`

@@ -101,7 +101,7 @@ in the 2D isle; the **Ember Hearth** inn, **Willa's Farm**, **Driftwood Dock**,
 ## Running it
 
 Uses ES modules + an import-map, so it must be served over HTTP (not `file://`):
-on GitHub Pages `…/tidefarer3d/index.html` just works; locally run
+on GitHub Pages `…/td3d/index.html` just works; locally run
 `python3 -m http.server` from the repo root.
 
 ## Files
