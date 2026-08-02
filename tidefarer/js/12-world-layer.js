@@ -6671,8 +6671,14 @@ function departEarly(){
   if(sailing) return;
   sailing=true;
   toast('“Cast off! Barik, then - and luck to the bold.”',3000);
+  Snd.splash();
+  if(typeof playSailTransition==='function'){
+    const title=(WORLD_DEFS.main && WORLD_DEFS.main.title) || '';
+    playSailTransition(title, ()=>switchWorld('main'), ()=>{ sailing=false; });
+    return;
+  }
   const fade=document.getElementById('fadeOv');
-  fade.style.opacity=1; Snd.splash();
+  fade.style.opacity=1;
   setTimeout(()=>{ switchWorld('main'); fade.style.opacity=0; sailing=false; }, 900);
 }
 function attemptSail(){
@@ -6716,8 +6722,16 @@ function attemptSail(){
 }
 function sailTo(dest, msg){
   if(sailing) return; sailing=true;
-  const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1; Snd.splash();
+  Snd.splash();
   if(msg) toast(msg,3000);
+  // The boat vignette (js/42-sail-transition.js) hides the world swap under a
+  // brief sailing loading screen; if it isn't loaded, fall back to the old fade.
+  if(typeof playSailTransition==='function'){
+    const title=(WORLD_DEFS[dest] && WORLD_DEFS[dest].title) || '';
+    playSailTransition(title, ()=>switchWorld(dest), ()=>{ sailing=false; });
+    return;
+  }
+  const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1;
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
