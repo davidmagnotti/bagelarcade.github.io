@@ -308,7 +308,7 @@ function startFresh(){
   startIntro();
 }
 // Each villager offers a single task from the start; Bram's (tools + a sword) and
-// Orin's (the fire staff) are the two that matter for the Hollow King - Maren will
+// Orin's (the fire staff) are the two that matter for the Hollow Spirit - Maren will
 // not open the causeway until Orin's staff quest is done (see buildDialogContent).
 function openingQuests(){ ['kit','mushrooms','harvest','fish','cat'].forEach(q=>{ if(!P.quests[q]) P.quests[q]='avail'; }); }
 document.getElementById('continueBtn').onclick=()=>{

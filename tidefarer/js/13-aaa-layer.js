@@ -15,7 +15,7 @@ function shockwave(x,y,color,r){ G.parts.push({x,y,vx:0,vy:0,life:0.35,max:0.35,
 /* ---------- in-world boss entrances ------------------------------------------
    A reusable, ON-CANVAS entrance beat (no overlay): for ~2.5s the world holds
    while the boss ARRIVES on the same screen the fight happens on - the dragon
-   taken by the violet, the Leviathan breaching, the Hollow King rising - then
+   taken by the violet, the Leviathan breaching, the Hollow Spirit rising - then
    control returns and combat begins with no cut. Modeled on the G.camCine
    scripted-camera beat in 21-exploration.js: the camera eases onto the boss, a
    title banner lands, an impact beat hits, then it hands straight to the fight.

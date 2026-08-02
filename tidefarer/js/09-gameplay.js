@@ -57,7 +57,7 @@ function circleBlocked(x,y,r,waterOK,diveOK){
   return false;
 }
 
-/* ---- the Hollow King's wall of fire ----------------------------------------
+/* ---- the Hollow Spirit's wall of fire ----------------------------------------
    When the hero steps north of the ruin mouth to meet the King, a wall of fire
    roars up across the gate behind them, sealing the arena until the King falls
    (or the hero is carried out of it). The gate tiles are made solid while lit. */
@@ -102,7 +102,7 @@ function updateHollowFire(dt){
   }
 }
 
-/* ---- the ward that seals the Hollow King away until the quest begins --------
+/* ---- the ward that seals the Hollow Spirit away until the quest begins --------
    Before Elder Maren speaks her charge, the ruined causeway stands walled: the
    ward-gate tiles are solid, a rampart of old ruin-stone renders across the neck,
    and the King with his bone-guard are hidden behind it (skipped by AI, targeting
@@ -963,7 +963,7 @@ function killMob(m,skill){
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
-  // named bosses (the Hollow King & Greymaw by kind, every other boss by its
+  // named bosses (the Hollow Spirit & Greymaw by kind, every other boss by its
   // ach tag) grant their achievement AND a one-time +max-mana on defeat
   bossReward(m);
   // felling any isle boss - the marquee bosses, the regional named foes, or the
@@ -1001,7 +1001,7 @@ function killMob(m,skill){
     toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
   }
   if(m.kind==='boss'){
-    // THE Hollow King (Emberwick's main-story boss) - the only fall that seals
+    // THE Hollow Spirit (Emberwick's main-story boss) - the only fall that seals
     // the isle's victory screen
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
@@ -1018,7 +1018,7 @@ function killMob(m,skill){
     setTimeout(()=>{ document.getElementById('winOv').style.display='flex'; if(G.state==='play') G.paused=true; },2400);
   } else if(m.boss){
     // any other named regional boss (the Tome-Warden snake, the Leviathan, the
-    // Castellan...) falls under its own name - never the Hollow King's
+    // Castellan...) falls under its own name - never the Hollow Spirit's
     Snd.boss(); G.shake=0.85; G.slowmo=1.1;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',80);
     banner((m.title||'THE FOE')+' FALLS','A SHADOW LIFTS FROM THIS PLACE');
@@ -1701,7 +1701,7 @@ function updateNPCs(dt){
      window - the reward for baiting it out is a free punish. */
 const LUNGERS={wolf:1,raptor:1,boar:1,brigand:1,raider:1,wraith:1};
 const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
-// Foes bound to Emberwick's gray ruins - the Hollow King's bone-guard, and every
+// Foes bound to Emberwick's gray ruins - the Hollow Spirit's bone-guard, and every
 // skeleton / the gravelord up at the barrow - never leave the ruin-stone.
 function ruinsBound(m){ return !!(m.hollowGuard || (G.worldId==='isle' && (m.kind==='skeleton'||m.kind==='gravelord'))); }
 const ISLE_SKELE_CAP=6;   // keep the barrow from filling with an endless bone-heap if you ignore them
@@ -1757,7 +1757,7 @@ function updateMobs(dt){
           startBossIntro(m,{kind:m.entrance, title:m.entranceTitle, sub:m.entranceSub}); continue;
         }
         m.state='chase';
-        if(m.kind==='boss'){ Snd.boss(); }   // the Hollow King's rise is shown now, not toasted
+        if(m.kind==='boss'){ Snd.boss(); }   // the Hollow Spirit's rise is shown now, not toasted
         else if(m.bigBoss && Snd.boss) Snd.boss(); }
       m.wt-=dt;
       if(m.wt<=0){ m.wt=rnd(2,5); const a=Math.random()*TAU; m.tx=m.hx+Math.cos(a)*1.6; m.ty=m.hy+Math.sin(a)*1.6; }
@@ -1961,7 +1961,7 @@ function updateMobs(dt){
           G.parts.push({x:m.x+Math.cos(ba)*rr, y:m.y-0.6+Math.sin(ba)*rr*0.7, vx:Math.cos(ba)*1.7, vy:Math.sin(ba)*1.7,
             life:0.42, color:Math.random()<0.5?'#ff7a1e':'#ffd24a', size:rnd(2.5,5), grav:0}); }
       }
-      if(m.kind==='boss'){ // the Hollow King alone raises bone and calls the dead
+      if(m.kind==='boss'){ // the Hollow Spirit alone raises bone and calls the dead
         m.shootCd-=dt;
         if(m.shootCd<=0 && l>2){
           m.shootCd=2.6;
@@ -1978,9 +1978,9 @@ function bossSummon(m){
   // never conjure past the barrow's cap - the King only tops the ranks back up
   const room = ISLE_SKELE_CAP - liveIsleSkeletons();
   if(room<=0) return;
-  toast('<b style="color:#78dca0">“Rise, my court!”</b>');
+  toast('<b style="color:#c79bff">“Rise, my court!”</b>');
   for(let i=0;i<Math.min(2,room);i++){ const s=spawnMob('skeleton', m.x+rnd(-2,2), m.y+rnd(1,2.5));
-    if(s){ s.state='chase'; s.respawnT=-1; s.hollowGuard=true; s.hx=s.x; s.hy=s.y; burst(s.x,s.y-0.4,'#78dca0',12); } }
+    if(s){ s.state='chase'; s.respawnT=-1; s.hollowGuard=true; s.hx=s.x; s.hy=s.y; burst(s.x,s.y-0.4,'#c79bff',12); } }
   Snd.magic();
 }
 

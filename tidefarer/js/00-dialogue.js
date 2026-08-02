@@ -585,7 +585,7 @@ const DIALOGUE = {
       doneText: "There it is - you felt that, the billet just… gone, turned off your edge. That's the turning. Watch the blow in and meet it LATE, right as it reaches you, not early - a swordsman's strike is no different. Now you're fit to go down into that crypt. Off to Maren."
     },
     "wreck": {
-      brief: "The Hollow King's down and the strait's gone calm - so now she just needs patching, and honest timber is all it takes. See that hull? Split like a walnut on Gull Reef. Bring me twelve planks of common wood and I'll have the Tidewalker seaworthy by the tide. No iron, no fuss.",
+      brief: "The Hollow Spirit's down and the strait's gone calm - so now she just needs patching, and honest timber is all it takes. See that hull? Split like a walnut on Gull Reef. Bring me twelve planks of common wood and I'll have the Tidewalker seaworthy by the tide. No iron, no fuss.",
       log: "Gather 12 wood for the hull, then return to Captain Brant at the dock.",
       doneText: "Aye, that's proper timber! *hammers* - there, she's watertight. Step aboard at the dock whenever you're ready and we'll cross to Greyharbor."
     },
@@ -625,7 +625,7 @@ const DIALOGUE = {
       doneText: "Seven echoes! You now know this island better than most who were born on it."
     },
     "gravelord": {
-      brief: "The Hollow King had a herald - Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started. And take Bram's yew bow - old bones splinter under arrows, half again as deep.",
+      brief: "The Hollow Spirit had a herald - Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started. And take Bram's yew bow - old bones splinter under arrows, half again as deep.",
       log: "Slay Gravelord Varek in the Old Ruins.",
       doneText: "Varek, unmade. The ruins will finally hold nothing but memory. You've the makings of a legend, you know."
     },
@@ -667,7 +667,7 @@ const DIALOGUE = {
     "mushrooms": {
       brief: "Hm. You move like someone who has never once had to move fast. That will get you killed in the ruins. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will grind them into a draught that quickens the blood. Then I will teach your feet the one lesson worth more than any blade.",
       log: "Gather 3 bluecaps from the Whisperwood for Orin.",
-      doneText: "Bluecaps crushed, essence bound, and down it goes… there. <i>He walks you through it twice in the tower yard - a low push off the back foot, a breath of speed, and gone before the blow lands.</i> That is the DASH. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not spend this old trick on just anyone. Take those quick feet down to Elder Maren - tell her old Orin says you're ready for the Hollow King. A sword is only half of what a fighter owes their feet."
+      doneText: "Bluecaps crushed, essence bound, and down it goes… there. <i>He walks you through it twice in the tower yard - a low push off the back foot, a breath of speed, and gone before the blow lands.</i> That is the DASH. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not spend this old trick on just anyone. Take those quick feet down to Elder Maren - tell her old Orin says you're ready for the Hollow Spirit. A sword is only half of what a fighter owes their feet."
     },
     "skeletons": {
       brief: "The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I'll give you a charm I've been saving for someone reckless.",
@@ -675,9 +675,9 @@ const DIALOGUE = {
       doneText: "Quieter already. This ember charm rides your strikes - every blow burns a little brighter now."
     },
     "king": {
-      brief: "Rask says you can turn a blade, and Orin says your feet are quick? <i>Elder Maren's brow climbs.</i> Neither man takes to strangers, yet both vouch for a castaway they've known a week - so they see something in you, and neither is a fool. Then it's true: the Hollow King stirs beneath the crypt, who long ago traded his heart for a crown. My folk warded the causeway gate to seal him in, and I am the last who knows the word to open it. His curse locks the strait - no boat leaves Emberwick while he churns the deep. Break him, and the sea opens again. Say you'll face him and I'll speak the gate open. Emberwick believes in you.",
-      log: "Defeat the Hollow King at the crypt in the Old Ruins.",
-      doneText: "The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow King's curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing."
+      brief: "Rask says you can turn a blade, and Orin says your feet are quick? <i>Elder Maren's brow climbs.</i> Neither man takes to strangers, yet both vouch for a castaway they've known a week - so they see something in you, and neither is a fool. Then it's true: the Hollow Spirit stirs beneath the crypt, who long ago traded his heart for a crown. My folk warded the causeway gate to seal him in, and I am the last who knows the word to open it. His curse locks the strait - no boat leaves Emberwick while he churns the deep. Break him, and the sea opens again. Say you'll face him and I'll speak the gate open. Emberwick believes in you.",
+      log: "Defeat the Hollow Spirit at the crypt in the Old Ruins.",
+      doneText: "The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit's curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing."
     },
     "welcome2": {
       brief: "New boots off the Emberwick ferry - I can smell the tutorial on you. Barik's bigger, hungrier, and less forgiving. Get provisioned before you get ambitious: Sela runs the counter south of the well. Tell her the Warden sent you.",

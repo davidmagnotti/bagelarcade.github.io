@@ -6653,7 +6653,7 @@ function attemptSail(){
   if(sailing) return;
   if(G.worldId==='isle'){
     if(qs('king')!=='done'){
-      blockMsg('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow King stands. Fell him first."</b>');
+      blockMsg('Captain Brant eyes the northern ruins. <b>"Strait\'s cursed while the Hollow Spirit stands. Fell him first."</b>');
       return;
     }
     if(qs('wreck')!=='done'){

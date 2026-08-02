@@ -12,7 +12,7 @@ const ACH={
   greenthumb:{t:'Green Thumb',d:'Harvest 5 wheat.'},
   plunderer:{t:'Plunderer',d:'Open 4 treasure chests.'},
   globetrotter:{t:'Across the Strait',d:'Reach the mainland.'},
-  kingslayer:{t:'Kingslayer',d:'Fell the Hollow King.'},
+  kingslayer:{t:'Kingslayer',d:'Fell the Hollow Spirit.'},
   wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'},
   wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'},
   // ---- the other named bosses of the archipelago (awarded on their defeat) ----
@@ -271,7 +271,7 @@ function loadCode(str){
   // descend into the dungeon itself and let the saved coordinates below resume the hero.
   const DUNGEON_PARENT={eastdeep:'east', frostdeep:'frost', frostvault:'frost', aeriedeep:'aerie', reachdeep:'reach', milldeep:'wind', undermaw:'main', skydungeon:'sky',
     // Act II return dungeons: without these, a save made inside one falls through to the default
-    // tutorial isle and drops the hero at their dungeon coords - straight into the Hollow King's
+    // tutorial isle and drops the hero at their dungeon coords - straight into the Hollow Spirit's
     // court. Restore each into its own dungeon, over its correct parent isle instead.
     barikdeep:'main', winddeep:'wind', sunwarddeep:'east', skydeep:'sky', embertomb:'isle'};
   if(DUNGEON_PARENT[d.world]){

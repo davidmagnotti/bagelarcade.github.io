@@ -91,23 +91,23 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
-  // The Hollow King is gated behind a fighter's full craft, not steel alone. If the
+  // The Hollow Spirit is gated behind a fighter's full craft, not steel alone. If the
   // traveler comes to Maren with a sword but no parry, she will not speak the causeway
   // gate open - she sends them east to Rask the Bladesworn first, to learn the turning.
   if(npc.id==='maren' && qs('king')==='avail' && !(P.unlocked&&P.unlocked.parry)){
-    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow King - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for a swinging arm alone. Whatever crawls beneath that crypt strikes back, and hard - you\'ll not last if all you know is how to hit. It is his waking that cursed the strait - his spite reaches out into the water and drags down any hull that dares the crossing. Put him down and the sea loosens its grip; Emberwick can sail again.” <i>She looks east, past the meadow.</i> “Go and find <b>Rask</b>. The old Bladesworn keeps the quiet out there - let him teach you to <b>turn a strike aside</b>. Come back to me when you can <b>parry</b>, and then we\'ll talk about the crypt.”',
+    setDialog('<i>Maren\'s face goes grave at the mention of the crypt.</i> “The Hollow Spirit - aye, he stirs, and I\'ll speak the gate open for the one who\'ll face him. But not for a swinging arm alone. Whatever crawls beneath that crypt strikes back, and hard - you\'ll not last if all you know is how to hit. It is his waking that cursed the strait - his spite reaches out into the water and drags down any hull that dares the crossing. Put him down and the sea loosens its grip; Emberwick can sail again.” <i>She looks east, past the meadow.</i> “Go and find <b>Rask</b>. The old Bladesworn keeps the quiet out there - let him teach you to <b>turn a strike aside</b>. Come back to me when you can <b>parry</b>, and then we\'ll talk about the crypt.”',
       shopButtons(npc,[{label:'I\'ll find Rask', ghost:true, fn:closeDialog}]));
     return;
   }
   // A parry alone is not enough: the traveler also needs the footwork Orin teaches.
   // If the turning is learned but the dash is not, Maren sends them up to the tower
-  // to do Orin's errand and learn the dash before they take up the Hollow King.
+  // to do Orin's errand and learn the dash before they take up the Hollow Spirit.
   if(npc.id==='maren' && qs('king')==='avail' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.dash)){
     setDialog('<i>Maren stays your hand before you can speak of the crypt.</i> “Rask taught you the turning - good, that\'ll keep you alive. But standing your ground won\'t always do; down there you\'ll need to be somewhere a blow ISN\'T.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do the old man\'s errand and let him quicken your feet - the <b>dash</b>. You\'ll want that step under you before I open the causeway. Come back when you have it.”',
       shopButtons(npc,[{label:'Up to the tower', ghost:true, fn:closeDialog}]));
     return;
   }
-  // After the Hollow King falls, the elder does more than thank you: she names the
+  // After the Hollow Spirit falls, the elder does more than thank you: she names the
   // wider turmoil in the isles and asks the champion to carry that steel outward -
   // the in-world reason to board Brant's boat and leave Emberwick. Fires once, on
   // the first visit after the quest is done; either answer still points to the boat.

@@ -356,7 +356,7 @@ function questProgressText(id){
 }
 const ISLE_IDS=['kit','bladeoath','mushrooms','harvest','fish','cat','king','wreck'];
 function isleQuestsSettled(){ return ISLE_IDS.every(id=>qs(id)==='done'); }
-// Brant's ship repair only opens once the Hollow King is felled and the strait calms.
+// Brant's ship repair only opens once the Hollow Spirit is felled and the strait calms.
 const UNLOCK_AFTER={ wreck:['king'],
   nets:['welcome2'], roadclear:['welcome2'], hedda2:['hedda1'], torv2:['torv1'],
   ribbon2:['ribbon1'], ribbon3:['ribbon2'], tame1:['hunt1'],

@@ -16,7 +16,7 @@ let ZONES = {
   grove:  {x:96,y:50,r:6,  name:"Rask's Grove"}
 };
 
-/* The Hollow King's arena, at the isle's cold northern tip. The ruins reach
+/* The Hollow Spirit's arena, at the isle's cold northern tip. The ruins reach
    far north; a stretch of open grass and a few warning-boards lead up to a
    fire-gate that seals the hero in once the King rises. Computed in
    shapeHollowKingApproach() and read by the fire mechanic in 09-gameplay. */
@@ -27,7 +27,7 @@ let HOLLOW_MINX = 99, HOLLOW_MAXX = -99;
 /* The ward-gate seals the approach a little further in, where the sea pinches
    the ruined causeway to a narrow neck (open water on either flank, so there is
    no way around). A wall of old ruin-stone stands here with a warded gate at its
-   heart, holding the Hollow King's spit shut until Elder Maren speaks it open at
+   heart, holding the Hollow Spirit's spit shut until Elder Maren speaks it open at
    the start of her quest. Computed in shapeHollowKingApproach(); raised and
    lifted by the seal mechanic in 09-gameplay. */
 let WARD_GATE = [];                // walkable tiles across the sealed causeway
@@ -146,7 +146,7 @@ function genWorld(){
   shapeHollowKingApproach();
 }
 
-/* Reshape the northern ruins into the Hollow King's approach:
+/* Reshape the northern ruins into the Hollow Spirit's approach:
    push the broken headland further north, lay a calm stretch of grass before
    the cursed ground, and record the fire-gate that seals the arena. */
 function shapeHollowKingApproach(){

@@ -2128,12 +2128,12 @@ function drawWolf(g,sx,sy,m){
 function drawSkeleton(g,sx,sy,m){
   const s = m.boss?1.7:1, step=Math.sin(m.anim*8)*2.2*s;
   // THE COG-BOUND: a miller risen fused into the mill's gear-train - an industrial
-  // revenant, deliberately NOT the Hollow King's crowned-and-caped royal skeleton.
+  // revenant, deliberately NOT the Hollow Spirit's crowned-and-caped royal skeleton.
   const cog = !!m.millboss;
   g.save(); g.translate(sx,sy);
   if(m.hurtT>0) g.globalAlpha=0.6;
   if(m.boss){ const ig=(m.introKind==='rise')?0.45*(m.introT||0):0;   // ghostlight flares as he rises
-    g.fillStyle= cog?('rgba(214,150,70,'+(0.15+ig).toFixed(2)+')'):('rgba(120,220,160,'+(0.16+ig).toFixed(2)+')');
+    g.fillStyle= cog?('rgba(214,150,70,'+(0.15+ig).toFixed(2)+')'):('rgba(150,90,215,'+(0.16+ig).toFixed(2)+')');
     g.beginPath(); g.ellipse(0,-24*s,26*s,32*s,0,0,TAU); g.fill(); }
   // the great iron gear the miller is bound into, grinding slowly behind his bones
   if(cog){
@@ -2153,8 +2153,8 @@ function drawSkeleton(g,sx,sy,m){
   g.fillStyle='#eceee6'; g.beginPath(); g.roundRect(-7*s,-28*s,14*s,16*s,4*s); g.fill();
   g.strokeStyle='#b9bab1'; g.lineWidth=1.5*s;
   for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(-6*s,-24*s+i*4*s); g.lineTo(6*s,-24*s+i*4*s); g.stroke(); }
-  if(m.boss && !cog){ // Hollow King: a tattered royal cape
-    g.fillStyle='#3a4a3f'; g.beginPath(); g.moveTo(-8*s,-30*s); g.lineTo(8*s,-30*s);
+  if(m.boss && !cog){ // Hollow Spirit: a tattered spectral shroud
+    g.fillStyle='#3a2a52'; g.beginPath(); g.moveTo(-8*s,-30*s); g.lineTo(8*s,-30*s);
     g.lineTo(10*s,-6*s); g.lineTo(4*s,-12*s); g.lineTo(0,-5*s); g.lineTo(-5*s,-12*s); g.lineTo(-10*s,-7*s); g.closePath(); g.fill();
   }
   if(cog){ // iron straps lashing the old bones to the works
@@ -2173,8 +2173,8 @@ function drawSkeleton(g,sx,sy,m){
       if(!skAway){ g.fillStyle='#ffb347'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill(); }
       g.fillStyle='#5a4c38'; g.fillRect(-6.4*s,-43.4*s,12.8*s,2.8*s);
       g.fillStyle='#8a7658'; for(const bx of [-4.4,0,4.4]){ g.beginPath(); g.arc(bx*s,-42*s,0.9*s,0,TAU); g.fill(); }
-    } else { // Hollow King: ghostlight eyes and a jagged gold crown
-      if(!skAway){ g.fillStyle='#78dca0'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill(); }
+    } else { // Hollow Spirit: violet ghostlight eyes and a jagged gold crown
+      if(!skAway){ g.fillStyle='#c79bff'; g.beginPath(); g.arc(-2.8*s,-36*s,1*s,0,TAU); g.arc(2.8*s,-36*s,1*s,0,TAU); g.fill(); }
       g.fillStyle='#ffd76a'; g.fillRect(-6*s,-45*s,12*s,3.4*s);
       g.beginPath(); g.moveTo(-6*s,-45*s); g.lineTo(-3.5*s,-50*s); g.lineTo(-1*s,-45*s); g.lineTo(1*s,-50*s); g.lineTo(3*s,-45*s); g.lineTo(5*s,-50*s); g.lineTo(6*s,-45*s); g.closePath(); g.fill(); }
   }
@@ -2186,7 +2186,7 @@ function drawSkeleton(g,sx,sy,m){
     g.fillStyle='#5a4c38'; g.fillRect(-3.4*s,-16.5*s,6.8*s,3.4*s);   // the snapped-off tooth head
     g.fillStyle='#463b2c'; g.fillRect(-3.5*s,-2*s,7*s,2.6*s);
   } else {
-    g.fillStyle= m.boss?'#8fd4ae':'#a8a094'; g.fillRect(-1.4*s,-16*s,2.8*s,15*s);
+    g.fillStyle= m.boss?'#b48fe0':'#a8a094'; g.fillRect(-1.4*s,-16*s,2.8*s,15*s);
     g.fillStyle='#6b5b43'; g.fillRect(-3.5*s,-2*s,7*s,2.6*s);
   }
   g.restore();
