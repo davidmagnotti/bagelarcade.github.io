@@ -424,7 +424,28 @@ function refreshUI(){
    out in the world. Cheap-guarded so it can be pinged every frame. */
 let _mountBtnKey=null;
 function ownsMount(){ return !!(P.horse || (P.unlocked && P.unlocked.moa)); }
+// The quick-slot (draught) cooldown made visible: while P.healCd runs, a dark clock-sweep
+// dims the potion slot and unwinds as it recovers, with the seconds left counting down in it -
+// so you can see at a glance when the next draught is ready instead of tapping into a toast.
+const HEAL_CD_MAX=4.5;
+function syncQuickCooldown(){
+  const slot=document.getElementById('hot_potion'); if(!slot) return;
+  let ov=slot.querySelector('.cdOverlay');
+  const cd=P.healCd||0, frac=Math.max(0,Math.min(1,cd/HEAL_CD_MAX));
+  if(cd>0.05){
+    if(!ov){
+      ov=document.createElement('div'); ov.className='cdOverlay';
+      ov.style.cssText='position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;'+
+        'display:flex;align-items:center;justify-content:center;font:bold 15px Verdana;color:#f0e2c0;text-shadow:0 1px 3px #000;';
+      slot.appendChild(ov);
+    }
+    const ang=Math.round(360*frac);   // the dark wedge = time still to wait; it shrinks toward ready
+    ov.style.background='conic-gradient(rgba(8,6,4,0.66) '+ang+'deg, rgba(8,6,4,0.12) '+ang+'deg)';
+    ov.textContent=Math.ceil(cd);
+  } else if(ov){ ov.remove(); }
+}
 function updateMountBtn(){
+  syncQuickCooldown();
   // indoors there's nothing to fight - hide the touch attack (sword) & dodge
   // (dash) buttons so the room reads calm
   if(isTouch){
