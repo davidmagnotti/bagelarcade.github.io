@@ -5493,6 +5493,12 @@ function genSunwardDeep(){
   carve(20,60,52,67);            // ROOM 3 - THE STOKEHOLD (combat guarding a heat-plate for gate B)
   carve(34,57,38,61);            // GATE-B corridor (barred at y58)
   carve(20,49,52,57);            // ROOM 4 - THE BELLOWS WALK (vent field on foot)
+  // OPTIONAL REJOINING LOOP - THE SLAG DRIFT: a longer western way from Room 4 up to Room 5, winding
+  // through a side-gallery with a stash. Rejoins the climb at Room 5 - both routes stay below the boss
+  // gate, so it never bypasses the seal. The direct corridor is faster; the long way pays loot.
+  carve(10,53,20,55);            // Room 4 -> the west gallery
+  carve(4,40,12,55);             // the slag-drift gallery (the long way up)
+  carve(10,40,20,42);            // the gallery -> Room 5 (rejoin)
   carve(34,45,38,50);            // corridor
   carve(20,38,52,45);            // ROOM 5 - THE CLINKER STAIR (a last stand before the forge-heart)
   carve(34,34,38,39);            // boss corridor (Forge-gate at y37)
@@ -5504,6 +5510,9 @@ function placeObjectsSunwardDeep(){
   // the Cinder Nook's cache (off Room 2's west passage) - optional detour loot
   if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.sun))
     G.decor.push({kind:'chest', x:6.5, y:73.5, sideCache:'sun', loot:'fire', title:'THE CINDER NOOK', sub:'A CACHE AMONG THE CLINKER'});
+  // the Slag Drift's stash (the reward for taking the long western way up from Room 4)
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.sunLoop))
+    G.decor.push({kind:'chest', x:7.5, y:47.5, sideCache:'sunLoop', loot:'mat', title:'THE SLAG DRIFT', sub:'A STASH ON THE LONG WAY UP'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   G._forgeVents=[]; G._forgeErupts=[]; G._forgeT=0;
@@ -5559,6 +5568,8 @@ function spawnMobsSunwardDeep(){
     for(const [zx,zy,k] of [[28,64,'skeleton'],[44,64,'scorpion']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // THE CINDER NOOK side-gallery: a scorpion and dead over the cache
     for(const [zx,zy,k] of [[5,73,'scorpion'],[8,76,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
+    // THE SLAG DRIFT loop: the toll for the long way up - a scorpion and dead in the gallery
+    for(const [zx,zy,k] of [[6,45,'scorpion'],[9,50,'skeleton']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
     // ROOM 5: a last stand on the clinker stair
     for(const [zx,zy] of [[28,41],[44,41]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skeleton',sp[0],sp[1]); }
   }
@@ -5694,6 +5705,12 @@ function genSkyDeep(){
   carve(20,60,52,67);            // ROOM 3 - THE TRANSEPT (combat guarding a rune-plate for gate B)
   carve(34,57,38,61);            // GATE-B corridor (barred at y58)
   carve(20,49,52,57);            // ROOM 4 - THE CHANCEL (hunting strikes + pillars)
+  // OPTIONAL REJOINING LOOP - THE CLOISTER: a longer western way from Room 4 up to Room 5, winding
+  // through a side-aisle with a stash (and out of the hunting lightning). Rejoins the climb at Room 5 -
+  // both routes stay below the boss gate, so it never bypasses the seal. Direct is faster; the long way pays loot.
+  carve(10,53,20,55);            // Room 4 -> the west cloister
+  carve(4,40,12,55);             // the cloister aisle (the long way up)
+  carve(10,40,20,42);            // the cloister -> Room 5 (rejoin)
   carve(34,45,38,50);            // corridor
   carve(20,38,52,45);            // ROOM 5 - THE SANCTUARY STEP (a last stand before the Stormheart)
   // OPTIONAL SIDE BRANCH - THE RELIQUARY: a dead-end side-chapel off the Sanctuary Step's east
@@ -5709,6 +5726,9 @@ function placeObjectsSkyDeep(){
   // the Reliquary's cache (off Room 5's east passage) - optional detour loot
   if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.sky))
     G.decor.push({kind:'chest', x:65.5, y:42.5, sideCache:'sky', loot:'storm', title:'THE RELIQUARY', sub:'A CACHE BEHIND THE CHAPEL'});
+  // the Cloister's stash (the reward for taking the long western way up from Room 4)
+  if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.skyLoop))
+    G.decor.push({kind:'chest', x:7.5, y:47.5, sideCache:'skyLoop', loot:'mat', title:'THE CLOISTER', sub:'A STASH ON THE LONG WAY UP'});
   setSolid(36,93,0); setTile(36,93,T.RUIN);
   for(const [tx,ty] of [[24,84],[48,84],[22,73],[52,73],[24,64],[48,64],[22,53],[52,53],[24,40],[48,40],[22,10],[52,10],[36,9]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // ---- THE LOCKS: clearing room 1 of its storm-shades raises gate A (no lever - the fight is
@@ -5740,6 +5760,8 @@ function spawnMobsSkyDeep(){
     for(const [zx,zy] of [[28,64],[44,64]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
     // THE RELIQUARY side-chapel: two storm-shades over the cache
     for(const [zx,zy] of [[64,41],[66,44]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
+    // THE CLOISTER loop: the toll for the long way up - two storm-shades in the aisle
+    for(const [zx,zy] of [[6,45],[9,50]]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob('skywraith',sp[0],sp[1]); }
     // ROOM 5: a last stand on the sanctuary step
     for(const [zx,zy,k] of [[28,41,'skywraith'],[44,41,'archer']]){ const sp=findOpenNear(zx,zy,3); if(sp) spawnMob(k,sp[0],sp[1]); }
   }
