@@ -1348,6 +1348,15 @@ document.getElementById('respawnBtn').onclick=()=>{
     if(typeof invalidateScenery==='function') invalidateScenery();
     G._millSealed=0;
   }
+  // if you died sealed in the Stalker's Den, reset the encounter: raise the Den Gate and
+  // re-seal the Maw-Stalker so walking back into the den re-triggers (and re-seals) it cleanly
+  if(G._mawDenSealed){
+    if(typeof MAW_DENGATE!=='undefined') for(const [x,y] of MAW_DENGATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
+    { const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='den'); if(cg) cg.open=true; }
+    for(const m of G.mobs){ if(m.undermawBeast && !m.dead){ m.sealed=true; m.entranceDone=false; m.introKind=null; } }
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    G._mawDenSealed=0;
+  }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;
     toast('Death takes its toll: <b>'+toll+' gold</b> lost from your purse. <i>(Banked gold is beyond its reach - Goldwarden Bree, Greyharbor.)</i>',6200); }

@@ -3178,6 +3178,7 @@ let UNDERMAW_WALLS = [];
 const UNDERMAW_GATE = [[19,11],[20,11],[21,11],[22,11],[23,11]];   // the Hoard Door, sealed until the beast falls
 const MAW_SHOOTGATE = [[20,112],[21,112],[22,112],[23,112],[24,112]];   // the Warded Gate, sealed until the ward-eye is struck
 const MAW_HORDEGATE = [[20,139],[21,139],[22,139],[23,139],[24,139]];   // the Bone Gate, sealed until the bone-yard horde is put down
+const MAW_DENGATE   = [[20,34],[21,34],[22,34],[23,34],[24,34]];   // the Den Gate: stands OPEN until you step into the Stalker's Den, then slams shut behind you
 function genUndermaw(){
   for(let i=0;i<MAPW*MAPH;i++){ G.map[i]=T.RUIN; G.solid[i]=1; }
   const carve=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)){ setTile(x,y,T.RUIN); setSolid(x,y,0); } };
@@ -3249,6 +3250,11 @@ function placeObjectsUndermaw(){
   // the room's north throat grinds up, opening the way deeper. (No scar here - the
   // platform-hop trial waits in R3/R4.) ----
   G.decor.push({kind:'catgate', x:22, y:139, open:false, gate:'horde', tiles:MAW_HORDEGATE.slice(), label:'the Bone Gate'});
+  // ---- R5: THE DEN GATE - a portcullis at the den's mouth. It stands OPEN as you approach;
+  // the moment you step up into the Stalker's Den it slams shut behind you, and only then does
+  // the Maw-Stalker rouse (see updateUndermaw). No retreat until the beast falls.
+  G._mawDenSealed=0;
+  G.decor.push({kind:'catgate', x:22, y:34, open:true, gate:'den', tiles:MAW_DENGATE.slice(), label:'the Den Gate'});
   // ---- R3: a longer, busier scar ----
   pit(6,38, 79,105); field(79,105, 6203);
   G._mawCross.push({y0:76,y1:108, sx:22, sy:107});
@@ -3295,6 +3301,9 @@ function spawnMobsUndermaw(){
   const b=spawnMob('scorpion', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.undermawBeast=1; b.bscale=1.7; b.title='THE MAW-STALKER'; b.subtitle='TERROR OF THE UNDERMAW';
     b.hp=b.maxhp=360; b.dmg=18; b.lvl=7; b.xp=380; b.gold=[35,60];
+    // sealed = inert and unseen until you walk into the den and the Den Gate shuts behind you
+    // (updateUndermaw unseals it and hands into its 'loom' entrance). Never looming in view first.
+    b.sealed=true;
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
   // R4 skeleton archers: rooted on the ledges flanking the crossing, raining bone arrows as you cross
   for(const [ax,ay] of [[14,39],[30,39],[14,69],[30,69]]){
@@ -3384,6 +3393,22 @@ function updateUndermaw(dt){
   updateDriftSlabs(G._mawSlabs, G._mawT);
   updateConveyor(dt);
   updateMawBats(dt);
+  // THE DEN GATE: stepping up into the Stalker's Den with the Maw-Stalker still alive slams the
+  // portcullis shut behind you - and only then does the beast rouse. The fight (and its 'loom'
+  // entrance) begins only once you're inside the den, locked in, with no way back until it falls.
+  if(!G._mawDenSealed && !P.dead && !(P.story&&P.story.undermawDown)
+     && P.y<34 && P.y>13 && P.x>7 && P.x<37
+     && (G.mobs||[]).some(m=>m.undermawBeast && !m.dead)){
+    G._mawDenSealed=1; for(const [x,y] of MAW_DENGATE) setSolid(x,y,1);
+    const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='den'); if(cg) cg.open=false;
+    invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
+    banner('THE DEN SEALS BEHIND YOU','NO RETREAT - PUT DOWN THE MAW-STALKER');
+    // the way back is shut: rouse the Maw-Stalker - reveal it and hand into its entrance beat
+    const boss=(G.mobs||[]).find(m=>m.undermawBeast && !m.dead);
+    if(boss){ boss.sealed=false;
+      if(typeof startBossIntro==='function' && !boss.entranceDone && !G.bossIntro)
+        startBossIntro(boss,{kind:boss.entrance, title:boss.title, sub:boss.subtitle}); }
+  }
   // a fall is in progress: the hero tumbles down into the black, then respawns on the ledge
   if(G._mawDrop){ G._mawDrop.t+=dt;
     if(Math.random()<0.4) burst(G._mawDrop.x+rnd(-0.3,0.3), G._mawDrop.y+rnd(-0.2,0.2), '#1a1512', 1, 1.2);

@@ -29,7 +29,7 @@ var GATES={
   ironwood:{ tool:'axe',  req:2, kind:'tree', hp:20, tag:'IRONWOOD',
              color:'#8fb3ff', glow:'rgba(70,110,190,1)', spark:'#a9c4ff',
              need:'the dungeon-forged <b>Rivenedge Axe</b>', drop:'hardwood', dropN:2, skill:'woodcut' },
-  basalt:{   tool:'pick', req:2, kind:'rock', hp:24, tag:'BASALT',
+  basalt:{   tool:'pick', req:2, kind:'rock', hp:24, tag:'BASALT', noTag:true,   // no floating name-tag; the stone just reads violet on sight
              color:'#c79bff', glow:'rgba(120,70,180,1)', spark:'#d9b8ff',
              need:'the dungeon-forged <b>Cragbreaker Pick</b>', drop:'ore', dropN:2, skill:'mining' },
   slagiron:{ tool:'pick', req:3, kind:'rock', hp:26, tag:'SLAGIRON',

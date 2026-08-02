@@ -676,7 +676,10 @@ function drawNode(n,s){
     if(n.dead){ cx.drawImage(SPR.rockLow, s.x-35, s.y-44); return; }
     drawShadowAt(cx,s.x,s.y,15);
     const sh=n.shake? Math.sin(G.time*45)*2.4*n.shake*4:0;
-    cx.drawImage(SPR.rock[n.variant], s.x-35+sh, s.y-44);
+    // the pick-gated "basalt" barrier is the same boulder tinted violet - so it reads as
+    // magicked stone on sight, no floating name needed (see GATES.basalt.noTag)
+    const rockSpr=(n.gate==='basalt' && SPR.rockViolet)? SPR.rockViolet[n.variant] : SPR.rock[n.variant];
+    cx.drawImage(rockSpr, s.x-35+sh, s.y-44);
     const cracks=n.maxhp-n.hp;
     if(cracks>0){
       cx.strokeStyle='rgba(15,12,8,0.65)'; cx.lineWidth=1.4;
