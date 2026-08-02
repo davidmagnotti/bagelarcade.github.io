@@ -32,7 +32,7 @@ function openDialog(npc){
   drawPortrait(npc);
   buildDialogContent(npc);
 }
-function closeDialog(){ dlg.open=false; document.getElementById('dialog').style.display='none';
+function closeDialog(){ dlg.open=false; dlg.btns=null; document.getElementById('dialog').style.display='none';
   // a skill card held for after the speaker's line (e.g. "Dash learned!") still fires if the
   // dialog is dismissed rather than clicked through - so the lesson is never silently dropped.
   if(P._dashCardPending){ const f=P._dashCardPending; P._dashCardPending=null; setTimeout(f,50); } }
@@ -78,9 +78,16 @@ function cleanSpeech(html){
 function setDialog(text,btns,raw){
   document.getElementById('dtext').innerHTML = raw? text : cleanSpeech(text);
   const bx=document.getElementById('dbtns'); bx.innerHTML='';
-  btns.forEach(b=>{
+  // Remember the live choices so keyboard players can pick one by number (see the
+  // keydown handler in 07-input.js). Cleared when the dialog closes.
+  dlg.btns=btns;
+  const kb = (typeof isTouch==='undefined') || !isTouch;   // number-key hints on PC only
+  btns.forEach((b,i)=>{
     const el=document.createElement('button');
-    el.className='btn'+(b.ghost?' ghost':'')+(b.cls?' '+b.cls:''); el.innerHTML=b.label;
+    el.className='btn'+(b.ghost?' ghost':'')+(b.cls?' '+b.cls:'');
+    // On PC, prefix a numbered hotkey ([1], [2]...) so players know they can choose
+    // from the keyboard. Touch just taps, so no number clutter there.
+    el.innerHTML = (kb && i<9 ? '<span style="opacity:.55;font-weight:normal">['+(i+1)+']</span> ' : '') + b.label;
     el.onclick=()=>b.fn(); bx.appendChild(el);
   });
 }

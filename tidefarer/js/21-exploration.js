@@ -172,7 +172,7 @@ function boot(){
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
     ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather (time it to an enemy\'s blow to parry) · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · in dialog, <b>number keys</b> pick a reply · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
