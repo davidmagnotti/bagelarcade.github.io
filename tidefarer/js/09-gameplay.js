@@ -646,7 +646,7 @@ function unlockParry(msg){
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up, a red <b style="color:#ff5a4a">!</b> builds over it, then flares <b style="color:#fff">WHITE</b> - <b>that white flash is your moment</b>. <b>Attack on the flash</b> to turn the blow instead of taking it: a parried arrow flies back, a parried striker is left staggered wide open. (A hair early or late is fine - just don\'t swing during the red build-up.)';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. Against a <b>melee</b> foe, a red <b style="color:#ff5a4a">!</b> builds as it winds up, then flares <b style="color:#fff">WHITE</b> - <b>attack on that white flash</b> to turn the blow and leave the striker staggered wide open. You can parry a <b>thrown shot</b> just as well - an arrow, a bone, a bomb: it <b style="color:#fff">flares WHITE</b> as it closes on you, so <b>time your swing to the incoming shot</b> and you\'ll bat it <b>right back at whoever threw it</b>. (A hair early or late is fine - just don\'t swing during a melee foe\'s red build-up.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
