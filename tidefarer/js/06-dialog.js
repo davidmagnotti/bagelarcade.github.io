@@ -32,7 +32,10 @@ function openDialog(npc){
   drawPortrait(npc);
   buildDialogContent(npc);
 }
-function closeDialog(){ dlg.open=false; document.getElementById('dialog').style.display='none'; }
+function closeDialog(){ dlg.open=false; document.getElementById('dialog').style.display='none';
+  // a skill card held for after the speaker's line (e.g. "Dash learned!") still fires if the
+  // dialog is dismissed rather than clicked through - so the lesson is never silently dropped.
+  if(P._dashCardPending){ const f=P._dashCardPending; P._dashCardPending=null; setTimeout(f,50); } }
 // A bazaar stall you can buy from - opens a standalone shop panel (no NPC).
 function openStallShop(b){
   const sh=b&&b.shop; if(!sh) return;
@@ -82,6 +85,12 @@ function setDialog(text,btns,raw){
   });
 }
 function buildDialogContent(npc){
+  // Speaking with Bram is what unlocks gathering - remember it the moment his dialog opens
+  // (see hasMetBram / hitNode: no chopping or mining until you've been to the forge).
+  if(npc.id==='bram'){ P.story=P.story||{}; P.story.bramMet=1; }
+  // A skill card (e.g. "Dash learned!") raised mid-dialogue is held until the player clicks
+  // through the speaker's line - it fires here, on the "Continue" that rebuilds the dialog.
+  if(P._dashCardPending){ const f=P._dashCardPending; P._dashCardPending=null; try{ f(); }catch(e){} }
   // Castellan of the Vael: once you carry Maelis's writ (feud2), calling on him
   // is a challenge - a taunt, then a boss fight. Otherwise he only warns you off.
   // A first-hour necklace moment: rare, short, and never explained (until Act 3).

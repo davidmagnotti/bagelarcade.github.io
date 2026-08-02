@@ -186,7 +186,7 @@ function placeObjectsSkyDungeon(){
   // DASH across; fall between them and the wind bears you back to the isle behind you.
   G._skyPits=new Set(); G._skyFellHint=0;
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true;
-    toast('The high wind lifts your step - you can <b>DASH</b> across the gaps (tap <b>Shift</b> / the dodge button).',5000); }
+    toast('The high wind lifts your step - you can <b>DASH</b> across the gaps (tap <b>Ctrl</b> / the dodge button).',5000); }
   for(let i=0;i<SKY_ISLES.length-1;i++){ const a=SKY_ISLES[i], b=SKY_ISLES[i+1];
     if(a.key==='i2' && b.key==='i3') continue;   // the fading bridge is its own crossing
     skyPlatformize(a,b);

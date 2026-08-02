@@ -10,6 +10,9 @@ window.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(G.bossIntro){ if(k===' ') e.preventDefault(); return; }   // input held for the entrance beat
   keys[k]=true;
+  // Dash lives on Ctrl now, and you move with WASD - so keep the browser from hijacking
+  // Ctrl+<gameplay key> combos while you play (Ctrl+S save-page, Ctrl+A, Ctrl+D, etc.).
+  if(e.ctrlKey && ['w','a','s','d',' ','e','1','2','4','r','m'].includes(k)) e.preventDefault();
   if(k==='e'||k==='enter'){ doInteract(); }
   if(k===' '){ e.preventDefault(); input.attack=true; }
   if(k==='1') selectWeapon('melee');
