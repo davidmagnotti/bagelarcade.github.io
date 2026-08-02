@@ -270,7 +270,7 @@ function startIntro(){
       [{label:'Continue', fn:p4}]);
   };
   const p2=()=>{
-    setDialog('“Your ship went down on the strait in the night - I watched its lanterns swallowed from the headland. That reef has fed on hulls longer than I\'ve been grey - and it\'s hungrier of late. A curse lies on the water now; no boat has made the crossing off Emberwick in a long while.” <i>The old woman studies the pale mask over your face, and thinks better of asking.</i> “You washed in wearing that, and reached for it before your eyes were open. Keep it, if it steadies you - you\'re the only soul the sea gave back. Do you know it? Your ship, your name, where you were bound?”',
+    setDialog('“Your ship went down on the strait in the night - I watched its lanterns swallowed from the headland. That reef has fed on hulls longer than I\'ve been grey - and it\'s hungrier of late. A curse lies on the water now; no boat has made the crossing off Emberwick in a long while.” <i>The old woman studies the pale mask over your face, and thinks better of asking.</i> “You washed in wearing that, and reached for it before your eyes were open. Keep it, if it steadies you. Do you know it? Your ship, your name, where you were bound?”',
       [{label:'…I- I don\'t remember.', fn:p3}]);
   };
   setDialog('<i>You come to face-down in the surf, salt raw in your throat. A pair of old, steady hands takes you under the arms and draws you up onto the sand.</i> “Easy now - easy. You\'re alive. I felt the tide turn in the night and knew it had given something back.” <i>She sets you on your feet and steadies you.</i>',
