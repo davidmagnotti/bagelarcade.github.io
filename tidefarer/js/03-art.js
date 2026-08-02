@@ -985,8 +985,10 @@ function _rimLight(spr, dpr){
   g.globalCompositeOperation='source-over'; g.globalAlpha=1;
 }
 function drawHumanoidCached(g, sx, sy, o, holder){
-  // No holder (or an odd state we shouldn't freeze) -> just draw live.
-  if(!holder || o.hurt || o.ride || o.swing){ drawHumanoid(g,sx,sy,o); return; }
+  // No holder (or an odd state we shouldn't freeze) -> just draw live. A walking NPC
+  // (o.moving) also draws live, so its gait is smooth instead of snapped to 8 cached frames;
+  // the cache is for NPCs standing at their posts, which is the common, static case.
+  if(!holder || o.hurt || o.ride || o.swing || o.moving){ drawHumanoid(g,sx,sy,o); return; }
   const sig=_humSig(o);
   if(holder._humSig!==sig){ holder._humSig=sig; holder._humSpr={}; holder._humN=0; }
   const key=_humGaitKey(o);

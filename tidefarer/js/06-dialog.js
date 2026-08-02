@@ -100,11 +100,12 @@ function buildDialogContent(npc){
     return;
   }
   // A parry alone is not enough: the traveler also needs the footwork Orin teaches.
-  // If the turning is learned but the dash is not, Maren sends them up to the tower
-  // to do Orin's errand and learn the dash before they take up the Hollow Spirit.
+  // If the turning is learned but the dash is not, Maren sends them up to the tower to
+  // help Orin - his errand grants the dash. She doesn't name the mechanic; the gate is
+  // held by this condition (!dash) re-showing until they have it.
   if(npc.id==='maren' && qs('king')==='avail' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.dash)){
-    setDialog('<i>Maren stays your hand before you can speak of the crypt.</i> “Rask taught you the turning - good, that\'ll keep you alive. But standing your ground won\'t always do; down there you\'ll need to be somewhere a blow ISN\'T.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b>. Do the old man\'s errand and let him quicken your feet - the <b>dash</b>. You\'ll want that step under you before I open the causeway. Come back when you have it.”',
-      shopButtons(npc,[{label:'Up to the tower', ghost:true, fn:closeDialog}]));
+    setDialog('<i>Maren looks you over, and her brows lift.</i> “Rask taught you the turning already? Steel in your hand and you know what to do with it - that\'s more than most manage. Not bad at all.” <i>She nods up the north road, toward the tower.</i> “Go see if you can lend <b>Sage Orin</b> a hand - the old man mentioned he\'s been needing an extra one. Help him out, then come back to me and we\'ll talk about the causeway.”',
+      shopButtons(npc,[{label:'Off to see Orin', ghost:true, fn:closeDialog}]));
     return;
   }
   // After the Hollow Spirit falls, the elder does more than thank you: she names the
