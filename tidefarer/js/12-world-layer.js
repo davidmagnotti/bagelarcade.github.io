@@ -667,7 +667,7 @@ function spawnRealmFolk(){
   G.npcs.push(makeNPC('aelin','Aelin the Weaver', SP.x+1.5,SP.y+2.2,
     {skin:'#d0a884',hair:'#8a8aa8',shirt:'#3a3a6a',pants:'#2c2c48',robe:'#40408a',trim:'#9a9ae0',hat:'wizard',hairstyle:'long'},
     ["The Spire's mine to keep - old glass, older books, and a candle that won't quite die.",
-     "I hold the range by day and the tower by night. Caught out after dark? Knock - there's a cot by the hearth."],0.6));
+     "Do me a kindness - bring me some bluecaps from the pines. My knees are done climbing for them, and the weave burns truer by their light. Caught out after dark? Knock - there's a cot by the hearth."],0.6));
   G.npcs.push(makeNPC('rook','Rook the Apothecary', V.x+7,V.y+6,
     {skin:'#b98f68',hair:'#4a3a28',shirt:'#5a6a3c',pants:'#3a4228',apron:'#7a5a3a'},
     ["A good tonic asks no questions and mends what it finds.",
@@ -736,11 +736,11 @@ function spawnMobsMain(){
     ['skeleton', {x:172,y:325,r:7}, 5, 0.45],
     ['brigand',  {x:162,y:148,r:6}, 5, 0.25]   // they guard what they stole
   ];
-  // practice dummies: Rook's yard by his range (dry side - the shore bites), and the Spire range.
+  // practice dummies: Rook's yard by his range (dry side - the shore bites).
+  // (Aelin's Spire keeps no range now - the Weaver sends students for bluecaps, not bolts.)
   // findOpenNear dodges buildings, trees, and water so a dummy can never spawn wedged.
   carveDisc(Math.round(ZONES.village.x+8), Math.round(ZONES.village.y+5), 2, T.SOIL, false);
-  for(const [yx,yy] of [[ZONES.village.x+7,ZONES.village.y+5],[ZONES.village.x+9,ZONES.village.y+4],
-                        [ZONES.spire.x+4,ZONES.spire.y+4],[ZONES.spire.x+6,ZONES.spire.y+3]]){
+  for(const [yx,yy] of [[ZONES.village.x+7,ZONES.village.y+5],[ZONES.village.x+9,ZONES.village.y+4]]){
     const yd=findOpenNear(Math.round(yx),Math.round(yy),5);
     if(yd) spawnMob('dummy',yd[0],yd[1]);
   }

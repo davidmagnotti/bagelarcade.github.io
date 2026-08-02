@@ -262,7 +262,7 @@ function spireAelinSpeak(){
     document.getElementById('dialog').style.display='block';
     document.getElementById('dname').textContent='Aelin the Weaver';
     const pg=document.getElementById('dportrait').getContext('2d'); pg.fillStyle='#20203a'; pg.fillRect(0,0,72,72);
-    setDialog('<i>Aelin looks up from her books by candlelight.</i> “Rest if you need it - the cot by the hearth is yours till the bells. I keep the range come light.”',
+    setDialog('<i>Aelin looks up from her books by candlelight.</i> “Rest if you need it - the cot by the hearth is yours till the bells. I’m off among the pines for bluecaps come light.”',
       [{label:'Thank you', cls:'gold', fn:closeDialog}], true);
   }
 }

@@ -160,7 +160,7 @@ function enterHouse(b){
   // and rest the cot by the hearth. (You go IN now; the interior places her + the cot at night.)
   if(b.kind==='tower' && String(b.label||'').toLowerCase().includes('spire')){
     if(nightAmount()<=0.5){
-      blockMsg('The Spire door is shut. <b>Aelin:</b> “I keep to the range by day, not the door. If it’s a roof or a word you’re after, come back after dark - I’ll be in.”');
+      blockMsg('The Spire door is shut. <b>Aelin:</b> “I’m out among the pines by day, hunting bluecaps, not minding the door. If it’s a roof or a word you’re after, come back after dark - I’ll be in.”');
       Snd.step(5); return;
     }
     // at night: fall through and enter the Spire proper
