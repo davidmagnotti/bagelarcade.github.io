@@ -235,6 +235,7 @@ function questTargetPos(id){
     if(id==='remember') return {x:ZONES.tower.x,y:ZONES.tower.y};
     if(id==='embers') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='mossbrew') return {x:ZONES.forest.x,y:ZONES.forest.y};
+    if(id==='redcaps') return ZONES.forest? {x:ZONES.forest.x,y:ZONES.forest.y} : null;
     if(id==='roadclear') return {x:ZONES.highlands.x,y:ZONES.highlands.y};
     if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='nets') return {x:ZONES.dock.x-2,y:ZONES.dock.y};

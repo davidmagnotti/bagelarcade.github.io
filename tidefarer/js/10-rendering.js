@@ -621,6 +621,12 @@ function drawNode(n,s){
     cx.globalAlpha=0.25+glow*0.2; cx.fillStyle='#7fb4e8';
     cx.beginPath(); cx.arc(s.x,s.y-18,16+glow*4,0,TAU); cx.fill(); cx.globalAlpha=1;
     cx.drawImage(SPR.mushroom, s.x-20, s.y-38);
+  } else if(n.kind==='redcap'){
+    if(n.dead) return;
+    const glow=0.5+0.5*Math.sin(G.time*2+n.sway);
+    cx.globalAlpha=0.16+glow*0.14; cx.fillStyle='#e0584a';
+    cx.beginPath(); cx.arc(s.x,s.y-18,13+glow*4,0,TAU); cx.fill(); cx.globalAlpha=1;
+    cx.drawImage(SPR.redcap, s.x-20, s.y-38);
   } else if(n.kind==='fish'){
     const ph=G.time*1.4+n.bob;
     // brighter, larger cyan ripples so a fishing spot reads clearly from a distance
@@ -3109,14 +3115,13 @@ function drawMob(m,s){
   }
   drawShadowAt(cx,s.x,s.y, m.boss?20: m.kind==='slime'?11:13);
   if(m.windup>0){
-    // danger ring + rising crouch: your cue to dodge
+    // danger ring + rising crouch: your cue to dodge or parry. (The floating "!" that
+    // used to sit above this was removed by request - the pulsing ring alone telegraphs
+    // the incoming blow; no exclamation is drawn over any hostile.)
     const wp=1-(m.windup/0.42);
     cx.strokeStyle='rgba(230,60,45,'+(0.5+0.35*Math.sin(G.time*24))+')';
     cx.lineWidth=2.5;
     cx.beginPath(); cx.ellipse(s.x,s.y,26+wp*10,(26+wp*10)*0.5,0,0,TAU); cx.stroke();
-    cx.fillStyle='rgba(230,60,45,0.95)';
-    cx.font='bold 15px Georgia'; cx.textAlign='center';
-    cx.fillText('!', s.x, s.y-(m.boss?66:46)-Math.sin(G.time*20)*2);
   }
   cx.save(); cx.translate(s.x,s.y); cx.scale(1.15,1.15); cx.translate(-s.x,-s.y);
   if(m.elite){

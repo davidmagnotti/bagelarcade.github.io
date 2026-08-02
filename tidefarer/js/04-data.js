@@ -8,6 +8,7 @@ const ITEMS = {
   wheat:{name:'Wheat', desc:'Eat to restore 10 HP.', use:'heal', heal:10},
   seed:{name:'Wheat Seeds', desc:'Plant in tilled soil at the farm.'},
   mushroom:{name:'Bluecap', desc:'A glowing mushroom from the Whisperwood.'},
+  redcap:{name:'Redcap', desc:'A crimson-capped toadstool from the Blackpine woods - prized at the Spire as a spell reagent.'},
   potion:{name:'Ember Tonic', desc:'Restores 30 HP.', use:'heal', heal:30},
   manapot:{name:'Quiver Bundle', desc:'A tied sheaf of fletched shafts. Refills your quiver by 12 arrows.', use:'arrows', arrows:12},
   goo:{name:'Slime Goo', desc:'A quivering green glob. Render three down at a brewing cellar and they thicken into a tonic.'},

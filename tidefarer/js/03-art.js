@@ -376,6 +376,15 @@ function buildSprites(){
     g.fillStyle='rgba(255,255,255,0.85)';
     g.beginPath(); g.arc(w/2-5,h-24,2,0,TAU); g.arc(w/2+4,h-22,1.6,0,TAU); g.fill();
   });
+  // redcap (a crimson Blackpine toadstool - Aelin's spell reagent)
+  SPR.redcap = makeCanvas(40,44,(g,w,h)=>{
+    g.fillStyle='#efe7d6'; g.fillRect(w/2-3,h-18,6,12);
+    const grad=g.createRadialGradient(w/2,h-22,2,w/2,h-20,14);
+    grad.addColorStop(0,'#e2604f'); grad.addColorStop(1,'#a11f1c');
+    g.fillStyle=grad; g.beginPath(); g.ellipse(w/2,h-20,13,9,0,Math.PI,0); g.fill();
+    g.fillStyle='rgba(255,240,230,0.9)';
+    g.beginPath(); g.arc(w/2-5,h-24,2,0,TAU); g.arc(w/2+4,h-22,1.6,0,TAU); g.arc(w/2,h-26,1.4,0,TAU); g.fill();
+  });
   // buildings
   SPR.house = makeCanvas(150,140,(g,w,h)=> drawHouse(g,w,h,'#c9b28a','#a3502f','#7c3d22'));
   SPR.house2= makeCanvas(150,140,(g,w,h)=> drawHouse(g,w,h,'#bcae95','#5d7a97','#48607a'));
@@ -2271,6 +2280,9 @@ function iconCanvas(kind,sz=40){
       case 'mushroom': g.fillStyle='#e8e2d2'; g.fillRect(-3,0,6,12);
         g.fillStyle='#4f8fdb'; g.beginPath(); g.ellipse(0,0,12,8,0,Math.PI,0); g.fill();
         g.fillStyle='#9fd8ff'; g.beginPath(); g.arc(-4,-4,2,0,TAU); g.arc(4,-3,1.6,0,TAU); g.fill(); break;
+      case 'redcap': g.fillStyle='#efe7d6'; g.fillRect(-3,0,6,12);
+        g.fillStyle='#c23a2f'; g.beginPath(); g.ellipse(0,0,12,8,0,Math.PI,0); g.fill();
+        g.fillStyle='#ffece2'; g.beginPath(); g.arc(-4,-4,2,0,TAU); g.arc(4,-3,1.6,0,TAU); g.fill(); break;
       case 'potion': g.fillStyle='rgba(230,240,255,0.5)'; g.beginPath(); g.arc(0,3,9,0,TAU); g.fill(); g.fillRect(-3,-12,6,10);
         g.fillStyle='#e05648'; g.beginPath(); g.arc(0,4,7.4,0,TAU); g.fill();
         g.fillStyle='#8a6238'; g.fillRect(-4,-14,8,4);
@@ -2309,7 +2321,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','manapot','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat','goo','wardplate'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','redcap','potion','manapot','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat','goo','wardplate'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }

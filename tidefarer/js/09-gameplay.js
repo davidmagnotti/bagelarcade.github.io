@@ -174,7 +174,7 @@ function nearestInteract(){
     const rng = n.kind==='fish'?2.4:1.7;   // fish sit in open water - reach across from the bank
     if(d<rng && d<bd){
       bd=d;
-      const lbl={tree:'Chop',rock:'Mine',mushroom:'Pick',shell:'Gather',apple:'Pick',fish: P.fishing? (P.fishing.bit?'Strike!':'…wait…') :'Fish'}[n.kind];
+      const lbl={tree:'Chop',rock:'Mine',mushroom:'Pick',redcap:'Pick',shell:'Gather',apple:'Pick',fish: P.fishing? (P.fishing.bit?'Strike!':'…wait…') :'Fish'}[n.kind];
       best={type:'node',o:n,label:lbl};
     }
   }
@@ -403,6 +403,11 @@ function hitNode(n){
   if(n.kind==='mushroom'){
     n.dead=true; n.respawn=38; invalidateScenery();
     give('mushroom',1); addXP('farming',6); burst(n.x,n.y-0.3,'#7fb4e8',8);
+    return;
+  }
+  if(n.kind==='redcap'){
+    n.dead=true; n.respawn=42; invalidateScenery();
+    give('redcap',1); addXP('farming',6); burst(n.x,n.y-0.3,'#e0584a',8);
     return;
   }
   if(n.kind==='apple'){
@@ -635,18 +640,18 @@ function unlockDash(msg){
    is turned aside - melee attackers are staggered, and arrows/bolts are batted
    back the way they came. It is the sword's answer to a ranged or telegraphed
    attack, where the dash is the answer to an unavoidable one. */
-// The parry timing window. A foe's wind-up ends with its blow landing; for the LAST
-// PARRY_WIN seconds of that wind-up the tell flares WHITE - that white flash is the
-// parry moment. A swing opens a guard of exactly this length, so swinging on the
-// white flash (a hair early or late is fine) turns the blow; swinging during the
-// earlier red build-up is too early - the guard lapses before the strike lands.
+// The parry timing window. A foe's wind-up ends with its blow landing; the LAST
+// PARRY_WIN seconds of that wind-up are the parry moment (a soft chime marks its
+// start - see updateMobs). A swing opens a guard of exactly this length, so swinging
+// as the blow lands (a hair early or late is fine) turns it; swinging during the
+// earlier wind-up is too early - the guard lapses before the strike lands.
 const PARRY_WIN = 0.32;
 function unlockParry(msg){
   P.unlocked=P.unlocked||{};
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up, a red <b style="color:#ff5a4a">!</b> builds over it, then flares <b style="color:#fff">WHITE</b> - <b>that white flash is your moment</b>. <b>Attack on the flash</b> to turn the blow instead of taking it: a parried arrow flies back, a parried striker is left staggered wide open. (A hair early or late is fine - just don\'t swing during the red build-up.)';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> No separate button - it\'s all <b>timing</b>. When a foe winds up, a <b style="color:#ff5a4a">red ring</b> pulses under it and a soft chime sounds just as the blow becomes turnable. <b>Attack as the blow lands</b> to turn it instead of taking it: a parried arrow flies back, a parried striker is left staggered wide open. (A hair early or late is fine - read the wind-up and strike into it.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -743,33 +748,10 @@ function drawMobBars(m,s){
     cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
     cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
   }
-  // PARRY TELL, in two stages: a red ! BUILDS through the early wind-up (get ready),
-  // then flares WHITE for the last PARRY_WIN seconds - THAT white flash is the moment
-  // to swing and turn the blow. Reads at a glance so the timing is legible.
-  if(!m.dead && (m.windup||0)>0 && dist(P.x,P.y,m.x,m.y)<11){
-    const top3= m.bigBoss? -108 : m.kind==='dragon'? -134 : m.kind==='scorpion'? -42 : -66;
-    const flash = (m.windup||0) <= (typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32);
-    cx.save(); cx.textAlign='center';
-    if(flash){
-      // the strike moment: a big, bright WHITE ! + a quick expanding ring shouting NOW
-      const p=0.85+0.15*Math.sin(G.time*40);
-      cx.globalAlpha=1; cx.font='bold 30px Georgia';
-      cx.strokeStyle='rgba(0,0,0,0.85)'; cx.lineWidth=5.5;
-      cx.strokeText('!', s.x, s.y+top3);
-      cx.fillStyle='rgba(255,255,255,'+p.toFixed(2)+')'; cx.fillText('!', s.x, s.y+top3);
-      const rr=6+18*(1-Math.max(0,m.windup)/(typeof PARRY_WIN!=='undefined'?PARRY_WIN:0.32));
-      cx.globalAlpha=0.5; cx.strokeStyle='#fff6c8'; cx.lineWidth=2.5;
-      cx.beginPath(); cx.arc(s.x, s.y+top3-8, rr, 0, TAU); cx.stroke();
-    } else {
-      // the build-up: a red ! that grows as the flash nears
-      const grow = 1 - Math.min(1, (m.windup - PARRY_WIN)/0.34);   // 0 early -> ~1 just before the flash
-      cx.globalAlpha=0.55+0.3*Math.sin(G.time*13);
-      cx.font='bold '+Math.round(15+9*grow)+'px Georgia';
-      cx.strokeStyle='rgba(0,0,0,0.8)'; cx.lineWidth=3.5;
-      cx.strokeText('!', s.x, s.y+top3); cx.fillStyle='#ff7a4a'; cx.fillText('!', s.x, s.y+top3);
-    }
-    cx.restore();
-  }
+  // (The floating parry "!" tell over enemies was removed by request. A foe's wind-up
+  // still reads from the pulsing red danger ring under it - see drawMob in 10-rendering
+  // - plus a soft chime the instant the blow becomes parryable; the parry timing itself
+  // is unchanged. No exclamation is drawn over any hostile.)
 }
 function damageMob(m,dmg,knock,skill){
   if(m.fainted) return; // a felled, freed dragon takes no more harm
@@ -1791,15 +1773,15 @@ function updateMobs(dt){
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
       if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
-        // Wind-ups are long enough to read: a red ! builds, then the last PARRY_WIN
-        // seconds flare WHITE (the parry moment). HEAVIES telegraph slowest and hit hard.
+        // Wind-ups are long enough to read from the danger ring; the last PARRY_WIN
+        // seconds are the parry moment. HEAVIES telegraph slowest and hit hard.
         m.windup = m.elite?0.42 : m.boss?0.58 : (heavy?0.66:0.5);
         m.hitCd= m.boss?1.1:1.25;
       }
       if(m.windup>0){
         const preFlash = m.windup > PARRY_WIN;
         m.windup-=dt;
-        // ring the parry-cue the instant the tell flares white (once per swing, close foes only)
+        // ring the parry-cue the instant the blow becomes parryable (once per swing, close foes only)
         if(preFlash && m.windup<=PARRY_WIN && l<9){ Snd.tone&&Snd.tone(1180,0.05,'square',0.022,240); }
         if(m.windup<=0){
           m.windup=0; m.swing=0.3;

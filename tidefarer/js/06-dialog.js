@@ -698,8 +698,14 @@ function shopButtons(npc,btns){
         [{label:'Begin the lesson ('+f+'g)', cls:'gold', fn:beginLesson},
          {label:'Not yet', ghost:true, fn:closeDialog}]);
     };
-    const trained = P.prog && P.prog.spireTrainedEver;
-    btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    // The Spire opens its lessons only AFTER you've run Aelin's reagent errand (the
+    // 'redcaps' quest) - or if you'd already trained here on an older save. Until then
+    // she has nothing to teach a stranger, and the quest flow above does the talking.
+    const canTrain = qs('redcaps')==='done' || (P.prog && P.prog.spireTrainedEver);
+    if(canTrain){
+      const trained = P.prog && P.prog.spireTrainedEver;
+      btns.unshift({label: trained? 'Train at the Spire (lesson learned)' : 'Train at the Spire ('+aelinFee()+'g → magic)', fn:aelinStudy});
+    }
     // (Snare removed - the staff casts only Bolt now.)
   }
   if(npc.id==='rook'){

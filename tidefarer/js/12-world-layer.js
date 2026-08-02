@@ -462,6 +462,13 @@ function placeObjectsMain(){
     if((t===T.GRASS||t===T.FOREST||t===T.RUIN)&&!solidAt(x,y)&&r()<0.7) addNode('rock',x,y); }
   for(let i=0;i<50;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     if(tileAt(x,y)===T.FOREST&&!solidAt(x,y)) addNode('mushroom',x,y); }
+  // redcaps: a forage cluster in the Blackpine Reach (the Barik woods) for Aelin's reagent errand
+  { const F=ZONES.forest, rc=mulberry32(SEED+91); let rn=0;
+    for(let tries=0;tries<900&&rn<14;tries++){
+      const a=rc()*TAU, dd=rc()*(F.r-2);
+      const x=Math.round(F.x+Math.cos(a)*dd), y=Math.round(F.y+Math.sin(a)*dd);
+      const t=tileAt(x,y);
+      if((t===T.FOREST||t===T.GRASS)&&!solidAt(x,y)){ addNode('redcap',x,y); rn++; } } }
   const mnr=mulberry32(SEED+17); // the Old Mines: a rich ring of stone
   for(let i=0;i<16;i++){ const a=mnr()*TAU, dd=2+mnr()*(ZONES.mines.r-3);
     const x=Math.round(ZONES.mines.x+Math.cos(a)*dd), y=Math.round(ZONES.mines.y+Math.sin(a)*dd);
@@ -4287,6 +4294,14 @@ QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', ki
   log:'Slay 8 wolves along Barik\'s roads and highlands.',
   doneText:'The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin.',
   rw:{gold:80, item:{wardstone:1}, xp:{melee:200, archery:120}} };
+// Aelin the Weaver won't teach the weave to a stranger with empty hands - she sends
+// you into the Blackpine woods for reagents first. Only once the redcaps are on her
+// shelf does the Spire open its lessons (the Train button is gated on this being done).
+QUESTS.redcaps={ giver:'aelin', title:'Reagents for the Weave', kind:'gather', need:{redcap:5},
+  brief:'Before I teach you a single cantrip, you can restock my shelf - a teacher is only as good as the reagents on hand, and mine stands bare. Redcaps grow in the shade of the Blackpine Reach, the woods north of here. Five crimson caps, stems whole, and the Spire opens its lessons to you.',
+  log:'Gather 5 redcaps in the Blackpine Reach (the Barik woods) for Aelin.',
+  doneText:'Firm, and not a wormhole in them - good picking. The shelf is stocked and the Spire is yours to study now. Come speak with me and we\'ll put a staff through its paces.',
+  rw:{gold:30, xp:{magic:120}}, xpL:70 };
 QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushroom:6},
   brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
   log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',
@@ -6674,6 +6689,9 @@ function switchWorld(id){
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
   // chain below is the one exception, left armed on purpose).
   if(id==='main' && !P.quests.mossbrew && !(P.story&&P.story.act2)) P.quests.mossbrew='avail';
+  // Aelin's reagent errand arms the moment you can reach the Spire, and stays offered
+  // in either act until it's accepted or done (the training button waits on it).
+  if(id==='main' && !P.quests.redcaps && QUESTS.redcaps) P.quests.redcaps='avail';
   if(id==='main' && !P.quests.pearlq && qs('fish')==='done' && !(P.story&&P.story.act2)) P.quests.pearlq='avail';
   // Act II: under the Veil, Barik lies flooded until the Drowned Vault is cleared - Warden Kell's
   // restoration plea (offered only while the flood stands).
