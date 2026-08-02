@@ -188,7 +188,7 @@ function spawnNPCs(){
     (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c',build:{w:0.95,head:0.95,stoop:0.7}},
       ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that.'],0.5);
       f.nightOwl=true; return f; })(),
-    (()=>{ const inn=makeNPC('perrin','Perrin the Innkeep', 41.5,59.4,
+    (()=>{ const inn=makeNPC('perrin','Perrin the Innkeeper', 41.5,59.4,
       {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038',build:{w:1.14,head:0.92}},
       ["A bed, a hearth, and no questions past dark. Ten gold.",
        "Night's for wolves and worries. Neither gets past my door."],0.7);
