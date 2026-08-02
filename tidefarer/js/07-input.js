@@ -10,6 +10,14 @@ window.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(G.bossIntro){ if(k===' ') e.preventDefault(); return; }   // input held for the entrance beat
   keys[k]=true;
+  // While a dialog is open, the number keys pick a choice (keyboard players can
+  // advance conversations without the mouse). Intercept before the hotbar keys so
+  // 1/2/4 don't also swap weapons/items mid-conversation.
+  if(dlg.open && k>='1' && k<='9'){
+    const b=dlg.btns && dlg.btns[+k-1];
+    if(b){ e.preventDefault(); b.fn(); }
+    return;
+  }
   if(k==='e'||k==='enter'){ doInteract(); }
   if(k===' '){ e.preventDefault(); input.attack=true; }
   if(k==='1') selectWeapon('melee');
@@ -70,6 +78,9 @@ function pickClickTarget(wx,wy){
     else cand.push({type:'gather',x:n.x,y:n.y,r:0.9,range:1.5,n});
   }
   for(const pl of G.plots) cand.push({type:'inter',x:pl.x+0.5,y:pl.y+0.5,r:0.8,range:1.5,go:()=>doInteract()});
+  // Ember Springs: click near the pool to walk over and Rest (zone-based, no object)
+  if(typeof ZONES!=='undefined' && ZONES.springs && G.worldId==='isle')
+    cand.push({type:'inter',x:ZONES.springs.x,y:ZONES.springs.y,r:3.0,range:3.4,go:()=>doInteract()});
   for(const b of G.decor){
     if(b.kind==='boat') cand.push({type:'inter',x:b.x,y:b.y,r:1.5,range:2.2,go:()=>attemptSail()});
     else if(b.kind==='ashwing') cand.push({type:'inter',x:b.x,y:b.y,r:1.8,range:3.0,go:()=> b.sky? askSkyDragon() : askAshwingHome()});

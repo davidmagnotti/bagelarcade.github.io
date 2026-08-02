@@ -248,6 +248,15 @@ function nearestInteract(){
       if(lbl){ bd=d; best={type:'plot',o:pl,label:lbl}; }
     }
   }
+  // Ember Springs: a warm pool where you can Rest to fully mend (zone-based, no
+  // marker object - stand at the pool's edge and interact). Isle only. The `o`
+  // carries the pool centre so drawMarkers can ring/label it like any other.
+  if(typeof ZONES!=='undefined' && ZONES.springs && G.worldId==='isle'){
+    const d=dist(P.x,P.y,ZONES.springs.x,ZONES.springs.y);
+    if(d<3.2 && d<bd){ bd=d;
+      best={type:'springrest', o:{x:ZONES.springs.x,y:ZONES.springs.y},
+        label:(P.springCd>0)?'Rest ('+Math.ceil(P.springCd)+'s)':'Rest'}; }
+  }
   return best;
 }
 
@@ -279,6 +288,13 @@ function doInteract(){
     P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
+    return;
+  }
+  if(it.type==='springrest'){
+    if(P.springCd>0){ blockMsg('The spring must gather its warmth again - <b>'+Math.ceil(P.springCd)+'s</b> before you can rest here anew.'); return; }
+    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.springCd=45;
+    addFloat('Rested - fully mended',P.x,P.y-1.8,'#7fe07f',1.2);
+    burst(P.x,P.y-0.6,'#ffd76a',16,2.2); Snd.pickup(); refreshUI();
     return;
   }
   if(it.type==='shop'){ facePoint(it.o.x,it.o.y); openStallShop(it.o); return; }
@@ -1361,6 +1377,7 @@ function updatePlayer(dt){
   }
   }
   P.wellCd=Math.max(0,(P.wellCd||0)-dt);
+  P.springCd=Math.max(0,(P.springCd||0)-dt);   // Ember Springs rest recharges
   P.comboT=Math.max(0,(P.comboT||0)-dt); if(P.comboT===0) P.combo=0;
   P.atkCd=Math.max(0,P.atkCd-dt);
   P.swing=Math.max(0,P.swing-dt);
