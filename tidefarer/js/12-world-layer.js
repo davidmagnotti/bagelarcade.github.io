@@ -16,7 +16,7 @@ const MAIN_ZONES = { // BARIK - ten times the home shores
   spire:    {x:196,y:332, r:8,  name:"Aelin's Spire", lv:[2,4]},
   hollow:   {x:162,y:148, r:6,  name:"Thieves' Hollow", lv:[7,7]},
   desert:   {x:300,y:112, r:32, name:'Sunscour Valley', lv:[11,14]},
-  undermaw: {x:212,y:196, r:8,  name:'The Undermaw', lv:[10,13]},
+  undermaw: {x:212,y:196, r:8,  name:'The Undermaw', lv:[5,7]},
   vael:     {x:318,y:40,  r:20, name:'The Vael March', lv:[11,14]}
 };
 const EAST_ZONES = {
@@ -103,8 +103,8 @@ const MILLDEEP_ZONES = { // THE UNDERMILL - the grinding works beneath the Winds
   vault: {x:20, y:2,  r:4,  name:"The Sailwright's Vault", lv:[0,0]}  // Nessa's stormsail + the way up (behind the gate)
 };
 const UNDERMAW_ZONES = { // THE UNDERMAW - a four-trial gauntlet under the Barik hills
-  maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[11,13]},   // the entry
-  den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[12,13]},   // the boss fight
+  maw:  {x:22, y:185, r:6,  name:'The Maw',          lv:[5,6]},   // the entry
+  den:  {x:22, y:23,  r:9,  name:"The Stalker's Den", lv:[6,7]},   // the boss fight
   hoard:{x:22, y:5,   r:5,  name:'The Deep Hoard',    lv:[0,0]}      // the reward alcove past the door
 };
 const DROWNED_ZONES = { // THE DROWNED VAULT - the flooded harbor-vault beneath Barik (grants Dive)
@@ -551,7 +551,7 @@ function placeObjectsMain(){
   const VM=ZONES.vael;
   addBuilding('house2',VM.x,VM.y,'Vael war-tent').locked=1;
   // war chests in dangerous country - worth the walk, worth the wait
-  for(const [wz,wlv] of [[ZONES.highlands,4],[ZONES.ruins,6],[ZONES.desert,12],[ZONES.vael,12],[ZONES.undermaw,11],[ZONES.spire,3]]){
+  for(const [wz,wlv] of [[ZONES.highlands,4],[ZONES.ruins,6],[ZONES.desert,12],[ZONES.vael,12],[ZONES.undermaw,7],[ZONES.spire,3]]){
     const wsp=findOpenNear(wz.x+3,wz.y+3,6);
     if(wsp){ G.decor.push({kind:'chest',x:wsp[0]+0.5,y:wsp[1]+0.5,opened:false,rich:wlv}); setSolid(wsp[0],wsp[1],1); }
   }
@@ -3293,7 +3293,7 @@ function spawnMobsUndermaw(){
   const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 7) || [Z.x, Z.y];
   const b=spawnMob('scorpion', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.undermawBeast=1; b.bscale=1.7; b.title='THE MAW-STALKER'; b.subtitle='TERROR OF THE UNDERMAW';
-    b.hp=b.maxhp=520; b.dmg=24; b.lvl=12; b.xp=560; b.gold=[50,90];
+    b.hp=b.maxhp=360; b.dmg=18; b.lvl=7; b.xp=380; b.gold=[35,60];
     b.hx=sp[0]; b.hy=sp[1]; b.state='idle'; b.noAggroT=0; b.respawnT=-1; b.entrance='loom'; }
   // R4 skeleton archers: rooted on the ledges flanking the crossing, raining bone arrows as you cross
   for(const [ax,ay] of [[14,39],[30,39],[14,69],[30,69]]){
@@ -3314,7 +3314,7 @@ function spawnMobsUndermaw(){
       const o=findOpenNear(sx,sy,3) || [sx,sy];
       const s=spawnMob('skeleton', o[0], o[1]);
       if(s){ s.mawHorde=1; s.arena=1; s.respawnT=-1; s.noAggroT=0;
-        s.hp=s.maxhp=40; s.dmg=16; s.speed=2.5; s.aggro=16; s.xp=24; s.lvl=10;
+        s.hp=s.maxhp=30; s.dmg=11; s.speed=2.5; s.aggro=16; s.xp=18; s.lvl=6;
         placed++; }
     }
     G._mawHordeLeft=placed;

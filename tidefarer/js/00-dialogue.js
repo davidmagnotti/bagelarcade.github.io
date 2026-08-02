@@ -831,7 +831,7 @@ const DIALOGUE = {
     },
     "undermaw1": {
       brief: "East of the Mirefen the ground splits - the Undermaw, we call it. Miners' tales say a hoard sleeps inside, guarded by bone-kin who never liked daylight. Find the mouth. What you do after is between you and the dark.",
-      log: "Find the Undermaw, east of the Mirefen. (Lv 10+ recommended.)",
+      log: "Find the Undermaw, east of the Mirefen. (Lv 5+ recommended.)",
       doneText: "You found it and kept your skin - that's rarer than the gold. Whatever you carried out, you earned."
     },
     "bounty": {
