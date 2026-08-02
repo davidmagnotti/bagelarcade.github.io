@@ -301,11 +301,31 @@ function completeIslandQuests(island){
   ui(); note('Completed '+n+' quest(s) on '+island);
 }
 
+/* ---- map: reveal the whole current isle AND flag every named zone discovered, so the
+        big-map's fast travel can hop to any of them (normally each must be found on foot) ---- */
+function revealMap(){
+  if(typeof scoutReveal==='function') scoutReveal();                 // lift the fog on this isle
+  else if(typeof explGrid==='function'){ try{ explGrid().fill(1); }catch(e){} }
+  P.disc=P.disc||{}; let n=0;
+  if(typeof ZONES!=='undefined') for(const k in ZONES){
+    const z=ZONES[k]; if(!z || !z.name) continue;
+    const key=G.worldId+':'+k;
+    if(!P.disc[key]){ P.disc[key]=1; n++; }
+  }
+  // grant the "found every zone" award if this isle is now fully discovered
+  try{ if(typeof award==='function' && typeof ZONES!=='undefined'){
+    const all=Object.keys(ZONES).filter(k=>ZONES[k].name).every(k=>P.disc[G.worldId+':'+k]);
+    if(all) award('wayfarer');
+  } }catch(e){}
+  ui(); note('Map revealed - '+n+' new fast-travel point(s) on this isle');
+}
+
 setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P.maxhp; P.mp=P.maxmp; } }catch(e){} }, 400);
 
 /* ---- panel ---- */
 const SECTIONS=[
   ['Teleport island', [
+    ['★ Unlock entire map (this isle · fast travel)',()=>revealMap()],
     ['Emberwick (start)',()=>tp('isle')], ['Barik',()=>tp('main')], ['Sunward',()=>tp('east')],
     ['Cloudreach (sky)',()=>tp('sky')], ['Windsurf',()=>tp('wind')], ['Stormreach',()=>tp('reach')],
     ['Aerie',()=>tp('aerie')], ['Frozen',()=>tp('frost')], ['Aldermere (Capital)',()=>tp('crown')],
