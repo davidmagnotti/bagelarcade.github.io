@@ -20,14 +20,16 @@
        ship - Vath's hand on the sea, seeded and unexplained
      * a dawn that actually breaks - a banded sky, a rising sun with god-rays and
        bloom, gulls, and a glittering sun-track laid across a calming tide
-     * the masked castaway drawn as a figure, not a mound - dark hair fanned in
-       the wet sand, a sodden cloak catching the first light, and the pale mask
-       over her face, the one bright thing, which the whole journey turns on
-     * Elder Maren, a stooped old woman with a staff and a raised lantern,
-       hurrying down the strand, her long dawn shadow thrown ahead of her
+     * NO drawn people on the shore - the environment and the narration carry the
+       castaway. The one figurative anchor is the pale MASK, left half in the wet
+       sand where the tide drew back, dawn-lit, the object the whole journey turns
+       on (a clean object reads far better here than a hand-drawn body would)
+     * whoever is coming for you is shown only as a warm lantern-light bobbing down
+       the strand and growing nearer - never a drawn figure
 
    On its final beat it hands off (onDone) to Maren's first words (startIntro).
-   Nothing of the castaway's name or face is revealed - Act I seeds only.
+   Nothing of the castaway's name or face is revealed - Act I seeds only. There is
+   no on-screen title card; the narration names nothing.
 
    Additive and graceful: if the overlay DOM is missing, it falls straight
    through to onDone, so nothing soft-locks. Everything is plain Canvas2D
@@ -77,14 +79,14 @@ const SH_BEATS = [
     storm:1, ship:0, ashore:0, push:1.05 },
   // the dark gives way to a breaking dawn on the shore (wordless dissolve)
   { who:'', html:'', storm:0.14, ship:0, ashore:1, push:1.0, fx:0.5, fy:0.5, hold:2000 },
-  // dawn on the sand: the tide lets a masked figure go (wordless)
+  // dawn on the empty strand: the tide has drawn back, the mask left in the sand (wordless)
   { who:'', html:'', storm:0.08, ship:0, ashore:1, push:1.03, hold:1700 },
-  { who:'', html:'<i>Then - dawn. Cold sand against your cheek, and the tide letting go of you at last. A pale mask lies over your face, and you have already reached for it, before your eyes are even open. You do not know why.</i>',
+  { who:'', html:'<i>Then - dawn. Cold sand against your cheek, the tide drawing back off you at last. A pale mask lies half in the wet sand within reach - and your hand has already closed on it, before your eyes are even open. You do not know why.</i>',
     storm:0.06, ashore:1, push:1.05 },
   // a slow push onto the mask, catching the first light (wordless)
-  { who:'', html:'', storm:0.05, ashore:1, push:1.14, focus:[0.53,0.60], hold:1700 },
-  // a lantern comes down the strand - the isle has a name (wordless)
-  { who:'', html:'', storm:0.05, ashore:1, lantern:1, push:1.02, fx:0.5, fy:0.55, title:'EMBERWICK', flash:0.35, hold:2300 },
+  { who:'', html:'', storm:0.05, ashore:1, push:1.16, focus:[0.5,0.62], hold:1700 },
+  // a lantern-light comes bobbing down the strand toward you (wordless)
+  { who:'', html:'', storm:0.05, ashore:1, lantern:1, push:1.02, fx:0.5, fy:0.55, hold:2100 },
   { who:'', html:'<i>A light comes bobbing down the shoreline - a lantern, and someone hurrying through the surf toward you. You have washed up on some strange, dark shore. You are, at least, alive.</i>',
     storm:0.05, ashore:1, lantern:1, push:1.04 },
 ];
@@ -572,7 +574,7 @@ function shCursedWave(cx,W,H,horizon,t,r){
   cx.restore();
 }
 
-/* ---- the wet dawn shore: sand, surf, debris, the castaway, and Maren ---- */
+/* ---- the wet dawn shore: sand, surf, wreck debris, the mask, an approaching light ---- */
 function shShore(cx,W,H,t,amt,lantern,storm){
   const by=beachY();
   cx.save(); cx.globalAlpha=Math.min(1,amt);
@@ -616,149 +618,101 @@ function shShore(cx,W,H,t,amt,lantern,storm){
   cx.fillStyle='rgba(20,16,10,0.4)'; cx.fillRect(-46,3,92,3);   // wet shadow line
   cx.restore();
 
-  // --- the masked castaway, at the tideline where the sea let her go ---
-  // kept high on the sand so the mask stays above the caption plate
-  shCastaway(cx,W,H,t,dawn,storm);
+  // --- the pale mask, left half in the wet sand where the tide drew back ---
+  // (no figure: the environment and the narration carry the castaway. An object
+  //  reads far cleaner than a hand-drawn body here, and the mask is the one bright
+  //  anchor - the thing the whole journey turns on.)
+  shMaskInSand(cx,W,H,t,dawn);
 
-  // --- Elder Maren, come down the strand with a raised lantern ---
-  if(lantern>0.02) shMaren(cx,W,H,t,Math.min(1,lantern)*Math.min(1,amt),dawn);
+  // --- someone coming for you: a warm lantern-light bobbing down the strand (no body) ---
+  if(lantern>0.02) shLanternApproach(cx,W,H,t,Math.min(1,lantern)*Math.min(1,amt),dawn);
 
   cx.restore();
 }
 
-/* ---- the castaway: a figure, not a mound - hair, cloak, an arm, and the pale mask ---- */
-function shCastaway(cx,W,H,t,dawn,storm){
-  const cxm=W*0.52, cym=H*0.63, s=Math.min(W,H)/360*0.92;
-  const breath=Math.sin(t*1.4)*1.2;         // faint breathing
-  cx.save(); cx.translate(cxm,cym);
+/* ---- the pale mask, left half in the wet sand where the tide drew back ----
+   No figure - just the object. It sits high on the sand (above the caption plate),
+   sunk a little into the tideline, dawn-lit, with a wet-sheen reflection and a long
+   soft shadow. This is the one bright anchor of the shore. */
+function shMaskInSand(cx,W,H,t,dawn){
+  const cxm=W*0.5, cym=H*0.63, s=Math.min(W,H)/360*1.7;
+  cx.save(); cx.translate(cxm,cym); cx.rotate(-0.16);
 
-  // the wet-dark halo of sand the sea left around her
-  cx.fillStyle='rgba(30,26,20,0.32)';
-  cx.beginPath(); cx.ellipse(0, 14*s, 96*s, 26*s, 0, 0, TAU); cx.fill();
-  // a long soft dawn shadow thrown up the beach
-  if(dawn>0.1){ cx.save(); cx.fillStyle='rgba(20,16,12,'+(0.22*dawn).toFixed(3)+')';
-    cx.transform(1,0,-0.9,0.4,0,0);
-    cx.beginPath(); cx.ellipse(60*s, 30*s, 70*s, 16*s, 0, 0, TAU); cx.fill(); cx.restore(); }
+  // the wet-dark patch of sand the tide left around it
+  cx.fillStyle='rgba(28,24,18,0.30)';
+  cx.beginPath(); cx.ellipse(0, 8*s, 26*s, 9*s, 0, 0, TAU); cx.fill();
+  // a long, soft dawn shadow thrown up the beach
+  if(dawn>0.08){ cx.save(); cx.fillStyle='rgba(20,16,12,'+(0.20*dawn).toFixed(3)+')';
+    cx.transform(1,0,-1.4,0.5,0,0);
+    cx.beginPath(); cx.ellipse(20*s, 12*s, 15*s, 5*s, 0, 0, TAU); cx.fill(); cx.restore(); }
 
-  // --- the sodden cloak: a body-length drape with fold shading and a dawn rim ---
-  const cloak=mixHex('#241d16','#3a2f22',dawn);
-  cx.fillStyle=cloak;
-  cx.beginPath();
-  cx.moveTo(-58*s,-2*s+breath*0.3);
-  cx.quadraticCurveTo(-30*s,-22*s+breath, 6*s,-16*s+breath);       // the risen shoulder/back
-  cx.quadraticCurveTo(40*s,-12*s, 62*s,2*s);                        // hip taper to the feet
-  cx.quadraticCurveTo(50*s,16*s, 10*s,16*s);
-  cx.quadraticCurveTo(-34*s,16*s,-58*s,6*s);
-  cx.closePath(); cx.fill();
-  // fold creases
-  cx.strokeStyle='rgba(12,9,6,0.4)'; cx.lineWidth=1.4*s;
-  cx.beginPath(); cx.moveTo(-30*s,-14*s+breath); cx.quadraticCurveTo(-6*s,-4*s,20*s,-6*s); cx.stroke();
-  cx.beginPath(); cx.moveTo(-14*s,-16*s+breath); cx.quadraticCurveTo(6*s,-2*s,34*s,-2*s); cx.stroke();
-  // dawn rim light along the top edge of the back
-  if(dawn>0.05){ cx.strokeStyle='rgba(255,224,180,'+(0.5*dawn).toFixed(3)+')'; cx.lineWidth=1.6*s;
-    cx.beginPath(); cx.moveTo(-30*s,-20*s+breath); cx.quadraticCurveTo(-4*s,-16*s+breath,8*s,-15*s+breath); cx.stroke(); }
+  // a faint mirror of the mask in the wet sand just below it (the sheen)
+  cx.save(); cx.globalAlpha=0.16*dawn; cx.scale(1,-0.5); cx.translate(0,-20*s);
+  cx.fillStyle=mixHex('#c9c3b2','#efe7d4',dawn);
+  cx.beginPath(); cx.ellipse(0,0,11*s,15*s,0,0,TAU); cx.fill(); cx.restore();
 
-  // --- hair fanned across the wet sand ---
-  cx.fillStyle=mixHex('#14100b','#1c150e',dawn);
-  cx.beginPath(); cx.moveTo(-46*s,-8*s+breath*0.5);
-  cx.quadraticCurveTo(-74*s,-6*s,-84*s,4*s);
-  cx.quadraticCurveTo(-74*s,10*s,-52*s,6*s);
-  cx.quadraticCurveTo(-64*s,2*s,-46*s,-2*s); cx.closePath(); cx.fill();
-  // a few loose strands
-  cx.strokeStyle='rgba(10,8,5,0.6)'; cx.lineWidth=1*s;
-  for(const yy of [-4,0,4]){ cx.beginPath(); cx.moveTo(-50*s,yy*s); cx.quadraticCurveTo(-70*s,(yy-2)*s,-86*s,(yy+3)*s); cx.stroke(); }
-
-  // --- the outstretched arm, hand relaxed on the sand ---
-  cx.strokeStyle=cloak; cx.lineWidth=8*s; cx.lineCap='round';
-  cx.beginPath(); cx.moveTo(24*s,-4*s); cx.quadraticCurveTo(50*s,4*s,66*s,2*s); cx.stroke();
-  cx.fillStyle=mixHex('#b9a58e','#d8bd9a',dawn);   // the open hand
-  cx.beginPath(); cx.ellipse(68*s,2*s,5*s,4*s,0,0,TAU); cx.fill();
-
-  // --- the pale mask over her face: the one bright thing ---
-  cx.save(); cx.translate(-44*s,-10*s+breath*0.5); cx.rotate(-0.32);
-  // face-shadow under the mask
-  cx.fillStyle='rgba(20,16,12,0.5)'; cx.beginPath(); cx.ellipse(1*s,2*s,12*s,16*s,0,0,TAU); cx.fill();
-  // mask body, lit warm on one side and cool on the other
+  // --- the mask body, lit warm on one side, cool on the other ---
   const mg=cx.createLinearGradient(-11*s,0,11*s,0);
-  mg.addColorStop(0, mixHex('#c9c3b2','#efe7d4',dawn));
-  mg.addColorStop(1, mixHex('#9a958a','#c8bfa8',dawn));
+  mg.addColorStop(0, mixHex('#cdc7b6','#f2ead7',dawn));
+  mg.addColorStop(1, mixHex('#948f83','#c2b9a2',dawn));
   cx.fillStyle=mg;
   cx.beginPath(); cx.ellipse(0,0,11*s,15*s,0,0,TAU); cx.fill();
   cx.strokeStyle='rgba(60,52,44,0.55)'; cx.lineWidth=1.1*s; cx.stroke();
   // a subtle nose ridge
   cx.strokeStyle='rgba(90,82,70,0.4)'; cx.lineWidth=1*s;
   cx.beginPath(); cx.moveTo(0,-4*s); cx.lineTo(0,5*s); cx.stroke();
-  // hollow eye-slits
-  cx.fillStyle='rgba(46,40,34,0.7)';
+  // hollow eye-slits, catching a shadow
+  cx.fillStyle='rgba(44,38,32,0.72)';
   cx.beginPath(); cx.ellipse(-4.2*s,-3*s,2.3*s,3.1*s,0.1,0,TAU); cx.ellipse(4.2*s,-3*s,2.3*s,3.1*s,-0.1,0,TAU); cx.fill();
-  // the dawn glint along the brow - the light finding the mask
+  // a lip of wet sand drifted over the lower edge - it is HALF in the sand
+  cx.fillStyle=mixHex('#4a453e','#8a7656',dawn);
+  cx.beginPath();
+  cx.moveTo(-11*s, 6*s);
+  cx.quadraticCurveTo(0, 12*s, 11*s, 5*s);
+  cx.quadraticCurveTo(6*s, 18*s, 0, 17*s);
+  cx.quadraticCurveTo(-7*s, 17*s, -11*s, 6*s);
+  cx.closePath(); cx.fill();
+  // a grain or two of sand across the brow
+  cx.fillStyle='rgba(120,104,78,0.5)';
+  cx.beginPath(); cx.arc(-3*s,-6*s,0.9*s,0,TAU); cx.arc(4*s,-8*s,0.7*s,0,TAU); cx.fill();
+  // the dawn glint along the brow - the first light finding the mask
   if(dawn>0.03){ cx.save(); cx.globalCompositeOperation='lighter';
-    cx.fillStyle='rgba(255,246,224,'+(0.6*dawn).toFixed(3)+')';
-    cx.beginPath(); cx.ellipse(-2.5*s,-7.5*s,5*s,2.6*s,0.2,0,TAU); cx.fill(); cx.restore(); }
-  cx.restore();
+    cx.fillStyle='rgba(255,246,224,'+(0.65*dawn).toFixed(3)+')';
+    cx.beginPath(); cx.ellipse(-2.5*s,-8*s,5.5*s,2.6*s,0.2,0,TAU); cx.fill(); cx.restore(); }
 
-  cx.lineCap='butt';
   cx.restore();
 }
 
-/* ---- Elder Maren: a stooped old woman with a staff and a raised lantern ---- */
-function shMaren(cx,W,H,t,a,dawn){
-  // she starts far down-strand and closes in a little over the beats
-  const prog=a;                                   // ~ how present/near she is
-  const lx=W*(0.24-0.06*prog)+Math.sin(t*0.6)*3, ly=H*0.64;
-  const s=Math.min(W,H)/360*(0.9+0.12*prog);
-  const stride=Math.sin(t*3)*2*s;                 // a hurrying bob
+/* ---- someone coming for you: a warm lantern-light bobbing down the strand ----
+   No figure is drawn - only the light. It bobs down the shoreline and grows nearer
+   as `a` rises, a bright core in a soft warm pool, with a hint of a swinging carry.
+   The narration ("a lantern, and someone hurrying") supplies the person. */
+function shLanternApproach(cx,W,H,t,a,dawn){
+  const lx=W*(0.26-0.10*a) + Math.sin(t*0.9)*6;      // bobs, and closes down-strand
+  const ly=H*0.62 + Math.sin(t*3.2)*3*a;             // a walking bob
+  const r=(46+70*a);                                  // the pool grows as it nears
   cx.save(); cx.globalAlpha=a;
 
-  // her long dawn shadow thrown ahead across the sand
-  if(dawn>0.1){ cx.save(); cx.fillStyle='rgba(20,16,12,'+(0.24*dawn).toFixed(3)+')';
-    cx.translate(lx,ly+16*s); cx.transform(1,0,1.1,0.34,0,0);
-    cx.beginPath(); cx.ellipse(30*s,0,30*s,9*s,0,0,TAU); cx.fill(); cx.restore(); }
-
-  cx.translate(lx,ly);
-  // --- the warm pool of lantern-light on the sand and figure ---
+  // a warm streak of the light's reflection on the wet sand, toward the viewer
   cx.save(); cx.globalCompositeOperation='lighter';
-  const glow=cx.createRadialGradient(18*s,-30*s,2,18*s,-30*s,80*s);
-  glow.addColorStop(0,'rgba(255,200,120,0.55)'); glow.addColorStop(1,'rgba(255,200,120,0)');
-  cx.fillStyle=glow; cx.beginPath(); cx.arc(18*s,-30*s,80*s,0,TAU); cx.fill(); cx.restore();
-
-  // --- the figure: a stooped elder in a shawl and long skirt ---
-  const robe=mixHex('#2a2620','#3c352b',dawn);
-  // skirt
-  cx.fillStyle=robe;
-  cx.beginPath();
-  cx.moveTo(-11*s+stride*0.3, 30*s);
-  cx.quadraticCurveTo(-14*s,-2*s, -6*s,-30*s);       // stooped back
-  cx.quadraticCurveTo(0,-40*s, 8*s,-32*s);           // shoulders/hood
-  cx.quadraticCurveTo(14*s,-4*s, 13*s,30*s);
-  cx.closePath(); cx.fill();
-  // a shawl over the shoulders
-  cx.fillStyle=mixHex('#3a332a','#4c4234',dawn);
-  cx.beginPath(); cx.moveTo(-8*s,-28*s); cx.quadraticCurveTo(1*s,-40*s,10*s,-30*s);
-  cx.quadraticCurveTo(6*s,-16*s,1*s,-14*s); cx.quadraticCurveTo(-5*s,-16*s,-8*s,-28*s); cx.closePath(); cx.fill();
-  // head, bowed
-  cx.fillStyle=mixHex('#a08d76','#c2a884',dawn);
-  cx.beginPath(); cx.arc(3*s,-34*s,5.4*s,0,TAU); cx.fill();
-  // wisp of grey hair
-  cx.strokeStyle='rgba(220,220,214,'+(0.5).toFixed(3)+')'; cx.lineWidth=1*s;
-  cx.beginPath(); cx.moveTo(-1*s,-36*s); cx.quadraticCurveTo(-4*s,-32*s,-2*s,-28*s); cx.stroke();
-
-  // the walking staff, planted ahead, and the near leg mid-stride
-  cx.strokeStyle=mixHex('#241c14','#3a2c1c',dawn); cx.lineWidth=2.2*s; cx.lineCap='round';
-  cx.beginPath(); cx.moveTo(-12*s,-20*s); cx.lineTo(-18*s,32*s); cx.stroke();       // staff
-  cx.strokeStyle=robe; cx.lineWidth=5*s;
-  cx.beginPath(); cx.moveTo(2*s,26*s); cx.lineTo(6*s+stride,36*s); cx.stroke();     // stepping leg
-
-  // --- the raised lantern, held out ahead ---
-  cx.strokeStyle=mixHex('#241c14','#3a2c1c',dawn); cx.lineWidth=2*s;
-  cx.beginPath(); cx.moveTo(9*s,-30*s); cx.lineTo(18*s,-34*s); cx.stroke();          // arm to lantern
-  cx.fillStyle='#2a2018'; cx.fillRect(16*s,-40*s,6*s,9*s);                            // lantern housing
-  cx.strokeStyle='#1a140f'; cx.lineWidth=1*s; cx.strokeRect(16*s,-40*s,6*s,9*s);
-  cx.save(); cx.globalCompositeOperation='lighter';
-  cx.fillStyle='rgba(255,216,140,0.98)'; cx.beginPath(); cx.arc(19*s,-35.5*s,3.4*s,0,TAU); cx.fill();
+  const streak=cx.createLinearGradient(lx,ly,lx-10,ly+120);
+  streak.addColorStop(0,'rgba(255,206,130,'+(0.28*a).toFixed(3)+')'); streak.addColorStop(1,'rgba(255,206,130,0)');
+  cx.fillStyle=streak;
+  cx.beginPath(); cx.moveTo(lx-14,ly); cx.lineTo(lx+14,ly); cx.lineTo(lx+30,ly+140); cx.lineTo(lx-30,ly+140); cx.closePath(); cx.fill();
+  // the soft warm pool
+  const glow=cx.createRadialGradient(lx,ly,2,lx,ly,r);
+  glow.addColorStop(0,'rgba(255,202,120,'+(0.6*a).toFixed(3)+')');
+  glow.addColorStop(0.5,'rgba(255,188,108,'+(0.28*a).toFixed(3)+')');
+  glow.addColorStop(1,'rgba(255,188,108,0)');
+  cx.fillStyle=glow; cx.beginPath(); cx.arc(lx,ly,r,0,TAU); cx.fill();
+  // the bright core - the flame itself, guttering a little in the sea-wind
+  const flick=0.82+0.18*Math.sin(t*9);
+  cx.fillStyle='rgba(255,232,168,'+(0.95*a*flick).toFixed(3)+')';
+  cx.beginPath(); cx.arc(lx,ly,3.2+1.6*a,0,TAU); cx.fill();
+  cx.fillStyle='rgba(255,248,214,'+(0.9*a).toFixed(3)+')';
+  cx.beginPath(); cx.arc(lx,ly,1.4+0.7*a,0,TAU); cx.fill();
   cx.restore();
 
-  cx.lineCap='butt';
   cx.restore();
 }
 
