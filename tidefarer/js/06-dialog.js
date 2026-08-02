@@ -120,7 +120,11 @@ function buildDialogContent(npc){
     };
     setDialog('<i>Elder Maren studies you a long moment, and there is more than gratitude in it.</i> “I\'ve watched a great many castaways wash up on this rock. Not one of them could have gone down into that dark and walked back out. You\'re a rare hand with a blade, traveler - a born fighter - and Emberwick is only one small stone in a wide and troubled sea.” <i>Her eyes turn to the water.</i> “The other isles are in turmoil - cursed tides, beasts on the roads, wrongs with no one left to set them right. They could use someone like you out there. Will you carry what you are beyond our shore?”',
       [{label:'I\'ll go where I\'m needed', cls:'gold', fn:toBoat},
-       {label:'The sea can wait', ghost:true, fn:toBoat}]);
+       {label:'The sea can wait', ghost:true, fn:()=>{
+         P.story.marenCharge=1;   // she's made her pitch; don't repeat the big speech
+         setDialog('<i>Maren nods, unsurprised.</i> “Ok. The sea keeps - and so do I. When you\'re ready to sail, <b>Captain Brant</b> is down at the dock, mending the Tidewalker.”',
+           shopButtons(npc,[{label:'Right then', ghost:true, fn:()=>buildDialogContent(npc)}]));
+       }}]);
     return;
   }
   // The Royal Audience - a scripted scene that opens Act III. The King receives
@@ -555,8 +559,6 @@ function shopButtons(npc,btns){
     btns.unshift({label:'Harbor projects…', fn:()=>projectsMenu(npc)});
   }
   if(npc.id==='maren'){
-    btns.unshift({label:'Village projects…', fn:()=>projectsMenu(npc)});
-    btns.unshift({label:'Supply contract…', fn:()=>contractMenu(npc)});
     btns.unshift({label:'Sell goods…', fn:()=>sellMenu(npc)});
     btns.unshift({label:'Buy Ember Tonic (30g)', fn:()=>{
       if(P.gold>=30){ P.gold-=30; giveQuiet('potion',1); Snd.coin(); refreshUI();

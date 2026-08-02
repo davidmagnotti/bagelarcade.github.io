@@ -2198,7 +2198,12 @@ function drawDecor(b,s){
          : (b.kind==='tower' && b.tall) ? SPR.towerTall
          : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
-  if(b.kind!=='boat') drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:92) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
+  if(b.kind!=='boat'){
+    // a tall, narrow tower wants a tight contact shadow tucked at its foot - the wide, house-sized
+    // oval blobbed out on the ground in front of the door and read as a detached round shadow.
+    if(b.kind==='tower') drawShadowAt(cx, s.x, s.y+4, 15);
+    else drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:92) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
+  }
   // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a
   // big-but-crisp, well-seated keep. Barik's keep draws at 0.4 - twice its old
   // 0.2, scaled uniformly (no stretch) so it reads as a proper keep.

@@ -510,7 +510,7 @@ function placeObjectsMain(){
   // Greyharbor rings its harbor: every house sits out on the shoreline rather than
   // huddled around the well, strung along the promenade lane (carved in genMainland,
   // which also links the ring to the King's Roads). Going round the shore:
-  addBuilding('house', V.x-15,V.y+6, "Harbor house");                 // (62,260) SW shore - shifted left/down off the dock->village dirt path
+  addBuilding('house', V.x-13,V.y+1, "Harbor house");                 // (64,255) set back onto the green so its door faces the village/path, not the water you arrive on
   addBuilding('house', V.x-12,V.y-3, 'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”'; // (65,251) north-west shore
   addBuilding('house2',V.x-6, V.y-10,"Ivo's Herbary");               // (71,244) north shore
   addBuilding('house2',V.x,   V.y-11,"Warden's post");               // (77,243) north point

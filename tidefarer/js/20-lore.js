@@ -209,6 +209,7 @@ function interiorHotspot(){
       chest:'Open', urn:'Search', drawers:'Search', cupboard:'Search', sack:'Search'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
+    if(f.type==='orb' && I.kind==='tower') continue;   // mage-tower scrying orbs no longer offer an "Attune" boon (still decor)
     if(!lbl) continue;
     // the wyrm & the wide reception desk need a hotspot that reaches past them
     const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : (f.type==='king'||f.type==='stairs'||f.type==='cook'||f.type==='millcellar')? 1.8 : 1.55;
