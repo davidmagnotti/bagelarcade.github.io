@@ -1170,6 +1170,13 @@ function killMob(m,skill){
     P.story=P.story||{}; P.story.undermawDown=1;
     if(typeof UNDERMAW_GATE!=='undefined') for(const [x,y] of UNDERMAW_GATE){ setSolid(x,y,0); setTile(x,y,T.RUIN); }
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='undermaw'); if(cg) cg.open=true;
+    // the Stalker's venom stops the moment it falls - no lingering sting after the win
+    P.poisonT=0; P._venAcc=0;
+    // the bone-kin loitering at the surface scar were its wardens: clear them from the cached
+    // Barik world (and from here if you're standing in it) so the mouth is quiet on your way out.
+    const clearScar=arr=>{ if(!arr) return; for(let i=arr.length-1;i>=0;i--){ if(arr[i] && arr[i].scarSkel) arr.splice(i,1); } };
+    if(typeof WORLDS!=='undefined' && WORLDS.main) clearScar(WORLDS.main.mobs);
+    if(G.worldId==='main') clearScar(G.mobs);
     if(typeof invalidateScenery==='function') invalidateScenery();
     banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
     if(typeof autoSave==='function') autoSave();

@@ -731,7 +731,7 @@ function spawnMobsMain(){
     ['slime', ZONES.meadow, 9, 0.45],
     ['scorpion', ZONES.desert, 10, 0.4],
     ['raider', ZONES.vael, 8, 0.45],
-    ['skeleton', ZONES.undermaw, 5, 0.9],
+    ['skeleton', ZONES.undermaw, 5, 0.9, {tag:'scarSkel', hideWhen:'undermawDown'}],  // the bone-kin at the scar's mouth - gone once the Maw-Stalker falls
     ['wolf',     {x:150,y:316,r:8}, 5, 0.4],   // the spire road earns its length
     ['skeleton', {x:172,y:325,r:7}, 5, 0.45],
     ['brigand',  {x:162,y:148,r:6}, 5, 0.25]   // they guard what they stole
@@ -745,11 +745,12 @@ function spawnMobsMain(){
     if(yd) spawnMob('dummy',yd[0],yd[1]);
   }
   const pr=mulberry32(SEED+41);
-  for(const [kind,z,count,eliteP] of packs){
+  for(const [kind,z,count,eliteP,opt] of packs){
+    if(opt && opt.hideWhen && P.story && P.story[opt.hideWhen]) continue;   // a cleared-dungeon pack no longer haunts the surface
     for(let i=0;i<count;i++){
       const a=pr()*TAU, dd=2+pr()*(z.r-3);
       const s=findOpenNear(Math.round(z.x+Math.cos(a)*dd),Math.round(z.y+Math.sin(a)*dd),4);
-      if(s) spawnMob(kind,s[0],s[1], pr()<eliteP);
+      if(s){ const m=spawnMob(kind,s[0],s[1], pr()<eliteP); if(m && opt && opt.tag) m[opt.tag]=1; }
     }
   }
   // Greymaw dens atop Wolfcrag
