@@ -10,9 +10,10 @@
         through-route - no soft-lock is possible. This is the "side areas
         with items" the design calls for.
 
-     2. TOOL-CHESTS. The two dungeon-forged tools themselves: a {axegift}
-        chest in the Undermaw (Barik) and a {pickgift} chest in the
+     2. TOOL-CHESTS. The two dungeon-forged tools themselves: a {pickgift}
+        chest in the Undermaw (Barik) and a {axegift} chest in the
         Emberdeep (Mount Kea) - the mining/earth dungeons that fit them.
+        (Now dead code - the tools are boss prizes; see BOSS_TOOL / awardDungeonTool.)
 
    Persistence: a felled gate (n.gid) and a looted chest (b.tgid) record
    into P.story.tg, which saves with P.story. On reload the world regen's,
@@ -52,7 +53,7 @@ var TG_WORLDS={
           {mat:'ironwood', gid:'crown:c1', loot:'materials'} ]
 };
 // the two tools themselves, each in a fitting dungeon
-var TG_TOOLCHEST={ undermaw:{flag:'axegift', tier:'axe'}, eastdeep:{flag:'pickgift', tier:'pick'} };
+var TG_TOOLCHEST={ undermaw:{flag:'pickgift', tier:'pick'}, eastdeep:{flag:'axegift', tier:'axe'} };
 
 function strHash(s){ var h=2166136261>>>0; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function tg(){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; return P.story.tg; }

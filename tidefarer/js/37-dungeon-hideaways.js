@@ -150,14 +150,15 @@ function placeDungeonHideaways(id){
 /* ---- the four dungeon tools are BOSS PRIZES: one per dungeon, dropped when the
         dungeon's marquee boss falls (hooked from killMob in 09-gameplay.js).
         Each has its "use it here" example already in the world:
-          Rivenedge Axe    (Undermaw / Maw-Stalker)    -> ironwood gates (isles)
-          Cragbreaker Pick (Emberdeep / Ashwing)        -> basalt gates (isles)
+          Cragbreaker Pick (Undermaw / Maw-Stalker)     -> basalt gates (isles; the Barik farm)
+          Rivenedge Axe    (Emberdeep / Ashwing)         -> ironwood gates (isles)
           Cograzor Pick    (Undermill / Cog-Bound)      -> slagiron gate rooms (isles)
           Emberbreaker Pick(Ashen Forge / Cinderwrought)-> emberstone gate rooms (isles)
+   (Undermaw and Emberdeep swapped prizes: the Undermaw now forges the purple-basalt PICK.)
 ---- */
 var BOSS_TOOL={
-  undermaw:    {flag:'axegift',   spot:[22,4], have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return !!m.undermawBeast;}},
-  eastdeep:    {flag:'pickgift',  have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return m.kind==='dragon';}},
+  undermaw:    {flag:'pickgift',  spot:[22,4], have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return !!m.undermawBeast;}},
+  eastdeep:    {flag:'axegift',   have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return m.kind==='dragon';}},
   sunwarddeep: {flag:'embergift', have:function(){return (P.tools&&P.tools.pick||0)>=4;}, is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
   milldeep:    {flag:'slaggift',  have:function(){return (P.tools&&P.tools.pick||0)>=3;}, is:function(m){return !!m.millboss;}}
 };
@@ -172,12 +173,9 @@ function awardDungeonTool(m){
     var pos=t.spot || ((typeof findOpenNear==='function' && findOpenNear(Math.round(m.x),Math.round(m.y),6)) || [Math.round(m.x),Math.round(m.y)]);
     var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5}; o[t.flag]=1;
     G.decor.push(o);
-    // The Undermaw yields TWO prizes: its Rivenedge Axe AND the Delvebreaker Pick that
-    // shatters Vath's wardstone - so the whole Hedda-ward loop stays inside Barik.
-    if(G.worldId==='undermaw' && (P.tools&&P.tools.pick||0)<2 && !G.decor.some(function(d){return d.delvegift;})){
-      var pp=(typeof findOpenNear==='function' && findOpenNear(pos[0]-2,pos[1],5)) || (typeof findOpenNear==='function' && findOpenNear(pos[0]+2,pos[1],5)) || [pos[0],pos[1]+1];
-      G.decor.push({kind:'chest', x:pp[0]+0.5, y:pp[1]+0.5, delvegift:1});
-    }
+    // The Undermaw's single prize is the Cragbreaker Pick (pickgift): it splits the violet
+    // basalt AND shatters Vath's Hedda-ward (any pick tier >= 2 does), so the whole
+    // Barik loop - rumour -> Undermaw -> break the ward -> Hedda - stays inside Barik.
     if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){}
 }
