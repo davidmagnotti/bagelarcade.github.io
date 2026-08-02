@@ -204,12 +204,11 @@ function interiorHotspot(){
   const I=G.interior; if(!I) return null;
   let best=null, bestD=1e9;
   for(const f of I.furn){
-    let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Anvil', orb:'Attune',
+    let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Anvil', orb:'Gaze',
       books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend',
       chest:'Open', urn:'Search', drawers:'Search', cupboard:'Search', sack:'Search'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
-    if(f.type==='orb' && I.kind==='tower') continue;   // mage-tower scrying orbs no longer offer an "Attune" boon (still decor)
     if(!lbl) continue;
     // the wyrm & the wide reception desk need a hotspot that reaches past them
     const reach = f.type==='dragon'? 3.2 : f.type==='frontdesk'? 2.0 : (f.type==='king'||f.type==='stairs'||f.type==='cook'||f.type==='millcellar')? 1.8 : 1.55;
@@ -217,6 +216,35 @@ function interiorHotspot(){
     if(d<reach && d<bestD){ bestD=d; best={f,label:lbl}; }
   }
   return best;
+}
+// THE SCRYING ORB: gaze into a mage-tower's glass for a hint toward your current purpose.
+// Repeatable and free (the old "Attune" boon and mana refill are retired) - it reads your
+// primary active quest and shows its objective back to you as a vision.
+function scryOrb(){
+  if(typeof Snd!=='undefined' && Snd.magic) Snd.magic();
+  if(typeof burst==='function') burst(P.x, P.y-0.8, '#7fd4ff', 16, 2.2);
+  // open the dialog overlay ourselves (setDialog only fills it), with a glowing-orb portrait
+  P.click=null; dlg.open=true; dlg.npc=null;
+  document.getElementById('dialog').style.display='block';
+  document.getElementById('dname').textContent='The Scrying-Glass';
+  const pg=document.getElementById('dportrait').getContext('2d');
+  pg.fillStyle='#0f1826'; pg.fillRect(0,0,72,72);
+  const gr=pg.createRadialGradient(36,37,3,36,37,27);
+  gr.addColorStop(0,'#eaf7ff'); gr.addColorStop(0.45,'#7fd4ff'); gr.addColorStop(1,'rgba(30,60,96,0)');
+  pg.fillStyle=gr; pg.beginPath(); pg.arc(36,37,25,0,Math.PI*2); pg.fill();
+  pg.fillStyle='rgba(255,255,255,0.7)'; pg.beginPath(); pg.arc(28,29,4,0,Math.PI*2); pg.fill();   // highlight
+  const pq = (typeof primaryQuest==='function') ? primaryQuest() : null;
+  const q = pq && (typeof QUESTS!=='undefined') && QUESTS[pq];
+  let vision;
+  if(q){
+    const step = q.log || q.title || 'a path only you can walk';
+    const who = (q.giver && typeof npcName==='function') ? npcName(q.giver) : null;
+    vision = '<i>The glass clouds, swirls, then clears on a vision -</i><br><br>“<b style="color:#7fd4ff">'+step+'</b>”'
+           + (who ? '<br><br><i>and, faint behind it, '+who+' awaiting your return.</i>' : '');
+  } else {
+    vision = '<i>You gaze into the scrying-glass. It clouds and swirls - then clears on nothing but your own reflection. No single thread pulls at you now; the isle is yours to wander as you will.</i>';
+  }
+  setDialog(vision, [{label:'Look away', cls:'gold', fn:closeDialog}], true);
 }
 // Talking to Aelin's figure inside the Spire (after dark) opens her normal
 // dialogue - lessons by day, and she's here to mind the tower by night.
@@ -270,28 +298,7 @@ function useHotspot(h){
   else if(f.type==='frontdesk'){ resortDesk(); }
   else if(f.type==='hearth') openStation('The Hearth', cookMenu);
   else if(f.type==='anvil') toast(['A smith’s anvil, scarred by a thousand strikes. The iron-work here is the smith’s trade, not yours to take up.','Bram’s anvil, still warm. Your own gear is won out on the isle, not hammered out here.'][rndi(0,1)],3600);
-  else if(f.type==='orb'){
-    // A mage-tower's scrying orb is now a ONE-TIME BOON per tower: it pours its
-    // stored focus into you for a whole free level, instead of the old
-    // just-tops-up-your-mana refill. (The Undermaw cave orb is unaffected.)
-    const key = (I && I.kind==='tower' && I.src) ? ('orb:'+I.src.w+':'+I.src.x+','+I.src.y) : null;
-    if(key && !P.prog[key]){
-      P.prog[key]=1; P.mp=P.maxmp;
-      if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
-      burst(P.x,P.y-0.8,'#c9b0ff',18,2.4); Snd.magic&&Snd.magic(); refreshUI&&refreshUI();
-      addFloat('The orb’s focus floods you',P.x,P.y-1.8,'#c9b0ff',1.3);
-      // no toast here: gainLXP already throws the big LEVEL banner + XP float, so a
-      // popup box restating it would just be redundant with what's already on screen
-      // the FIRST mage-tower orb also teaches the dash - the mage's parting gift of speed
-      const learnsDash = !(P.unlocked && P.unlocked.dash);
-      if(learnsDash && typeof unlockDash==='function') setTimeout(()=>unlockDash('The orb’s last lesson settles into your feet. <b style="color:#c9b0ff">Dash learned!</b> <b>Step outside to try it</b> - '+((typeof isTouch!=='undefined'&&isTouch)?'tap the dodge button':'press Shift')+' to dart aside.'), 1600);
-      autoSave&&autoSave();
-      return;
-    }
-    if(P.mp>=P.maxmp){ toastErr(key? 'The orb is spent - its gift already yours. It only hums now.' : 'The orb hums - your mana is already full.'); return; }
-    P.mp=P.maxmp; burst(P.x,P.y-0.8,'#7fd4ff',12,2); Snd.magic(); refreshUI();
-    addFloat('Mana restored',P.x,P.y-1.8,'#7fd4ff',1.1);
-  }
+  else if(f.type==='orb') scryOrb();
   else if(f.type==='books') readLore(f.lore || I.loreKey || ((I.kind==='tower'?'tower': I.kind==='castle'?'castle':'barn')+(G.worldId==='main'?'@m':'')));
   else if(f.type==='shelf') readLore(f.lore || I.loreKey || ((I.kind==='house2'?'house2':'house')+(G.worldId==='main'?'@m':'')));
   else if(f.type==='cavechest'){
