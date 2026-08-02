@@ -125,6 +125,10 @@ function sleepInBed(own){
   },750);
 }
 function rummage(f){
+  // themed homes carry their own weighted loot tables, secret caches and one-time
+  // chests (js/40-home-interiors.js); let that claim the search before the legacy
+  // barrel/hay/crate defaults below.
+  if(typeof homeSearch==='function' && homeSearch(f)) return;
   if(f.rummaged){ toast('Nothing more in there.'); return; }
   f.rummaged=true;
   const roll=Math.random();
@@ -201,7 +205,8 @@ function interiorHotspot(){
   let best=null, bestD=1e9;
   for(const f of I.furn){
     let lbl={bed:(I.home&&P.home)?'Sleep':'Bed', hearth:'Cook', anvil:'Anvil', orb:'Attune',
-      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend'}[f.type];
+      books:'Read', shelf:'Read', barrel:'Rummage', hay:'Rummage', crate:'Rummage', dragon:'Speak', frontdesk:'Front desk', poolguest:'Chat', suitebed:(P.resortRoom?'Sleep':'Suite'), king:'Speak', cook:'Speak', stairs:'Stairs', millcellar:'Descend',
+      chest:'Open', urn:'Search', drawers:'Search', cupboard:'Search', sack:'Search'}[f.type];
     if(f.type==='stairs') lbl = f.dir==='up'? 'Go up' : 'Go down';
     if(f.type==='cook' && qs('kitchenrun')==='active' && has('crate',1)) lbl='Deliver crate';
     if(!lbl) continue;
