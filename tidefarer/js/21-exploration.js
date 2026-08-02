@@ -131,7 +131,7 @@ function frame(ts){
     // The normal player-follow is suspended for its duration.
     const c=G.camCine; c.t+=raw;
     if(!c.fired && c.t>=c.outDur){ c.fired=true;   // punctuate the reveal as the camera arrives
-      if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW KING STIRS');
+      if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW SPIRIT STIRS');
       if(typeof shockwave==='function') shockwave(c.wx,c.wy,'rgba(155,224,160,0.85)',60);
       G.shake=Math.max(G.shake||0,0.5); if(Snd.quest) Snd.quest();
     }

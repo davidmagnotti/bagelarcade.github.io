@@ -299,7 +299,7 @@ function spawnMob(kind,x,y,elite){
     xp:Math.round(d.xp*(elite?2.5:1)), elite:!!elite, lvl:(d.lvl||1)+(elite?2:0),
     face:1, anim:Math.random()*10, state:'idle', wt:rnd(1,3), hitCd:0, hurtT:0,
     swing:0, boss:kind==='boss', bigBoss:(kind==='boss'||kind==='alpha'),
-    title: kind==='boss'? 'THE HOLLOW KING' : kind==='alpha'? 'GREYMAW, THE ALPHA' : null,
+    title: kind==='boss'? 'THE HOLLOW SPIRIT' : kind==='alpha'? 'GREYMAW, THE ALPHA' : null,
     dead:false, shootCd:0, summoned:[false,false]};
   G.mobs.push(m); return m;
 }

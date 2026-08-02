@@ -133,7 +133,7 @@ function openHollowGate(announce){
   for(const m of G.mobs) if(m.hollowGuard && !m.boss) m.sealed=false;
   if(typeof invalidateScenery==='function') invalidateScenery();
   if(announce){
-    if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW KING STIRS');
+    if(typeof banner==='function') banner('THE WARD-GATE OPENS','THE CAUSEWAY LIES OPEN - THE HOLLOW SPIRIT STIRS');
     const mx=(typeof WARD_MINX!=='undefined')?(WARD_MINX+WARD_MAXX)/2+0.5:46;
     if(typeof shockwave==='function') shockwave(mx, WARD_GATEY+0.5, 'rgba(155,224,160,0.85)', 55);
     G.shake=Math.max(G.shake||0,0.55);
@@ -1005,7 +1005,7 @@ function killMob(m,skill){
     // the isle's victory screen
     Snd.boss(); G.shake=0.9; G.slowmo=1.15;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',85);
-    banner('THE HOLLOW KING FALLS','THE CURSE BREAKS - THE STRAIT LIES OPEN');
+    banner('THE HOLLOW SPIRIT FALLS','THE CURSE BREAKS - THE STRAIT LIES OPEN');
     dropHollowFire();   // the seal breaks with him
     // his risen court crumbles with him FOR GOOD: clear every skeleton on the isle -
     // alive or merely waiting to respawn - so the northern spit stays quiet, and drop
