@@ -2125,8 +2125,12 @@ function updateWorld(dt){
       vx:rnd(-0.3,0.3), vy:-rnd(0.8,1.7), life:rnd(1.6,2.8),
       color:Math.random()<0.35?'#ff8a44':'rgba(90,84,80,0.55)', size:rnd(2,4), grav:-0.12});
   }
-  // ---- Act II surface-curse ambience (only once the isle wears its curse) ----
-  if(P.story && P.story.vathVeil && !G.interior){
+  // ---- Act II surface-curse ambience (only while the isle still wears its curse) ----
+  // Gated on the isle's own spirit-dungeon clear flag, not just the Veil: winning the dungeon
+  // drains the flood / cools the lava / breaks the storm, so the matching weather must stop too -
+  // the same revert the terrain (place*Hazard) and the folk's dialogue (update*CurseMood) already do.
+  const _curseFlag={east:'ashenForgeDone', wind:'galeDeepDone', main:'barikDeepDone', sky:'stormTempleDone'}[G.worldId];
+  if(P.story && P.story.vathVeil && !G.interior && _curseFlag && !P.story[_curseFlag]){
     // SUNWARD: drifting ash blown across the whole isle while Kea erupts
     if(G.worldId==='east' && Math.random()<dt*6){
       G.parts.push({x:P.x+rnd(-14,14), y:P.y-rnd(4,10), vx:rnd(-0.4,0.2), vy:rnd(0.5,1.4),
