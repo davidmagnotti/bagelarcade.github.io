@@ -510,7 +510,7 @@ function placeObjectsMain(){
   // Greyharbor rings its harbor: every house sits out on the shoreline rather than
   // huddled around the well, strung along the promenade lane (carved in genMainland,
   // which also links the ring to the King's Roads). Going round the shore:
-  addBuilding('house', V.x-11,V.y+3, "Harbor house");                 // (66,257) west shore, over the docks
+  addBuilding('house', V.x-15,V.y+6, "Harbor house");                 // (62,260) SW shore - shifted left/down off the dock->village dirt path
   addBuilding('house', V.x-12,V.y-3, 'Thimble & Thread (Clothier)').closedMsg='<b>Thimble &amp; Thread</b> has its shutters down and its needles away. “Mira sews by daylight, dear - come back then.”'; // (65,251) north-west shore
   addBuilding('house2',V.x-6, V.y-10,"Ivo's Herbary");               // (71,244) north shore
   addBuilding('house2',V.x,   V.y-11,"Warden's post");               // (77,243) north point
@@ -6051,7 +6051,10 @@ function placeReachHazard(){
   _curseHint('reachCurseSeen','<b>The storm over Stormreach will not break</b> - the sea has climbed the shingle and the coast lies half-drowned in surge and wrack. Whatever churns the water dens below the graveyard, in the <b>Drowned Catacomb</b>.');
 }
 
-/* ---- Act II returned-isle DIALOGUE: the folk speak the wound while it stands, and speak
+/* ---- Act II returned-isle DIALOGUE.  NOTE: the damaged/restored lines below are the
+   SOURCE OF TRUTH in js/00-dialogue.js (DIALOGUE.curse / DIALOGUE.restore) and are
+   re-applied by applyIdleDialogue on every world entry - edit them THERE, not here.
+   The folk speak the wound while it stands, and speak
    their relief once you break it. Each is gated on the Warding Veil (so it never touches the
    Act I town) and picks the damaged or restored line-set by the isle's spirit-dungeon clear
    flag. Called from switchWorld's per-isle block, which re-spawns the NPCs every visit - so a
@@ -6886,6 +6889,10 @@ function switchWorld(id){
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1; }
   }
+  // DIALOGUE has the final word: overlay every NPC's chatter (and story-state mood)
+  // from js/00-dialogue.js, after the built-in mood updaters above. See that file to
+  // edit any spoken line by hand.
+  if(typeof applyIdleDialogue==='function') applyIdleDialogue();
   if(typeof placeBankerByInn==='function') placeBankerByInn();   // a banker by the inn, on every town that has one
   Snd.quest();   // arrival chime (island-name intro banner removed by request)
   updateQuestUI(); refreshUI();

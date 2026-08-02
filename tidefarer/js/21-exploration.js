@@ -160,6 +160,10 @@ function boot(){
   weatherAll();
   G.worldId='isle';
   genIsleAll();
+  // Central dialogue (js/00-dialogue.js) is the source of truth: apply quest text once,
+  // and overlay the isle's NPC chatter after the initial spawn.
+  if(typeof applyQuestDialogue==='function') applyQuestDialogue();
+  if(typeof applyIdleDialogue==='function') applyIdleDialogue();
   if(typeof placeBankerByInn==='function') placeBankerByInn();   // Emberwick's banker, by the Ember Hearth inn
   for(let i=0;i<6;i++) G.clouds.push({x:Math.random()*MAPW, y:Math.random()*MAPH,
     vx:rnd(0.25,0.5), vy:rnd(-0.12,0.12), r:rnd(48,90)});

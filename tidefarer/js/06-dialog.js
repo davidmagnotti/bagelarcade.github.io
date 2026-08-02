@@ -705,10 +705,6 @@ function shopButtons(npc,btns){
   if(npc.id==='rook'){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Straight off the shelf, friend - the red Ember Tonic for the small hurts, the blue elixir for when the small hurts aren\'t. What\'ll it be?',
       [{item:'potion',price:30},{item:'elixir',price:70}])});
-    btns.unshift({label:'“Weren’t you a fletcher?”', fn:()=>{
-      setDialog('“Arrows? That was more my cousin\'s calling than mine - she kept the bow, I kept the kettle, out east past the water. Steadier work, this: mending folk instead of putting holes in them. Tell her I still owe her twenty gold.”',
-        shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
-    }});
   }
   if(npc.id==='hedda'){
     if(!P.home) btns.unshift({label:'Buy the homestead (250g)', fn:()=>{
