@@ -191,7 +191,7 @@ function buildDialogContent(npc){
   if(npc.id==='vath' && P.story && !P.story.vathGreet && qs('wyrm')!=='done'){
     const p4=()=>{
       P.story.vathGreet=1;
-      setDialog('<i>He spreads his hands, all warmth again.</i> “But here I am, running on, and you did not climb all this way for an old man’s riddles.” <i>The smile returns; it still does not reach his eyes.</i> “There is a matter on this isle that someone of your… talents could set right. And I pay - handsomely. Shall I tell you of it?”',
+      setDialog('<i>He spreads his hands, all warmth again.</i> “But here I am, running on, and you did not climb all this way for an old man’s riddles.” <i>The smile returns; it still does not reach his eyes.</i> “There is a matter on this isle that someone of your… talents could set right. A beast in the mountain has made a misery of the good folk here - and will make ash of them before long. End their torment, and you would have their thanks, and mine. Shall I tell you of it?”',
         [{label:'Go on', cls:'gold', fn:()=>buildDialogContent(npc)}]);
     };
     const p3=()=>{

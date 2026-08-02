@@ -4467,7 +4467,7 @@ QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill'
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
-  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. A wanderer pays well for a dead dragon - I have coin, and reasons of my own.',
+  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. Free these people of it and you would have my thanks - I have reasons of my own for wanting that fire gone cold.',
   log:'Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
