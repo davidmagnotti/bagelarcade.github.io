@@ -144,6 +144,45 @@ function genWorld(){
   carveDisc(26,101,3,T.SAND,false);     // its pale beach
   carveDisc(26,101,2,T.GRASS,false);    // a scrap of green to stand on
   shapeHollowKingApproach();
+  carveCastawayCove();
+}
+
+/* The castaway's cove: a small wash-ashore BEACH on the village's WEST shore, just
+   left of the well, where Elder Maren draws the masked castaway out of the surf at
+   the start of the game (the spawn point - see startFresh / startIntro). The village
+   grass otherwise runs straight into the strait with no beach, and the near-shore is
+   crowded by the inn and Maren's cottage - so this reaches a little sand SPIT out
+   into the water instead, an open crescent of real SAND ringed by a wet SHALLOW
+   tideline, clear of the buildings. Kept off the inn (41,57) and cottage (44,54). */
+function carveCastawayCove(){
+  // integer-safe disc fill (carveDisc iterates in fractional steps when the radius
+  // is not a whole number, which silently no-ops - so lay sand over exact tiles here)
+  const sand=(cx,cy,r,onlyLand)=>{
+    for(let y=Math.floor(cy-r);y<=Math.ceil(cy+r);y++)
+      for(let x=Math.floor(cx-r);x<=Math.ceil(cx+r);x++){
+        if(!inb(x,y) || dist(x,y,cx,cy)>r) continue;
+        if(onlyLand && !walkTile(tileAt(x,y))) continue;
+        setTile(x,y,T.SAND);
+      }
+  };
+  // an on-shore beach: the village's west-shore grass turned to SAND (land only, so the
+  // strait itself stays water - we never bridge across to the driftwood dock). A broad
+  // pale crescent hugging the waterline, north of the inn and around the well's lane.
+  sand(40,53, 3.6, true);
+  sand(41,56, 2.6, true);
+  sand(39,51, 2.2, true);
+  // pull the waterline one tile west right where the castaway wakes, so she lies on
+  // open sand with the tideline in front of her (the deep strait channel further west
+  // is left untouched, so the crossing to the dock stays a real water gap)
+  for(const [x,y] of [[39,52],[39,53],[39,54],[39,55],[39,56]]) if(tileAt(x,y)===T.SHALLOW) setTile(x,y,T.SAND);
+  // soften the deep water right at the new beach's edge to a wet SHALLOW tideline, so
+  // the sand meets a lapping shore instead of a hard drop into deep sea
+  for(let y=48;y<=59;y++) for(let x=36;x<=43;x++){
+    if(!inb(x,y) || tileAt(x,y)!==T.DEEP) continue;
+    let nearSand=false;
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) if(tileAt(x+dx,y+dy)===T.SAND){ nearSand=true; break; }
+    if(nearSand) setTile(x,y,T.SHALLOW);
+  }
 }
 
 /* Reshape the northern ruins into the Hollow Spirit's approach:

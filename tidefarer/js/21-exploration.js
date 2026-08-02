@@ -296,20 +296,22 @@ function startFresh(){
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';
   G.state='play';
-  // wash ashore right beside Elder Maren, down by the water - she is the one who draws
-  // you out of the surf, so the castaway wakes at her side on the shore (not at the forge).
-  const greeter=(G.npcs||[]).find(n=>n.id==='maren');
+  // wash ashore on the castaway's cove - a little beach on the village's WEST shore
+  // (carved in genIsle, to the LEFT of the village), where Elder Maren draws you out
+  // of the surf. Wake ON the sand at the waterline, facing the sea you came in on.
+  // Prefer an actual sand tile; fall back to any open tile near the cove.
+  const COVE={x:40, y:53};
   let sp=null;
-  if(greeter && typeof findOpenNear==='function'){
-    for(const off of [[1,1],[0,1],[1,0],[-1,1],[1,-1],[0,2],[2,0],[-1,0],[0,-1]]){
-      const c=findOpenNear(Math.round(greeter.x+off[0]), Math.round(greeter.y+off[1]), 2);
-      if(c && dist(c[0]+0.5,c[1]+0.5,greeter.x,greeter.y)>=1){ sp=c; break; }
+  if(typeof tileAt==='function' && typeof T!=='undefined'){
+    // wake on the beach sand nearest the water's edge, then working inland
+    for(const [x,y] of [[39,54],[40,54],[39,53],[40,53],[39,55],[40,52],[41,54],[41,53]]){
+      if(tileAt(x,y)===T.SAND){ sp=[x,y]; break; }
     }
   }
+  if(!sp && typeof findOpenNear==='function') sp=findOpenNear(COVE.x,COVE.y,3);
   if(sp){ P.x=sp[0]+0.5; P.y=sp[1]+0.5; }
-  else if(greeter){ P.x=greeter.x+1.5; P.y=greeter.y+0.5; }
-  else { P.x=56.5; P.y=58.5; }
-  P.dir={x:1,y:0};
+  else { P.x=COVE.x+0.5; P.y=COVE.y+0.5; }
+  P.dir={x:-1,y:0};   // facing the sea, to the west
   if(typeof unstickEntity==='function') unstickEntity(P);   // never wake wedged in a wall
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
