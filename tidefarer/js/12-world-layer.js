@@ -3266,7 +3266,13 @@ function placeObjectsUndermaw(){
   // reward:1 marks the Deep Hoard as this dungeon's reward room, so killMob opens it here (it
   // already does, via the m.undermawBeast handler) and never drops a "way out" at the boss instead
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', reward:1, tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
-  if(!(P.story && P.story.undermawArmor)) G.decor.push({kind:'chest', x:22.5, y:4.5, undermawArmor:1});
+  // The Maw-Stalker's prize (the Rivenedge Axe) is dropped into the Deep Hoard here, at 22,4 - the
+  // reward-room chest, right where the old Deepiron Ward used to sit (see awardDungeonTool's `spot`).
+  // A wall of mineable BASALT seals the hoard's climb-out (the "way out") off from the rest of the
+  // room, so once the boss falls you can try the tiered-pick mining right here: cut one block through
+  // with a tier-2+ pick (the Cragbreaker) to open the shortcut. Never a soft-lock - the entrance
+  // way-up at the Maw always stands open, so a delver without the pick just walks back down.
+  if(typeof addGateNode==='function') for(let gy=2; gy<=8; gy++) addGateNode('basalt', 25, gy);
   // A supply cache in the corridor just before the den: three Ember Tonics for the
   // boss fight. Claimed once, then it stays taken across later descents.
   if(!(P.story && P.story.undermawTonics)) G.decor.push({kind:'chest', x:22.5, y:37.5, mawTonics:1});
@@ -6412,16 +6418,6 @@ function openChest(b){
     banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
     setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The miller’s arms-chest gives up the heavy <b>winch-crank</b> that fits the seized sluice valves throughout the works.</i> Now <b>work the sluices</b> to drain the flooded halls and climb to the guardian at the top.', {label:'OK'});
       else toast('The miller’s arms-chest gives up the <b>winch-crank</b> for the sluices. Now <b>work the valves</b> to drain the flooded halls.',6600); },400);
-    setTimeout(autoSave,300);
-    return;
-  }
-  if(b.undermawArmor){
-    bumpStat('chests');
-    P.story=P.story||{}; P.story.undermawArmor=1;
-    give('wardplate',1);
-    banner('THE DEEPIRON WARD','+15% DEFENCE WHILE CARRIED');
-    shockwave(b.x,b.y,'rgba(150,200,230,0.9)',56); burst(b.x,b.y-0.5,'#9ab0c8',18,2.6); Snd.levelup&&Snd.levelup();
-    setTimeout(()=>toast('A slab of black deep-iron, cold and old, worked into a ward-plate. The <b style="color:#9ab0c8">Deepiron Ward</b> turns aside <b>15% of every blow</b> while you carry it - atop any armour you wear.',6800),400);
     setTimeout(autoSave,300);
     return;
   }
