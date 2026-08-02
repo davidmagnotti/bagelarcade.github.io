@@ -30,12 +30,32 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; if(e.key===' ') input.attack=false; });
 
-cv.addEventListener('mousemove',e=>{ input.mx=e.clientX; input.my=e.clientY;
+/* Release every held control when the game loses focus. Without this, a movement
+   key or an on-screen button held at the moment another window/pop-up steals focus
+   never receives its keyup / pointerup - so the hero keeps walking or swinging on
+   its own when you tab back in. Fires on window blur and on the tab going hidden. */
+function clearHeldInput(){
+  for(const k in keys) keys[k]=false;
+  input.attack=false;
+  input.mouseDown=false;
+  if(input.joy.active && typeof joyRelease==='function') joyRelease();
+}
+window.addEventListener('blur', clearHeldInput);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) clearHeldInput(); });
+
+cv.addEventListener('mousemove',e=>{ if(isTouch) return; input.mx=e.clientX; input.my=e.clientY;
   if(input.mouseDown && P.click && P.click.type==='pos' && !G.interior){
     const w=screenToWorld(e.clientX,e.clientY); P.click.x=w.x; P.click.y=w.y;
   }
 });
-cv.addEventListener('mousedown',e=>{ if(G.state!=='play') return;
+cv.addEventListener('mousedown',e=>{
+  // Touch devices move with the joystick and act with the on-screen buttons -
+  // there is no tap-to-move. Ignore mouse events on the canvas so a stray touch,
+  // or a browser-synthesised "compatibility" mouse event fired while thumbing the
+  // dodge/attack button, can't set a walk-here target and send the hero wandering
+  // off (the "dash reads as a phantom tap" bug on mobile).
+  if(isTouch) return;
+  if(G.state!=='play') return;
   Snd.init(); input.mouseDown=true;
   if(G.bossIntro) return;                 // input held for the entrance beat
   if(dlg.open) return;

@@ -55,7 +55,7 @@ if(safe) SAFE=true;
    costs almost nothing (the tuner is one-way-down and can't climb back up). */
 const softCanvas = (typeof SOFTCANVAS!=='undefined') && SOFTCANVAS;
 let tier = safe ? MAX : (softCanvas && !USERGFX ? 1 : 0);
-let acc=0, cnt=0, prev=0, cooldownUntil=0;
+let acc=0, cnt=0, prev=0, cooldownUntil=0, slowStreak=0;
 
 function apply(){
   RQ=TIERS[tier].rq;
@@ -66,6 +66,18 @@ function apply(){
   if(typeof resize==='function') resize();
 }
 apply();
+
+/* One stall frame - another window/pop-up grabbing the main thread, a GC pause,
+   or the tab returning to the foreground - used to be enough to slam the render
+   scale to the floor (this tuner is one-way-down), leaving the whole screen fuzzy
+   until a refresh reset the tier. Guard it: drop the current timing window on any
+   focus/visibility change so the catch-up frame after a stall is never measured,
+   and (below) require the slowness to actually persist before stepping down. */
+function resetTiming(){ prev=0; acc=0; cnt=0; slowStreak=0; }
+window.addEventListener('blur', resetTiming);
+window.addEventListener('focus', resetTiming);
+window.addEventListener('pageshow', resetTiming);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) resetTiming(); });
 
 const _frame=frame;
 frame=function(ts){
@@ -84,10 +96,19 @@ frame=function(ts){
     // collapsed to a slideshow, in which case rescue regardless of the lock.
     if(USERGFX && avg<CATASTROPHIC) return;
     if(avg>22 && tier<MAX){                 // under ~45fps: step down
-      const jump = avg>120 ? 3 : avg>55 ? 2 : 1;   // very slow => drop harder
-      tier=Math.min(MAX, tier+jump);
-      apply();
-      cooldownUntil=ts+900;                 // let the new tier settle
+      // Only step down once the slow reading has held across two evaluation
+      // windows (~1.2s). A lone transient hitch trips one window and the next
+      // window recovers - resetting the streak - so it can no longer drag the
+      // render resolution to the floor permanently (the "fuzzy until refresh" bug).
+      if(++slowStreak>=2){
+        const jump = avg>120 ? 3 : avg>55 ? 2 : 1;   // very slow => drop harder
+        tier=Math.min(MAX, tier+jump);
+        apply();
+        cooldownUntil=ts+900;                 // let the new tier settle
+        slowStreak=0;
+      }
+    } else {
+      slowStreak=0;                          // frames are healthy again
     }
     // (The old "shrink the window" fallback at the lowest tier was removed with
     //  Performance mode - the lowest tier already engages the Fast-graphics
