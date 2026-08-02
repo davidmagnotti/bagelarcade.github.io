@@ -354,7 +354,9 @@ function addBuilding(kind,x,y,label){
   // side). Widen the broad residential sprites to a symmetric 3-wide base so the
   // whole visible base is solid; the front (south) row stays open so the door is
   // still reachable.
-  const fp = {house:[3,2],house2:[3,2],igloo:[3,2],forge:[3,2],barn:[3,2],tower:[2,2],castle:[6,3],hut:[2,2],volcano:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0],resort:[6,4],windmill:[3,3],waterwheel:[4,3],fruitstand:[1,1],stall:[1,1],bazaar:[1,1]}[kind]||[0,0];
+  // castle widened to [8,4]: the keep sprite's stone base is far broader than the old
+  // [6,3] block, which left the towers and curtain wall as thin air you could stroll through.
+  const fp = {house:[3,2],house2:[3,2],igloo:[3,2],forge:[3,2],barn:[3,2],tower:[2,2],castle:[8,4],hut:[2,2],volcano:[6,3],well:[1,1],boat:[0,0],lamp:[0,0],crypt:[0,0],resort:[6,4],windmill:[3,3],waterwheel:[4,3],fruitstand:[1,1],stall:[1,1],bazaar:[1,1]}[kind]||[0,0];
   for(let dy=0;dy<fp[1];dy++) for(let dx=0;dx<fp[0];dx++) setSolid(Math.floor(x)+dx-Math.floor(fp[0]/2), Math.floor(y)+dy-Math.floor(fp[1]/2), 1);
   return b;
 }

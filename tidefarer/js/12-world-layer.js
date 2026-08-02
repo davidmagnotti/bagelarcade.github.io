@@ -12,7 +12,7 @@ const MAIN_ZONES = { // BARIK - ten times the home shores
   tower:    {x:254,y:65,  r:11, name:'Stormwatch Peak', lv:[8,10]},
   farm:     {x:293,y:213, r:16, name:'Barik Farmsteads', lv:[1,3]},
   mines:    {x:91, y:148, r:12, name:'Old Barik Mines', lv:[3,5]},
-  castle:   {x:118,y:300, r:14, name:'Barik Keep', lv:[1,1]},
+  castle:   {x:110,y:300, r:14, name:'Barik Keep', lv:[1,1]},
   spire:    {x:196,y:332, r:8,  name:"Aelin's Spire", lv:[2,4]},
   hollow:   {x:162,y:148, r:6,  name:"Thieves' Hollow", lv:[7,7]},
   desert:   {x:300,y:112, r:32, name:'Sunscour Valley', lv:[11,14]},
@@ -350,7 +350,7 @@ function genMainland(){
   carveDisc(ZONES.tower.x,ZONES.tower.y,ZONES.tower.r,T.RUIN,false);
   carveDisc(ZONES.farm.x,ZONES.farm.y,ZONES.farm.r,T.GRASS,false);
   carveDisc(ZONES.mines.x,ZONES.mines.y,ZONES.mines.r,T.RUIN,false);
-  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.PATH,false);   // keep courtyard
+  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.GRASS,false);   // keep grounds - an open grass meadow before the keep, not a dirt courtyard
   carveDisc(ZONES.spire.x,ZONES.spire.y,ZONES.spire.r,T.GRASS,false);
   carveDisc(ZONES.desert.x,ZONES.desert.y,ZONES.desert.r,T.SAND,false);   // Sunscour
   carveDisc(ZONES.desert.x-14,ZONES.desert.y+16,16,T.SAND,false);
@@ -454,11 +454,17 @@ function placeObjectsMain(){
     if(t!==T.GRASS&&t!==T.FOREST) continue;
     if(dist(x,y,ZONES.village.x,ZONES.village.y)<ZONES.village.r) continue;
     if(dist(x,y,ZONES.tower.x,ZONES.tower.y)<ZONES.tower.r) continue;
+    if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // keep the keep's grass meadow clear
+    // leave a one-tile margin along the King's Roads so no tree overhangs and blocks the path
+    let byRoad=false;
+    for(let ry=-1;ry<=1&&!byRoad;ry++) for(let rx=-1;rx<=1;rx++) if(tileAt(x+rx,y+ry)===T.PATH){ byRoad=true; break; }
+    if(byRoad) continue;
     const p=(t===T.FOREST)?0.22:0.05;
     if(r()<p) addNode('tree',x,y);
   }
   for(let i=0;i<300;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     const t=tileAt(x,y);
+    if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // no stone strewn across the keep meadow
     if((t===T.GRASS||t===T.FOREST||t===T.RUIN)&&!solidAt(x,y)&&r()<0.7) addNode('rock',x,y); }
   for(let i=0;i<50;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     if(tileAt(x,y)===T.FOREST&&!solidAt(x,y)) addNode('mushroom',x,y); }
