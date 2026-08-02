@@ -13,7 +13,6 @@ const ACH={
   plunderer:{t:'Plunderer',d:'Open 4 treasure chests.'},
   globetrotter:{t:'Across the Strait',d:'Reach the mainland.'},
   kingslayer:{t:'Kingslayer',d:'Fell the Hollow Spirit.'},
-  wolfsbane:{t:'Wolfsbane',d:'Slay Greymaw, the Alpha.'},
   wayfarer:{t:'Wayfarer',d:'Chart every region of an island.'},
   // ---- the other named bosses of the archipelago (awarded on their defeat) ----
   gravebane:{t:'Gravebane',d:'Unmake Gravelord Varek in the Old Ruins.'},
@@ -42,7 +41,7 @@ function award(id){
 const BOSS_MP=5;
 function bossReward(m){
   P.ach=P.ach||{};
-  const key = m.ach || (m.kind==='boss' ? 'kingslayer' : m.kind==='alpha' ? 'wolfsbane' : null);
+  const key = m.ach || (m.kind==='boss' ? 'kingslayer' : null);
   if(!key || !ACH[key]) return;
   if(!P.ach[key]){                                   // first fall only
     P.maxmp += BOSS_MP; P.mp = P.maxmp;
@@ -69,7 +68,6 @@ function checkStats(){
 function worldFlagsFrom(mobs,decor){
   return {
     bossDead: mobs.some(m=>m.boss&&m.dead),
-    alphaDead: mobs.some(m=>m.kind==='alpha'&&m.dead),
     chests: decor.filter(b=>b.kind==='chestOpen').map(b=>[Math.round(b.x*2),Math.round(b.y*2)])
   };
 }
@@ -95,7 +93,6 @@ function applyWorldFlags(f){
   if(f.bossDead){ const b=G.mobs.find(m=>m.boss); if(b){b.dead=true;b.respawnT=-1;} G.flags.intro_boss=true;
     // the King's bone-guard fell with him - never respawn the northern-spit skeletons on reload
     for(const o of G.mobs){ if(o.kind==='skeleton'){ o.dead=true; o.respawnT=-1; } } }
-  if(f.alphaDead){ const a=G.mobs.find(m=>m.kind==='alpha'); if(a){a.dead=true;a.respawnT=-1;} G.flags.intro_alpha=true; }
   for(const c of (f.chests||[])){
     const ch=G.decor.find(b=>b.kind==='chest'&&Math.round(b.x*2)===c[0]&&Math.round(b.y*2)===c[1]);
     if(ch){ ch.opened=true; ch.kind='chestOpen'; }

@@ -753,8 +753,11 @@ function spawnMobsMain(){
       if(s){ const m=spawnMob(kind,s[0],s[1], pr()<eliteP); if(m && opt && opt.tag) m[opt.tag]=1; }
     }
   }
-  // Greymaw dens atop Wolfcrag
-  { const gm=spawnMob('alpha', ZONES.highlands.x, ZONES.highlands.y-2); if(gm) gm.entrance='loom'; }
+  // a den of wolves atop Wolfcrag (the old Greymaw den - now just a thick pack)
+  { const wr=mulberry32(SEED+77);
+    for(let i=0;i<6;i++){ const a=wr()*TAU, dd=1+wr()*3.5;
+      const s=findOpenNear(Math.round(ZONES.highlands.x+Math.cos(a)*dd),Math.round(ZONES.highlands.y-2+Math.sin(a)*dd),4);
+      if(s) spawnMob('wolf', s[0], s[1], wr()<0.4); } }
   // peak guardians around the chest
   spawnMob('skeleton',ZONES.tower.x-2,ZONES.tower.y+1,true);
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
@@ -4468,7 +4471,7 @@ QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:
   brief:"The wilds have turned. Crimson-ringed beasts - elites, we call them - press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
   log:'Slay 8 elite beasts anywhere on the mainland.',
   doneText:"Eight heads' worth of quiet. The road breathes easier - and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
-  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['alpha','embers'] };
+  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['embers'] };
 QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'springs',
   brief:"My grandmother swore there were warm springs in the western hills - water that closes wounds. I'm too old for the walk and too stubborn to admit it. Find them for me. Just… find them.",
   log:'Discover the Ember Springs in the isle\'s western hills.',
@@ -4512,7 +4515,6 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
 ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
-ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
 ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60};
@@ -4520,12 +4522,6 @@ ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
 ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
 ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
 ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.'};
-QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
-  brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
-  log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
-  doneText:"By the tides... you actually did it. The howling stopped last night - now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name.",
-  rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
-
 /* =====================================================================
    ACT I FINALE - "The Enchanter's Tide" turns. The King's audience sets you
    after Vath, and after the truth of his lost children. The pendant is a
@@ -4619,7 +4615,7 @@ QUESTS.reachRestore={ giver:'mora', title:'The Storm That Drowns the Coast', kin
 // but unaccepted is purged at the Act II transition. The Duchess chain (duchesslove/duchessreply)
 // is deliberately excluded - it is the one Act I errand that carries into Act II.
 const ACT1_ISLE_QUESTS=['welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1',
-  'ribbon1','ribbon2','ribbon3','feud1','feud2','sting1','undermaw1','bounty','alpha','embers',
+  'ribbon1','ribbon2','ribbon3','feud1','feud2','sting1','undermaw1','bounty','embers',
   'mossbrew','pearlq','hunt1','tame1','wyrm','vhunt','board','sail','tide','breakers'];
 // Clear any of the above that is merely offered ('avail') but never accepted, so a returned isle
 // shows none of its Act I quest-board work. Accepted ('active') and finished ('done') quests are
@@ -4880,13 +4876,6 @@ function buildExtraSprites(){
     g.strokeStyle='rgba(70,40,15,0.8)'; g.lineWidth=1.6;
     g.beginPath(); g.moveTo(10,15); g.lineTo(14,25); g.moveTo(16,14); g.lineTo(20,26); g.moveTo(22,15); g.lineTo(26,25); g.stroke();
     g.fillStyle='#3a2a1a'; g.beginPath(); g.arc(11,19,1.4,0,TAU); g.fill(); });
-  ICONS.fang=makeCanvas(40,40,(g)=>{
-    g.fillStyle='#eee7d8';
-    g.beginPath(); g.moveTo(12,8); g.quadraticCurveTo(26,10,28,32);
-    g.quadraticCurveTo(16,26,12,8); g.closePath(); g.fill();
-    g.strokeStyle='rgba(60,45,25,0.8)'; g.lineWidth=1.5; g.stroke();
-    g.fillStyle='#c9a24e'; g.fillRect(9,5,10,5);
-  });
   // relic icon
   ICONS.relic=makeCanvas(40,40,(g)=>{
     g.fillStyle='#3a5a80'; g.beginPath();

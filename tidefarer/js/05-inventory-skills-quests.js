@@ -47,7 +47,7 @@ function dmgLvl(lvl){
   if(lvl <= s) return lvl;
   return s + 2*Math.sqrt(s)*(Math.sqrt(lvl) - Math.sqrt(s));
 }
-function meleeDmg(){ return Math.round(6 + P.swordTier*4 + dmgLvl(P.skills.melee.lvl)*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0) + (has('fang',1)?8:0)); }
+function meleeDmg(){ return Math.round(6 + P.swordTier*4 + dmgLvl(P.skills.melee.lvl)*2 + (has('charm',1)?3:0) + (has('warcharm',1)?5:0) + (has('relic',1)?4:0)); }
 // The bow is now a hard-hitting, rationed weapon (a quiver of 20 that trickles
 // back) - so each shaft bites far deeper than the old free-fire bow did.
 function bowDmg(){ return Math.round(28 + dmgLvl(P.skills.archery.lvl)*4 + (has('charm',1)?6:0) + (has('warcharm',1)?10:0) + (has('relic',1)?8:0)); }
@@ -228,7 +228,7 @@ function questTargetPos(id){
     if(id==='slimes') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='skeletons'||id==='king') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='cat') return (G.cat && !G.cat.found)? {x:ZONES.forest.x,y:ZONES.forest.y} : null;
-    if(id==='bounty'||id==='alpha') return ZONES.highlands? {x:ZONES.highlands.x,y:ZONES.highlands.y} : {x:ZONES.ruins.x,y:ZONES.ruins.y};
+    if(id==='bounty') return ZONES.highlands? {x:ZONES.highlands.x,y:ZONES.highlands.y} : {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='shells'||id==='pearlq') return {x:ZONES.dock.x,y:ZONES.dock.y-2};
     if(id==='springs') return {x:ZONES.springs.x,y:ZONES.springs.y};
     if(id==='cove') return {x:ZONES.cove.x,y:ZONES.cove.y};
@@ -269,7 +269,7 @@ function questTargetPos(id){
   const n=G.npcs.find(n=>n.id===q.giver); return n&&{x:n.x,y:n.y};
 }
 function primaryQuest(){
-  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   for(const id of order) if(qs(id)==='active') return id;
   for(const id of order) if(qs(id)==='avail') return null;
   return null;

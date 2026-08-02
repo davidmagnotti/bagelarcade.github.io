@@ -879,11 +879,6 @@ const DIALOGUE = {
       log: "Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.",
       doneText: "Kind hands, kind harvest. Here - three bottles, brewed slow. And drink this thimble now: my quickroot draught. Your legs will remember it when one dodge is not enough."
     },
-    "alpha": {
-      brief: "The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
-      log: "Slay Greymaw, the Alpha, atop Wolfcrag Highlands.",
-      doneText: "By the tides... you actually did it. The howling stopped last night - now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name."
-    },
     "pendant": {
       brief: "The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
       log: "Sail to Emberwick and show the pendant to Sage Orin at his tower.",

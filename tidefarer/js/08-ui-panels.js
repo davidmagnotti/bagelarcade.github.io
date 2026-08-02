@@ -227,7 +227,6 @@ function refreshInvPanel(){
   if(has('charm',1)) tr.push('Ember Charm <span style="color:#9be07f">+3</span>');
   if(has('warcharm',1)) tr.push('Battleworn Charm <span style="color:#9be07f">+5</span>');
   if(has('relic',1)) tr.push('Stormwatch Relic <span style="color:#9be07f">+4</span>');
-  if(has('fang',1))  tr.push('Greymaw\u2019s Fang <span style="color:#9be07f">+8 melee</span>');
   if(has('wardstone',1)) tr.push('Warden\u2019s Wardstone <span style="color:#9be07f">-2 dmg taken</span>');
   if(has('boots',1)) tr.push('Trailblazer Boots <span style="color:#9be07f">+14% speed</span>');
   if(has('crown',1)) tr.push('Hollow Crown <span style="color:#9be07f">+25 HP</span>');
@@ -240,7 +239,7 @@ function refreshInvPanel(){
     cv2.getContext('2d').drawImage(ICONS[cv2.dataset.eqicon]||iconCanvas('stone'),0,0);
   });
   // ---- the satchel: tap selects; the action card below does the doing ----
-  const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0);
+  const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0 && ITEMS[k]);   // skip any retired item left in an old save (e.g. the removed Greymaw's Fang)
   if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:12px;color:var(--parch-dim);">Satchel\u2019s empty. The island provides - go poke it.</div>'); return; }
   if(INV_SEL && !(P.inv[INV_SEL]>0)) INV_SEL=null;
   grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:11px;letter-spacing:2px;color:#9a917f;margin:2px 0 4px;">SATCHEL</div>');
@@ -306,7 +305,7 @@ function refreshQuestLog(){
   const box=document.getElementById('qlog'); box.innerHTML='';
   const qf=(document.getElementById('qsearch').value||'').trim().toLowerCase();
   const matches=(t)=>!qf || String(t).toLowerCase().includes(qf);
-  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   let any=false;
   for(const id of order){
     const st=qs(id); if(!st || st==='avail') continue;
@@ -388,7 +387,7 @@ function questReadySweep(){
 function updateQuestUI(){
   questReadySweep();
   const tc=document.getElementById('trackerCards'); tc.innerHTML='';
-  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','alpha','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
+  const order=['welcome','kit','bladeoath','sharpen','slimes','mushrooms','skeletons','king','fish','harvest','cat','shells','pearlq','remember','springs','cove','orchard','wreck','fittings','provisions','masterwork','wolffold','feast','necklace','profit','echoes','gravelord','setsail','bounty','embers','mossbrew','welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1','feud1','feud2','sting1','duchesslove','duchessreply','undermaw1','ribbon1','ribbon2','ribbon3','hunt1','tame1','surf1','board','tide','roost','thaw','audience','pendant','enchanter','homecoming'];
   const act=order.filter(id=>QUESTS[id] && qs(id)==='active');
   const rdy=act.some(id=>questReady(id));
   G._qbtn={act:act.length, ready:rdy};

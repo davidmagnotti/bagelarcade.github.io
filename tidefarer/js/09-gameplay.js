@@ -783,7 +783,7 @@ function drawMobBars(m,s){
     const dl=(m.lvl||1)-(P.level||1);
     cx.font='bold 9px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
     cx.fillStyle= dl>=3?'#ff6a5a': dl>=1?'#ffd76a': dl<=-3?'#8a94a0':'#e8e0d0';
-    const top2= m.kind==='scorpion'? -36 : m.kind==='dragon'? -128 : m.boss?-102: m.kind==='alpha'?-94: -58;
+    const top2= m.kind==='scorpion'? -36 : m.kind==='dragon'? -128 : m.boss?-102: -58;
     cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=2.6;
     cx.strokeText('Lv '+(m.lvl||1), s.x, s.y+top2);
     cx.fillText('Lv '+(m.lvl||1), s.x, s.y+top2);
@@ -986,7 +986,7 @@ const OVERWORLD_PARENT = { frostvault:'frost', frostdeep:'frost', aeriedeep:'aer
 // named foes, and every dungeon beast - the full roster crowd-control (snare)
 // must never touch. Keep this list in step with the isle-clear check below.
 function isBossMob(m){
-  return !!(m && (m.boss||m.bigBoss||m.kind==='boss'||m.kind==='alpha'||m.vaultbear||m.skyboss
+  return !!(m && (m.boss||m.bigBoss||m.kind==='boss'||m.vaultbear||m.skyboss
     ||m.skyfinalboss||m.tombboss||m.reachboss||m.millboss||m.undermawBeast));
 }
 // Record that this isle's boss has fallen. Once cleared, the wilds stop sending
@@ -1008,7 +1008,7 @@ function killMob(m,skill){
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
-  // named bosses (the Hollow Spirit & Greymaw by kind, every other boss by its
+  // named bosses (the Hollow Spirit by kind, every other boss by its
   // ach tag) grant their achievement AND a one-time +max-mana on defeat
   bossReward(m);
   // felling any isle boss - the marquee bosses, the regional named foes, or the
@@ -1037,13 +1037,6 @@ function killMob(m,skill){
     else if(Math.random()<0.30) na=rndi(1,2);
     if(m.elite) na*=2;
     if(na>0) G.parts.push({x:m.x-0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'arrows',n:na,size:9,color:''});
-  }
-  if(m.kind==='alpha'){
-    Snd.boss(); G.shake=0.8; G.slowmo=1.0;
-    shockwave(m.x,m.y,'rgba(255,140,110,0.9)',70);
-    banner('GREYMAW FALLS','THE HIGHLANDS GO QUIET');
-    give('fang',1);
-    toast('<b style="color:#ffb0a0">Greymaw\'s Fang</b> - +8 melee damage while carried.',5200);
   }
   if(m.kind==='boss'){
     // THE Hollow Spirit (Emberwick's main-story boss) - the only fall that seals
@@ -1907,18 +1900,6 @@ function updateMobs(dt){
           for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
             G.projs.push({kind:'hex',x:m.x,y:m.y-0.9,vx:Math.cos(ca)*7.5,vy:Math.sin(ca)*7.5,life:1.7,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
           if(Snd.magic) Snd.magic();
-        }
-      }
-      if(m.kind==='alpha'){
-        m.lungeCd=(m.lungeCd||3)-dt;
-        if(m.lungeCd<=0 && l>2.2 && l<7.5){
-          m.lungeCd=4.2; m.lunge=0.5;
-          Snd.noise(0.35,0.07,300,0.6); Snd.tone(180,0.4,'sawtooth',0.06,-90); // howl
-          addFloat('HOWL', m.x, m.y-2.4, '#ffb0a0', 1.2);
-        }
-        if((m.lunge||0)>0){ m.lunge-=dt;
-          moveEntity(m, dx/l*d.speed*2.6*dt, dy/l*d.speed*2.6*dt);
-          if(Math.random()<0.5) G.parts.push({x:m.x,y:m.y,vx:-dx/l,vy:-dy/l,life:0.3,color:'rgba(190,190,200,0.5)',size:3});
         }
       }
       // THE MAW-STALKER pounces: it periodically telegraphs, then dashes hard at you and

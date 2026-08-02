@@ -3230,15 +3230,7 @@ function drawMob(m,s){
     cx.beginPath(); cx.ellipse(s.x,s.y,15,7,0,0,TAU); cx.stroke();
     cx.save(); cx.translate(s.x,s.y); cx.scale(1.16,1.16); cx.translate(-s.x,-s.y);
   }
-  if(m.kind==='alpha'){
-    cx.save(); cx.translate(s.x,s.y); cx.scale(1.9,1.9); cx.translate(-s.x,-s.y);
-    drawWolf(cx,s.x,s.y,m);
-    cx.restore();
-    const gl=0.6+0.4*Math.sin(G.time*6);
-    cx.fillStyle='rgba(255,60,40,'+(0.7*gl)+')';
-    cx.beginPath(); cx.arc(s.x+m.face*31,s.y-58,2.6,0,TAU); cx.fill();
-  }
-  else if(m.kind==='slime') drawSlime(cx,s.x,s.y,m);
+  if(m.kind==='slime') drawSlime(cx,s.x,s.y,m);
   else if(m.kind==='wolf') drawWolf(cx,s.x,s.y,m);
   else drawSkeleton(cx,s.x,s.y,m);
   if(m.elite) cx.restore();
@@ -3253,7 +3245,7 @@ function drawMob(m,s){
     cx.strokeStyle='rgba(230,225,210,0.8)'; cx.lineWidth=1;
     cx.beginPath(); cx.moveTo(s.x+m.face*9, s.y-37); cx.lineTo(s.x+m.face*9, s.y-17); cx.stroke();
   }
-    const w=m.bigBoss?54:26, top= m.boss?-96: m.kind==='alpha'?-88: m.kind==='slime'?-30:-48;
+    const w=m.bigBoss?54:26, top= m.boss?-96: m.kind==='slime'?-30:-48;
     cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(s.x-w/2,s.y+top,w,4);
     cx.fillStyle= m.boss?'#78dca0':'#e05648'; cx.fillRect(s.x-w/2,s.y+top,w*clamp(m.hp/m.maxhp,0,1),4);
   }

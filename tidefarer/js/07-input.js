@@ -84,7 +84,7 @@ function pickClickTarget(wx,wy){
   let best=null, bd=1.1;
   for(const m of G.mobs){
     if(m.dead||m.sealed) continue;
-    const r=(m.boss||m.kind==='alpha')?1.8:1.0;
+    const r=m.boss?1.8:1.0;
     const d=dist(wx,wy,m.x,m.y-0.3);
     if(d<r && d<bd){ bd=d; best={type:'mob',m}; }
   }
