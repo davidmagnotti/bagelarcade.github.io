@@ -696,7 +696,7 @@ function spawnRealmFolk(){
      'My whole shipment, taken on the north road. The pines have thieves in them now.'],0.5));
   G.npcs.push((()=>{ const cv2=makeNPC('corvo','Captain Corvo', 330.5,243.2,
     {skin:'#b98a62',hair:'#3a3634',shirt:'#3c4a5e',pants:'#2a3038',hat:'hood',hatColor:'#2f3a48'},
-    ['East past the shoals sits an island the charts pretend not to see.',
+    ['You cracked that wizard\'s violet stones for me - I\'ll not soon forget it. Bring my Wren her ribbon from Mira and I\'ll sail you out to his uncharted isle, free of charge.',
      'My girl Wren turns twelve at the next full tide. I promised her something fine.',
      'Think on it: first my ribbons go missing, so my ferry sits idle. Then they say a dragon shut the eastern sky. Now word is Windsurf\'s own harbor has turned deadly. One door after another, latched between the isles - and always, they say, by some soft-spoken fellow who never raises his voice.'],0.3); cv2.nightOwl=true; return cv2; })());
   G.npcs.push((()=>{ const hm=makeNPC('hermit','Moss-Brother Fen', ZONES.forest.x+9.5,ZONES.forest.y-6.6,
@@ -4387,7 +4387,7 @@ QUESTS.ivo1={ giver:'ivo', title:'Tidebalm', kind:'gather', need:{shell:5},
   doneText:'Unbroken, every one. You\'d make a fair herbalist if the sword ever bores you. Balm\'s share is yours.',
   rw:{gold:35, item:{potion:2}, xp:{fishing:140}} };
 QUESTS.ribbon1={ giver:'corvo', title:'A Ribbon for Wren', kind:'talk', talkTo:'mira', xpL:90, stageOf:'ribbon', stage:1,
-  brief:'East past the shoals sits an island the charts pretend not to see. Bring my girl Wren a fine ribbon for her birthday and I will sail you there myself. Mira at Thimble and Thread in Greyharbor weaves the best on Barik.',
+  brief:'How did you break those pesky violet stones? Ha - I should have known better than to trust the word of that wicked wizard. I promised to sail him to an island east of every chart, and leaving those cursed stones strewn across my cove is how he repays me. ... You want me to take you there? I\'d love nothing more, truly - but my girl Wren has been asking after a ribbon from Mira in the village, and I can\'t leave my boat to sail out that way. Tell you what: you get me a ribbon, and I\'ll take you out to that isle whenever you want, free of charge. Mira weaves the best at Thimble and Thread in Greyharbor.',
   log:'(1/3) Ask Mira the Seamstress in Greyharbor about a ribbon.',
   doneText:'A ribbon? I would love nothing more, truly. But my whole silk shipment was taken on the north road. Brigands nest in the pines north of Blackpine now, and my silk sits in their camp. I cannot say when more will come. Here - take a couple of tonics for the road; the pines are no place to go dry.',
   rw:{item:{potion:2}, xp:{archery:60}} };
