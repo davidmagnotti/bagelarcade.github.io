@@ -3159,7 +3159,7 @@ function enterMillFromInterior(){
    THE UNDERMAW - a four-trial gauntlet under the Barik hills, climbing north
    to the Maw-Stalker's den and the hoard beyond. The trials:
      R1  floating slabs drifting across a bottomless scar
-     R2  shoot the ward-eye (bow / staff) to grind a gate up
+     R2  a grinding conveyor of stone belts, dashed across a bottomless scar
      R3  a mix of a rotating slab and a floating slab
      R4  floating slabs run under fire from rooted skeleton archers
    Reuses ewall walls, driftslabs, spinwheels, the catgate, bonepit, archers.
@@ -3175,7 +3175,7 @@ function genUndermaw(){
   carve(20,174,24,181);   // throat
   carve(6,142,38,174);    // R1 - a long black scar, crossed on scattered floating platforms
   carve(20,136,24,143);   // corridor 1
-  carve(6,114,38,136);    // R2 - the ward-eye (shoot to open the gate)
+  carve(6,114,38,136);    // R2 - the conveyor (dash across the grinding belts; its gate stands open)
   carve(20,108,24,115);   // corridor 2 (the Warded Gate sits at y=112)
   carve(6,76,38,108);     // R3 - a long black scar of scattered floating platforms
   carve(20,70,24,77);     // corridor 3
@@ -3210,10 +3210,11 @@ function placeObjectsUndermaw(){
   // behind the Hoard Door so you only reach it once the Maw-Stalker falls
   G.decor.push({kind:'fastexit', x:27.5, y:4.5, name:'CLIMB OUT', labelY:-46});
   setSolid(27,4,0); setTile(27,4,T.RUIN);
-  // the scar turns on the DASH and on ranged fire - make sure both are on hand so nothing soft-locks
+  // the scar's platform-hops turn on the DASH - make sure it's on hand so nothing soft-locks.
+  // (No bow is granted here: R2's old ward-eye - the one puzzle that needed a ranged shot -
+  // was replaced by the conveyor crossing, so the maw no longer hands out a "magical" bow.
+  // The bow lives on the Cloudreach now, at the Gale-Shrine.)
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The dark quickens your step - you can <b>DASH</b> here (tap <b>Shift</b> / the dodge button).',4200); }
-  if(!(P.unlocked && P.unlocked.bow)){ P.unlocked=P.unlocked||{}; P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows;
-    toast('An old hunting <b>bow</b> and a full quiver lean by the maw - loose <b>arrows</b> here (press <b>2</b> / the bow slot). Twenty hard-hitting shafts, and they trickle back.',4600); if(typeof buildHotbar==='function') buildHotbar(); if(typeof refreshUI==='function') refreshUI(); }
   for(const [tx,ty] of [[8,178],[36,178],[8,156],[36,156],[8,124],[36,124],[8,92],[36,92],[8,54],[36,54],[10,20],[34,20],[16,4],[28,4]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
