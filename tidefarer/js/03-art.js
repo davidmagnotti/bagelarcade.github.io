@@ -617,12 +617,20 @@ function drawIgloo(g,w,h){
 }
 function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   const bw=96*scale, bh=52*scale, bx=w/2, byBase=h-10;
-  // iso-ish box
-  g.fillStyle=wall; g.beginPath();
+  // iso-ish box - the two wall planes are lit as one volume: the left face takes the
+  // key light (upper-left sun) and the right face falls into shadow, so the corner
+  // reads with real contrast instead of two flat fills.
+  const wLit=g.createLinearGradient(bx-bw/2,byBase-bh-18*scale,bx,byBase);
+  wLit.addColorStop(0,shade(wall,16)); wLit.addColorStop(1,shade(wall,-8));   // sunlit face, top brightest
+  g.fillStyle=wLit; g.beginPath();
   g.moveTo(bx-bw/2,byBase-bh); g.lineTo(bx,byBase-bh+18*scale); g.lineTo(bx,byBase); g.lineTo(bx-bw/2,byBase-18*scale); g.closePath(); g.fill();
-  const wall2 = shade(wall,-24);
-  g.fillStyle=wall2; g.beginPath();
+  const wShad=g.createLinearGradient(bx,byBase-bh,bx+bw/2,byBase);
+  wShad.addColorStop(0,shade(wall,-22)); wShad.addColorStop(1,shade(wall,-40));  // shadow face deepens away from the corner
+  g.fillStyle=wShad; g.beginPath();
   g.moveTo(bx+bw/2,byBase-bh); g.lineTo(bx,byBase-bh+18*scale); g.lineTo(bx,byBase); g.lineTo(bx+bw/2,byBase-18*scale); g.closePath(); g.fill();
+  // bright corner seam where the lit and shadowed faces meet - a hard edge that snaps the volume forward
+  g.strokeStyle='rgba(255,244,214,0.22)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(bx,byBase-bh+18*scale); g.lineTo(bx,byBase); g.stroke();
   // door & window sit ON the slanted wall planes, bases on the ground line
   const dk=18/(bw/2); // wall slope
   const gyL=(x)=> byBase-18*scale + (x-(bx-bw/2))*dk;   // left-face ground line
@@ -664,13 +672,15 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
   g.moveTo(wx0+ww/2, gyR(wx0+ww/2)-wel-wh); g.lineTo(wx0+ww/2, gyR(wx0+ww/2)-wel);
   g.moveTo(wx0, gyR(wx0)-wel-wh/2); g.lineTo(wx0+ww, gyR(wx0+ww)-wel-wh/2);
   g.stroke();
-  // roof
-  g.fillStyle=roof; g.beginPath();
-  g.moveTo(bx-bw/2-8*scale, byBase-bh-2); g.lineTo(bx-8*scale, byBase-bh-34*scale); g.lineTo(bx+2, byBase-bh+16*scale); g.lineTo(bx-bw/2-8*scale+ (bw/2), byBase-bh+16*scale);
-  g.closePath();
-  g.beginPath(); // simpler: two roof planes
+  // roof - sunlit left plane graded warm-bright toward the ridge, shadow right plane
+  // deepened, so the ridge line reads as a crisp lit/shadow break (high-contrast volume)
+  const rLit=g.createLinearGradient(bx-bw/2-10*scale,byBase-bh,bx,byBase-bh-30*scale);
+  rLit.addColorStop(0,shade(roof,-4)); rLit.addColorStop(1,shade(roof,20));
+  g.fillStyle=rLit; g.beginPath();
   g.moveTo(bx-bw/2-10*scale,byBase-bh); g.lineTo(bx,byBase-bh-30*scale); g.lineTo(bx,byBase-bh+18*scale); g.closePath(); g.fill();
-  g.fillStyle=roofDk; g.beginPath();
+  const rShad=g.createLinearGradient(bx,byBase-bh-30*scale,bx+bw/2+10*scale,byBase-bh);
+  rShad.addColorStop(0,roofDk); rShad.addColorStop(1,shade(roofDk,-16));
+  g.fillStyle=rShad; g.beginPath();
   g.moveTo(bx+bw/2+10*scale,byBase-bh); g.lineTo(bx,byBase-bh-30*scale); g.lineTo(bx,byBase-bh+18*scale); g.closePath(); g.fill();
   g.strokeStyle=shade(roofDk,-20); g.lineWidth=2;
   g.beginPath(); g.moveTo(bx,byBase-bh-30*scale); g.lineTo(bx,byBase-bh+18*scale); g.stroke();
@@ -912,7 +922,42 @@ function _bakeHumanoid(o){
   g.setTransform(dpr,0,0,dpr,0,0);
   try{ drawHumanoid(g, -_HB.x0*s, -_HB.y0*s, Object.assign({}, o, {_bake:1})); }
   catch(e){ return null; }
+  // ---- directional rim light (AAA edge-sculpt) -------------------------------
+  // A warm key light rakes the figure from the upper-left (matching the head's own
+  // radial highlight), so every character reads as a lit, rounded volume against the
+  // world rather than a flat fill. The rim is derived from the baked silhouette by
+  // compositing - no per-shape work, so it lifts the whole cast (hero, villagers,
+  // foes) at once. Built here in the bake, it costs nothing per frame.
+  try{ _rimLight(cv, dpr); }catch(e){}
   return cv;
+}
+/* Carve a thin light crescent off the light-facing edge of a baked sprite and blend
+   it back additively. Technique: tint the silhouette solid warm-white, erase a copy
+   of it shifted toward the shadow side, and what survives is the sliver of edge that
+   catches the key - the rim. All separable composite ops (GPU-cheap everywhere). */
+let _rimCv=null, _rimCx=null;
+function _rimLight(spr, dpr){
+  const w=spr.width, h=spr.height;
+  if(w<3||h<3) return;
+  if(!_rimCv){ _rimCv=document.createElement('canvas'); _rimCx=_rimCv.getContext('2d'); }
+  if(_rimCv.width!==w || _rimCv.height!==h){ _rimCv.width=w; _rimCv.height=h; }
+  const r=_rimCx;
+  r.setTransform(1,0,0,1,0,0);
+  r.globalCompositeOperation='source-over'; r.globalAlpha=1;
+  r.clearRect(0,0,w,h);
+  r.drawImage(spr,0,0);                              // silhouette
+  r.globalCompositeOperation='source-in';           // tint it a solid warm key colour
+  r.fillStyle='#fff2d0'; r.fillRect(0,0,w,h);
+  r.globalCompositeOperation='destination-out';     // erase the body shifted toward shadow...
+  const dx=2.0*dpr, dy=2.3*dpr;                      // ...leaving the upper-left edge lit
+  r.drawImage(spr,dx,dy);
+  r.drawImage(spr,dx*0.5,dy*0.5);                    // second, closer erase softens the crescent
+  const g=spr.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);
+  g.globalCompositeOperation='lighter';             // additive: a bright rim on the light side
+  g.globalAlpha=0.5;
+  g.drawImage(_rimCv,0,0);
+  g.globalCompositeOperation='source-over'; g.globalAlpha=1;
 }
 function drawHumanoidCached(g, sx, sy, o, holder){
   // No holder (or an odd state we shouldn't freeze) -> just draw live.

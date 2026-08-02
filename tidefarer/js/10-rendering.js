@@ -516,8 +516,8 @@ function render(){
   if(DBG.vignette && fxOn('vignette')){
     const vk=VW+'x'+VH;
     if(_vgKey!==vk){
-      _vgCache=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.36,VW/2,VH/2,Math.max(VW,VH)*0.72);
-      _vgCache.addColorStop(0,'rgba(0,0,0,0)'); _vgCache.addColorStop(1,'rgba(0,0,0,0.45)');
+      _vgCache=cx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.32,VW/2,VH/2,Math.max(VW,VH)*0.72);
+      _vgCache.addColorStop(0,'rgba(0,0,0,0)'); _vgCache.addColorStop(0.7,'rgba(6,10,16,0.18)'); _vgCache.addColorStop(1,'rgba(4,7,12,0.56)');
       _vgKey=vk;
     }
     cx.fillStyle=_vgCache; cx.fillRect(0,0,VW,VH);

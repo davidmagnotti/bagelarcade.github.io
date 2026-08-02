@@ -141,13 +141,49 @@ function drawCrows(){
 
 /* ---------- film grain + cinematic grade ---------- */
 let grainCv=null, grainPat=null;
+let gradeCv=null, gradeCx=null;
+/* HIGH-CONTRAST tone-shaping pass. True contrast needs per-pixel luminance, so it
+   blends the frame with a punchy copy of ITSELF via 'overlay' (a *separable* blend -
+   unlike the removed 'saturation' pass, this is GPU-cheap and can't crash Skia). The
+   copy is built on a small offscreen buffer with a contrast/saturate filter (the
+   filter runs on ~1/2-size pixels, not the full screen - the same trick the bloom
+   pass uses to stay fast on desktop Chrome/Edge), then overlaid back. The result is a
+   filmic S-curve: shadows crush deeper, highlights snap brighter, colour reads richer.
+   Skipped on a software-raster canvas, where the per-frame readback would be brutal. */
+function gradeContrast(){
+  if(typeof SOFTCANVAS!=='undefined' && SOFTCANVAS) return;
+  if(!cv.width) return;
+  const scale=2;
+  const gw=Math.max(1,(cv.width/scale)|0), gh=Math.max(1,(cv.height/scale)|0);
+  if(!gradeCv){ gradeCv=document.createElement('canvas'); gradeCx=gradeCv.getContext('2d'); }
+  if(gradeCv.width!==gw || gradeCv.height!==gh){ gradeCv.width=gw; gradeCv.height=gh; }
+  gradeCx.clearRect(0,0,gw,gh);
+  gradeCx.save();
+  try{ if(typeof gradeCx.filter==='string') gradeCx.filter='contrast(1.5) saturate(1.42) brightness(1.02)'; }catch(e){}
+  gradeCx.imageSmoothingEnabled=true;
+  gradeCx.drawImage(cv,0,0,gw,gh);
+  gradeCx.restore();
+  cx.save();
+  cx.setTransform(1,0,0,1,0,0);
+  cx.globalCompositeOperation='overlay';
+  cx.globalAlpha=0.42;
+  cx.imageSmoothingEnabled=true;             // upscaling the half-size buffer is a mild blur - softens banding
+  cx.drawImage(gradeCv,0,0,cv.width,cv.height);
+  cx.restore();
+}
 function drawGritGrade(){
   // NOTE: the old 'saturation' desaturate pass was removed - that non-separable
   // blend mode is extremely slow and can hard-crash integrated GPUs on Windows
-  // (Surface). The cool-shadow + grain passes below give most of the look.
-  // cool the shadows
+  // (Surface). The contrast + split-tone + grain passes below are all separable
+  // blends (overlay / soft-light) and stay GPU-cheap.
+  // high-contrast filmic S-curve (self-overlay; see gradeContrast)
+  gradeContrast();
+  // split-tone: cool the shadows, then warm the highlights - the classic
+  // teal/orange cinematic look. soft-light of a colour tints toward that hue
+  // in the mids without flattening the range.
   cx.globalCompositeOperation='soft-light';
-  cx.globalAlpha=0.35; cx.fillStyle='#243642'; cx.fillRect(-20,-20,VW+40,VH+40);
+  cx.globalAlpha=0.42; cx.fillStyle='#1d3547'; cx.fillRect(-20,-20,VW+40,VH+40);   // cool shadows
+  cx.globalAlpha=0.20; cx.fillStyle='#ffcf8a'; cx.fillRect(-20,-20,VW+40,VH+40);   // warm the light
   // film grain
   if(!grainCv){
     grainCv=document.createElement('canvas'); grainCv.width=192; grainCv.height=192;
