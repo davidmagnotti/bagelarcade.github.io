@@ -10,7 +10,7 @@
 /* ---------- injected styles ---------- */
 const st=document.createElement('style');
 st.textContent=`
-  .edBadge{margin:2px auto 10px;display:inline-block;font-family:Georgia,serif;
+  .edBadge{margin:2px auto 10px;display:inline-block;font-family:var(--font-serif);
     font-size:11px;letter-spacing:6px;color:#e8c98f;padding:4px 14px 3px 20px;
     border-top:1px solid rgba(201,162,78,.55);border-bottom:1px solid rgba(201,162,78,.55);}
   .edEmbers{position:absolute;inset:0;overflow:hidden;pointer-events:none;}

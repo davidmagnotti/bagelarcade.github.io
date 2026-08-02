@@ -1024,6 +1024,22 @@ function drawHumanoid(g,sx,sy,o){
   const away=scrY<-0.15;
   const profile=!away && Math.abs(scrX)>1.05 && Math.abs(scrY)<0.42;
   const flip=scrX<0?-1:1;
+  // ---- 3/4 turn: true 8-way facing ----------------------------------------
+  // The face already tracks the heading; this turns the whole HEAD & BODY mass so
+  // the four diagonals read as a figure yawed ~45deg instead of collapsing into a
+  // flat front/back. `turnQ` grows 0 (square to camera) -> 1 (near side-on) across
+  // the diagonal, and `_lead` is the screen side we turn toward. Only the LIVE
+  // figure turns - baked NPC sprites are direction-agnostic in the cache, so a
+  // stale sprite must not show a wrong-way yaw; profiles are already full side
+  // views, and a seated rider's pose is fixed. Those all get turnQ=0.
+  const _lead=flip;
+  // scrX ~0 straight to camera, ~1 at the 45deg diagonal, ~1.41 at full side. Map so
+  // a diagonal reads as a ~3/4 turn and it eases to full by the time profile takes over.
+  // OPT-IN (o.turn): only the live overworld player yaws. Portraits, dialog avatars,
+  // interior & cutscene figures pass a fixed front-ish dir and must stay square, and
+  // baked NPC sprites are dir-agnostic in the cache (a turn would show stale wrong-way);
+  // profiles are already a full side view and a seated rider's pose is fixed.
+  const turnQ=(!o.turn||o._bake||profile||o.ride)?0:clamp((Math.abs(scrX)-0.2)/1.1,0,1);
   // gait
   const sw1=Math.sin(step), sw2=Math.sin(step*2);
   // mounted: the mount's own bob (added to the draw position by the caller) carries
@@ -1105,6 +1121,12 @@ function drawHumanoid(g,sx,sy,o){
     g.beginPath(); g.arc(0,0,shR,0,TAU); g.fill();
     g.restore();
   }
+
+  // 3/4 turn on the whole standing figure (everything above the ground shadow):
+  // foreshorten across as it turns side-on, and slide the mass toward the leading
+  // side so the stance reads as rotated, not just narrowed. The head then leads a
+  // touch further below, completing the yaw.
+  if(turnQ){ g.scale(1-turnQ*0.16, 1); g.translate(_lead*turnQ*0.9, 0); }
 
   if(o.quiver && !away){
     g.save(); g.translate(-7,-24+B); g.rotate(0.5);
@@ -1408,6 +1430,7 @@ function drawHumanoid(g,sx,sy,o){
   /* ---------------- THE HEAD: half the hero ---------------- */
   g.save();
   g.translate(flip*stF,-34.6+B*1.15+stF*0.6);           // stoop leans the head forward & down
+  if(turnQ){ g.translate(_lead*turnQ*1.6, 0); g.rotate(_lead*turnQ*0.07); } // head leads the turn
   const headScale=hdF*(o.hero?1.12:1);                  // hero head grander; build.head resizes per character
   if(headScale!==1) g.scale(headScale,headScale);
   if(walking) g.rotate(sw1*0.035);
@@ -2497,7 +2520,7 @@ function iconCanvas(kind,sz=40){
         g.strokeStyle='#7a5a2a'; g.lineWidth=2.4; g.beginPath(); g.moveTo(-7,2); g.lineTo(7,2); g.stroke(); break;   // the binding cord
       case 'gold': g.fillStyle='#c98f1e'; g.beginPath(); g.arc(0,1.5,10,0,TAU); g.fill();
         g.fillStyle='#ffd76a'; g.beginPath(); g.arc(0,0,10,0,TAU); g.fill();
-        g.fillStyle='#c98f1e'; g.font='bold 12px Georgia'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('E',0,1); break;
+        g.fillStyle='#c98f1e'; g.font='bold 12px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('E',0,1); break;
       case 'charm': g.strokeStyle='#c9a06a'; g.lineWidth=2; g.beginPath(); g.arc(0,-6,7,Math.PI*0.15,Math.PI*0.85,true); g.stroke();
         g.fillStyle='#ff9a3c'; g.beginPath(); g.moveTo(0,-4); g.quadraticCurveTo(8,2,0,12); g.quadraticCurveTo(-8,2,0,-4); g.fill();
         g.fillStyle='#ffd76a'; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(4,4,0,9); g.quadraticCurveTo(-4,4,0,0); g.fill(); break;

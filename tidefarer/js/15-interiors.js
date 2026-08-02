@@ -688,7 +688,7 @@ function drawFurniture(f,s){
       // hanging RECEPTION sign
       cx.fillStyle='#3a5c6a'; cx.fillRect(s.x-18,s.y-60,36,15);
       cx.strokeStyle='#c9a24e'; cx.lineWidth=1.5; cx.strokeRect(s.x-18,s.y-60,36,15);
-      cx.fillStyle='#ffe9a8'; cx.font='bold 8px Georgia'; cx.textAlign='center'; cx.fillText('RECEPTION', s.x, s.y-50);
+      cx.fillStyle='#ffe9a8'; cx.font='bold 8px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center'; cx.fillText('RECEPTION', s.x, s.y-50);
       // the concierge behind the counter
       drawHumanoid(cx, s.x-3, s.y-22, {skin:'#caa27b',hair:'#3a2e26',shirt:'#5a3a6a',pants:'#33303c',trim:'#c9a24e',dir:{x:0,y:1},step:0,size:0.82});
       break;
@@ -753,7 +753,7 @@ function drawFurniture(f,s){
         cx.font='9px Verdana'; cx.textAlign='center';
         const lbl= owned? 'Your Suite' : 'Suite';
         cx.fillStyle='rgba(0,0,0,0.5)'; cx.fillText(lbl,s.x+1,s.y-43); cx.fillStyle= owned? '#ffe9a8':'#c8bfa8'; cx.fillText(lbl,s.x,s.y-44);
-        if(!owned){ const gl=0.4+0.3*Math.sin(G.time*3); cx.fillStyle='rgba(200,190,168,'+gl.toFixed(2)+')'; cx.font='12px Georgia'; cx.fillText('🔒',s.x,s.y-30); }
+        if(!owned){ const gl=0.4+0.3*Math.sin(G.time*3); cx.fillStyle='rgba(200,190,168,'+gl.toFixed(2)+')'; cx.font='12px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.fillText('🔒',s.x,s.y-30); }
       }
       break;
     case 'king':
@@ -769,7 +769,7 @@ function drawFurniture(f,s){
         const gl=0.5+0.3*Math.sin(G.time*3);
         cx.strokeStyle='rgba(255,215,106,'+gl.toFixed(2)+')'; cx.lineWidth=2;
         cx.beginPath(); cx.ellipse(s.x,s.y-2,16,7,0,0,TAU); cx.stroke();
-        cx.fillStyle='#ffd76a'; cx.font='bold 18px Georgia'; cx.textAlign='center';
+        cx.fillStyle='#ffd76a'; cx.font='bold 18px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
         cx.fillText('!', s.x, s.y-58+Math.sin(G.time*3)*3);
       }
       break;
@@ -788,7 +788,7 @@ function drawFurniture(f,s){
     case 'stairs':
       { cx.save(); cx.translate(s.x,s.y);
         for(let i=0;i<5;i++){ cx.fillStyle=i%2?'#8f8b83':'#7a766e'; cx.fillRect(-17+i*2,-i*6,34-i*4,8); cx.strokeStyle='rgba(0,0,0,0.3)'; cx.lineWidth=1; cx.strokeRect(-17+i*2,-i*6,34-i*4,8); }
-        cx.fillStyle='#ffd76a'; cx.font='bold 13px Georgia'; cx.textAlign='center'; cx.fillText(f.dir==='up'?'▲':'▼', 0, -36+Math.sin(G.time*3)*2);
+        cx.fillStyle='#ffd76a'; cx.font='bold 13px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center'; cx.fillText(f.dir==='up'?'▲':'▼', 0, -36+Math.sin(G.time*3)*2);
         cx.restore(); }
       break;
     case 'millcellar':
@@ -807,7 +807,7 @@ function drawFurniture(f,s){
         for(let i=0;i<4;i++){ cx.fillStyle=i%2?'#2a2018':'#372c21'; cx.fillRect(-19+i*3,3-i*4,38-i*6,4); }   // worn steps descending
         cx.fillStyle='rgba(255,196,110,'+(0.12+0.16*pulse)+')';   // warm lamp glow from the workings below
         cx.beginPath(); cx.moveTo(-13,4); cx.quadraticCurveTo(0,-8,13,4); cx.closePath(); cx.fill();
-        cx.fillStyle='#ffd76a'; cx.font='bold 15px Georgia'; cx.textAlign='center'; cx.fillText('▼', 0, -24+Math.sin(G.time*3)*2);   // "way down"
+        cx.fillStyle='#ffd76a'; cx.font='bold 15px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center'; cx.fillText('▼', 0, -24+Math.sin(G.time*3)*2);   // "way down"
         cx.restore(); }
       break;
     case 'palacefountain':
@@ -1027,7 +1027,7 @@ function renderInterior(){
     cx.fillStyle='rgba(255,215,106,'+(0.15+0.1*Math.sin(G.time*3))+')';
     cx.save(); cx.translate(s.x,s.y); cx.scale(1,0.5);
     cx.beginPath(); cx.arc(0,0,26,0,TAU); cx.fill(); cx.restore();
-    cx.fillStyle='#ffd76a'; cx.font='bold 14px Georgia'; cx.textAlign='center';
+    cx.fillStyle='#ffd76a'; cx.font='bold 14px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.textAlign='center';
     cx.fillText('▼', s.x, s.y+4-Math.abs(Math.sin(G.time*3))*4);
   }
   // furniture & player, depth-sorted
