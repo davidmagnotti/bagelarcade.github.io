@@ -309,6 +309,10 @@
   #ovControls{margin-top:20px;font-size:12px;color:var(--parch-dim);line-height:1.8;}
   #ovControls b{color:var(--ember);}
   #fadeOv{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .7s ease;}
+  /* sailing-between-isles loading vignette (see js/42-sail-transition.js) */
+  #sailOv{position:fixed;inset:0;display:none;opacity:0;pointer-events:none;z-index:70;
+    background:#0b1526;}
+  #sailCv{position:absolute;inset:0;width:100%;height:100%;display:block;}
   .abtn.small{width:54px;height:54px;font-size:20px;}
   /* ---------- AAA layer ---------- */
   #bossBar{position:fixed;top:52px;left:50%;transform:translateX(-50%);width:min(440px,72vw);z-index:12;display:none;pointer-events:none;}

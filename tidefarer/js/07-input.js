@@ -13,6 +13,14 @@ window.addEventListener('keydown',e=>{
   // Dash lives on Ctrl now, and you move with WASD - so keep the browser from hijacking
   // Ctrl+<gameplay key> combos while you play (Ctrl+S save-page, Ctrl+A, Ctrl+D, etc.).
   if(e.ctrlKey && ['w','a','s','d',' ','e','1','2','4','r','m'].includes(k)) e.preventDefault();
+  // While a dialog is open, the number keys pick a choice (keyboard players can
+  // advance conversations without the mouse). Intercept before the hotbar keys so
+  // 1/2/4 don't also swap weapons/items mid-conversation.
+  if(dlg.open && k>='1' && k<='9'){
+    const b=dlg.btns && dlg.btns[+k-1];
+    if(b){ e.preventDefault(); b.fn(); }
+    return;
+  }
   if(k==='e'||k==='enter'){ doInteract(); }
   if(k===' '){ e.preventDefault(); input.attack=true; }
   if(k==='1') selectWeapon('melee');
@@ -30,12 +38,32 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; if(e.key===' ') input.attack=false; });
 
-cv.addEventListener('mousemove',e=>{ input.mx=e.clientX; input.my=e.clientY;
+/* Release every held control when the game loses focus. Without this, a movement
+   key or an on-screen button held at the moment another window/pop-up steals focus
+   never receives its keyup / pointerup - so the hero keeps walking or swinging on
+   its own when you tab back in. Fires on window blur and on the tab going hidden. */
+function clearHeldInput(){
+  for(const k in keys) keys[k]=false;
+  input.attack=false;
+  input.mouseDown=false;
+  if(input.joy.active && typeof joyRelease==='function') joyRelease();
+}
+window.addEventListener('blur', clearHeldInput);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) clearHeldInput(); });
+
+cv.addEventListener('mousemove',e=>{ if(isTouch) return; input.mx=e.clientX; input.my=e.clientY;
   if(input.mouseDown && P.click && P.click.type==='pos' && !G.interior){
     const w=screenToWorld(e.clientX,e.clientY); P.click.x=w.x; P.click.y=w.y;
   }
 });
-cv.addEventListener('mousedown',e=>{ if(G.state!=='play') return;
+cv.addEventListener('mousedown',e=>{
+  // Touch devices move with the joystick and act with the on-screen buttons -
+  // there is no tap-to-move. Ignore mouse events on the canvas so a stray touch,
+  // or a browser-synthesised "compatibility" mouse event fired while thumbing the
+  // dodge/attack button, can't set a walk-here target and send the hero wandering
+  // off (the "dash reads as a phantom tap" bug on mobile).
+  if(isTouch) return;
+  if(G.state!=='play') return;
   Snd.init(); input.mouseDown=true;
   if(G.bossIntro) return;                 // input held for the entrance beat
   if(dlg.open) return;
@@ -56,7 +84,7 @@ function pickClickTarget(wx,wy){
   let best=null, bd=1.1;
   for(const m of G.mobs){
     if(m.dead||m.sealed) continue;
-    const r=(m.boss||m.kind==='alpha')?1.8:1.0;
+    const r=m.boss?1.8:1.0;
     const d=dist(wx,wy,m.x,m.y-0.3);
     if(d<r && d<bd){ bd=d; best={type:'mob',m}; }
   }

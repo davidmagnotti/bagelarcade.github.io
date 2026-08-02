@@ -250,7 +250,6 @@ const MOBDEF = {
   archer:{hp:26, dmg:27, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   gravelord:{hp:150, dmg:42, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
   boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow Spirit'},
-  alpha:{hp:460, dmg:48, speed:3.6, aggro:8, xp:400, gold:[60,85], lvl:8, name:'Greymaw, the Alpha'},
   scorpion:{hp:300, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
   raider:{hp:280, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
   raidcap:{hp:820, dmg:40, speed:3.15, aggro:12, xp:620, gold:[120,180], lvl:14, name:'Castellan of the Vael'},
@@ -298,8 +297,8 @@ function spawnMob(kind,x,y,elite){
     dmg:Math.round(d.dmg*(elite?1.7:1)), speed:d.speed*(elite?1.12:1), aggro:d.aggro*(elite?1.2:1),
     xp:Math.round(d.xp*(elite?2.5:1)), elite:!!elite, lvl:(d.lvl||1)+(elite?2:0),
     face:1, anim:Math.random()*10, state:'idle', wt:rnd(1,3), hitCd:0, hurtT:0,
-    swing:0, boss:kind==='boss', bigBoss:(kind==='boss'||kind==='alpha'),
-    title: kind==='boss'? 'THE HOLLOW SPIRIT' : kind==='alpha'? 'GREYMAW, THE ALPHA' : null,
+    swing:0, boss:kind==='boss', bigBoss:(kind==='boss'),
+    title: kind==='boss'? 'THE HOLLOW SPIRIT' : null,
     dead:false, shootCd:0, summoned:[false,false]};
   G.mobs.push(m); return m;
 }

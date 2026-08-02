@@ -350,7 +350,12 @@ function genMainland(){
   carveDisc(ZONES.tower.x,ZONES.tower.y,ZONES.tower.r,T.RUIN,false);
   carveDisc(ZONES.farm.x,ZONES.farm.y,ZONES.farm.r,T.GRASS,false);
   carveDisc(ZONES.mines.x,ZONES.mines.y,ZONES.mines.r,T.RUIN,false);
-  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.GRASS,false);   // keep grounds - an open grass meadow before the keep, not a dirt courtyard
+  carveDisc(ZONES.castle.x,ZONES.castle.y,ZONES.castle.r,T.GRASS,false);   // keep grounds - the open meadow the King's Road crosses
+  // The keep itself now stands on a headland extended WEST of the through-road, so
+  // travellers pass to the EAST of it and never have to round its back to reach the
+  // gate. Extend the land to carry the keep and the apron before its south gate.
+  carveDisc(ZONES.castle.x-11,ZONES.castle.y,12,T.GRASS,false);            // the western keep headland
+  carveDisc(ZONES.castle.x-9, ZONES.castle.y+7,7,T.GRASS,false);           // a broad apron of ground before the gate
   carveDisc(ZONES.spire.x,ZONES.spire.y,ZONES.spire.r,T.GRASS,false);
   carveDisc(ZONES.desert.x,ZONES.desert.y,ZONES.desert.r,T.SAND,false);   // Sunscour
   carveDisc(ZONES.desert.x-14,ZONES.desert.y+16,16,T.SAND,false);
@@ -410,6 +415,15 @@ function genMainland(){
   ];
   for(const r of ROADS) landBridge(r[0],r[1],r[2],r[3]);
   for(const r of ROADS) carveLine(r[0],r[1],r[2],r[3], T.PATH,0);
+  // ---- Barik Keep approach ----
+  // Tie the village and spire roads together with a short link that runs EAST of the
+  // keep, so the King's Road skirts the grounds rather than driving past the keep's
+  // back. A cobbled walkway then branches west off that link, straight up to a small
+  // forecourt at the south gate - visitors approach the gate head-on and no one has
+  // to walk behind the keep.
+  carveLine(ZONES.castle.x-6,ZONES.castle.y-4, ZONES.castle.x+6,ZONES.castle.y+4, T.PATH,0);
+  carveLine(ZONES.castle.x+4,ZONES.castle.y+3, ZONES.castle.x-10,ZONES.castle.y+3, T.PATH,1);
+  carveDisc(ZONES.castle.x-11,ZONES.castle.y+2,3,T.PATH,true);   // the cobbled forecourt at the gate
   // ---- Greyharbor's harbor promenade ----
   // The town's houses now ring the shoreline (placed in placeObjectsMain), each out
   // at the water's edge instead of huddled by the well. This coastal lane threads
@@ -455,6 +469,7 @@ function placeObjectsMain(){
     if(dist(x,y,ZONES.village.x,ZONES.village.y)<ZONES.village.r) continue;
     if(dist(x,y,ZONES.tower.x,ZONES.tower.y)<ZONES.tower.r) continue;
     if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // keep the keep's grass meadow clear
+    if(dist(x,y,ZONES.castle.x-11,ZONES.castle.y)<8) continue;             // and the western keep headland
     // leave a one-tile margin along the King's Roads so no tree overhangs and blocks the path
     let byRoad=false;
     for(let ry=-1;ry<=1&&!byRoad;ry++) for(let rx=-1;rx<=1;rx++) if(tileAt(x+rx,y+ry)===T.PATH){ byRoad=true; break; }
@@ -465,6 +480,7 @@ function placeObjectsMain(){
   for(let i=0;i<300;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     const t=tileAt(x,y);
     if(dist(x,y,ZONES.castle.x,ZONES.castle.y)<ZONES.castle.r) continue;   // no stone strewn across the keep meadow
+    if(dist(x,y,ZONES.castle.x-11,ZONES.castle.y)<8) continue;             // nor across the western keep headland
     if((t===T.GRASS||t===T.FOREST||t===T.RUIN)&&!solidAt(x,y)&&r()<0.7) addNode('rock',x,y); }
   for(let i=0;i<50;i++){ const x=rndiR(r,4,MAPW-5), y=rndiR(r,4,MAPH-5);
     if(tileAt(x,y)===T.FOREST&&!solidAt(x,y)) addNode('mushroom',x,y); }
@@ -526,14 +542,15 @@ function placeObjectsMain(){
   addBuilding('lamp',FZ.x,FZ.y,'');
   const MZ=ZONES.mines;
   addBuilding('lamp',MZ.x+1,MZ.y-1,'');
-  // Barik Keep - the Duchess's seat
-  const CK=ZONES.castle;
-  addBuilding('castle', CK.x,CK.y-3,'Barik Keep - Hall of Duchess Maelis');
-  addBuilding('house2',CK.x-6,CK.y+2,'Keep barracks');
-  addBuilding('house2',CK.x+6,CK.y+2,'Keep granary');
-  addBuilding('lamp',CK.x-2,CK.y+1,''); addBuilding('lamp',CK.x+2,CK.y+1,'');
-  G.decor.push({kind:'pillar',x:CK.x-4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x-5,CK.y-2,1);
-  G.decor.push({kind:'pillar',x:CK.x+4.5,y:CK.y-1.5,broken:false}); setSolid(CK.x+4,CK.y-2,1);
+  // Barik Keep - the Duchess's seat, set on the western headland with its gate
+  // opening south onto the cobbled forecourt (see the approach carved in genMainland).
+  const CK=ZONES.castle, KX=CK.x-11, KY=CK.y-3;   // KX,KY = the keep's anchor, shifted west of the through-road
+  addBuilding('castle', KX,KY,'Barik Keep - Hall of Duchess Maelis');
+  addBuilding('house2',KX-7,KY+2,'Keep barracks');   // service buildings on the landward (west) side, clear of the walkway
+  addBuilding('house2',KX-7,KY+6,'Keep granary');
+  addBuilding('lamp',KX-2,KY+4,''); addBuilding('lamp',KX+2,KY+4,'');   // lamps at the gate mouth
+  G.decor.push({kind:'pillar',x:KX-4.5,y:KY+1.5,broken:false}); setSolid(KX-5,KY+1,1);
+  G.decor.push({kind:'pillar',x:KX+4.5,y:KY+1.5,broken:false}); setSolid(KX+4,KY+1,1);
   // Aelin's Spire - the magic tower
   const SP=ZONES.spire;
   addBuilding('tower', SP.x,SP.y,"Aelin's Spire - school of the weave").tall=true;   // a proper wizard's spire, twice as tall
@@ -638,7 +655,7 @@ function wedDuke(){
   if(G.worldId!=='main') return;
   if(G.npcs && G.npcs.some(n=>n.id==='dukeElias')) return;
   const mae = G.npcs && G.npcs.find(n=>n.id==='maelis');
-  const bx = mae? Math.round(mae.x-1.6) : Math.round(ZONES.castle.x-1);
+  const bx = mae? Math.round(mae.x-1.6) : Math.round(ZONES.castle.x-12);
   const by = mae? Math.round(mae.y) : Math.round(ZONES.castle.y+1);
   const sp = (typeof findOpenNear==='function' && findOpenNear(bx,by,3)) || [bx,by];
   const duke = makeNPC('dukeElias','Duke Elias of Barik', sp[0], sp[1],
@@ -651,8 +668,9 @@ function wedDuke(){
 }
 function spawnRealmFolk(){
   const CK=ZONES.castle, SP=ZONES.spire, V=ZONES.village, VM=ZONES.vael;
+  const KX=CK.x-11, KY=CK.y-3;   // the relocated keep's anchor (matches placeObjectsMain)
   const wed = !!(P.story && P.story.duchessWed);
-  G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', CK.x+0.5,CK.y+0.8,
+  G.npcs.push(makeNPC('maelis','Duchess Maelis of Barik', KX+0.5,KY+3.8,
     {skin:'#e0b088',hair:'#d8c090',shirt:'#6a3a5e',pants:'#3a2a3c',robe:'#5a2a52',trim:'#e8c860',hat:'crown',hairstyle:'long'},
     wed
     ? ["My Duke charts the tides from the west solar now. Strange, to rule beside someone at last.",
@@ -660,7 +678,7 @@ function spawnRealmFolk(){
     : ["Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
        "A duchess rules by ledger and by patience. The sword is for those who run out of both."],0.5));
   wedDuke();
-  { const kw=makeNPC('guardc1','Keep Warden', CK.x-2.5,CK.y+2.2,
+  { const kw=makeNPC('guardc1','Keep Warden', KX-2.5,KY+5.2,
     {skin:'#caa27b',hair:'#2e2a28',shirt:'#4a4f5e',pants:'#2f333c',armor:2,pauldrons:true},
     ["Her Majesty receives travelers. Mind your manners and your mud."],0.4);
     kw.nightOwl=true; G.npcs.push(kw); }   // the keep is guarded round the clock
@@ -753,8 +771,11 @@ function spawnMobsMain(){
       if(s){ const m=spawnMob(kind,s[0],s[1], pr()<eliteP); if(m && opt && opt.tag) m[opt.tag]=1; }
     }
   }
-  // Greymaw dens atop Wolfcrag
-  { const gm=spawnMob('alpha', ZONES.highlands.x, ZONES.highlands.y-2); if(gm) gm.entrance='loom'; }
+  // a den of wolves atop Wolfcrag (the old Greymaw den - now just a thick pack)
+  { const wr=mulberry32(SEED+77);
+    for(let i=0;i<6;i++){ const a=wr()*TAU, dd=1+wr()*3.5;
+      const s=findOpenNear(Math.round(ZONES.highlands.x+Math.cos(a)*dd),Math.round(ZONES.highlands.y-2+Math.sin(a)*dd),4);
+      if(s) spawnMob('wolf', s[0], s[1], wr()<0.4); } }
   // peak guardians around the chest
   spawnMob('skeleton',ZONES.tower.x-2,ZONES.tower.y+1,true);
   spawnMob('skeleton',ZONES.tower.x+2,ZONES.tower.y+2,true);
@@ -4493,7 +4514,7 @@ QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:
   brief:"The wilds have turned. Crimson-ringed beasts - elites, we call them - press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
   log:'Slay 8 elite beasts anywhere on the mainland.',
   doneText:"Eight heads' worth of quiet. The road breathes easier - and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
-  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['alpha','embers'] };
+  rw:{gold:150, item:{potion:3}, xp:{melee:260, archery:260, magic:260}}, unlocks:['embers'] };
 QUESTS.springs={ giver:'maren', title:'Waters of Old', kind:'visit', zone:'springs',
   brief:"My grandmother swore there were warm springs in the western hills - water that closes wounds. I'm too old for the walk and too stubborn to admit it. Find them for me. Just… find them.",
   log:'Discover the Ember Springs in the isle\'s western hills.',
@@ -4537,7 +4558,6 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
 ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
-ITEMS.fang = {name:"Greymaw's Fang", desc:'+8 melee damage. Pried from the Alpha\'s jaw.'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
 ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60};
@@ -4545,12 +4565,6 @@ ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
 ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
 ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
 ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.'};
-QUESTS.alpha = { giver:'kell', title:'The Alpha of Wolfcrag', kind:'kill', kill:{alpha:1},
-  brief:"The elites answer to something. Greymaw - a wolf the size of a cart, eyes like coals. It dens high on Wolfcrag. Kill it, and the packs scatter for a generation. This is no bounty, adventurer. This is a hunt.",
-  log:'Slay Greymaw, the Alpha, atop Wolfcrag Highlands.',
-  doneText:"By the tides... you actually did it. The howling stopped last night - now I know why. Greyharbor will sing of this. Take the purse, hero. You've earned the name.",
-  rw:{gold:250, item:{potion:4}, xp:{melee:400, archery:400, magic:400}} };
-
 /* =====================================================================
    ACT I FINALE - "The Enchanter's Tide" turns. The King's audience sets you
    after Vath, and after the truth of his lost children. The pendant is a
@@ -4644,7 +4658,7 @@ QUESTS.reachRestore={ giver:'mora', title:'The Storm That Drowns the Coast', kin
 // but unaccepted is purged at the Act II transition. The Duchess chain (duchesslove/duchessreply)
 // is deliberately excluded - it is the one Act I errand that carries into Act II.
 const ACT1_ISLE_QUESTS=['welcome2','nets','roadclear','hedda1','hedda2','torv1','torv2','ivo1',
-  'ribbon1','ribbon2','ribbon3','feud1','feud2','sting1','undermaw1','bounty','alpha','embers',
+  'ribbon1','ribbon2','ribbon3','feud1','feud2','sting1','undermaw1','bounty','embers',
   'mossbrew','pearlq','hunt1','tame1','wyrm','vhunt','board','sail','tide','breakers'];
 // Clear any of the above that is merely offered ('avail') but never accepted, so a returned isle
 // shows none of its Act I quest-board work. Accepted ('active') and finished ('done') quests are
@@ -4905,13 +4919,6 @@ function buildExtraSprites(){
     g.strokeStyle='rgba(70,40,15,0.8)'; g.lineWidth=1.6;
     g.beginPath(); g.moveTo(10,15); g.lineTo(14,25); g.moveTo(16,14); g.lineTo(20,26); g.moveTo(22,15); g.lineTo(26,25); g.stroke();
     g.fillStyle='#3a2a1a'; g.beginPath(); g.arc(11,19,1.4,0,TAU); g.fill(); });
-  ICONS.fang=makeCanvas(40,40,(g)=>{
-    g.fillStyle='#eee7d8';
-    g.beginPath(); g.moveTo(12,8); g.quadraticCurveTo(26,10,28,32);
-    g.quadraticCurveTo(16,26,12,8); g.closePath(); g.fill();
-    g.strokeStyle='rgba(60,45,25,0.8)'; g.lineWidth=1.5; g.stroke();
-    g.fillStyle='#c9a24e'; g.fillRect(9,5,10,5);
-  });
   // relic icon
   ICONS.relic=makeCanvas(40,40,(g)=>{
     g.fillStyle='#3a5a80'; g.beginPath();
@@ -6696,8 +6703,14 @@ function departEarly(){
   if(sailing) return;
   sailing=true;
   toast('“Cast off! Barik, then - and luck to the bold.”',3000);
+  Snd.splash();
+  if(typeof playSailTransition==='function'){
+    const title=(WORLD_DEFS.main && WORLD_DEFS.main.title) || '';
+    playSailTransition(title, ()=>switchWorld('main'), ()=>{ sailing=false; });
+    return;
+  }
   const fade=document.getElementById('fadeOv');
-  fade.style.opacity=1; Snd.splash();
+  fade.style.opacity=1;
   setTimeout(()=>{ switchWorld('main'); fade.style.opacity=0; sailing=false; }, 900);
 }
 function attemptSail(){
@@ -6741,8 +6754,16 @@ function attemptSail(){
 }
 function sailTo(dest, msg){
   if(sailing) return; sailing=true;
-  const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1; Snd.splash();
+  Snd.splash();
   if(msg) toast(msg,3000);
+  // The boat vignette (js/42-sail-transition.js) hides the world swap under a
+  // brief sailing loading screen; if it isn't loaded, fall back to the old fade.
+  if(typeof playSailTransition==='function'){
+    const title=(WORLD_DEFS[dest] && WORLD_DEFS[dest].title) || '';
+    playSailTransition(title, ()=>switchWorld(dest), ()=>{ sailing=false; });
+    return;
+  }
+  const fade=document.getElementById('fadeOv'); if(fade) fade.style.opacity=1;
   setTimeout(()=>{ switchWorld(dest); setTimeout(()=>{ if(fade) fade.style.opacity=0; sailing=false; },100); },780);
 }
 function boatMenu(){
