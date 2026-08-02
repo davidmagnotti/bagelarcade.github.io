@@ -3416,9 +3416,11 @@ function updateUndermaw(dt){
   updateMawBats(dt);
   // THE DEN GATE: stepping up into the Stalker's Den with the Maw-Stalker still alive slams the
   // portcullis shut behind you - and only then does the beast rouse. The fight (and its 'loom'
-  // entrance) begins only once you're inside the den, locked in, with no way back until it falls.
+  // entrance) begins only once you're a few tiles inside the den, locked in, with no way back
+  // until it falls. The gate row is y=34; wait until the hero is well past it (P.y<31) so the
+  // seal reads as "you walked into the room", not "you brushed the doorway".
   if(!G._mawDenSealed && !P.dead && !(P.story&&P.story.undermawDown)
-     && P.y<34 && P.y>13 && P.x>7 && P.x<37
+     && P.y<31 && P.y>13 && P.x>7 && P.x<37
      && (G.mobs||[]).some(m=>m.undermawBeast && !m.dead)){
     G._mawDenSealed=1; for(const [x,y] of MAW_DENGATE) setSolid(x,y,1);
     const cg=(G.decor||[]).find(d=>d.kind==='catgate' && d.gate==='den'); if(cg) cg.open=false;
