@@ -91,6 +91,57 @@ function buildGroundCache(){
   }
   groundCache=c; gcOX=OX; gcOY=OY; gcWorld=G.worldId;
 }
+/* Animated water for the LOWFX path. The ground blit bakes the sea in flat (its
+   depth grade only), so the live per-tile sheen/sparkles/shore-lap were lost when
+   the tile loop was skipped. Those are cheap path ops on the FEW water tiles in
+   view (not the thousands of ground drawImages that were the real low-gfx cost),
+   so we run them here as a small overlay after the blit - the sea stays alive in
+   Fast graphics without giving back the win. Mirrors the full-detail effects in
+   the live tile pass below; keep the two in sync. */
+function drawWaterFXLow(minX,maxX,minY,maxY,EL){
+  const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  if(CLOUD) return;   // cloud worlds have open sky where the sea would be
+  for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
+    for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
+      const t=G.map[y*MAPW+x];
+      if(t!==T.SHALLOW && t!==T.DEEP) continue;
+      const s=worldToScreen(x,y); const sx=s.x, sy=s.y;
+      // gentle animated sheen glints
+      const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
+      if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
+        cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
+      // drifting ripple lines
+      const cph=Math.sin(G.time*1.1 + x*0.7 - y*0.5);
+      if(cph>0.45){ cx.strokeStyle='rgba(180,230,255,'+(0.05+0.06*cph).toFixed(3)+')'; cx.lineWidth=1.4;
+        cx.beginPath(); cx.moveTo(sx-9,sy+1); cx.quadraticCurveTo(sx,sy-3,sx+9,sy+1); cx.stroke(); }
+      // shore-lap: a crest rolls shoreward and breaks into white foam on the shallows
+      if(EL && G.wdepth){
+        const wdp=waterDepthLv(x,y);
+        if(wdp>0 && wdp<2.2){
+          const w=Math.sin(wdp*2.0 - G.time*1.5 + ((x*31+y*17)%7)*0.09);
+          if(w>0.55){
+            const aa=(w-0.55)/0.45;
+            cx.strokeStyle='rgba(238,250,252,'+(0.30*aa).toFixed(3)+')'; cx.lineWidth=1.6;
+            cx.beginPath(); cx.moveTo(sx-11,sy+1); cx.quadraticCurveTo(sx,sy-2.5,sx+11,sy+1); cx.stroke();
+            if(aa>0.75 && wdp<1.2){
+              cx.fillStyle='rgba(255,255,255,'+(0.5*(aa-0.75)*4).toFixed(3)+')';
+              cx.beginPath();
+              cx.arc(sx-6,sy+1,1.3,0,TAU); cx.arc(sx+2,sy-0.5,1.1,0,TAU); cx.arc(sx+8,sy+1.4,1.2,0,TAU);
+              cx.fill();
+            }
+          }
+        }
+      }
+      // occasional twinkle
+      if(((x*13+y*29+((G.time*2.2)|0))%41)===0){
+        const sa=0.35+0.35*Math.sin(G.time*6+x);
+        cx.strokeStyle='rgba(255,255,255,'+sa+')'; cx.lineWidth=1;
+        cx.beginPath(); cx.moveTo(sx-3,sy); cx.lineTo(sx+3,sy);
+        cx.moveTo(sx,sy-2); cx.lineTo(sx,sy+2); cx.stroke();
+      }
+    }
+  }
+}
 /* Scenery (trees/rocks/bushes) is static in position but drawn live with many
    path ops per node. In low-gfx, bake it once here by pointing `cx` at the
    offscreen and offsetting the camera so worldToScreen maps into cache space,
@@ -195,6 +246,9 @@ function render(){
     // drawImage). Scenery - trees, rocks and buildings, all cheap sprite blits -
     // is drawn LIVE in the depth-sorted object pass, so every actor (player,
     // enemies, chests, pickups) occludes and is occluded correctly.
+    // The sea baked in flat; re-animate it with a cheap per-water-tile overlay so
+    // it still sparkles and laps the shore in Fast graphics (see drawWaterFXLow).
+    drawWaterFXLow(minX,maxX,minY,maxY,EL);
    } else for(let y=Math.max(0,minY); y<=Math.min(MAPH-1,maxY); y++){
     for(let x=Math.max(0,minX); x<=Math.min(MAPW-1,maxX); x++){
       const t=G.map[y*MAPW+x];
