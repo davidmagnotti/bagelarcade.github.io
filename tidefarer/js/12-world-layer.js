@@ -324,6 +324,7 @@ function genIsleAll(){
   // king quest is already underway, once quest state has been restored.
   if(typeof sealHollowKing==='function') sealHollowKing();
   placeEmberTomb();
+  if(typeof placeGraveMouth==='function') placeGraveMouth();   // Act II climax: the tide-cut stair to the Tidefarer's Rest (js/44)
   const fg=G.decor.find(b=>b.kind==='forge'); G.forgePos = fg? {x:fg.x,y:fg.y} : null;
   buildMapBase();
 }
@@ -6451,7 +6452,7 @@ function openChest(b){
     shockwave(b.x,b.y,'rgba(240,220,150,0.9)',64); burst(b.x,b.y-0.5,'#ffe9a8',26,3); if(Snd.levelup) Snd.levelup();
     giveGold(rndi(300,450)); give('crystal',2); give('pearl',1);
     banner('THE TIDEWARD VAULT','THE FOUNDERS\' HOARD');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders\' vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid atop it all, a slab of tide-worn stone graven with a name and a map you half-know.</i> “The <b>Tidefarer</b>,” <i>you read, and the old prophecy your brother copied out of Stormreach\'s catacombs stirs in your memory - a weapon forged to seal an evil, hidden on an isle off Emberwick.</i> <b style="color:#ffe9a8">The trail to the weapon lies open.</b> <i>(Act II climax - to be continued.)</i>'); },500);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders\' vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid atop it all, a slab of tide-worn stone graven with a name and a map you half-know.</i> “The <b>Tidefarer</b>,” <i>you read, and the old prophecy your brother copied out of Stormreach\'s catacombs stirs in your memory - a weapon forged to seal an evil, hidden on an isle off Emberwick.</i> <b style="color:#ffe9a8">The trail to the weapon lies open: a tide-cut stair has broken open in the rock by Driftwood Dock - the chart\'s hidden waters at last. Put out to the Tidefarer\'s Rest.</b>'); },500);
     setTimeout(autoSave,300); return;
   }
   // THE RIMEFISSURE'S REWARD: the hush-frost spellbook the Rimebound was set to guard.
@@ -6790,7 +6791,9 @@ function boatMenu(){
     if(frostWon)  all.push(['Sail to the Aerie Isle','aerie']);    // the last far reach opens once the Frozen Isle is won
     if(veil) all.push(['Steal home to Barik','main'],['Sail to the Sunward Isle','east'],
                       ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle']);
-    // the capital is never listed in Act II: Vath's gaze holds the throne.
+    // the capital is sealed all through Act II - until the Tidefarer's book is won and the
+    // storm-wall over Aldermere falls (finaleOpen). Then the last road opens (Act III, js/45).
+    if(typeof capitalFerryOption==='function'){ const co=capitalFerryOption(); if(co) all.push(co); }
   }
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
@@ -6828,7 +6831,7 @@ function switchWorld(id){
   // Wave / puzzle / trap dungeons reset fresh on every visit until they are BEATEN: otherwise a
   // cached copy from an earlier descent (waves already killed, gates already open, traps sprung)
   // shows up empty on re-entry. Skip the cache and regenerate a fresh challenge until it's won.
-  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone', winddeep:'galeDeepDone', sunwarddeep:'ashenForgeDone', skydeep:'stormTempleDone', embertomb:'tidewardDone' };
+  const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone', winddeep:'galeDeepDone', sunwarddeep:'ashenForgeDone', skydeep:'stormTempleDone', embertomb:'tidewardDone', graveisle:'tidefarerFreed' };
   const _fw=FRESH_UNTIL_WON[id];
   if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
   if(WORLDS[id]){

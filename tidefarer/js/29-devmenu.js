@@ -362,6 +362,16 @@ const SECTIONS=[
     ['★ Act II return phase (Veil + 4 gifts + refresh isles)',()=>enterReturnPhase()],
     ['Reset Act I ending (replay)',()=>resetActOneEnding()],
   ]],
+  // The finale arc (js/43-45): the Act II climax grave-isle, Joan's slow-time gift,
+  // and the Act III capital assault + Vath seal.
+  ['Endgame (Act II climax · Act III finale)', [
+    ['Open the grave-stair (needs Tideward done)',()=>{ P.story=P.story||{}; P.story.tidewardDone=1; if(G.worldId==='isle'){ if(typeof placeGraveMouth==='function') placeGraveMouth(); } note('Tideward done - grave-stair opens by Driftwood Dock'); ui(); }],
+    ["Teleport: The Tidefarer's Rest",()=>{ P.story=P.story||{}; P.story.tidewardDone=1; tp('graveisle'); }],
+    ['Grant slow-time (the warrior\'s gift)',()=>{ if(typeof grantSlowTime==='function') grantSlowTime(); ui(); note('Slow-time learned - press Q'); }],
+    ['★ Win the book (slow-time + open the sea to Aldermere)',()=>{ P.story=P.story||{}; P.story.tidewardDone=1; P.story.tidefarerWoke=1; P.story.tidefarerFreed=1; P.story.finaleOpen=1; if(typeof grantSlowTime==='function') grantSlowTime(); ui(); note('Book won - sail to Aldermere for the finale'); }],
+    ['Teleport: Aldermere finale (start the assault)',()=>{ P.story=P.story||{}; P.story.finaleOpen=1; delete P.story.vathSealed; if(typeof G!=='undefined') G._capital=null; if(typeof WORLDS!=='undefined') delete WORLDS.crown; tp('crown'); }],
+    ['Reset finale (replay the capital assault)',()=>{ P.story=P.story||{}; ['vathSealed','finaleWon','kingFreed','finale'].forEach(f=>delete P.story[f]); if(typeof G!=='undefined') G._capital=null; if(typeof WORLDS!=='undefined') delete WORLDS.crown; note('Finale reset - sail to Aldermere again'); ui(); }],
+  ]],
   // Every animated overlay cutscene, playable on demand from anywhere - they pause the
   // world, draw their own full-frame scene, and hand back when done. The freeing/ending
   // scenes are given a harmless no-op continuation here so previewing them has no side

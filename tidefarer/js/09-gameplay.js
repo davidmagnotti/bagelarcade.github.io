@@ -907,6 +907,7 @@ function damageMob(m,dmg,knock,skill){
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
+    else if(m.kind==='mage' && m.capVath && !m.sealed){ m.hp=1; if(typeof sealVath==='function') sealVath(m); } // Act III finale: sealed for good by Jaist's seal (js/45)
     else if(m.kind==='mage' && m.finalVath && !m.bound){ m.hp=1; bindVath(m); } // Act IV: the last stand - bound, not slain
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls (mid-game) - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe

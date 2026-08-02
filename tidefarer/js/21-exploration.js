@@ -112,12 +112,20 @@ function frame(ts){
     renderInterior();
     return;
   }
+  // SLOW-TIME (Joan's gift, js/43-slowtime.js): the player always advances at
+  // full dt; the world (foes, their shots, ambient timers) gets the reduced dt
+  // this hands back while the tide is stilled. Returns dt unchanged otherwise.
+  const wDt = (typeof slowTimeTick==='function') ? slowTimeTick(dt, raw) : dt;
   updatePlayer(dt);
-  updateNPCs(dt);
-  updateMobs(dt);
-  updateProjs(dt);
-  updateWorld(dt);
+  updateNPCs(wDt);
+  updateMobs(wDt);
+  updateProjs(wDt);
+  updateWorld(wDt);
   WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt); updateGulls(dt);
+  // endgame drivers (Act II climax grave-isle · Act III capital finale). Run at real dt,
+  // after the world update, so a story-card pause can't re-trigger them. See js/44, js/45.
+  if(typeof graveIsleTick==='function') graveIsleTick(dt);
+  if(typeof capitalTick==='function') capitalTick(dt);
   G.flash=Math.max(0,G.flash-raw*1.6);
   // once the accept-dialog is dismissed, launch the deferred ward-gate reveal pan
   if(G.wardPan && !dlg.open && !G.camCine && G.worldId==='isle' && typeof WARD_GATEY!=='undefined'){
@@ -172,7 +180,7 @@ function boot(){
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
     ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather (time it to an enemy\'s blow to parry) · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b>/<b>L</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · in dialog, <b>number keys</b> pick a reply · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b>/<b>L</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · in dialog, <b>number keys</b> pick a reply · <b>1-2/4</b> hotbar · <b>Q</b> still the tide (once learned) · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;

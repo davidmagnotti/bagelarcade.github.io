@@ -7,6 +7,42 @@ collected at the end.
 
 ---
 
+## Build status — the finale is now shipped — [built]
+
+The arc no longer stops at the Tideward Crypt's "(to be continued)" card. The
+whole remaining spine — the Act II climax and the Act III finale — is built and
+wired end to end. New modules:
+
+- **`js/43-slowtime.js` — Joan's SLOW-TIME.** The marquee gift, player-triggered
+  (Q / an on-screen disc), MP-costed with a cooldown: the world advances at the
+  reduced dt this module hands the main loop (`slowTimeTick`) while the player
+  keeps full dt. Granted by the book (below).
+- **`js/44-tidefarer-tomb.js` — the Act II climax, "The Tidefarer's Rest."** A new
+  world (`graveisle`) reached by a tide-cut stair that opens by Driftwood Dock
+  once the Tideward Crypt is cleared (`P.story.tidewardDone`). The spirit wakes
+  and tells the deepest history (the turned sealing-spell, "do not let him talk"),
+  begs the **headstone strike**, the **royal-family guardians** rise as a boss
+  wave (wraith honour-guard + the **First of the Line**), and the **book** grants
+  the two gifts — slow-time to the warrior, the seal to the scholar — and opens
+  the sea to Aldermere (`P.story.finaleOpen`).
+- **`js/45-capital-finale.js` — Act III, the battle for the capital.** The ferry
+  offers Aldermere once the book is won; the `crown` city turns hostile
+  (`capitalTick`) into three waves of Vath's **thralled** soldiers up to the
+  palace, then **VATH** himself (a `mage` boss). His death is intercepted
+  (one clause in `js/09-gameplay.js`) into **sealVath** — Jaist's seal, sealed not
+  slain — the King is freed, and the ending plays. `P.story.vathSealed` /
+  `P.story.finale`.
+
+Hooks into the base: one line each in `genIsleAll` (the grave-stair),
+`switchWorld`'s `FRESH_UNTIL_WON` (the arena regenerates until won) and `boatMenu`
+(the capital destination), the main loop `frame()` (the two tick drivers + the
+slow-time dt-split), and the Vath death-intercept in `killMob`'s damage path. Dev
+menu: an "Endgame (Act II climax · Act III finale)" section. The decisions the
+"open questions" below flagged were resolved in the shipped build (e.g. slow-time
+is MP-drain + cooldown; the King is freed, not lost).
+
+---
+
 ## The three-act spine — [new, canonical]
 
 This is the governing structure. Everything below hangs off it.
