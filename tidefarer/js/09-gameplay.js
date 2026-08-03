@@ -2157,6 +2157,28 @@ function updateWorld(dt){
   for(const f of G.fireflies){ f.ph+=dt*2; f.life-=dt;
     f.x+=Math.cos(f.ph*0.7)*dt*0.5; f.y+=Math.sin(f.ph*0.9)*dt*0.5; }
   G.fireflies=G.fireflies.filter(f=>f.life>0 && dist(f.x,f.y,P.x,P.y)<16);
+  // ---- THE CLOUDREACH WIND: the high sky blows hard up here and shifts its heading
+  // without warning - a wind that changes direction. It only falls still once the
+  // Storm-Eye on the Rainbow Road is put out (P.story.skyEyeDone), the same kill that
+  // "stills the high wind" in the story. Purely ambient - wind-blown streaks + gusts.
+  if(G.worldId==='sky' && !G.interior && !(P.story && P.story.skyEyeDone)){
+    // a wandering wind vector: ease the live heading toward a target, and now and then
+    // pick a brand-new random target - that swing IS the wind changing direction.
+    const W = G.skyWind || (G.skyWind={ang:Math.random()*TAU, tang:Math.random()*TAU, spd:1, reT:0});
+    W.reT-=dt;
+    if(W.reT<=0){ W.tang=Math.random()*TAU; W.spd=rnd(0.8,1.7); W.reT=rnd(3.5,8);
+      G.shake=Math.max(G.shake,0.10); }                     // a gust marks the shift
+    let da=((W.tang-W.ang+Math.PI*3)%TAU)-Math.PI; W.ang+=da*Math.min(1,dt*1.1);
+    const wx=Math.cos(W.ang), wy=Math.sin(W.ang);
+    // streaks race in on the wind from upwind of the player, sweeping across and past
+    if(Math.random()<dt*16){
+      const px=P.x - wx*rnd(9,15) - wy*rnd(-9,9);
+      const py=P.y - wy*rnd(9,15) + wx*rnd(-9,9) - rnd(0,3);
+      const v=rnd(3.5,6.5)*W.spd;
+      G.parts.push({x:px, y:py, vx:wx*v, vy:wy*v, life:rnd(0.8,1.6),
+        color:Math.random()<0.5?'rgba(232,242,255,0.55)':'rgba(190,215,255,0.4)', size:rnd(1,2.4), grav:0});
+    }
+  }
   if(G.worldId==='east' && ZONES.caldera && Math.random()<dt*4){
     const CC=ZONES.caldera;
     G.parts.push({x:CC.x+rnd(-2,2), y:CC.y-rnd(0,0.6),

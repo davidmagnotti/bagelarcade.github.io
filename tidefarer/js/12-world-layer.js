@@ -4050,7 +4050,7 @@ function askSkyDragon(){
     flyToWorld('east','Ashwing tips off the cloud-shelf and pours downward - the Sunward Isle swelling up green out of the sea to meet you.'); }});
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
   const line = haveChart
-    ? '<i>Ashwing dips his great head to the Cloud-Chart and rumbles low, tracing a wing-tip along its inked wind-roads. He knows every one - Windsurf, the Cloudreach, the Sunward Isle - and will bear you to any of them, now the high wind lies still.</i>'
+    ? '<i>Ashwing dips his great head to the Cloud-Chart and rumbles low, tracing a wing-tip along its inked wind-roads. He knows every one - Windsurf, the Cloudreach, the Sunward Isle - and will bear you to any of them, now the high wind lies still.</i> <b>"Wherever you need to go, friend - only name it, and I\'ll gladly bear you there."</b>'
     : '<i>Ashwing folds a wing against the wind and rumbles - he will carry you back down to the Sunward Isle whenever the height gets into your knees. (Run the rainbow road and bring back the crown\'s chart, and he\'ll fly you on to Windsurf too.)</i>';
   // open the dialog window itself (dlg.open + display + portrait) via lairDialog - calling
   // setDialog alone only fills a HIDDEN panel, so the menu never appeared and "Fly down" read as dead
