@@ -235,7 +235,7 @@ function enterDungeonLink(id){
   P.unlocked.melee=P.unlocked.bow=P.unlocked.dash=P.unlocked.dash2=P.unlocked.surf=P.unlocked.parry=true;
   P.kit=true; P.swordTier=Math.max(P.swordTier||0,3);
   P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
-  P.hp=P.maxhp; P.mp=P.maxmp;
+  P.hp=P.maxhp;
   try{ buildHotbar&&buildHotbar(); refreshUI&&refreshUI(); }catch(e){}
   switchWorld(id);
   const def=(typeof WORLD_DEFS!=='undefined') && WORLD_DEFS[id];

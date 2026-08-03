@@ -37,7 +37,7 @@ const MAX_SKILL_LVL = 100;   // every skill climbs to a shared mastery cap of 10
 
 const P = {
   x:ZONES.village.x+0.5, y:ZONES.village.y+2.5,
-  hp:100, maxhp:100, mp:30, maxmp:30,
+  hp:100, maxhp:100,
   overheal:0, // a yellow bonus buffer (from resting at the hot springs) that soaks a hit before HP does
   arrows:20, maxArrows:20, // the quiver: a hard-hitting bow, rationed to 20 shafts that slowly refill
   dir:{x:0,y:1}, moving:false, anim:0, speed:4.6,
@@ -117,7 +117,7 @@ const QUESTS = {
     brief:'Three pages barely wet your feet, apprentice. The isle keeps at least seven echoes of its history - in homes, on stones, in places warm and cold. Read seven and you\'ll leave here knowing WHERE you\'ve been.',
     log:'Read 7 lore writings across the isle (books, standing stones, the crypt...).',
     doneText:'Seven echoes! You now know this island better than most who were born on it.',
-    rw:{gold:30, mp:6, xp:{magic:220}} },
+    rw:{gold:30, xp:{magic:220}} },
   gravelord:{ giver:'orin', title:'The Gravelord Stirs', kind:'kill', kill:{gravelord:1},
     brief:'The Hollow Spirit had a herald - Varek, his gravelord. My wards report the old bones knitting back together in the ruins. Put him down before he finishes what his master started. And take Bram\'s yew bow - old bones splinter under arrows, half again as deep.',
     log:'Slay Gravelord Varek in the Old Ruins.',
@@ -127,7 +127,7 @@ const QUESTS = {
     brief:'Mama\'s birthday is after you sail, and she always says the sea gives the best gifts. Six spiral shells and... a real PEARL? Fishers say they hide in the deep casts. Please?',
     log:'Gather 6 spiral shells and 1 pearl (a rare catch while fishing).',
     doneText:'A REAL PEARL! She\'s going to cry. Happy crying! You\'re my favorite person who isn\'t Mama.',
-    rw:{gold:35, mp:4, xp:{fishing:200}} },
+    rw:{gold:35, xp:{fishing:200}} },
   profit:{ giver:'maren', title:'A Tidy Profit', kind:'special',
     brief:'Commerce keeps a village breathing, traveler. Sell twelve goods across my counter - fish, timber, pearls, whatever the isle yields - and I\'ll teach you the trick of mainland haggling.',
     log:'Sell 12 items to Elder Maren.',

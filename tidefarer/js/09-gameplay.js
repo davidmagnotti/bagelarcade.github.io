@@ -298,7 +298,7 @@ function doInteract(){
   if(it.type==='lore'){ facePoint(it.o.x,it.o.y); readLore(it.key); return; }
   if(it.type==='well'){
     if(P.wellCd>0){ blockMsg('The well needs <b>'+Math.ceil(P.wellCd)+'s</b> to refill before you can drink again.'); return; }
-    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.wellCd=90;
+    P.hp=P.maxhp; P.arrows=P.maxArrows||20; P.wellCd=90;
     addFloat('Fully restored',P.x,P.y-1.8,'#7fe07f',1.2);
     burst(P.x,P.y-0.6,'#9ecbe8',14,2.2); Snd.pickup(); refreshUI();
     return;
@@ -605,8 +605,7 @@ function tryAttack(useMouse){
     G.projs.push(arrow);
     refreshUI();
   } else if(P.weapon==='staff'){
-    if(P.mp<8){ toastErr('Not enough mana - it returns as you breathe.'); P.atkCd=0.3; return; }
-    P.mp-=8; P.atkCd=0.7; P.swing=0.3; Snd.magic();
+    P.atkCd=0.7; P.swing=0.3; Snd.magic();
     if(TRAIN && TRAIN.who==='aelin') TRAIN.casts=(TRAIN.casts||0)+1;   // Aelin's drill counts staff casts
     // Emberburst perk (magic L5): bigger splash. Overcharge perk: the bolt strikes twice as hard.
     const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
@@ -622,7 +621,7 @@ function gainLXP(n){
   addFloat('+'+n+' XP', P.x, P.y-2.6, '#c9b0ff');
   while(P.xpL>=xpForP(P.level) && P.level<20){
     P.xpL-=xpForP(P.level); P.level++;
-    P.maxhp+=6; P.maxmp+=2; P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20;   // level-up tops the quiver too
+    P.maxhp+=6; P.hp=P.maxhp; P.arrows=P.maxArrows||20;   // level-up tops the quiver too
     burst(P.x,P.y-0.5,'#c9b0ff',20); Snd.levelup();
     shockwave(P.x,P.y,'rgba(201,176,255,0.9)',46);
     banner('LEVEL '+P.level, 'Barik takes your measure - and steps back.');
@@ -1005,7 +1004,7 @@ function killMob(m,skill){
   if(skill && SKILLS[skill]) addXP(skill, m.xp||d.xp);
   bumpStat('kills');
   // named bosses (the Hollow Spirit by kind, every other boss by its
-  // ach tag) grant their achievement AND a one-time +max-mana on defeat
+  // ach tag) grant their achievement on defeat
   bossReward(m);
   // felling any isle boss - the marquee bosses, the regional named foes, or the
   // beasts denning in the isle's dungeons - marks the isle cleared and stills its nights
@@ -1117,7 +1116,7 @@ function killMob(m,skill){
     if(typeof openSkyGate==='function') openSkyGate('gEye');
     const g5=G.decor&&G.decor.find(d=>d.kind==='skygate'&&d.gate==='g5');
     if(g5 && !g5.open){ g5.open=true; for(const [x,y] of (g5.tiles||[])) setSolid(x,y,0); }
-    P.hp=P.maxhp; P.mp=P.maxmp;
+    P.hp=P.maxhp;
     if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
     banner('THE STORM-EYE CLOSES','THE HIGH WIND FALLS STILL');
     if(typeof autoSave==='function') autoSave();
@@ -1315,7 +1314,7 @@ function playerDie(){
 }
 document.getElementById('respawnBtn').onclick=()=>{
   document.getElementById('deadOv').style.display='none';
-  P.dead=false; P.hp=Math.round(P.maxhp*0.6); P.mp=P.maxmp;
+  P.dead=false; P.hp=Math.round(P.maxhp*0.6);
   P.poisonT=0; P._venAcc=0; // venom does not carry through death
   // when a foe kills you it recovers fully - no chipping a boss down across
   // repeated deaths. Every living mob is healed to full and sent home to rest.
@@ -1633,8 +1632,6 @@ function updatePlayer(dt){
   }
   P.stillT = P.moving? 0 : (P.stillT||0)+dt; // how long we've truly stood still
   P.moveT  = P.moving? (P.moveT||0)+dt : 0;   // ...and how long we've been under way (launch spring)
-  // regen
-  P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
   // Arrows do NOT passively recharge - the quiver is only replenished by picking up dropped
   // shafts (fallen archers/bosses), quiver-bundle items, and level-ups. Spend them with care.
   if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation

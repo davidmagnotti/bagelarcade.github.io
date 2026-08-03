@@ -198,7 +198,7 @@ function enterHouse(b){
       // remote hospitality: far from any town, folk take a knocker in
       give('bread',1);
       const fadeH=document.getElementById('fadeOv'); fadeH.style.opacity=1; Snd.tone(200,0.5,'sine',0.04,-60);
-      setTimeout(()=>{ G.dayT=0.09; P.hp=P.maxhp; P.mp=P.maxmp; G.fireflies.length=0; refreshUI(); autoSave();
+      setTimeout(()=>{ G.dayT=0.09; P.hp=P.maxhp; G.fireflies.length=0; refreshUI(); autoSave();
         blockMsg('You knock. \u201cStorm-late, are you? Come in, the hearth is yours till dawn.\u201d They wake you with <b>bread</b> at first light.');
         setTimeout(()=>{ fadeH.style.opacity=0; },120); },750);
       return;
@@ -236,7 +236,7 @@ function enterHouse(b){
     // desk, a scrying orb, and a rug. Each book opens a different lesson.
     F('desk',6.6,3.2,1.0,0.6); F('stool',6.6,4.3,0.35,0.3); F('orb',2.4,3.4,0.5,0.4);
     F('books',1.7,1.3,0.7,0.3,true,'weave@tower');
-    F('shelf',3.1,1.3,0.7,0.3,true,'mana@tower');
+    F('shelf',3.1,1.3,0.7,0.3,true,'scrying@tower');
     F('books',4.5,1.3,0.7,0.3,true,'ember@tower');
     F('shelf',5.9,1.3,0.7,0.3,true,'wards@tower');
     F('books',7.3,1.3,0.7,0.3,true,'enchant@tower');
@@ -480,7 +480,6 @@ function updateInterior(dt){
   }
   P.swing=Math.max(0,P.swing-dt);
   P.hurtT=Math.max(0,P.hurtT-dt);
-  P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
   if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
 }
 function iBox(s,w,d,h,top,lft,rgt){

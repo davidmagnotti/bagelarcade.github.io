@@ -748,7 +748,7 @@ function offerSkyReturn(){
   setDialog('The wind calms and the rainbow runs clear. Rest at the landing - healed and a level stronger?',
     [ {label:'Rest at the landing', cls:'gold', fn:()=>{
         closeDialog();
-        P.hp=P.maxhp; P.mp=P.maxmp;
+        P.hp=P.maxhp;
         if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
         P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
         G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;

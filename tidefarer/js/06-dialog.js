@@ -788,7 +788,7 @@ function shopButtons(npc,btns){
       fade.style.opacity=1;
       setTimeout(()=>{
         G.dayT=0.09; // morning proper - the dark is done
-        P.hp=P.maxhp; P.mp=P.maxmp;
+        P.hp=P.maxhp;
         P.bind={w:G.worldId, x:npc.x, y:npc.y+1};
         fade.style.opacity=0;
         toast('You sleep deep and dreamless. Dawn finds you <b>fully mended</b>.',4600);
