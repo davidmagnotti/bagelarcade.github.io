@@ -140,7 +140,6 @@ const EPI = {
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0, storm:0, near:0, land:0, flash:0, flashT:6, drops:[], running:false, ended:false,
 };
-function rollCredits(){ sailEpilogue(); }   // old call-site name kept as an alias
 function sailEpilogue(){
   const ov=document.getElementById('epiOv');
   const cv=document.getElementById('epiCv');

@@ -3,9 +3,6 @@
    ===================================================================== */
 function moveEntity(e,dx,dy,rad,waterOK,diveOK){
   rad=rad||0.28;
-  // DEV float / noclip: the player drifts through everything - walls, water, land-solids,
-  // pits - with no collision at all. Toggled from the dev menu (window.DEVFLOAT).
-  if(e===P && window.DEVFLOAT){ e.x+=dx; e.y+=dy; return; }
   // In the Undermaw the black scar is a bottomless pit the hero crosses on platforms.
   // Mobs have no falling logic, so left alone they wander out and float over the void.
   // Hold every non-player entity back at the pit's edge; the player still crosses freely.
@@ -364,7 +361,6 @@ function doInteract(){
   if(it.type==='node') hitNode(it.o);
   if(it.type==='plot') usePlot(it.o);
 }
-const BUILDING_KINDS={house:1,house2:1,igloo:1,forge:1,barn:1,tower:1,castle:1,hut:1,resort:1,windmill:1,waterwheel:1};
 // The interact button found nothing in reach. Rather than fail silently, word the
 // blocker in-world - if a building is close by, the player almost certainly meant
 // its door, so point them at it; otherwise a plain "nothing here" line.
@@ -606,7 +602,6 @@ function tryAttack(useMouse){
     refreshUI();
   } else if(P.weapon==='staff'){
     P.atkCd=0.7; P.swing=0.3; Snd.magic();
-    if(TRAIN && TRAIN.who==='aelin') TRAIN.casts=(TRAIN.casts||0)+1;   // Aelin's drill counts staff casts
     // Emberburst perk (magic L5): bigger splash. Overcharge perk: the bolt strikes twice as hard.
     const eb=P.perks&&P.perks.emberburst, oc=P.perks&&P.perks.frostbolt;
     const bolt={kind:'bolt',x:P.x,y:P.y-0.5,vx:aim.x*10,vy:aim.y*10,life:1.4,dmg:oc?magicDmg()*2:magicDmg(),from:'player',skill:'magic',aoe:eb?1.9:1.2};
@@ -1269,7 +1264,6 @@ function hurtPlayer(dmg,src){
   buzz(24);
   dmg=dmg*[0.6,1,1.35][CFG.diff|0];
   let _red=[0,0.15,0.30][P.armor||0];
-  if(typeof has==='function' && has('wardplate',1)) _red=Math.min(0.65, _red+0.15);   // the Deepiron Ward stacks atop worn armour
   dmg=Math.max(1, Math.round(dmg*(1-_red)));
   if(has('wardstone',1)) dmg=Math.max(1, dmg-2);   // the Warden's Wardstone turns aside a sliver of every blow
   const lvUp=Math.max(0,(src&&src.lvl||1)-(P.level||1));
@@ -1599,21 +1593,7 @@ function updatePlayer(dt){
     // ARENA: keep the trainee inside the ring - clamp them back rather than abandon
     { const R=6.2, ax=P.x-TRAIN.x, ay=P.y-TRAIN.y, ad=Math.hypot(ax,ay);
       if(ad>R){ P.x=TRAIN.x+ax/ad*R; P.y=TRAIN.y+ay/ad*R; P.click=null; } }
-    if(TRAIN.who==='aelin'){
-      // The Spire lesson is pure spellwork - no footwork gates (no dodge-roll to
-      // learn here). Land 5 staff casts on the practice dummy and the weave lifts
-      // you a whole magic level. Gated to once per day back in aelinStudy.
-      if((TRAIN.casts||0)>=5){
-        TRAIN=null; for(const m of dums){ m.hp=m.maxhp; }
-        P.prog=P.prog||{}; P.prog.spireDay=(P.prog.dayN||1);          // today's lesson is spent
-        P.prog.spireTrainedEver=1;                                    // the Spire door now knows you
-        const mg=P.skills.magic; addXP('magic', Math.max(160, xpForLevel(mg.lvl)-mg.xp));  // guarantee a level
-        gainLXP(80);
-        toast('<b>Aelin smiles.</b> “Five true casts - the weave knows your hand now, and that\'s my lesson done. Now step <b>inside the Spire</b> and lay both hands on the <b>orb</b> - it keeps a prize for a student who\'s earned it.”',6200);
-        Snd.levelup();
-      }
-    }
-    else if(TRAIN.stage===0 && dmgDone>=30){ TRAIN.stage=1; Snd.quest();
+    if(TRAIN.stage===0 && dmgDone>=30){ TRAIN.stage=1; Snd.quest();
       toast('<b>Good.</b> Now chain it: land a <b>COMBO x2</b> without pausing between strikes.',4400); }
     else if(TRAIN.stage===1 && TRAIN.combo>=2){ TRAIN.stage=2;
       if(TRAIN.who==='rook'){ Snd.quest();

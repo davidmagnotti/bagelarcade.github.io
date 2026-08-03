@@ -223,7 +223,6 @@ function refreshInvPanel(){
   if(has('relic',1)) tr.push('Stormwatch Relic <span style="color:#9be07f">+4</span>');
   if(has('wardstone',1)) tr.push('Warden\u2019s Wardstone <span style="color:#9be07f">-2 dmg taken</span>');
   if(has('boots',1)) tr.push('Trailblazer Boots <span style="color:#9be07f">+14% speed</span>');
-  if(has('crown',1)) tr.push('Hollow Crown <span style="color:#9be07f">+25 HP</span>');
   if(tr.length) eq+='<div style="font-size:11px;color:var(--parch-dim);margin-bottom:6px;">'+
     '<b style="color:#9a917f;letter-spacing:1px;">CHARMS </b>'+tr.join(' \u00b7 ')+'</div>';
   eq+='<div style="font-size:11px;color:var(--parch-dim);border-top:1px solid #3a2c1c;padding-top:7px;margin-bottom:2px;">Stronger weapons, armor &amp; tools are won from the isle\u2019s quests and its fiercest foes.</div>';

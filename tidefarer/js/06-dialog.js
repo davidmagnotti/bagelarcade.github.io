@@ -702,34 +702,6 @@ function shopButtons(npc,btns){
         shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
     }});
   }
-  if(npc.id==='aelin'){
-    // tuition scales with mastery (25g \u00d7 magic level) and the Spire caps out at level 7
-    const aelinFee=()=>25*Math.max(1,P.skills.magic.lvl);
-    const aelinStudy=()=>{
-      if(P.skills.magic.lvl>=7){ setDialog('“Level seven - the Spire\'s ceiling. Past this point the weave teaches <i>you</i>, and it does not take gold. Go and practice.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      // one lesson, ever - a single true lesson is all the Spire gives
-      if(P.prog && P.prog.spireTrainedEver){
-        setDialog('“You\'ve had my lesson, and the weave keeps it - there\'s nothing more I can drill into you here. Go and practice what you know. And if you haven\'t yet - step inside; the orb has a gift for a student who\'s earned it.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      const f=aelinFee();
-      if(P.gold<f){ setDialog('“The Spire\'s wisdom is subsidized, not free. '+f+' gold - mastery raises tuition.”',shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}])); return; }
-      // she gives the lesson aloud first - a click-to-continue brief - then the drill begins
-      const beginLesson=()=>{
-        P.gold-=f; Snd.coin(); refreshUI(); closeDialog();
-        P.x=npc.x+2.5; P.y=npc.y+1.6; unstickEntity(P);
-        TRAIN={who:'aelin', stage:0, rolls:0, combo:0, casts:0, _r:0, x:P.x, y:P.y,
-          dmg0:G.mobs.filter(m=>m.kind==='dummy').reduce((a,m)=>a+(m.maxhp-m.hp),0)};
-        toast('<b>Aelin\'s lesson:</b> strike the dummy with <b>5 bolts</b>. Attune your staff with <b>3</b>.',5000); Snd.quest();
-      };
-      setDialog('<i>Aelin sets a practice dummy at the heart of the ring and steps clear.</i> “Here is the whole of today\'s lesson: attune your staff - <b>press 3</b> - and strike that dummy with <b>five clean bolts</b>. No footwork, no flourish - just the weave, loosed true, five times over. Ready your staff, and begin when you are.”',
-        [{label:'Begin the lesson ('+f+'g)', cls:'gold', fn:beginLesson},
-         {label:'Not yet', ghost:true, fn:closeDialog}]);
-    };
-    // Magic training removed - that art is gone from the isles, so there's no "Train at the
-    // Spire" button anymore. Aelin is a character now: her lines carry the interaction, and after
-    // dark you can step inside the Spire to talk and rest the cot. (aelinStudy/aelinFee above are
-    // now unused, left harmless; nothing references P.skills.magic at runtime.)
-    void aelinStudy; void aelinFee;
-  }
   if(npc.id==='rook'){
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Straight off the shelf, friend - the red Ember Tonic for the small hurts, the blue elixir for when the small hurts aren\'t. What\'ll it be?',
       [{item:'potion',price:30},{item:'elixir',price:70}])});

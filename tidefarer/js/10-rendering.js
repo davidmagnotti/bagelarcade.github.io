@@ -2747,14 +2747,13 @@ function drawMob(m,s){
     if(open){ g.font='bold 10px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; g.fillStyle='#ffd76a'; g.fillText('VULNERABLE!',s.x,cy-40*sc*0.5+8); }
     drawMobBars&&drawMobBars(m,s); return;
   }
-  if(m.kind==='wraith'||m.kind==='skywraith'||m.kind==='skygrabber'||m.kind==='stormwraith'||m.kind==='skyspirit'){
+  if(m.kind==='wraith'||m.kind==='skywraith'||m.kind==='skygrabber'||m.kind==='stormwraith'){
     // the same tattered cloud-shade, recoloured for the Rainbow Road's shades
     const PAL={
       wraith:     {body:'#1c2233', hem:'rgba(140,170,220,0.35)', hood:'#0e1220', eye:'150,205,255', glow:'120,190,255', wisp:'rgba(140,170,220,0.5)'},
       skywraith:  {body:'#233150', hem:'rgba(170,210,255,0.42)', hood:'#101a2e', eye:'160,220,255', glow:'150,210,255', wisp:'rgba(170,205,255,0.55)'},
       skygrabber: {body:'#1e3a34', hem:'rgba(120,235,205,0.5)',  hood:'#0c211d', eye:'150,255,215', glow:'120,255,205', wisp:'rgba(150,240,210,0.55)'},
-      stormwraith:{body:'#2a2444', hem:'rgba(185,165,255,0.5)',  hood:'#160f28', eye:'205,185,255', glow:'180,150,255', wisp:'rgba(190,170,255,0.55)'},
-      skyspirit:  {body:'#341f48', hem:'rgba(215,140,255,0.55)', hood:'#1a0f24', eye:'230,150,255', glow:'210,120,255', wisp:'rgba(220,150,255,0.6)'}
+      stormwraith:{body:'#2a2444', hem:'rgba(185,165,255,0.5)',  hood:'#160f28', eye:'205,185,255', glow:'180,150,255', wisp:'rgba(190,170,255,0.55)'}
     }[m.kind];
     const sc=m.bscale||1;
     const bobW=Math.sin(m.anim*3.2)*2.5;
@@ -3751,8 +3750,7 @@ function drawPlayerFigure(s){
   const look={hero:true, fem:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     trim:P.swordTier>0?'#8a6d30':null,   // no pauldrons: they broadened her shoulders into a triangular silhouette
     crest:!!(P.story && P.story.necklace),  // the crest necklace, worn from wake-up
-    mask: !!(P.story && P.story.masked),     // the Emberwick mask - worn until the woodworker draws it off
-    hat: has('crown',1)?'crown':null};
+    mask: !!(P.story && P.story.masked)};     // the Emberwick mask - worn until the woodworker draws it off
   // Once memory returns, the castaway becomes the princess again: her true royal
   // wear - a deep magenta - and her hair bound up in her traditional ponytail.
   if(P.story && P.story.royalGarb){
@@ -3983,7 +3981,6 @@ function buildMapBase(){
     mapBaseWorld=G.worldId;   // record which world this shared canvas now holds
   }catch(e){/* keep the previous image rather than blanking */}
 }
-let miniT=0;
 function drawMinimap(){
   // Cloud worlds (no chartable ground) and dungeons (walls and floor are the same stone,
   // so the map is just a gray box) have their minimap sealed by design; #miniWrap is hidden

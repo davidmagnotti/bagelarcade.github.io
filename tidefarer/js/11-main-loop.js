@@ -46,16 +46,6 @@ function weatherAll(){
 }
 
 /* ---------- gore & goo decals that stain the ground ---------- */
-function splat(x,y,color,big){
-  const n= big? 7 : 4;
-  for(let i=0;i<n;i++){
-    if(G.decals.length>90) G.decals.shift();
-    const a=Math.random()*TAU, d=Math.random()*(big?0.9:0.5);
-    G.decals.push({x:x+Math.cos(a)*d, y:y+Math.sin(a)*d,
-      rx:(big?5:3)+Math.random()*(big?9:5), color,
-      life:rnd(18,30), max:1, rot:Math.random()*TAU});
-  }
-}
 function drawDecals(minX,maxX,minY,maxY){
   for(const d of G.decals){
     if(d.x<minX||d.x>maxX||d.y<minY||d.y>maxY) continue;
@@ -68,7 +58,6 @@ function drawDecals(minX,maxX,minY,maxY){
   }
   cx.globalAlpha=1;
 }
-const GORE={ slime:'#3f6b2a', wolf:'#4d100c', skeleton:'#8f8a7a', boss:'#274435', player:'#55100c' };
 
 /* ---------- rolling ground fog & ruin miasma ---------- */
 function spawnFog(x,y,color){

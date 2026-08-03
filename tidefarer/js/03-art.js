@@ -920,12 +920,6 @@ function drawShadowAt(g,sx,sy,r){
   g.drawImage(sp, sx-w/2+ox, sy-h/2, w, h);
 }
 
-function dirOct(d){
-  // screen-space facing octant: 0=E, 1=SE, 2=S(front), 3=SW, ±4=W, -1=NE, -2=N(back), -3=NW
-  if(!d) return 1;
-  return Math.round(Math.atan2(d.x+d.y, d.x-d.y)/(Math.PI/4));
-}
-
 /* =====================================================================
    NPC SPRITE CACHE
    drawHumanoid is a ~900-line procedural figure (gradients + dozens of path
@@ -2463,10 +2457,6 @@ function iconCanvas(kind,sz=40){
     g.translate(w/2,h/2); const s=w/40;
     g.scale(s,s);
     switch(kind){
-      case 'wardplate': g.fillStyle='#42505c'; g.beginPath(); g.roundRect(-10,-11,20,22,4); g.fill();
-        g.strokeStyle='#20272e'; g.lineWidth=2; g.beginPath(); g.roundRect(-10,-11,20,22,4); g.stroke();
-        g.strokeStyle='#6a7a88'; g.lineWidth=1.4; g.beginPath(); g.moveTo(0,-11); g.lineTo(0,11); g.moveTo(-10,-2); g.lineTo(10,-2); g.stroke();
-        g.fillStyle='#8fa4b4'; g.beginPath(); g.arc(-5,-6,1.4,0,TAU); g.arc(5,-6,1.4,0,TAU); g.arc(-5,5,1.4,0,TAU); g.arc(5,5,1.4,0,TAU); g.fill(); break;
       case 'goo': g.fillStyle='#7fca6a'; g.beginPath(); g.ellipse(0,2,10,8,0,0,TAU); g.fill();
         g.fillStyle='#9ade86'; g.beginPath(); g.ellipse(-3,-1,4,3,0,0,TAU); g.fill();
         g.strokeStyle='#4f8f3e'; g.lineWidth=1.6; g.beginPath(); g.ellipse(0,2,10,8,0,0,TAU); g.stroke();
@@ -2551,9 +2541,6 @@ function iconCanvas(kind,sz=40){
       case 'charm': g.strokeStyle='#c9a06a'; g.lineWidth=2; g.beginPath(); g.arc(0,-6,7,Math.PI*0.15,Math.PI*0.85,true); g.stroke();
         g.fillStyle='#ff9a3c'; g.beginPath(); g.moveTo(0,-4); g.quadraticCurveTo(8,2,0,12); g.quadraticCurveTo(-8,2,0,-4); g.fill();
         g.fillStyle='#ffd76a'; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(4,4,0,9); g.quadraticCurveTo(-4,4,0,0); g.fill(); break;
-      case 'crown': g.fillStyle='#ffd76a'; g.beginPath(); g.moveTo(-11,8); g.lineTo(-11,-4); g.lineTo(-5,2); g.lineTo(0,-9); g.lineTo(5,2); g.lineTo(11,-4); g.lineTo(11,8); g.closePath(); g.fill();
-        g.fillStyle='#e05648'; g.beginPath(); g.arc(0,3,2.4,0,TAU); g.fill();
-        g.fillStyle='#c98f1e'; g.fillRect(-11,6,22,3); break;
       case 'sword': g.rotate(-0.7); g.fillStyle='#c9ced6'; g.fillRect(-2,-14,4,20);
         g.beginPath(); g.moveTo(-2,-14); g.lineTo(0,-18); g.lineTo(2,-14); g.closePath(); g.fill();
         g.fillStyle='#8a6238'; g.fillRect(-6,6,12,3); g.fillRect(-2,9,4,6); break;
@@ -2572,7 +2559,7 @@ function iconCanvas(kind,sz=40){
 }
 const ICONS = {};
 function buildIcons(){
-  ['wood','stone','fish','wheat','seed','mushroom','potion','manapot','gold','charm','crown','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat','goo','wardplate'].forEach(k=> ICONS[k]=iconCanvas(k));
+  ['wood','stone','fish','wheat','seed','mushroom','potion','manapot','gold','charm','sword','bow','staff','heart','silk','ribbon','bread','cookedfish','apple','armor0','armor1','armor2','coconut','boarmeat','goo'].forEach(k=> ICONS[k]=iconCanvas(k));
   const gi=document.getElementById('goldIcon').getContext('2d');
   gi.drawImage(iconCanvas('gold',18),0,0);
 }

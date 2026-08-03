@@ -48,7 +48,6 @@ function findHedda(){
   for(var i=0;i<G.npcs.length;i++){ if(G.npcs[i].id==='hedda') return G.npcs[i]; }
   return null;
 }
-function nodeAt(x,y){ for(var i=0;i<G.nodes.length;i++){ if(G.nodes[i].tx===x && G.nodes[i].ty===y) return G.nodes[i]; } return null; }
 // an ORDINARY tree/rock (no tool-gate) blocking this tile - the kind a starting axe/pick
 // fells in a swing. If such a node is holding part of the ward line, the player can cut it
 // down and walk through the hole, so the wall must never lean on one (see the border loop).
@@ -59,14 +58,6 @@ function fellableAt(x,y){
 }
 function removeNode(n){ n.dead=true; n.gone=true; var i=G.nodes.indexOf(n); if(i>=0) G.nodes.splice(i,1); }
 function npcAt(x,y,exceptId){ for(var i=0;i<G.npcs.length;i++){ var n=G.npcs[i]; if(n.id!==exceptId && Math.round(n.x-0.5)===x && Math.round(n.y-0.5)===y) return true; } return false; }
-// a building/critical decor tile inside the footprint would be wrong to seal
-function criticalDecorAt(x,y){
-  var CRIT={house:1,house2:1,barn:1,forge:1,tower:1,castle:1,windmill:1,waterwheel:1,boat:1,well:1,
-            dungeonmouth:1,cavemouth:1,lairmouth:1,tombmouth:1,tunnelmouth:1,leappoint:1,fastexit:1,bazaar:1,chest:1};
-  for(var i=0;i<G.decor.length;i++){ var b=G.decor[i]; if(CRIT[b.kind] && Math.round(b.x-0.5)===x && Math.round(b.y-0.5)===y) return true; }
-  return false;
-}
-
 // flood from (sx,sy) across walkable tiles, treating `blocked` (a {'x,y':1} set) as walls.
 // returns a reached-set; stops early past `cap`.
 function flood(sx,sy,blocked,cap){

@@ -737,23 +737,3 @@ function exitSkyDungeon(){
     G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
     if(fd) setTimeout(()=>{ fd.style.opacity=0; },220); }, 300);
 }
-/* after the Storm-Eye falls: mend the hero and set them at the landing */
-function offerSkyReturn(){
-  if(G.state!=='play' || P.dead || G.worldId!=='skydungeon' || dlg.open) return;
-  const st=skyIsle('start');
-  dlg.open=true; dlg.npc=null;
-  document.getElementById('dialog').style.display='block';
-  document.getElementById('dname').textContent='The Wind Calms';
-  skyBirdPortrait();
-  setDialog('The wind calms and the rainbow runs clear. Rest at the landing - healed and a level stronger?',
-    [ {label:'Rest at the landing', cls:'gold', fn:()=>{
-        closeDialog();
-        P.hp=P.maxhp;
-        if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
-        P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
-        G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
-        burst(P.x,P.y-0.5,'#c9b0ff',20,2); if(Snd.magic) Snd.magic();
-        toast('The bird waits at the landing to fly you down whenever you\'re ready.',3800);
-      }},
-      {label:'Stay a while', ghost:true, fn:closeDialog} ]);
-}

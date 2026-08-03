@@ -52,9 +52,6 @@ var TG_WORLDS={
   crown:[ {mat:'basalt',   gid:'crown:c0', loot:'elixirs'},
           {mat:'ironwood', gid:'crown:c1', loot:'materials'} ]
 };
-// the two tools themselves, each in a fitting dungeon
-var TG_TOOLCHEST={ undermaw:{flag:'pickgift', tier:'pick'}, eastdeep:{flag:'axegift', tier:'axe'} };
-
 function strHash(s){ var h=2166136261>>>0; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function tg(){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; return P.story.tg; }
 
@@ -213,21 +210,6 @@ function placeCache(ca, zones, used){
   if(!felled && typeof addGateNode==='function'){
     var g2=addGateNode(ca.mat, m[0], m[1]); if(g2) g2.gid=ca.gid;
   }
-}
-
-function placeToolChest(id, tc){
-  var t=tg();
-  if(t[id+':toolchest']) return;                      // already taken
-  if((P.tools && P.tools[tc.tier] || 0) >= 2) return; // already own the tier-2 tool
-  var def=WORLD_DEFS[id]; if(!def || !def.spawn) return;
-  var sx=Math.round(def.spawn.x), sy=Math.round(def.spawn.y);
-  // deep in the dungeon, never at the entrance (see deepDungeonSpot in 37-dungeon-hideaways.js)
-  var pos=(typeof deepDungeonSpot==='function' && deepDungeonSpot([sx,sy], id+':tool'))
-        || (typeof findOpenNear==='function' && findOpenNear(sx,sy+8,14)) || null;
-  if(!pos) return;
-  var o={kind:'chest', x:pos[0]+0.5, y:pos[1]+0.5, tgid:id+':toolchest'};
-  o[tc.flag]=1;
-  G.decor.push(o);
 }
 
 function placeToolgates(id){

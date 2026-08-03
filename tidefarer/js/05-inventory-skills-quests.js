@@ -153,7 +153,6 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Double Dash learned!</b> Moss\u2019s quickroot draught lets you chain a <b>second dodge roll</b> right after the first.',6000); }
   if(rw.room){ P.resortRoom=1;
     toast('<b style="color:var(--ember)">The Breakers suite is yours!</b> Coralie hands you the brass key - sleep in the canopy bed by the sea-window any time, no charge.',6000); }
-  if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.hp){ P.maxhp+=rw.hp; P.hp=P.maxhp; toast('<b style="color:var(--ember)">+'+rw.hp+' max HP</b> - hardened by the deed.'); }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   if(id==='ribbon1'){ P.quests.ribbon2='active';
