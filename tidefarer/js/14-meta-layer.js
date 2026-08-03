@@ -220,6 +220,15 @@ function loadCode(str){
     P.quests.pendant='active'; P.prog.pendant=P.prog.pendant||0;
     setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">The pendant still burns to be understood.</b> Sail to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000); }catch(e){} }, 2600);
   }
+  // Unstick the Orin -> Woodworker hand-off for saves made while it shipped as an
+  // 'avail' offer: Orin has read the ward (pendant done) but the Woodworker leg was
+  // left waiting to be re-accepted at Orin, where a lingering 'avail' side-quest could
+  // bury it and dead-end the trail. Promote it to an active quest so the marker leads
+  // straight to the woodpile, matching Orin's own words. Guarded past the reveal.
+  if(P.quests.enchanter==='avail' && !P.story.unmasked && !P.story.act1End){
+    P.quests.enchanter='active'; P.prog.enchanter=P.prog.enchanter||0;
+    setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">Show the pendant to the Woodworker</b> down by the green on <b>Emberwick</b>, as Sage Orin bid you.',7000); }catch(e){} }, 2600);
+  }
   // Repair the over-aggressive Windsurf re-gate that briefly shipped: it could
   // strip surf from a save that had legitimately earned a board. Anyone who
   // completed Tolen's board quest under the old rules got a windsurf outright
