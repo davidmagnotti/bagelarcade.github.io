@@ -697,10 +697,14 @@ function skyBirdDialog(){
       [ {label:'Onto the rainbow road', cls:'gold', fn:()=>{ closeDialog(); enterSkyDungeon(); }},
         {label:'In a moment', ghost:true, fn:closeDialog} ]);
   };
+  // "To the shrine, then" - close the dialog AND point the player at the Gale-Shrine, so the
+  // button has a visible effect instead of just silently dismissing.
+  const toShrine=()=>{ closeDialog();
+    if(typeof toast==='function') toast('Head <b>north</b> to the little <b>Gale-Shrine</b>. Put down the <b>wind spirit</b> guarding it, and take the <b>bow</b> from the chest it leaves behind - then come back and we\'ll run the rainbow road.',5600); };
   // already signed on, just coming and going: prompt for the bow, or offer the road
   if(P.story && P.story.birdQuest){
     if(haveBow) offerRoad();
-    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:closeDialog}]);
+    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:toShrine}]);
     return;
   }
   const accept=()=>{
@@ -708,7 +712,7 @@ function skyBirdDialog(){
     if(Snd.quest) Snd.quest();
     if(typeof autoSave==='function') autoSave();
     if(haveBow) offerRoad();
-    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:closeDialog}]);
+    else setDialog(needBowLine, [{label:'To the shrine, then', cls:'gold', fn:toShrine}]);
   };
   setDialog('<i>A bright little bird flutters down, feathers stormtossed.</i> Traveler! The high wind has turned cruel and blows me clean off course before I can reach my little islands - and I cannot set it right on my own. <b>Will you help me?</b>',
     [ {label:'I\'ll help', cls:'gold', fn:accept},

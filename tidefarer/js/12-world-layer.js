@@ -3251,8 +3251,11 @@ function placeObjectsUndermaw(){
 
   G._mawT=0; G._mawPits=new Set(); G._mawWheels=[]; G._mawSlabs=[]; G._mawCross=[]; G._mawFallHint=0; G._mawDrop=null;
   const pit=(x0,x1,y0,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y)&&!solidAt(x,y)){ G._mawPits.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5, seed:(x*7+y*13)%9}); } };
-  // a small platform that slides only a SHORT way left-and-right
-  const slab=(cx,cy,amp,spd,phase)=>{ const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:2, h:2}; G.decor.push(s); G._mawSlabs.push(s); };
+  // a small platform that slides only a SHORT way left-and-right. The slabs are kept
+  // deliberately small (1.5 tiles) so the gaps between them read wide - the centre-to-centre
+  // spine hop stays ~3 tiles (still dashable), but with less slab under you the jumps land
+  // tighter and the R3/R4 scars feel more spread out.
+  const slab=(cx,cy,amp,spd,phase)=>{ const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:1.5, h:1.5}; G.decor.push(s); G._mawSlabs.push(s); };
   // scatter a navigable FIELD of small sliding platforms across a big black pit: a guaranteed
   // zig-zag "spine" of dash-hops from the south ledge to the north, plus spread-out extra
   // platforms (left and right) so there are several routes up.
@@ -4469,7 +4472,7 @@ QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill'
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
-  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom. Free these people of it and you would have my thanks - I have reasons of my own for wanting that fire gone cold.',
+  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom.',
   log:'Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
