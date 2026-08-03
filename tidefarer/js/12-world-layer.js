@@ -1622,15 +1622,14 @@ function placeObjectsWind(){
   const SOUTH=[['stall','Curios & knick-knacks'],['fruitstand','Baker\'s cart'],['stall','Windvane whittler'],['fruitstand','Fishmonger'],['stall','Sailcloth remnants']];
   NORTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y-3, l));
   SOUTH.forEach(([k,l],i)=> addBuilding(k, M.x-4+i*2, M.y+3, l));
-  // You came DOWN onto Windsurf on the stormsail won atop the Cloudreach - there is no
-  // dragon here, and no keel crosses the cursed strait until you calm it. So until the tide is calmed
-  // you are meant to be stranded: fix the strait and the ferry opens, your way out.
-  if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
-  // ASHWING roosts on the Windward Bluffs - the great dragon that bore you down onto Windsurf
-  // stays with you here rather than winging off. He's your ride off the isle: talk to him to fly
-  // up to the Cloudreach or on to the Sunward Isle, whenever you like (no tide-gating - you can
-  // come and go freely). Replaces the old signal-beacon; nothing to signal when he's at your side.
-  { const sp=findOpenNear(B.x, B.y-3, 8) || [B.x, B.y-3];
+  // A ferry moors at the Windsurf pier the moment you can cross the strait: in Act I once the
+  // tide is calmed, and in Act II the moment the Warding Veil opens the sea-roads home. The boat
+  // is your way BETWEEN the isles now - the dragon below only lifts you UP.
+  if(P.story && (P.story.tideCalm || (P.story.act2 && P.story.vathVeil))) addBuilding('boat', D.x+2, D.y+6, '');
+  // ASHWING waits at the HARBOUR, right beside Rell - the great dragon that bore you down onto
+  // Windsurf stays at your side. He is the way UP: talk to him to fly to the Cloudreach. Crossing
+  // between the isles is the ferryman's work now, not the dragon's, so his roost sits by the dock.
+  { const sp=findOpenNear(D.x-3, D.y-2, 8) || [D.x-3, D.y-2];
     G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82});
     setSolid(sp[0], sp[1], 1); }
   addBuilding('lamp', D.x, D.y-1, '');
@@ -1824,16 +1823,14 @@ function askDragonFlight(){
   flyToWorld('sky');
 }
 function askAshwingHome(){
-  // Ashwing rests on the Windsurf bluffs, the dragon that bore you down here - and he'll fly you
-  // off the isle whenever you like. NOT gated on calming the tide: you're free to come and go, up
-  // to the Cloudreach or on across to the Sunward Isle.
+  // Ashwing waits at the Windsurf harbour, the dragon that bore you down here - and he is the way
+  // UP. Crossing between the isles is the ferry's work now (the boat at the pier); the dragon only
+  // lifts you to the cloud-sea. NOT gated on the tide - the way up is always open.
   const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }},
-               {label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
-                 flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }},
                {label:'Not just yet', ghost:true, fn:closeDialog} ];
   // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
-  // into a hidden panel - otherwise the "Fly home" menu never shows
-  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He\'ll carry you up past the last cloud, or on across the water, whenever you say the word.</i>', btns);
+  // into a hidden panel - otherwise the flight menu never shows
+  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He\'ll carry you up past the last cloud whenever you say the word; the sea-crossings he leaves to the ferryman at the pier.</i>', btns);
 }
 /* The signal beacon on the Windward Bluffs. Until the strait is calmed you are stranded on
    Windsurf by the killing tide - no wing will risk that water. Once it's calm, lighting the
@@ -6248,6 +6245,42 @@ function updateBarikCurseMood(){
     ['You have done what no ledger of mine could: given Barik back its ground. The east will dry, the harvest will come late but it will come, and the keep will remember whose hand drained the fen.',
      'Barik is solvent in more than coin again, thanks to you. The Duchy owes you a debt it will be glad to keep paying.']);
 }
+// BARIK sheltering: while Vath's storm rages over the flooded isle (vathVeil && !barikDeepDone),
+// the townsfolk cannot stand in the open - they huddle on the keep forecourt under the Duchess's
+// walls (the same "quartered the flooded families in the keep" the curse dialogue already speaks),
+// and only Warden Kell holds the landing, the last soul willing to meet you in the storm and warn
+// you off. Runs on every Barik entry (main is cached, so this repositions the restored NPCs too);
+// once the Drowned Vault falls the isle regenerates calm and everyone drifts back to their doors.
+function shelterBarikFolk(){
+  if(G.worldId!=='main') return;
+  if(!(P.story && P.story.vathVeil) || (P.story && P.story.barikDeepDone)) return;
+  if(typeof findOpenNear!=='function') return;
+  const CK=(typeof ZONES!=='undefined' && ZONES.castle) ? ZONES.castle : {x:110,y:300};
+  const KX=CK.x-11, KY=CK.y-3;                 // the keep's anchor (gate opens south onto the forecourt)
+  const occ={};
+  // huddle an NPC onto the nearest free tile to (KX+ox,KY+oy), never onto a tile already taken
+  const huddle=(id,ox,oy)=>{
+    const n=G.npcs && G.npcs.find(x=>x.id===id); if(!n) return;
+    let sp=null;
+    for(let r=1;r<=6 && !sp;r++){ const c=findOpenNear(Math.round(KX+ox),Math.round(KY+oy),r);
+      if(c && !occ[c[0]+','+c[1]]) sp=c; }
+    if(!sp) return;
+    occ[sp[0]+','+sp[1]]=1;
+    n.x=sp[0]+0.5; n.y=sp[1]+0.5; n.hx=n.x; n.hy=n.y;   // move AND re-anchor so they don't wander home
+    n.wander=Math.min(n.wander||0,0.15);                // frightened folk keep close
+    n.face={x:0,y:-1};                                  // turned toward the keep at their backs
+    n.sheltered=1;
+  };
+  // spread across the forecourt and the approach south of the gate, so it reads as a crowd taking refuge
+  huddle('sela',-3,6); huddle('ivo',-1,6); huddle('rook',1,6); huddle('mira',3,6);
+  huddle('bree',-4,8); huddle('saffi',-2,8); huddle('dockhand',0,8); huddle('hedda',2,8); huddle('torv',4,8);
+  huddle('moss',-3,10); huddle('hermit',-1,10); huddle('aelin',1,10);
+  // Warden Kell alone holds the landing you arrive at, to turn you back into the keep
+  const D=(typeof ZONES!=='undefined' && ZONES.dock)?ZONES.dock:{x:55,y:258};
+  const kell=G.npcs && G.npcs.find(n=>n.id==='kell');
+  const ks=findOpenNear(Math.round(D.x+3),Math.round(D.y+1),7);
+  if(kell && ks){ kell.x=ks[0]+0.5; kell.y=ks[1]+0.5; kell.hx=kell.x; kell.hy=kell.y; kell.wander=0; kell.warner=1; }
+}
 // WINDSURF - the maddened wind drowned Waterwheel Row and a north district (galeDeepDone lifts it).
 function updateWindCurseMood(){
   if(!(P.story && P.story.vathVeil)) return;
@@ -6750,8 +6783,10 @@ function attemptSail(){
       return;
     }
   }
-  // Windsurf is walled off by the killing tide until you calm the strait.
-  if(G.worldId==='wind' && !(P.story && P.story.tideCalm)){
+  // Windsurf is walled off by the killing tide until you calm the strait - UNLESS Act II's
+  // Warding Veil has opened the sea-roads home, in which case the ferry moored at the pier crosses
+  // freely (the dragon at the harbour is only for flying up to the Cloudreach).
+  if(G.worldId==='wind' && !(P.story && (P.story.tideCalm || (P.story.act2 && P.story.vathVeil)))){
     blockMsg('The strait past the breakwater churns like a cauldron - no hull could live in it, and you came down here by sail with no way back up. <b>Calm the water first</b> and the ferry can moor.');
     return;
   }
@@ -6906,6 +6941,7 @@ function switchWorld(id){
   // restoration plea (offered only while the flood stands).
   if(id==='main' && P.story && P.story.vathVeil && !P.story.barikDeepDone && qs('barikRestore')!=='done' && !P.quests.barikRestore) P.quests.barikRestore='avail';
   if(id==='main' && typeof updateBarikCurseMood==='function') updateBarikCurseMood();
+  if(id==='main' && typeof shelterBarikFolk==='function') shelterBarikFolk();   // storm-refuge: townsfolk huddle at the keep, Kell holds the landing
   if(id==='main'){
     if(!(P.story&&P.story.act2)) for(const q2 of ['welcome2','hedda1','torv1','ivo1','ribbon1']) if(!P.quests[q2] && QUESTS[q2]) P.quests[q2]='avail';
     if(P.earlySail && !P.earlyKit){
