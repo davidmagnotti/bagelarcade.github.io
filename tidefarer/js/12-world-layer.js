@@ -2475,7 +2475,7 @@ function freeWarden(m){
   // meltwater, a soft winter returns, and Vath is glimpsed on the glacier road. When it ends,
   // Sigrid's pointer card (the trail down to the Rimefissure) follows. Falls back to the old
   // story-card if the overlay layer is absent.
-  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You gave us back our guardian. That <b>robed man</b> who twisted the cold - violet at the cuffs - his eye is on every sea-road home now. But there\'s an old warding sleeps in the deep ice, down the <b>Rimefissure</b>, past whatever he bound there - a thing that could hide you clean from his sight. Old magic, old script. Take it to your brother; a scholar\'s the only one could ever work it.”',
+  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You gave us back our guardian. And if you\'ve the nerve for the deep, there\'s one thing more: an <b>old warding sleeps in the ice down the Rimefissure</b>, past whatever the cold bound there - older than this curse, older than the crown, and no one living has read a word of it. Old magic, old script. Take it to your brother; a scholar\'s the only one who could ever work it.”',
     {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }});
   setTimeout(()=>{
     if(typeof wardenFreedCutscene==='function') wardenFreedCutscene(m, sigridCard);
@@ -6519,7 +6519,7 @@ function openChest(b){
     }
     P.story.veilTome=1; give('veilrune',1);
     banner('A SECRET, KEPT IN ICE','THE HUSH-FROST SPELLBOOK');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b> - its pages the hush-frost the warden wept, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Jaist</b> ever loved. You cannot read a word of it. <i>But one page you can feel in your blood: a spell to slip a hunter\'s eye - to go unseen, even by <b>Vath</b>. The rest is a scholar\'s puzzle - page on page of other secrets the old line hid across the isles.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. Jaist could read this. Jaist could cast it.</i>'); },520);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b>, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Jaist</b> ever loved - you cannot read a word of it. <i>It is older than the cold, maybe older than the crown; the Rimebound was set to keep it here long before any living grief, and what its frost-pages actually DO you cannot begin to guess.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. If anyone alive can read it, it is Jaist.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }
@@ -6539,8 +6539,8 @@ function openChest(b){
       setTimeout(autoSave,300); return;
     }
     P.story.reachProphecy=1; give('reachverse',1); giveGold(rndi(80,130));
-    banner("THE TIDEFARER'S VERSE",'THE THING THIS PLACE WAS HIDING');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The warden guarded no coin - it guarded a wall: a verse-stone older than the catacomb, cut by a hand that knew the deep.</i> <b>WHEN THE ISLES CRY OUT AND THE CROWN GOES DARK, A DAUGHTER OF THE TIDE SHALL SAIL THEM FREE - TILL SHE FINDS THE WEAPON THE GREAT QUEEN FORGED TO SEAL THE SHADOW.</b> <i>Beneath it, a fresher hand: the queen lies buried with the weapon she forged - not where the histories laid her.</i> <b style="color:#c9b0ff">You copy the Tidefarer\'s verse.</b> <i>The script runs on past your reading - but <b>Jaist</b> will know it. Take it up to your brother.</i>'); },520);
+    banner('THE DROWNED CHART','THE THING THIS PLACE WAS HIDING');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The warden guarded no coin - it guarded an iron coffer, and in it a <b>sea-chart older than the catacomb</b>, its edges cut with the old royal script by a hand that knew the deep.</i> <b>WHEN THE ISLES CRY OUT AND THE CROWN GOES DARK, A DAUGHTER OF THE TIDE SHALL SAIL THEM FREE - TILL SHE FINDS THE WEAPON THE GREAT QUEEN FORGED TO SEAL THE SHADOW.</b> <i>And below the verse, inked waters: coastlines on no chart you know, and a mark where the histories say nothing lies.</i> <b style="color:#c9b0ff">You take the Drowned Chart.</b> <i>You cannot read the royal script - but <b>Jaist</b> can. Take it up to your brother.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }

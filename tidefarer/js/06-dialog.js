@@ -416,11 +416,11 @@ function buildDialogContent(npc){
       P.story.reachProphecyRead=1;
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.85)',52);
       if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',18,2.4);
-      banner("THE HUNT HAS A HEADING",'FIND THE TIDEFARER, FIND THE WEAPON');
-      setDialog('<i>His eyes race the lines, then race them again.</i> “…the weapon the great queen forged to seal the shadow. And beneath it - <i>she lies buried with it, and does not rest where the histories laid her.</i>” <i>He looks up, gone pale.</i> “Joan, this isn\'t a grave-song. It\'s a heading. The Tidefarer did EXACTLY what you\'ve been doing - isle by isle, curse by curse - and she made a thing that could end Vath for good, then took it into a hidden grave. Find her, and we find it.” <i>He rolls the copy careful and tucks it into his chart-case.</i> “I\'ll keep this safe and keep reading it. Go on freeing the isles - only now we know what we\'re freeing them TOWARD.”',
-        [{label:'A heading at last', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog(); }}]);
+      banner('THE HUNT HAS A MAP','FIND THE TIDEFARER, FIND THE WEAPON');
+      setDialog('<i>His eyes race the verse, then drop to the inked waters below it - and his breath catches.</i> “…the weapon the great queen forged to seal the shadow, and she lies buried with it, not where the histories laid her.” <i>He turns the chart to the light, tracing the coastlines.</i> “Joan - this isn\'t a grave-song. It\'s a <b>map</b>. The Tidefarer charted the way to her own hidden grave, and the weapon in it - a thing that could end Vath for good. The waters are half-worn, but it\'s a heading, and a heading is everything.” <i>He rolls it careful into his chart-case.</i> “I\'ll keep reading what\'s left. Go on freeing the isles - only now we know what we\'re freeing them TOWARD.”',
+        [{label:'A map at last', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog(); }}]);
     };
-    setDialog('<i>You lay the copied verse in your brother\'s hands. Jaist goes still the moment he sees the letters.</i> “This is old royal script - Grandmother\'s hand, or near enough. Where did you-” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
+    setDialog('<i>You lay the ancient chart in your brother\'s hands. Jaist goes still the moment he sees the letters along its edge.</i> “Old royal script - Grandmother\'s hand, or near enough. And these coastlines...” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
       [{label:'Read it, brother', fn:read}]);
     return;
   }
@@ -433,7 +433,7 @@ function buildDialogContent(npc){
   // carries other secrets - abilities the old line hid across the isles - which seeds the
   // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
-    const homeCard=()=>storyCard('<b style="color:#c9b0ff">Jaist casts the WARDING VEIL over you. Vath\'s eye slides past you now.</b> <i>The way home is safe again - the ferry can carry you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>.</i> “Not the capital, though - not yet,” <i>Jaist warns, thumbing to the next frost-page.</i> “Not until we\'re ready to face Vath himself. His gaze never leaves the throne he stole.” <i>He reads on, and his eyes catch fire the way they used to over a hard passage.</i> “This book is more than a hiding-spell, sister. The old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go, pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
+    const homeCard=()=>storyCard('<i>The warding settles and holds.</i> <b style="color:#c9b0ff">The way home is open again</b> - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>. <i>Jaist thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Not the capital, though - not till we\'re ready for Vath himself. And this is more than a hiding-spell, sister: the old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
         {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
     const cast=()=>{
       closeDialog();
@@ -452,10 +452,10 @@ function buildDialogContent(npc){
       }
     };
     const p2=()=>{
-      setDialog('<i>He turns the frost-pages to the lamplight, lips moving over the script.</i> “Hush-frost, wept from a warden Vath enslaved - and someone read a warding into it. Do you know what this IS? The spell to go unseen by him.” <i>He riffles deeper and stops, breath caught.</i> “And it doesn\'t end there - there\'s more written past it than I can take in at a glance. Hold still and let me read the veil onto you properly - this is the one kind of fight I was ever built for.”',
+      setDialog('<i>He works down the frost-page, lips moving.</i> “It\'s a warding of some kind - a hiding-spell, I think. The rest is past me at a glance.” <i>He looks up.</i> “Only one way to learn what it does. Hold still, sister - let me try it on you.”',
         [{label:'Cast it, brother', cls:'gold', fn:cast}]);
     };
-    setDialog('<i>You lay the ice-bound spellbook in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Where did you - this is old script. Grandmother\'s hand, or near enough.” <i>His scholar\'s eyes are already devouring the page.</i>',
+    setDialog('<i>You lay the ice-bound book in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Old royal script - Grandmother\'s hand, or older. Where did you...” <i>His scholar\'s eyes are already racing the page.</i>',
       [{label:'It was in the deep ice, past the Rimebound', fn:p2}]);
     return;
   }
@@ -463,7 +463,7 @@ function buildDialogContent(npc){
   // idle chatter no longer sends you to "find what this place is hiding" - you already did.
   // (Reach-world only, so it never overrides the Frozen-Isle Jaist's landing lines.)
   if(npc.id==='brother' && typeof G!=='undefined' && G.worldId==='reach' && P.story && P.story.reachProphecyRead){
-    setDialog('<i>Jaist keeps the copied verse close and an eye on the moored boat.</i> “Every curse you break is a step nearer her grave - the Tidefarer\'s, and the weapon in it. Keep pulling Vath\'s hooks out of the isles, sister. I\'ll hold the way home, and I\'ll keep reading.”',
+    setDialog('<i>Jaist keeps the Drowned Chart close and an eye on the moored boat.</i> “Every curse you break is a step nearer her grave - the Tidefarer\'s, and the weapon in it. Keep pulling Vath\'s hooks out of the isles, sister. I\'ll hold the way home, and I\'ll keep reading the chart.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
