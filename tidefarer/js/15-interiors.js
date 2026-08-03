@@ -1,6 +1,22 @@
 /* =====================================================================
    INTERIORS - step inside the buildings
    ===================================================================== */
+// The settlement a "shut for the night" door speaks for, per overworld. Keyed by
+// G.worldId so the locked-door line names the place you're actually standing in
+// (the old code only special-cased Greyharbor and fell back to "Emberwick"
+// everywhere else - so Stormreach, Windsurf, Hearthhold &c. all mislabelled).
+// Any world not listed (dungeons, or a new isle) drops the place-name and uses a
+// generic line, so a door can never name the wrong town again.
+const NIGHT_TOWN = {
+  isle:'Emberwick', main:'Greyharbor', east:'Kohana', wind:'Windsurf',
+  aerie:'Rookhaven', frost:'Hearthhold', crown:'Aldermere', reach:'Stormreach',
+  sky:'the Cloudreach'
+};
+function nightClosedLine(){
+  const town = NIGHT_TOWN[G.worldId];
+  return town ? 'Latched for the night. '+town+' keeps honest hours.'
+              : 'Latched for the night - the folk here keep honest hours.';
+}
 // The Tideglass Palace: a grand two-storey interior. Level 0 is the great
 // hall - a colonnaded throne room around a massive open courtyard with the
 // King and his guards; level 1 is the ramparts, with the four corner towers,
@@ -188,7 +204,7 @@ function enterHouse(b){
       return;
     }
     // b.closedMsg: a custom "shut for the night" line for this door; else a generic one
-    blockMsg(b.closedMsg || ['Latched for the night. '+(G.worldId==='main'?'Greyharbor':'Emberwick')+' keeps honest hours.',
+    blockMsg(b.closedMsg || [nightClosedLine(),
       '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
       'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)]);
     Snd.step(5); return;
