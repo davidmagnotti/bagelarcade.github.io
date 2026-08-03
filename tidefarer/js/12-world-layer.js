@@ -6791,7 +6791,8 @@ function barikArrivalGreeting(){
     [{label:'I\'ll find a bed', cls:'gold', fn:closeDialog}]);
 }
 // The first time you drop out of the cloud onto Windsurf, Rell the harbormaster gapes at the
-// impossible visitor - nobody's reached this island since the wind soured its straits.
+// impossible visitor - you can only get here on Ashwing's back, so the high wind is already
+// calmed by now. What still keeps Windsurf cut off is the water: rough as ever, no hull dares it.
 function windArrivalGreeting(){
   if(G.state!=='play' || (typeof dlg!=='undefined' && dlg.open)) return;
   dlg.open=true; dlg.npc=null;
@@ -6803,7 +6804,7 @@ function windArrivalGreeting(){
     pg.save(); pg.translate(36,64); pg.scale(1.3,1.3);
     if(typeof drawHumanoid==='function') drawHumanoid(pg,0,0,{skin:'#a9784e',hair:'#2a2622',beard:'#2a2622',shirt:'#33566e',pants:'#2c3540',dir:{x:0,y:1},step:0});
     pg.restore(); }
-  setDialog('<i>A weathered man on the docks shades his eyes at the sky, then at you, and near drops his coil of rope.</i> “…Well I\'ll be salted. Where did YOU drop from?” <i>He squints up at the cloud you fell out of, then back at you, plainly not believing it.</i> “No hull\'s crossed our straits in a season - not since the wind turned and the deep water started taking boats whole. Nobody comes to Windsurf any more. And here you are, right out of the sky.” <i>He sticks out a calloused hand.</i> “Rell. Harbormaster of a harbor with no ships. Find me at the docks when you\'ve found your feet - there\'s a thing out past the reef I\'d give my last coin to see gone.”',
+  setDialog('<i>A weathered man on the docks shades his eyes at the sky and near drops his coil of rope as a DRAGON folds down over his harbour.</i> “…Well I\'ll be salted. That\'s Ashwing himself - and you rode him DOWN.” <i>He keeps glancing up at the great beast, plainly not believing it.</i> “Forty years on this dock and I never once saw a soul come in on the back of a living legend. The high wind\'s gone quiet at last - first calm sky in a season - but don\'t let that fool you. Our water\'s rough as it ever was, and no hull\'s dared the straits regardless. Nobody comes to Windsurf any more. And here you are, right out of the sky.” <i>He sticks out a calloused hand.</i> “Rell. Harbormaster of a harbor with no ships. Find me at the docks when you\'ve found your feet - there\'s a thing out past the reef I\'d give my last coin to see gone.”',
     [{label:'Glad to be down', cls:'gold', fn:closeDialog}]);
 }
 // A banker stands next to every town's inn (except Cloudreach, which has none) so
