@@ -172,7 +172,13 @@ function completeQuest(id){
     setTimeout(()=>toast('Tolen presses a heavy iron <b style="color:var(--ember)">windmill key</b> into your hand - Burl\'s padlock is yours to open now. Nessa\'s stormsail waits below.',6000),1400); }
   if(id==='pendant'){ // Orin has read the ward - now he sends you to the Woodworker
     P.story=P.story||{}; P.story.wardRead=1;
-    if(!P.quests.enchanter) P.quests.enchanter='avail'; }
+    // Launch the Woodworker leg directly as ACTIVE (not 'avail'): Orin's own words in
+    // the pendant doneText send you straight to the green, and the quest marker must
+    // follow to the Woodworker. Leaving it 'avail' meant it had to be re-offered at
+    // Orin - where any lingering 'avail' Orin side-quest (e.g. the bluecap draught)
+    // hijacked the single offer slot, burying the main-story hand-off and dead-ending
+    // the trail between Orin and the woodpile.
+    if(!P.quests.enchanter){ P.quests.enchanter='active'; P.prog.enchanter=0; } }
   const fresh=[];
   (q.unlocks||[]).forEach(u=>{ if(!P.quests[u]){ P.quests[u]='avail'; fresh.push(u); } });
   if(id==='setsail') setTimeout(()=>banner('THE TIDEWALKER SAILS','Board her at the dock - Greyharbor awaits'),1300);
