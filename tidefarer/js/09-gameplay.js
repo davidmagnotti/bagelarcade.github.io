@@ -1221,6 +1221,12 @@ function killMob(m,skill){
     if(typeof invalidateScenery==='function') invalidateScenery();
     banner('THE MAW-STALKER FALLS','THE HOARD DOOR GRINDS OPEN');
     if(typeof autoSave==='function') autoSave();
+    // a quiet Act-II seed: Vath's violet lifts off the carcass and gutters out - the
+    // same colour that wreathed the Hollow Spirit. Plays once, then hands the world back.
+    if(typeof mawStalkerCutscene==='function' && !(P.story&&P.story._mawCutSeen)){
+      P.story=P.story||{}; P.story._mawCutSeen=1;
+      setTimeout(()=>{ try{ mawStalkerCutscene(m, function(){}); }catch(e){} }, 800);
+    }
   }
   // After felling ANY dungeon boss, open the way up. Dungeons that carry a REWARD ROOM (a
   // `gate:'reward'` catgate) grind that room open instead - the prize + the climb-out stand in a

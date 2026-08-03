@@ -125,6 +125,20 @@ const MC_VEIL = [
     calm:1, snow:0.7, dive:1 },
 ];
 
+/* The Maw-Stalker (the Undermaw scorpion) falls in the deep dark. No freed-victim
+   here - just a beast Vath's violet was riding: it lifts off the carcass and gutters
+   out, and the player clocks the colour as the same one that wreathed the Hollow
+   Spirit. A quiet Act-II seed, not a turning beat. */
+const MC_MAW = [
+  // the beast fallen in the deep, Vath's violet still clinging and pulsing over it (wordless)
+  { who:'', html:'', ens:1, calm:0, shake:0.4, hold:1500 },
+  // the violet lifts off it and gutters out into the dark (wordless - the beat)
+  { who:'', html:'', ens:0.1, calm:0.6, shatter:1, flash:1.0, shake:0.5, hold:1800 },
+  // the observation: the same violet as the Hollow Spirit
+  { who:'', html:'<i>The violet burns off the fallen beast and gutters out into the dark - </i><b style="color:#c9a0ff">the very same cold light that wreathed the Hollow Spirit</b><i> on the northern shore. No cave-thing owns a colour like that. The same hand set them both against you - and it has reached even down here.</i>',
+    ens:0, calm:1 },
+];
+
 /* ---------- driver ---------- */
 function mcResize(){
   const cv=MC.cv; if(!cv) return;
@@ -180,7 +194,7 @@ function mcShow(i){
       tap.textContent = last
         ? (MC.kind==='storm'?'take the high road ›' : MC.kind==='rime'?'let it rest in the deep ›'
            : MC.kind==='vath'?'turn to your brother ›' : MC.kind==='aerie'?'climb to the light ›'
-           : MC.kind==='veil'?'the way home opens ›' : 'walk back down ›')
+           : MC.kind==='veil'?'the way home opens ›' : MC.kind==='maw'?'on into the dark ›' : 'walk back down ›')
         : 'click to continue ›';
     }
     if(sub){ sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show'); }
@@ -247,6 +261,19 @@ function mcMotes(dt){
     for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=Math.max(MC.W,MC.H)*(0.18+Math.random()*0.22);
       MC.motes.push({x:cxm+Math.cos(a)*r, y:cy+Math.sin(a)*r*0.7, tx:cxm, ty:cy, life:1,
         col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.4)}); }
+  } else if(MC.kind==='maw'){
+    // Vath's violet clings to the fallen beast, then blows OFF and up on the break, guttering out
+    if(MC.shatter>0.02){
+      MC._macc+=dt*48*MC.shatter; let n=Math.floor(MC._macc); MC._macc-=n; if(n>4) n=4;
+      for(let i=0;i<n;i++){ const a=Math.random()*TAU, sp=rnd(80,250);
+        MC.motes.push({x:cxm, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-80, life:1,
+          col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.6)}); }
+    } else if(MC.ens>0.3){
+      MC._macc+=dt*20*MC.ens; let n=Math.floor(MC._macc); MC._macc-=n; if(n>3) n=3;
+      for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=30+Math.random()*22;
+        MC.motes.push({x:cxm+Math.cos(a)*r, y:cy+Math.sin(a)*r*0.6, tx:cxm, ty:cy, life:1,
+          col:Math.random()<0.5?'160,110,240':'190,140,255', size:rnd(2,4)}); }
+    }
   } else if(MC.kind==='veil'){
     // frost lifts off the spellbook's page and streams across to the sister, wrapping her
     const bx=MC.W*0.37, by=MC.H*0.50, sx=MC.W*0.63, sy=MC.H*0.55;
@@ -292,6 +319,7 @@ function mcDraw(){
   else if(MC.kind==='vath')   drawVathScene(cx,W,H,t);
   else if(MC.kind==='aerie')  drawAerieScene(cx,W,H,t);
   else if(MC.kind==='veil')   drawVeilScene(cx,W,H,t);
+  else if(MC.kind==='maw')    drawMawScene(cx,W,H,t);
 
   // motes
   cx.save(); cx.globalCompositeOperation='lighter';
@@ -304,7 +332,7 @@ function mcDraw(){
 
   // the break flash - tinted to the scene (cold for frost/sky, violet for Vath, warm for the pyre)
   if(MC.flash>0.01){
-    const fc = MC.kind==='vath' ? '199,140,255' : MC.kind==='aerie' ? '255,196,120' : '226,244,255';
+    const fc = MC.kind==='vath' ? '199,140,255' : MC.kind==='aerie' ? '255,196,120' : MC.kind==='maw' ? '190,120,240' : '226,244,255';
     cx.fillStyle='rgba('+fc+','+(0.5*MC.flash).toFixed(3)+')'; cx.fillRect(0,0,W,H);
   }
   cx.restore();  // shake
@@ -807,6 +835,80 @@ function drawGentleSnow(cx,W,H,t,amt){
 // a steady pseudo-random in [-1,1] from two ints (no per-frame flicker)
 function rndSteady(a,b){ const s=Math.sin(a*12.9898+b*78.233)*43758.5453; return (s-Math.floor(s))*2-1; }
 
+/* ===================== THE UNDERMAW (MAW-STALKER) ===================== */
+/* A deep-cave beat: the fallen scorpion collapsed on the dark floor, Vath's violet
+   miasma clinging over it and then lifting off and guttering out. Deliberately a
+   silhouette in near-black - the load-bearing thing is the violet leaving. */
+function drawMawScene(cx,W,H,t){
+  const ens=MC.ens, calm=MC.calm, dive=MC.dive, floorY=H*0.72;
+  // deep cave dark, faintly bruised violet while the curse still clings
+  const bg=cx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0, mixHex('#0a0a10','#170b26', Math.min(1,ens*0.7)));
+  bg.addColorStop(1, mixHex('#050507','#0c0716', Math.min(1,ens*0.5)));
+  cx.fillStyle=bg; cx.fillRect(0,0,W,H);
+  // a few dark stalactites biting down from the roof
+  cx.fillStyle='#070709';
+  for(const [fx,fw,fh] of [[0.12,0.05,0.16],[0.31,0.04,0.10],[0.68,0.06,0.20],[0.87,0.045,0.13]]){
+    const x=W*fx; cx.beginPath(); cx.moveTo(x-W*fw,0); cx.lineTo(x+W*fw,0); cx.lineTo(x,H*fh); cx.closePath(); cx.fill();
+  }
+  // the cave floor / rubble the beast lies on
+  const gr=cx.createLinearGradient(0,floorY-8,0,H);
+  gr.addColorStop(0, mixHex('#171319','#241436', Math.min(1,ens*0.4)));
+  gr.addColorStop(1, '#050406');
+  cx.fillStyle=gr;
+  cx.beginPath(); cx.moveTo(0,floorY+6);
+  for(let x=0;x<=W;x+=40) cx.lineTo(x, floorY+Math.sin(x*0.012)*5+2);
+  cx.lineTo(W,H); cx.lineTo(0,H); cx.closePath(); cx.fill();
+
+  const bx=W*0.5, by=floorY-4;
+  // the violet miasma pooled over the carcass, lifting as ens -> 0
+  if(ens>0.03){ cx.save(); cx.globalCompositeOperation='lighter';
+    const vg=cx.createRadialGradient(bx,by,10,bx,by,Math.max(W,H)*0.5);
+    vg.addColorStop(0,'rgba(150,90,230,'+(0.22*ens).toFixed(3)+')');
+    vg.addColorStop(1,'rgba(150,90,230,0)');
+    cx.fillStyle=vg; cx.fillRect(0,0,W,H); cx.restore(); }
+
+  drawFallenStalker(cx,bx,by,Math.min(W,H)*0.30, ens, dive, t);
+}
+// the fallen Maw-Stalker: a dark scorpion silhouette collapsed on its side, legs
+// splayed, tail drooped, a last violet ember at the eyes and sting that guts out.
+function drawFallenStalker(cx,x,y,s,ens,dive,t){
+  const body='#0c0a10';
+  const sink=easeOut(dive)*0.16*s;
+  const breathe=1+Math.sin(t*1.6)*0.02*ens;   // a faint last shudder while the curse holds
+  cx.save(); cx.translate(x, y+sink); cx.globalAlpha=1-dive*0.85; cx.scale(breathe,breathe);
+  cx.lineCap='round'; cx.lineJoin='round';
+  // splayed legs, drooping to the floor (drawn behind the body)
+  cx.strokeStyle=body; cx.lineWidth=s*0.045;
+  for(const sgn of [-1,1]) for(let i=0;i<4;i++){
+    const lx=sgn*(0.06+i*0.12)*s, tipx=sgn*(0.30+i*0.15)*s;
+    cx.beginPath(); cx.moveTo(lx,-s*0.04); cx.quadraticCurveTo(sgn*(0.24+i*0.14)*s,-s*0.01, tipx, s*0.13); cx.stroke();
+  }
+  // the abdomen mass
+  cx.fillStyle=body; cx.beginPath(); cx.ellipse(0,-s*0.02,s*0.34,s*0.18,0,0,TAU); cx.fill();
+  // head + limp claws reaching forward-left, sagging to the ground
+  cx.beginPath(); cx.ellipse(-s*0.36,0,s*0.12,s*0.09,0,0,TAU); cx.fill();
+  cx.strokeStyle=body; cx.lineWidth=s*0.07;
+  for(const sgn of [-1,1]){ cx.beginPath(); cx.moveTo(-s*0.40,sgn*s*0.05);
+    cx.quadraticCurveTo(-s*0.62,sgn*s*0.13,-s*0.72,sgn*s*0.06); cx.stroke(); }
+  // the tail, curling back and drooping, the stinger nosed toward the floor
+  cx.lineWidth=s*0.08; cx.beginPath();
+  cx.moveTo(s*0.26,-s*0.08);
+  cx.quadraticCurveTo(s*0.60,-s*0.34, s*0.52,-s*0.02);
+  cx.quadraticCurveTo(s*0.47,s*0.13, s*0.54,s*0.17);
+  cx.stroke();
+  // the last violet embers at the eyes and the sting, guttering out as the curse leaves
+  if(ens>0.03){ cx.save(); cx.globalCompositeOperation='lighter';
+    for(const [ex,ey] of [[-s*0.40,-s*0.02],[s*0.54,s*0.17]]){
+      const eg=cx.createRadialGradient(ex,ey,0.5,ex,ey,s*0.13);
+      eg.addColorStop(0,'rgba(199,123,255,'+(0.85*ens).toFixed(3)+')');
+      eg.addColorStop(1,'rgba(199,123,255,0)');
+      cx.fillStyle=eg; cx.beginPath(); cx.arc(ex,ey,s*0.13,0,TAU); cx.fill(); }
+    cx.restore(); }
+  cx.lineCap='butt'; cx.lineJoin='miter';
+  cx.restore();
+}
+
 /* ---------- public entry points ---------- */
 function wardenFreedCutscene(m, onDone){ mcPlay('warden', MC_WARDEN, {ens:1, calm:0, snow:0}, onDone, m); }
 function rimeboundFreedCutscene(m, onDone){ mcPlay('rime', MC_RIME, {ens:1, calm:0}, onDone, m); }
@@ -814,11 +916,13 @@ function stormEyeCutscene(onDone){ mcPlay('storm', MC_STORM, {ens:1, calm:0}, on
 function vathBoundCutscene(m, onDone){ mcPlay('vath', MC_VATH, {ens:1, calm:0, dive:0}, onDone, m); }
 function aerieFreedCutscene(m, onDone){ mcPlay('aerie', MC_AERIE, {ens:1, calm:0}, onDone, m); }
 function veilCastCutscene(onDone){ mcPlay('veil', MC_VEIL, {ens:0, calm:0, snow:0.2, dive:0}, onDone, null); }
+function mawStalkerCutscene(m, onDone){ mcPlay('maw', MC_MAW, {ens:1, calm:0}, onDone, m); }
 window.wardenFreedCutscene=wardenFreedCutscene;
 window.rimeboundFreedCutscene=rimeboundFreedCutscene;
 window.stormEyeCutscene=stormEyeCutscene;
 window.vathBoundCutscene=vathBoundCutscene;
 window.aerieFreedCutscene=aerieFreedCutscene;
 window.veilCastCutscene=veilCastCutscene;
+window.mawStalkerCutscene=mawStalkerCutscene;
 
 })();
