@@ -1070,14 +1070,6 @@ function awakenDragon(alreadyBound){
   }
   // the banner + shake now ride the 'enthrall' entrance (fires as he rouses) - see startBossIntro
 }
-function startMageHunt(){
-  // Freeing Ashwing no longer triggers a grove hunt. Vath simply flees the Sunward
-  // Isle when the chain breaks - he is not present as a mob afterward. This is kept
-  // as a harmless no-op so any older reference/save that calls it does nothing.
-  if(P.mageHuntStarted) return;
-  P.mageHuntStarted=1;
-  const vi=G.npcs.findIndex(n=>n.id==='vath'); if(vi>=0) G.npcs.splice(vi,1); // he leaves the village for good
-}
 function freeDragon(x,y){
   // he dissolves into warm light and beats back to his mountain, himself again
   for(let i=0;i<32;i++){ const a=Math.random()*TAU, sp=rnd(1,4.5);
@@ -1482,16 +1474,6 @@ function pullEmberLever(b){
   invalidateScenery();
   openFireGate('g2');
 }
-function stepEmberPlate(b){
-  if(b.set) return;
-  if(b.group==='font'){ // visit-all: tread each font once
-    b.set=true; Snd.pickup&&Snd.pickup(); burst(b.x,b.y-0.2,'#ffb04a',10,1.6);
-    const grp=G.decor.filter(d=>d.kind==='emberplate' && d.group==='font');
-    if(grp.every(d=>d.set)) openFireGate('g1');
-    else addFloat((grp.filter(d=>d.set).length)+' / '+grp.length,b.x,b.y-1.4,'#ffd8a0',1.1);
-    return;
-  }
-}
 /* THE WARDING LOCKS: press the four ember-runes in order I->IV. A wrong press
    darkens every rune and wakes a barrow archer out of the ash. */
 function pressEmberButton(b){
@@ -1862,7 +1844,6 @@ function askWindsurfFlight(){
    tunnel, to a sealed roost-heart where a cursed tome (and its serpent
    warden) must be destroyed to give the birds their minds back.
    ===================================================================== */
-function aerieTunnelExit(){ const S=AERIE_ZONES.sanctum; return {x:S.x+0.5, y:S.y+2.5}; }
 function aerieTunnelEntry(){ const T2=AERIE_ZONES.tunnel; return {x:T2.x+0.5, y:T2.y+0.5}; }
 function genAerie(){
   const rng=mulberry32(SEED);
@@ -1991,13 +1972,6 @@ function spawnMobsAerie(){
   // catacomb below (see spawnMobsAerieDeep). The plateau is walled by birds alone.
   const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
-}
-function spawnSerpent(){
-  if(G.mobs && G.mobs.some(m=>m.kind==='serpent' && !m.dead)) return null;
-  const S=AERIE_ZONES.sanctum, sp=findOpenNear(Math.round(S.x), Math.round(S.y+2), 3) || [S.x, S.y+2];
-  const sn=spawnMob('serpent', sp[0], sp[1]);
-  if(sn){ sn.boss=true; sn.bigBoss=true; sn.title='THE TOME-WARDEN'; sn.ach='tomewarden'; sn.hx=sp[0]; sn.hy=sp[1]; sn.state='idle'; sn.respawnT=-1; sn.entrance='rise'; }
-  return sn;
 }
 function destroyTome(b){
   if(b.destroyed) return;
@@ -3468,7 +3442,7 @@ function updateUndermaw(dt){
     if(Math.random()<0.4) burst(G._mawDrop.x+rnd(-0.3,0.3), G._mawDrop.y+rnd(-0.2,0.2), '#1a1512', 1, 1.2);
     if(G._mawDrop.t>=G._mawDrop.dur) mawRespawn();
     return; }
-  if(P.dead || (P.rollT||0)>0 || window.DEVFLOAT) return;   // mid-dash / dev-float: airborne over the scar
+  if(P.dead || (P.rollT||0)>0) return;   // mid-dash: airborne over the scar
   const tx=Math.floor(P.x), ty=Math.floor(P.y);
   if(!(G._mawPits && G._mawPits.has(tx+','+ty))) return;   // solid footing
   if(wheelCarry(G._mawWheels, dt)) return;                 // riding a rotating slab
@@ -5332,34 +5306,6 @@ function dungPlateCheck(){
     if(Math.abs(P.x-d.x)<0.62 && Math.abs(P.y-d.y)<0.62){ d.pressed=true;
       if(Snd.pickup) Snd.pickup(); if(typeof burst==='function') burst(d.x,d.y-0.15,'#dfe6c8',12,1.7);
       dungOpenGate(d.gate); } }
-}
-// the shared 3-chamber vertical skeleton every return-dungeon is carved from
-function _dungVertical(floorTile){
-  _dungReset();
-  _dungCarve(28,84,44,95,floorTile);   // the entry stair
-  _dungCarve(33,66,39,84,floorTile);   // corridor up
-  _dungCarve(22,44,50,66,floorTile);   // the mid hall
-  _dungCarve(33,30,39,44,floorTile);   // corridor up
-  _dungCarve(20,8,52,30,floorTile);    // the guardian's chamber
-}
-// generic furnishing: the ascent mouth (back to `surface`), lamps, and the reward
-// chest (its ability flag passed in), placed in the guardian's chamber
-function _dungFurnish(surface, chestFlag){
-  G.decor=G.decor||[];
-  G.decor.push({kind:'dungeonmouth', x:36.5, y:93.5, deepworld:surface, exit:1, label:'the way up'});
-  setSolid(36,93,0); setTile(36,93,T.RUIN);
-  for(const [tx,ty] of [[30,86],[42,86],[24,46],[48,46],[24,64],[48,64],[24,12],[48,12],[36,10]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
-  const chest={kind:'chest', x:36.5, y:12.5}; chest[chestFlag]=1; G.decor.push(chest);
-  G.critters=[];
-}
-// generic guardian + a little trash between you and it
-function _dungBoss(trashKind, bossKind, doneFlag, title, sub, elite){
-  for(const [zx,zy] of [[36,72],[30,54],[42,54],[36,46]]){ const sp=findOpenNear(zx,zy,4); if(sp) spawnMob(trashKind,sp[0],sp[1]); }
-  if(!(P.story && P.story[doneFlag])){
-    const sp=findOpenNear(36, 22, 7) || [36,22];
-    const b=spawnMob(bossKind, sp[0], sp[1], elite);
-    if(b){ b.boss=true; b.bigBoss=true; b.title=title; b.subtitle=sub; b.hx=sp[0]; b.hy=sp[1]; b.respawnT=-1; b.gateboss=1; b.gateDone=doneFlag; b.entrance='loom'; }
-  }
 }
 // ---- WINDSURF: THE GALE SPIRE (grants the Swiftstep charm (quicker dash)) ----
 /* ---------- WINDSURF: THE GALE SPIRE (winddeep) - bespoke ----------

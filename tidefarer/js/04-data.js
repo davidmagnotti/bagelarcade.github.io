@@ -9,11 +9,8 @@ const ITEMS = {
   seed:{name:'Wheat Seeds', desc:'Plant in tilled soil at the farm.'},
   mushroom:{name:'Bluecap', desc:'A glowing mushroom from the Whisperwood.'},
   potion:{name:'Ember Tonic', desc:'Restores 30 HP.', use:'heal', heal:30},
-  manapot:{name:'Quiver Bundle', desc:'A tied sheaf of fletched shafts. Refills your quiver by 12 arrows.', use:'arrows', arrows:12},
   goo:{name:'Slime Goo', desc:'A quivering green glob. Render three down at a brewing cellar and they thicken into a tonic.'},
-  wardplate:{name:'Deepiron Ward', desc:'A cold slab of deep-iron. Turns aside 15% of every blow while carried, atop any armour you wear.'},
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
-  crown:{name:'Hollow Crown', desc:'+25 max HP. You earned this.'},
   skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
   veilrune:{name:'Hush-Frost Spellbook', desc:'An ancient spell book of the old royal line, its pages hush-frost that will not thaw, scored in a royal script only a scholar could read. The Rimebound was set to guard it long ago; no one living knows what its workings do. Carry it to your brother.'},
   reachverse:{name:'The Drowned Chart', desc:'An ancient sea-chart lifted from the deep vault beneath Stormreach, the old royal script cut along its margin in a verse: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. It marks waters, not words. Show it to Jaist; the scholar can read what you cannot.'},
@@ -273,10 +270,8 @@ const MOBDEF = {
   skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches (Storm Temple storm-shades reuse this)
   skybat:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Storm Bat'},               // the Rainbow Road's roosting swarm - same fight as the old sky wraith, now a winged cloud-bat
   skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank
-  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // (retired) old Rainbow Road mini-boss - no longer spawned
-  skyspirit:{hp:980, dmg:30, speed:3.2, aggro:13, xp:820, gold:[0,0], lvl:13, name:'The Corrupted Spirit'}, // (retired) old final sky boss
-  stormeye:{hp:900, dmg:24, speed:1.4, aggro:20, xp:900, gold:[0,0], lvl:13, name:'The Storm-Eye'},         // final sky boss: shielded, hurls dodge-only gale-wisps; only vulnerable when it discharges
-  galewisp:{hp:1, dmg:18, speed:0, aggro:0, xp:0, gold:[0,0], lvl:12, name:'Gale-Wisp'}                     // its spat minions (spawned as dodge-only projectiles)
+  stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // the Rainbow Road mini-boss, spawned as "The Wind Spirit" in spawnMobsSky
+  stormeye:{hp:900, dmg:24, speed:1.4, aggro:20, xp:900, gold:[0,0], lvl:13, name:'The Storm-Eye'}          // final sky boss: shielded, hurls dodge-only gale-wisps; only vulnerable when it discharges
 };
 function inSafeZone(x,y){
   for(const k of ['village','dock','farm']){

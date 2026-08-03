@@ -393,19 +393,6 @@ function enterHouse(b){
   if(typeof _revealFromBlack==='function') _revealFromBlack();   // step in through the door, don't teleport
   Snd.step(8);
 }
-function enterCave(){
-  if(G.interior) return;
-  const I={kind:'cave', w:9, h:7, ret:{x:P.x,y:P.y+0.4}, exit:{x:4.5,y:6.1}, t:0, furn:[], cave:1, loreKey:'undermaw'};
-  const F=(type,x,y,hw,hh,solid,lore)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false,lore});
-  F('orb',2.2,2.6,0.5,0.4);
-  F('crate',7.0,4.4,0.55,0.45);
-  F('cavechest',4.6,2.2,0.7,0.5);
-  F('books',6.6,1.5,1.2,0.3,true,'undermaw');
-  G.interior=I; P.click=null;
-  P.x=4.5; P.y=5.4; P.moving=false; P.fishing=null; P.combo=0;
-  toast('<b>The Undermaw</b> - the dark breathes here, slow and cold. Something glitters at the heart of it.',4600);
-  Snd.step(8);
-}
 function enterLair(){
   if(G.interior) return;
   // a vast basalt cathedral inside Mount Kea, not a cottage
@@ -474,8 +461,8 @@ function updateInterior(dt){
   if(P.moving){
     mx/=ml; my/=ml;
     const sp=3.8;
-    let nx=P.x+mx*sp*dt; if(window.DEVFLOAT || !interiorBlocked(nx,P.y,0.28)) P.x=nx;   // dev float: noclip
-    let ny=P.y+my*sp*dt; if(window.DEVFLOAT || !interiorBlocked(P.x,ny,0.28)) P.y=ny;
+    let nx=P.x+mx*sp*dt; if(!interiorBlocked(nx,P.y,0.28)) P.x=nx;
+    let ny=P.y+my*sp*dt; if(!interiorBlocked(P.x,ny,0.28)) P.y=ny;
     P.dir={x:mx,y:my}; P.anim+=dt*9;
   }
   P.swing=Math.max(0,P.swing-dt);
