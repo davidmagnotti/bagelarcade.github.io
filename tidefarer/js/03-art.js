@@ -377,6 +377,17 @@ function buildSprites(){
     grad.addColorStop(1,'rgba(108,58,178,0.58)');
     g.fillStyle=grad; g.fillRect(0,0,w,h);
   }));
+  // GREEN STONE: the same faceted boulder tinted green, for the pick-gated "emberstone" barriers
+  // (rendered green + nameless so it reads as magicked stone at a glance - see GATES.emberstone).
+  SPR.rockGreen = SPR.rock.map(src=>makeCanvas(70,56,(g,w,h)=>{
+    g.drawImage(src,0,0);
+    g.globalCompositeOperation='source-atop';
+    const grad=g.createLinearGradient(12,h-42,34,h-14);
+    grad.addColorStop(0,'rgba(150,240,170,0.60)');
+    grad.addColorStop(0.6,'rgba(70,200,110,0.58)');
+    grad.addColorStop(1,'rgba(40,150,80,0.58)');
+    g.fillStyle=grad; g.fillRect(0,0,w,h);
+  }));
   SPR.rockLow = makeCanvas(70,56,(g,w,h)=>{
     g.fillStyle='#7c7c82'; g.beginPath(); g.ellipse(w/2,h-14,16,8,0,0,TAU); g.fill();
     g.fillStyle='#93939a'; g.beginPath(); g.ellipse(w/2-4,h-16,9,5,0,0,TAU); g.fill();

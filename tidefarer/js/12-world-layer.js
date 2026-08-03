@@ -1626,11 +1626,13 @@ function placeObjectsWind(){
   // dragon here, and no keel crosses the cursed strait until you calm it. So until the tide is calmed
   // you are meant to be stranded: fix the strait and the ferry opens, your way out.
   if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
-  // THE SIGNAL BEACON on the Windward Bluffs - the high point of the isle. Once the strait
-  // is calmed you light it to signal Ashwing down from the cloud-sea, and he bears you up to
-  // the Cloudreach: your only road back UP off Windsurf (you came DOWN by parachute).
+  // ASHWING roosts on the Windward Bluffs - the great dragon that bore you down onto Windsurf
+  // stays with you here rather than winging off. He's your ride off the isle: talk to him to fly
+  // up to the Cloudreach or on to the Sunward Isle - but only once the strait is calmed (no wing
+  // will cross that boiling water). Replaces the old signal-beacon; there's nothing to signal when
+  // he's already at your side.
   { const sp=findOpenNear(B.x, B.y-3, 8) || [B.x, B.y-3];
-    G.decor.push({kind:'signalbeacon', x:sp[0]+0.5, y:sp[1]+0.5, lit:!!(P.story&&P.story.tideCalm), name:'SIGNAL BEACON', labelY:-54});
+    G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82});
     setSolid(sp[0], sp[1], 1); }
   addBuilding('lamp', D.x, D.y-1, '');
   addBuilding('lamp', D.x+3, D.y+1, '');
@@ -1823,16 +1825,24 @@ function askDragonFlight(){
   flyToWorld('sky');
 }
 function askAshwingHome(){
-  const btns=[ {label:'Fly to the Sunward Isle', cls:'gold', fn:()=>{ closeDialog();
-        flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the shore - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }} ];
-  // once the Windsurf strait is calmed, Ashwing will bear you UP into the cloud-sea
-  if(P.story && P.story.tideCalm){
-    btns.push({label:'Fly up into the Cloudreach', fn:()=>{ closeDialog(); flyToCloudreach(); }});
+  // Ashwing rests on the Windsurf bluffs, the dragon that bore you down here. He'll fly you off
+  // the isle - but NOT while the strait below still boils: no wing crosses that killing water. So
+  // you stay grounded here until you calm the tide (the whole reason you came), exactly as the old
+  // signal-beacon gated it. Once it's calm he bears you up to the Cloudreach, or on to Sunward.
+  if(!(P.story && P.story.tideCalm)){
+    lairDialog('Ashwing','<i>Ashwing lifts his great head toward the strait and rumbles a low warning. The water down there still boils black and wrong - </i><b>no wing will cross it yet</b><i>. Calm the tide, and he\'ll bear you off Windsurf whenever you like.</i>',
+      [{label:'Understood', cls:'gold', fn:closeDialog}]);
+    return;
+  }
+  const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }} ];
+  if(P.story && P.story.skyMapTaken){
+    btns.push({label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
+        flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }});
   }
   btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
   // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
   // into a hidden panel - otherwise the "Fly home" menu never shows
-  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He will carry you across the strait, or up past the last cloud, whenever you say the word.</i>', btns);
+  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. The strait lies calm now; he\'ll carry you up past the last cloud, or on across the water, whenever you say the word.</i>', btns);
 }
 /* The signal beacon on the Windward Bluffs. Until the strait is calmed you are stranded on
    Windsurf by the killing tide - no wing will risk that water. Once it's calm, lighting the
@@ -6374,7 +6384,7 @@ function openChest(b){
       if(typeof refreshUI==='function') refreshUI();
       Snd.levelup&&Snd.levelup();
       banner('THE STORMWARD BOW','A RANGED ARM - AND THE BANE OF THE STORM-EYE');
-      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> refills slowly, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
+      setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The shrine\'s coffer gives up a tall stormward <b>bow</b> of horn and windcord, and a quiver of twenty long shafts fletched in gull-grey.</i> <b style="color:var(--ember)">Bow unlocked!</b> '+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to loose arrows - each one bites deep, and the <b>quiver of 20</b> does not refill on its own - gather dropped shafts to restock, so make them count. <i>Keep it close - up on the rainbow road, when you face the <b>Storm-Eye</b>, the bow is the <b>only</b> thing that will bite it.</i>', {label:'OK'});
         else toast('<b style="color:var(--ember)">Bow unlocked!</b> Only the bow can strike the Storm-Eye ahead.',7000); },400);
     } else {
       giveGold(30); give('potion',1); Snd.quest&&Snd.quest();

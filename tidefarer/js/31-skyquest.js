@@ -522,13 +522,14 @@ function updateSkyDungeon(dt){
     // it only grabs at point-blank (and never mid-stun) - so a dash-juke or a sword-stun slips you past
     if(!P.dead && (P.rollT||0)<=0 && (m.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<0.6 && (G.time-(m._grabT||0))>0.7){
       m._grabT=G.time;
-      const st=skyIsle('start');
-      if(Snd.boss) Snd.boss(); G.shake=0.6; buzz(24);
-      burst(P.x,P.y-0.5,'#bcd8ff',18,2.6); shockwave(P.x,P.y,'rgba(160,200,255,0.8)',40);
-      P.x=st.x+0.5; P.y=st.y+2.5; P.click=null; P.moving=false;
-      G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
-      shockwave(P.x,P.y,'rgba(160,200,255,0.8)',40);
-      toast('The <b>cloud-snatcher</b> closes a cold grip on you and hurls you back down the rainbow road to the landing. <i>It cannot leave its isle - time your run and slip past.</i>',5200);
+      if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(20);
+      burst(P.x,P.y-0.5,'#bcd8ff',14,2.4); shockwave(P.x,P.y,'rgba(160,200,255,0.8)',34);
+      // it no longer hurls you back to the landing - a grip just STUNS you for a beat. It
+      // shoves you a little off itself so you're not pinned in a stun-loop, then you wrench free.
+      if(typeof stunPlayer==='function') stunPlayer(0.9);
+      const gx=P.x-m.x, gy=P.y-m.y, gd=Math.hypot(gx,gy)||1;
+      P.x+=gx/gd*1.3; P.y+=gy/gd*1.3; P.click=null; P.moving=false;
+      if(!G._snatchHint){ G._snatchHint=1; toast('The <b>cloud-snatcher</b> gets a cold grip on you - it <b>stuns</b> you for a moment before you wrench loose. <i>It cannot leave its isle: dash-juke it, or rattle it with a sword-blow, and slip past.</i>',5200); }
     }
   }
   updateStormEye(dt);

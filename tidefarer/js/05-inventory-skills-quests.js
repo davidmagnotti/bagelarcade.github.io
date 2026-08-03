@@ -135,7 +135,7 @@ function completeQuest(id){
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; buildHotbar(); refreshUI();
-    if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range. Each shaft hits <b>hard</b> - but your <b>quiver holds 20</b>, and refills slowly, so pick your shots.', {label:'OK'});
+    if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range. Each shaft hits <b>hard</b> - but your <b>quiver holds 20</b> and does <b>not</b> refill on its own, so pick your shots. Gather dropped shafts and quiver bundles to restock.', {label:'OK'});
     else toast('<b style="color:var(--ember)">Bow unlocked!</b> 20 hard-hitting arrows - press 2 or tap the bow slot.'); }
   if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
     // the dash is NOT taught here: earning the staff opens Orin's tower, and the

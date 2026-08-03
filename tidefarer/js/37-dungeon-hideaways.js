@@ -133,7 +133,16 @@ function placeGateRoom(mat, gid, loot, spawn, used){
   var pk=findPocket(rng, spawn, used); if(!pk) return;
   used.push(pk.neck);
   G.decor.push({kind:'chest', x:pk.chest[0]+0.5, y:pk.chest[1]+0.5, tgcache:loot, tgid:gid+':loot'});
-  if(!felled && typeof addGateNode==='function'){ var g=addGateNode(mat, pk.neck[0], pk.neck[1]); if(g) g.gid=gid; }
+  if(!felled && typeof addGateNode==='function'){
+    var g=addGateNode(mat, pk.neck[0], pk.neck[1]); if(g){ g.gid=gid; g.ward=1; }
+    // widen the seal so a 1-tile gate can't be walked around: wall the walkable tiles flanking
+    // the neck (perpendicular to the pocket passage) with the same gate. They share the gid and
+    // ward flag, so mining ANY one shatters the whole barrier - up to 3 tiles wide.
+    var ddx=pk.chest[0]-pk.neck[0], ddy=pk.chest[1]-pk.neck[1];
+    var perp = (Math.abs(ddx)>=Math.abs(ddy)) ? [[0,1],[0,-1]] : [[1,0],[-1,0]];
+    for(var pf=0; pf<perp.length; pf++){ var fx=pk.neck[0]+perp[pf][0], fy=pk.neck[1]+perp[pf][1];
+      if(walkable(fx,fy) && !occ(fx,fy)){ var gf=addGateNode(mat, fx, fy); if(gf){ gf.gid=gid; gf.ward=1; } } }
+  }
 }
 
 function placeDungeonHideaways(id){

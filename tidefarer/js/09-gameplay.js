@@ -1021,7 +1021,10 @@ function killMob(m,skill){
   if(m.kind==='mage'){ m.respawnT=-1; Snd.magic();
     shockwave(m.x,m.y,'rgba(199,123,255,0.8)',46);
     toast('<b>Vath’s binding unravels with him.</b> “...the fire was to be mine,” he says, unhurried even now - and the violet goes out. The grove falls quiet.',6000); }
-  if(g>0) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
+  // gold is a RARE drop now: bosses/elites still always pay out, but a common foe only
+  // sheds coin about a third of the time (so purses fill from fights you pick, not every kill).
+  const dropsGold = m.boss || m.bigBoss || m.elite || Math.random()<0.3;
+  if(g>0 && dropsGold) G.parts.push({x:m.x,y:m.y,vx:0,vy:0,life:20,pickup:'gold',n:g,size:9,color:''});
   if(Math.random()<(m.elite?1:0.4)) G.parts.push({x:m.x+0.3,y:m.y+0.2,vx:0,vy:0,life:20,pickup:'heart',n:12,size:9,color:''});
   // dropped shafts - archers carry quivers, barrow-bones and raiders shed a few, and
   // a hard boss is a good resupply. Only worth dropping once you've a bow to catch them.
@@ -1118,15 +1121,11 @@ function killMob(m,skill){
     if(typeof gainLXP==='function' && typeof xpForP==='function') gainLXP(xpForP(P.level));
     banner('THE STORM-EYE CLOSES','THE HIGH WIND FALLS STILL');
     if(typeof autoSave==='function') autoSave();
-    // The Rainbow Road's finale now plays as a full-overlay cutscene (js/39-more-cutscenes.js):
+    // The Rainbow Road's finale plays as a full-overlay cutscene (js/39-more-cutscenes.js):
     // the shielded storm-core guts itself into mist, the high wind falls still, the rainbow runs
-    // quiet, and the cloud-vault opens north. When it ends, the pointer card (take the vault's
-    // prize down to Ashwing) follows. Falls back to the old story-card if the overlay is absent.
-    const skyCard=()=>storyCard('<i>North of the Broken Crown the little vault stands open on the cloud, its ward unknotted - something the crown kept, waiting there for you.</i> <b style="color:#c9b0ff">Take what it kept, then carry it down to Ashwing.</b>',
-      {label:'OK'});
+    // quiet, and the cloud-vault opens north. No follow-up story card - the cutscene carries it.
     setTimeout(()=>{
-      if(typeof stormEyeCutscene==='function') stormEyeCutscene(skyCard);
-      else skyCard();
+      if(typeof stormEyeCutscene==='function') stormEyeCutscene(()=>{});
     }, 1400);
   }
   // THE WIND SPIRIT on the Cloudreach - felling it lifts the ward on the Gale-Shrine, so you
@@ -1233,7 +1232,9 @@ function killMob(m,skill){
   // sealed chamber the guardian was warding, not a portal dropped where it fell. Dungeons not yet
   // on that pattern fall back to the old fast-exit drop. (Overworld bosses stay put; the Undermill
   // opens its own sail-vault via m.millboss.)
-  if((m.boss||m.bigBoss) && !m.millboss && typeof inDungeon==='function' && inDungeon()){
+  // (The Rainbow Road's Storm-Eye is excluded: it drops no "climb out" portal - you leave the
+  //  sky by talking to the Wind-Lost Bird / flying down, so a dropped exit here is unwanted.)
+  if((m.boss||m.bigBoss) && !m.millboss && !m.skyfinalboss && typeof inDungeon==='function' && inDungeon()){
     if(typeof hasRewardRoom==='function' && hasRewardRoom()){ if(typeof openRewardRoom==='function') openRewardRoom(); }
     else if(typeof spawnFastExit==='function') spawnFastExit(m.x, m.y);
   }
@@ -1634,13 +1635,8 @@ function updatePlayer(dt){
   P.moveT  = P.moving? (P.moveT||0)+dt : 0;   // ...and how long we've been under way (launch spring)
   // regen
   P.mp=Math.min(P.maxmp,P.mp+dt*2.6);
-  // the quiver slowly refills toward its cap (~1 shaft every 1.7s) so the bow is a
-  // rationed burst weapon, never a permanent dead-end
-  if((P.arrows||0) < (P.maxArrows||20)){
-    const before=Math.floor(P.arrows||0);
-    P.arrows=Math.min(P.maxArrows||20, (P.arrows||0)+dt*0.6);
-    if(Math.floor(P.arrows) !== before) refreshUI();
-  }
+  // Arrows do NOT passively recharge - the quiver is only replenished by picking up dropped
+  // shafts (fallen archers/bosses), quiver-bundle items, and level-ups. Spend them with care.
   if(G.time-P.lastCombat>5 && !dlg.open) P.hp=Math.min(P.maxhp,P.hp+dt*2.2); // no mending mid-conversation
   // fishing timer
   if(P.fishing){

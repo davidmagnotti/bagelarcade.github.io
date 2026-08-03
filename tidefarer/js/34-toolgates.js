@@ -35,8 +35,8 @@ var GATES={
   slagiron:{ tool:'pick', req:3, kind:'rock', hp:26, tag:'SLAGIRON',
              color:'#e0955a', glow:'rgba(190,95,45,1)', spark:'#f2b98a',
              need:'the mill-forged <b>Cograzor Pick</b>', drop:'ore', dropN:3, skill:'mining' },
-  emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE',
-             color:'#ff7a4a', glow:'rgba(235,70,25,1)', spark:'#ffc078',
+  emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE', noTag:true,   // nameless, reads green on sight
+             color:'#46c96a', glow:'rgba(45,190,80,1)', spark:'#a8f0b8',
              need:'the forge-tempered <b>Emberbreaker Pick</b>', drop:'crystal', dropN:2, skill:'mining' },
   // VATH-WARD: not natural stone but sorcery made solid - a bright-violet ward Vath
   // raised to cut Barik off from itself. Any dungeon-forged pickaxe (pick tier >= 2)

@@ -172,7 +172,8 @@ const DIALOGUE = {
       "You have the look of someone the world owes a favor. Climb the mountain; collect it."
     ],
     "rell": [
-      "Off Ashwing's back? Then you're one of a lucky few - no hull's crossed our straits in a season.",
+      "You came down on a DRAGON. Ashwing himself, wings over my harbour - <i>Rell just stares at you a moment.</i> Folk on this rock will tell that story for a generation. No hull's crossed our straits in a season, and you drop out of the cloud on a living legend.",
+      "Still can't get over it - a grown dragon, sat up on the bluffs like a gull. And it MINDS you. What in the tides did you do to earn that?",
       "Something churns the deep water out past the reef. It eats boats, and it's eating this town."
     ],
     "coralie": [
