@@ -24,8 +24,8 @@
        castaway. The one figurative anchor is the pale MASK, left half in the wet
        sand where the tide drew back, dawn-lit, the object the whole journey turns
        on (a clean object reads far better here than a hand-drawn body would)
-     * whoever is coming for you is shown only as a warm lantern-light bobbing down
-       the strand and growing nearer - never a drawn figure
+     * whoever is coming for you is never drawn at all - not a figure, not a light -
+       the narration alone carries them down the strand
 
    On its final beat it hands off (onDone) to Maren's first words (startIntro).
    Nothing of the castaway's name or face is revealed - Act I seeds only. There is
@@ -81,14 +81,12 @@ const SH_BEATS = [
   { who:'', html:'', storm:0.14, ship:0, ashore:1, push:1.0, fx:0.5, fy:0.5, hold:2000 },
   // dawn on the empty strand: the tide has drawn back, the mask left in the sand (wordless)
   { who:'', html:'', storm:0.08, ship:0, ashore:1, push:1.03, hold:1700 },
-  { who:'', html:'<i>Then - dawn. Cold sand against your cheek, the tide drawing back off you at last. A pale mask lies half in the wet sand within reach - and your hand has already closed on it, before your eyes are even open. You do not know why.</i>',
+  { who:'', html:'<i>Then - dawn. Warm sand against your cheek, the tide drawing back off you at last. A pale mask lies half in the wet sand within reach - and your hand has already closed on it, before your eyes are even open. You do not know why.</i>',
     storm:0.06, ashore:1, push:1.05 },
   // a slow push onto the mask, catching the first light (wordless)
   { who:'', html:'', storm:0.05, ashore:1, push:1.16, focus:[0.5,0.62], hold:1700 },
-  // a lantern-light comes bobbing down the strand toward you (wordless)
-  { who:'', html:'', storm:0.05, ashore:1, lantern:1, push:1.02, fx:0.5, fy:0.55, hold:2100 },
-  { who:'', html:'<i>A light comes bobbing down the shoreline - a lantern, and someone hurrying through the surf toward you. You have washed up on some strange, dark shore. You are, at least, alive.</i>',
-    storm:0.05, ashore:1, lantern:1, push:1.04 },
+  { who:'', html:'<i>A light comes bobbing down the shoreline - a lantern, and someone hurrying through the surf toward you. You have washed up on some strange, dark shore.</i>',
+    storm:0.05, ashore:1, push:1.04 },
 ];
 
 /* ---------- driver ---------- */
@@ -320,7 +318,7 @@ function shDraw(){
   // --- the cursed wave rising to take her ---
   if(SH.reach>0.03) shCursedWave(cx,W,H,horizon,t,SH.reach);
 
-  // --- the shore foreground: wet sand, surf, debris, the castaway, and Maren's lantern ---
+  // --- the shore foreground: wet sand, surf, debris, and the pale mask in the sand ---
   if(ashore>0.02) shShore(cx,W,H,t,ashore,SH.lantern,storm);
 
   // --- weather: rain over everything while the storm holds ---
@@ -624,8 +622,7 @@ function shShore(cx,W,H,t,amt,lantern,storm){
   //  anchor - the thing the whole journey turns on.)
   shMaskInSand(cx,W,H,t,dawn);
 
-  // --- someone coming for you: a warm lantern-light bobbing down the strand (no body) ---
-  if(lantern>0.02) shLanternApproach(cx,W,H,t,Math.min(1,lantern)*Math.min(1,amt),dawn);
+  // --- someone coming for you is carried by the narration alone: no drawn light, no body ---
 
   cx.restore();
 }
@@ -679,39 +676,6 @@ function shMaskInSand(cx,W,H,t,dawn){
   if(dawn>0.03){ cx.save(); cx.globalCompositeOperation='lighter';
     cx.fillStyle='rgba(255,246,224,'+(0.65*dawn).toFixed(3)+')';
     cx.beginPath(); cx.ellipse(-2.5*s,-8*s,5.5*s,2.6*s,0.2,0,TAU); cx.fill(); cx.restore(); }
-
-  cx.restore();
-}
-
-/* ---- someone coming for you: a warm lantern-light bobbing down the strand ----
-   No figure is drawn - only the light. It bobs down the shoreline and grows nearer
-   as `a` rises, a bright core in a soft warm pool, with a hint of a swinging carry.
-   The narration ("a lantern, and someone hurrying") supplies the person. */
-function shLanternApproach(cx,W,H,t,a,dawn){
-  const lx=W*(0.26-0.10*a) + Math.sin(t*0.9)*6;      // bobs, and closes down-strand
-  const ly=H*0.62 + Math.sin(t*3.2)*3*a;             // a walking bob
-  const r=(46+70*a);                                  // the pool grows as it nears
-  cx.save(); cx.globalAlpha=a;
-
-  // a warm streak of the light's reflection on the wet sand, toward the viewer
-  cx.save(); cx.globalCompositeOperation='lighter';
-  const streak=cx.createLinearGradient(lx,ly,lx-10,ly+120);
-  streak.addColorStop(0,'rgba(255,206,130,'+(0.28*a).toFixed(3)+')'); streak.addColorStop(1,'rgba(255,206,130,0)');
-  cx.fillStyle=streak;
-  cx.beginPath(); cx.moveTo(lx-14,ly); cx.lineTo(lx+14,ly); cx.lineTo(lx+30,ly+140); cx.lineTo(lx-30,ly+140); cx.closePath(); cx.fill();
-  // the soft warm pool
-  const glow=cx.createRadialGradient(lx,ly,2,lx,ly,r);
-  glow.addColorStop(0,'rgba(255,202,120,'+(0.6*a).toFixed(3)+')');
-  glow.addColorStop(0.5,'rgba(255,188,108,'+(0.28*a).toFixed(3)+')');
-  glow.addColorStop(1,'rgba(255,188,108,0)');
-  cx.fillStyle=glow; cx.beginPath(); cx.arc(lx,ly,r,0,TAU); cx.fill();
-  // the bright core - the flame itself, guttering a little in the sea-wind
-  const flick=0.82+0.18*Math.sin(t*9);
-  cx.fillStyle='rgba(255,232,168,'+(0.95*a*flick).toFixed(3)+')';
-  cx.beginPath(); cx.arc(lx,ly,3.2+1.6*a,0,TAU); cx.fill();
-  cx.fillStyle='rgba(255,248,214,'+(0.9*a).toFixed(3)+')';
-  cx.beginPath(); cx.arc(lx,ly,1.4+0.7*a,0,TAU); cx.fill();
-  cx.restore();
 
   cx.restore();
 }
