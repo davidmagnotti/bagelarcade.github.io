@@ -554,7 +554,7 @@ const DIALOGUE = {
   // ---- Aldermere folk after the royal audience -------------------------
   crown: {
     "aldous": [
-      "Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son.",
+      "Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.",
       "You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.",
       "Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them."
     ],

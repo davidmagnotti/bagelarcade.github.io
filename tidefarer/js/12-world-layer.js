@@ -4307,6 +4307,13 @@ function spawnCrownFolk(){
     ['I feed a palace and half a garrison off this one cart. Ask me anything but for a discount.',
      'The kitchen wants everything by supper and pays me by the moon. Such is the crown\'s trade.',
      'Reliable legs are worth more than gold in this city, friend, and just as hard to find.'],0.25));
+  // ---- Hollis: keeper of The Coin & Cup, the capital's public house off the Bazaar ----
+  { const inn=makeNPC('hollis','Hollis the Innkeeper', M.x-2, M.y+10.5,
+    {skin:'#c29a6e',hair:'#3a2f2a',shirt:'#5a3a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
+    ['Welcome to the Coin & Cup - grandest beds in Aldermere, and the only ones the crown\'s taxes haven\'t reached. Yet.',
+     'Isle-folk, factors, off-duty guardsmen - they all end their night under my roof, whatever they started it as.',
+     'A clean bed and a hot bowl, same price as ever. The court can keep its banquets.'],0.6);
+    inn.nightOwl=true; G.npcs.push(inn); }   // a good innkeep is up as long as the lamps are lit
 }
 function spawnMobsCrown(){
   const Z=CROWN_ZONES, BA=Z.barracks;
@@ -4323,7 +4330,7 @@ function updateCrownFolkMood(){
   if(!(P.story && P.story.kingTold)) return;
   const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
   // after the audience, the King speaks openly of the hunt he has charged you with
-  set('aldous',['Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son.',
+  set('aldous',['Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.',
     'You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.',
     'Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them.']);
   set('perrin',['His Majesty has not stood so straight in decades. Whatever passed between you gave the old grief a direction. That is no small gift.',

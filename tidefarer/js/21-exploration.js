@@ -18,6 +18,12 @@ function stampExplore(dt){
 // A falconer's rook maps the whole current isle: lift the fog everywhere, but
 // leave the named zones to be DISCOVERED on foot (you still earn those banners).
 function scoutReveal(){ explGrid().fill(1); }
+// the "- Lv X–Y" suffix on a DISCOVERED banner. Towns / safe zones carry lv:[0,0] and
+// must show NO level tag (not "Lv 0–0"); a zone whose range is a single level shows just "Lv N".
+function zoneLvLabel(lv){
+  if(!lv || (lv[0]===0 && lv[1]===0)) return '';
+  return lv[0]===lv[1] ? ' - Lv '+lv[0] : ' - Lv '+lv[0]+'–'+lv[1];
+}
 function checkDiscover(){
   P.disc=P.disc||{};
   for(const k in ZONES){
@@ -25,7 +31,7 @@ function checkDiscover(){
     const key=G.worldId+':'+k;
     if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
       P.disc[key]=1;
-      banner('DISCOVERED', z.name + (z.lv? ' - Lv '+z.lv[0]+'\u2013'+z.lv[1] : '')); Snd.quest(); giveGold(8);
+      banner('DISCOVERED', z.name + zoneLvLabel(z.lv)); Snd.quest(); giveGold(8);
       const all=Object.keys(ZONES).filter(k2=>ZONES[k2].name).every(k2=>P.disc[G.worldId+':'+k2]);
       if(all) award('wayfarer');
     }
