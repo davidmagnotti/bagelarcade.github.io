@@ -444,7 +444,7 @@ const THR = {
       vath:0.82, gold:0.9, violet:0.55, clash:0.82, flee:1, guards:0 },
     // the bait revealed - and Vath looses ONE massive beam that hurls the spent King to the floor.
     { who:'Vath',
-      html:'“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending thirty years of hoarded strength in one reckless breath.”',
+      html:'“Take them? Old man — I never wanted the children. They were bait. I needed you off that throne and spending long years of hoarded strength in one reckless breath.”',
       vath:1, gold:0.3, violet:0.85, clash:0, flee:1, guards:0, bigStrike:1 },
     { who:'Vath', title:'THE TIDEGLASS TAKEN',
       html:'“You have just tired yourself out enough for me to TAKE it.”',

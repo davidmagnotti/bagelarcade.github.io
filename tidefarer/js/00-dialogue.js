@@ -260,8 +260,8 @@ const DIALOGUE = {
       "Word comes off every isle at once - old curses breaking like ice in spring. The city cannot decide if it is a miracle or a warning."
     ],
     "isolde": [
-      "This is the Queen's garden. She loved the sea-colored blooms - so I keep them, though she has not walked here in thirty years.",
-      "They never found her. Nor the babe. The King had the font built so there'd be a place to weep that wasn't the shoreline.",
+      "This is the Queen's garden. She loved the sea-colored blooms - so I keep them, though she has not walked here since the children were small.",
+      "A fever took her that winter, and no draught in the realm could turn it. The King had the font built so there'd be a place to weep that wasn't her own empty rooms.",
       "Strange - some travelers stand at the font and go pale, as if they half-remember it. You look a little that way yourself."
     ],
     "doran": [
@@ -292,7 +292,7 @@ const DIALOGUE = {
         "Night's for wolves and worries. Neither gets past my door."
       ],
       "crown": [
-        "His Majesty grieves in public now, which is new. For thirty years he did it behind a shut door.",
+        "His Majesty grieves in public now, which is new. For all those long years he did it behind a shut door.",
         "Do not speak of the lost prince within the King's hearing unless you mean to ruin his week. The whole court steps around it.",
         "Aldermere runs on ledgers and patience. I supply both."
       ]
@@ -554,7 +554,7 @@ const DIALOGUE = {
   // ---- Aldermere folk after the royal audience -------------------------
   crown: {
     "aldous": [
-      "Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.",
+      "Long years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.",
       "You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.",
       "Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them."
     ],
@@ -791,7 +791,7 @@ const DIALOGUE = {
     },
     "lettuce": {
       brief: "You there, with the boots and the free afternoon! A warren of hares has decided my lettuce beds are the royal buffet - and the King does love his green. I can't chase and weed both. Shoo three of the little thieves off the beds for me - a firm bonk sends them bolting, no harm done - and I'll load you with the crispest heads in Aldermere.",
-      log: "Shoo 3 garden hares off the lettuce beds by the Drowned Queen's Garden.",
+      log: "Shoo 3 garden hares off the lettuce beds by the Queen's Garden.",
       doneText: "Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they're from Gale, she'll know what to do with them."
     },
     "wyrm": {
@@ -940,8 +940,8 @@ const DIALOGUE = {
       doneText: "It broke. The storm just - broke, clean away to blue, like a held breath let go. First clear sky over the Cloudreach in a season. You have my thanks, Skyward, and the whole cloud's besides - we thought we'd lost the sun for good."
     },
     "roses": {
-      brief: "This garden is a memorial. The King planted it for his queen, lost to the sea thirty years gone, and I have tended it alone ever since. The sea took her; let the sea honour her. Six spiral shells for the border, one true pearl for the fountain's heart, and she will have the garden she was owed.",
-      log: "Bring Isolde 6 spiral shells and 1 pearl for the Drowned Queen's memorial garden.",
+      brief: "This garden is a memorial. The King planted it for his queen, who took a fever and died when his children were small, and I have tended it alone ever since. She loved the colors of the shore - so bring the shore to her: six spiral shells for the border, one true pearl for the fountain's heart, and she will have the garden she was owed.",
+      log: "Bring Isolde 6 spiral shells and 1 pearl for the Queen's memorial garden.",
       doneText: "Oh - a REAL pearl. It catches the light just as she used to. There. The King walks here some evenings; he will see it, and know that someone still remembers her. That is worth more than you know."
     },
     "larder": {
@@ -950,7 +950,7 @@ const DIALOGUE = {
       doneText: "Counted and crated - the stalls will bless your name by morning. Here is the crown's rate, and a little over for the legs it cost you."
     },
     "garrison": {
-      brief: "The Garrison stands the capital's last wall, and thirty quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.",
+      brief: "The Garrison stands the capital's last wall, and long quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.",
       log: "Bring Captain Halvard 8 iron ore and 2 hardwood for the Garrison armoury.",
       doneText: "Good steel, well chosen. The Watch stands the sounder for it - and so does the King who sleeps behind our wall. Take a soldier's thanks, and a soldier's coin."
     }

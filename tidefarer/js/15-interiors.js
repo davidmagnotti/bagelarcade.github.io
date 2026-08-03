@@ -73,7 +73,7 @@ function palaceKingSpeak(){
   const line = (P.story && P.story.act1End)
     ? 'Don\'t fuss over me, child. Vath took the Tideglass light; he did not take the throne\'s meaning, nor my children. Take the prince and sail east, past the charts, and come back when you can finish it. I will be here.'
     : told
-    ? 'The hall is quieter than it looks, traveler. Thirty years I have paced this floor waiting for word of my son. Bring me an ending - any ending - and these old stones will ring again.'
+    ? 'The hall is quieter than it looks, traveler. Long years I have paced this floor waiting for word of my son and daughter. Bring me an ending - any ending - and these old stones will ring again.'
     : 'Welcome to the Tideglass, traveler. Walk the courtyard, take the air on the ramparts. A palace this size is mostly for echoes now, but the doors are open to a curse-breaker.';
   setDialog('“'+line+'”', [{label:'Your Majesty', ghost:true, fn:closeDialog}]);
 }
@@ -107,7 +107,7 @@ function cookSpeak(){
       [{label:'Thank you, Nan', ghost:true, fn:closeDialog}]);
     return;
   }
-  setDialog('“The kitchen never sleeps, love. Thirty years I’ve fed a court of three and a garrison of two hundred - and not once has anyone finished their greens.”',
+  setDialog('“The kitchen never sleeps, love. All my long years I’ve fed a court of three and a garrison of two hundred - and not once has anyone finished their greens.”',
     [{label:'Farewell', ghost:true, fn:closeDialog}]);
 }
 function enterHouse(b){

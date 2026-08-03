@@ -126,7 +126,7 @@ names only for the currently-unnamed siblings.**
 | **Jaist** (scholar son) | the **Prince** (unnamed) | **Jaist.** |
 | Queen **Regina** (ancestor who beat Vath) | the **Tidefarer**, great-grandmother | **Tidefarer** as title; **Regina** can be her name — but note *regina* is Latin for "queen," so "Queen Regina" = "Queen Queen." Make it a choice, not an accident. |
 | **Orin** on Emberwick | **Sage Orin** on Emberwick | Already match. |
-| the mother | a lost queen, drowned ~30 years gone (shipped) | Already match. |
+| the mother | the late queen, who **took a fever and died when the children were small** (NOT drowned, NOT on the voyage). The King was later **fooled by Vath into sending the princess, prince, and Vath himself** out to seek the curses' root; the ship was "lost." Timespan is left **vague** ("long years"), no fixed number. | Canon as of this pass. |
 
 **Also settle:** the isle called **"Sunwick"** here ships as **"The Sunward
 Isle."** And the Tidefarer's generation — the draft calls Archer her

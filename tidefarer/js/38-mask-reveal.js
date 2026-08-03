@@ -50,8 +50,8 @@ const MR = {
 const MR_BEATS = [
   // the mask begins to lift; the first light bleeds through the grey (wordless)
   { who:'', html:'', mask:0.55, fog:0.92, gold:0.14, shake:0.45, hold:1500 },
-  // it comes away and shatters, thirty years of fog tearing loose with it
-  { who:'', html:'<i>The mask comes away — and thirty years of fog tears loose with it.</i>',
+  // it comes away and shatters, long years of fog tearing loose with it
+  { who:'', html:'<i>The mask comes away — and long years of fog tears loose with it.</i>',
     mask:0, fog:0.4, gold:0.5, shatter:1, flash:1.1, shake:0.6 },
   // the boat memory surfaces (wordless)
   { who:'', html:'', mem:'boat', fog:0.3, gold:0.55, hold:1600 },

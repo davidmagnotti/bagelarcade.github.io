@@ -161,7 +161,7 @@ function buildDialogContent(npc){
   // (kingTold) and before the later reveal - no herald/audience-quest step needed.
   if(npc.id==='aldous' && !(P.story&&(P.story.kingTold||P.story.unmasked||P.story.act1End))){
     const p3=()=>{
-      setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown thirty years ago. He\'s been out there all this time - and my children with him, or their graves.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy and girl.”',
+      setDialog('<i>He turns the truth over like a blade carried too long.</i> “The curses across my isles - the wyrm, the leviathan, the aerie, the weeping strait - are all one hand\'s work. His. I\'d know Vath\'s bindings anywhere; he learned them at this court. He did not drown out there all those years ago, whatever word came back. He\'s been out there all this time - and my children with him, or their graves.” <i>The King rises.</i> “I cannot send armies against a ghost. But you walk where he walks and unmake what he makes. Find him, traveler. Find what became of my boy and girl.”',
         [{label:'I will find him.', cls:'gold', fn:()=>{
             P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
             completeQuest('audience');
@@ -171,12 +171,12 @@ function buildDialogContent(npc){
             // back to Orin on Emberwick to have it read.
             if(!P.quests.pendant){ P.quests.pendant='active'; P.prog.pendant=0; }
             setTimeout(()=>toast('<b style="color:var(--ember)">The pendant is the thread.</b> Sail back to <b>Emberwick</b> and show it to <b>Sage Orin</b> at his tower.',7000),2600);
-            setDialog('<i>The King presses a heavy purse and a folded writ into your hands, his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited thirty years; I can wait a little longer, now that someone is looking.”',
+            setDialog('<i>The King presses a heavy purse and a folded writ into your hands, his seal in blue wax.</i> “Then you are my hand abroad. Every gate in Aldermere opens to that seal. Bring him to me, or bring me the truth. I have waited long years; I can wait a little longer, now that someone is looking.”',
               [{label:'Continue',fn:()=>buildDialogContent(npc)}]);
         }}]);
     };
     const p2=()=>{
-      setDialog('“Thirty years past, I had a wife I did not deserve, a fierce slip of a daughter who would sooner duel the guard than curtsy, and a son not yet a season old. Then the curses began - waters that ate ships, beasts that would not lie down, isle after isle turning strange and cruel. I sent to learn their root, and my most trusted man went to lead the search and keep my blood safe: my daughter, my infant son, and the queen who would not be parted from either. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals. We recovered timbers and grief, nothing else. I buried three empty coffins - my queen, my girl, my boy - and called Vath a loyal man drowned in my service.”',
+      setDialog('“Long years past, I had a wife I did not deserve - and a fever took her while our children were small, before either was grown enough to keep the memory. A fierce slip of a daughter who would sooner duel the guard than curtsy, and a boy still small enough to carry. Then the curses began - waters that ate ships, beasts that would not lie down, isle after isle turning strange and cruel. My most trusted man swore he could hunt their root, and counselled me the safest place for my blood was at his own side. Fool that grief had made me, I let him take them: my daughter, my young son, and himself. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals, or so the word came back. We recovered timbers and grief, nothing else. I buried two empty coffins - my girl, my boy - and mourned Vath as a loyal man lost in my service.”',
         [{label:'…And now?', fn:p3}]);
     };
     setDialog('<i>The King\'s eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit. Let me tell you why the sight of you unsteadies me.”',
@@ -252,7 +252,7 @@ function buildDialogContent(npc){
         }});
       // The visual flood has just played the memories and the names; this card is the
       // quiet landing after it - her speaking the name aloud, and the brother's banter.
-      setTimeout(()=>storyCard('<i>For a long moment you can only stand inside it - the flood, and the thirty still years on the far side of it. Then, quietly, you say aloud the name the sea kept from you.</i> <b>Joan.</b> <i>It fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
+      setTimeout(()=>storyCard('<i>For a long moment you can only stand inside it - the flood, and all the still years on the far side of it. Then, quietly, you say aloud the name the sea kept from you.</i> <b>Joan.</b> <i>It fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
         {label:'Go on', onOk:cardB}),700);
     };
     const p5=()=>{
@@ -314,13 +314,13 @@ function buildDialogContent(npc){
       if(typeof sailEpilogue==='function') sailEpilogue();
       else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
     };
-    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, the one the sea took first. And you-” <i>his voice fails on the prince.</i> “...Jaist. My boy. Both of you. Alive.”',
+    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, my firstborn, that I gave to the water with my own blind hand. And you-” <i>his voice fails on the prince.</i> “...Jaist. My boy. Both of you. Alive.”',
       [{label:'We came home, Father.', cls:'gold', fn:toCutscene}]);
     return;
   }
   // Act I aftermath: the King is diminished but tended; a somber coda that points at Act II.
   if(npc.id==='aldous' && P.story && P.story.act1End){
-    setDialog('<i>They have not moved the King far from his throne. He is awake, grey and quiet, the Tideglass light gone out of him - but his hand finds yours with the old strength.</i> “Don\'t look at me like a grave, daughter. He took the magic; he did not take the man.” <i>His eyes go east.</i> “Go where he can\'t reach yet. Come back when you can end this. I kept the two of you for thirty years of empty coffins - I can keep a while longer.”',
+    setDialog('<i>They have not moved the King far from his throne. He is awake, grey and quiet, the Tideglass light gone out of him - but his hand finds yours with the old strength.</i> “Don\'t look at me like a grave, daughter. He took the magic; he did not take the man.” <i>His eyes go east.</i> “Go where he can\'t reach yet. Come back when you can end this. I kept the two of you through long years of empty coffins - I can keep a while longer.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }

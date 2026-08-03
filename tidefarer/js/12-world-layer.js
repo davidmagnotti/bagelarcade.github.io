@@ -142,7 +142,7 @@ const CROWN_ZONES = { // ALDERMERE - the royal capital, grandest of the realms
   plaza:   {x:96, y:102, r:13, name:'Crown Plaza', lv:[0,0]},
   temple:  {x:118,y:112, r:8,  name:'The Cathedral of the Tide', lv:[0,0]},
   palace:  {x:100,y:64,  r:16, name:'The Tideglass Palace', lv:[0,0]},
-  garden:  {x:130,y:78,  r:11, name:"The Drowned Queen's Garden", lv:[0,0]},
+  garden:  {x:130,y:78,  r:11, name:"The Queen's Garden", lv:[0,0]},
   barracks:{x:70, y:80,  r:9,  name:'The Garrison', lv:[0,0]},
   highrow: {x:126,y:140, r:11, name:'Highrow', lv:[0,0]}
 };
@@ -4047,7 +4047,8 @@ function useLeapPoint(){
 /* =====================================================================
    ALDERMERE - the royal capital. A great walled city climbing from the
    harbor to the Tideglass Palace, where a grieving king has ruled alone
-   since the sea took his queen and their infant heir a lifetime ago.
+   since a fever took his queen when his children were small - and Vath's
+   treachery later took the children themselves.
    The grandest, most populous world in the game - a whole kingdom to
    walk. (The reveal that binds it to Emberwick waits behind Act 3.)
    ===================================================================== */
@@ -4237,7 +4238,7 @@ function placeObjectsCrown(){
       if(nh) nh.lockMsg=highLines[i%3]; } }
   addBuilding('well', HR.x, HR.y+1, '');
   for(const [lx,ly] of [[-9,0],[9,0],[0,7]]) addBuilding('lamp', HR.x+lx, HR.y+ly, '');
-  // ---- the Drowned Queen's Garden: a place of quiet mourning ----
+  // ---- the Queen's Garden: a place of quiet mourning ----
   addBuilding('well', GA.x, GA.y, "The Weeping Font");   // a memorial fountain
   const gr=mulberry32(SEED+33);
   for(let gy=-GA.r;gy<=GA.r;gy++) for(let gx=-GA.r;gx<=GA.r;gx++){ const px=GA.x+gx, py=GA.y+gy;
@@ -4261,7 +4262,7 @@ function placeObjectsCrown(){
       if((lx+ly)%2===0) G.decor.push({kind:'lettuce',x:px+0.5,y:py+0.5,ph:(px*7+py*13)%6,nibbled:((px+py)%3===0)}); } }
   G.critters=[];
 }
-// the lettuce beds sit just southwest of the Drowned Queen's Garden
+// the lettuce beds sit just southwest of the Queen's Garden
 function crownLettucePlot(){ const GA=CROWN_ZONES.garden; return {x:Math.round(GA.x-12), y:Math.round(GA.y+8)}; }
 function spawnCrownFolk(){
   const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, H=Z.harbor, GA=Z.garden, BA=Z.barracks, D=Z.dock;
@@ -4278,7 +4279,7 @@ function spawnCrownFolk(){
   // ---- Lord Steward Perrin: runs the kingdom day to day ----
   G.npcs.push(makeNPC('perrin','Lord Steward Perrin', PA.x-4.5, PA.y+6.5,
     {skin:'#c79a6a',hair:'#5a4a38',shirt:'#4a4a5a',pants:'#33303c',robe:'#3a3a4c',trim:'#9a9aa8',hairstyle:'short'},
-    ['His Majesty grieves in public now, which is new. For thirty years he did it behind a shut door.',
+    ['His Majesty grieves in public now, which is new. For all those long years he did it behind a shut door.',
      'Do not speak of the lost prince within the King\'s hearing unless you mean to ruin his week. The whole court steps around it.',
      'Aldermere runs on ledgers and patience. I supply both.'],0.2));
   // ---- Captain of the Guard ----
@@ -4309,8 +4310,8 @@ function spawnCrownFolk(){
   // ---- the Gardener, tending the memorial ----
   G.npcs.push(makeNPC('isolde','Isolde the Gardener', GA.x+0.5, GA.y+2.5,
     {skin:'#c99a72',hair:'#7a6a4a',shirt:'#4a5a44',pants:'#3a3a2c',hairstyle:'bun'},
-    ['This is the Queen\'s garden. She loved the sea-colored blooms - so I keep them, though she has not walked here in thirty years.',
-     'They never found her. Nor the babe. The King had the font built so there\'d be a place to weep that wasn\'t the shoreline.',
+    ['This is the Queen\'s garden. She loved the sea-colored blooms - so I keep them, though she has not walked here since the children were small.',
+     'A fever took her that winter, and no draught in the realm could turn it. The King had the font built so there\'d be a place to weep that wasn\'t her own empty rooms.',
      'Strange - some travelers stand at the font and go pale, as if they half-remember it. You look a little that way yourself.'],0.15));
   // ---- market + harbor flavor ----
   G.npcs.push(makeNPC('doran','Doran the Factor', M.x+0.5, M.y+2.5,
@@ -4357,7 +4358,7 @@ function updateCrownFolkMood(){
   if(!(P.story && P.story.kingTold)) return;
   const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
   // after the audience, the King speaks openly of the hunt he has charged you with
-  set('aldous',['Thirty years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.',
+  set('aldous',['Long years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.',
     'You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.',
     'Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them.']);
   set('perrin',['His Majesty has not stood so straight in decades. Whatever passed between you gave the old grief a direction. That is no small gift.',
@@ -4497,7 +4498,7 @@ QUESTS.kitchenrun={ giver:'odo', title:"The Victualler's Errand", kind:'special'
   rw:{gold:60, item:{elixir:1}, xp:{fishing:120}} };
 QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill', kill:{hare:3}, xpL:150,
   brief:'You there, with the boots and the free afternoon! A warren of hares has decided my lettuce beds are the royal buffet - and the King does love his green. I can\'t chase and weed both. Shoo three of the little thieves off the beds for me - a firm bonk sends them bolting, no harm done - and I\'ll load you with the crispest heads in Aldermere.',
-  log:'Shoo 3 garden hares off the lettuce beds by the Drowned Queen\'s Garden.',
+  log:'Shoo 3 garden hares off the lettuce beds by the Queen\'s Garden.',
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
@@ -4605,8 +4606,8 @@ ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitche
    ACT I FINALE - "The Enchanter's Tide" turns. The King's audience sets you
    after Vath, and after the truth of his lost children. The pendant is a
    memory-ward; the Woodworker is the enchanted prince, the scholarly brother;
-   and YOU - the masked stranger - are the warrior princess, the sister the sea
-   took first. Show the ward, take off the mask, remember, and bring the prince
+   and YOU - the masked stranger - are the warrior princess, the elder sister
+   lost with him to the sea. Show the ward, take off the mask, remember, and bring the prince
    to the capital - where Vath comes not to fight but to seize the throne's
    magic, and the King spends himself to buy your escape.
    ===================================================================== */
@@ -4708,9 +4709,9 @@ function purgeAct1AvailQuests(){
    The royal capital was grand but quiet - a dozen townsfolk and only three
    quests, most of them story-gated. These give its people something to ask of a
    passing hero, and tie a little more of the lost-queen thread into the city. -- */
-QUESTS.roses={ giver:'isolde', title:"The Drowned Queen's Garden", kind:'gather', need:{shell:6, pearl:1}, xpL:240,
-  brief:'This garden is a memorial. The King planted it for his queen, lost to the sea thirty years gone, and I have tended it alone ever since. The sea took her; let the sea honour her. Six spiral shells for the border, one true pearl for the fountain\'s heart, and she will have the garden she was owed.',
-  log:'Bring Isolde 6 spiral shells and 1 pearl for the Drowned Queen\'s memorial garden.',
+QUESTS.roses={ giver:'isolde', title:"The Queen's Garden", kind:'gather', need:{shell:6, pearl:1}, xpL:240,
+  brief:'This garden is a memorial. The King planted it for his queen, who took a fever and died when his children were small, and I have tended it alone ever since. She loved the colors of the shore - so bring the shore to her: six spiral shells for the border, one true pearl for the fountain\'s heart, and she will have the garden she was owed.',
+  log:'Bring Isolde 6 spiral shells and 1 pearl for the Queen\'s memorial garden.',
   doneText:'Oh - a REAL pearl. It catches the light just as she used to. There. The King walks here some evenings; he will see it, and know that someone still remembers her. That is worth more than you know.',
   rw:{gold:60, mp:6, item:{elixir:1}, xp:{fishing:200, farming:120}} };
 QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', need:{cookedfish:6, bread:4}, xpL:200,
@@ -4719,7 +4720,7 @@ QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', ne
   doneText:'Counted and crated - the stalls will bless your name by morning. Here is the crown\'s rate, and a little over for the legs it cost you.',
   rw:{gold:90, item:{potion:2}, xp:{fishing:120, farming:120}} };
 QUESTS.garrison={ giver:'halvard', title:'Steel for the Watch', kind:'gather', need:{ore:8, hardwood:2}, xpL:220,
-  brief:'The Garrison stands the capital\'s last wall, and thirty quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
+  brief:'The Garrison stands the capital\'s last wall, and long quiet years have rusted more than our blades. Eight lumps of good iron ore and two lengths of hardwood for the hafts - our own smith will strike the rest - and the armoury stands sound again. A soldier does not beg - so consider it a commission, soldier to soldier.',
   log:'Bring Captain Halvard 8 iron ore and 2 hardwood for the Garrison armoury.',
   doneText:'Good steel, well chosen. The Watch stands the sounder for it - and so does the King who sleeps behind our wall. Take a soldier\'s thanks, and a soldier\'s coin.',
   rw:{gold:100, item:{elixir:1, potion:2}, xp:{melee:200, mining:120}} };
