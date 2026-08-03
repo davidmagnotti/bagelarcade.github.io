@@ -161,15 +161,17 @@ function placeDungeonHideaways(id){
         Each has its "use it here" example already in the world:
           Cragbreaker Pick (Undermaw / Maw-Stalker)     -> basalt gates (isles; the Barik farm)
           Rivenedge Axe    (Emberdeep / Ashwing)         -> ironwood gates (isles)
-          Cograzor Pick    (Undermill / Cog-Bound)      -> slagiron gate rooms (isles)
+          Cograzor Pick    (Gale Spire / The Skirl)      -> slagiron gate rooms (isles)
           Emberbreaker Pick(Ashen Forge / Cinderwrought)-> emberstone gate rooms (isles)
    (Undermaw and Emberdeep swapped prizes: the Undermaw now forges the purple-basalt PICK.)
+   (The Undermill drops NO tool - its prize is Nessa's stormsail, in the vault. The mill-forged
+    Cograzor Pick moved to the Gale Spire beneath Windsurf, hafted from that ruined waterwheel.)
 ---- */
 var BOSS_TOOL={
   undermaw:    {flag:'pickgift',  spot:[22,4], have:function(){return (P.tools&&P.tools.pick||0)>=2;},  is:function(m){return !!m.undermawBeast;}},
   eastdeep:    {flag:'axegift',   have:function(){return (P.tools&&P.tools.axe||0)>=2;},   is:function(m){return m.kind==='dragon';}},
   sunwarddeep: {flag:'embergift', have:function(){return (P.tools&&P.tools.pick||0)>=4;}, is:function(m){return !!(m.gateboss && m.gateDone==='ashenForgeDone');}},
-  milldeep:    {flag:'slaggift',  have:function(){return (P.tools&&P.tools.pick||0)>=3;}, is:function(m){return !!m.millboss;}}
+  winddeep:    {flag:'slaggift',  have:function(){return (P.tools&&P.tools.pick||0)>=3;}, is:function(m){return !!m.skirl;}}
 };
 // The boss drops its prize as a CHEST where it falls - you go to it, open it (get the
 // prize), then climb out. (Not a silent grant; the "get prize, then climb out" flow.)

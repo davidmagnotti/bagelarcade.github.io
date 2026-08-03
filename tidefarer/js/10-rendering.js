@@ -164,7 +164,7 @@ function drawWaterOverlay(minX,maxX,minY,maxY,EL,full){
 const DYNAMIC_DECOR = {chest:1, chestOpen:1, boat:1, lava:1, lairmouth:1, dungeonmouth:1, icelever:1, boneplate:1, bonelever:1, bonebars:1, catgate:1, tunnelmouth:1, ashwing:1, kingfire:1, wardgate:1,
   cratersmoke:1, lavacrack:1, emberplate:1, firegate:1, emberlever:1, dragonrest:1, icespire:1, emberbutton:1, staffgate:1, leappoint:1, tombmouth:1,
   skygate:1, skytile:1, skybird:1, vathghost:1,
-  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1, millwater:1,
+  coggate:1, millgear:1, millwheel:1, sluicelever:1, signalbeacon:1, fastexit:1, millwater:1, millsurge:1,
   icebrazier:1, icewall:1, thinice:1,
   beamgate:1, bonepan:1, windzone:1,
   lavaseg:1, lavasluice:1, firewheel:1,
@@ -1331,6 +1331,33 @@ function drawDecor(b,s){
     g.beginPath(); g.moveTo(-32,-KN); g.lineTo(0,16-KN); g.lineTo(0,16-KN-3); g.lineTo(-32,-KN-3); g.closePath(); g.fill();
     g.strokeStyle='rgba(122,106,92,0.5)'; g.lineWidth=1;   // capstone ridge highlight
     g.beginPath(); g.moveTo(-32,-KN-2); g.lineTo(0,16-KN-2); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='millsurge'){
+    // THE TIMED SURGE across a drained doorway (see updateMillDeep). w._warn telegraphs the surge
+    // with a low churn at the sill; w._surgeI (0..1) is the water rising to a full curtain and back.
+    const w=b.w; if(!w || !w.on || (typeof P!=='undefined' && P.story && P.story.millDone)) return;
+    const inten=w._surgeI||0, warn=w._warn||0;
+    if(inten<=0.02 && warn<=0.02) return;
+    const g=cx; g.save(); g.translate(s.x,s.y);
+    if(warn>0 && inten<0.25){   // the tell: a bright churn-line skitters across the sill before it climbs
+      g.strokeStyle='rgba(190,228,246,'+(0.35+0.4*warn).toFixed(2)+')'; g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(-30,2); g.quadraticCurveTo(0,-3-4*warn,30,2); g.stroke();
+      for(let i=0;i<2;i++) if(Math.random()<0.4) G.parts.push({x:b.x, y:b.y-0.1, vx:rnd(-0.3,0.3), vy:-rnd(0.3,0.9), life:rnd(0.2,0.5), color:'rgba(205,232,246,0.7)', size:rnd(1,2), grav:0.05});
+    }
+    const H=13*Math.max(0,Math.min(1,inten));   // curtain height rides the surge intensity
+    if(H>0.5){
+      const bob=Math.sin(G.time*7 + b.gx*0.7)*1.2*inten;
+      g.fillStyle='rgba(24,66,94,0.94)';   // left face
+      g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+      g.fillStyle='rgba(16,50,74,0.94)';   // right face
+      g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
+      g.fillStyle='rgba(48,116,156,0.96)';   // crest
+      g.beginPath(); g.moveTo(0,-16-H+bob); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
+      g.strokeStyle='rgba(200,232,248,0.6)'; g.lineWidth=1.3;
+      g.beginPath(); g.moveTo(-30,-H-1); g.quadraticCurveTo(0,-15-H+bob,30,-H-1); g.stroke();
+      if(Math.random()<0.08*inten) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.3,0.3), vy:-rnd(0.4,1.1), life:rnd(0.3,0.7), color:'rgba(205,232,246,0.7)', size:rnd(1,2.2), grav:0.05});
+    }
     g.restore(); return;
   }
   if(b.kind==='emberbutton'){

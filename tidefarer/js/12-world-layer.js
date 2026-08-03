@@ -3007,7 +3007,13 @@ function placeObjectsMillDeep(){
       // a raised churning water-curtain over every flooded tile, so the barrier reads as a WALL of
       // water (not a calm pool you might jump). The render hides itself where a doorway has drained.
       G.decor.push({kind:'millwater', x:x+0.5, y:y+0.5, gx:x, gy:y}); } }
-    const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false}; G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
+    // sSpd/sPhase drive the TIMED SURGE once this doorway is drained: the race pulses water back
+    // across the opening on a telegraphed cycle. Stagger the phase by row so a hall's doorways never
+    // all surge at once (there's always a passable beat somewhere). See updateMillDeep + 'millsurge'.
+    const w={hall, id, y, dx0:doorX0, dx1:doorX1, on:false, sSpd:0.26, sPhase:((y*0.137)%1+1)%1, _surgeI:0, _warn:0};
+    G._millWalls.push(w); applyMillWall(w);   // doorway starts shut
+    // a surge-curtain over each doorway tile, drawn only while the drained doorway is surging shut
+    for(let x=doorX0;x<=doorX1;x++) if(inb(x,y)) G.decor.push({kind:'millsurge', x:x+0.5, y:y+0.5, gx:x, gy:y, w});
   };
   const valve=(hall, vx, vy, flips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, flips, label:'a sluice valve'}); };
   const ovalve=(hall, vx, vy, pips)=>{ G.decor.push({kind:'sluicelever', x:vx+0.5, y:vy+0.5, on:false, hall, order:true, pips, label:'a tide-lock valve'}); };
@@ -3112,6 +3118,27 @@ function updateMillDeep(dt){
     s.up = ph>=0.68 && ph<0.95;
     if(s.up && Math.floor(P.x)===s.gx && Math.floor(P.y)===s.gy) HIT(s.dmg, s.x, s.y);
   }
+  // TIMED SLUICE SURGES: a drained doorway is not safe forever - the race still pulses. On a
+  // telegraphed cycle the water gathers (warn), then sweeps back across the opening (flood) as a
+  // wall you cannot walk through, then recedes. Time your run - or DASH: a roll's i-frames carry you
+  // through a surge clean, same as the grind-blades. Caught on foot, you're washed back downstream.
+  if(!(P.story && P.story.millDone)) for(const w of (G._millWalls||[])){
+    if(!w.on){ w._surgeI=0; w._warn=0; continue; }   // a still-shut doorway is the valve's business, no surge
+    const ph=((t*w.sSpd + w.sPhase)%1 + 1)%1;
+    let inten=0, warn=0;
+    if(ph>=0.50 && ph<0.62){ warn=(ph-0.50)/0.12; inten=0.22*warn; }        // water gathers low - the tell
+    else if(ph>=0.62 && ph<0.86){ inten=Math.min(1,(ph-0.62)/0.05); }       // surges up fast and holds
+    else if(ph>=0.86 && ph<0.94){ inten=1-(ph-0.86)/0.08; }                 // recedes
+    w._surgeI=inten; w._warn=warn;
+    const flood = ph>=0.64 && ph<0.86;   // the impassable window (a hair inside the visual, so the tell is honest)
+    if(flood){
+      const onDoor = Math.floor(P.y)===w.y && Math.floor(P.x)>=w.dx0 && Math.floor(P.x)<=w.dx1;
+      if(onDoor && !safe){   // washed back downstream (south) and bloodied - unless a dash carries you through
+        HIT(15, P.x, w.y+0.5); P.y=w.y+1.55; P.click=null; P.moving=false;
+        shockwave(P.x, w.y+0.5, 'rgba(150,205,235,0.7)', 26); Snd.step&&Snd.step(6);
+      }
+    }
+  }
 }
 // THE COG-BOUND: the miller who was caught in the gear-train when it seized, risen
 // fused to the works and guarding them. Fell it and the freed shaft grinds the
@@ -3127,7 +3154,7 @@ function spawnCogBound(){
   const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 5) || [Z.x, Z.y];
   const b=spawnMob('skeleton', sp[0], sp[1]);
   if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
-    b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[40,70];
+    b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[0,0];   // no coin - the SAIL in the vault is the only prize here
     b.hx=sp[0]; b.hy=sp[1]; b.state='chase'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
   return b;
 }
