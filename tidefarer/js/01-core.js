@@ -189,17 +189,15 @@ const LB = {x:0, y:0};
    the cheaper ambiance on. Persisted per-effect. In normal (non-perf) detail
    everything renders regardless - fxOn() short-circuits when !LOWFX. */
 const FX = { grade:0, lighting:0, bloom:0, cloudShadows:0, foam:0,
-             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:1,
-             storybook:1 };
+             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:1 };
 try{ for(const k in FX){ const v=SafeStore.get('tf_fx_'+k); if(v!==null) FX[k]=(v==='1')?1:0; } }catch(e){}
 function fxOn(n){ return !LOWFX || !!FX[n]; }   // full detail => always on
 /* Storybook (cel) look: a cleaner, more cartoonish grade for Act I - grain off,
    a flatter tone curve, a warmer split-tone, less baked grime, no carrion grit.
-   Unlike fxOn(), this is a STYLE choice, not a perf choice, so it applies in
-   every quality tier. Act-gated: Act II onward keeps the full gritty cinematic
-   grade (the fall). Toggle lives in the Display > Effects panel. */
+   This is a STYLE choice, not a perf choice, so it applies in every quality
+   tier and can't be turned off. Act-gated: Act II onward keeps the full gritty
+   cinematic grade (the fall). */
 function storybookOn(){
-  if(!FX.storybook) return false;
   const s=(typeof P!=='undefined') && P.story; if(!s) return true;   // pre-story = Act I
   return ((s.act||1) < 2) && !s.act2;
 }
