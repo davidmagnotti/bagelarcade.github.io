@@ -4595,6 +4595,7 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
 ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
 ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
 ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
+ITEMS.frostchart = {name:"Tibb's Frostferry Chart", desc:"A wax-sealed sea-chart Tibb pressed on you at Stormreach, the road north marked in a raftwright's rough hand. It ends at the Frozen Isle, and beside the mark he has scrawled only: something lies sealed under that ice - the sort of thing a curse-breaker ought to go and get."};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
 ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60};
@@ -4656,8 +4657,8 @@ QUESTS.barrowbrute={ giver:'mora', title:'Wrecker of Stormreach', kind:'special'
 QUESTS.drownedwarden={ giver:'tibb', title:'Warden of the Drowned Vault', kind:'special', xpL:420,
   brief:'There is a stair under the drowned graveyard, and a great bull-headed brute wardening the vault below - the Drowned Minotaur, my grandfather\'s grandfather sealed it in and told us never to dig. But the old ward still guards the deep: the Ossuary floor is a lock of bone-stones, and a dead thing dances you the key. Tread its steps true, chamber by chamber, and the Bone Gate opens. Go down, put the beast\'s horns in the dirt, and let us bury our dead in peace.',
   log:'Descend into the catacomb beneath Stormreach, tread the Ossuary\'s ward-dance, and put down the Drowned Minotaur.',
-  doneText:'The whole warren went quiet when it fell - I felt the floor settle. The bone-stones lie dark and the way stands open now, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic, salvaged from the vault it guarded.',
-  rw:{gold:130, item:{elixir:1, potion:2}, xp:{melee:260, magic:220}} };
+  doneText:'The whole warren went quiet when it fell - I felt the floor settle, and the salvage is ours at last. Take a raftwright\'s thanks, and this tonic from the vault it guarded. And one thing more - <b>a chart, north to the Frozen Isle</b>. There\'s a thing sealed under that ice the old songs won\'t name; if you\'re hunting what I think you\'re hunting, that\'s where your road runs next. The strait\'s open to a keel now - the ferry will carry you.',
+  rw:{gold:130, item:{elixir:1, potion:2, frostchart:1}, xp:{melee:260, magic:220}} };
 /* ---------- Act II: the returned-isle RESTORATIONS -----------------------------
    Under the Warding Veil you steal home to find each old isle warped by a curse
    Vath let fester. Each isle's curse is anchored to a spirit bound in a new
