@@ -3294,12 +3294,14 @@ function placeObjectsUndermaw(){
   // reward:1 marks the Deep Hoard as this dungeon's reward room, so killMob opens it here (it
   // already does, via the m.undermawBeast handler) and never drops a "way out" at the boss instead
   G.decor.push({kind:'catgate', x:21, y:11, open:false, gate:'undermaw', reward:1, tiles:UNDERMAW_GATE.slice(), label:'the Hoard Door'});
-  // The Maw-Stalker's prize (the Cragbreaker Pick, which mines the violet basalt) is dropped into
-  // the Deep Hoard here, at 22,4 - the reward-room chest (see awardDungeonTool's `spot`). A wall of
-  // mineable BASALT seals the hoard's climb-out (the "way out"), so the moment the boss falls and you
-  // claim the pick you can put it straight to work: cut one block through to open the shortcut. Never
-  // a soft-lock - the entrance way-up at the Maw always stands open, so you can also just walk back down.
-  if(typeof addGateNode==='function') for(let gy=2; gy<=8; gy++) addGateNode('basalt', 25, gy);
+  // The Maw-Stalker's prize (the Cragbreaker Pick) is dropped into the Deep Hoard here, at 22,4 -
+  // the reward-room chest (see awardDungeonTool's `spot`). A wall of violet WARDSTONE - the very
+  // same Vath-ward crystal that walls off the Barik farm (GATES.vathward) - seals the hoard's
+  // climb-out (the "way out"), so the moment the boss falls and you claim the pick you can put it
+  // straight to work: cut one block through to open the shortcut. Never a soft-lock - the entrance
+  // way-up at the Maw always stands open, so you can also just walk back down. (These stones carry
+  // no ward gid, so they break one at a time here - not as the single shattering ring the farm is.)
+  if(typeof addGateNode==='function') for(let gy=2; gy<=8; gy++) addGateNode('vathward', 25, gy);
   // A supply cache in the corridor just before the den: three Ember Tonics for the
   // boss fight. Claimed once, then it stays taken across later descents.
   if(!(P.story && P.story.undermawTonics)) G.decor.push({kind:'chest', x:22.5, y:37.5, mawTonics:1});
