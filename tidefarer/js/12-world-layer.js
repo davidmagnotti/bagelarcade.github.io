@@ -5202,6 +5202,17 @@ function exitBarikDeep(){
 // drowned the low ground - the Mirefen marsh has become open water, and the Drowned Vault's
 // mouth hides in a flooded sinkhole among the reeds (not a lamp-lit hole by the dock). A
 // diver's cache waits on a rock the deep water keeps.
+// Flood-fill of every tile you can WALK to from (sx,sy): orthogonal steps over non-solid,
+// walkable, non-water tiles. Used to PROVE a sealed curse-pocket is (a) truly cut off while the
+// curse stands and (b) never seals a route to the isle's living zones. One cheap pass at gen.
+function _curseReach(sx,sy,cap){
+  const seen=new Set([sx+','+sy]), st=[[sx,sy]]; let n=0;
+  const walk=(x,y)=> inb(x,y) && !solidAt(x,y) && walkTile(tileAt(x,y)) && tileAt(x,y)!==T.DEEP && tileAt(x,y)!==T.SHALLOW;
+  while(st.length){ const p=st.pop(); if(++n>cap) break;
+    const nb=[[p[0]+1,p[1]],[p[0]-1,p[1]],[p[0],p[1]+1],[p[0],p[1]-1]];
+    for(const c of nb){ const k=c[0]+','+c[1]; if(seen.has(k)||!walk(c[0],c[1])) continue; seen.add(k); st.push(c); } }
+  return seen;
+}
 function placeBarikFlood(){
   if(!(P.story && P.story.vathVeil)) return;
   // Once the Tidemaw in the Drowned Vault is felled (barikDeepDone), Vath's flood recedes and
@@ -5237,6 +5248,20 @@ function placeBarikFlood(){
       way.push([xx,yy]);
     }
   }
+  // THE MAROONED CROFT: a dry islet at the drowned HEART of the Mirefen, ringed on every side by
+  // Vath's deep flood - no causeway touches it (the causeway hugs the west edge) and no foot
+  // crosses solid deep water, so its reward sits UNREACHABLE until the Drowned Vault falls and the
+  // lagoon drains back to meadow. The core + chest are laid in BOTH states; only the surrounding
+  // flood (laid above, cursed only) isolates it - so this adds NO barrier of its own and can never
+  // seal a route: a restored isle simply walks out to it over dry ground.
+  { const ix=Math.round(M.x), iy=Math.round(M.y);
+    for(let y=iy-2;y<=iy+2;y++) for(let x=ix-2;x<=ix+2;x++){ if(inb(x,y) && dist(x,y,ix,iy)<=2.5){
+      setTile(x,y,T.SOIL); setSolid(x,y,0);
+      if(G.nodes) G.nodes=G.nodes.filter(n=>!(Math.floor(n.x)===x && Math.floor(n.y)===y)); } }
+    if(!restored && !G.decor.some(d=>d.fenCroft)){
+      G.decor.push({kind:'snag', x:ix-1.4, y:iy-1.3, ph:2.1, h:13, lean:0.34, fenCroft:1});
+      G.decor.push({kind:'pillar', x:ix+1.4, y:iy+1.4, broken:true, fenCroft:1}); }
+    if(!G.decor.some(d=>d.fenCroftChest)) G.decor.push({kind:'chest', x:ix+0.5, y:iy+0.5, rich:7, fenCroftChest:1}); }
   // the hidden mouth: a flooded sinkhole in the reeds at the head of the causeway. Placed even on
   // a restored isle (on now-dry ground) so the drained Vault below stays re-enterable.
   const head=way.length? way[way.length-1] : null;
@@ -5268,7 +5293,7 @@ function placeBarikFlood(){
       if(rock){ setTile(rock[0],rock[1],T.SAND); setSolid(rock[0],rock[1],0);
         G.decor.push({kind:'chest', x:rock[0]+0.5, y:rock[1]+0.5, rich:6, diverCache:1}); }
     }
-    _curseHint('barikCurseSeen','<b>Vath\'s flood has swallowed the east of Barik</b> - the Mirefen and the farmsteads are one drowned sea now, dead trees standing where the fields were. Something waits in a <b>flooded sinkhole</b> up the reed-causeway from the south shore.');
+    _curseHint('barikCurseSeen','<b>Vath\'s flood has swallowed the east of Barik</b> - the Mirefen and the farmsteads are one drowned sea now, dead trees standing where the fields were, and a lone croft left marooned out in the deep water. Something waits in a <b>flooded sinkhole</b> up the reed-causeway from the south shore.');
   }
 }
 /* =====================================================================
@@ -6121,6 +6146,27 @@ function placeWindHazard(){
 }
 // SUNWARD - Mount Kea erupts unending: fresh lava creeps down the slopes and a fissure has
 // split open low on the south face - the way into the Ashen Forge.
+// A deterministic peripheral land-nub on the Sunward Isle, far from the volcano and every living
+// zone, ringed by as much water/solid as possible - a natural peninsula a lava moat can seal cheap.
+// Same in both curse states (reads only base terrain + a fixed scan), so the reward never moves.
+function _sunwardPocketSpot(){
+  const Z=(typeof EAST_ZONES!=='undefined')?EAST_ZONES:{};
+  const isLand=(x,y)=> inb(x,y) && !solidAt(x,y) && walkTile(tileAt(x,y)) && tileAt(x,y)!==T.DEEP && tileAt(x,y)!==T.SHALLOW;
+  const coreOK=(cx,cy)=>{ for(let y=cy-2;y<=cy+2;y++) for(let x=cx-2;x<=cx+2;x++){ if(dist(x,y,cx,cy)<=2.5 && !isLand(x,y)) return false; } return true; };
+  const zonesClear=(cx,cy)=>{ for(const k in Z){ const z=Z[k]; if(dist(cx,cy,z.x,z.y) < (z.r||6)+9) return false; } return true; };
+  const V=Z.volcano||{x:88,y:52,r:22};
+  // how boxed-in a spot already is (water/solid around a radius-5 ring) - a peninsula seals with the fewest moat tiles
+  const boxScore=(cx,cy)=>{ let s=0; for(let a=0;a<16;a++){ const ang=a/16*TAU, x=Math.round(cx+Math.cos(ang)*5), y=Math.round(cy+Math.sin(ang)*5);
+    if(!isLand(x,y)) s++; } return s; };
+  let best=null, bestScore=-1;
+  for(let y=16;y<MAPH-16;y+=4) for(let x=16;x<MAPW-16;x+=4){
+    if(dist(x,y,V.x,V.y) < V.r+6) continue;               // keep clear of Mount Kea's lava field
+    if(!coreOK(x,y) || !zonesClear(x,y)) continue;
+    const sc=boxScore(x,y);
+    if(sc>bestScore){ bestScore=sc; best=[x,y]; }
+  }
+  return best;
+}
 function placeSunwardHazard(){
   if(!(P.story && P.story.vathVeil)) return;
   // Once the Cinderwrought in the Ashen Forge is felled (ashenForgeDone) Mount Kea settles - the
@@ -6145,7 +6191,41 @@ function placeSunwardHazard(){
   const fx=Math.round(V.x), fy=Math.round(V.y+V.r*0.72);
   const sp=(typeof findOpenNear==='function' && findOpenNear(fx, fy, 8)) || [fx,fy];
   _curseMouthAt(sp[0], sp[1], [sp[0], sp[1]+1], 'sunwarddeep', 'the Ashen Forge', 'THE ASHEN FORGE ▼');
-  if(!restored) _curseHint('sunCurseSeen','<b>Mount Kea burns without pause</b> - lava creeps down the slopes and ash chokes the sky. A fresh <b>fissure</b> has split the mountain\'s south face.');
+  // THE ASHLOCKED TERRACE: a peninsula of green the eruption rings in a MOAT OF MOLTEN ROCK -
+  // unreachable while Kea burns, opened when the Ashen Forge is quenched and the lava cools. The
+  // core + chest are laid in BOTH states; the moat (cursed only) is flood-fill VERIFIED to seal the
+  // pocket without cutting any route to the living zones - if it can't, it is ripped straight back
+  // out, so it can never soft-lock (the same verify-or-bail as the Hedda ward).
+  { const pk=_sunwardPocketSpot();
+    if(pk){ const ix=pk[0], iy=pk[1];
+      // core kept walkable in both states
+      for(let y=iy-2;y<=iy+2;y++) for(let x=ix-2;x<=ix+2;x++){ if(inb(x,y) && dist(x,y,ix,iy)<=2.5){ setSolid(x,y,0);
+        if(!(walkTile(tileAt(x,y)) && tileAt(x,y)!==T.DEEP && tileAt(x,y)!==T.SHALLOW)) setTile(x,y,T.GRASS);
+        if(G.nodes) G.nodes=G.nodes.filter(n=>!(Math.floor(n.x)===x && Math.floor(n.y)===y)); } }
+      if(!restored){
+        // the molten moat: solid ring of lava (radius 2.5..5, matching the Windsurf drowned-district
+        // seal). Record the tiles so a failed reachability check can rip them straight back out.
+        const ringed=[];
+        for(let y=iy-5;y<=iy+5;y++) for(let x=ix-5;x<=ix+5;x++){ const dd=dist(x,y,ix,iy);
+          if(inb(x,y) && dd>2.5 && dd<=5 && !solidAt(x,y) && walkTile(tileAt(x,y)) && tileAt(x,y)!==T.DEEP && tileAt(x,y)!==T.SHALLOW){
+            ringed.push([x,y]); setSolid(x,y,1); } }
+        for(let i=0;i<ringed.length;i++) G.decor.push({kind:'lava', x:ringed[i][0]+0.5, y:ringed[i][1]+0.5, r:1, ashLockMoat:1});
+        // VERIFY from the isle spawn: the pocket must be SEALED and every living zone still REACHABLE.
+        const spw=(WORLD_DEFS.east && WORLD_DEFS.east.spawn) || {x:44.5,y:120.5};
+        const reach=_curseReach(Math.round(spw.x-0.5), Math.round(spw.y-0.5), 60000);
+        const nearReach=(z)=>{ if(!z) return true; for(let r=0;r<=6;r++) for(let a=0;a<8;a++){
+          const x=Math.round(z.x+Math.cos(a/8*TAU)*r), y=Math.round(z.y+Math.sin(a/8*TAU)*r); if(reach.has(x+','+y)) return true; } return false; };
+        const zonesOK=['dock','village','grove'].every(k=>nearReach(EAST_ZONES[k]));
+        const sealed=!reach.has(ix+','+iy);
+        if(!(zonesOK && sealed)){                       // moat would cut a route (or fails to seal) - tear it out
+          for(let i=0;i<ringed.length;i++) setSolid(ringed[i][0], ringed[i][1], 0);
+          G.decor=G.decor.filter(d=>!d.ashLockMoat);
+          try{ console.warn('placeSunwardHazard: ashlocked terrace verify failed (zones='+zonesOK+' sealed='+sealed+') - moat not placed'); }catch(_){}
+        }
+      }
+      if(!G.decor.some(d=>d.ashLockChest)) G.decor.push({kind:'chest', x:ix+0.5, y:iy+0.5, rich:8, ashLockChest:1});
+    } }
+  if(!restored) _curseHint('sunCurseSeen','<b>Mount Kea burns without pause</b> - lava creeps down the slopes and ash chokes the sky. A fresh <b>fissure</b> has split the mountain\'s south face, and a green terrace stands marooned in a moat of molten rock.');
 }
 // CLOUDREACH - a storm has settled over the cloud and will not break: the old standing stones
 // are lightning-struck and toppled, and one has cracked open onto the Storm Temple below.
