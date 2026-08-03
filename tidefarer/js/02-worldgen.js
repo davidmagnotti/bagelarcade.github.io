@@ -360,13 +360,10 @@ function placeObjects(){
   // buildings
   addBuilding('house', 44,54, 'Maren\'s cottage').closedMsg='<b>Maren\'s cottage</b> is dark, but for one candle. “Come back at a decent hour, castaway,” the Elder calls, not unkindly.';
   addBuilding('forge', 58,55, 'The forge').closedMsg='The <b>forge</b> is banked for the night - coals glowing low. “Iron\'s cold till dawn,” Bram grunts from his cot.';
-  addBuilding('house2',44,61, 'Fisher row');
   addBuilding('barn',  63,66, 'Willa\'s barn').closedMsg='<b>Willa\'s barn</b> is shut and the cows are asleep. Something inside purrs, then goes quiet.';
   addBuilding('tower', 56,33, 'Orin\'s tower').tall=true;   // Orin's tower stands twice as tall on Emberwick
   addBuilding('well',  48,58, 'Village well');
   addBuilding('boat',  25.5,62.5,'');
-  addBuilding('house2', 41,57, 'The Ember Hearth (Inn)');   // pulled inland: at x=39 its wide sprite sat out over the strait
-  addBuilding('lamp', 41,58.5,'');
   addBuilding('lamp', 46,57,''); addBuilding('lamp', 50,59,''); addBuilding('lamp',51,56,'');
   addBuilding('lamp', 54,56,''); addBuilding('lamp', 56,54,'');   // the lantern trail on out to Bram's forge
   addBuilding('lamp', 30,62,''); addBuilding('lamp', 60,64,'');   // the second lamp lights the lane down to Willa's farm

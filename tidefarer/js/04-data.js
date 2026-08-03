@@ -196,11 +196,6 @@ function spawnNPCs(){
     (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c',build:{w:0.95,head:0.95,stoop:0.7}},
       ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that.'],0.5);
       f.nightOwl=true; return f; })(),
-    (()=>{ const inn=makeNPC('perrin','Perrin the Innkeeper', 41.5,59.4,
-      {skin:'#d8a97a',hair:'#6a5038',shirt:'#7a5a3a',pants:'#4a3a2c',apron:'#c9b48e',beard:'#6a5038',build:{w:1.14,head:0.92}},
-      ["A bed, a hearth, and no questions past dark. Ten gold.",
-       "Night's for wolves and worries. Neither gets past my door."],0.7);
-      inn.nightOwl=true; return inn; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
     // Rask the Bladesworn - an old sword-master who keeps a wooded clearing in the

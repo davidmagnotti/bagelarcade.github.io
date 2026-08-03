@@ -164,7 +164,7 @@ function boot(){
   // and overlay the isle's NPC chatter after the initial spawn.
   if(typeof applyQuestDialogue==='function') applyQuestDialogue();
   if(typeof applyIdleDialogue==='function') applyIdleDialogue();
-  if(typeof placeBankerByInn==='function') placeBankerByInn();   // Emberwick's banker, by the Ember Hearth inn
+  // Emberwick has no innkeeper or Coinkeeper: the inn was removed, so no banker is placed here.
   for(let i=0;i<6;i++) G.clouds.push({x:Math.random()*MAPW, y:Math.random()*MAPH,
     vx:rnd(0.25,0.5), vy:rnd(-0.12,0.12), r:rnd(48,90)});
   pressable(document.getElementById('dodgeBtn'), ()=>{ tryRoll(); });
