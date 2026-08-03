@@ -230,6 +230,10 @@ function enterDungeonLink(id){
   P.kit=true; P.swordTier=Math.max(P.swordTier||0,3);
   P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
   P.hp=P.maxhp; P.mp=P.maxmp;
+  // grant any dungeon-specific tool the trial's core mechanic needs, so a test-link hero can
+  // actually operate it. The Undermill's sluice valves are seized until you've taken the miller's
+  // winch-crank - without it every valve just reports "seized" and the whole dungeon reads as broken.
+  if(id==='milldeep') P.story.millCrankTaken=1;
   try{ buildHotbar&&buildHotbar(); refreshUI&&refreshUI(); }catch(e){}
   switchWorld(id);
   const def=(typeof WORLD_DEFS!=='undefined') && WORLD_DEFS[id];

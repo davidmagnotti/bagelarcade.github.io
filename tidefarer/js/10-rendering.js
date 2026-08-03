@@ -1285,11 +1285,20 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='millwater'){
-    // a raised churning water-curtain - only where the water still stands (a drained doorway is
-    // flat floor, so we draw nothing there). Reads clearly as an impassable wall of water.
+    // a raised churning water-curtain PENNED IN A STONE SLUICE CHANNEL - only where the water
+    // still stands (a drained doorway is flat floor, so we draw nothing there). The stone banks
+    // along both long faces (the dry floor on either side) make it read clearly: the water is
+    // held in a walled trough, which is WHY it doesn't just sheet off across the hall floor.
     if(!(inb(b.gx,b.gy) && tileAt(b.gx,b.gy)===T.DEEP && solidAt(b.gx,b.gy))) return;
-    const g=cx, t=G.time, H=12; g.save(); g.translate(s.x,s.y);
+    const g=cx, t=G.time, H=12, K=8; g.save(); g.translate(s.x,s.y);   // H = water height, K = stone bank height
     const bob=Math.sin(t*3 + b.gx*0.8 + b.gy*0.6)*1.4;
+    // (1) FAR BANK - the stone kerb along the upper-right edge (borders the dry floor to the north).
+    // Drawn first so the water stands in front of it. Matches the ewall basalt palette.
+    g.fillStyle='#241e19';   // back-bank face
+    g.beginPath(); g.moveTo(0,-16); g.lineTo(32,0); g.lineTo(32,-K); g.lineTo(0,-16-K); g.closePath(); g.fill();
+    g.fillStyle='#48403a';   // back-bank capstone
+    g.beginPath(); g.moveTo(0,-16-K); g.lineTo(32,-K); g.lineTo(24,-K-3); g.lineTo(0,-16-K-3); g.closePath(); g.fill();
+    // (2) THE WATER between the banks
     g.fillStyle='rgba(26,70,98,0.92)';   // left face
     g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
     g.fillStyle='rgba(18,54,78,0.92)';   // right face
@@ -1299,6 +1308,14 @@ function drawDecor(b,s){
     g.strokeStyle='rgba(190,228,246,0.5)'; g.lineWidth=1.3;   // bright churn along the crest
     g.beginPath(); g.moveTo(-30,-H-1); g.quadraticCurveTo(-14,-16-H+bob,0,-14-H+bob); g.quadraticCurveTo(14,-16-H-bob,30,-H-1); g.stroke();
     if(Math.random()<0.03) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.8), life:rnd(0.3,0.7), color:'rgba(205,232,246,0.7)', size:rnd(1,2), grav:0.04});
+    // (3) NEAR BANK - the stone kerb along the lower-left edge (borders the dry floor to the south).
+    // Drawn last, over the foot of the water, so the water reads as held back BEHIND a stone wall.
+    g.fillStyle='#2f2823';   // near-bank face (toward camera)
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-K); g.lineTo(-32,-K); g.closePath(); g.fill();
+    g.fillStyle='#48403a';   // near-bank capstone
+    g.beginPath(); g.moveTo(-32,-K); g.lineTo(0,16-K); g.lineTo(0,16-K-3); g.lineTo(-32,-K-3); g.closePath(); g.fill();
+    g.strokeStyle='rgba(122,106,92,0.5)'; g.lineWidth=1;   // capstone ridge highlight
+    g.beginPath(); g.moveTo(-32,-K-2); g.lineTo(0,16-K-2); g.stroke();
     g.restore(); return;
   }
   if(b.kind==='emberbutton'){
