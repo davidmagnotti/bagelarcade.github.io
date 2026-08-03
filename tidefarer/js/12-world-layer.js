@@ -3000,9 +3000,7 @@ function placeObjectsMillDeep(){
   for(const [tx,ty] of [[12,95],[28,95],[9,84],[31,72],[9,64],[31,52],[9,44],[31,32],[9,24],[31,12],[12,1],[28,1]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   // a decorative great wheel in the landing (the works are drowned, not turning)
   G.decor.push({kind:'millwheel', x:12.5, y:97.2, r:6});
-  // THE MILLER'S ARMS-CHEST: the winch-crank that frees the seized sluice valves. You cannot
-  // work a valve until you've taken it. (The bow lives on the Cloudreach now, not here.)
-  if(!(P.story && P.story.millCrankTaken)) G.decor.push({kind:'chest', x:26.5, y:94.5, crank:1});
+  // (No arms-chest / winch-crank gate any more - the sluice valves turn by hand, straight away.)
   // ---- THE FLOODED HALLS. Each hall is barred by four WATER-WALLS, every doorway flooded shut by
   // default (you cannot get through). Sluice valves sit at each hall's mouth. There are TWO kinds:
   //   * COMBINATION halls (A,B): each valve is coupled to TWO doorways - throwing it drains one pair
@@ -3073,14 +3071,10 @@ function applyMillWall(w){
     else { setTile(x,w.y,T.DEEP); setSolid(x,w.y,1); } }
 }
 // THE SLUICE VALVES. Halls A/B couple each valve to TWO doorways (a small combination puzzle);
-// halls C/D give each valve its own single doorway (just throw them all - no order to read). All
-// are seized until you take the winch-crank from the miller's arms-chest.
+// halls C/D give each valve its own single doorway (just throw them all - no order to read).
+// You turn any valve straight away - no tool to fetch first.
 function pullSluiceLever(b){
   if(!b.flips) return;   // the mill's only valves are the water-sluices
-  if(!(P.story && P.story.millCrankTaken)){
-    toast('The sluice valve is seized fast with rust and rot - it will not turn by hand. There\'s a <b>winch-crank</b> stowed in the miller\'s arms-chest that would free it.',5000);
-    Snd.step&&Snd.step(5); return;
-  }
   b.on=!b.on; Snd.quest&&Snd.quest(); buzz&&buzz(8); shockwave(b.x,b.y,'rgba(120,190,235,0.8)',40);
   for(const id of b.flips){ const w=(G._millWalls||[]).find(x=>x.id===id); if(!w) continue;
     w.on=!w.on; applyMillWall(w);
@@ -6530,19 +6524,6 @@ function openChest(b){
     setTimeout(autoSave,300);
     return;
   }
-  if(b.crank){
-    bumpStat('chests');
-    P.story=P.story||{}; P.story.millCrankTaken=1;
-    // the winch-crank frees the seized sluice valves - the water waits on you throwing them
-    // (see pullSluiceLever). (The old miller's bow is gone - the bow lives on the Cloudreach now.)
-    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',16,2.4);
-    Snd.quest&&Snd.quest();
-    banner('THE ARMS-CHEST OPENS','THE WINCH-CRANK IS YOURS');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The miller’s arms-chest gives up the heavy <b>winch-crank</b> that fits the seized sluice valves throughout the works.</i> Now <b>work the sluices</b> to drain the flooded halls and climb to the guardian at the top.', {label:'OK'});
-      else toast('The miller’s arms-chest gives up the <b>winch-crank</b> for the sluices. Now <b>work the valves</b> to drain the flooded halls.',6600); },400);
-    setTimeout(autoSave,300);
-    return;
-  }
   if(b.mawTonics){
     bumpStat('chests');
     P.story=P.story||{}; P.story.undermawTonics=1;
@@ -7022,7 +7003,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>The bear was only the doorkeeper.</i> Each hall is a killing-floor: step in and a <b>gate slams shut behind you</b>, sealing you in as the <b>ice-beasts come in waves</b>, one lot after the next. <b>Clear every wave</b> and both gates grind up, opening the way on. Survive all three halls to reach the <b>Hoarfrost Hoard</b>.',9000),1800); }
   if(id==='milldeep' && !P.prog.millSeen && !(P.story && P.story.millDone)){ P.prog.millSeen=1;
     setTimeout(()=>banner('THE UNDERMILL','WORK THE SLUICES - FOUR DROWNED HALLS'),1200);
-    setTimeout(()=>toast('<i>The works have drowned - FOUR halls stand flooded, walled off by deep water, no way through by default.</i> Take the <b>winch-crank</b> from the miller\'s arms-chest first. The first two halls are <b>combination</b> locks: each valve is coupled to two doorways, so <b>find the states</b> that open a doorway in every wall at once. The two deeper halls are <b>TIDE-LOCKS</b> - carved with a numbered ORDER on a stone plaque. Throw those numbered valves <b>in the exact order</b> or the whole hall floods back and you start over. Weave north, hall after hall, to the thing that fouls the works.',11000),1800); }
+    setTimeout(()=>toast('<i>The works have drowned - FOUR halls stand flooded, walled off by deep water, no way through by default.</i> <b>Turn the sluice valves</b> to drain the water-walls. The first two halls are <b>combination</b> locks: each valve is coupled to two doorways, so <b>find the states</b> that open a doorway in every wall at once. In the two deeper halls each valve drains its own stretch - just <b>turn them all</b>. Weave north, hall after hall, to the thing that fouls the works.',10000),1800); }
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){

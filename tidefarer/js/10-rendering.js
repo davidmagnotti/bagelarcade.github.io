@@ -1287,37 +1287,50 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='millwater'){
-    // a raised churning water-curtain PENNED IN A STONE SLUICE CHANNEL - only where the water
-    // still stands (a drained doorway is flat floor, so we draw nothing there). The stone banks
-    // along both long faces (the dry floor on either side) make it read clearly: the water is
-    // held in a walled trough, which is WHY it doesn't just sheet off across the hall floor.
+    // WATER COURSING DOWN A STONE SLUICE CHANNEL - only where the water still stands (a drained
+    // doorway is flat floor, so we draw nothing there). Tall stone WALLS run along both long faces:
+    // a low kerb in front (so you see over it to the water) and a high wall behind (rising above the
+    // surface). The water sits low between them with streaks running along the channel, so it reads
+    // as a current FLOWING through a walled race - not a calm pool, and clearly penned in.
     if(!(inb(b.gx,b.gy) && tileAt(b.gx,b.gy)===T.DEEP && solidAt(b.gx,b.gy))) return;
-    const g=cx, t=G.time, H=12, K=8; g.save(); g.translate(s.x,s.y);   // H = water height, K = stone bank height
-    const bob=Math.sin(t*3 + b.gx*0.8 + b.gy*0.6)*1.4;
-    // (1) FAR BANK - the stone kerb along the upper-right edge (borders the dry floor to the north).
-    // Drawn first so the water stands in front of it. Matches the ewall basalt palette.
-    g.fillStyle='#241e19';   // back-bank face
-    g.beginPath(); g.moveTo(0,-16); g.lineTo(32,0); g.lineTo(32,-K); g.lineTo(0,-16-K); g.closePath(); g.fill();
-    g.fillStyle='#48403a';   // back-bank capstone
-    g.beginPath(); g.moveTo(0,-16-K); g.lineTo(32,-K); g.lineTo(24,-K-3); g.lineTo(0,-16-K-3); g.closePath(); g.fill();
-    // (2) THE WATER between the banks
-    g.fillStyle='rgba(26,70,98,0.92)';   // left face
-    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
-    g.fillStyle='rgba(18,54,78,0.92)';   // right face
-    g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-H); g.lineTo(32,-H); g.closePath(); g.fill();
-    g.fillStyle='rgba(48,116,156,0.95)';   // top (choppy crest)
-    g.beginPath(); g.moveTo(0,-16-H+bob); g.lineTo(32,-H); g.lineTo(0,16-H); g.lineTo(-32,-H); g.closePath(); g.fill();
-    g.strokeStyle='rgba(190,228,246,0.5)'; g.lineWidth=1.3;   // bright churn along the crest
-    g.beginPath(); g.moveTo(-30,-H-1); g.quadraticCurveTo(-14,-16-H+bob,0,-14-H+bob); g.quadraticCurveTo(14,-16-H-bob,30,-H-1); g.stroke();
-    if(Math.random()<0.03) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.2,0.2), vy:-rnd(0.3,0.8), life:rnd(0.3,0.7), color:'rgba(205,232,246,0.7)', size:rnd(1,2), grav:0.04});
-    // (3) NEAR BANK - the stone kerb along the lower-left edge (borders the dry floor to the south).
-    // Drawn last, over the foot of the water, so the water reads as held back BEHIND a stone wall.
-    g.fillStyle='#2f2823';   // near-bank face (toward camera)
-    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-K); g.lineTo(-32,-K); g.closePath(); g.fill();
-    g.fillStyle='#48403a';   // near-bank capstone
-    g.beginPath(); g.moveTo(-32,-K); g.lineTo(0,16-K); g.lineTo(0,16-K-3); g.lineTo(-32,-K-3); g.closePath(); g.fill();
+    const g=cx, t=G.time, WH=10, KF=15, KN=6; g.save(); g.translate(s.x,s.y);   // water / far-wall / near-wall heights
+    // (1) FAR WALL - a tall stone wall along the upper-right edge (borders the dry floor behind).
+    // Drawn first; it rises well above the water so the channel reads as walled in.
+    g.fillStyle='#241e19';   // back-wall face
+    g.beginPath(); g.moveTo(0,-16); g.lineTo(32,0); g.lineTo(32,-KF); g.lineTo(0,-16-KF); g.closePath(); g.fill();
+    g.fillStyle='#3c342e';   // shadowed inner lip of the far wall (the water side)
+    g.beginPath(); g.moveTo(0,-16-KF); g.lineTo(32,-KF); g.lineTo(32,-KF+3); g.lineTo(0,-16-KF+3); g.closePath(); g.fill();
+    g.fillStyle='#48403a';   // far-wall capstone
+    g.beginPath(); g.moveTo(0,-16-KF); g.lineTo(32,-KF); g.lineTo(30,-KF-3); g.lineTo(0,-16-KF-3); g.closePath(); g.fill();
+    // (2) THE WATER, sitting low in the race
+    g.fillStyle='rgba(24,66,94,0.95)';   // left face (toward camera)
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-WH); g.lineTo(-32,-WH); g.closePath(); g.fill();
+    g.fillStyle='rgba(16,50,74,0.95)';   // right face
+    g.beginPath(); g.moveTo(32,0); g.lineTo(0,16); g.lineTo(0,16-WH); g.lineTo(32,-WH); g.closePath(); g.fill();
+    g.fillStyle='rgba(38,98,136,0.96)';   // flat top surface (a race, not a bulging pool)
+    g.beginPath(); g.moveTo(0,-16-WH); g.lineTo(32,-WH); g.lineTo(0,16-WH); g.lineTo(-32,-WH); g.closePath(); g.fill();
+    // (3) FLOW STREAKS running ALONG the channel (down the +x axis), scrolling so the water courses.
+    // a,b in [-0.5,0.5]: a = along-channel, b = across. P(a,b) maps to the flat top surface.
+    const P=(a,bb)=>[ (a-bb)*32, (a+bb)*16 - WH ];
+    const flow=(t*0.5)%1;   // one shared phase -> streaks line up tile-to-tile into a continuous current
+    for(let k=0;k<3;k++){ const bb=-0.3+k*0.3;
+      const s0=P(-0.5,bb), s1=P(0.5,bb);
+      g.strokeStyle='rgba(150,205,232,0.28)'; g.lineWidth=1.4;   // the steady seam of the current
+      g.beginPath(); g.moveTo(s0[0],s0[1]); g.lineTo(s1[0],s1[1]); g.stroke();
+      let c=((flow + k*0.33)%1)-0.5, a0=Math.max(-0.5,c-0.16), a1=Math.min(0.5,c+0.16);   // a bright ripple gliding along it
+      const p0=P(a0,bb), p1=P(a1,bb);
+      g.strokeStyle='rgba(212,238,250,0.8)'; g.lineWidth=1.8;
+      g.beginPath(); g.moveTo(p0[0],p0[1]); g.lineTo(p1[0],p1[1]); g.stroke();
+    }
+    if(Math.random()<0.02) G.parts.push({x:b.x, y:b.y-0.2, vx:rnd(-0.15,0.15), vy:-rnd(0.2,0.5), life:rnd(0.25,0.55), color:'rgba(205,232,246,0.6)', size:rnd(1,1.8), grav:0.04});
+    // (4) NEAR WALL - a low stone kerb along the lower-left edge (the dry floor in front). Drawn last,
+    // over the foot of the water; kept low so the current stays in view above it.
+    g.fillStyle='#2f2823';   // near-wall face (toward camera)
+    g.beginPath(); g.moveTo(-32,0); g.lineTo(0,16); g.lineTo(0,16-KN); g.lineTo(-32,-KN); g.closePath(); g.fill();
+    g.fillStyle='#48403a';   // near-wall capstone
+    g.beginPath(); g.moveTo(-32,-KN); g.lineTo(0,16-KN); g.lineTo(0,16-KN-3); g.lineTo(-32,-KN-3); g.closePath(); g.fill();
     g.strokeStyle='rgba(122,106,92,0.5)'; g.lineWidth=1;   // capstone ridge highlight
-    g.beginPath(); g.moveTo(-32,-K-2); g.lineTo(0,16-K-2); g.stroke();
+    g.beginPath(); g.moveTo(-32,-KN-2); g.lineTo(0,16-KN-2); g.stroke();
     g.restore(); return;
   }
   if(b.kind==='emberbutton'){

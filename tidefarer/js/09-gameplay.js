@@ -225,7 +225,7 @@ function nearestInteract(){
     if(b.kind==='firelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'firelever',o:b,label:'Pull the fire-lever'}; } }
     if(b.kind==='sluicelever'){ const d=dist(P.x,P.y,b.x,b.y);
-      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:(b.on?'Sluice (open)':'Turn the sluice valve')}; } }
+      if(d<1.9 && d<bd){ bd=d; best={type:'sluicelever',o:b,label:(b.on?'Turn valve (open)':'Turn valve')}; } }
     if(b.kind==='icebrazier'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.9 && d<bd){ bd=d; best={type:'icebrazier',o:b,label:b.lit?'Light torch':(b.frozen?'Frozen brazier':'Brazier')}; } }
     // the warding runes (Emberdeep puzzle 3) - reachable by E / the touch button,
