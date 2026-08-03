@@ -169,7 +169,7 @@ const QUESTS = {
     doneText:'Quieter already. This ember charm rides your strikes - every blow burns a little brighter now.',
     rw:{item:{charm:1}, gold:20, xp:{melee:80, archery:80, magic:80}}, unlocks:['king'] },
   king:{ giver:'maren', title:'The Hollow Spirit', kind:'kill', kill:{boss:1},
-    brief:'Rask says you can turn a blade, and Orin says your feet are quick - after a single WEEK ashore? <i>Elder Maren\'s brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I\'ll speak the warded gate open for you.',
+    brief:'Rask says you can turn a blade, and Orin says your feet are quick - after not even a WEEK ashore? <i>Elder Maren\'s brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I\'ll speak the warded gate open for you.',
     log:'Elder Maren will open the warded gate: defeat the Hollow Spirit in the old graveyard at the isle\'s north tip.',
     doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit\'s curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing.',
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }

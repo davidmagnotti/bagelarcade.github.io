@@ -674,7 +674,7 @@ const DIALOGUE = {
       doneText: "Quieter already. This ember charm rides your strikes - every blow burns a little brighter now."
     },
     "king": {
-      brief: "Rask says you can turn a blade, and Orin says your feet are quick - after a single WEEK ashore? <i>Elder Maren's brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I'll speak the warded gate open for you.",
+      brief: "Rask says you can turn a blade, and Orin says your feet are quick - after not even a WEEK ashore? <i>Elder Maren's brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I'll speak the warded gate open for you.",
       log: "Elder Maren will open the warded gate: defeat the Hollow Spirit in the old graveyard at the isle's north tip.",
       doneText: "The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit's curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing."
     },
