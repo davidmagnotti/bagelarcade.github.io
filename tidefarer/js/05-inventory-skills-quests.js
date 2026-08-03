@@ -137,7 +137,7 @@ function completeQuest(id){
   if(rw.bow){ P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; buildHotbar(); refreshUI();
     if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range. Each shaft hits <b>hard</b> - but your <b>quiver holds 20</b> and does <b>not</b> refill on its own, so pick your shots. Gather dropped shafts and quiver bundles to restock.', {label:'OK'});
     else toast('<b style="color:var(--ember)">Bow unlocked!</b> 20 hard-hitting arrows - press 2 or tap the bow slot.'); }
-  if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 - bolts cost 8 mana.');
+  if(rw.staff){ P.unlocked.staff=true; buildHotbar(); toast('<b style="color:var(--ember)">Fire Staff unlocked!</b> Press 3 to loose fire-bolts at range.');
     // the dash is NOT taught here: earning the staff opens Orin's tower, and the
     // scrying orb inside is what teaches the dash (see enterHouse + the orb boon).
   }
@@ -155,7 +155,6 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">The Breakers suite is yours!</b> Coralie hands you the brass key - sleep in the canopy bed by the sea-window any time, no charge.',6000); }
   if(rw.item && rw.item.crown){ P.maxhp+=25; P.hp=P.maxhp; }
   if(rw.hp){ P.maxhp+=rw.hp; P.hp=P.maxhp; toast('<b style="color:var(--ember)">+'+rw.hp+' max HP</b> - hardened by the deed.'); }
-  if(rw.mp){ P.maxmp+=rw.mp; P.mp=P.maxmp; toast('<b style="color:var(--ember)">+'+rw.mp+' max mana</b> - your focus deepens.'); }
   if(rw.xp) for(const s in rw.xp) addXP(s, rw.xp[s]);
   if(id==='ribbon1'){ P.quests.ribbon2='active';
     toast('<b>Quest updated:</b> A Ribbon for Wren - steal back Mira\u2019s silk from the brigand camp north of Blackpine.',5600); }
@@ -221,7 +220,6 @@ function rewardText(q){
   if(rw.moa) parts.push('<b style="color:var(--ember)">Kiko the Moa</b>');
   if(rw.dash2) parts.push('<b style="color:var(--ember)">the Double Dash</b>');
   if(rw.hp) parts.push('<b style="color:#9be07f">+'+rw.hp+' max HP</b>');
-  if(rw.mp) parts.push('<b style="color:#9be07f">+'+rw.mp+' max mana</b>');
   if(rw.xp){ const sk=Object.keys(rw.xp).filter(s=>SKILLS[s]); if(sk.length) parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
   return parts.length? '<div class="rwline">Reward: '+parts.join(' · ')+'</div>' : '';
 }

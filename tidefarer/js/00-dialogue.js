@@ -225,7 +225,7 @@ const DIALOGUE = {
     ],
     "wisp": [
       "Mind your footing near the edges - the cloud looks solid and is not.",
-      "Bottled mana, if your spellwork's thirsty - the rainbow road asks a lot of a staff. And the way onward is the bird's <b>rainbow road</b>: calm the wind and it bears you down.",
+      "Fire-tonics off the cloud-tops, if the climb wears you thin - the rainbow road asks a lot of a body. And the way onward is the bird's <b>rainbow road</b>: calm the wind and it bears you down.",
       "If the height gets into your knees, Ashwing will carry you back to the Sunward shore."
     ],
     "mora": [

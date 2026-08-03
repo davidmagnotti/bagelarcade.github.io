@@ -18,6 +18,12 @@ function tp(id){
   if(G.interior){ G.interior=null; }
   if(G.state!=='play'){ G.state='play'; }
   P.dead=false; document.getElementById('deadOv').style.display='none';
+  // Dev jumps drop you straight onto far islands, past Rask's parry lesson and the
+  // dash boon - so grant the base guard + footwork here, or the enemies' white-! blows
+  // can't be parried and the dash-gated dungeons can't be crossed on a jumped-in save.
+  P.unlocked=P.unlocked||{};
+  if(!P.unlocked.parry) P.unlocked.parry=true;
+  if(!P.unlocked.dash)  P.unlocked.dash=true;
   switchWorld(id); ui(); note('Teleported: '+id);
 }
 function setAct(n){
@@ -217,7 +223,7 @@ function unlockAll(){
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
   ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
 }
-function heal(){ P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; P.poisonT=0; ui(); note('Restored to full'); }
+function heal(){ P.hp=P.maxhp; P.arrows=P.maxArrows||20; P.poisonT=0; ui(); note('Restored to full'); }
 function gold(n){ if(typeof giveGold==='function') giveGold(n); else P.gold=(P.gold||0)+n; ui(); note('+'+n+' gold'); }
 function xp(n){ if(typeof gainLXP==='function') gainLXP(n); ui(); note('+'+n+' level XP'); }
 function maxSkills(){ for(const s in (P.skills||{})){ if(typeof addXP==='function') addXP(s, 9999); } ui(); note('Skills boosted'); }
@@ -331,7 +337,7 @@ function revealMap(){
   ui(); note('Map revealed - '+n+' new fast-travel point(s) on this isle');
 }
 
-setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P.maxhp; P.mp=P.maxmp; } }catch(e){} }, 400);
+setInterval(()=>{ try{ if(god && typeof P!=='undefined' && P && !P.dead){ P.hp=P.maxhp; } }catch(e){} }, 400);
 
 /* ---- panel ---- */
 const SECTIONS=[

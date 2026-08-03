@@ -254,7 +254,7 @@ function leaveDungeon(){
 function useFastExit(){
   if(dlg.open) return;
   if(!leaveDungeon()){ if(typeof toast==='function') toast('There is no way up from here.',3000); return; }
-  P.hp=P.maxhp; P.mp=P.maxmp;
+  P.hp=P.maxhp;
   if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',20,2); Snd.magic&&Snd.magic();
   toast('You climb out of the dungeon - whole again.',4200);
 }
@@ -3629,7 +3629,7 @@ function spawnSkyFolk(){
   G.npcs.push(makeNPC('wisp','A Cloud-Tender', Z.landing.x+2.5, Z.landing.y-1.5,
     {skin:'#b8a0c8',hair:'#e8e0f0',shirt:'#6a5a8a',pants:'#3a3350',hairstyle:'bun'},
     ['Mind your footing near the edges - the cloud looks solid and is not.',
-     'Bottled mana, if your spellwork\'s thirsty - the rainbow road asks a lot of a staff. And the way onward is the bird\'s <b>rainbow road</b>: calm the wind and it bears you down.',
+     'Fire-tonics off the cloud-tops, if the climb wears you thin - the rainbow road asks a lot of a body. And the way onward is the bird\'s <b>rainbow road</b>: calm the wind and it bears you down.',
      'If the height gets into your knees, Ashwing will carry you back to the Sunward shore.'],0.5));
 }
 function spawnMobsSky(){
@@ -3821,6 +3821,12 @@ function placeObjectsReachDeep(){
   // verse, sealed in the reward room past the warden (the 'reachverse' branch in openChest) -
   // the thing Jaist sent you down here to find, not a stray tonic on the boss-room floor.
   G.critters=[];
+  // THE BONE GATE (y37) gets its own visible bone-portcullis so the wall you cannot
+  // yet pass reads as a sealed gate, not an invisible barrier - it grinds up (bars and
+  // all) in openBoneGate once the last dance is trodden true. Skipped on a cleared run,
+  // where the gate already stands open below.
+  if(!(P.story && P.story.tombBossDown))
+    for(let x=38;x<=42;x++) G.decor.push({kind:'bonebars', x:x+0.5, y:37.5, gate:'bonemain'});
   // a cleared run (the warden is down) tears the dance down and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
     collapseReachDance();
@@ -3952,6 +3958,7 @@ function reachDanceZap(c){
 function openBoneGate(){
   if(G._reachGateOpen) return; G._reachGateOpen=true;
   for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
+  G.decor=G.decor.filter(d=>!(d.kind==='bonebars' && d.gate==='bonemain'));   // the portcullis grinds up with it
   invalidateScenery&&invalidateScenery();
   Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,220,160,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
   banner('THE BONE GATE GRINDS UP','THE DROWNED VAULT LIES OPEN');
@@ -4623,7 +4630,7 @@ QUESTS.pendant = { giver:'orin', title:'The Medallion', kind:'talk', talkTo:'ori
   brief:"The King's charge rings in your ears - find Vath, find his son. And that pendant at your throat unsettled him as it once unsettled Maren. Sail back to Emberwick and lay it before Sage Orin; if any hand can read old work, it is his.",
   log:'Sail to Emberwick and show the pendant to Sage Orin at his tower.',
   doneText:"<i>Orin turns the medallion once in the lantern-light - and chuckles, low and knowing.</i> Ho ho... I wondered when you'd come back, wearing that. You've done well, freeing the isles of Vath's wicked influence. <i>He folds your fingers gently back over it, then reaches into the clutter of his desk and draws out a rolled sea-chart, its wax seal long broken.</i> One thing more - a gift, and a burden with it. A chart to an isle off the edge of every map I own: <b>Stormreach</b>, a lone rock under a storm that never breaks, far past anywhere Vath's hand can reach. <i>He presses it into your palm and holds your gaze.</i> When you've stood before the King - whatever passes in that hall - you sail there next. Ask me no more; some things a soul must come to on its own. <i>He straightens, the moment passing.</i> Now - go and show that necklace to the Woodworker, down by the green. Just that, nothing more. You might yet free both of you from this affliction.",
-  rw:{gold:40, mp:6, xp:{magic:260}} };
+  rw:{gold:40, xp:{magic:260}} };
 QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', talkTo:'woody', xpL:620,
   brief:"Go down to the green and seek out the Woodworker. Show him the pendant - only that, nothing more - and let happen what will. I'll not spoil it by naming it; some things a soul must come to on its own. Go, child. Trust these old bones: this is a door you have carried the key to all along.",
   log:'Show the Woodworker the pendant on Emberwick, and let him see the face behind the mask.',
@@ -4721,7 +4728,7 @@ QUESTS.roses={ giver:'isolde', title:"The Queen's Garden", kind:'gather', need:{
   brief:'This garden is a memorial. The King planted it for his queen, who took a fever and died when his children were small, and I have tended it alone ever since. She loved the colors of the shore - so bring the shore to her: six spiral shells for the border, one true pearl for the fountain\'s heart, and she will have the garden she was owed.',
   log:'Bring Isolde 6 spiral shells and 1 pearl for the Queen\'s memorial garden.',
   doneText:'Oh - a REAL pearl. It catches the light just as she used to. There. The King walks here some evenings; he will see it, and know that someone still remembers her. That is worth more than you know.',
-  rw:{gold:60, mp:6, item:{elixir:1}, xp:{fishing:200, farming:120}} };
+  rw:{gold:60, item:{elixir:1}, xp:{fishing:200, farming:120}} };
 QUESTS.larder={ giver:'doran', title:'Stock the Grand Bazaar', kind:'gather', need:{cookedfish:6, bread:4}, xpL:200,
   brief:'A capital eats, traveler, and the strait\'s long closure left our larders thin. The stalls will pay honest coin for honest fare - six grilled fish and four fresh loaves to stock the Bazaar against a lean week. Do that and I\'ll cut you the crown\'s own rate.',
   log:'Bring Doran the Factor 6 grilled fish and 4 fresh bread for the Bazaar stores.',
@@ -7027,8 +7034,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
     setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
-    setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
-    setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
+    setTimeout(()=>banner('THE DROWNED CATACOMB','FOLLOW THE BONEWRIGHT - TREAD THE WARD-DANCE TRUE'),1200);
+    setTimeout(()=>toast('<i>The Ossuary is a lock, and the key is a dance.</i> In each chamber a <b>spectral bonewright rises and treads the floor-stones in a set order</b> - <b>watch the pattern</b>, then <b>walk the same stones in the same sequence</b> to spring the ward-gate open. A <b>wrong stone</b> looses a bone-green ward-jolt (a little blood, no restart) and shows you the dance again, so take your time and read it. <b>Follow the pattern true in all three chambers</b> and the <b>Bone Gate</b> grinds up onto the Drowned Vault.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
     setTimeout(()=>toast('<i>Each chamber is a maze of solid stone, its corridors snaking north.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Touch a lit lance and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }

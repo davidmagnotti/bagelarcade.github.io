@@ -433,7 +433,7 @@ function buildDialogContent(npc){
   // carries other secrets - abilities the old line hid across the isles - which seeds the
   // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
-    const homeCard=()=>storyCard('<b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s eye slides past you now.</b> <i>The sea-roads home are open again - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>.</i> “Not the capital,” <i>Jaist warns, thumbing to the next frost-page.</i> “His gaze never leaves the throne he stole.” <i>He reads on, and his eyes catch fire the way they used to over a hard passage.</i> “Sister - this book is more than a hiding-spell. The old line wrote whole workings into it, hidden away isle by isle. Gifts. <b>Powers.</b> Somewhere in these pages may be the very thing that lets us stop </i>hiding<i> from Vath and </i><b style="color:#ffd76a">fight</b><i> him. Go - pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
+    const homeCard=()=>storyCard('<b style="color:#c9b0ff">Jaist casts the WARDING VEIL over you. Vath\'s eye slides past you now.</b> <i>The way home is safe again - the ferry can carry you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>.</i> “Not the capital, though - not yet,” <i>Jaist warns, thumbing to the next frost-page.</i> “Not until we\'re ready to face Vath himself. His gaze never leaves the throne he stole.” <i>He reads on, and his eyes catch fire the way they used to over a hard passage.</i> “This book is more than a hiding-spell, sister. The old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go, pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
         {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
     const cast=()=>{
       closeDialog();
@@ -452,7 +452,7 @@ function buildDialogContent(npc){
       }
     };
     const p2=()=>{
-      setDialog('<i>He turns the frost-pages to the lamplight, lips moving over the script.</i> “Hush-frost, wept from a warden Vath enslaved - and someone read a warding into it. Do you know what this IS, Joan? It\'s the spell to go unseen by him. To hide.” <i>He riffles deeper and stops, breath caught.</i> “And it doesn\'t end there - there\'s more written past it than I can take in at a glance. Trust the deep ice to keep the one book that could save us. Hold still and let me read the veil onto you properly - this is the one kind of fight I was ever built for.”',
+      setDialog('<i>He turns the frost-pages to the lamplight, lips moving over the script.</i> “Hush-frost, wept from a warden Vath enslaved - and someone read a warding into it. Do you know what this IS? The spell to go unseen by him.” <i>He riffles deeper and stops, breath caught.</i> “And it doesn\'t end there - there\'s more written past it than I can take in at a glance. Hold still and let me read the veil onto you properly - this is the one kind of fight I was ever built for.”',
         [{label:'Cast it, brother', cls:'gold', fn:cast}]);
     };
     setDialog('<i>You lay the ice-bound spellbook in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Where did you - this is old script. Grandmother\'s hand, or near enough.” <i>His scholar\'s eyes are already devouring the page.</i>',
@@ -788,7 +788,7 @@ function shopButtons(npc,btns){
       fade.style.opacity=1;
       setTimeout(()=>{
         G.dayT=0.09; // morning proper - the dark is done
-        P.hp=P.maxhp; P.mp=P.maxmp;
+        P.hp=P.maxhp;
         P.bind={w:G.worldId, x:npc.x, y:npc.y+1};
         fade.style.opacity=0;
         toast('You sleep deep and dreamless. Dawn finds you <b>fully mended</b>.',4600);

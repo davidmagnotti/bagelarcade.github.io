@@ -40,7 +40,7 @@ const LORE={
   underclimb:{title:'The Underclimb', text:'“The old miners\' tunnel does not come up inside the roost as the falconers still say - it goes DOWN, into a catacomb the birds were never meant to guard. Scratched by the mouth, in a hand already going shaky: <i>the tome is at the bottom, past the bone gate and the sigils. the warden keeps it. put the warden down first. do not read the pages.</i>”'},
   // ---- Orin's tower: a mage's library. Read the shelves to learn the craft. ----
   'weave@tower':{title:'On the Weave', text:'“<i>A First Reader in the Arts.</i> Every living thing hums, and the humming braids together into one cloth the old hands call the Weave. A mage does not <i>make</i> power - she finds a loose thread and pulls, gently, and the world gives. Pull kindly and it mends behind you. Pull greedily and it frays, and frayed weave snags on everything - which is why the reckless caster is followed by small misfortunes for a season after.”'},
-  'mana@tower':{title:'The Caster\'s Well', text:'“What you spend when you cast is not the Weave itself but <b>mana</b> - the water you\'ve drawn up into your own well from it. A deep well is not born; it is dug, one drill at a time, one incantation repeated past boredom. <i>Rest refills the well. Panic empties it. The orb on the desk lets a tired student top up without waiting on sleep.</i> Drink from someone else\'s well and you have not learned magic - you have learned theft.”'},
+  'scrying@tower':{title:'The Restless Art', text:'“<i>A Second Reader in the Arts.</i> A bolt is the easy half of magic; the hard half is still being where you meant to stand when it lands. Orin drills it into every student the same way - eyes up, weight light, never rooted. <i>The orb on the desk is a sparring-glass: it throws your own hesitation back at you until your feet learn to answer before your head does.</i> A mage who cannot move is only a candle waiting for the wind.”'},
   'ember@tower':{title:'Ember-Glass & Bound Fire', text:'“In the Ember Wars the court mages could not carry hearths to the front, so they bound fire into crystal - <b>ember-glass</b> - warmth that remembers being asked politely. You still turn it up out of the ruin-rock, veined red. It cures resin, warms a strait, steps a windsurf sail true. <i>Fire bound with consent stays warm and patient. Fire bound against its will only waits.</i> Remember which you are holding.”'},
   'wards@tower':{title:'Wards, Circles & Seals', text:'“Defensive weaving: a ward is a promise written into a threshold - <i>this far and no farther.</i> The bathing-stones, the standing stones, the sigils on a dungeon floor: all wards, some kind, some cruel. A well-set circle asks nothing of the one inside it and everything of the one who would cross. <i>To break a hostile ward you rarely need more force - you need to read what it was promised, and prove the promise already kept.</i>”'},
   'enchant@tower':{title:'On Compulsion (a warning)', text:'“The blackest branch of the art is <b>enchantment</b> - not persuading a mind but overwriting one. Bind a beast so and it forgets it was ever gentle: the guardian turns on the guarded, the warden on the warded. <i>The binder threads a single violet cord through the creature\'s well and drinks it dry to fuel the leash.</i> Cut the cord and the beast is simply itself again - grateful, usually, and very tired. It is a coward\'s magic. It is also, lately, someone\'s favourite.”'},
@@ -115,7 +115,7 @@ function sleepInBed(own){
   fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
   setTimeout(()=>{
     G.dayT=0.02; // dawn
-    P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20;   // a night's rest also restrings the quiver
+    P.hp=P.maxhp; P.arrows=P.maxArrows||20;   // a night's rest also restrings the quiver
     G.fireflies.length=0;
     if(own && G.interior) P.bind={w:G.worldId, x:G.interior.ret.x, y:G.interior.ret.y};
     refreshUI(); setTimeout(autoSave,300);
@@ -155,7 +155,7 @@ function resortDesk(){
       + (canPay? '' : '<br><i>(You are '+(COST-(P.gold||0))+' gold short.)</i>'),
     [ canPay
         ? {label:'Take a suite ('+COST+'g)', cls:'gold', fn:()=>{
-            P.gold-=COST; P.hp=P.maxhp; P.mp=P.maxmp;
+            P.gold-=COST; P.hp=P.maxhp;
             P.resortRoom=1;                                          // the suite is yours from now on
             if(I&&I.ret) P.bind={w:G.worldId,x:I.ret.x,y:I.ret.y};   // wake here if you fall
             refreshUI(); Snd.quest&&Snd.quest(); autoSave&&autoSave();
@@ -173,7 +173,7 @@ function resortSuiteSleep(){
   const fade=document.getElementById('fadeOv'), I=G.interior;
   fade.style.opacity=1; Snd.tone(220,0.5,'sine',0.04,-80);
   setTimeout(()=>{
-    G.dayT=0.02; P.hp=P.maxhp; P.mp=P.maxmp; P.arrows=P.maxArrows||20; G.fireflies.length=0;
+    G.dayT=0.02; P.hp=P.maxhp; P.arrows=P.maxArrows||20; G.fireflies.length=0;
     if(I&&I.ret) P.bind={w:G.worldId, x:I.ret.x, y:I.ret.y};
     refreshUI(); setTimeout(autoSave,300);
     toast('You sink into <b>your suite\'s</b> canopy bed, the sea breathing beyond the shutters. Dawn finds you <b>fully mended</b> - and the Breakers will keep you if you fall.',4200);
@@ -218,7 +218,7 @@ function interiorHotspot(){
   return best;
 }
 // THE SCRYING ORB: gaze into a mage-tower's glass for a hint toward your current purpose.
-// Repeatable and free (the old "Attune" boon and mana refill are retired) - it reads your
+// Repeatable and free (the old "Attune" boon is retired) - it reads your
 // primary active quest and shows its objective back to you as a vision.
 function scryOrb(){
   if(typeof Snd!=='undefined' && Snd.magic) Snd.magic();
