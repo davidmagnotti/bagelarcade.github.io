@@ -98,6 +98,11 @@ const DIALOGUE = {
       "These shafts fed three generations before the wilds took the road.",
       "Stone's still down there. Just needs hands brave enough."
     ],
+    "brenna": [
+      "I'm away up to the Old Barik Mines to find my brother Torv - he's holed up in those shafts alone since the wild roads cut the pit off, and someone in this family ought to see he's still breathing. You're headed inland? Look in on him for me.",
+      "Torv won't come down to the harbor, won't leave his precious stone. Stubborn as the rock he digs. If the delver won't come to his kin, his kin'll go to the delver.",
+      "Mind the north road if you take it - it's not the walk it was. That's the half of why I worry after Torv."
+    ],
     "maelis": [
       "Barik feeds three baronies and fears one: the Vael March, north-east, where my cousin plays at war.",
       "A duchess rules by ledger and by patience. The sword is for those who run out of both."
@@ -706,9 +711,9 @@ const DIALOGUE = {
       doneText: "Rows are clean, seed's safe, and I owe you more than coin. See that chestnut cob by the paddock? Old plough-horse, sound legs, and bored to tears since we went over to oxen. He's yours - Chestnut answers a whistle, and I'll stable him here whenever you've no need of him. Go on, a farmhand like you has ground to cover."
     },
     "torv1": {
-      brief: "Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.",
+      brief: "Brenna sent you up from the harbor, did she? She frets - always has. Well, you've climbed all this way, so make it worth the boots: three generations of Barik built with stone from these shafts, then the wilds took the road and the pit went quiet. Help me clear the mouth - ten good stone proves the vein still gives.",
       log: "Mine 10 stone around the Old Barik Mines for Torv.",
-      doneText: "Listen to that ring. The old girl's awake. Barik builds again - starting with your pay."
+      doneText: "Listen to that ring - the old girl's awake, and that's your doing. Barik builds again, starting with your pay. ... Here, one more word, since you swing a pick like you mean it: away to the south-east, past the Mirefen, a run of strange <b style=\"color:#c04bff\">violet rock</b> came up in the night. Won't chip, won't split - no pick on Barik so much as marks it, and believe me I've tried. But the old delvers swore the Undermaw keeps a pick of star-dark iron down in its deep hoard - the one tool that bites clean through stone like that. You want past those purple rocks, that's where your edge is waiting."
     },
     "torv2": {
       brief: "Stone keeps walls up; ore keeps forges lit. The deep rock here still carries iron if you've the arm for it. Four ore and Greyharbor's smith stays in business.",

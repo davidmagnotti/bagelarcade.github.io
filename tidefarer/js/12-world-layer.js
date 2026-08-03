@@ -627,6 +627,16 @@ function spawnNPCsMain(){
     ["Emberwick? Quaint little training ground, that isle.",
      "They say a storm-relic sits atop the Peak. Guarded, of course."],1.2));
   { const dp=G.npcs.find(n=>n.id==='dockhand'); if(dp) dp.nightOwl=true; } // fishermen keep night hours
+  // Brenna waits by the boat where you first step ashore - Torv the Delver's sister,
+  // bound up-country to look in on him. Her chatter is the breadcrumb to Torv (and his
+  // "reopen the shafts" quest) up at the Old Barik Mines.
+  { const dz=ZONES.dock;
+    const bsp=(typeof findOpenNear==='function' && findOpenNear(dz.x+2,dz.y+1,5)) || [dz.x+2,dz.y+1];
+    G.npcs.push(makeNPC('brenna',"Brenna, Torv's Sister", bsp[0],bsp[1],
+      {skin:'#c49a72',hair:'#3a3a3c',shirt:'#5a5048',pants:'#3a352f',apron:'#6a5f52',hairstyle:'bun'},
+      ["I'm away up to the Old Barik Mines to find my brother Torv - he's holed up in those shafts alone since the wild roads cut the pit off, and someone in this family ought to see he's still breathing. You're headed inland? Look in on him for me.",
+       "Torv won't come down to the harbor, won't leave his precious stone. Stubborn as the rock he digs. If the delver won't come to his kin, his kin'll go to the delver.",
+       "Mind the north road if you take it - it's not the walk it was. That's the half of why I worry after Torv."],0.3)); }
 }
 function spawnBarikFolk(){
   const V=ZONES.village, FZ=ZONES.farm, MZ=ZONES.mines;
@@ -4392,9 +4402,9 @@ QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{sl
   doneText:'Rows are clean, seed\'s safe, and I owe you more than coin. See that chestnut cob by the paddock? Old plough-horse, sound legs, and bored to tears since we went over to oxen. He\'s yours - Chestnut answers a whistle, and I\'ll stable him here whenever you\'ve no need of him. Go on, a farmhand like you has ground to cover.',
   rw:{gold:60, item:{potion:1}, xp:{melee:160, magic:120}, horse:true} };
 QUESTS.torv1={ giver:'torv', title:'Reopen the Shafts', kind:'gather', need:{stone:10},
-  brief:'Three generations of Barik built with stone from these shafts - then the wilds took the road and the pit went quiet. Help me clear the mouth: ten good stone proves the vein still gives.',
+  brief:'Brenna sent you up from the harbor, did she? She frets - always has. Well, you\'ve climbed all this way, so make it worth the boots: three generations of Barik built with stone from these shafts, then the wilds took the road and the pit went quiet. Help me clear the mouth - ten good stone proves the vein still gives.',
   log:'Mine 10 stone around the Old Barik Mines for Torv.',
-  doneText:'Listen to that ring. The old girl\'s awake. Barik builds again - starting with your pay.',
+  doneText:'Listen to that ring - the old girl\'s awake, and that\'s your doing. Barik builds again, starting with your pay. ... Here, one more word, since you swing a pick like you mean it: away to the south-east, past the Mirefen, a run of strange violet rock came up in the night. Won\'t chip, won\'t split - no pick on Barik so much as marks it, and believe me I\'ve tried. But the old delvers swore the Undermaw keeps a pick of star-dark iron down in its deep hoard - the one tool that bites clean through stone like that. You want past those purple rocks, that\'s where your edge is waiting.',
   rw:{gold:55, item:{crystal:1}, xp:{mining:220}}, unlocks:['torv2'] };
 QUESTS.torv2={ giver:'torv', title:'The Old Vein', kind:'gather', need:{ore:4},
   brief:'Stone keeps walls up; ore keeps forges lit. The deep rock here still carries iron if you\'ve the arm for it. Four ore and Greyharbor\'s smith stays in business.',
