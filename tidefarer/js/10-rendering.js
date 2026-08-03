@@ -2753,7 +2753,7 @@ function drawMob(m,s){
       wraith:     {body:'#1c2233', hem:'rgba(140,170,220,0.35)', hood:'#0e1220', eye:'150,205,255', glow:'120,190,255', wisp:'rgba(140,170,220,0.5)'},
       skywraith:  {body:'#233150', hem:'rgba(170,210,255,0.42)', hood:'#101a2e', eye:'160,220,255', glow:'150,210,255', wisp:'rgba(170,205,255,0.55)'},
       skygrabber: {body:'#1e3a34', hem:'rgba(120,235,205,0.5)',  hood:'#0c211d', eye:'150,255,215', glow:'120,255,205', wisp:'rgba(150,240,210,0.55)'},
-      stormwraith:{body:'#2a2444', hem:'rgba(185,165,255,0.5)',  hood:'#160f28', eye:'205,185,255', glow:'180,150,255', wisp:'rgba(190,170,255,0.55)'}
+      stormwraith:{body:'#eef2fa', hem:'rgba(255,255,255,0.55)', hood:'#cfd6e6', eye:'150,200,255', glow:'130,185,255', wisp:'rgba(245,249,255,0.6)'}
     }[m.kind];
     const sc=m.bscale||1;
     const bobW=Math.sin(m.anim*3.2)*2.5;
