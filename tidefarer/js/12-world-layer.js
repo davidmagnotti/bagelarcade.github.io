@@ -1628,9 +1628,8 @@ function placeObjectsWind(){
   if(P.story && P.story.tideCalm) addBuilding('boat', D.x+2, D.y+6, '');
   // ASHWING roosts on the Windward Bluffs - the great dragon that bore you down onto Windsurf
   // stays with you here rather than winging off. He's your ride off the isle: talk to him to fly
-  // up to the Cloudreach or on to the Sunward Isle - but only once the strait is calmed (no wing
-  // will cross that boiling water). Replaces the old signal-beacon; there's nothing to signal when
-  // he's already at your side.
+  // up to the Cloudreach or on to the Sunward Isle, whenever you like (no tide-gating - you can
+  // come and go freely). Replaces the old signal-beacon; nothing to signal when he's at your side.
   { const sp=findOpenNear(B.x, B.y-3, 8) || [B.x, B.y-3];
     G.decor.push({kind:'ashwing', x:sp[0]+0.5, y:sp[1]+0.5, face:-1, name:'ASHWING', labelY:-82});
     setSolid(sp[0], sp[1], 1); }
@@ -1825,24 +1824,16 @@ function askDragonFlight(){
   flyToWorld('sky');
 }
 function askAshwingHome(){
-  // Ashwing rests on the Windsurf bluffs, the dragon that bore you down here. He'll fly you off
-  // the isle - but NOT while the strait below still boils: no wing crosses that killing water. So
-  // you stay grounded here until you calm the tide (the whole reason you came), exactly as the old
-  // signal-beacon gated it. Once it's calm he bears you up to the Cloudreach, or on to Sunward.
-  if(!(P.story && P.story.tideCalm)){
-    lairDialog('Ashwing','<i>Ashwing lifts his great head toward the strait and rumbles a low warning. The water down there still boils black and wrong - </i><b>no wing will cross it yet</b><i>. Calm the tide, and he\'ll bear you off Windsurf whenever you like.</i>',
-      [{label:'Understood', cls:'gold', fn:closeDialog}]);
-    return;
-  }
-  const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }} ];
-  if(P.story && P.story.skyMapTaken){
-    btns.push({label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
-        flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }});
-  }
-  btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
+  // Ashwing rests on the Windsurf bluffs, the dragon that bore you down here - and he'll fly you
+  // off the isle whenever you like. NOT gated on calming the tide: you're free to come and go, up
+  // to the Cloudreach or on across to the Sunward Isle.
+  const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }},
+               {label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
+                 flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the bluff - the wind slams past and Windsurf falls away behind you, small and bright on the sea.'); }},
+               {label:'Not just yet', ghost:true, fn:closeDialog} ];
   // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
   // into a hidden panel - otherwise the "Fly home" menu never shows
-  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. The strait lies calm now; he\'ll carry you up past the last cloud, or on across the water, whenever you say the word.</i>', btns);
+  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He\'ll carry you up past the last cloud, or on across the water, whenever you say the word.</i>', btns);
 }
 /* The signal beacon on the Windward Bluffs. Until the strait is calmed you are stranded on
    Windsurf by the killing tide - no wing will risk that water. Once it's calm, lighting the
