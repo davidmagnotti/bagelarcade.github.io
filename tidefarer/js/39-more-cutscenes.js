@@ -736,17 +736,25 @@ function drawVeilScene(cx,W,H,t){
 }
 function drawScholar(cx,x,footY,s,calm,t){
   cx.save(); cx.translate(x,footY);
-  // robe
-  cx.fillStyle='#2a2440';
+  // JAIST the scholar-prince: a dark-blue cloak over a bright blue tunic (his royal colours)
+  cx.fillStyle='#274052';   // cloak
   cx.beginPath();
-  cx.moveTo(0,-s*1.12);
-  cx.quadraticCurveTo(-s*0.42,-s*0.5,-s*0.5,s*0.02);
-  cx.lineTo(s*0.5,s*0.02);
-  cx.quadraticCurveTo(s*0.42,-s*0.5,0,-s*1.12);
+  cx.moveTo(0,-s*1.02);
+  cx.quadraticCurveTo(-s*0.46,-s*0.5,-s*0.52,s*0.02);
+  cx.lineTo(s*0.52,s*0.02);
+  cx.quadraticCurveTo(s*0.46,-s*0.5,0,-s*1.02);
   cx.closePath(); cx.fill();
-  // hood + face
-  cx.fillStyle='#3a3355'; cx.beginPath(); cx.ellipse(0,-s*0.92,s*0.17,s*0.2,0,0,TAU); cx.fill();
-  cx.fillStyle='#e8d9b0'; cx.beginPath(); cx.ellipse(0,-s*0.88,s*0.1,s*0.12,0,0,TAU); cx.fill();
+  cx.fillStyle='#3b5a7a';   // tunic panel down the front
+  cx.beginPath();
+  cx.moveTo(0,-s*0.88);
+  cx.quadraticCurveTo(-s*0.22,-s*0.46,-s*0.24,s*0.02);
+  cx.lineTo(s*0.24,s*0.02);
+  cx.quadraticCurveTo(s*0.22,-s*0.46,0,-s*0.88);
+  cx.closePath(); cx.fill();
+  // head: short brown hair framing a skin face (hair ellipse behind, face shifted down so hair rims the top)
+  const jhy=-s*0.98;
+  cx.fillStyle='#7a5a3a'; cx.beginPath(); cx.ellipse(0,jhy,s*0.17,s*0.19,0,0,TAU); cx.fill();
+  cx.fillStyle='#d8a97a'; cx.beginPath(); cx.ellipse(0,jhy+s*0.05,s*0.13,s*0.14,0,0,TAU); cx.fill();
   // the open spellbook, held before him, glowing brighter as the casting takes
   const bx=0, by=-s*0.36, bw=s*0.36, bh=s*0.12;
   cx.save(); cx.globalCompositeOperation='lighter';
@@ -774,19 +782,32 @@ function drawVeilSister(cx,x,footY,s,calm,dive,t){
     dg.addColorStop(0.72,'rgba(196,216,255,'+a.toFixed(3)+')');
     dg.addColorStop(1,'rgba(160,140,225,0)');
     cx.fillStyle=dg; cx.beginPath(); cx.arc(0,-s*0.5,s*0.98,0,TAU); cx.fill(); cx.restore(); }
-  // the warrior sister, fading as the veil sinks in
+  // JOAN the warrior-princess, fading as the veil sinks in: deep-magenta royal tunic,
+  // gold trim, and her high ponytail - the silhouette that reads as HER, not another robe.
   cx.globalAlpha=Math.max(0.14, 1-hidden*0.72);
-  cx.fillStyle='#3a2c28';
+  cx.fillStyle='#a2286a';   // magenta tunic
   cx.beginPath();
-  cx.moveTo(0,-s*0.96);
+  cx.moveTo(0,-s*0.9);
   cx.quadraticCurveTo(-s*0.3,-s*0.42,-s*0.34,s*0.02);
   cx.lineTo(s*0.34,s*0.02);
-  cx.quadraticCurveTo(s*0.3,-s*0.42,0,-s*0.96);
+  cx.quadraticCurveTo(s*0.3,-s*0.42,0,-s*0.9);
   cx.closePath(); cx.fill();
-  cx.fillStyle='#e8c9a0'; cx.beginPath(); cx.ellipse(0,-s*0.84,s*0.12,s*0.14,0,0,TAU); cx.fill();
+  cx.strokeStyle='#e6c25a'; cx.lineWidth=Math.max(1,s*0.028);   // gold belt-trim
+  cx.beginPath(); cx.moveTo(-s*0.3,-s*0.16); cx.lineTo(s*0.3,-s*0.16); cx.stroke();
+  const shy=-s*0.86;
+  // the high ponytail, swept up-and-back behind the head (drawn first, so it sits behind)
+  cx.fillStyle='#7a4526';
+  cx.beginPath();
+  cx.moveTo(s*0.06, shy-s*0.06);
+  cx.quadraticCurveTo(s*0.36, shy-s*0.18, s*0.30, shy-s*0.42);
+  cx.quadraticCurveTo(s*0.22, shy-s*0.14, s*0.02, shy+s*0.02);
+  cx.closePath(); cx.fill();
+  // hair cap + skin face
+  cx.fillStyle='#7a4526'; cx.beginPath(); cx.ellipse(0,shy,s*0.15,s*0.17,0,0,TAU); cx.fill();
+  cx.fillStyle='#e8c9a0'; cx.beginPath(); cx.ellipse(0,shy+s*0.05,s*0.12,s*0.13,0,0,TAU); cx.fill();
   // a blade at her side, catching the frost-light
   cx.strokeStyle='rgba(214,228,248,'+(0.75*(1-hidden)).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.03);
-  cx.beginPath(); cx.moveTo(s*0.3,0); cx.lineTo(s*0.46,-s*0.52); cx.stroke();
+  cx.beginPath(); cx.moveTo(s*0.34,0); cx.lineTo(s*0.5,-s*0.52); cx.stroke();
   cx.restore();
 }
 
