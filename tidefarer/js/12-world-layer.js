@@ -3052,18 +3052,20 @@ function placeObjectsMillDeep(){
   // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
   // restart - and a DASH's roll frames pass clean through. The deeper the hall, the harder it grinds.
   G._millT=0; G._millSpikes=[]; G._millAxes=[];
-  const mspikes=(x0,x1,y,spd,phase)=>{ for(let x=x0;x<=x1;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:14}; G.decor.push(s); G._millSpikes.push(s); } };
+  // Each spike-grate spans the hall WALL TO WALL (x7-33) along one open floor row between the
+  // water-walls, so there's no end to sidestep round - you read its telegraph and time a step
+  // across when the iron drops. Grates and grind-blades alternate gap-by-gap, one hazard per
+  // stretch, so no two ever pinch the same row. Staggered phases keep a crossing window open.
+  const mspikes=(y,spd,phase)=>{ for(let x=7;x<=33;x++){ if(!inb(x,y)||solidAt(x,y)) continue; const s={kind:'spiketile', x:x+0.5, y:y+0.5, gx:x, gy:y, spd, phase, up:false, warnP:0, dmg:14}; G.decor.push(s); G._millSpikes.push(s); } };
   const maxe=(x,y,amp,spd,phase)=>{ const a={kind:'axetrap', x:x+0.5, y:y+0.5, hx:x+0.5, hy:y+0.5, amp, spd, phase, hitR:0.82, dmg:18}; G.decor.push(a); G._millAxes.push(a); };
-  // Hall A - a couple of spike-grates and one slow grind-blade
-  mspikes(12,20,84, 0.75, 0.0); mspikes(21,29,80, 0.75, 0.4); maxe(20,79, 2.4, 1.9, 0.2);
-  // Hall B - thicker: three grates and two faster blades
-  mspikes(12,22,64, 0.9, 0.0); mspikes(20,28,58, 0.9, 0.5); mspikes(10,18,54, 0.9, 0.25);
-  maxe(20,61, 2.8, 2.2, 0.0); maxe(20,55, 2.8, 2.3, 0.5);
-  // Hall C (tide-lock) - blades sweep the crossing you earn once the order is right
-  mspikes(12,20,44, 0.85, 0.0); mspikes(21,29,39, 0.85, 0.4); maxe(20,42, 2.6, 2.1, 0.2); maxe(20,35, 2.6, 2.2, 0.6);
-  // Hall D (tide-lock) - the meat-grinder: grates and three blades over the deepest locks
-  mspikes(12,22,25, 0.95, 0.0); mspikes(20,28,21, 0.95, 0.5); mspikes(10,18,15, 0.95, 0.25);
-  maxe(20,24, 3.0, 2.4, 0.0); maxe(20,18, 3.0, 2.5, 0.5); maxe(13,21, 2.2, 2.6, 0.3);
+  // Hall A (walls y86,83,80,77) - two wall-to-wall grates + one slow grind-blade, one per gap
+  mspikes(84, 0.75, 0.0); maxe(20,81, 2.4, 1.9, 0.2); mspikes(78, 0.75, 0.4);
+  // Hall B (walls y66,63,60,57) - three wall-to-wall grates + two faster blades
+  mspikes(64, 0.9, 0.0); maxe(20,61, 2.8, 2.2, 0.0); mspikes(58, 0.9, 0.5); maxe(20,55, 2.8, 2.3, 0.5); mspikes(53, 0.9, 0.25);
+  // Hall C (tide-lock, walls y46,43,40,37) - two wall-to-wall grates + the blades you earn once the order's right
+  mspikes(44, 0.85, 0.0); maxe(20,42, 2.6, 2.1, 0.2); mspikes(39, 0.85, 0.4); maxe(20,35, 2.6, 2.2, 0.6);
+  // Hall D (tide-lock, walls y26,23,20,17,14) - the meat-grinder: three wall-to-wall grates + two blades, alternating every gap
+  mspikes(25, 0.95, 0.0); maxe(20,21, 3.0, 2.4, 0.0); mspikes(18, 0.95, 0.5); maxe(20,15, 3.0, 2.5, 0.5); mspikes(12, 0.95, 0.25);
   // THE STORMSAIL + THE WAY UP, in the reward vault above the arena (behind the sail-vault gate,
   // so you only reach them once the Cog-Bound falls and the gate grinds up). The exit is right here.
   if(!(P.story && P.story.haveSail)) G.decor.push({kind:'chest', x:24.5, y:1.5, sail:1});
