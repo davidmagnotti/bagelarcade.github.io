@@ -3122,7 +3122,7 @@ function updateMillDeep(dt){
     G._millSealed=1; for(const [x,y] of MILL_BOSS_SEAL) setSolid(x,y,1);
     const cg=G.decor.find(d=>d.kind==='catgate' && d.gate==='cog'); if(cg) cg.open=false;
     invalidateScenery&&invalidateScenery(); Snd.boss&&Snd.boss(); G.shake=Math.max(G.shake||0,0.5); buzz&&buzz(20);
-    banner('THE COG-BOUND RISES','THE COG-GATE SLAMS SHUT - NO RETREAT');
+    banner('THE SLUICE-MAW RISES','THE COG-GATE SLAMS SHUT - NO RETREAT');
   }
   const safe = P.dead || (P.rollT||0)>0;
   const HIT=(dmg,x,y)=>{ if(!safe) hurtPlayer(dmg,{x,y,lvl:12}); };
@@ -3170,9 +3170,13 @@ function spawnCogBound(){
   if((G.mobs||[]).some(mb=>mb.millboss)) return;   // one at a time
   const Z=MILLDEEP_ZONES.works;
   const sp=findOpenNear(Math.round(Z.x), Math.round(Z.y), 5) || [Z.x, Z.y];
-  const b=spawnMob('skeleton', sp[0], sp[1]);
-  if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.bscale=1.85; b.title='THE COG-BOUND'; b.ach='cogbreaker';
-    b.hp=b.maxhp=480; b.dmg=27; b.lvl=12; b.xp=520; b.gold=[0,0];   // no coin - the SAIL in the vault is the only prize here
+  // The thing that fouled the drowned works is a water-monster - an angler-maw that swam up the
+  // flooded shaft and lodged in the gears (kind 'tidemaw' for its render). It keeps the millboss
+  // flag for the gate/kill logic, but NOT the tidemaw AI flag, so it just chases and bites (the
+  // Barik Tidemaw's submerge/spout AI never runs outside barikdeep). Same HP - not a hard fight.
+  const b=spawnMob('tidemaw', sp[0], sp[1]);
+  if(b){ b.boss=true; b.bigBoss=true; b.millboss=1; b.title='THE SLUICE-MAW'; b.subtitle='FOULED IN THE DROWNED WORKS'; b.ach='cogbreaker';
+    b.hp=b.maxhp=480; b.dmg=27; b.speed=2.3; b.lvl=12; b.xp=520; b.gold=[0,0];   // no coin - the SAIL in the vault is the only prize here
     b.hx=sp[0]; b.hy=sp[1]; b.state='chase'; b.noAggroT=0; b.respawnT=-1; b.entrance='rise'; }
   return b;
 }
@@ -4489,7 +4493,7 @@ QUESTS.board={ giver:'tolen', title:'A Board for the Strait', kind:'gather', nee
 QUESTS.sail={ giver:'nessa', title:'The Sail in the Undermill', kind:'special', xpL:220,
   brief:'So Tolen shaped you a board - then it\'s my sail you\'ll be needing, and there\'s the rub. My last good stormsail is locked in the old grinding works BENEATH THE WINDMILL, behind the millstone gate, and has been since the gear-train seized a season back. And it wasn\'t rust that stopped it - something got FOULED in the shaft down there and won\'t lie quiet. Take Tolen\'s key, go down, put the thing down, and bring my sail up. Do that and I\'ll step it to your board myself.',
   log:'Descend the Undermill beneath the windmill. Defeat the guardian fouling the works to raise the millstone gate, and carry Nessa\'s stormsail back up to her.',
-  doneText:'You brought it up - my own stormsail, whole and dry, after all this time. Hold still and I\'ll step it to your board now... there. She\'ll fly true. Then it\'s Rell you want, and that cold thing past the breakwater.',
+  doneText:'You brought it up - my own stormsail, whole and dry, after all this time. Hold still and I\'ll step it to your board now... there. She\'ll fly true. <b>You\'re good to go</b> - she\'ll carry you clean across the shallows, so the light water\'s a road to you now. Then it\'s <b>Rell</b> you want, down at the docks - he\'ll point you at that cold thing past the breakwater.',
   rw:{surf:true, gold:40} };
 QUESTS.tide={ giver:'rell', title:'The Treacherous Tide', kind:'kill', kill:{leviathan:1}, xpL:400,
   brief:'You feel it in the water, past my breakwater - a wrongness, cold and patient. No hull has crossed since it woke, and Windsurf is starving for want of a sail. It is no natural beast; it moves like something bound. Walk the jetty and face it, friend - end this, and you give this whole city back its sea.',
@@ -6645,22 +6649,20 @@ function openChest(b){
   }
   if(b.sail){
     bumpStat('chests');
-    P.story=P.story||{}; P.story.haveSail=1;
+    P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(200,225,255,0.9)',52); burst(b.x,b.y-0.5,'#dce8ff',18,2.6); Snd.levelup&&Snd.levelup();
-    if(qs('sail')==='active'){
-      completeQuest('sail');   // grants the windsurf (rw.surf) and marks the objective done
-    } else if(!(P.unlocked && P.unlocked.surf)){
-      P.unlocked=P.unlocked||{}; P.unlocked.surf=true;
-      banner('THE STORMSAIL IS YOURS','THE BOARD IS WHOLE');
-      toast('<b style="color:var(--ember)">Windsurf board earned!</b> Nessa\'s stormsail steps true to your board - walk onto the water and ride it, at nearly double speed.',6500);
-    } else {
+    // Already sailing (an edge case - you only ever get surf FROM Nessa) - the old sail is salvage.
+    if(P.unlocked && P.unlocked.surf){
       giveGold(60); give('elixir',1);
       toast('A fine old stormsail, but you\'ve a board that already flies. Rolled and stowed - it\'ll fetch a good price ashore.',5200);
       setTimeout(autoSave,300); return;
     }
-    // the Leviathan hunt opens the moment you can cross the light water
-    if(qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
-    setTimeout(()=>toast('Carry the sail up and see <b>Rell the Harbormaster</b> - he\'ll send you at the Leviathan now. Windsurf out past the breakwater onto the light water when you\'re ready.',6800),2600);
+    // You lift the sail, but a rolled sail is not a stepped sail: carry it UP to Nessa, who
+    // steps it to your board (completeQuest('sail') -> grants the windsurf). The chest no longer
+    // hands you the board or any coin - that was the "just gold" bug when the quest state slipped.
+    P.story.haveSail=1;
+    banner('NESSA\'S STORMSAIL','WHOLE AND DRY AFTER ALL THIS TIME');
+    setTimeout(()=>toast('You lift <b style="color:#dce8ff">Nessa\'s stormsail</b> from the vault, whole and dry after all this time. <b>Carry it up to Nessa</b> at the Sailmaker\'s Loft - she\'ll step it to your board and see you off.',6800),600);
     setTimeout(autoSave,300);
     return;
   }

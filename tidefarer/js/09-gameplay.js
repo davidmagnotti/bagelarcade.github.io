@@ -1189,7 +1189,7 @@ function killMob(m,skill){
     { const vg=G.decor.find(d=>d.kind==='catgate' && d.gate==='millvault'); if(vg) vg.open=true; }
     G._millSealed=0;
     if(typeof invalidateScenery==='function') invalidateScenery();
-    banner('THE COG-BOUND FALLS','THE VAULT GRINDS OPEN - THE SAIL IS YOURS');
+    banner('THE SLUICE-MAW FALLS','THE VAULT GRINDS OPEN - THE SAIL IS YOURS');
     if(typeof autoSave==='function') autoSave();
   }
   // THE BONE-YARD (Undermaw R1): the second room's horde. Each fallen skeleton stays

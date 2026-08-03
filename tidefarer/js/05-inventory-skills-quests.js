@@ -68,6 +68,7 @@ function questReady(id){
     if(id==='profit') return (P.prog.profit||0)>=12;
     if(id==='setsail') return isleQuestsSettled();
     if(id==='bladeoath') return !!(P.unlocked&&P.unlocked.parry);   // ready the moment Rask's turning is learned
+    if(id==='sail') return !!(P.story&&P.story.haveSail);            // ready once you carry Nessa's sail up out of the Undermill
     // regional boss-hunts complete off the flag the boss sets when it falls
     if(id==='hoarfrost') return !!(P.story&&P.story.iceBearDown);
     if(id==='rimebound') return !!(P.story&&P.story.deepDone);
@@ -162,6 +163,11 @@ function completeQuest(id){
   if(id==='ribbon3'){ P.prog.eastSail=1;
     banner('NEW HORIZONS','THE EAST STRAIT IS OPEN');
     setTimeout(()=>toast('Corvo readies his sloop. <b>Speak to him to sail east</b> - the Sunward Isle waits past the shoals.',6000),1500); }
+  if(id==='sail'){ // Nessa has stepped the sail - the board flies now, so the Leviathan hunt opens.
+    // (This used to fire off the sail-chest; now it fires when Nessa actually steps the sail, so
+    // Rell only has a beast to point you at once you're truly good to go on the water.)
+    if(qs('tide')!=='done' && !P.quests.tide) P.quests.tide='avail';
+    setTimeout(()=>toast('You\'re good to go - the board rides the <b>shallows</b> now, so the light water is yours. See <b>Rell the Harbormaster</b> at the docks; he\'ll point you at the thing past the breakwater.',6800),1600); }
   if(id==='board'){ // the board is shaped, but bare - fetch Nessa's sail from the Undermill next.
     // Tolen shapes the board AND hands over Burl's spare key: the windmill stays locked
     // to everyone until you hold that key, so grant millKey here to open the Undermill.

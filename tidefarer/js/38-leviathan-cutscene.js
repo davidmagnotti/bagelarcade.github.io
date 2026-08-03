@@ -384,11 +384,13 @@ function lvSerpent(cx,W,H,t,ens,dive){
   cx.fillStyle=shade(bodyC,-18);
   cx.beginPath(); cx.moveTo(42*sc,8*sc); cx.quadraticCurveTo(86*sc,16*sc,78*sc,40*sc);
   cx.quadraticCurveTo(36*sc,38*sc,30*sc,14*sc); cx.closePath(); cx.fill();
-  // fangs
+  // fangs - slim and sharp, the two rows offset half a tooth so they interlock like real teeth
+  // (they used to be squat, evenly-stacked triangles that read as a blocky bar)
   cx.fillStyle='#eaf3f2';
-  for(let ti=0;ti<6;ti++){ const txp=(34+ti*8)*sc;
-    cx.beginPath(); cx.moveTo(txp,6*sc); cx.lineTo(txp+3*sc,18*sc); cx.lineTo(txp+6*sc,6*sc); cx.closePath(); cx.fill();
-    cx.beginPath(); cx.moveTo(txp,30*sc); cx.lineTo(txp+3*sc,18*sc); cx.lineTo(txp+6*sc,30*sc); cx.closePath(); cx.fill(); }
+  for(let ti=0;ti<7;ti++){ const txp=(33+ti*7)*sc;   // upper row: long fangs stabbing DOWN
+    cx.beginPath(); cx.moveTo(txp,4*sc); cx.lineTo(txp+1.8*sc,21*sc); cx.lineTo(txp+3.6*sc,4*sc); cx.closePath(); cx.fill(); }
+  for(let ti=0;ti<6;ti++){ const txp=(36.5+ti*7)*sc; // lower row: shorter fangs stabbing UP, offset between the uppers
+    cx.beginPath(); cx.moveTo(txp,32*sc); cx.lineTo(txp+1.8*sc,16*sc); cx.lineTo(txp+3.6*sc,32*sc); cx.closePath(); cx.fill(); }
   // swept-back horns
   cx.fillStyle=spine;
   cx.beginPath(); cx.moveTo(-6*sc,-22*sc); cx.lineTo(-30*sc,-66*sc); cx.lineTo(6*sc,-28*sc); cx.closePath(); cx.fill();
