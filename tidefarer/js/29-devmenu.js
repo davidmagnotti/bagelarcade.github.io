@@ -551,7 +551,7 @@ window.addEventListener('keydown',(e)=>{
   }
 });
 
-/* ---- the Settings toggle (Display pane), matching the shake/flash On/Off rows ---- */
+/* ---- the Settings toggle (Difficulty pane), matching the shake/flash On/Off rows ---- */
 function syncDevToggle(){
   const on=devEnabled();
   const bOn=document.getElementById('cfgDevOn'), bOff=document.getElementById('cfgDevOff');
@@ -560,9 +560,10 @@ function syncDevToggle(){
 }
 function buildDevToggle(){
   if(document.getElementById('cfgDevOn')) return true;
-  const pane=document.querySelector('.pTab[data-pane="display"]');
+  const pane=document.querySelector('.pTab[data-pane="difficulty"]');
   if(!pane) return false;
   const row=document.createElement('div'); row.className='pRow';
+  row.style.marginTop='16px';
   row.innerHTML='<span>Developer menu <span style="text-transform:none;letter-spacing:0;color:var(--parch-dim);">(cheats &amp; test tools)</span></span>'+
     '<div class="pSeg"><button class="btn" id="cfgDevOn">On</button><button class="btn" id="cfgDevOff">Off</button></div>';
   pane.appendChild(row);

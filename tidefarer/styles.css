@@ -167,7 +167,12 @@
   /* Tabbed pause menu: fixed header + tab bar + fixed footer never scroll, so
      Resume and the tab strip stay put on iPhone; only the active pane's body
      scrolls (and settings panes are short enough that it usually won't). */
-  #pauseCard{width:min(480px,94vw);max-height:88vh;display:flex;flex-direction:column;
+  /* Fit the actually-visible viewport (dvh, not vh) and leave room for the
+     decorative pause-glyph + gap that sit ABOVE the card in the centered
+     column - otherwise the card's bottom (with Resume) is pushed off-screen
+     on phones. On short screens the glyph is hidden (below) and the card gets
+     the full height instead. */
+  #pauseCard{width:min(480px,94vw);max-height:min(86vh, calc(100dvh - 150px));display:flex;flex-direction:column;
     padding:0 20px 16px;border-radius:14px;
     background:
       radial-gradient(circle at 22% 10%, rgba(255,255,255,.06), transparent 45%),
@@ -213,6 +218,14 @@
   .achRow.got{color:#ffe0a0;background:rgba(120,90,20,.22);border-left:3px solid #c9a24e;}
   #pauseBtns{flex:0 0 auto;display:flex;gap:10px;justify-content:center;margin:0 -20px;
     padding:12px 20px 0;flex-wrap:wrap;border-top:1px solid #45423a;}
+  /* Short screens (most phones in portrait): drop the decorative pause-glyph and
+     give the whole visible height to the card, so long panes (Display, Deeds)
+     scroll inside it with Resume always reachable. !important overrides the inline
+     display the affordance script sets when paused. */
+  @media (max-height:760px){
+    #pauseGlyph{display:none!important;}
+    #pauseCard{max-height:min(96vh, calc(100dvh - 12px));}
+  }
   /* dialog */
   #dialog{bottom:86px;top:auto;transform:translateX(-50%);width:min(560px,94vw);display:none;}
   #dialog .drow{display:flex;gap:12px;align-items:flex-start;}
