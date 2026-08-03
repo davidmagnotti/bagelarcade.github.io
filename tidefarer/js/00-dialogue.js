@@ -26,7 +26,6 @@ const DIALOGUE = {
     ],
     "bram": [
       "A dull blade is a heavy blade.",
-      "Hear that ring? That's good iron talking.",
       "Stone from the north road takes an edge best."
     ],
     "brant": [
