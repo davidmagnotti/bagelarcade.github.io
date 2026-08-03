@@ -229,6 +229,25 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
+  // The other half of that hand-off: Orin has already read the ward (wardRead),
+  // the reveal hasn't happened, and yet the Woodworker leg ('enchanter') isn't
+  // running - so the woodpile nudge above bounces the player back to Orin with
+  // nothing here to catch them, and the trail dead-ends between the two. This is
+  // reachable from older saves that recorded the ward-reading without opening the
+  // Woodworker leg (the pendant quest's launch of 'enchanter' post-dates them).
+  // Any time the ward is read but the reveal is still ahead, (re)launch the leg
+  // from Orin's own mouth and point the marker back to the green, matching the
+  // pendant doneText. Skipped in the normal flow, where completing the pendant
+  // quest at Orin already sets wardRead AND 'enchanter'=active in one breath.
+  if(npc.id==='orin' && P.story && P.story.wardRead && !P.story.unmasked
+     && !P.story.act1End && qs('enchanter')!=='active'){
+    P.prog=P.prog||{};
+    P.quests.enchanter='active'; P.prog.enchanter=P.prog.enchanter||0;
+    if(typeof Snd!=='undefined' && Snd.quest) Snd.quest();
+    setDialog('<i>Orin looks up from his workbench and finds the pendant already at your throat, unbidden.</i> “Still carrying it about like a riddle you can\'t set down - and no wonder. I told you once and I\'ll tell you plain again: take that necklace down to the <b>Woodworker</b>, by the green. Show it to HIM, and only that. Some doors a soul must walk through on its own - and this one has your name on it, and his.”',
+      [{label:'To the Woodworker', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // The pendant, shown to the Woodworker: the ward cracks his binding. He begs the
   // masked stranger to show her face - and when she does, the fog tears for them
   // both. Brother and sister, the scholar and the warrior, remember at once. This

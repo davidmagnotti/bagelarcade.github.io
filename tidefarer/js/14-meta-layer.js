@@ -222,7 +222,14 @@ function loadCode(str){
   // left waiting to be re-accepted at Orin, where a lingering 'avail' side-quest could
   // bury it and dead-end the trail. Promote it to an active quest so the marker leads
   // straight to the woodpile, matching Orin's own words. Guarded past the reveal.
-  if(P.quests.enchanter==='avail' && !P.story.unmasked && !P.story.act1End){
+  // The ward has been read (Orin's leg done) but the Woodworker leg isn't running:
+  // either it shipped as an 'avail' offer that could be buried at Orin, or - on
+  // older saves - the ward-reading was recorded before the pendant quest ever
+  // launched 'enchanter', so no quest exists at all. Either way the trail dead-ends
+  // between Orin and the woodpile. Key off wardRead (not just the 'avail' state) so
+  // both cases self-heal on load: promote/create the leg as active so the marker
+  // leads straight to the green. Guarded past the reveal so it never re-fires.
+  if(P.story.wardRead && qs('enchanter')!=='active' && !P.story.unmasked && !P.story.act1End){
     P.quests.enchanter='active'; P.prog.enchanter=P.prog.enchanter||0;
     setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">Show the pendant to the Woodworker</b> down by the green on <b>Emberwick</b>, as Sage Orin bid you.',7000); }catch(e){} }, 2600);
   }
