@@ -3814,6 +3814,12 @@ function placeObjectsReachDeep(){
   // verse, sealed in the reward room past the warden (the 'reachverse' branch in openChest) -
   // the thing Jaist sent you down here to find, not a stray tonic on the boss-room floor.
   G.critters=[];
+  // THE BONE GATE (y37) gets its own visible bone-portcullis so the wall you cannot
+  // yet pass reads as a sealed gate, not an invisible barrier - it grinds up (bars and
+  // all) in openBoneGate once the last dance is trodden true. Skipped on a cleared run,
+  // where the gate already stands open below.
+  if(!(P.story && P.story.tombBossDown))
+    for(let x=38;x<=42;x++) G.decor.push({kind:'bonebars', x:x+0.5, y:37.5, gate:'bonemain'});
   // a cleared run (the warden is down) tears the dance down and stands every gate open
   if(P.story && P.story.tombBossDown){ G._reachGateOpen=true;
     collapseReachDance();
@@ -3945,6 +3951,7 @@ function reachDanceZap(c){
 function openBoneGate(){
   if(G._reachGateOpen) return; G._reachGateOpen=true;
   for(let x=38;x<=42;x++){ setSolid(x,37,0); setTile(x,37,T.RUIN); }
+  G.decor=G.decor.filter(d=>!(d.kind==='bonebars' && d.gate==='bonemain'));   // the portcullis grinds up with it
   invalidateScenery&&invalidateScenery();
   Snd.quest&&Snd.quest(); shockwave(40.5,37.5,'rgba(120,220,160,0.85)',55); G.shake=Math.max(G.shake||0,0.5);
   banner('THE BONE GATE GRINDS UP','THE DROWNED VAULT LIES OPEN');
@@ -7020,8 +7027,8 @@ function switchWorld(id){
     setTimeout(()=>banner('THE EMBERDEEP','DASH THE TURNING SLABS ACROSS THE PIT'),1200);
     setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
-    setTimeout(()=>banner('THE DROWNED CATACOMB','TIME THE TRAPS - AXES, ARROWS AND SPIKES'),1200);
-    setTimeout(()=>toast('<i>The catacomb is one long death-trap.</i> <b>Swinging axes</b> sweep the halls, <b>arrow-slits</b> loose bolts across the ossuary, and <b>spike-plates</b> snap up underfoot (watch for the rumble before they strike). Read each hazard\'s beat and slip through the gap - or <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button), whose roll passes clean through a blade. A clip costs blood, not a restart, so keep moving. Clear the far end and the Bone Gate grinds up.',9500),1800); }
+    setTimeout(()=>banner('THE DROWNED CATACOMB','FOLLOW THE BONEWRIGHT - TREAD THE WARD-DANCE TRUE'),1200);
+    setTimeout(()=>toast('<i>The Ossuary is a lock, and the key is a dance.</i> In each chamber a <b>spectral bonewright rises and treads the floor-stones in a set order</b> - <b>watch the pattern</b>, then <b>walk the same stones in the same sequence</b> to spring the ward-gate open. A <b>wrong stone</b> looses a bone-green ward-jolt (a little blood, no restart) and shows you the dance again, so take your time and read it. <b>Follow the pattern true in all three chambers</b> and the <b>Bone Gate</b> grinds up onto the Drowned Vault.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
     setTimeout(()=>toast('<i>Each chamber is a maze of solid stone, its corridors snaking north.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Touch a lit lance and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }

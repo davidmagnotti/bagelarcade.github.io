@@ -18,6 +18,12 @@ function tp(id){
   if(G.interior){ G.interior=null; }
   if(G.state!=='play'){ G.state='play'; }
   P.dead=false; document.getElementById('deadOv').style.display='none';
+  // Dev jumps drop you straight onto far islands, past Rask's parry lesson and the
+  // dash boon - so grant the base guard + footwork here, or the enemies' white-! blows
+  // can't be parried and the dash-gated dungeons can't be crossed on a jumped-in save.
+  P.unlocked=P.unlocked||{};
+  if(!P.unlocked.parry) P.unlocked.parry=true;
+  if(!P.unlocked.dash)  P.unlocked.dash=true;
   switchWorld(id); ui(); note('Teleported: '+id);
 }
 function setAct(n){

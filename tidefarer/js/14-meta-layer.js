@@ -133,6 +133,12 @@ function loadCode(str){
     delete P.quests.vhunt; delete P.prog.vhunt;
   }
   P.unlocked=d.unlocked||{}; P.swordTier=d.swordTier||0;
+  // Safety net: the timed parry is Rask's learned guard, and it's the only defence
+  // against the enemies' white-! blows. Normally you can't leave Emberwick without it
+  // (Maren gates the crossing behind it), but a dev-jumped or otherwise skipped-ahead
+  // save can land on the far isles unable to parry at all. If you're past the tutorial
+  // (the King's audience is done, or you've crossed into Act II) grant the guard back.
+  if((P.story && (P.story.kingTold || (P.story.act||1)>=2)) && !P.unlocked.parry) P.unlocked.parry=true;
   P.tools=d.tools||{axe:0,pick:0}; P.armor=d.armor||0;
   // The relic verbs (Lodestone, Blast Charge) were folded into the tiered picks:
   // their gated nooks are now slagiron / emberstone gate rooms. Grant returning
