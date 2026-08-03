@@ -8,32 +8,38 @@
 /* ---------- weather every pre-rendered sprite: grime, moss, streaks ---------- */
 function weatherAll(){
   const r=mulberry32(777);
+  // Storybook (cel) look wants clean, drawn-looking flats, so the baked grime,
+  // streaks, moss and fake-AO are pulled back hard. This is a one-time bake into
+  // the shared sprite atlas, so it can't be re-run per act - the toggle leans the
+  // whole game a touch cleaner; the per-frame grade below is what's act-scoped.
+  const sb = (typeof storybookOn==='function') && storybookOn();
+  const gk = sb ? 0.32 : 1;                 // grime/streak/moss density scale
   for(const key in SPR){
     const c=SPR[key]; if(!c||!c.getContext) continue;
     const g=c.getContext('2d');
     g.save();
     g.globalCompositeOperation='source-atop';
     // grime speckle
-    for(let i=0;i<Math.round(c.width*c.height/260);i++){
+    for(let i=0;i<Math.round(c.width*c.height/260*gk);i++){
       const px=r()*c.width, py=r()*c.height;
       g.fillStyle= r()<0.6 ? 'rgba(20,14,8,'+(0.05+r()*0.09)+')' : 'rgba(230,225,210,'+(0.03+r()*0.05)+')';
       g.fillRect(px,py,1+r()*2.4,1+r()*1.6);
     }
     // vertical weather streaks (rain-stained walls)
-    for(let i=0;i<4;i++){
+    for(let i=0;i<Math.round(4*gk);i++){
       const px=r()*c.width, py=r()*c.height*0.5, ln=8+r()*c.height*0.35;
       g.fillStyle='rgba(15,10,6,'+(0.05+r()*0.05)+')';
       g.fillRect(px,py,1.4,ln);
     }
     // moss creeping up from the base
-    for(let i=0;i<6;i++){
+    for(let i=0;i<Math.round(6*gk);i++){
       const px=r()*c.width, py=c.height*(0.72+r()*0.24);
       g.fillStyle='rgba(70,95,45,'+(0.10+r()*0.12)+')';
       g.beginPath(); g.ellipse(px,py,2+r()*4,1.4+r()*2,0,0,TAU); g.fill();
     }
-    // grounded shadow gradient (fake AO)
+    // grounded shadow gradient (fake AO) - softened under the storybook look
     const ao=g.createLinearGradient(0,c.height*0.62,0,c.height);
-    ao.addColorStop(0,'rgba(0,0,0,0)'); ao.addColorStop(1,'rgba(10,6,2,0.22)');
+    ao.addColorStop(0,'rgba(0,0,0,0)'); ao.addColorStop(1,'rgba(10,6,2,'+(sb?0.12:0.22)+')');
     g.fillStyle=ao; g.fillRect(0,0,c.width,c.height);
     g.restore();
   }
@@ -157,16 +163,22 @@ function gradeContrast(){
   const gw=Math.max(1,(cv.width/scale)|0), gh=Math.max(1,(cv.height/scale)|0);
   if(!gradeCv){ gradeCv=document.createElement('canvas'); gradeCx=gradeCv.getContext('2d'); }
   if(gradeCv.width!==gw || gradeCv.height!==gh){ gradeCv.width=gw; gradeCv.height=gh; }
+  // Storybook (cel) look: a much flatter tone curve so colour reads as broad
+  // drawn bands, not a photographic S-curve. Keep saturation up (clean toon
+  // colour) but pull contrast right down and lighten the overlay.
+  const sb=(typeof storybookOn==='function') && storybookOn();
   gradeCx.clearRect(0,0,gw,gh);
   gradeCx.save();
-  try{ if(typeof gradeCx.filter==='string') gradeCx.filter='contrast(1.5) saturate(1.42) brightness(1.02)'; }catch(e){}
+  try{ if(typeof gradeCx.filter==='string') gradeCx.filter = sb
+        ? 'contrast(1.12) saturate(1.5) brightness(1.04)'
+        : 'contrast(1.5) saturate(1.42) brightness(1.02)'; }catch(e){}
   gradeCx.imageSmoothingEnabled=true;
   gradeCx.drawImage(cv,0,0,gw,gh);
   gradeCx.restore();
   cx.save();
   cx.setTransform(1,0,0,1,0,0);
   cx.globalCompositeOperation='overlay';
-  cx.globalAlpha=0.42;
+  cx.globalAlpha= sb ? 0.28 : 0.42;
   cx.imageSmoothingEnabled=true;             // upscaling the half-size buffer is a mild blur - softens banding
   cx.drawImage(gradeCv,0,0,cv.width,cv.height);
   cx.restore();
@@ -176,15 +188,24 @@ function drawGritGrade(){
   // blend mode is extremely slow and can hard-crash integrated GPUs on Windows
   // (Surface). The contrast + split-tone + grain passes below are all separable
   // blends (overlay / soft-light) and stay GPU-cheap.
+  const sb=(typeof storybookOn==='function') && storybookOn();
   // high-contrast filmic S-curve (self-overlay; see gradeContrast)
   gradeContrast();
   // split-tone: cool the shadows, then warm the highlights - the classic
   // teal/orange cinematic look. soft-light of a colour tints toward that hue
-  // in the mids without flattening the range.
+  // in the mids without flattening the range. Under the storybook look the
+  // teal is pulled back (less of it, a warmer hue) for a Wind-Waker daylight
+  // read instead of a grim teal/orange.
   cx.globalCompositeOperation='soft-light';
-  cx.globalAlpha=0.42; cx.fillStyle='#1d3547'; cx.fillRect(-20,-20,VW+40,VH+40);   // cool shadows
-  cx.globalAlpha=0.20; cx.fillStyle='#ffcf8a'; cx.fillRect(-20,-20,VW+40,VH+40);   // warm the light
-  // film grain
+  if(sb){
+    cx.globalAlpha=0.22; cx.fillStyle='#26404f'; cx.fillRect(-20,-20,VW+40,VH+40);  // gentle, warmer shadow tint
+    cx.globalAlpha=0.24; cx.fillStyle='#ffd79a'; cx.fillRect(-20,-20,VW+40,VH+40);  // warm the light a touch more
+  } else {
+    cx.globalAlpha=0.42; cx.fillStyle='#1d3547'; cx.fillRect(-20,-20,VW+40,VH+40);   // cool shadows
+    cx.globalAlpha=0.20; cx.fillStyle='#ffcf8a'; cx.fillRect(-20,-20,VW+40,VH+40);   // warm the light
+  }
+  // film grain - skipped entirely in storybook mode (clean flats read as drawn)
+  if(sb){ cx.globalCompositeOperation='source-over'; cx.globalAlpha=1; return; }
   if(!grainCv){
     grainCv=document.createElement('canvas'); grainCv.width=192; grainCv.height=192;
     const g=grainCv.getContext('2d'), im=g.createImageData(192,192);

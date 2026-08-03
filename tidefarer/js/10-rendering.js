@@ -502,8 +502,10 @@ function render(){
     cx.globalAlpha=1;
   }
 
-  // ---- carrion crows & coastal gulls (cheap: a few line strokes) - kept in low-gfx
-  if(fxOn('birds')){ drawCrows(); drawGulls(); }
+  // ---- carrion crows & coastal gulls (cheap: a few line strokes) - kept in low-gfx.
+  // Storybook (Act I) drops the carrion crows - they're pure grim dressing - but
+  // keeps the coastal gulls, which read as cozy seaside ambiance.
+  if(fxOn('birds')){ if(!(typeof storybookOn==='function' && storybookOn())) drawCrows(); drawGulls(); }
   if(fxOn('fog')) drawFog();
   if(fxOn('cloudShadows')) WX.drawCloudShadows();
 

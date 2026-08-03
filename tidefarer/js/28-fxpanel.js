@@ -8,6 +8,9 @@
 if(typeof FX==='undefined') return;
 
 const GROUPS = [
+  ['Look', [
+    ['storybook','Act I storybook (cel) look'],
+  ]],
   ['Costly (off by default)', [
     ['grade','Cinematic color grade'],
     ['lighting','Dynamic night lighting'],
