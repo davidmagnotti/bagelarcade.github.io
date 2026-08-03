@@ -51,9 +51,10 @@ const SH = {
   lantern:0,   // 0 = empty shoreline, 1 = a lantern (Maren) come down to the surf
   push:1,      // camera zoom (slow cinematic push-in)
   bars:0,      // letterbox bars, 0 = none, 1 = full cinematic frame
+  swell:0,     // 0 = flat sea, 1 = the cursed swell RISEN to full height, taking the ship
   fx:0.5, fy:0.5,  // camera focus point (fraction of frame) the push zooms toward
   // one-shots (decay per frame)
-  flash:0, shake:0, reach:0,   // reach = the cursed swell rising to take the ship
+  flash:0, shake:0,
   // lightning
   bolt:null, boltT:0, boltNext:0.8, lit:0,
   // particles
@@ -65,7 +66,9 @@ const SH = {
 /* Each beat carries the line, the scene-state the visuals ease toward while it is on
    screen, an optional title-card flash, and one-shot punches. A wordless beat
    auto-advances after `hold` ms so the motion can carry it. `bolt:1` forces a
-   lightning strike on entry; `focus:[x,y]` re-aims the camera push. */
+   lightning strike on entry; `focus:[x,y]` re-aims the camera push. `swell:1`
+   eases the cursed wave UP to full height (it rises to meet the ship); the next
+   beat's `swell:0` lets it recede as the dark closes over. */
 const SH_BEATS = [
   // the ship cresting a black swell, the frame closing to letterbox (wordless)
   { who:'', html:'', storm:1, ship:1, ashore:0, bars:1, push:1.04, shake:0.5, bolt:1, hold:2100 },
@@ -74,9 +77,9 @@ const SH_BEATS = [
   // a strike splits the dark - the ship heeled hard over, her sail tearing (wordless)
   { who:'', html:'', storm:1, ship:1, ashore:0, push:1.09, bolt:1, shake:0.55, hold:1600 },
   // the cursed sea rises and takes her, lanterns snuffed one by one (wordless, the big beat)
-  { who:'', html:'', storm:1, ship:0, ashore:0, push:1.13, reach:1, flash:1.0, shake:0.8, hold:2200 },
+  { who:'', html:'', storm:1, ship:0, ashore:0, push:1.13, swell:1, flash:1.0, shake:0.8, hold:2600 },
   { who:'', html:'<i>It was no reef. The water itself rose to meet you - cold and wrong, lit from beneath - and the last of the lanterns was swallowed whole. The dark closed over.</i>',
-    storm:1, ship:0, ashore:0, push:1.05 },
+    storm:1, ship:0, ashore:0, swell:0, push:1.05 },
   // the dark gives way to a breaking dawn on the shore (wordless dissolve)
   { who:'', html:'', storm:0.14, ship:0, ashore:1, push:1.0, fx:0.5, fy:0.5, hold:2000 },
   // dawn on the empty strand: the tide has drawn back, the mask left in the sand (wordless)
@@ -116,8 +119,8 @@ function shPlay(beats, init, onDone){
   SH.beats=beats; SH.onDone=onDone||null;
   SH.cv=cv; SH.cx=cv.getContext('2d');
   SH.t=0; SH.prev=0; SH.idx=0; SH._macc=0; SH._sacc=0;
-  SH.storm=1; SH.ship=1; SH.ashore=0; SH.lantern=0; SH.push=1; SH.bars=0; SH.fx=0.5; SH.fy=0.5;
-  SH.flash=0; SH.shake=0; SH.reach=0; SH.bolt=null; SH.boltT=0; SH.boltNext=0.8; SH.lit=0;
+  SH.storm=1; SH.ship=1; SH.ashore=0; SH.lantern=0; SH.push=1; SH.bars=0; SH.swell=0; SH.fx=0.5; SH.fy=0.5;
+  SH.flash=0; SH.shake=0; SH.bolt=null; SH.boltT=0; SH.boltNext=0.8; SH.lit=0;
   if(init) Object.assign(SH, init);
   SH.rain.length=0; SH.spray.length=0; SH.motes.length=0; SH.gulls.length=0;
   if(!SH.grain) shMakeGrain();
@@ -141,7 +144,7 @@ function shShow(i){
   if(b.flash)   SH.flash=Math.max(SH.flash, b.flash);
   if(b.shake)   SH.shake=Math.max(SH.shake, b.shake);
   if(b.bolt)    shSpawnBolt(true);
-  if(b.reach){  SH.reach=1; if(typeof Snd!=='undefined'&&Snd.magic) Snd.magic(); }
+  if(b.swell){  if(typeof Snd!=='undefined'&&Snd.magic) Snd.magic(); }   // the curse takes the sea
   if(b.focus){  SH._fxT=b.focus[0]; SH._fyT=b.focus[1]; } else { SH._fxT=(b.fx!=null?b.fx:0.5); SH._fyT=(b.fy!=null?b.fy:0.5); }
   const who=document.getElementById('shWho'), line=document.getElementById('shLine');
   if(who) who.textContent=b.who||'';
@@ -199,11 +202,13 @@ function shLoop(ts){
   SH.lantern = e(SH.lantern, b.lantern!=null?b.lantern:SH.lantern,1.6);
   SH.push    = e(SH.push,    b.push!=null?b.push:SH.push,         1.2);
   SH.bars    = e(SH.bars,    b.bars!=null?b.bars:SH.bars,         2.2);
+  // the cursed swell eases UP toward its target (it RISES to take the ship), and
+  // eases back down on the following beat as the dark closes over
+  SH.swell   = e(SH.swell,   b.swell!=null?b.swell:SH.swell,      1.5);
   SH.fx      = e(SH.fx,      SH._fxT!=null?SH._fxT:0.5,           1.4);
   SH.fy      = e(SH.fy,      SH._fyT!=null?SH._fyT:0.5,           1.4);
   SH.flash = Math.max(0, SH.flash - dt*2.4);
   SH.shake = Math.max(0, SH.shake*(1-SH.ashore*0.6) - dt*1.6);
-  SH.reach = Math.max(0, SH.reach - dt*0.7);
   shLightning(dt);
   shParticles(dt);
   shDraw();
@@ -267,10 +272,10 @@ function shParticles(dt){
   }
   for(const s of SH.spray){ s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=180*dt; s.life-=dt*0.9; }
   SH.spray=SH.spray.filter(s=>s.life>0);
-  // the cursed swell's cold violet motes, blowing up where the ship goes under
-  if(SH.reach>0.05){
+  // the cursed swell's cold violet motes, boiling UP off the wave face as it rises
+  if(SH.swell>0.05){
     const rx=W*0.5, ry=horizon+8;
-    SH._macc+=dt*46*SH.reach; let n=Math.floor(SH._macc); SH._macc-=n; if(n>5) n=5;
+    SH._macc+=dt*46*SH.swell; let n=Math.floor(SH._macc); SH._macc-=n; if(n>5) n=5;
     for(let i=0;i<n;i++){ const a=-Math.PI*0.5+rnd(-1.0,1.0), sp=rnd(90,300);
       SH.motes.push({x:rx+rnd(-60,60), y:ry, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1,
         col:Math.random()<0.5?'150,110,225':'175,205,235', size:rnd(1.6,4.4)}); }
@@ -316,7 +321,7 @@ function shDraw(){
   if(SH.ship>0.02 && ashore<0.9) shShip(cx,W,H,horizon,t,SH.ship,(1-ashore),storm);
 
   // --- the cursed wave rising to take her ---
-  if(SH.reach>0.03) shCursedWave(cx,W,H,horizon,t,SH.reach);
+  if(SH.swell>0.03) shCursedWave(cx,W,H,horizon,t,SH.swell);
 
   // --- the shore foreground: wet sand, surf, debris, and the pale mask in the sand ---
   if(ashore>0.02) shShore(cx,W,H,t,ashore,SH.lantern,storm);
@@ -527,7 +532,7 @@ function shShip(cx,W,H,horizon,t,pres,onwater,storm){
 
 /* ---- the cursed wave: a towering wall lit from within, spectral tendrils reaching ---- */
 function shCursedWave(cx,W,H,horizon,t,r){
-  const rise=easeOut(r);                  // 1 at the peak of the reach, easing away
+  const rise=easeOut(r);                  // 0 = flat sea, 1 = the wall at full height (r is the rising swell)
   const cxm=W*0.5, baseY=horizon+10, topY=horizon - H*0.5*rise;
   cx.save();
   // the dark wall of water
