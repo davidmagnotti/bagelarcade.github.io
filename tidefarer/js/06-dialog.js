@@ -545,17 +545,12 @@ function buildDialogContent(npc){
   npc.li=(npc.li+1)%npc.idleLines.length;
   setDialog('“'+npc.idleLines[npc.li]+'”', shopButtons(npc,[{label:'Farewell',ghost:true,fn:closeDialog}]));
 }
-// Travel affordances that must stay reachable in EVERY dialog state - including a
-// quest offer or turn-in, which otherwise return before shopButtons() runs. Without
-// this, a player who declines Rell's quest is stranded on Windsurf, since Ashwing is
-// the only way off the isle until the strait is calmed. Kept as the single source of
-// truth for the fly-home button (shopButtons and the quest paths both route through it).
+// Travel affordances that must stay reachable in EVERY dialog state. Rell used to carry a
+// "fly off the isle" button here, but travel off Windsurf now runs through two visible things
+// at the harbour: ASHWING (talk to him to fly UP to the Cloudreach) and the FERRY moored at the
+// pier (board it to sail across to the other isles). So Rell just talks - you ask the dragon, not
+// the harbormaster, for a flight. Kept as a hook for any future always-reachable travel need.
 function withTravel(npc,btns){
-  if(npc.id==='rell'){
-    btns.unshift({label:'Signal Ashwing - fly back to Kohana', fn:()=>{
-      flyToWorld('east','You run Rell\'s signal-kite up the mast. Before long a green shape wheels out of the sun - Ashwing, come to carry you home.');
-    }});
-  }
   return btns;
 }
 // A simple NPC storefront: a sub-menu of Buy buttons for the wares a shop-

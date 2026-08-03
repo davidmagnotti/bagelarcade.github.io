@@ -550,6 +550,10 @@ function render(){
   if(CFG.flash && G.lightning>0.01){ cx.fillStyle='rgba(235,240,255,'+(G.lightning*0.55)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
   if(CFG.flash && G.flash>0.01){ cx.fillStyle='rgba(200,30,20,'+(G.flash*0.30)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
 
+  // Act II returned-isle curse painted sky-wide (ash on Sunward, storm on Barik,
+  // gale on Windsurf) - self-gated on the Veil + that isle's boss flag (45-isle-hazards.js)
+  if(typeof drawIsleHazard==='function') drawIsleHazard();
+
   // sickly miasma near the Old Ruins
   const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<14){ cx.fillStyle='rgba(70,100,70,'+(0.10*(1-ruinD/14)).toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }

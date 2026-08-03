@@ -357,8 +357,9 @@ const DIALOGUE = {
   curse: {
     "barik": {
       "kell": { dmg: [
+          "You shouldn't be in the open, warrior - nobody should. That storm hasn't broken in weeks and it won't, and the flood came up under it. I've every soul in Barik packed behind the Duchess's walls and the door barred. I'm the only fool still standing a watch out here. Whatever's churning the water up the reed-causeway is doing the same to the sky - go put it DOWN, and I'll open that gate again.",
           "You come back to a drowned Barik, warrior. The flood took the whole east - fen, farms, the low road - and half my folk are camped on the keep hill. Whatever churns that water up the reed-causeway, it needs putting DOWN.",
-          "I hold the high ground and count heads by lantern. It is all a warden can do while the sea sits where the wheat should be. If you mean to go down that sinkhole - go with my blessing, and quickly."
+          "I hold the high ground and count heads by lantern, rain running off my helm. It is all a warden can do while the sea sits where the wheat should be and the storm never lifts. If you mean to go down that sinkhole - go with my blessing, and quickly."
         ], res: [
           "The water's falling by the hour and the fields are surfacing black and rich. You gave Barik back its ground, warrior - I'll not forget it, and neither will the folk coming down off the hill.",
           "Dry road east again for the first time in weeks. The keep can breathe. Whatever you put down in that vault, it stayed down - and Barik is Barik again because of it."
