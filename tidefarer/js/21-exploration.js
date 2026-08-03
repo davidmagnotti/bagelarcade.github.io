@@ -28,6 +28,11 @@ function checkDiscover(){
   P.disc=P.disc||{};
   for(const k in ZONES){
     const z=ZONES[k]; if(!z.name) continue;
+    // A zone walled off by Vath's standing ward (Hedda's farmstead) must not be DISCOVERED
+    // through the wall: the farm's 16-tile radius otherwise trips from outside the violet
+    // line, unlocking a fast-travel node that would drop you behind the wall. Skip it until
+    // the ward falls (41-barik-ward.js). Nothing else on any isle is ever gated here.
+    if(typeof window.wardSealsZone==='function' && window.wardSealsZone(G.worldId, z.x, z.y)) continue;
     const key=G.worldId+':'+k;
     if(!P.disc[key] && dist(P.x,P.y,z.x,z.y)<(z.r||6)+1){
       P.disc[key]=1;
@@ -62,6 +67,9 @@ function tryFastTravel(tx,ty){
   let best=null, bd=1e9;
   for(const k in ZONES){
     const z=ZONES[k]; if(!z.name || !P.disc[G.worldId+':'+k]) continue;
+    // never route a fast travel behind a standing ward, even if the zone was somehow already
+    // discovered (e.g. a save from before this gate) - the wall must be broken on foot first.
+    if(typeof window.wardSealsZone==='function' && window.wardSealsZone(G.worldId, z.x, z.y)) continue;
     const d2=dist(tx,ty,z.x,z.y);
     if(d2<Math.max(z.r||6,5)+2 && d2<bd){ bd=d2; best=z; }
   }

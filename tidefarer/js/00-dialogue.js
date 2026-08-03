@@ -326,6 +326,18 @@ const DIALOGUE = {
     "maelisWed": [
       "My Duke charts the tides from the west solar now. Strange, to rule beside someone at last.",
       "You carried the letter that carried my heart. Barik does not forget a debt like that - nor do I."
+    ],
+    // Torv, once you've reopened his shafts, lets Brenna march him down to the harbor to
+    // set her mind at ease - the two of them stand together by the boats now.
+    "torvHome": [
+      "Brenna wouldn't let it lie till I came down and showed her all my fingers - so here I am, blinking at the daylight. The vein's ringing again, and my sister's stopped fretting. Both your doing.",
+      "A man can dig a mountain and still not out-stubborn his own kin. She wanted me down at the water, so I'm down at the water. Worse afternoons, I've had.",
+      "The shafts'll keep till morning. Family first, Brenna says - and she's usually right, curse her."
+    ],
+    "brennaHome": [
+      "You brought him down out of those shafts in one piece - look at him, squinting at the sun like a mole turned out of its hole. I can breathe again. Thank you, truly.",
+      "My fool brother, safe and above ground and grumbling about it - that's the sweetest sound I've heard all season, and it's your doing.",
+      "Anything Greyharbor can do for you, you've only to ask. You gave a worried sister her brother back."
     ]
   },
 
@@ -973,6 +985,8 @@ function _dlgIdleFor(npc){
   if(id==='brother') return (DIALOGUE.idleByWorld.brother[w]) || DIALOGUE.idleByWorld.brother.reach;
   if(id==='woody')   return st.royalGarb  ? DIALOGUE.idleVariant.woodyRoyal : DIALOGUE.idle.woody;
   if(id==='maelis')  return st.duchessWed ? DIALOGUE.idleVariant.maelisWed  : DIALOGUE.idle.maelis;
+  if(id==='torv')    return st.torvHome   ? DIALOGUE.idleVariant.torvHome   : DIALOGUE.idle.torv;
+  if(id==='brenna')  return st.torvHome   ? DIALOGUE.idleVariant.brennaHome : DIALOGUE.idle.brenna;
   if(/^cguard\d+$/.test(id)) return DIALOGUE.idle.cguard;
   if(DIALOGUE.farmers[id]) return DIALOGUE.farmers[id];
   return DIALOGUE.idle[id] || null;

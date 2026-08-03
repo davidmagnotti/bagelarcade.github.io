@@ -40,6 +40,12 @@
 
 var WARD_GID='main:heddaward';
 var DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+// Whether the violet wall is actually STANDING in the current 'main' instance. Set true
+// only when placeBarikWard finishes and passes its seal-verify; cleared the moment a stone
+// breaks (onWardBroken) or the wall is never raised. wardSealsZone() reads this so fast
+// travel / zone discovery can refuse the sealed SE corner while - and only while - the
+// wall is genuinely up.
+var WARD_UP=false;
 
 function isWater(t){ return (typeof T!=='undefined') && (t===T.DEEP || t===T.SHALLOW); }
 function walkableTile(x,y){ return inb(x,y) && !solidAt(x,y) && walkTile(tileAt(x,y)) && !isWater(tileAt(x,y)); }
@@ -87,6 +93,7 @@ function nearOpen(px,py){ if(walkableTile(px,py)) return [px,py];
 function placeBarikWard(id){
   try{
     if(id!=='main') return;
+    WARD_UP=false;   // recomputed below: true only if we raise AND verify the wall this gen
     P.story=P.story||{}; P.story.tg=P.story.tg||{};
     // The ward can ONLY be down if it was legitimately shattered, and the only thing
     // that shatters wardstone is a dungeon-forged pick (tier >= 2 - the Undermaw's
@@ -212,9 +219,20 @@ function placeBarikWard(id){
       return;
     }
     // (rumours are (re)attached by applyIdleDialogue on every Barik entry - see 00-dialogue.js)
+    WARD_UP=true;   // wall raised and seal-verified: the SE corner is genuinely closed
     if(typeof invalidateScenery==='function') invalidateScenery();
   }catch(e){ try{ console.warn('placeBarikWard failed', e); }catch(_){ } }
 }
+
+// True while the violet wall genuinely seals a zone off. Fast travel and zone discovery
+// (21-exploration.js) call this so the walled SE corner - Hedda's farmstead - can neither
+// be DISCOVERED through the wall nor TRAVELLED into behind it, until you actually shatter
+// the ward. Only the SE pocket (past both cut lines) is ever sealed; everything else is
+// always free. Once the wall is down (WARD_UP false), nothing here blocks travel.
+window.wardSealsZone=function(worldId, zx, zy){
+  if(worldId!=='main' || !WARD_UP) return false;
+  return zx>=WARD_XCUT && zy>=WARD_YCUT;
+};
 
 // ---- rumours: while the ward stands, two Barik voices point you at it ----
 function addLine(id, line){
@@ -238,6 +256,7 @@ window.attachBarikWardRumours=function(){
 window.onWardBroken=function(n){
   try{
     if(!n || n.gid!==WARD_GID) return;
+    WARD_UP=false;   // the wall is down - the SE corner (farm) is now free to discover and travel to
     if(typeof toast==='function') toast('<b style="color:#c04bff">The ward shatters.</b> The violet stone crumbles to dust the length of the wall, and the whole east shoulder opens for good - Hedda\'s steading, and the cove where Corvo\'s sloop can carry you east.', 5600);
     var hd=findHedda();
     if(hd){ hd.idleLines=[

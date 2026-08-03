@@ -184,6 +184,16 @@ function completeQuest(id){
     const who=[...new Set(fresh.map(u=>npcName(QUESTS[u].giver)))].join(' & ');
     setTimeout(()=>toast('<b style="color:var(--ember)">! New work:</b> speak with <b>'+who+'</b>.',4800),1400);
   }
+  if(id==='torv1'){ // shafts reopened - Torv finally agrees to come down to his worrying sister
+    P.story=P.story||{}; P.story.torvHome=1;
+    // Move him down to the harbor beside Brenna. Delayed a beat so it plays as him setting
+    // off after the QUEST COMPLETE banner, not a mid-sentence pop. The live move keeps the
+    // cached Barik world consistent; spawnBarikFolk places him there on any fresh regen/reload.
+    setTimeout(()=>{
+      toast('<b style="color:var(--ember)">Torv shoulders his pick</b> and heads down the road for the harbor - Brenna\'s fretted long enough. You\'ll find the two of them together by the boats.',6200);
+      if(typeof relocateTorvHome==='function') relocateTorvHome();
+    },2200);
+  }
   if(id==='cat'){ P.petPip=false; G.cat.following=false; G.cat.homebound=true; }
   setTimeout(autoSave,300);
   if(id==='king') setTimeout(()=>toast('The strait is calm at last. The <b>Tidewalker</b> still needs patching - see <b style="color:var(--ember)">Captain Brant</b> at the dock; a little timber and she sails for <b>Greyharbor</b>.',6800),2600);

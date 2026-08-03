@@ -652,11 +652,39 @@ function spawnBarikFolk(){
     {skin:'#d8ab7d',hair:'#b8863e',shirt:'#8a6a3a',pants:'#5a4630',apron:'#7a5a3a',hairstyle:'bun'},
     ["Soil's good here. It's everything ELSE that's the problem.",
      "Slimes from the Mirefen eat a season's work in a night."],1.4));
-  G.npcs.push(makeNPC('torv','Torv the Delver', MZ.x+1.5,MZ.y+2.5,
-    {skin:'#b98f68',hair:'#3a3a3c',shirt:'#4a4440',pants:'#332f2c',beard:'#4a4a4c',armor:1},
-    ["These shafts fed three generations before the wilds took the road.",
-     "Stone's still down there. Just needs hands brave enough."],0.9));
+  // Torv holds the Old Barik Mines until you reopen his shafts (torv1). After that his
+  // worrying sister marches him down to the harbor, so on later visits he stands by the
+  // boats beside Brenna (his reunion chatter is swapped in by applyIdleDialogue). See
+  // the torv1 hook in completeQuest (05-inventory-skills-quests.js) for the live move.
+  const torvLook={skin:'#b98f68',hair:'#3a3a3c',shirt:'#4a4440',pants:'#332f2c',beard:'#4a4a4c',armor:1};
+  if(P.story && P.story.torvHome){
+    const dz=ZONES.dock;
+    const tsp=(typeof findOpenNear==='function' && findOpenNear(dz.x+4,dz.y+1,6)) || [dz.x+4,dz.y+1];
+    G.npcs.push(makeNPC('torv','Torv the Delver', tsp[0],tsp[1], torvLook,
+      ["Brenna wouldn't let it lie till I came down and showed her all my fingers - so here I am, blinking at the daylight.",
+       "The shafts'll keep till morning. Family first, Brenna says - and she's usually right, curse her."],0.4));
+  } else {
+    G.npcs.push(makeNPC('torv','Torv the Delver', MZ.x+1.5,MZ.y+2.5, torvLook,
+      ["These shafts fed three generations before the wilds took the road.",
+       "Stone's still down there. Just needs hands brave enough."],0.9));
+  }
 }
+// Live-relocate Torv from the mines down to the harbor beside Brenna the moment his shafts
+// are reopened (torv1), so their reunion holds in the already-cached Barik world without a
+// reload. On a fresh regen spawnBarikFolk does the same placement from P.story.torvHome.
+function relocateTorvHome(){
+  if(G.worldId!=='main' || !G.npcs) return;
+  const torv=G.npcs.find(n=>n.id==='torv'); if(!torv) return;
+  const dz=ZONES.dock;
+  const sp=(typeof findOpenNear==='function' && findOpenNear(dz.x+4,dz.y+1,6)) || [dz.x+4,dz.y+1];
+  torv.x=sp[0]+0.5; torv.y=sp[1]+0.5; torv.hx=torv.x; torv.hy=torv.y; torv.wander=0.4; torv.li=0;
+  if(typeof DIALOGUE!=='undefined' && DIALOGUE.idleVariant && DIALOGUE.idleVariant.torvHome)
+    torv.idleLines=DIALOGUE.idleVariant.torvHome.slice();
+  const bre=G.npcs.find(n=>n.id==='brenna');
+  if(bre && typeof DIALOGUE!=='undefined' && DIALOGUE.idleVariant && DIALOGUE.idleVariant.brennaHome){
+    bre.idleLines=DIALOGUE.idleVariant.brennaHome.slice(); bre.li=0; }
+}
+window.relocateTorvHome=relocateTorvHome;
 // Once Maelis and Elias are wed, the Duke stands at her side in the keep. Spawns
 // him beside her if he isn't already there - called on world-gen and the moment
 // the wedding scene resolves, so he appears without needing a reload.
