@@ -3861,6 +3861,14 @@ function drawProj(p,s){
     cx.fillStyle='#bfe8ff'; cx.beginPath(); cx.moveTo(9,0); cx.lineTo(-4,-4); cx.lineTo(-1,0); cx.lineTo(-4,4); cx.closePath(); cx.fill();
     cx.fillStyle='#e6f6ff'; cx.beginPath(); cx.moveTo(7,0); cx.lineTo(-1,-2); cx.lineTo(-1,2); cx.closePath(); cx.fill();
     cx.restore();
+  } else if(p.kind==='snowball'){
+    // a great lobbed ball of packed snow - reads big and slow so it's clearly parryable
+    const g=cx; g.save(); g.translate(s.x, s.y-12);
+    g.fillStyle='rgba(220,240,255,0.32)'; g.beginPath(); g.arc(0,0,9.5,0,TAU); g.fill();      // frosty halo
+    g.fillStyle='#e9f3ff'; g.beginPath(); g.arc(0,0,6,0,TAU); g.fill();                          // packed snow
+    g.fillStyle='#ffffff'; g.beginPath(); g.arc(-1.8,-2,2.4,0,TAU); g.fill();                    // highlight
+    g.fillStyle='rgba(150,190,220,0.5)'; g.beginPath(); g.arc(2,2.2,1.8,0,TAU); g.fill();        // shaded belly
+    g.restore();
   } else if(p.kind==='spout'){
     // a hurled gout of seawater, trailing droplets
     cx.fillStyle='rgba(120,190,220,0.32)'; cx.beginPath(); cx.arc(s.x,s.y-12,11,0,TAU); cx.fill();

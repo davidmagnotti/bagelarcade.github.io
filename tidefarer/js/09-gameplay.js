@@ -1933,15 +1933,18 @@ function updateMobs(dt){
         }
       }
       if(m.kind==='frostwarden'){
-        // a slow siege-engine of ice: closes ground and flings frost shards,
-        // fanning wider volleys as the binding drives it harder (lower HP)
+        // a slow siege-engine of ice: it scoops the drift and LOBS great slow snowballs -
+        // telegraphed and easy to read, so you can PARRY them. Meet one on the white flash and
+        // it sails straight back at the Warden, and a snowball turned on its own maker is what
+        // shakes the old binding loose. It fans wider volleys as the binding drives it harder.
         m.shootCd-=dt;
-        if(m.shootCd<=0 && l>2 && l<12){
-          m.shootCd = m.hp<m.maxhp*0.5? 1.6 : 2.4; m.swing=0.3;
-          const spread = m.hp<m.maxhp*0.5? [-0.26,0,0.26] : [0];
+        if(m.shootCd<=0 && l>2 && l<13){
+          m.shootCd = m.hp<m.maxhp*0.5? 1.9 : 2.7; m.swing=0.4;
+          addFloat('SNOWBALL', m.x, m.y-3.0, '#dff2ff', 1.0);
+          const spread = m.hp<m.maxhp*0.5? [-0.22,0,0.22] : [0];
           for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
-            G.projs.push({kind:'shard',x:m.x,y:m.y-1.1,vx:Math.cos(ca)*8,vy:Math.sin(ca)*8,life:1.8,dmg:Math.round(d.dmg*0.7),from:'mob'}); }
-          if(Snd.magic) Snd.magic();
+            G.projs.push({kind:'snowball',x:m.x,y:m.y-1.1,vx:Math.cos(ca)*5.4,vy:Math.sin(ca)*5.4,life:2.6,dmg:Math.round(d.dmg*0.7),from:'mob',owner:m}); }
+          if(Snd.noise) Snd.noise(0.26,0.09,170,0.5);
         }
         if((m.swing||0)>0.14 && Math.random()<0.5){ // frost breath as the slam lands
           G.parts.push({x:m.x+rnd(-1.5,1.5),y:m.y-0.6,vx:rnd(-0.4,0.4),vy:-rnd(0.3,0.9),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.04}); }
@@ -2036,7 +2039,7 @@ function updateProjs(dt){
     p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
     // fake-3D arc (item 3): physical arcing shots ride a parabola in p.z. Purely
     // visual - collisions still use the flat (x,y), so gameplay is untouched.
-    if(p.z0==null){ p.z0=p.life+dt; p.arc=(p.kind==='arrow'||p.kind==='bone'||p.kind==='shard'); }
+    if(p.z0==null){ p.z0=p.life+dt; p.arc=(p.kind==='arrow'||p.kind==='bone'||p.kind==='shard'||p.kind==='snowball'); }
     if(p.arc){ const f=1-Math.max(0,p.life)/p.z0; p.z=Math.sin(Math.PI*Math.min(1,f))*(p.z0*15); }
     if(p.kind==='bolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#ffb26b',size:3,grav:0});
     if(p.kind==='snarebolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.32,color:'#6fe0c8',size:3,grav:0});

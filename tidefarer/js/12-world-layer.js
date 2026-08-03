@@ -2421,6 +2421,13 @@ function spawnFrostFolk(){
     ['Wrap up warm and mind the glacier - the Warden is up there, and it is not itself.',
      'It was never a monster, friend. It is the kindest thing on this rock. Whatever holds it now is not.',
      'And keep off the Rimewood flats unless you mean to fight - a great white bear has denned in the old ice-cave out there. Hoarfrost, the hunters call it. Whatever it guards down that hole, it guards it jealously.'],0.4));
+  // ---- Greta: keeps The Kettle & Hearth, Hearthhold's one warm bed ----
+  { const inn=makeNPC('greta','Greta the Innkeeper', V.x+3.5, V.y-0.3,
+    {skin:'#c2a488',hair:'#cfc7b8',shirt:'#5a4a5e',pants:'#3a3340',apron:'#b8a890',hairstyle:'bun'},
+    ['The Kettle & Hearth keeps the only fire in Hearthhold that never goes cold. Ten gold for a bed by it, and a bowl of whatever\'s in the pot.',
+     'No seals on the floes, no fish beneath them - but a warm bed I can still give you. Rest here whenever the ice gets into your bones.',
+     'Come in from that wind before it takes your ears off. Sleep\'s ten gold; the thaw, if you can win it, is on the house.'],0.5);
+    inn.nightOwl=true; G.npcs.push(inn); }   // an innkeep on a frozen coast keeps the hearth lit round the clock
 }
 function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
