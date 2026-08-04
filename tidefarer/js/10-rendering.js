@@ -563,6 +563,20 @@ function render(){
   if((P.poisonT||0)>0){ const va2=0.05+0.05*Math.sin(G.time*5);
     cx.fillStyle='rgba(110,190,70,'+va2.toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
 
+  // THE RECKONING: the fallen capital is soaked violet, and the corruption deepens toward the
+  // stolen throne - the palace glows demonic as you climb to it. A slow pulse keeps it alive.
+  if(G.worldId==='crown' && P.story && P.story.sealLearned && !P.story.vathDown){
+    const pulse=0.5+0.5*Math.sin(G.time*1.6);
+    cx.fillStyle='rgba(58,18,74,'+(0.22+0.05*pulse).toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40);   // whole-city violet wash
+    if(typeof CROWN_ZONES!=='undefined' && typeof worldToScreen==='function'){
+      const ps=worldToScreen(CROWN_ZONES.palace.x, CROWN_ZONES.palace.y);
+      const rg=cx.createRadialGradient(ps.x,ps.y,20, ps.x,ps.y,Math.max(VW,VH)*0.9);
+      rg.addColorStop(0,'rgba(150,30,180,'+(0.34+0.12*pulse).toFixed(3)+')');   // demonic glow at the throne
+      rg.addColorStop(0.5,'rgba(88,20,110,0.14)');
+      rg.addColorStop(1,'rgba(30,8,44,0)');
+      cx.fillStyle=rg; cx.fillRect(0,0,VW,VH);
+    }
+  }
   // low-health warning pulse
   if(!P.dead && P.hp<P.maxhp*0.3){
     const sev=1-P.hp/(P.maxhp*0.3);

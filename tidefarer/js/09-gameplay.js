@@ -902,6 +902,7 @@ function damageMob(m,dmg,knock,skill){
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
+    else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // THE RECKONING phase 1: beaten to his knees (rage/monster phase 2 hangs off this)
     else if(m.kind==='mage' && m.finalVath && !m.bound){ m.hp=1; bindVath(m); } // Act IV: the last stand - bound, not slain
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls (mid-game) - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe
@@ -909,6 +910,21 @@ function damageMob(m,dmg,knock,skill){
     else if(m.kind==='icecolossus' && !m.freed){ m.hp=1; freeColossus(m); } // the Rimebound is another of Vath's cursed victims
     else killMob(m, skill);
   }
+}
+// THE RECKONING - phase 1 seam. Vath, beaten in his caster's form, cannot flee this time
+// (the seal is coming and he knows it). He is held, cornered, at the foot of the throne.
+// Beat 2 replaces this with the rage cutscene and his monster form; Beat 3 (vathDown) is the
+// sealing ending + credits. For now this is a clean, testable stopping point.
+function crownVathDown(m){
+  m.crownPhase1=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.invuln=true;
+  if(Snd.magic) Snd.magic(); G.slowmo=Math.max(G.slowmo||0,1.1); G.shake=0.7;
+  shockwave(m.x,m.y,'rgba(199,123,255,0.95)',80);
+  for(let i=0;i<30;i++){ const a=Math.random()*TAU, s=rnd(1,4.5);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.7,1.7),color:'#c77bff',size:rnd(2,4),grav:-0.06}); }
+  banner('PHASE ONE — VATH FALTERS','THE ENCHANTER IS BEATEN TO HIS KNEES');
+  if(typeof updateBossUI==='function') updateBossUI();
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The last blow lands and the violet guttered around his hands goes out. Vath drops to one knee on his own stolen dais, and for the first time the calm cracks.</i> <b style="color:#c9a0ff">"...No. Not to a HALF-TRAINED girl and a WOODCUTTER. Not again."</b> <i>Something under his skin begins to move.</i> <b style="color:var(--ember)">(His rage — and what it makes of him — come next. Phase 2 to follow.)</b>'); }, 900);
+  if(typeof autoSave==='function') autoSave();
 }
 function vathEscapes(m){
   // The enchanter is not surprised, and he does not die. He studies you - the
@@ -2295,6 +2311,7 @@ function updateWorld(dt){
   if(G.worldId==='sunwarddeep' && typeof updateSunwardDeep==='function') updateSunwardDeep(dt);
   if(G.worldId==='skydeep' && typeof updateSkyDeep==='function') updateSkyDeep(dt);
   if(G.worldId==='embertomb' && typeof updateEmberTomb==='function') updateEmberTomb(dt);
+  if(G.worldId==='crown' && typeof updateCrownReckoning==='function') updateCrownReckoning(dt);
   if(G.worldId==='skydungeon' && typeof updateSkyDungeon==='function') updateSkyDungeon(dt);
   if(G.worldId==='wind' && typeof updateWind==='function') updateWind(dt);
   G.shake=Math.max(0,G.shake-dt*2.5);

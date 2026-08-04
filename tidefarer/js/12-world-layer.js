@@ -4424,10 +4424,48 @@ function updateCrownFolkMood(){
     'A royal writ, an open purse, and the King\'s own hope riding on you. Do not squander them.']);
   set('brea',['Hear it! The King has named the traveler his own hand abroad - go where they go, and you go with the crown\'s blessing!']);
 }
+// THE RECKONING: once Jaist has learned the founders' seal, the ferry runs to Aldermere for
+// the final confrontation. The capital has fallen - Vath holds the throne, the King is long
+// gone, the guards and folk are fled, and violet corruption bleeds out from the palace. The
+// city is empty but for Vath, waiting on the stolen throne. Ends when Vath is bound (vathDown).
+function crownReckoning(){ return !!(P.story && P.story.sealLearned && !P.story.vathDown); }
 function genCrownAll(){
   genCrown(); bakeSolids(); placeObjectsCrown(); buildFoam();
-  spawnCrownFolk(); spawnMobsCrown();
+  if(crownReckoning()) spawnCrownReckoning();   // deserted, corrupted, Vath on the throne
+  else { spawnCrownFolk(); spawnMobsCrown(); }
   buildMapBase();
+}
+// Aldermere fallen: no folk, no guards, no King - only Vath, waiting sealed on the throne
+// until you climb the palace to face him. (Beat 1: the arrival + confrontation + phase-1
+// fight. The rage/monster phase 2 and the sealing ending hang off crownVathDown / vathDown.)
+function spawnCrownReckoning(){
+  const Z=CROWN_ZONES, PA=Z.palace;
+  G._crownConfront=0;
+  const base=[Math.round(PA.x), Math.round(PA.y+2)];
+  const sp=(typeof findOpenNear==='function' && findOpenNear(base[0], base[1], 9)) || base;
+  const m=spawnMob('mage', sp[0], sp[1]);
+  if(m){
+    m.crownVath=1; m.boss=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER'; m.subtitle='ON THE THRONE HE STOLE';
+    m.ach='enchantersbane'; m.lvl=16; m.maxhp=1000; m.hp=1000; m.dmg=32; m.speed=2.7; m.aggro=16;
+    m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1; m.state='idle'; m.noAggroT=1e9;
+    m.sealed=true; m.invuln=true; m.arena=1; m.wphase=1; m.entrance='enthrall';
+  }
+}
+// proximity trigger: climbing to the throne wakes Vath. Mirrors the Tideward Guardian's
+// sealed-until-you-step-in reveal (updateEmberTomb). Fires the confrontation, then the fight.
+function updateCrownReckoning(dt){
+  if(!crownReckoning()) return;
+  const boss=G.mobs.find(m=>m.crownVath && !m.dead);
+  if(!boss) return;
+  const PA=CROWN_ZONES.palace;
+  if(boss.sealed && !G._crownConfront && dist(P.x,P.y,boss.x,boss.y)<7 && P.y<PA.y+7){
+    G._crownConfront=1;
+    if(typeof storyCard==='function') storyCard('<i>You climb the Tideglass steps into the throne room. It is empty - the long hall stripped and silent, the great seat where your father sat run through with veins of living violet.</i> <b>Your father is not here.</b> <i>He has been gone a long time. Only one figure waits in the dark under the stolen crown, and he does not rise so much as unfold.</i> <b style="color:#c9a0ff">"The last of the line. Come all this way to give me the set."</b> <i>Vath steps down off the throne, violet gathering to his hands.</i>',
+      {label:'End this', onOk:()=>{
+        boss.sealed=false; boss.invuln=false; boss.noAggroT=0; boss.state='chase';
+        if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'enthrall',title:boss.title,sub:boss.subtitle});
+      }});
+  }
 }
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();
@@ -7131,6 +7169,11 @@ function switchWorld(id){
   }
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   if(id==='main') award('globetrotter');
+  // THE RECKONING: sailing into the fallen capital for the final confrontation with Vath.
+  if(id==='crown' && crownReckoning()){
+    if(typeof banner==='function') banner('ALDERMERE','THE THRONE VATH STOLE');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The ferryman will not put in past the quay. Aldermere stands dead ahead - and it IS dead: the watch-fires cold, the wall unmanned, not a guard nor a soul on the long streets. A violet stain has crept out from the palace and soaked the whole city through, and the nearer the throne, the more the stone seems to <b>breathe</b>.</i> <b style="color:#c9a0ff">Vath is on the throne. Your father is nowhere.</b> <i>Climb to the palace. Keep him off Jaist long enough for your brother to speak the seal to its end.</i>'); }, 900);
+  }
   // Act IV: coming back to Emberwick with the last hunt underway - make sure Vath
   // is on the green if you'd already drawn him out and left mid-fight.
   if(id==='isle' && typeof ensureFinalVath==='function') ensureFinalVath();
