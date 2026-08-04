@@ -3674,9 +3674,11 @@ function genReach(){
 }
 function placeObjectsReach(){
   const Z=REACH_ZONES;
-  // the castaway camp: a couple of lean-to huts and a well
-  addBuilding('hut', Z.camp.x-3, Z.camp.y-2, 'Castaway lean-to');
-  addBuilding('hut', Z.camp.x+3, Z.camp.y+1, 'Driftwood shelter');
+  // the castaway camp: two cast sea-stone storm-houses and a well. The stranded
+  // gave up on lean-tos long ago - these are squat, buttressed concrete shelters
+  // that shrug off the reef-storms (see SPR.stormhut).
+  addBuilding('stormhut', Z.camp.x-3, Z.camp.y-2, 'Castaway storm-house');
+  addBuilding('stormhut', Z.camp.x+3, Z.camp.y+1, 'Sea-wall shelter');
   addBuilding('well', Z.camp.x, Z.camp.y, 'Rain-catch');
   addBuilding('lamp', Z.camp.x-4, Z.camp.y+3, ''); addBuilding('lamp', Z.camp.x+4, Z.camp.y-3, '');
   // the Brute's Barrow: a ring of raised stones round the monster's ground
@@ -4844,6 +4846,58 @@ function buildExtraSprites(){
     g.fillStyle='#3a2a18';
     g.beginPath(); g.moveTo(40,80); g.lineTo(40,60); g.quadraticCurveTo(48,52,56,60); g.lineTo(56,80); g.closePath(); g.fill(); g.stroke();
     g.fillStyle='#e8d8a8'; g.fillRect(44,2,8,6); g.strokeRect(44,2,8,6);
+  });
+  // Stormreach shelters: cast sea-stone storm-houses - squat, battered concrete
+  // walls under a low heavy roof, corner buttresses and shuttered slit-windows.
+  // Nothing like the Kohana straw huts; these are built to shrug off the reef-storms.
+  SPR.stormhut=makeCanvas(96,86,(g)=>{
+    const OUT='rgba(20,14,8,0.9)';
+    const wallL='#9b978d', wallR='#7c786e', wallB='#67635a';   // sunlit / shade / splash-base
+    const roof='#6e6a62', roofL='#847f75', roofDk='#4f4c46';
+    // ---- battered (bottom-heavy) concrete body ----
+    g.lineWidth=2; g.strokeStyle=OUT;
+    g.beginPath(); g.moveTo(20,40); g.lineTo(76,40); g.lineTo(82,80); g.lineTo(14,80); g.closePath();
+    g.fillStyle=wallL; g.fill();
+    g.beginPath(); g.moveTo(48,40); g.lineTo(76,40); g.lineTo(82,80); g.lineTo(48,80); g.closePath();
+    g.fillStyle=wallR; g.fill();
+    g.beginPath(); g.moveTo(20,40); g.lineTo(76,40); g.lineTo(82,80); g.lineTo(14,80); g.closePath(); g.stroke();
+    // heavier base course (the wet splash-band the surf works at)
+    g.fillStyle=wallB;
+    g.beginPath(); g.moveTo(15.5,72); g.lineTo(80.5,72); g.lineTo(82,80); g.lineTo(14,80); g.closePath(); g.fill();
+    g.strokeStyle='rgba(30,24,16,0.5)'; g.lineWidth=1.3;
+    g.beginPath(); g.moveTo(16,72); g.lineTo(80,72); g.stroke();
+    // board-formed concrete seams (faint horizontals)
+    g.strokeStyle='rgba(40,36,30,0.28)'; g.lineWidth=1;
+    for(let yy=48; yy<70; yy+=6){ g.beginPath(); g.moveTo(19,yy); g.lineTo(77,yy); g.stroke(); }
+    // salt / rain streaks weeping down the face
+    g.strokeStyle='rgba(212,216,216,0.16)'; g.lineWidth=1.4;
+    for(const sx of [30,44,58,68]){ g.beginPath(); g.moveTo(sx,44); g.lineTo(sx-1,70); g.stroke(); }
+    // ---- corner buttresses (thicker at the foot) ----
+    g.strokeStyle=OUT; g.lineWidth=2;
+    const buttress=(bx)=>{ g.fillStyle=wallB;
+      g.beginPath(); g.moveTo(bx-3,42); g.lineTo(bx+3,42); g.lineTo(bx+5,80); g.lineTo(bx-5,80); g.closePath(); g.fill(); g.stroke(); };
+    buttress(18); buttress(78);
+    // ---- low heavy hipped roof (a slab, not a straw cone) ----
+    g.fillStyle=roof;
+    g.beginPath(); g.moveTo(10,44); g.lineTo(86,44); g.lineTo(74,26); g.lineTo(22,26); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=roofL;   // sunlit left half of the cap
+    g.beginPath(); g.moveTo(10,44); g.lineTo(48,44); g.lineTo(48,26); g.lineTo(22,26); g.closePath(); g.fill();
+    g.fillStyle=roofDk; g.fillRect(22,24,52,4); g.strokeRect(22,24,52,4);   // ridge cap
+    g.fillStyle='rgba(20,16,10,0.22)'; g.fillRect(20,44,56,3);              // eave shadow onto the wall
+    // ---- deep-set door: recessed concrete frame + banded timber ----
+    g.strokeStyle=OUT; g.lineWidth=2;
+    g.fillStyle='#4a463f'; g.fillRect(41,56,16,24); g.strokeRect(41,56,16,24);
+    g.fillStyle='#5a4023'; g.fillRect(44,58,10,22);
+    g.strokeStyle='rgba(24,16,8,0.7)'; g.lineWidth=1.4; g.strokeRect(44,58,10,22);
+    g.strokeStyle='#3a2c1a'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(44,64); g.lineTo(54,64); g.moveTo(44,74); g.lineTo(54,74); g.stroke();
+    // ---- small deep-set slit-windows, one warm-lit ----
+    g.strokeStyle=OUT; g.lineWidth=2;
+    g.fillStyle='#2f2b26'; g.fillRect(26,50,9,9); g.strokeRect(26,50,9,9);
+    g.fillStyle='#3a352e'; g.fillRect(63,50,9,9); g.strokeRect(63,50,9,9);
+    g.fillStyle='#ffce7a'; g.fillRect(65,52,5,5);
+    g.strokeStyle='rgba(24,16,8,0.5)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(26,54.5); g.lineTo(35,54.5); g.stroke();
   });
   // Mount Kea: an ash cone with a living caldera
   SPR.volcano=makeCanvas(260,200,(g)=>{

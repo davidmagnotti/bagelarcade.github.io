@@ -285,7 +285,7 @@ function enterHouse(b){
     F('plant',2.0,2.2,0.6,0.6); F('plant',12.2,2.0,0.6,0.6); F('plant',28.4,2.2,0.6,0.6); F('plant',2.0,11.4,0.6,0.6);
     F('vase',13.8,6.4,0.5,0.5); F('vase',13.8,10.0,0.5,0.5);
   }
-  if(b.kind==='hut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3);
+  if(b.kind==='hut'||b.kind==='stormhut'){ F('rug',4.5,3.6,0,0,false); F('hearth',6.8,1.35,1.0,0.35); F('bed',2.2,1.6,1.05,0.65); F('crate',6.9,5.0,0.55,0.45); F('stool',3.4,4.2,0.35,0.3);
     F('shelf',4.6,1.35,1.0,0.3);                            // a woven shelf - read it for the isle's story
     // each named hut carries its own lore (Kohana on the Sunward Isle, castaways on Stormreach)
     I.loreKey = G.worldId==='reach' ? 'castaway@reach'

@@ -29,13 +29,14 @@
    ===================================================================== */
 
 /* buildings that own a hearth/forge fire and should cast warm light + AO */
-const ATMO_LIT = { house:1, house2:1, forge:1, tower:1, barn:1, hut:1, igloo:0 };
+const ATMO_LIT = { house:1, house2:1, forge:1, tower:1, barn:1, hut:1, stormhut:1, igloo:0 };
 /* per-kind warm-pool tuning: [radiusPx, dayIntensity, hotConst] */
 const ATMO_GLOW = {
   house:  [46, 0.060, 0.00],
   house2: [46, 0.060, 0.00],
   barn:   [50, 0.045, 0.00],
   hut:    [40, 0.055, 0.00],
+  stormhut:[38, 0.048, 0.00],
   tower:  [40, 0.045, 0.00],
   forge:  [58, 0.075, 0.06],   // the forge glows hot even at noon
 };
