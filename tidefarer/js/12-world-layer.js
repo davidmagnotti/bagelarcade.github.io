@@ -3662,10 +3662,17 @@ function genSkyAll(){ genSky(); bakeSolids(); placeObjectsSky(); buildFoam(); pl
 // ---------- STORMREACH ----------
 function genReach(){
   genRadialIsle(60,60,48);
+  // Stormreach is a storm-lashed coast, not a green isle: no grass at all. Turn the
+  // whole interior to churned mud (SOIL) with coherent patches of broken stone (RUIN),
+  // so the ground reads wet, grey and beaten - matching the reef-storm the isle sits under.
+  for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){ const i=y*MAPW+x;
+    if(G.map[i]!==T.GRASS) continue;
+    const n=Math.sin(x*0.34)*Math.cos(y*0.29)+Math.sin((x+y)*0.18);
+    G.map[i] = n>0.62 ? T.RUIN : T.SOIL; }
   const Z=REACH_ZONES;
   carveDisc(Z.strand.x,Z.strand.y,Z.strand.r,T.SAND,false);
-  carveDisc(Z.camp.x,Z.camp.y,Z.camp.r,T.GRASS,false);
-  carveDisc(Z.barrow.x,Z.barrow.y,Z.barrow.r,T.GRASS,false);
+  carveDisc(Z.camp.x,Z.camp.y,Z.camp.r,T.SOIL,false);      // mud, not grass
+  carveDisc(Z.barrow.x,Z.barrow.y,Z.barrow.r,T.SOIL,false); // the beast's churned ground
   carveDisc(Z.dock.x,Z.dock.y,4,T.SAND,false);
   carveDisc(Z.camp.x,Z.camp.y,3,T.PATH,false);
   carveLine(Z.strand.x,Z.strand.y, Z.camp.x,Z.camp.y, T.PATH,0);
@@ -3710,11 +3717,12 @@ function placeObjectsReach(){
     if(!placed) addBuilding('boat', Z.strand.x, Z.strand.y+6, ''); }
   // lamps light the landing (the old dock off east is quiet now that the boat rides here)
   addBuilding('lamp', Z.strand.x-3, Z.strand.y-1, ''); addBuilding('lamp', Z.strand.x+3, Z.strand.y-1, '');
-  // greenery + a couple of chests
+  // scatter: the storm-coast is barren - broken stone strewn over the mud, with only a
+  // few wind-bent palms clinging to the sand strand. No inland trees (there's no grass left).
   const pr=mulberry32(SEED+19);
   for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
-    if(((t===T.GRASS&&pr()<0.22)||(t===T.SAND&&pr()<0.12)) && !solidAt(ax,ay) && dist(ax,ay,Z.camp.x,Z.camp.y)>5){
-      const n=addNode(pr()<0.5?'tree':'rock',ax,ay); if(n&&t===T.SAND) n.palm=1; } }
+    if(((t===T.SOIL&&pr()<0.14)||(t===T.RUIN&&pr()<0.22)||(t===T.SAND&&pr()<0.10)) && !solidAt(ax,ay) && dist(ax,ay,Z.camp.x,Z.camp.y)>5){
+      const n=addNode(t===T.SAND?'tree':'rock',ax,ay); if(n&&t===T.SAND) n.palm=1; } }
   G.decor.push({kind:'chest', x:Z.barrow.x+0.5, y:Z.barrow.y-7+0.5, rich:10});
   G.critters=[];
 }
@@ -3749,7 +3757,7 @@ function spawnMobsReach(){
     const sp=findOpenNear(Z.barrow.x, Z.barrow.y, 6) || [Z.barrow.x, Z.barrow.y];
     const brute=spawnMob('raidcap', sp[0], sp[1]);
     if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1; brute.ach='brutebane';
-      brute.hp=brute.maxhp=1000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; brute.entrance='rise'; }
+      brute.hp=brute.maxhp=3000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; brute.entrance='rise'; }
   }
   // storm-driven raiders wash up around the barrow
   if(!(P.story && P.story.reachBossDown)) for(let i=0;i<4;i++){ const a=Math.random()*TAU, r2=6+Math.random()*12;
@@ -3796,8 +3804,10 @@ function genReachDeep(){
   // so the wall-face pass below excludes it - a catgate seals it until the warden falls
   for(let x=28;x<=52;x++){ if(x>=38 && x<=42) continue; setTile(x,13,T.RUIN); setSolid(x,13,1); }
   // the two internal ward-walls that split the Ossuary into three chambers: solid stone
-  // across the room, save the 3-wide central doorway each ward-gate seals (see setupReachDance)
-  for(const gy of [54,47]) for(let x=RDANCE.x0;x<=RDANCE.x1;x++){
+  // across the room, save the 3-wide central doorway each ward-gate seals (see setupReachDance).
+  // Span the FULL carved width (26..54), not just RDANCE.x0..x1 (27..53): the old span left a
+  // one-tile floor gap at each edge (x=26 and x=54) you could slip through to skip the gates.
+  for(const gy of [54,47]) for(let x=26;x<=54;x++){
     if(x>=RDANCE.gateX0 && x<=RDANCE.gateX1) continue;   // leave the central doorway carved
     setSolid(x,gy,1); setTile(x,gy,T.RUIN);
   }
@@ -6713,7 +6723,7 @@ function openChest(b){
     }
     P.story.reachProphecy=1; give('reachverse',1); giveGold(rndi(80,130));
     banner('THE DROWNED CHART','THE THING THIS PLACE WAS HIDING');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The warden guarded no coin - it guarded an iron coffer, and in it a <b>sea-chart older than the catacomb</b>, its edges cut with the old royal script by a hand that knew the deep.</i> <b>WHEN THE ISLES CRY OUT AND THE CROWN GOES DARK, A DAUGHTER OF THE TIDE SHALL SAIL THEM FREE - TILL SHE FINDS THE WEAPON THE GREAT QUEEN FORGED TO SEAL THE SHADOW.</b> <i>And below the verse, inked waters: coastlines on no chart you know, and a mark where the histories say nothing lies.</i> <b style="color:#c9b0ff">You take the Drowned Chart.</b> <i>You cannot read the royal script - but <b>Jaist</b> can. Take it up to your brother.</i>'); },520);
+    toast('You picked up the <b style="color:#c9b0ff">Drowned Chart</b> - old royal script you can\'t read. Carry it up to <b>Jaist</b>.',6000);
     setTimeout(autoSave,300);
     return;
   }
@@ -6999,7 +7009,7 @@ function boatMenu(){
     all=[['Sail to Stormreach','reach']];                          // the storm-coast hub, where the prince holds the boat
     if(beatReach) all.push(['Sail to the Frozen Isle','frost']);   // the Brute's fall thaws the strait north
     if(frostWon)  all.push(['Sail to the Aerie Isle','aerie']);    // the last far reach opens once the Frozen Isle is won
-    if(veil) all.push(['Steal home to Barik','main'],['Sail to the Sunward Isle','east'],
+    if(veil) all.push(['Sail to Barik','main'],['Sail to the Sunward Isle','east'],
                       ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle']);
     // the capital is never listed in Act II: Vath's gaze holds the throne.
   }

@@ -1849,11 +1849,13 @@ function drawHumanoid(g,sx,sy,o){
         g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(flip*-HR*0.44,-6.5,2.6,1.7,0,0,TAU); g.fill();
         });
       } else {
-        // front: a high gather at the crown, plus a peek of the tail past the shoulder
+        // front: a high gather at the crown, plus a peek of the tail past the shoulder.
+        // The tail is drawn STATIC (no swayHair): in front view the face-framing hair
+        // doesn't move, so a lone swinging sliver past the shoulder read as a detached
+        // strand jittering on its own. It now sits still like the rest of the front hair.
         g.fillStyle=hc;
         g.beginPath(); g.ellipse(0,-11.6,4.2,2.6,0,0,TAU); g.fill(); g.stroke();
         g.fillStyle=shade(hc,-26); g.beginPath(); g.ellipse(0,-9.7,3.0,1.7,0,0,TAU); g.fill();
-        swayHair(()=>{  // only the falling tail swings; the crown gather stays put
         g.fillStyle=hc;
         g.beginPath();
         g.moveTo(HR*0.70,-2);
@@ -1861,7 +1863,6 @@ function drawHumanoid(g,sx,sy,o){
         g.lineTo(HR*0.58,13.5);
         g.quadraticCurveTo(HR*0.78,5, HR*0.60,-2.5);
         g.closePath(); g.fill(); g.stroke();
-        });
       }
     }
     if(o.fem){
@@ -2045,6 +2046,23 @@ function drawHumanoid(g,sx,sy,o){
       g.beginPath(); g.moveTo(0,3); g.lineTo(0,-12); g.stroke();
       g.strokeStyle='rgba(220,220,225,0.6)'; g.lineWidth=1;
       g.beginPath(); g.moveTo(0,-12); g.quadraticCurveTo(4,-10, 4.5,-5); g.stroke();
+    } else if(o.weapon==='hammer'){
+      // a heavy wrecking maul: a stout haft under a big blocky iron head, banded
+      // and riveted. Reads as the tool that stove in every hull on the strand.
+      g.strokeStyle='#4f3a22'; g.lineWidth=3.2; g.lineCap='round';   // thick haft
+      g.beginPath(); g.moveTo(0,6); g.lineTo(0,-14); g.stroke();
+      g.lineCap='butt';
+      g.fillStyle='#6f6c66';                                         // iron head block
+      g.beginPath(); g.roundRect(-8,-21,16,10,1.6); g.fill();
+      g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
+      g.fillStyle='#87847d';                                         // sunlit top-left face
+      g.beginPath(); g.roundRect(-8,-21,16,4.4,1.6); g.fill();
+      g.fillStyle='#565149';                                         // dark end-bands
+      g.fillRect(-8,-21,3,10); g.fillRect(5,-21,3,10);
+      g.strokeStyle=OUT; g.lineWidth=1.1; g.strokeRect(-8,-21,3,10); g.strokeRect(5,-21,3,10);
+      g.fillStyle='#3f3b34';                                         // rivets
+      g.beginPath(); g.arc(-6.4,-18.6,0.9,0,TAU); g.arc(-6.4,-13.4,0.9,0,TAU);
+      g.arc(6.4,-18.6,0.9,0,TAU); g.arc(6.4,-13.4,0.9,0,TAU); g.fill();
     }
     g.restore();
   }

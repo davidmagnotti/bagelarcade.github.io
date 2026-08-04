@@ -2429,10 +2429,13 @@ function drawNPC(n,s){
   // (an NPC walking toward a wander target) also draws live, so a walking/dancing NPC gets a
   // smooth 60fps gait instead of the 8-frame cached walk - the cache is for NPCs standing still.
   drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
-  // name
-  cx.font='10px Verdana'; cx.textAlign='center';
-  cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
-  cx.fillStyle='#ffe9a8'; cx.fillText(nname, s.x, s.y-52*(nlook.size||1));
+  // name (the brother-prince Jaist rides at your side across the Act II isles;
+  // he needs no floating name-tag trailing him everywhere he goes)
+  if(nname && n.id!=='brother'){
+    cx.font='10px Verdana'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
+    cx.fillStyle='#ffe9a8'; cx.fillText(nname, s.x, s.y-52*(nlook.size||1));
+  }
   // (ambient overhead speech bubbles removed - NPC lines show only in the dialog panel)
   // quest marks
   let mark=null;
@@ -3265,14 +3268,18 @@ function drawMob(m,s){
     drawMobBars&&drawMobBars(m,s); return;
   }
   if(m.kind==='raidcap'){
-    drawShadowAt(cx,s.x,s.y,18);
+    // The Barrow Brute (Wrecker of Stormreach) is a bigger, maul-swinging hulk than
+    // the Barik Castellan that shares this kind; brute-only via m.reachboss.
+    const brute=m.reachboss, scl=brute?2.15:1.5, cs=scl/1.5;
+    drawShadowAt(cx,s.x,s.y, brute?26:18);
     // a red horsehair crest above the captain's helm, streaming as he moves
     const fl=(m.face||1), cr=Math.sin(m.anim*7);
     drawHumanoid(cx,s.x,s.y,{skin:'#b0855f',hair:'#241d1a',shirt:'#7a2320',pants:'#2c1c1c',
-      hat:'hood',hatColor:'#3a1616',armor:2,pauldrons:true,trim:'#c8a24a',weapon:'sword',wtier:2,
-      swing:m.swing||0, hurt:m.hurtT>0, size:1.5,
+      hat:'hood',hatColor:'#3a1616',armor:2,pauldrons:true,trim:'#c8a24a',
+      weapon:brute?'hammer':'sword',wtier:2,
+      swing:m.swing||0, hurt:m.hurtT>0, size:scl,
       dir:{x:fl,y:0.3}, step:Math.sin(m.anim*7)});
-    cx.save(); cx.translate(s.x, s.y-46);
+    cx.save(); cx.translate(s.x, s.y-46*cs); cx.scale(cs,cs);
     cx.strokeStyle='#b23a2a'; cx.lineWidth=3.4; cx.lineCap='round';
     cx.beginPath(); cx.moveTo(-2,0);
     cx.quadraticCurveTo(-fl*6+cr*2,-9, -fl*12+cr*4,-6);
