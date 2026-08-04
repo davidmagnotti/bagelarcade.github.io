@@ -279,6 +279,10 @@ function useHotspot(h){
       toast('You stretch out on the Spire\u2019s spare cot. \u201cSleep, then,\u201d Aelin murmurs. \u201cThe weave keeps better hours than you do.\u201d',4200);
       sleepInBed(false);
     }
+    else if(G.interior && G.interior.restfree){                  // the Cathedral tower's cot: rest here free
+      toast('You stretch out on the tower cot beneath the old glass. The stones keep the sea-wind off, and you sleep the night through - no charge.',4200);
+      sleepInBed(false);
+    }
     else {
       // it belongs to someone else - a proper click-to-continue line, not a fleeting toast
       P.click=null; dlg.open=true; dlg.npc=null;

@@ -2445,10 +2445,22 @@ function drawNPC(n,s){
   drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
   // name (the brother-prince Jaist rides at your side across the Act II isles;
   // he needs no floating name-tag trailing him everywhere he goes)
+  // The name reads over the head only once you've MET this soul (spoken to them - P.met),
+  // or while you stand close enough to speak - the same approach-fade the landmark and
+  // gate labels use. A met name stays lit for good. It sits clear ABOVE the head now, not
+  // on it, with the quest mark stacked higher still.
   if(nname && n.id!=='brother'){
-    cx.font='10px Verdana'; cx.textAlign='center';
-    cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, s.y-52*(nlook.size||1)+1);
-    cx.fillStyle='#ffe9a8'; cx.fillText(nname, s.x, s.y-52*(nlook.size||1));
+    const met = !!(P.met && n.id && P.met[n.id]);
+    const nd = dist(P.x, P.y, n.x, n.y);
+    const na = met ? 1 : Math.max(0, Math.min(1, (4.4 - nd)/1.6));   // fade in over the last ~1.6 tiles
+    if(na>0.02){
+      const ny = s.y - 62*(nlook.size||1);   // lifted off the head for a clean gap
+      cx.save(); cx.globalAlpha=na;
+      cx.font='10px Verdana'; cx.textAlign='center';
+      cx.fillStyle='rgba(0,0,0,0.55)'; cx.fillText(nname, s.x+1, ny+1);
+      cx.fillStyle='#ffe9a8'; cx.fillText(nname, s.x, ny);
+      cx.restore();
+    }
   }
   // (ambient overhead speech bubbles removed - NPC lines show only in the dialog panel)
   // quest marks
@@ -2463,9 +2475,9 @@ function drawNPC(n,s){
   if(mark){
     const bob=Math.sin(G.time*3)*3;
     cx.font='bold 18px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; cx.strokeStyle='rgba(0,0,0,0.7)'; cx.lineWidth=3;
-    cx.strokeText(mark,s.x,s.y-66+bob);
+    cx.strokeText(mark,s.x,s.y-78+bob);
     cx.fillStyle= mark==='!'? '#ffd76a':'#9be07f';
-    cx.fillText(mark,s.x,s.y-66+bob);
+    cx.fillText(mark,s.x,s.y-78+bob);
   }
 }
 function drawScorpion(m,s){

@@ -4218,7 +4218,7 @@ function placeObjectsCrown(){
   if(kit) kit.kitchen=1;
   addBuilding('lamp', PA.x-14, PA.y+11, ''); addBuilding('lamp', PA.x-17, PA.y+7, '');
   // ---- the Cathedral of the Tide ----
-  addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide');
+  addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide').tall=true;   // the capital's spire stands twice as tall, same as Orin's tower on Emberwick
   addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
   // ---- Crown Plaza: the civic heart ----
   addBuilding('well', PL.x, PL.y, 'The Kings\' Fountain');
@@ -6609,6 +6609,7 @@ function updateReachCurseMood(){
 function haveAllFourGifts(){ return !!(P.unlocked && P.unlocked.dive && P.unlocked.swiftstep && P.unlocked.dash2 && P.spells && P.spells.flamesnare); }
 function placeEmberTomb(){
   if(!haveAllFourGifts()) return;
+  if(G.worldId && G.worldId!=='isle') return;   // only the Emberwick surface carries the mouth
   if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld==='embertomb')) return;
   const Z=(typeof ISLE_ZONES!=='undefined' && ISLE_ZONES.ruins) ? ISLE_ZONES.ruins : {x:46,y:20};
   const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x), Math.round(Z.y), 14)) || null;
@@ -6616,6 +6617,15 @@ function placeEmberTomb(){
     for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
     G.decor.push({kind:'dungeonmouth', x:sp[0]+0.5, y:sp[1]+0.5, deepworld:'embertomb', label:'the Tideward Crypt', name:'THE TIDEWARD CRYPT ▼'});
     G.decor.push({kind:'lamp', x:sp[0]-1.5, y:sp[1]+0.5}); G.decor.push({kind:'lamp', x:sp[0]+1.5, y:sp[1]+0.5});
+    // The four gifts are gathered on the returned isles, and only the DIVE gift dropped the
+    // cached Emberwick - so if DIVE wasn't the LAST gift in hand, a fresh regen never ran and
+    // the mouth never appeared. switchWorld now calls this on every isle entry, so when it lands
+    // live on an already-generated (cached) Emberwick, redraw the scenery + big map and point the
+    // player north to the Old Ruins the first time the way opens.
+    if(typeof invalidateScenery==='function') invalidateScenery();
+    if(typeof buildMapBase==='function') buildMapBase();
+    if(!(P.story && P.story.tidewardSeen)){ P.story=P.story||{}; P.story.tidewardSeen=1;
+      if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">With all four gifts in hand, the ground splits open at the Old Ruins.</b> A founders\' stair winds down into <b>the Tideward Crypt</b> - up at the <b>Old Ruins, north of Orin\'s tower</b>, where the last ward was sealed. Go down when you\'re ready.',8500), 700); }
   }
 }
 function beginOpenChest(b){
@@ -7180,6 +7190,10 @@ function switchWorld(id){
   // Act IV: coming back to Emberwick with the last hunt underway - make sure Vath
   // is on the green if you'd already drawn him out and left mid-fight.
   if(id==='isle' && typeof ensureFinalVath==='function') ensureFinalVath();
+  // Act II capstone: the Tideward Crypt mouth opens once all four returned-isle gifts are
+  // in hand. Run on EVERY isle entry (Emberwick is cached, so a fresh regen may never fire
+  // after the last gift lands) - placeEmberTomb self-guards against double-placing.
+  if(id==='isle' && typeof placeEmberTomb==='function') placeEmberTomb();
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
   // chain below is the one exception, left armed on purpose).
   if(id==='main' && !P.quests.mossbrew && !(P.story&&P.story.act2)) P.quests.mossbrew='avail';
