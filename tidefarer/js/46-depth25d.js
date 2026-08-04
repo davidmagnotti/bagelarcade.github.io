@@ -138,6 +138,71 @@ function _d25cloudBank(baseY, amp, period, parX, seed, tint, alpha){
   }
 }
 
+/* =====================================================================
+   BUILDING CAST SHADOWS
+   -----------------------------------------------------------------------
+   Buildings used to drop a single wide contact OVAL on the ground. The
+   directional-cast logic then stretched and shoved that oval sideways, so
+   on a house it pooled out in FRONT of the door and read as a detached
+   round blob sitting on the grass. Replace it, for standing buildings, with
+   a real planar cast shadow: the sprite's own black silhouette, hinged at
+   its foot, flattened onto the ground and sheared toward the sun's away-side
+   so it lies BEHIND-and-to-one-side of the building - the shape you'd expect
+   the walls and roof to throw. A thin contact core at the foot keeps the
+   base planted. Skipped at the low-gfx tier (keeps the cheap oval there).
+   ===================================================================== */
+
+/* which decor kinds get the silhouette cast (standing walls with a footprint) */
+const _D25_CAST = {house:1,house2:1,barn:1,forge:1,hut:1,stormhut:1,igloo:1,tower:1,bazaar:1};
+function buildingCasts(kind){ return !!_D25_CAST[kind]; }
+
+/* Black silhouette of a sprite, cached on the sprite canvas itself (baked once
+   per sprite, so it costs a single extra drawImage per building per frame). */
+function _d25silhouette(S){
+  if(S._sil) return S._sil;
+  const c=document.createElement('canvas'); c.width=S.width; c.height=S.height;
+  const g=c.getContext('2d');
+  g.drawImage(S,0,0);
+  g.globalCompositeOperation='source-in';   // keep the sprite's alpha, paint it solid black
+  g.fillStyle='#000'; g.fillRect(0,0,c.width,c.height);
+  S._sil=c; return c;
+}
+
+/* Draw the planar cast shadow for one building. `s` is the tile-origin screen
+   point; the sprite is drawn with its foot at s.y+~10, spanning S.height*BS up. */
+function drawBuildingShadow(b,S,s,BS){
+  const w=S.width*BS, h=S.height*BS;
+  const night=(typeof nightAmount==='function')?nightAmount():0;
+  // sun angle: how LOW it sits (0 at noon -> a tight shadow, 1 near the horizon
+  // -> a long one) and which side it throws to. Fixed to a gentle afternoon on
+  // the always-daylight tutorial isle and underground.
+  const fixed=(G.worldId==='isle') || (typeof inDungeon==='function' && inDungeon());
+  let low=0.45, dir=1;
+  if(!fixed){
+    const t=G.dayT;
+    if(t>=0.06 && t<=0.44){ low=Math.min(1,Math.abs((t-0.25)/0.19)); dir=(t<0.25)?1:-1; }
+    else { low=0.92; dir=(t<0.25||t>0.9)?1:-1; }
+  }
+  let alpha=0.26*(1-0.5*Math.min(1,night));
+  if(alpha<0.03) return;
+  const flat  = 0.30 + low*0.26;          // vertical foreshortening of the laid-down shape
+  const shear = dir*(0.30 + low*0.55);     // lateral lean toward the sun's away-side
+  const baseY = s.y + 7;                    // hinge just under the wall foot
+  const g=cx;
+  // thin contact core first, tucked under the footprint (mostly hidden by the
+  // sprite) so the base reads planted without a blob spilling out front
+  g.fillStyle='rgba(0,0,0,'+(alpha*0.6).toFixed(3)+')';
+  g.beginPath(); g.ellipse(s.x, baseY-1, w*0.30, Math.max(4,h*0.05), 0, 0, TAU); g.fill();
+  // the projected silhouette, hinged at the foot and skewed onto the ground
+  const sil=_d25silhouette(S);
+  g.save();
+  g.globalAlpha=alpha;
+  g.translate(s.x, baseY);
+  g.transform(1, 0, shear, flat, 0, 0);   // (x,y) -> (x + shear*y, flat*y); y<=0 above the hinge
+  g.drawImage(sil, -w/2, -h, w, h);
+  g.restore();
+}
+
 /* ---- 2: parallax horizon, drawn on the backdrop before the ground ---- */
 function depthHorizon(CLOUD){
   if(typeof inDungeon==='function' && inDungeon()) return;
