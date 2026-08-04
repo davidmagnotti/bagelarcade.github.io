@@ -951,7 +951,7 @@ function drawShadowAt(g,sx,sy,r){
 
    Local bounding box of the figure (pre-size units, generous margins for hats/
    crowns/pauldrons). Verified against the live renderer so nothing clips. */
-const _HB = { x0:-30, y0:-64, x1:30, y1:16 };
+const _HB = { x0:-30, y0:-72, x1:30, y1:16 };  // y0 lowered: the de-chibi head rides higher on longer legs (+ hats/crowns)
 function _humGaitKey(o){
   const step=o.step||0;
   const moving = Math.abs(step)>0.0001 && o.step!==undefined && o.step!==0;
@@ -1119,6 +1119,23 @@ function drawHumanoid(g,sx,sy,o){
   const hdF=_bd.head!=null?_bd.head:1;  // head size (smaller reads adult/elder, larger reads young)
   const stF=_bd.stoop||0;               // forward head lean, local units (aged / hunched)
 
+  // ---- GLOBAL PROPORTION: "youthful" build — a gentle step off the old
+  // head-is-half chibi mascot: the head shrinks a little and the legs lengthen a
+  // little, so the cast reads a touch older/taller while staying rounded & cute.
+  // Every figure & portrait inherits this because the whole cast routes through
+  // drawHumanoid. Extra height is added in the LEGS (thighs grow and the upper
+  // body rides up on them), NOT by stretching the torso; the head is scaled down
+  // and re-seated so it sits naturally on the shoulders. Robed figures have no
+  // visible legs, so they take a matching vertical robe stretch instead. Tune the
+  // whole cast from these five numbers.
+  const PROP_HK   = 0.84;               // head size multiplier (1 = old chibi head)
+  const PROP_LEG  = 4.5;                // leg lengthening in local units (thighs + upper-body lift)
+  const PROP_HANCH= -33.6;              // head seat Y in the lifted frame (was -34.6)
+  const PROP_ARM  = PROP_LEG*0.42;      // forearm lengthening so hands reach down the taller body
+  const PROP_ROBE = 1.12;               // vertical stretch for robed (legless) figures
+  const legLift   = o.robe? 0 : PROP_LEG;   // robes don't ride up on legs; they stretch instead
+  const armLen    = o.robe? 0 : PROP_ARM;
+
   g.save();
   // NOTE: the old per-character ctx.filter='saturate/brightness' vividness boost
   // was REMOVED entirely. A per-draw ctx.filter forces each figure into its own
@@ -1130,7 +1147,7 @@ function drawHumanoid(g,sx,sy,o){
   if(hurtF && !o._bake){ g.translate(rnd(-1.2,1.2),0); }
   g.rotate(lean + swingDip*flip*0.05); // a slight lunge into the swing, toward the facing
   g.scale(s,s);
-  g.scale(1,0.93); // seen from the isometric camera above - slight vertical foreshorten
+  g.scale(1,0.93*(o.robe?PROP_ROBE:1)); // iso foreshorten; robed figures stretch tall (no legs to lengthen)
   // squash & stretch on the whole body - mascot bounce + the launch/settle/swing springs
   const sq=Math.max(0.6, (walking? 1+0.045*sw2 : 1) + springSq);
   g.scale(1/Math.sqrt(sq), sq);
@@ -1233,18 +1250,22 @@ function drawHumanoid(g,sx,sy,o){
       const la= stride*0.55*sg;
       const lift= Math.max(0, sg*stride)*2.2;
       g.save();
-      g.translate(lx, -8.5+B*0.4); g.rotate(flip*la*(away?-1:1));
+      g.translate(lx, -8.5-legLift+B*0.4); g.rotate(flip*la*(away?-1:1)); // hip rides up onto the longer thigh
       g.fillStyle=pants;
-      g.beginPath(); g.roundRect(-2.4,0,4.8, 6.5, 2.1); g.fill();
+      g.beginPath(); g.roundRect(-2.4,0,4.8, 6.5+legLift, 2.1); g.fill(); // longer thigh keeps the foot planted
       g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
       // big boot
       const fs=walking? Math.max(0,-sg*stride)*0.12 : 0;
-      g.translate(0, 6.2-lift*0.3);
+      g.translate(0, 6.2+legLift-lift*0.3);
       g.scale(1+fs, 1-fs*0.6);
       drawBoot(bootD);
       g.restore();
     }
   }
+
+  // Everything from here up (arms, torso, head, weapon) rides UP on the longer
+  // legs, so the added height lands in the legs and the torso keeps its length.
+  g.save(); g.translate(0,-legLift);
 
   /* ---------------- sausage arms with mitt hands ----------------
      Defined before the body so the rear view can tuck them BEHIND it:
@@ -1255,11 +1276,11 @@ function drawHumanoid(g,sx,sy,o){
     g.translate(side*8.2*bwF,armY+(lift||0));
     g.rotate(side*0.28 + ang);
     g.fillStyle=o.robe? o.robe : shirt;
-    g.beginPath(); g.roundRect(-2.1,0,4.2,7.4,2.1); g.fill();
+    g.beginPath(); g.roundRect(-2.1,0,4.2,7.4+armLen,2.1); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.3; g.stroke();
     g.fillStyle=skin; // big mitt
-    g.beginPath(); g.arc(0,8.6,3.0,0,TAU); g.fill(); g.stroke();
-    g.beginPath(); g.arc(-side*2.1,7.8,1.15,0,TAU); g.fill(); g.stroke(); // thumb
+    g.beginPath(); g.arc(0,8.6+armLen,3.0,0,TAU); g.fill(); g.stroke();
+    g.beginPath(); g.arc(-side*2.1,7.8+armLen,1.15,0,TAU); g.fill(); g.stroke(); // thumb
     g.restore();
   };
   const armSwing=walking? sw1*0.5 : 0.05;
@@ -1465,9 +1486,9 @@ function drawHumanoid(g,sx,sy,o){
 
   /* ---------------- THE HEAD: half the hero ---------------- */
   g.save();
-  g.translate(flip*stF,-34.6+B*1.15+stF*0.6);           // stoop leans the head forward & down
+  g.translate(flip*stF,PROP_HANCH+B*1.15+stF*0.6);      // stoop leans the head forward & down; PROP_HANCH re-seats the smaller head
   if(turnQ){ g.translate(_lead*turnQ*1.85, 0); g.rotate(_lead*turnQ*0.09); } // head leads the turn
-  const headScale=hdF*(o.hero?1.12:1);                  // hero head grander; build.head resizes per character
+  const headScale=hdF*(o.hero?1.12:1)*PROP_HK;          // hero head grander; build.head resizes per character; PROP_HK de-chibifies
   if(headScale!==1) g.scale(headScale,headScale);
   if(walking) g.rotate(sw1*0.035);
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
@@ -1569,11 +1590,12 @@ function drawHumanoid(g,sx,sy,o){
         g.moveTo( eSp+fx+2,eyeY+1.6); g.lineTo( eSp+fx-1.6,eyeY);
         g.stroke(); g.lineCap='butt';
       } else if(expr==='happy'){
-        g.strokeStyle='#241a10'; g.lineWidth=1.8; g.lineCap='round';
+        // gentle upward eye-curves (a warm squint) - softer stroke than before
+        g.strokeStyle='#2e2418'; g.lineWidth=1.5; g.lineCap='round';
         g.beginPath();
-        g.arc(-eSp+fx,eyeY+0.6,2.3,Math.PI*1.15,Math.PI*1.85);
-        g.moveTo(eSp+fx+2.3*Math.cos(Math.PI*1.15),eyeY+0.6+2.3*Math.sin(Math.PI*1.15));
-        g.arc( eSp+fx,eyeY+0.6,2.3,Math.PI*1.15,Math.PI*1.85);
+        g.arc(-eSp+fx,eyeY+0.4,2.1,Math.PI*1.2,Math.PI*1.8);
+        g.moveTo(eSp+fx+2.1*Math.cos(Math.PI*1.2),eyeY+0.4+2.1*Math.sin(Math.PI*1.2));
+        g.arc( eSp+fx,eyeY+0.4,2.1,Math.PI*1.2,Math.PI*1.8);
         g.stroke(); g.lineCap='butt';
       } else if(blink){
         g.strokeStyle='#241a10'; g.lineWidth=2.1; g.lineCap='round'; // a real, visible blink
@@ -1584,26 +1606,29 @@ function drawHumanoid(g,sx,sy,o){
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#17100a'; // round button eyes - level and friendly
+          g.fillStyle='#241a12'; // round button eyes - softer brown-black, gentler than jet
           g.beginPath();
-          g.arc(ex2,eyeY,2.15,0,TAU);
+          g.arc(ex2,eyeY,1.95,0,TAU);
           g.fill();
-          g.fillStyle='rgba(255,255,255,0.92)';
-          g.beginPath(); g.arc(ex2-0.6,eyeY-0.9,0.58,0,TAU); g.fill();
-          g.fillStyle='rgba(255,255,255,0.35)';
-          g.beginPath(); g.arc(ex2+0.55,eyeY+0.8,0.28,0,TAU); g.fill();
+          // a single, calm catch-light (the old twin highlights read as glassy doll eyes)
+          g.fillStyle='rgba(255,255,255,0.8)';
+          g.beginPath(); g.arc(ex2-0.5,eyeY-0.7,0.5,0,TAU); g.fill();
         }
       }
-      // filled tapered brows, tilted by mood
-      g.fillStyle='#2e2418';
+      // filled tapered brows, tilted by mood. Lifted ~0.8u off the eyes and set a
+      // touch softer/thinner than before, so the resting face reads open & friendly
+      // instead of a low, heavy glare.
+      g.save(); g.translate(0,-0.8);
+      g.fillStyle='#3a2d1f';
       const bT= (o.expr==='battle')? 1.6 : (o.expr==='hurt')? -1.3 : (o.expr==='happy')? -0.7 : 0;
       for(const e of [-1,1]){
         g.beginPath();
         g.moveTo(e*(eSp+2.5)+fx,-6.3-bT*0.4);
-        g.quadraticCurveTo(e*eSp+fx,-8.1+bT*0.3, e*(eSp-2.5)+fx,-6.7+bT);
-        g.quadraticCurveTo(e*eSp+fx,-7.2+bT*0.3, e*(eSp+2.5)+fx,-5.8-bT*0.4);
+        g.quadraticCurveTo(e*eSp+fx,-8.0+bT*0.3, e*(eSp-2.5)+fx,-6.75+bT);
+        g.quadraticCurveTo(e*eSp+fx,-7.15+bT*0.3, e*(eSp+2.5)+fx,-5.95-bT*0.4);
         g.closePath(); g.fill();
       }
+      g.restore();
       // button nose with a light catch
       g.fillStyle=shade(skin,-13);
       g.beginPath(); g.ellipse(fx*0.4,2.6,1.6,1.25,0,0,TAU); g.fill();
@@ -1622,12 +1647,12 @@ function drawHumanoid(g,sx,sy,o){
         g.quadraticCurveTo(fx*0.4+1,5.8, fx*0.4+2.2,4.9);
         g.stroke();
       } else if(o.expr==='happy'){
-        g.fillStyle='#5a3020';
+        // a soft, closed-mouth smile - warm and gentle, not a manic open grin
+        // (the old dark open-mouth cavity read as creepy on the small face)
+        g.lineWidth=1.3; g.strokeStyle='rgba(120,66,44,0.85)';
         g.beginPath();
-        g.moveTo(fx*0.4-2.8,3.8); g.quadraticCurveTo(fx*0.4,7.2, fx*0.4+2.8,3.8);
-        g.quadraticCurveTo(fx*0.4,4.9, fx*0.4-2.8,3.8);
-        g.closePath(); g.fill();
-        g.lineWidth=1.1; g.strokeStyle='rgba(30,18,12,0.6)'; g.stroke();
+        g.moveTo(fx*0.4-2.3,4.1); g.quadraticCurveTo(fx*0.4,5.8, fx*0.4+2.3,4.1);
+        g.stroke();
       } else {
         g.lineWidth=1.05; g.strokeStyle='rgba(90,58,40,0.75)';
         g.beginPath();
@@ -2081,6 +2106,8 @@ function drawHumanoid(g,sx,sy,o){
     }
     g.restore();
   }
+
+  g.restore(); // end upper-body lift onto the longer legs
 
   /* ---------------- name tag hook (unchanged contract) ---------------- */
   g.restore();
