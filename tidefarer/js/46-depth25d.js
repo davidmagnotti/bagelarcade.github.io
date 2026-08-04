@@ -186,9 +186,14 @@ function drawBuildingShadow(b,S,s,BS){
   }
   let alpha=0.28*(1-0.5*Math.min(1,night));
   if(alpha<0.03) return;
-  const flat  = 0.30 + low*0.26;          // vertical foreshortening of the laid-down shape
-  const shear = dir*(0.30 + low*0.55);     // lateral lean toward the sun's away-side
-  const baseY = s.y + 7;                    // hinge just under the wall foot
+  // The cast is a copy of the sprite, hinged at the foot and folded back onto the
+  // ground AWAY from the viewer (up-screen = behind). It has to be TALLER than the
+  // house is on screen, or the house sprite (drawn on top) hides it and only the
+  // front-base sliver peeks out - which reads as a shadow in FRONT. Over-tall, it
+  // rises past the roofline and clearly emerges behind the building.
+  const flat  = 0.78 + low*0.5;            // cast length as a multiple of sprite height (~>1 => past the roof)
+  const shear = dir*(0.55 + low*0.35);     // lateral lean, so it emerges to the back-SIDE, not straight up over the roof
+  const baseY = s.y + 6;                    // hinge at the wall foot
   const g=cx;
   // the projected silhouette, hinged at the foot and skewed onto the ground. No
   // separate contact oval - the silhouette's own base seats the building, and a
