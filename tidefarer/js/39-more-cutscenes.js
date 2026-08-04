@@ -88,7 +88,7 @@ const MC_VATH = [
   { who:'Vath', html:'<b style="color:#c9a0ff">“Clever. Cruel. You’d have woven a fine binding yourself.”</b>',
     ens:0.9, dive:0.25 },
   { who:'', html:'', ens:0.7, dive:0.7, flash:0.95, shake:0.5, hold:1500 },
-  { who:'Vath', html:'<b style="color:#c9a0ff">“No stone holds forever, first mate. Your blood has caged me before — a lifetime ago, and lifetimes before that. Every seal your line ever set, I have outwaited. I will thaw. I will come back.”</b>',
+  { who:'Vath', html:'<b style="color:#c9a0ff">“No stone holds forever, little tide. Your blood beat me once, a lifetime ago — and hadn’t the strength to close the seal. This is the first cage your line has ever set on me. But I have worn through worse than stone. I will wear through this, and I will come back.”</b>',
     ens:0.4, dive:0.9, title:'VATH IS BOUND' },
   { who:'', html:'<i>Then quiet — the violet light dying in the grass, and the old stone standing as it has always stood.</i>',
     ens:0.08, dive:1, calm:1 },
