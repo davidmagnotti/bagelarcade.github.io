@@ -128,6 +128,9 @@ function cookSpeak(){
 }
 function enterHouse(b){
   if(G.interior) return;
+  // The old waterwheel IS the mouth of the Gale Spire in Act II - stepping inside drops you
+  // straight down the shaft rather than into any mill interior (see placeWindHazard).
+  if(b.galeSpire){ if(typeof useGateDungeon==='function') useGateDungeon(b); return; }
   if(b.grand){ // the Aldermere palace GATE - guarded; you need the King's leave
     if(P.riding){ P.riding=0; if(typeof updateMountBtn==='function') updateMountBtn(); }
     const leave = qs('kitchenrun')==='done' || (P.story&&(P.story.palaceLeave||P.story.kingTold));

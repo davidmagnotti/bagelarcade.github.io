@@ -6175,9 +6175,14 @@ function placeWindHazard(){
     flood(WH.x+4, WH.y-4, 4);     // ...and spills across the north yard
     flood(WH.x+8, WH.y+4, 4);     // ...and down the mill-leat to the south-east
   }
-  // the hidden mouth at the wheel's south foot, with a dry approach from the town road (south).
-  // Placed even on a restored isle so the Gale Spire below stays re-enterable.
-  _curseMouthAt(WH.x+2, WH.y+2, [WH.x+2, WH.y+3], 'winddeep', 'the Gale Spire', 'THE GALE SPIRE ▼');
+  // The Gale Spire is entered by going INSIDE the old waterwheel itself - no separate hole in
+  // the ground. Flag the wheel building so its door descends into winddeep (see enterHouse).
+  // Set in both states so the Spire below stays re-enterable after the flood drains.
+  { const wheel=G.decor.find(d=>d.kind==='waterwheel');
+    if(wheel){ wheel.deepworld='winddeep'; wheel.galeSpire=1; }
+    // make sure the wheel's south door stays a dry, walkable approach even at full flood
+    for(const [dx,dy] of [[0,1],[-1,1],[-1,2]]){ const ax=Math.round(WH.x+dx), ay=Math.round(WH.y+dy);
+      if(inb(ax,ay) && tileAt(ax,ay)!==T.DEEP){ setTile(ax,ay,T.PATH); setSolid(ax,ay,0); } } }
   // THE DROWNED DISTRICT: a whole scrap of the north yard the flood cuts off ENTIRELY - a little
   // island of drowned rooftops ringed by deep water you cannot reach at all while the isle is
   // cursed. Its reward chest is placed in BOTH states, but while the curse stands a wide ring of
