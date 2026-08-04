@@ -902,8 +902,11 @@ function damageMob(m,dmg,knock,skill){
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
-    else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // THE RECKONING phase 1: beaten to his knees -> rage cutscene
-    else if(m.vathDemon && !m.vathSealed){ m.hp=1; crownVathSealSeam(m); } // THE RECKONING phase 2: the monster is broken -> the seal (Beat 3)
+    else if(m.crownVath && m.vstage===1){ m.hp=1; if(typeof vathToStage2==='function') vathToStage2(m); } // RECKONING stage 1 (shadow) broken -> the Goliath
+    else if(m.crownVath && m.vstage===2){ m.hp=1; if(typeof vathToStage3==='function') vathToStage3(m); } // RECKONING stage 2 (Goliath) broken -> the formless, untouchable form
+    else if(m.brotherCage && !m.cageBroken){ m.hp=1; if(typeof cageBreak==='function') cageBreak(m); }     // Jaist's cage smashed -> he speaks the seal, the ending
+    else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // (legacy 2-phase reckoning, retained as a fallback)
+    else if(m.vathDemon && !m.vathSealed){ m.hp=1; crownVathSealSeam(m); }                 // (legacy)
     else if(m.kind==='mage' && m.finalVath && !m.bound){ m.hp=1; bindVath(m); } // Act IV: the last stand - bound, not slain
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls (mid-game) - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe

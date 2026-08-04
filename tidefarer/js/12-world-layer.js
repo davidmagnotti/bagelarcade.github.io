@@ -4452,7 +4452,8 @@ function updateCrownFolkMood(){
 function crownReckoning(){ return !!(P.story && P.story.sealLearned && !P.story.vathDown); }
 function genCrownAll(){
   genCrown(); bakeSolids(); placeObjectsCrown(); buildFoam();
-  if(crownReckoning()) spawnCrownReckoning();   // deserted, corrupted, Vath on the throne
+  if(P.story && P.story.gameWon && typeof spawnVictoryCrowd==='function') spawnVictoryCrowd();   // the dawn celebration
+  else if(crownReckoning()) spawnCrownReckoning();   // deserted, corrupted, Vath on the throne
   else { spawnCrownFolk(); spawnMobsCrown(); }
   buildMapBase();
 }
@@ -4461,35 +4462,51 @@ function genCrownAll(){
 // fight. The rage/monster phase 2 and the sealing ending hang off crownVathDown / vathDown.)
 function spawnCrownReckoning(){
   const Z=CROWN_ZONES, PA=Z.palace;
-  G._crownConfront=0;
-  const base=[Math.round(PA.x), Math.round(PA.y+2)];
+  G._crownConfront=0; G._vathIntro=0; G._vathFire=0;
+  // Vath waits UNSEEN (sealed = not rendered/targeted) until you cross into the throne arena,
+  // then springs the ambush from behind you (startVathIntro). vstage 0 = pre-fight.
+  const base=[Math.round(PA.x), Math.round(PA.y+3)];
   const sp=(typeof findOpenNear==='function' && findOpenNear(base[0], base[1], 9)) || base;
   const m=spawnMob('mage', sp[0], sp[1]);
   if(m){
     m.crownVath=1; m.boss=true; m.bigBoss=true; m.title='VATH THE EMBERBINDER'; m.subtitle='ON THE THRONE HE STOLE';
-    m.ach='enchantersbane'; m.lvl=16; m.maxhp=1000; m.hp=1000; m.dmg=32; m.speed=2.7; m.aggro=16;
+    m.ach='enchantersbane'; m.lvl=16; m.maxhp=1; m.hp=1; m.dmg=32; m.speed=2.7; m.aggro=16;
     m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1; m.state='idle'; m.noAggroT=1e9;
-    m.sealed=true; m.invuln=true; m.arena=1; m.wphase=1; m.entrance='enthrall';
+    m.sealed=true; m.invuln=true; m.customAI=1; m.vstage=0; m.arena=1;
+  }
+  // Jaist, caged in black glass on the dais - kept unseen (sealed) until the ambush reveals him,
+  // then a fixed, invulnerable object right up until stage 3, when it becomes destructible.
+  const cs=(typeof findOpenNear==='function' && findOpenNear(Math.round(PA.x), Math.round(PA.y+2), 6)) || [PA.x, PA.y+2];
+  const cage=spawnMob('mage', cs[0], cs[1]);
+  if(cage){
+    cage.kind='cage'; cage.brotherCage=1; cage.boss=false; cage.bigBoss=false;
+    cage.title="JAIST'S CAGE"; cage.name="Jaist's Cage";
+    cage.maxhp=520; cage.hp=520; cage.dmg=0; cage.speed=0; cage.aggro=0;
+    cage.hx=cs[0]; cage.hy=cs[1]; cage.respawnT=-1; cage.state='idle';
+    cage.customAI=1; cage.invuln=true; cage.sealed=true; cage.noAggroT=1e9;
   }
 }
-// proximity trigger: climbing to the throne wakes Vath. Mirrors the Tideward Guardian's
-// sealed-until-you-step-in reveal (updateEmberTomb). Fires the confrontation, then the fight.
+// Drives the reckoning each frame (called from updateWorld while G.worldId==='crown'). Fires the
+// ambush when you step into the arena, then hands the boss to updateVathBoss (js/47-finale.js).
 function updateCrownReckoning(dt){
+  // Post-victory: the first time you step OUT of the dawn room into the freed capital, play the
+  // arrival beat. Gated on dawnRoom so it can't fire during the black fade before you wake.
+  if(P.story && P.story.gameWon){
+    if(!G.interior && P.prog && P.prog.dawnRoom && !P.prog.celebrationSeen){ P.prog.celebrationSeen=1; if(typeof celebrationArrival==='function') celebrationArrival(); }
+    return;
+  }
   if(!crownReckoning()) return;
-  // PHASE 2: Vath's unbound demon is a customAI boss (generic AI leaves it be), so it is driven
-  // here with the heavy sweep/shard/slam moveset - the same one the Tideward Guardian uses.
-  for(const m of G.mobs) if(m.vathDemon && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateWardKing(m,dt);
   const boss=G.mobs.find(m=>m.crownVath && !m.dead);
   if(!boss) return;
-  const PA=CROWN_ZONES.palace;
-  if(boss.sealed && !G._crownConfront && dist(P.x,P.y,boss.x,boss.y)<7 && P.y<PA.y+7){
-    G._crownConfront=1;
-    if(typeof storyCard==='function') storyCard('<i>You climb the Tideglass steps into the throne room. It is empty - the long hall stripped and silent, the great seat where your father sat run through with veins of living violet.</i> <b>Your father is not here.</b> <i>He has been gone a long time. Only one figure waits in the dark under the stolen crown, and he does not rise so much as unfold.</i> <b style="color:#c9a0ff">"The last of the line. Come all this way to give me the set."</b> <i>Vath steps down off the throne, violet gathering to his hands.</i>',
-      {label:'End this', onOk:()=>{
-        boss.sealed=false; boss.invuln=false; boss.noAggroT=0; boss.state='chase';
-        if(typeof startBossIntro==='function' && !G.bossIntro) startBossIntro(boss,{kind:boss.entrance||'enthrall',title:boss.title,sub:boss.subtitle});
-      }});
+  const A=(typeof vathArena==='function') ? vathArena() : {cx:CROWN_ZONES.palace.x, cy:CROWN_ZONES.palace.y+7, r:8};
+  if(boss.vstage===0){
+    if(!G._vathIntro && !P.dead && dist(P.x,P.y,A.cx,A.cy) < A.r-1 && P.y < A.cy+A.r && typeof startVathIntro==='function') startVathIntro(boss);
+    return;
   }
+  if(G._vathIntro) return;                                   // ambush cutscene running
+  if(typeof dlg!=='undefined' && dlg.open) return;            // frozen through any dialogue/story card
+  if(boss.sealing) return;                                    // held still through the sealing
+  if(typeof updateVathBoss==='function') updateVathBoss(boss,dt);
 }
 function genMainAll(){
   genMainland(); bakeSolids(); placeObjectsMain(); buildFoam();

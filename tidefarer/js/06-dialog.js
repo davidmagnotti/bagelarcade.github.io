@@ -355,6 +355,22 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
+  // THE ENDING: at the dawn celebration, Jaist offers you the throne at his side. You want the
+  // horizon, not a crown - so he takes it, and asks one last favour that points past every chart.
+  if(npc.id==='brother' && P.story && P.story.gameWon){
+    const toCredits=()=>{ closeDialog(); if(typeof rollCredits==='function') rollCredits();
+      else if(typeof banner==='function') banner('THE SHADOW IS SEALED','THE END — FOR NOW'); };
+    const favour=()=>setDialog('<i>He settles the stolen crown onto his own brow - and for the first time it looks like it belongs there. Then he grins, the old scheming-brother grin.</i> “So. One favour, before you go. Those charts Old Mabley keeps swearing about - black water past Stormreach, isles no living hand has named - they\'re real. I\'ve seen the soundings. Something out there is stirring, sister, the way something stirred here.” <i>He grips your arm.</i> “Go and see. Free whatever needs freeing. And come home and tell me all of it - I\'ll keep the lamp lit and the sea-road open.” <b style="color:var(--ember)">Beyond the charted isles, a new tide is rising. (Act III — coming soon.)</b>',
+      [{label:'I\'ll send word from the edge of the map', cls:'gold', fn:toCredits}]);
+    const takeIt=()=>setDialog('<i>Old Mabley, three steps down, isn\'t even pretending not to listen.</i> “There\'s black water past Stormreach, majesty-to-be,” <i>he calls up.</i> “Charts washed in from the deep. Isles with no names on them - and no warrior on them either.” <i>Jaist looks from the old sailor to you, and something passes between the two of you that needs no words: you both know exactly where you\'ll be within the month.</i> “Then I\'ll keep the throne warm,” <i>he says softly.</i> “Somebody has to. It was always going to be me - the reader, not the blade.”',
+      [{label:'You\'ll be a good king, Jaist', fn:favour}]);
+    const decline=()=>setDialog('<i>You shake your head before he\'s even done asking, and he laughs, because of course he knew.</i> “No. I didn\'t come all this way across every sea in the world to sit still on a chair, Jaist - not even a gold one. You were always the one who loved these halls. I love what\'s past the harbour wall.” <i>He nods, unsurprised, a little proud.</i> “The tide keeps throwing you back out to it, doesn\'t it.”',
+      [{label:'Someone has to see what\'s out there', fn:takeIt}]);
+    setDialog('<i>Jaist waits for you at the foot of the palace stair, the whole freed sea cheering at his back. He looks at you a long moment - the sister who went into the dark for him and came back out.</i> “We did it. Both of us, home, and the shadow in the stone.” <i>His voice goes careful.</i> “Father\'s throne stands empty, Joan. By blood it\'s yours before it\'s mine - you\'re the elder. Rule with me. Aldermere would follow you into the sea and back.”',
+      [{label:'Take the throne? Not me.', cls:'gold', fn:decline},
+       {label:'Hear him out', fn:decline}]);
+    return;
+  }
   // Old Wend on the plaza steps of the Act II capital: ask why the watch is gone and he tells
   // you the King has withdrawn into himself and dismissed the whole garrison. Quiet foreboding
   // for the reckoning still ahead - no guards left in Aldermere.

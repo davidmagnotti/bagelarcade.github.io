@@ -135,6 +135,29 @@ function enterReturnPhase(){
   if(G.worldId && typeof WORLD_DEFS!=='undefined' && WORLD_DEFS[G.worldId] && !WORLD_DEFS[G.worldId].dungeon) regenWorld(G.worldId);
   ui(); note('Act II return phase set: Veil + 4 gifts, old isles refreshed');
 }
+// Arm THE RECKONING (the Act II Vath finale) and drop you in the fallen capital: set the seal
+// learned + clear any prior win, then teleport to Aldermere. Walk up to the throne to spring it.
+function armReckoning(){
+  P.story=P.story||{}; P.prog=P.prog||{};
+  P.story.act=Math.max(P.story.act||1,2); P.story.act2=1; P.story.unmasked=1; P.story.royalGarb=1;
+  P.story.act1End=1; P.story.sealTome=1; P.story.sealLearned=1;
+  ['vathDown','vathSealed','gameWon','finale','crownDawn'].forEach(f=>{ delete P.story[f]; });
+  delete P.prog.celebrationSeen; delete P.prog.dawnRoom;
+  G._vathIntro=0; G._vathFire=0;
+  if(typeof WORLDS!=='undefined') delete WORLDS.crown;
+  if(typeof tp==='function') tp('crown'); else if(typeof switchWorld==='function') switchWorld('crown');
+  note('Reckoning armed - walk up to the throne room');
+}
+// Skip straight to the victory dawn: mark the shadow sealed and drop into the celebrating capital.
+function skipToDawn(){
+  P.story=P.story||{}; P.prog=P.prog||{};
+  P.story.act=Math.max(P.story.act||1,2); P.story.act2=1; P.story.unmasked=1; P.story.royalGarb=1;
+  P.story.act1End=1; P.story.sealLearned=1; P.story.vathDown=1; P.story.vathSealed=1; P.story.gameWon=1; P.story.finale=1;
+  P.prog.dawnRoom=1; delete P.prog.celebrationSeen;   // so the arrival beat plays when you land
+  if(typeof WORLDS!=='undefined') delete WORLDS.crown;
+  if(typeof tp==='function') tp('crown'); else if(typeof switchWorld==='function') switchWorld('crown');
+  note('Skipped to the dawn celebration');
+}
 /* ---- dungeons: toggle each dungeon's WON state either way ---- */
 const DUNGEONS=[
   ['Rimefissure', 'frostdeep', 'deepDone'],       // frost boss (Rimebound) freed
@@ -395,6 +418,8 @@ const SECTIONS=[
     ['Vath BOUND (Act I villain sealed)',()=>playCutscene('vath')],
     ['The TOME BURNS (aerie freed)',()=>playCutscene('aerie')],
     ['The WARDING VEIL (Jaist casts)',()=>playCutscene('veil')],
+    ['⚔ THE RECKONING - arm Vath finale + go',()=>armReckoning()],
+    ['✓ Skip to the DAWN celebration',()=>skipToDawn()],
   ]],
   // Free = mark defeated; Reset = un-defeat (stand the boss back up). One tidy
   // section instead of two. (The deep-dungeon bosses have their own toggles below.)
