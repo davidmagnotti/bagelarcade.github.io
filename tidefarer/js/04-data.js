@@ -234,6 +234,17 @@ function spawnNPCs(){
   // Pip the cat
   G.cat = {x:34.5, y:31.5, face:1, anim:0, wt:2, found:false, home:{x:34.5,y:31.5}};
 }
+// Once Jaist has remembered he is the prince (royalGarb), he never stands at the woodpile
+// again: he keeps the boat and the way home, down at Emberwick's western landing. Both the
+// unmasking (06-dialog.js) and every Act II return to a CACHED Emberwick call this on the
+// live Woodworker NPC, so a copy generated back in Act I - still standing at his old woodpile
+// with its home-post (hx,hy) pinned there - is walked down to the water and stays there.
+function jaistToBoat(w){
+  if(!w) return;
+  const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
+  w.x=sp[0]+0.5; w.y=sp[1]+0.5; w.hx=w.x; w.hy=w.y; w.tx=null; w.ty=null;
+  w.hums=false; w.wander=0; w.face={x:-1,y:0};   // watching the water, holding the landing - no woodpile, no humming
+}
 
 /* ---------- mobs ---------- */
 const MOBDEF = {

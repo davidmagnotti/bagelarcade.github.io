@@ -7194,6 +7194,14 @@ function switchWorld(id){
   // in hand. Run on EVERY isle entry (Emberwick is cached, so a fresh regen may never fire
   // after the last gift lands) - placeEmberTomb self-guards against double-placing.
   if(id==='isle' && typeof placeEmberTomb==='function') placeEmberTomb();
+  // Jaist has left the woodpile for good once the mask is off (royalGarb). Emberwick is cached
+  // from Act I, though, so a return in Act II can restore a Woodworker NPC still parked at his
+  // old woodpile - "stuck by the wood pile again." Walk him down to the boat on every isle
+  // entry; jaistToBoat is idempotent, so it's harmless when he's already there. (Fresh regens
+  // spawn him at the boat.)
+  if(id==='isle' && P.story && P.story.royalGarb && typeof jaistToBoat==='function'){
+    jaistToBoat((G.npcs||[]).find(n=>n.id==='woody'));
+  }
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
   // chain below is the one exception, left armed on purpose).
   if(id==='main' && !P.quests.mossbrew && !(P.story&&P.story.act2)) P.quests.mossbrew='avail';

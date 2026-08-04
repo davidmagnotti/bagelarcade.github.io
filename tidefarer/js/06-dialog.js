@@ -288,11 +288,12 @@ function buildDialogContent(npc){
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
       // Jaist has remembered he is the prince: he leaves the woodpile for good this instant.
-      // Neutralise the live Woodworker NPC so he no longer hums his logs or paces the yard -
-      // he holds the boat and the way home now, not a woodcutter dancing. (On the next Act II
-      // landing spawnNPCs re-places him down at the boat; this just stops the stale dance
-      // between the reveal and that regen.)
-      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(w){ w.hums=false; w.wander=0; w.tx=null; } }
+      // Walk the live Woodworker NPC down to the boat so he no longer hums his logs or paces
+      // the yard - he holds the way home now, not a woodcutter dancing. jaistToBoat also moves
+      // his home-post (hx,hy), so the wander/separation tether can't drag him back uphill to the
+      // woodpile. (Fresh Act II regens spawn him at the boat via spawnNPCs; the cached-Emberwick
+      // case is caught again on isle entry in switchWorld, so he is never stranded at the woodpile.)
+      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(typeof jaistToBoat==='function') jaistToBoat(w); else if(w){ w.hums=false; w.wander=0; w.tx=null; } }
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
@@ -347,9 +348,10 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // Act II teaser, once Act I has closed on the capital.
+  // Act II underway: Jaist keeps the boat on Emberwick and the way home while the princess
+  // pulls Vath's hooks out of the old isles and hunts down the working that can bind him.
   if(npc.id==='woody' && P.story && P.story.act1End){
-    setDialog('<i>Your brother stands at the tideline, looking east past every isle you know.</i> “Father bought us this - don\'t waste it grieving. Vath has the Tideglass magic now, and we don\'t have the strength to take it back. Not yet.” <i>He almost smiles.</i> “So we go and get strong. There are isles out past the charts, and allies we haven\'t made. When we come back for him, we come back ready. <b style="color:var(--ember)">(Act II - coming soon.)</b>”',
+    setDialog('<i>Your brother stands at the tideline, one hand near the axe, looking east past every isle you know.</i> “Father bought us this - so don\'t waste it grieving. Vath holds the Tideglass magic and the old islands both, and we don\'t have the strength to take them back yet. So we go and get it.” <i>He almost smiles.</i> “Pull his hooks out of the isles, sister - island by island, the way you always could. Somewhere out past the charts is the thing that binds him for good. Bring me anything written in the old hand, and I\'ll read us the rest of the way. I\'ll keep the boat.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
@@ -374,7 +376,7 @@ function buildDialogContent(npc){
       if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
       if(typeof autoSave==='function') autoSave();
       if(typeof sailEpilogue==='function') sailEpilogue();
-      else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Act II - coming soon.</b>',10000);
+      else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Set your prow for Stormreach, and Act II.</b>',10000);
     };
     setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, my firstborn, that I gave to the water with my own blind hand. And you-” <i>his voice fails on the prince.</i> “...Jaist. My boy. Both of you. Alive.”',
       [{label:'We came home, Father.', cls:'gold', fn:toCutscene}]);
