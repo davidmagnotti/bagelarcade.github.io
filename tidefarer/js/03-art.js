@@ -1036,7 +1036,7 @@ function drawHumanoid(g,sx,sy,o){
   const hc=o.hair||'#3a2a1a', skin=o.skin||'#d8a97a';
   const shirt=o.robe? o.robe : (o.shirt||'#7a5f43');
   const pants=o.pants||'#4a3d30';
-  const OUT='rgba(24,16,10,0.85)';
+  const OUT='rgba(20,12,7,0.95)';   // crisper, near-opaque ink line - sharper silhouette everywhere
   // facing
   const dx=o.dir?o.dir.x:0.7, dy=o.dir?o.dir.y:0.7;
   const scrX=dx-dy, scrY=(dx+dy)*0.5;
@@ -1287,7 +1287,7 @@ function drawHumanoid(g,sx,sy,o){
     }
   } else {
     const bg2=g.createLinearGradient(0,-26,0,-6);
-    bg2.addColorStop(0,shade(shirt,11)); bg2.addColorStop(0.6,shirt); bg2.addColorStop(1,shade(shirt,-11));
+    bg2.addColorStop(0,shade(shirt,15)); bg2.addColorStop(0.55,shirt); bg2.addColorStop(1,shade(shirt,-15));  // punchier torso volume
     g.fillStyle=bg2;
     g.beginPath();
     g.moveTo(-8.2,-23.5+B);
@@ -1297,7 +1297,7 @@ function drawHumanoid(g,sx,sy,o){
     g.quadraticCurveTo(0,-26.5+B, -8.2,-23.5+B);
     g.closePath(); g.fill();
     g.strokeStyle=OUT; g.lineWidth=1.9; g.stroke();
-    g.strokeStyle='rgba(255,240,208,0.30)'; g.lineWidth=1.5; // modern rim light
+    g.strokeStyle='rgba(255,242,212,0.42)'; g.lineWidth=1.6; // brighter rim light - sharper edge highlight
     g.beginPath(); g.arc(-2.6,-16.5+B,7.2,Math.PI*0.95,Math.PI*1.4); g.stroke();
     g.fillStyle=shade(shirt,-6); // tunic hem flares over the hips
     g.beginPath();
@@ -1458,7 +1458,7 @@ function drawHumanoid(g,sx,sy,o){
   const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
   // ball with soft top-light - round, not flat
   const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
-  hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
+  hg.addColorStop(0,shade(skin,17)); hg.addColorStop(0.6,skin); hg.addColorStop(1,shade(skin,-15));  // crisper light-to-shadow falloff on the skull
   g.fillStyle=hg;
   g.beginPath(); // wide cranium narrowing through the cheeks to a soft chin
   g.ellipse(0,-1.5,HR,HRY*0.92,0,Math.PI,0);
@@ -1569,24 +1569,32 @@ function drawHumanoid(g,sx,sy,o){
       } else {
         for(const e of [-1,1]){
           const ex2=e*eSp+fx*0.9;
-          g.fillStyle='#17100a'; // round button eyes - level and friendly
+          g.fillStyle='#140d07'; // alert eyes - a touch bigger & inkier than the old buttons
           g.beginPath();
-          g.arc(ex2,eyeY,2.15,0,TAU);
+          g.arc(ex2,eyeY,2.32,0,TAU);
           g.fill();
-          g.fillStyle='rgba(255,255,255,0.92)';
-          g.beginPath(); g.arc(ex2-0.6,eyeY-0.9,0.58,0,TAU); g.fill();
-          g.fillStyle='rgba(255,255,255,0.35)';
-          g.beginPath(); g.arc(ex2+0.55,eyeY+0.8,0.28,0,TAU); g.fill();
+          // a crisp upper-lash line caps each eye - the single biggest 'sharper & more
+          // expressive' read, giving the gaze a defined lid instead of a soft dot
+          g.strokeStyle='#140d07'; g.lineWidth=1.0; g.lineCap='round';
+          g.beginPath(); g.moveTo(ex2-2.4,eyeY-1.65); g.quadraticCurveTo(ex2,eyeY-2.75, ex2+2.4,eyeY-1.45); g.stroke();
+          g.lineCap='butt';
+          g.fillStyle='rgba(255,255,255,0.95)'; // bright primary catchlight - lively, glossy
+          g.beginPath(); g.arc(ex2-0.7,eyeY-1.0,0.9,0,TAU); g.fill();
+          g.fillStyle='rgba(255,255,255,0.4)';  // secondary sparkle low-right
+          g.beginPath(); g.arc(ex2+0.75,eyeY+0.95,0.34,0,TAU); g.fill();
         }
       }
-      // filled tapered brows, tilted by mood
-      g.fillStyle='#2e2418';
-      const bT= (o.expr==='battle')? 1.6 : (o.expr==='hurt')? -1.3 : (o.expr==='happy')? -0.7 : 0;
+      // filled tapered brows, tilted by mood - darker & bolder so each mood reads at a
+      // glance (battle scowls hard, hurt/happy lift), and a whisper of arch on calm so the
+      // neutral face looks awake rather than blank. They also sit a touch lower & closer to
+      // the eyes, which pushes the expression forward.
+      g.fillStyle='#241812';
+      const bT= (o.expr==='battle')? 2.3 : (o.expr==='hurt')? -1.7 : (o.expr==='happy')? -1.0 : -0.25;
       for(const e of [-1,1]){
         g.beginPath();
-        g.moveTo(e*(eSp+2.5)+fx,-6.3-bT*0.4);
-        g.quadraticCurveTo(e*eSp+fx,-8.1+bT*0.3, e*(eSp-2.5)+fx,-6.7+bT);
-        g.quadraticCurveTo(e*eSp+fx,-7.2+bT*0.3, e*(eSp+2.5)+fx,-5.8-bT*0.4);
+        g.moveTo(e*(eSp+2.7)+fx,-5.9-bT*0.4);
+        g.quadraticCurveTo(e*eSp+fx,-7.9+bT*0.32, e*(eSp-2.7)+fx,-6.4+bT);
+        g.quadraticCurveTo(e*eSp+fx,-6.9+bT*0.32, e*(eSp+2.7)+fx,-5.2-bT*0.4);
         g.closePath(); g.fill();
       }
       // button nose with a light catch
@@ -1597,8 +1605,9 @@ function drawHumanoid(g,sx,sy,o){
       // the mouth carries the mood
       g.strokeStyle='#5a3a28'; g.lineCap='round';
       if(o.expr==='battle'){
-        g.lineWidth=1.4;
-        g.beginPath(); g.moveTo(fx*0.4-2.1,4.5); g.lineTo(fx*0.4+2.1,4.5); g.stroke();
+        // a firm, faintly downturned set - gritted determination, not a blank line
+        g.lineWidth=1.5; g.strokeStyle='#4a2e1e';
+        g.beginPath(); g.moveTo(fx*0.4-2.3,4.3); g.quadraticCurveTo(fx*0.4,3.8, fx*0.4+2.3,4.3); g.stroke();
       } else if(o.expr==='hurt'){
         g.lineWidth=1.3;
         g.beginPath();
@@ -1614,9 +1623,10 @@ function drawHumanoid(g,sx,sy,o){
         g.closePath(); g.fill();
         g.lineWidth=1.1; g.strokeStyle='rgba(30,18,12,0.6)'; g.stroke();
       } else {
-        g.lineWidth=1.05; g.strokeStyle='rgba(90,58,40,0.75)';
+        // a soft, gently upturned line - a quiet contentment, warmer than the old flat stub
+        g.lineWidth=1.15; g.strokeStyle='rgba(84,52,36,0.8)';
         g.beginPath();
-        g.moveTo(fx*0.4-1.6,4.4); g.lineTo(fx*0.4+1.6,4.4); // quiet, neutral
+        g.moveTo(fx*0.4-1.9,4.3); g.quadraticCurveTo(fx*0.4,5.1, fx*0.4+1.9,4.3);
         g.stroke();
       }
       g.lineCap='butt';
