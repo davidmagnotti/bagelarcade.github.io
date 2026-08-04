@@ -618,7 +618,7 @@ function skyVathTaunt(){
   vathGhostPortrait();
   const p3=()=>{ setDialog('<b style="color:#c9a0ff">"No matter. The high wind will wear you thin where I need not lift a hand."</b> <i>The violet frays apart on the gale.</i>',
     [{label:'…', cls:'gold', fn:disperse}]); };
-  const p2=()=>{ setDialog('<b style="color:#c9a0ff">"You should have slain that wretched dragon when I bade you. But you never do listen, do you?"</b> <i>The apparition drifts a little closer, patient as a spider on the wind.</i>',
+  const p2=()=>{ setDialog('<b style="color:#c9a0ff">"You had that wretched wyrm at your throat and you set it loose - freed my own puppet, the way your blood always coddles the thing I sent to gut it. Enough. Turn back, or the sky will finish what the dragon could not."</b> <i>The apparition drifts a little closer, patient as a spider on the wind.</i>',
     [{label:'I don\'t take orders from a ghost.', fn:p3}]); };
   setDialog('<i>The rainbow dims. A knot of violet gathers on the wind ahead of you and unspools into a shape you know too well - Vath, or the ghost of him, hanging in the air with that patient half-smile.</i> <b style="color:#c9a0ff">"…Up here, of all places. You ARE a busy little tide."</b>',
     [{label:'What do you want, Vath?', fn:p2}]);
