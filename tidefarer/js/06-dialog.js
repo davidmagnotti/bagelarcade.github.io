@@ -351,7 +351,7 @@ function buildDialogContent(npc){
   // Act II underway: Jaist keeps the boat on Emberwick and the way home while the princess
   // pulls Vath's hooks out of the old isles and hunts down the working that can bind him.
   if(npc.id==='woody' && P.story && P.story.act1End){
-    setDialog('<i>Your brother stands at the tideline, one hand near the axe, looking east past every isle you know.</i> “Father bought us this - so don\'t waste it grieving. Vath holds the Tideglass magic and the old islands both, and we don\'t have the strength to take them back yet. So we go and get it.” <i>He almost smiles.</i> “Pull his hooks out of the isles, sister - island by island, the way you always could. Somewhere out past the charts is the thing that binds him for good. Bring me anything written in the old hand, and I\'ll read us the rest of the way. I\'ll keep the boat.”',
+    setDialog('<i>Your brother stands at the tideline, one hand near the axe, looking east past every isle you know.</i> “Father bought us this - so don\'t waste it grieving. Vath holds the old islands now, and we don\'t have the strength to take them back yet. So we go and get it.” <i>He almost smiles.</i> “Pull his hooks out of the isles, sister - island by island, the way you always could. Somewhere out past the charts is the thing that binds him for good. Bring me anything written in the old hand, and I\'ll read us the rest of the way. I\'ll keep the boat.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
