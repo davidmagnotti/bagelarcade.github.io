@@ -12,7 +12,7 @@
    The beats:
      * the pale mask lifts from her face and shatters, the grey amnesia fog
        tearing loose with it
-     * a boat pitching in the black water - her mother singing, her little
+     * a boat pitching in the black water - the storm, her little
        brother screaming, her arm across him like a bar of iron
      * Vath, robed in violet fire, prising her name out of her and sealing the
        mask over her face
@@ -55,7 +55,7 @@ const MR_BEATS = [
     mask:0, fog:0.4, gold:0.5, shatter:1, flash:1.1, shake:0.6 },
   // the boat memory surfaces (wordless)
   { who:'', html:'', mem:'boat', fog:0.3, gold:0.55, hold:1600 },
-  { who:'', html:'<i>A deck pitching in the black water. Your mother’s voice, singing low. Your little brother — small, screaming — and your arm thrown across him like a bar of iron.</i>',
+  { who:'', html:'<i>A deck pitching in the black water. Cold rain, and the mast groaning overhead. Your little brother — small, screaming — and your arm thrown across him like a bar of iron.</i>',
     mem:'boat', gold:0.6 },
   // Vath and the curse (wordless punch)
   { who:'', html:'', mem:'curse', fog:0.32, gold:0.4, violet:0.9, flash:0.9, shake:0.7, hold:1700 },
@@ -311,7 +311,7 @@ function mrPorthole(x,y,rw,rh,alpha,inner){
   cx.restore();
 }
 
-// the boat pitching in the black water: mother's song, brother's scream
+// the boat pitching in the black water: the storm, brother's scream
 function mrBoat(x,y,s,t){
   const cx=MR.cx;
   const hy=y+s*0.18;
