@@ -288,11 +288,17 @@ function buildDialogContent(npc){
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
       // Jaist has remembered he is the prince: he leaves the woodpile for good this instant.
-      // Neutralise the live Woodworker NPC so he no longer hums his logs or paces the yard -
-      // he holds the boat and the way home now, not a woodcutter dancing. (On the next Act II
-      // landing spawnNPCs re-places him down at the boat; this just stops the stale dance
-      // between the reveal and that regen.)
-      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(w){ w.hums=false; w.wander=0; w.tx=null; } }
+      // Silence his humming, stop his pacing, and move the live Woodworker NPC down to the
+      // boat and the tideline - the watch he keeps for the rest of Act I and every Act II
+      // return home - so he is never again seen at the woodcutter's section once his name is
+      // his own. (On the next Act II landing spawnNPCs re-places him at this same boat; this
+      // makes the move happen the instant he remembers, not only after the next sail.)
+      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody');
+        if(w){
+          w.hums=false; w.wander=0; w.tx=null; w.ty=null;
+          const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
+          w.x=sp[0]+0.5; w.y=sp[1]+0.5; w.hx=w.x; w.hy=w.y; w.face={x:-1,y:0}; w.nightOwl=true;
+        } }
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
@@ -349,7 +355,7 @@ function buildDialogContent(npc){
   }
   // Act II teaser, once Act I has closed on the capital.
   if(npc.id==='woody' && P.story && P.story.act1End){
-    setDialog('<i>Your brother stands at the tideline, looking east past every isle you know.</i> “Father bought us this - don\'t waste it grieving. Vath has the Tideglass magic now, and we don\'t have the strength to take it back. Not yet.” <i>He almost smiles.</i> “So we go and get strong. There are isles out past the charts, and allies we haven\'t made. When we come back for him, we come back ready. <b style="color:var(--ember)">(Act II - coming soon.)</b>”',
+    setDialog('<i>Your brother stands at the tideline, looking east past every isle you know.</i> “Vath has the Tideglass magic now, and we don\'t have the strength to take it back. Not yet.” <i>He almost smiles.</i> “So we go and get strong. There are isles out past the charts, and allies we haven\'t made. When we come back for him, we come back ready. <b style="color:var(--ember)">(Act II - coming soon.)</b>”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
