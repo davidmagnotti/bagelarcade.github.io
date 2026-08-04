@@ -15,6 +15,10 @@ let ZONES = {
   forest: {x:33,y:38,r:9,  name:'Whisperwood'},
   grove:  {x:96,y:50,r:6,  name:"Rask's Grove"}
 };
+// The Tideward Crypt was moved off the northern Old Ruins to the isle's SOUTHERN shore - a
+// founders' ruin at the bottom of Emberwick, past Willa's farm. genWorld carves this clearing
+// and a path down to it so the crypt mouth (placeEmberTomb) always lands on reachable ground.
+const ISLE_TOMB = {x:52, y:82};
 
 /* The Hollow Spirit's arena, at the isle's cold northern tip. The ruins reach
    far north; a stretch of open grass and a few warning-boards lead up to a
@@ -87,6 +91,11 @@ function genWorld(){
   carveDisc(ZONES.cove.x,ZONES.cove.y,ZONES.cove.r,T.GRASS,false);
   carveDisc(ZONES.cove.x+2,ZONES.cove.y-2,3,T.SAND,false);
   carveDisc(ZONES.orchard.x,ZONES.orchard.y,ZONES.orchard.r,T.GRASS,false);
+  // the Tideward Crypt's southern site: a founders' ruin-clearing at the bottom shore, ringed
+  // by a thin beach so it reads as the isle's southern point (the crypt mouth is dropped here
+  // by placeEmberTomb once all four gifts are in hand).
+  carveDisc(ISLE_TOMB.x,ISLE_TOMB.y,7,T.SAND,false);
+  carveDisc(ISLE_TOMB.x,ISLE_TOMB.y,5,T.RUIN,false);
   // --- Rask's Grove: the island's FAR-EAST woods, carved out past the Slime Meadow.
   // The coastline is pushed east here (carveDisc lays land straight over open sea) into
   // a little forest with a grass clearing at its heart, where the blade-master Rask
@@ -107,6 +116,7 @@ function genWorld(){
   carveLine(ZONES.meadow.x+3,ZONES.meadow.y, ZONES.grove.x,ZONES.grove.y, T.PATH,1);   // a broad dirt path east, past the meadow, right into Rask's clearing
   carveLine(V.x,V.y-3, ZONES.tower.x,ZONES.tower.y+2, T.PATH,0);
   carveLine(ZONES.tower.x,ZONES.tower.y-2, ZONES.ruins.x,ZONES.ruins.y+6, T.PATH,0);
+  carveLine(ZONES.farm.x,ZONES.farm.y+2, ISLE_TOMB.x,ISLE_TOMB.y-3, T.PATH,0);   // the way down to the southern crypt-ruin
   // farm soil plots (two rows of plots, south of Willa's barn, with walking gaps).
   // Kept aligned under the barn's new southern berth (see placeObjects), so the whole
   // farm reads as one steading well clear of Bram's forge up the lane.

@@ -6611,7 +6611,7 @@ function placeEmberTomb(){
   if(!haveAllFourGifts()) return;
   if(G.worldId && G.worldId!=='isle') return;   // only the Emberwick surface carries the mouth
   if(G.decor.some(d=>d.kind==='dungeonmouth' && d.deepworld==='embertomb')) return;
-  const Z=(typeof ISLE_ZONES!=='undefined' && ISLE_ZONES.ruins) ? ISLE_ZONES.ruins : {x:46,y:20};
+  const Z=(typeof ISLE_TOMB!=='undefined' && ISLE_TOMB) ? ISLE_TOMB : {x:52,y:82};   // the isle's SOUTHERN shore (moved off the northern Old Ruins)
   const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x), Math.round(Z.y), 14)) || null;
   if(sp && inb(sp[0],sp[1])){
     for(let y=sp[1]-1;y<=sp[1]+1;y++) for(let x=sp[0]-1;x<=sp[0]+1;x++) if(inb(x,y) && walkTile(tileAt(x,y))) setTile(x,y,T.PATH);
@@ -6625,7 +6625,7 @@ function placeEmberTomb(){
     if(typeof invalidateScenery==='function') invalidateScenery();
     if(typeof buildMapBase==='function') buildMapBase();
     if(!(P.story && P.story.tidewardSeen)){ P.story=P.story||{}; P.story.tidewardSeen=1;
-      if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">With all four gifts in hand, the ground splits open at the Old Ruins.</b> A founders\' stair winds down into <b>the Tideward Crypt</b> - up at the <b>Old Ruins, north of Orin\'s tower</b>, where the last ward was sealed. Go down when you\'re ready.',8500), 700); }
+      if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">With all four gifts in hand, the ground splits open at the isle\'s southern shore.</b> A founders\' stair winds down into <b>the Tideward Crypt</b> - at the <b>ruins on Emberwick\'s southern point, past Willa\'s farm</b>, where the last ward was sealed. Go down when you\'re ready.',8500), 700); }
   }
 }
 function beginOpenChest(b){
