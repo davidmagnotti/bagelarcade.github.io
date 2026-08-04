@@ -641,14 +641,14 @@ function drawNode(n,s){
   if(n.gate && !n.gone && typeof drawGateAura==='function') drawGateAura(n,s);
   if(n.kind==='tree' && n.palm){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
-    const TS=1.08;   // stand a touch taller so palms read as raised out of the ground
-    if(typeof drawTreeCast==='function') drawTreeCast(SPR.palm[n.variant%3], s.x, s.y, TS);
+    const TSX=1.10, TSY=1.24;   // stand taller (height-biased) so palms read as raised out of the ground
+    if(typeof drawTreeCast==='function') drawTreeCast(SPR.palm[n.variant%3], s.x, s.y, TSX, TSY);
     else drawShadowAt(cx,s.x,s.y,15);
     const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.7+n.sway)*1.1;
     const dmg = n.maxhp? 1-n.hp/n.maxhp : 0;
     cx.save(); cx.translate(s.x+sh*0.3, s.y);
     cx.rotate(sh*0.004 + dmg*0.06*(n.sway>Math.PI?-1:1));
-    cx.scale(TS,TS);
+    cx.scale(TSX,TSY);
     cx.drawImage(SPR.palm[n.variant%3], -52, -104);
     if(dmg>0){ // axe notch in the trunk
       cx.fillStyle='#e8dcbd';
@@ -661,14 +661,14 @@ function drawNode(n,s){
   }
   if(n.kind==='tree'){
     if(n.dead){ cx.drawImage(SPR.stump, s.x-42, s.y-96); return; }
-    const TS = n.big ? 1.24 : 1.09;   // stand a touch taller so trees feel raised, not decals on the grass
-    if(typeof drawTreeCast==='function') drawTreeCast(SPR.tree[n.variant], s.x, s.y, TS);
+    const TSX = n.big ? 1.24 : 1.12, TSY = n.big ? 1.46 : 1.28;   // stand clearly taller (height-biased) so trees feel raised, not decals on the grass
+    if(typeof drawTreeCast==='function') drawTreeCast(SPR.tree[n.variant], s.x, s.y, TSX, TSY);
     else drawShadowAt(cx,s.x,s.y,16);
     const sh = n.shake? Math.sin(G.time*40)*3*n.shake*4 : Math.sin(G.time*0.8+n.sway)*1.2;
     const dmg = 1 - n.hp/n.maxhp;
     cx.save(); cx.translate(s.x+sh*0.3,s.y);
     cx.rotate(sh*0.004 + dmg*0.07*(n.sway>Math.PI?-1:1));
-    cx.scale(TS,TS);
+    cx.scale(TSX,TSY);
     cx.drawImage(SPR.tree[n.variant], -42, -96);
     if(dmg>0){ // axe notch in the trunk
       cx.fillStyle='#e8dcbd';

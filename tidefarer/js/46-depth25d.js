@@ -154,8 +154,13 @@ function _d25cloudBank(baseY, amp, period, parX, seed, tint, alpha){
    ===================================================================== */
 
 /* which decor kinds get the silhouette cast (standing walls with a footprint) */
-const _D25_CAST = {house:1,house2:1,barn:1,forge:1,hut:1,stormhut:1,igloo:1,tower:1,bazaar:1};
+const _D25_CAST = {house:1,house2:1,barn:1,forge:1,hut:1,stormhut:1,igloo:1,tower:1,bazaar:1,castle:1};
 function buildingCasts(kind){ return !!_D25_CAST[kind]; }
+/* TALL structures whose shadow length may grow with their real height - a wizard
+   tower or a castle throws a long cast. Everything else is "short" and gets a
+   modest, height-independent shadow (a house and a hut drop the same one, and it
+   never looms taller than the wall it belongs to). */
+const _D25_TALL = {tower:1, castle:1};
 
 /* Black silhouette of a sprite, cached on the sprite canvas itself (baked once
    per sprite, so it costs a single extra drawImage per building per frame). */
@@ -186,11 +191,14 @@ function _d25sun(){
 }
 
 /* Core planar cast: the sprite's silhouette, hinged at (cx0,footY), folded back
-   onto the ground. `flat` is the cast length as a MULTIPLE of sprite height (>1
-   rises past the top of the sprite, so it emerges BEHIND it up-screen rather than
-   being hidden by the sprite drawn on top); `shear` leans it to the back-side. */
-function _d25fold(S, cx0, footY, w, h, flat, shear, alpha){
-  if(alpha<0.03) return;
+   onto the ground so it lies up-screen (BEHIND the sprite). `castLen` is the
+   shadow's length in PIXELS and `lean` is its sideways slope (x per unit of that
+   length, signed) - both expressed against the cast, NOT the sprite height, so a
+   short hut and a giant castle behave sanely. */
+function _d25fold(S, cx0, footY, w, h, castLen, lean, alpha){
+  if(alpha<0.03 || castLen<1) return;
+  const flat  = castLen / h;               // Y-scale that turns the h-tall silhouette into a castLen-tall shadow
+  const shear = lean * flat;               // so the top shifts by lean*castLen, independent of sprite height
   const g=cx;
   g.save();
   g.globalAlpha=alpha;
@@ -204,21 +212,29 @@ function _d25fold(S, cx0, footY, w, h, flat, shear, alpha){
    point; the sprite is drawn with its foot at s.y+~10, spanning S.height*BS up. */
 function drawBuildingShadow(b,S,s,BS){
   const {low,dir,night}=_d25sun();
-  const flat  = 0.78 + low*0.5;            // cast length as a multiple of sprite height (~>1 => past the roof)
-  const shear = dir*(0.55 + low*0.35);     // lateral lean, so it emerges to the back-SIDE, not straight up over the roof
-  _d25fold(S, s.x, s.y+6, S.width*BS, S.height*BS, flat, shear, 0.28*(1-0.5*Math.min(1,night)));
+  const h=S.height*BS, w=S.width*BS;
+  let castLen;
+  if(_D25_TALL[b.kind]){
+    // tall structures throw a shadow that grows with their real height
+    castLen = h*(0.9 + low*0.55);
+  } else {
+    // short buildings: a modest, height-INDEPENDENT cast that never looms taller
+    // than the wall it belongs to (so it reads grounded, not like a second building)
+    castLen = Math.min(58 + low*54, h*0.92);
+  }
+  castLen = Math.min(castLen, 360);         // safety cap so a giant landmark can't shadow half the map
+  _d25fold(S, s.x, s.y+6, w, h, castLen, dir*(0.6 + low*0.35), 0.28*(1-0.5*Math.min(1,night)));
 }
 
 /* Draw the cast shadow for a tree/foliage node. Same fold, tuned a touch shorter
-   and fainter than a building's - a canopy shadow gets long and heavy fast, and
-   forests overlap. `cx0`,`footY` are the trunk foot; `scale` matches the (slightly
-   taller) sprite scale so the shadow tracks the canopy. */
-function drawTreeCast(S, cx0, footY, scale){
+   and fainter than a building's - a canopy shadow gets heavy fast and forests
+   overlap. `cx0`,`footY` are the trunk foot; `sx`,`sy` match the (taller) sprite
+   scale so the shadow tracks the canopy. */
+function drawTreeCast(S, cx0, footY, sx, sy){
   if(!S) return;
   const {low,dir,night}=_d25sun();
-  const flat  = 0.60 + low*0.42;
-  const shear = dir*(0.50 + low*0.34);
-  _d25fold(S, cx0, footY, S.width*scale, S.height*scale, flat, shear, 0.20*(1-0.5*Math.min(1,night)));
+  const h=S.height*sy;
+  _d25fold(S, cx0, footY, S.width*sx, h, h*(0.62 + low*0.4), dir*(0.55 + low*0.34), 0.20*(1-0.5*Math.min(1,night)));
 }
 
 /* ---- 2: parallax horizon, drawn on the backdrop before the ground ---- */
