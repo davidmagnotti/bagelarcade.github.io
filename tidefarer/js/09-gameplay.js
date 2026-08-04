@@ -1670,6 +1670,19 @@ function updateNPCs(dt){
     n.hidden = hide;
   }
   for(const n of G.npcs){
+    // A story companion (the prince, walking the capital at your side during Act I's
+    // homecoming) trails the player like Pip instead of holding a post: never
+    // night-hidden, and skipping the wander/separation that tethers everyone else home.
+    if(n.follow){
+      n.hidden=false;
+      if(!dlg.open){
+        const d=dist(n.x,n.y,P.x,P.y);
+        if(d>1.5){ const dx=P.x-n.x, dy=P.y-n.y, l=Math.hypot(dx,dy)||1;
+          moveEntity(n, dx/l*Math.min(4.5,d*2.2)*dt, dy/l*Math.min(4.5,d*2.2)*dt);
+          n.anim+=dt*7; n.face={x:dx/l,y:dy/l}; }
+      }
+      continue;
+    }
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
     if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)
@@ -1696,7 +1709,7 @@ function updateNPCs(dt){
   if(!dlg.open){
     const SEP=1.5, SEPV=0.85;
     for(const n of G.npcs){
-      if(n.hidden || n.throne) continue;
+      if(n.hidden || n.throne || n.follow) continue;   // a follower tracks the player, not a home post
       let px=0, py=0, near=0;
       for(const m of G.npcs){
         if(m===n || m.hidden || m.throne) continue;

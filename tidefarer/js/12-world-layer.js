@@ -4371,6 +4371,22 @@ function spawnCrownFolk(){
      'Isle-folk, factors, off-duty guardsmen - they all end their night under my roof, whatever they started it as.',
      'A clean bed and a hot bowl, same price as ever. The court can keep its banquets.'],0.6);
     inn.nightOwl=true; G.npcs.push(inn); }   // a good innkeep is up as long as the lamps are lit
+  // ---- Jaist, Your Brother the Prince: once the mask is off and Act I's homecoming is
+  // underway, he crosses from the isles at your side and WALKS THE CAPITAL WITH YOU -
+  // from the quay up to the Tideglass Palace and the audience with the King. He trails
+  // the player (follow) rather than holding a post, and only stands here during that
+  // homecoming window (unmasked, before the throne scene closes Act I). ----
+  if(P.story && P.story.unmasked && !P.story.act1End){
+    const S=Z.spawn||{x:H.x,y:H.y};
+    const bp=findOpenNear(Math.round(S.x+1),Math.round(S.y-1),8)||[S.x+1,S.y-1];
+    const bro=makeNPC('brother','Jaist, Your Brother the Prince', bp[0], bp[1],
+      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#2f5fa0',pants:'#33302a',cloak:'#25406a',hairstyle:'short'},
+      ['Lead on, Joan. Whatever waits in that throne room, we walk into it together this time.',
+       'So this is Aldermere with my own eyes, and not a page in a book. Father is up past the forecourt - take us to him.',
+       'Every wall of this city was raised for the three of us. Let us go and give the old man back two of the three.'],0);
+    bro.follow=1; bro.nightOwl=1;
+    G.npcs.push(bro);
+  }
 }
 function spawnMobsCrown(){
   const Z=CROWN_ZONES, BA=Z.barracks;

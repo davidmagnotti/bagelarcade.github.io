@@ -265,14 +265,14 @@ function buildDialogContent(npc){
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
-      const cardB=()=>storyCard('<i>Then the smile fades - you both remember the rest in the same breath.</i> “Vath,” <i>you say, the way you name a wound.</i> “It was always Vath - and Father is still out there in his grip.” <i>The salt-bleached rags fall away and you stand in your own colours at last: a deep royal magenta, your hair swept up in the old high ponytail. Beside you, Jaist trades the woodpile grey for his own bright blue and shoulders his axe like the sword it should have been.</i> “Take me to Father,” <i>he says.</i> “And I\'m not letting you walk into Vath alone this time.”',
+      // The animated flood has just surfaced the names JOAN and JAIST, so we no longer
+      // re-narrate the naming here. It lands straight on the two of them: a wordless
+      // look, then the shared memory of who did this to them - the brother talking.
+      const reunion=()=>storyCard('<i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile. Then the smile fades - you both remember the rest in the same breath.</i> “Vath,” <i>you say, the way you name a wound.</i> “It was always Vath - and Father is still out there in his grip.” <i>The salt-bleached rags fall away and you stand in your own colours at last: a deep royal magenta, your hair swept up in the old high ponytail. Beside you, Jaist trades the woodpile grey for his own bright blue and shoulders his axe like the sword it should have been.</i> “Take me to Father,” <i>he says.</i> “And I\'m not letting you walk into Vath alone this time.”',
         {label:'To Aldermere', onOk:()=>{
           setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
         }});
-      // The visual flood has just played the memories and the names; this card is the
-      // quiet landing after it - her speaking the name aloud, and the brother's banter.
-      setTimeout(()=>storyCard('<i>For a long moment you can only stand inside it - the flood, and all the still years on the far side of it. Then, quietly, you say aloud the name the sea kept from you.</i> <b>Joan.</b> <i>It fits like a hand in an old glove.</i> “You always ran AT the storm, Joan,” <i>your brother says, half a laugh and half a sob.</i> <b>Jaist.</b> “The warrior. And I read the books and named the stars. Some pair we make.” <i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile.</i>',
-        {label:'Go on', onOk:cardB}),700);
+      setTimeout(reunion,700);
     };
     const p5=()=>{
       closeDialog();
