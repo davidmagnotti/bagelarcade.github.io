@@ -21,6 +21,7 @@ const GROUPS = [
     ['fireflies','Fireflies'],
     ['birds','Birds'],
     ['vignette','Vignette'],
+    ['depth','Depth haze & horizon'],
   ]],
 ];
 

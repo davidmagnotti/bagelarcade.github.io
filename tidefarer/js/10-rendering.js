@@ -223,6 +223,10 @@ function render(){
      else { bg.addColorStop(0,'#1e4467'); bg.addColorStop(0.55,'#16283e'); bg.addColorStop(1,'#0c1727'); }
      _bgGrad=bg; _bgKey=bgKey; }
    cx.fillStyle=_bgGrad;} cx.fillRect(0,0,VW,VH);
+  // 2.5-D depth: distant, parallax island silhouettes (or cloud banks) painted
+  // on the backdrop before the ground, so the terrain clips them to the open
+  // sea/sky. Gives the horizon a receding far plane instead of a flat wall.
+  if(typeof depthHorizon==='function' && fxOn('depth')) depthHorizon(CLOUD);
   // Trauma-style shake: squared falloff (a punchier decay than linear), a small
   // directional kick set on impacts (G.kickX/Y), and a hair of rotation so a hit
   // reads as a jolt rather than a uniform wobble. setTransform() resets fully each
@@ -593,6 +597,11 @@ function render(){
     cx.strokeStyle='#ffd76a'; cx.lineWidth=3.4;
     cx.beginPath(); cx.arc(csn.x,csn.y-24,13,-Math.PI/2,-Math.PI/2+cpr*TAU); cx.stroke();
   }
+  // 2.5-D depth: aerial-perspective haze veil - washes the far field toward the
+  // atmosphere colour so distance recedes, while the foreground stays crisp.
+  // Drawn over the world & weather but UNDER the UI markers so quest arrows and
+  // interaction prompts stay legible.
+  if(typeof depthAerial==='function' && fxOn('depth')) depthAerial(CLOUD);
   // interaction marker + quest arrow
   drawMarkers();
   // cinematic grade: cool shadows, film grain (full-screen blend passes -

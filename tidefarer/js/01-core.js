@@ -189,7 +189,7 @@ const LB = {x:0, y:0};
    the cheaper ambiance on. Persisted per-effect. In normal (non-perf) detail
    everything renders regardless - fxOn() short-circuits when !LOWFX. */
 const FX = { grade:0, lighting:0, bloom:0, cloudShadows:0, foam:0,
-             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:1 };
+             fog:1, decals:1, particles:1, fireflies:1, birds:1, vignette:1, depth:1 };
 try{ for(const k in FX){ const v=SafeStore.get('tf_fx_'+k); if(v!==null) FX[k]=(v==='1')?1:0; } }catch(e){}
 function fxOn(n){ return !LOWFX || !!FX[n]; }   // full detail => always on
 /* Storybook (cel) look: a cleaner, more cartoonish grade for Act I - grain off,
