@@ -1795,6 +1795,15 @@ function updateNPCs(dt){
       }
       continue;
     }
+    // Once the mask is off, the Woodworker IS Prince Jaist and holds the boat, never the
+    // woodpile. spawnNPCs seats him at the boat on a fresh Emberwick, and the reveal / isle
+    // re-entry relocate a cached one - but if royalGarb ever flips while a stale Woodworker
+    // is still parked at his Act I woodpile (an old save, a dev jump, no world re-entry), none
+    // of those fire. Catch it here, once, so his name/garb (Prince Jaist, royal blue) can never
+    // disagree with where he's standing. jaistToBoat is idempotent; _atBoat stops the re-check.
+    if(n.id==='woody' && !n._atBoat && P.story && P.story.royalGarb && G.worldId==='isle' && typeof jaistToBoat==='function'){
+      jaistToBoat(n); n._atBoat=1;
+    }
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
     if(n.hums && !n.hidden && !(n.id==='woody' && P.story && P.story.royalGarb)){ // the Woodworker hums a tune he can't name (the royal anthem) - but once he remembers he's Prince Jaist, he hums no more
