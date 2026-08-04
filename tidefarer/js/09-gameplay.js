@@ -902,7 +902,8 @@ function damageMob(m,dmg,knock,skill){
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
-    else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // THE RECKONING phase 1: beaten to his knees (rage/monster phase 2 hangs off this)
+    else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // THE RECKONING phase 1: beaten to his knees -> rage cutscene
+    else if(m.vathDemon && !m.vathSealed){ m.hp=1; crownVathSealSeam(m); } // THE RECKONING phase 2: the monster is broken -> the seal (Beat 3)
     else if(m.kind==='mage' && m.finalVath && !m.bound){ m.hp=1; bindVath(m); } // Act IV: the last stand - bound, not slain
     else if(m.kind==='mage' && !m.escaped){ m.hp=1; vathEscapes(m); } // Vath never falls (mid-game) - he slips away
     else if(m.kind==='leviathan' && !m.freed){ m.hp=1; freeLeviathan(m); } // the curse breaks; it is a victim, not a foe
@@ -911,19 +912,55 @@ function damageMob(m,dmg,knock,skill){
     else killMob(m, skill);
   }
 }
-// THE RECKONING - phase 1 seam. Vath, beaten in his caster's form, cannot flee this time
-// (the seal is coming and he knows it). He is held, cornered, at the foot of the throne.
-// Beat 2 replaces this with the rage cutscene and his monster form; Beat 3 (vathDown) is the
-// sealing ending + credits. For now this is a clean, testable stopping point.
+// THE RECKONING - PHASE 1 END -> RAGE CUTSCENE -> PHASE 2 (the monster).
+// Beaten in his caster's form, Vath does not flee this time - he refuses to lose, and his
+// rage tears his human shape apart. crownVathDown plays the rage beat; vathBecomeMonster then
+// swaps him into his unbound demon form (rendered as the hulking brute, re-tinted violet, and
+// driven by the heavy sweep/shard/slam boss AI). Beat 3 (crownVathSealSeam -> vathDown) is the
+// sealing ending + credits.
 function crownVathDown(m){
-  m.crownPhase1=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.invuln=true;
-  if(Snd.magic) Snd.magic(); G.slowmo=Math.max(G.slowmo||0,1.1); G.shake=0.7;
-  shockwave(m.x,m.y,'rgba(199,123,255,0.95)',80);
-  for(let i=0;i<30;i++){ const a=Math.random()*TAU, s=rnd(1,4.5);
+  m.crownPhase1=1; m.state='idle'; m.invuln=true; m.sealed=true; m.hp=1; m.windup=0; m.sweepCd=1;   // inert through the rage beat (AI skips sealed); vathBecomeMonster unseals him
+  if(Snd.magic) Snd.magic(); G.slowmo=Math.max(G.slowmo||0,1.2); G.shake=0.9;
+  shockwave(m.x,m.y,'rgba(199,123,255,0.95)',90);
+  for(let i=0;i<32;i++){ const a=Math.random()*TAU, s=rnd(1,4.5);
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.7,1.7),color:'#c77bff',size:rnd(2,4),grav:-0.06}); }
   banner('PHASE ONE — VATH FALTERS','THE ENCHANTER IS BEATEN TO HIS KNEES');
   if(typeof updateBossUI==='function') updateBossUI();
-  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The last blow lands and the violet guttered around his hands goes out. Vath drops to one knee on his own stolen dais, and for the first time the calm cracks.</i> <b style="color:#c9a0ff">"...No. Not to a HALF-TRAINED girl and a WOODCUTTER. Not again."</b> <i>Something under his skin begins to move.</i> <b style="color:var(--ember)">(His rage — and what it makes of him — come next. Phase 2 to follow.)</b>'); }, 900);
+  // the rage beat: he refuses the loss, and something under his skin starts to move.
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The last blow lands and the violet guttered around his hands goes out. Vath drops to one knee on his own stolen dais, and for the first time the calm cracks clean through.</i> <b style="color:#c9a0ff">"...No. NO. Not to a half-trained girl and a WOODCUTTER. Not again, not EVER again!"</b> <i>He claws at his own chest, and the enchantment he wove into himself lifetimes ago tears loose all at once - the borrowed man-shape splitting off him like wet paper.</i> <b style="color:var(--ember)">Vath sheds his shape. What was under it was never a man.</b>',
+    {label:'Stand your ground', onOk:()=>vathBecomeMonster(m)}); },900);
+  if(typeof autoSave==='function') autoSave();
+}
+// PHASE 2: Vath's true, unbound form. Same mob object, re-shaped into the violet demon-brute
+// and handed the heavy boss moveset (driven by updateWardKing from updateCrownReckoning).
+function vathBecomeMonster(m){
+  if(!m || m.vathDemon) return;
+  m.kind='minotaur'; m.vathDemon=1; m.dead=false; m.invuln=false; m.sealed=false;
+  m.title='VATH UNBOUND'; m.subtitle='THE SHADOW WITHOUT ITS MASK'; m.name='Vath Unbound';
+  m.customAI=1;                                  // generic AI leaves him be; updateCrownReckoning drives him
+  m.maxhp=1300; m.hp=1300; m.dmg=40; m.speed=3.1; m.aggro=18; m.size=1.35;
+  m.wphase=1; m.state='chase'; m.noAggroT=0; m.windup=0; m.sweepCd=1.4; m.shardCd=2; m.slamCd=6;
+  m.hx=m.x; m.hy=m.y; m.respawnT=-1;
+  if(Snd.boss) Snd.boss(); G.shake=1.1; G.slowmo=Math.max(G.slowmo||0,1.15);
+  shockwave(m.x,m.y,'rgba(150,30,180,0.95)',120);
+  for(let i=0;i<48;i++){ const a=Math.random()*TAU, s=rnd(1.5,6);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.2,life:rnd(0.9,2),color:i%2?'#c77bff':'#7a1aa0',size:rnd(2,5),grav:-0.05}); }
+  banner('VATH UNBOUND','THE SHADOW SHEDS ITS SHAPE');
+  if(typeof updateBossUI==='function') updateBossUI();
+}
+// PHASE 2 END -> Beat 3 seam. The demon is broken but not gone - it cannot be killed, only
+// SEALED. Hold it here; Beat 3 replaces this with Jaist speaking the founders' seal, the
+// ending, and the credits. (P.story.vathDown / P.story.vathSealed drive that beat.)
+function crownVathSealSeam(m){
+  m.vathSealed=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.invuln=true;
+  P.story=P.story||{}; P.story.vathDown=1;
+  if(Snd.boss) Snd.boss(); G.shake=1.0; G.slowmo=1.25;
+  shockwave(m.x,m.y,'rgba(199,123,255,0.95)',120);
+  for(let i=0;i<40;i++){ const a=Math.random()*TAU, s=rnd(1,5);
+    G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.9),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
+  banner('THE MONSTER IS BROKEN','NOW — THE SEAL');
+  if(typeof updateBossUI==='function') updateBossUI();
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The demon-shape buckles and cannot rise - but it does not die, and you know in your bones it never will. It can only be caged.</i> <b style="color:#ffe9a8">"Jaist — NOW! The seal!"</b> <i>Your brother is already opening the founders\' book.</i> <b style="color:var(--ember)">(Beat 3 to follow: Jaist speaks the seal, the ending, and the credits.)</b>'); }, 900);
   if(typeof autoSave==='function') autoSave();
 }
 function vathEscapes(m){

@@ -4455,6 +4455,9 @@ function spawnCrownReckoning(){
 // sealed-until-you-step-in reveal (updateEmberTomb). Fires the confrontation, then the fight.
 function updateCrownReckoning(dt){
   if(!crownReckoning()) return;
+  // PHASE 2: Vath's unbound demon is a customAI boss (generic AI leaves it be), so it is driven
+  // here with the heavy sweep/shard/slam moveset - the same one the Tideward Guardian uses.
+  for(const m of G.mobs) if(m.vathDemon && !m.dead && !m.sealed && !m.introKind && !(typeof dlg!=='undefined'&&dlg.open)) updateWardKing(m,dt);
   const boss=G.mobs.find(m=>m.crownVath && !m.dead);
   if(!boss) return;
   const PA=CROWN_ZONES.palace;

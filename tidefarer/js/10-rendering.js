@@ -2659,7 +2659,9 @@ function drawMob(m,s){
     const breath=Math.sin(m.anim*1.4)*1.2;
     drawShadowAt(cx,s.x,s.y,20);
     cx.save(); cx.translate(s.x,s.y); cx.scale(fl,1); cx.lineJoin='round';
-    const fur='#5a3f2a', furD='#3d2a1a', furL='#7a583a', horn='#ece0c6', hornD='#b9a67e', hoof='#241a12', OUT='rgba(18,12,6,0.9)';
+    // Vath's unbound form wears the same hulking brute silhouette, re-cast in violet shadow.
+    const dem=!!m.vathDemon;
+    const fur=dem?'#3a2150':'#5a3f2a', furD=dem?'#22103a':'#3d2a1a', furL=dem?'#5a2f82':'#7a583a', horn=dem?'#e0ccff':'#ece0c6', hornD=dem?'#7a5aa8':'#b9a67e', hoof=dem?'#140a24':'#241a12', OUT=dem?'rgba(10,4,20,0.92)':'rgba(18,12,6,0.9)';
     cx.lineWidth=2; cx.strokeStyle=OUT;
     // legs - digitigrade, hoofed
     cx.fillStyle=furD;
@@ -2698,8 +2700,9 @@ function drawMob(m,s){
     cx.fillStyle=fur; cx.beginPath(); cx.ellipse(9,3,5,4,0,0,TAU); cx.fill(); cx.stroke();   // muzzle
     cx.fillStyle='#1a120c'; cx.beginPath(); cx.arc(11,2,1.1,0,TAU); cx.arc(11,5,1.1,0,TAU); cx.fill();   // nostrils
     cx.fillStyle=furD; cx.beginPath(); cx.ellipse(-3,-2,3,1.8,-0.5,0,TAU); cx.fill(); cx.stroke();       // ear
-    cx.fillStyle= wnd? '#ff5a3a' : '#ffd23a';                    // eye - glows, reddens on the wind-up
+    cx.fillStyle= wnd? '#ff5a3a' : (dem?'#e07bff':'#ffd23a');    // eye - glows, reddens on the wind-up (violet for the unbound Vath)
     cx.beginPath(); cx.arc(4,-2,1.7,0,TAU); cx.fill();
+    if(dem){ cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(200,110,255,0.5)'; cx.beginPath(); cx.arc(4,-2,3.4,0,TAU); cx.fill(); cx.restore(); }   // violet eye-glow
     cx.strokeStyle='#c9a24e'; cx.lineWidth=1.4; cx.beginPath(); cx.arc(10,7,2.4,-0.3,Math.PI+0.3); cx.stroke();  // nose ring
     cx.restore();
     if(m.hurtT>0){ cx.fillStyle='rgba(255,150,120,0.4)'; cx.beginPath(); cx.ellipse(0,-34,20,26,0,0,TAU); cx.fill(); }
