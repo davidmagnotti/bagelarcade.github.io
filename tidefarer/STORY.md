@@ -123,7 +123,7 @@ names only for the currently-unnamed siblings.**
 | House **Kensington**, isles of **Yorkshire** | House of **Aldermere**, the **Tideglass** line | **Aldermere.** "Yorkshire" reads as real-world England and clashes with the invented register (Emberwick, Tideglass). Drop it. |
 | King **Archer** | King **Aldous** | **Aldous** (shipped in dialogue already). |
 | **Joan** (warrior daughter) | the **Princess** (unnamed) | **Joan.** Naming the sibling is an upgrade. |
-| **Jaist** (scholar son) | the **Prince** (unnamed) | **Jaist.** |
+| **Leo** (scholar son) | the **Prince** (unnamed) | **Leo.** |
 | Queen **Regina** (ancestor who beat Vath) | the **Tidefarer**, great-grandmother | **Tidefarer** as title; **Regina** can be her name — but note *regina* is Latin for "queen," so "Queen Regina" = "Queen Queen." Make it a choice, not an accident. |
 | **Orin** on Emberwick | **Sage Orin** on Emberwick | Already match. |
 | the mother | the late queen, who **took a fever and died when the children were small** (NOT drowned, NOT on the voyage). The King was later **fooled by Vath into sending the princess, prince, and Vath himself** out to seek the curses' root; the ship was "lost." Timespan is left **vague** ("long years"), no fixed number. | Canon as of this pass. |
@@ -203,7 +203,7 @@ the kingdom against them" rule made playable.
 ## Act I — amnesia and the fall
 
 **Where it stands — [built].** You play the princess (**Joan**), daughter of
-**King Aldous** of Aldermere; your brother the prince (**Jaist**) fights at your
+**King Aldous** of Aldermere; your brother the prince (**Leo**) fights at your
 side. **Vath the Emberbinder** stole the **Tideglass magic** from your father's
 blood; in the throne-hall coup the King is taken and Vath rewrites the guards'
 memory to frame the prince. You wash ashore on Emberwick an amnesiac, masked,
@@ -435,7 +435,7 @@ The sea to **Aldermere** finally opens.
   soldiers and creatures across the capital. This is the "turn the whole kingdom
   against them" rule made playable — the reason the finale is a war, not a duel.
 - **Face Vath — [new].** The two gifts converge: **Joan's slow-time** creates the
-  openings and survives his onslaught; **Jaist's seal** finishes it. He is
+  openings and survives his onslaught; **Leo's seal** finishes it. He is
   **sealed, not killed** — the Tidefarer's unfinished work, completed. Callback:
   *don't let Vath talk* (the waterfall lesson).
 - **Free the King.** Your father, Vath's captive since Act I, is the rescue stake

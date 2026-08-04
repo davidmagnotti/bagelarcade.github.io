@@ -13,8 +13,8 @@ const ITEMS = {
   charm:{name:'Ember Charm', desc:'+3 damage to every attack.'},
   skymap:{name:'Cloud-Chart', desc:'A chart of the wind-roads, kept in the Broken Crown. Show it to Ashwing and he will bear you between the isles - to Windsurf, back to the Cloudreach, or on to the Sunward Isle.'},
   veilrune:{name:'Hush-Frost Spellbook', desc:'An ancient spell book of the old royal line, its pages hush-frost that will not thaw, scored in a royal script only a scholar could read. The Rimebound was set to guard it long ago; no one living knows what its workings do. Carry it to your brother.'},
-  reachverse:{name:'The Drowned Verse', desc:'A verse copied off an ancient stone in the deep vault beneath Stormreach, the old royal script cut in a prophecy: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. It names a weapon, not waters. Show it to Jaist; the scholar can read what you cannot.'},
-  sealtome:{name:"The Founders' Sealing Book", desc:'A heavy book bound in tide-worn hide, drawn deep in the old royal script and guarded since the founders by the Tideward Guardian. It holds the one working the old line feared enough to seal away: a binding strong enough to cage the shadow itself. You cannot read it - carry it to your brother Jaist, the only scholar who can, and the only one who could ever cast it.'},
+  reachverse:{name:'The Drowned Verse', desc:'A verse copied off an ancient stone in the deep vault beneath Stormreach, the old royal script cut in a prophecy: a daughter of the tide frees the isles until she finds the weapon the great queen forged - and the queen lies buried with it. It names a weapon, not waters. Show it to Leo; the scholar can read what you cannot.'},
+  sealtome:{name:"The Founders' Sealing Book", desc:'A heavy book bound in tide-worn hide, drawn deep in the old royal script and guarded since the founders by the Tideward Guardian. It holds the one working the old line feared enough to seal away: a binding strong enough to cage the shadow itself. You cannot read it - carry it to your brother Leo, the only scholar who can, and the only one who could ever cast it.'},
   rivenedge:{name:'Rivenedge Axe', desc:'A dungeon-forged greataxe. Fells the blue-black ironwood that walls the old paths - and bites through any ordinary pine in a swing or two.'},
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
   delvebreaker:{name:'Delvebreaker Pick', desc:'A pick of star-dark iron from the Undermaw\'s deep hoard. Shatters the bright-violet wardstone Vath raised to cut Barik off - and splits common basalt the same.'},
@@ -208,7 +208,7 @@ function spawnNPCs(){
       ['Pip can catch moths RIGHT out of the air.','I\'m not allowed past the meadow. Yet.','Did you know slimes bounce? I know everything.'],1.0),
     // The Woodworker - the most forgettable soul on the island. (He is more than
     // that; the clues are planted from hour one and pay off far, far later.)
-    // Once he remembers he is Prince Jaist (royalGarb), he has left the woodpile for
+    // Once he remembers he is Prince Leo (royalGarb), he has left the woodpile for
     // good: he holds the way home down at the boat, watching the water - no more
     // humming his logs into a five-point star. On every Act II return to Emberwick you
     // land beside him and the boat, the same watch he keeps on the other returned isles.
@@ -216,7 +216,7 @@ function spawnNPCs(){
       if(P.story && P.story.royalGarb){
         const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
         const j=makeNPC('woody','The Woodworker', sp[0], sp[1],
-          {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94}},
+          {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94}},
           ["Go on and see to the old rock - I'll keep the boat and our way home, same as ever.",
            "Vath's curses have had free run of these islands while we were gone. Undo what you can, Joan; I'll hold the tideline here.",
            "Strange, standing on Emberwick and knowing at last it's mine to leave. I'll be right here by the water when you're ready to sail."],0);
@@ -224,25 +224,25 @@ function spawnNPCs(){
         return j;
       }
       const w=makeNPC('woody','The Woodworker',57.5,50.5,
-      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94,stoop:0.6}},
+      {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#6a5a44',pants:'#4a3f30',hairstyle:'short',build:{w:1.0,head:0.94,stoop:0.6}},
       ['Nice day for it. Every day is a nice day for it, really.',
        'I carve little boats, mostly. For someone. I forget who - but they will turn up.',
        'Where am I from? Ha. Woke here one morning, the wood needed chopping, so I chopped. Been happy since.',
        'That tune in my head? No idea the name. My hands seem to, though - I stack the logs to it.'],0.25);
       w.hums=true; return w; })()
   ];
-  // Act II: Jaist keeps the boat and the way home now, so the old ferry-captain is gone from
+  // Act II: Leo keeps the boat and the way home now, so the old ferry-captain is gone from
   // the Emberwick dock - his Act I shipwright work is long done and the story has sailed past him.
   if(P.story && P.story.act2) G.npcs = G.npcs.filter(n=>n.id!=='brant');
   // Pip the cat
   G.cat = {x:34.5, y:31.5, face:1, anim:0, wt:2, found:false, home:{x:34.5,y:31.5}};
 }
-// Once Jaist has remembered he is the prince (royalGarb), he never stands at the woodpile
+// Once Leo has remembered he is the prince (royalGarb), he never stands at the woodpile
 // again: he keeps the boat and the way home, down at Emberwick's western landing. Both the
 // unmasking (06-dialog.js) and every Act II return to a CACHED Emberwick call this on the
 // live Woodworker NPC, so a copy generated back in Act I - still standing at his old woodpile
 // with its home-post (hx,hy) pinned there - is walked down to the water and stays there.
-function jaistToBoat(w){
+function leoToBoat(w){
   if(!w) return;
   const sp=(typeof findOpenNear==='function' && findOpenNear(29,62,7)) || [29,62];
   w.x=sp[0]+0.5; w.y=sp[1]+0.5; w.hx=w.x; w.hy=w.y; w.tx=null; w.ty=null;
@@ -275,11 +275,11 @@ const MOBDEF = {
   polarbear:{hp:560, dmg:46, speed:3.5, aggro:9.5, xp:380, gold:[26,44], lvl:14, name:'Ice-Maddened Bear'},   // vicious, high-level frost predator
   icecolossus:{hp:1120, dmg:42, speed:2.1, aggro:12, xp:840, gold:[0,0], lvl:15, name:'The Rimebound'},   // Vath-cursed dungeon guardian - freed, not slain
   minotaur:{hp:900, dmg:34, speed:2.7, aggro:11, xp:520, gold:[40,70], lvl:14, name:'The Drowned Minotaur'},   // bull-headed brute wardening the vault past the Stormreach Ossuary
-  // -- THE RECKONING: Vath's three finale forms + Jaist's cage (reshaped from a mage slot; stats set live in js/47-finale.js) --
+  // -- THE RECKONING: Vath's three finale forms + Leo's cage (reshaped from a mage slot; stats set live in js/47-finale.js) --
   vathhusk:{hp:560, dmg:26, speed:3.2, aggro:18, xp:0, gold:[0,0], lvl:16, name:'Vath Unshaped'},
   goliath:{hp:1500, dmg:46, speed:2.35, aggro:20, xp:0, gold:[0,0], lvl:16, name:'Vath the Goliath'},
   vathshadow:{hp:1, dmg:34, speed:3.3, aggro:22, xp:0, gold:[0,0], lvl:16, name:'Vath the Formless'},
-  cage:{hp:520, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:16, name:"Jaist's Cage"},
+  cage:{hp:520, dmg:0, speed:0, aggro:0, xp:0, gold:[0,0], lvl:16, name:"Leo's Cage"},
   // -- the returned-isle dungeon guardians (bespoke bosses, Act II) --
   tidemaw:{hp:840, dmg:30, speed:2.5, aggro:12, xp:640, gold:[0,0], lvl:7, name:'The Tidemaw'},              // Barik's Drowned Vault: an anglerfish leviathan; submerges + spouts
   skirl:{hp:820, dmg:32, speed:3.4, aggro:13, xp:700, gold:[0,0], lvl:9, name:'The Skirl'},                 // Windsurf's Gale Spire: a wind-funnel elemental; wind-blades + a knockback gust-pulse

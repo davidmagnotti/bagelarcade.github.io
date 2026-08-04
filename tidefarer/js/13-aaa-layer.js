@@ -132,8 +132,8 @@ const EPI = {
   // ease toward while it is on screen. storm 0..1 = rain/lightning; near 0..1 = island approach.
   beats: [
     { who:'', html:'<i>Six months of open water. The charted isles are long behind the wake, and the sea has run out of names.</i>', storm:0.05, near:0.05 },
-    { who:'Joan', html:'“There &mdash; off the bow. See it?” <i>She holds the tiller steady into the wind.</i> “That dark line isn\'t weather, Jaist. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.24, near:0.26 },
-    { who:'Jaist', html:'<i>He doesn\'t look up from the chart in his lap.</i> “…Father would have had its name before we cleared the swell. I keep starting to turn and ask him.”', storm:0.44, near:0.48 },
+    { who:'Joan', html:'“There &mdash; off the bow. See it?” <i>She holds the tiller steady into the wind.</i> “That dark line isn\'t weather, Leo. It\'s land &mdash; the first we\'ve seen in weeks.”', storm:0.24, near:0.26 },
+    { who:'Leo', html:'<i>He doesn\'t look up from the chart in his lap.</i> “…Father would have had its name before we cleared the swell. I keep starting to turn and ask him.”', storm:0.44, near:0.48 },
     { who:'Joan', html:'<i>She sets a hand over his.</i> “It\'s the last name on Orin\'s chart &mdash; <b>Stormreach</b>. One rock under a storm that never breaks, past anywhere Vath\'s reach can follow.” <i>Her voice goes quiet and hard.</i> “Father spent everything to buy us this water. We don\'t waste it grieving where he can\'t see.”', storm:0.66, near:0.68 },
     { who:'Joan', html:'“So we take the rock. We get strong. And one day we come back for him.” <i>She turns the bow into the black swell.</i> “Hold on to something, little brother. We land together.”', storm:0.88, near:0.86 },
     { who:'', html:'<i>The keel comes up out of the dark and grinds onto black shingle. High above the rain, a single light is burning. You have reached the last name on the map.</i>', storm:1, near:1, land:1 },
@@ -238,8 +238,8 @@ function placeReachHomecoming(){
   // if the brother somehow isn't on the strand, put him there. Normally it no-ops.
   if(!G.npcs.some(n=>n.id==='brother')){
     const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.x+2), Math.round(Z.y+1), 5)) || [Z.x+2, Z.y+1];
-    const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
-      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+    const b=makeNPC('brother','Leo, Your Brother the Prince', sp[0], sp[1],
+      {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
       ["Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
        "I'll keep a fire lit here on the strand. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
        "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."],0.1);
@@ -397,7 +397,7 @@ const THR = {
     // The homecoming, before the storm: the King on his feet at the throne, turned to face
     // his children - joy and disbelief - a quiet beat with no enemy in the room yet.
     { who:'King Aldous', kingFace:'kids',
-      html:'“You’re home. Joan — Jaist — I can’t believe it. Both of you, home at last.”',
+      html:'“You’re home. Joan — Leo — I can’t believe it. Both of you, home at last.”',
       vath:0, gold:0.14, violet:0, clash:0, flee:0, guards:0 },
     { who:'Vath', title:'THE ENCHANTER COMES',
       html:'“Forgive me — I do hate to interrupt so loving a family reunion. But how good of you all to gather in a single room.”',
@@ -421,7 +421,7 @@ const THR = {
     // the prince digs in - he won't abandon the father he only just found. The King, still
     // holding Vath off, cuts him down: they can't win this, not yet. The siblings stay put
     // (flee held low) through the argument; only the princess's resolve breaks it.
-    { who:'Jaist',
+    { who:'Leo',
       html:'“No, Father — we won’t leave you to face Vath alone!”',
       vath:0.78, gold:0.98, violet:0.5, clash:0.98, flee:0.06, guards:0 },
     { who:'King Aldous',
@@ -429,7 +429,7 @@ const THR = {
       vath:0.8, gold:0.95, violet:0.55, clash:0.92, flee:0.06, guards:0 },
     // Joan makes the call - she crosses the hall and SEIZES her brother by the arm.
     { who:'Joan',
-      html:'“Then we live to come back for him! Jaist — with me, NOW.”',
+      html:'“Then we live to come back for him! Leo — with me, NOW.”',
       vath:0.78, gold:0.95, violet:0.55, clash:0.9, flee:0.4, guards:0 },
     // wordless: she HAULS him up the nave toward the east doors, the camera tracking the drag.
     { who:'', html:'',
@@ -503,7 +503,7 @@ const LOOK_HERO ={hero:true,fem:true,skin:'#d8a97a',hair:'#7a4526',shirt:'#a2286
 const LOOK_KING ={skin:'#d8b48c',hair:'#d6d0c4',shirt:'#3a2f5e',pants:'#2a2340',robe:'#402a68',trim:'#c9a24e',beard:'#d6d0c4',beardLong:true,hat:'crown',necklace:'#c9a24e'};
 const LOOK_KSPENT={skin:'#9a9488',hair:'#c8c4ba',shirt:'#2c2836',pants:'#232030',robe:'#332b3e',trim:'#7a6a4a',beard:'#c8c4ba',beardLong:true,hat:'crown',necklace:'#6a5f45'};
 const LOOK_VATH ={skin:'#c2a892',hair:'#241a2e',robe:'#4a2a5e',rune:true,beard:'#2a2038'};
-const LOOK_PRINCE={skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'};
+const LOOK_PRINCE={skin:'#d8a97a',hair:'#e8cd6e',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'};
 const LOOK_GUARD={skin:'#c9a37a',hair:'#3a2f26',shirt:'#46525f',pants:'#33302a',armor:2,pauldrons:true,hat:'hood',hatColor:'#556170'};
 function throneCutscene(){
   const ov=document.getElementById('thrOv');

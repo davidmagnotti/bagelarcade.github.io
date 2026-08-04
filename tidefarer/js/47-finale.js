@@ -68,7 +68,7 @@ function startVathIntro(boss){
       {label:'Then through him', onOk:begin}); };
   if(typeof storyCard==='function'){
     storyCard('<i>The throne-room doors boom shut at your back, and the cold air folds. Vath does not come DOWN off the stolen throne - he unfolds out of the dark right behind you, close enough to whisper.</i> <b style="color:#c9a0ff">"There she is. And on the day I\'d all but given up waiting."</b> <i>He laughs, low and delighted.</i> <b style="color:#c9a0ff">"I have been so patient - for YOU, and for that brother of yours. The whole set, come to me at last."</b>',
-      {label:'Where is Jaist?', onOk:cardCage});
+      {label:'Where is Leo?', onOk:cardCage});
   } else begin();
 }
 
@@ -98,10 +98,10 @@ function vathToStage2(m){
   if(typeof updateBossUI==='function') updateBossUI();
 }
 /* ---- STAGE 3: broken, he abandons all shape - a formless dark thing no blade
-   can touch. The only way to end it is to SHATTER the cage so Jaist can seal him. ---- */
+   can touch. The only way to end it is to SHATTER the cage so Leo can seal him. ---- */
 function vathToStage3(m){
   m.vstage=3; m.kind='vathshadow'; m.dead=false; m.invuln=true;   // untouchable now
-  m.title='VATH THE FORMLESS'; m.subtitle='NO BLADE BITES — FREE JAIST'; m.name='Vath the Formless';
+  m.title='VATH THE FORMLESS'; m.subtitle='NO BLADE BITES — FREE LEO'; m.name='Vath the Formless';
   m.maxhp=1; m.hp=1; m.dmg=34; m.speed=3.3; m.aggro=22; m.size=1.5;
   m.state='chase'; m.windup=0; m.slamCd=2.2; m.reachCd=3.4;
   if(typeof Snd!=='undefined' && Snd.boss) Snd.boss(); G.shake=1.1; G.slowmo=Math.max(G.slowmo||0,1.2);
@@ -109,8 +109,8 @@ function vathToStage3(m){
   // the cage becomes destructible now
   const cage=G.mobs.find(c=>c.brotherCage && !c.dead);
   if(cage){ cage.invuln=false; cage.sealed=false; cage.maxhp=cage.maxhp||520; cage.hp=cage.maxhp; }
-  if(typeof banner==='function') banner('VATH THE FORMLESS','SMASH THE CAGE — SET JAIST FREE');
-  if(typeof toast==='function') toast('<b style="color:#c9a0ff">Your blade passes clean through him.</b> He cannot be cut - only <b>SEALED</b>. <b style="color:var(--ember)">Break Jaist\'s cage</b> so your brother can speak the founders\' seal, and stay ahead of Vath while you do.',9000);
+  if(typeof banner==='function') banner('VATH THE FORMLESS','SMASH THE CAGE — SET LEO FREE');
+  if(typeof toast==='function') toast('<b style="color:#c9a0ff">Your blade passes clean through him.</b> He cannot be cut - only <b>SEALED</b>. <b style="color:var(--ember)">Break Leo\'s cage</b> so your brother can speak the founders\' seal, and stay ahead of Vath while you do.',9000);
   if(typeof updateBossUI==='function') updateBossUI();
 }
 
@@ -159,7 +159,7 @@ function updateVathBoss(m,dt){
   }
 }
 
-/* ---- THE SEAL: the cage shatters, Jaist steps free and speaks the founders'
+/* ---- THE SEAL: the cage shatters, Leo steps free and speaks the founders'
    binding, and Vath is dragged down into the stone. Then the collapse. ---- */
 function cageBreak(cage){
   cage.cageBroken=1; cage.dead=true; cage.respawnT=-1;
@@ -169,13 +169,13 @@ function cageBreak(cage){
   if(typeof shockwave==='function') shockwave(cage.x,cage.y,'rgba(240,220,150,0.9)',90);
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, s=rnd(1,5);
     G.parts.push({x:cage.x,y:cage.y-0.6,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.9),color:i%2?'#1a0e2e':'#c9b0ff',size:rnd(2,4),grav:-0.04}); }
-  if(typeof banner==='function') banner('THE CAGE SHATTERS','JAIST IS FREE — NOW, THE SEAL');
+  if(typeof banner==='function') banner('THE CAGE SHATTERS','LEO IS FREE — NOW, THE SEAL');
   const p1=()=>{ if(typeof storyCard!=='function'){ vathSealComplete(); return; }
-    storyCard('<i>The black glass breaks like a held breath let go, and Jaist is on his feet with the founders\' book already open. Not the low voice he read you to sleep with - this is the old hand spoken ALOUD, and each word drops like a stone down a deep well. The formless thing that was Vath strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth.</i>',
+    storyCard('<i>The black glass breaks like a held breath let go, and Leo is on his feet with the founders\' book already open. Not the low voice he read you to sleep with - this is the old hand spoken ALOUD, and each word drops like a stone down a deep well. The formless thing that was Vath strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth.</i>',
       {label:'Hold the line', onOk:p2}); };
   const p2=()=>{ storyCard('<i>The seal roots the way he swore it would - into the one who casts it. He staggers; for a breath the violet crawls up his own arm before the binding drags it down into the stone with Vath. When he lowers the book his hair has gone white at one temple and his hand will not stop shaking - but he is smiling, and he is HIM, all the way through.</i> <b style="color:#ffe9a8">"It held,"</b> <i>he says, hardly believing it. "Sister - it HELD."</i>',
       {label:'…', onOk:p3}); };
-  const p3=()=>{ storyCard('<i>The violet drains out of Aldermere like a tide going out, and with it goes the very last of your strength. Your knees give. Jaist catches you before the marble does, and you hear him call your name from very far away.</i> <b style="color:var(--ember)">The shadow is sealed. The isles are free.</b> <i>Everything goes soft, and dark, and quiet.</i>',
+  const p3=()=>{ storyCard('<i>The violet drains out of Aldermere like a tide going out, and with it goes the very last of your strength. Your knees give. Leo catches you before the marble does, and you hear him call your name from very far away.</i> <b style="color:var(--ember)">The shadow is sealed. The isles are free.</b> <i>Everything goes soft, and dark, and quiet.</i>',
       {label:'…', onOk:vathSealComplete}); };
   p1();
 }
@@ -224,7 +224,7 @@ function celebrationArrival(){
   if(typeof banner==='function') banner('ALDERMERE, AT DAWN','THE ISLES ARE FREE — AND EVERYONE HAS COME');
   if(typeof Snd!=='undefined' && Snd.levelup) Snd.levelup();
   setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>You step out onto the palace stair and stop dead. The whole of Aldermere is below you - and not just Aldermere. Every soul you ever pulled out from under Vath\'s shadow is here: the folk of Barik and the Sunward Isle, of Windsurf and the Frozen strait, the Aerie\'s flyers, the crews off Stormreach. Ashwing dozes gold in the square with children on his tail. Someone is playing the old Tide-Queen\'s anthem, and this time the whole crowd knows the last verse.</i> <b style="color:#ffe9a8">Your brother stands at the foot of the stair, waiting for you. Go and speak with him.</b>',
-    {label:'Go to Jaist'}); }, 700);
+    {label:'Go to Leo'}); }, 700);
 }
 
 /* ---- the celebration crowd: everyone, and every creature, that you freed ---- */
@@ -232,9 +232,9 @@ function spawnVictoryCrowd(){
   const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, GA=Z.garden;
   const put=(id,name,x,y,look,lines,wander)=>{ const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(x),Math.round(y),7)) || [x,y];
     const n=makeNPC(id,name,sp[0],sp[1],look,lines,wander||0); n.nightOwl=true; G.npcs.push(n); return n; };
-  // Jaist, your brother, at the foot of the palace stair - carries the ending
-  put('brother','Jaist, Your Brother the Prince', PA.x, PA.y+11,
-    {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#2f5fa0',pants:'#33302a',cloak:'#c9a24e',hairstyle:'short'},
+  // Leo, your brother, at the foot of the palace stair - carries the ending
+  put('brother','Leo, Your Brother the Prince', PA.x, PA.y+11,
+    {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#2f5fa0',pants:'#33302a',cloak:'#c9a24e',hairstyle:'short'},
     ['Look at them all, sister. Every isle we freed, come to say it with their own mouths: thank you.',
      'A streak of white in my hair and a book I can never un-read. Small price. We WON.'],0.05);
   // the old sailor who first sang you the anthem, now with the last verse restored

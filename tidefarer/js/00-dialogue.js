@@ -302,7 +302,7 @@ const DIALOGUE = {
         "Aldermere runs on ledgers and patience. I supply both."
       ]
     },
-    "brother": {  // Jaist on the Frozen Isle vs. Stormreach
+    "brother": {  // Leo on the Frozen Isle vs. Stormreach
       "frost": [
         "Go on - I'll hold the landing. If Hearthhold has the right of it, whatever Vath bound is down the Rimefissure, past the deep ice.",
         "The whole strait talks of a robed man on the glacier. That's Vath, or his handiwork. Find what he hid down there, Joan - and mind the cold.",

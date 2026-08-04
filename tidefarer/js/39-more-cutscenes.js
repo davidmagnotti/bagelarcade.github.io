@@ -107,20 +107,20 @@ const MC_AERIE = [
     vath:0.5, calm:1 },
 ];
 
-// The WARDING VEIL cast: Jaist, the scholar, reads the hush-frost spellbook onto his
+// The WARDING VEIL cast: Leo, the scholar, reads the hush-frost spellbook onto his
 // sister at the Frostferry landing. The frost lifts off the page and wraps her, then
 // sinks in and she goes unseen to Vath's witch-sight. `calm` = how far the casting has
 // taken; `snow` = the frost fall; `dive` = the veil sinking in / the sister fading hidden.
 const MC_VEIL = [
   { who:'', html:'', calm:0, snow:0.2, dive:0, hold:1400 },
-  { who:'Jaist',
-    html:'<i>Jaist closes his eyes and speaks the old words the way he used to read to you when the sea was loud — low, sure, unhurried.</i> “Hold still, sister. Let me read it onto you properly.”',
+  { who:'Leo',
+    html:'<i>Leo closes his eyes and speaks the old words the way he used to read to you when the sea was loud — low, sure, unhurried.</i> “Hold still, sister. Let me read it onto you properly.”',
     calm:0.25, snow:0.45 },
   { who:'',
     html:'<i>The frost lifts from the page in a fine violet snow, winds around you, and draws close — a veil settling over you and sinking in: cold, then gone.</i>',
     calm:0.7, snow:0.9, flash:0.6, shatter:1 },
   { who:'', html:'', calm:1, snow:1, dive:0.6, title:'THE WARDING VEIL', hold:2000 },
-  { who:'Jaist',
+  { who:'Leo',
     html:'<b style="color:#c9b0ff">“There.”</b> <i>He opens his eyes.</i> “It\'s a scholar\'s trick, not a warrior\'s — it won\'t stop a blade, mind. But Vath hunts by his witch-sight, and to that you\'re a blank stretch of open sea now. He won\'t see you coming.”',
     calm:1, snow:0.7, dive:1 },
 ];
@@ -707,7 +707,7 @@ function drawBurningTome(cx,x,y,s,ens,calm,t){
     cx.restore(); cx.restore(); }
 }
 
-/* ===================== THE WARDING VEIL (Jaist casts) ===================== */
+/* ===================== THE WARDING VEIL (Leo casts) ===================== */
 function drawVeilScene(cx,W,H,t){
   const calm=MC.calm, snow=MC.snow, dive=MC.dive, horizon=H*0.68;
   // night over the Frostferry landing, a faint violet where the old spell wakes
@@ -729,14 +729,14 @@ function drawVeilScene(cx,W,H,t){
   const footY=horizon+H*0.02;
   // the sister first (behind the motes), going translucent as the veil sinks in
   drawVeilSister(cx, W*0.63, footY, Math.min(W,H)*0.22, calm, dive, t);
-  // Jaist, the scholar, reading from the open, glowing spellbook
+  // Leo, the scholar, reading from the open, glowing spellbook
   drawScholar(cx, W*0.37, footY, Math.min(W,H)*0.24, calm, t);
   // frost fall
   if(snow>0.02) drawGentleSnow(cx,W,H,t,snow*0.7);
 }
 function drawScholar(cx,x,footY,s,calm,t){
   cx.save(); cx.translate(x,footY);
-  // JAIST the scholar-prince: a dark-blue cloak over a bright blue tunic (his royal colours)
+  // LEO the scholar-prince: a dark-blue cloak over a bright blue tunic (his royal colours)
   cx.fillStyle='#274052';   // cloak
   cx.beginPath();
   cx.moveTo(0,-s*1.02);
@@ -753,7 +753,7 @@ function drawScholar(cx,x,footY,s,calm,t){
   cx.closePath(); cx.fill();
   // head: short brown hair framing a skin face (hair ellipse behind, face shifted down so hair rims the top)
   const jhy=-s*0.98;
-  cx.fillStyle='#7a5a3a'; cx.beginPath(); cx.ellipse(0,jhy,s*0.17,s*0.19,0,0,TAU); cx.fill();
+  cx.fillStyle='#e8cd6e'; cx.beginPath(); cx.ellipse(0,jhy,s*0.17,s*0.19,0,0,TAU); cx.fill();
   cx.fillStyle='#d8a97a'; cx.beginPath(); cx.ellipse(0,jhy+s*0.05,s*0.13,s*0.14,0,0,TAU); cx.fill();
   // the open spellbook, held before him, glowing brighter as the casting takes
   const bx=0, by=-s*0.36, bw=s*0.36, bh=s*0.12;

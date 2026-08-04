@@ -904,7 +904,7 @@ function damageMob(m,dmg,knock,skill){
     if(m.kind==='dragon' && !m.fainted){ m.hp=1; dragonFaints(m); } // he faints, he does not fall
     else if(m.crownVath && m.vstage===1){ m.hp=1; if(typeof vathToStage2==='function') vathToStage2(m); } // RECKONING stage 1 (shadow) broken -> the Goliath
     else if(m.crownVath && m.vstage===2){ m.hp=1; if(typeof vathToStage3==='function') vathToStage3(m); } // RECKONING stage 2 (Goliath) broken -> the formless, untouchable form
-    else if(m.brotherCage && !m.cageBroken){ m.hp=1; if(typeof cageBreak==='function') cageBreak(m); }     // Jaist's cage smashed -> he speaks the seal, the ending
+    else if(m.brotherCage && !m.cageBroken){ m.hp=1; if(typeof cageBreak==='function') cageBreak(m); }     // Leo's cage smashed -> he speaks the seal, the ending
     else if(m.kind==='mage' && m.crownVath && !m.crownPhase1){ m.hp=1; crownVathDown(m); } // (legacy 2-phase reckoning, retained as a fallback)
     else if(m.vathDemon && !m.vathSealed){ m.hp=1; crownVathSealSeam(m); }                 // (legacy)
     else if(m.kind==='mage' && m.finalVath && !m.bound){ m.hp=1; bindVath(m); } // Act IV: the last stand - bound, not slain
@@ -951,7 +951,7 @@ function vathBecomeMonster(m){
   banner('VATH UNBOUND','THE SHADOW SHEDS ITS SHAPE');
   if(typeof updateBossUI==='function') updateBossUI();
 }
-// PHASE 2 END -> BEAT 3: the demon is broken but cannot be killed, only SEALED. Jaist speaks
+// PHASE 2 END -> BEAT 3: the demon is broken but cannot be killed, only SEALED. Leo speaks
 // the founders' seal, pays the cost he feared, and cages Vath - then the ending and credits.
 function crownVathSealSeam(m){
   m.vathSealed=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.invuln=true;
@@ -970,9 +970,9 @@ function vathSealEnding(){
   P.story=P.story||{}; P.story.vathSealed=1; P.story.gameWon=1; P.story.finale=1;
   if(typeof award==='function') award('enchantersbane');
   const seal=()=>{ if(typeof storyCard!=='function'){ rollCredits(); return; }
-    storyCard('<i>You hold the line one breath more - and behind you Jaist begins to read. Not the low, easy voice he read you to sleep with; this is the founders\' hand spoken ALOUD, and each word lands like a stone dropped down a deep well. The violet demon strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth. The cage closes over him.</i>',
+    storyCard('<i>You hold the line one breath more - and behind you Leo begins to read. Not the low, easy voice he read you to sleep with; this is the founders\' hand spoken ALOUD, and each word lands like a stone dropped down a deep well. The violet demon strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth. The cage closes over him.</i>',
       {label:'Hold the line', onOk:cost}); };
-  const cost=()=>{ storyCard('<i>The seal roots the way Jaist swore it would - into the one who casts it. He staggers; for a breath the violet crawls up his own arm before the binding drags it down into the stone with Vath. When he lowers the book his hair has gone white at one temple and his hand will not stop shaking - but he is smiling, and he is HIM, all the way through.</i> <b style="color:#ffe9a8">"It held,"</b> <i>he says, hardly believing it. "Sister - it HELD."</i>',
+  const cost=()=>{ storyCard('<i>The seal roots the way Leo swore it would - into the one who casts it. He staggers; for a breath the violet crawls up his own arm before the binding drags it down into the stone with Vath. When he lowers the book his hair has gone white at one temple and his hand will not stop shaking - but he is smiling, and he is HIM, all the way through.</i> <b style="color:#ffe9a8">"It held,"</b> <i>he says, hardly believing it. "Sister - it HELD."</i>',
       {label:'Go to him', onOk:after}); };
   const after=()=>{ storyCard('<i>The violet drains out of Aldermere like a tide going out. The watch-fires will be relit, the streets refilled, the wall manned again - but not by your father. He spent the last of the Tideglass buying the two of you this hour, a long time ago now, and he is not coming back to see it kept. You stand with your brother in the hush of the throne room, the stolen crown cold on its empty seat, and for the first time since a wave took everything, there is nothing left in all the isles that is hunting you.</i> <b style="color:#ffe9a8">The shadow is sealed. The isles are free. You are home.</b>',
       {label:'The Tidefarer\'s tale', onOk:rollCredits}); };
@@ -988,7 +988,7 @@ const CREDITS_HTML =
   '<p><span class="role">Aldermere</span> lights its watch-fires anew, and crowns the two the tide threw back.</p>'+
   '<h2>The Tidefarers</h2>'+
   '<p><span class="role">Joan</span> &mdash; the masked princess, the warrior who freed the isles</p>'+
-  '<p><span class="role">Jaist</span> &mdash; her brother, the scholar-prince, who read the seal and paid its price</p>'+
+  '<p><span class="role">Leo</span> &mdash; her brother, the scholar-prince, who read the seal and paid its price</p>'+
   '<p><span class="role">King Aldous</span> &mdash; who spent the last of the Tideglass to buy his children an hour</p>'+
   '<p><span class="role">Vath the Emberbinder</span> &mdash; the shadow, caged at last</p>'+
   '<h2>The Folk of the Isles</h2>'+
@@ -1798,18 +1798,18 @@ function updateNPCs(dt){
       }
       continue;
     }
-    // Once the mask is off, the Woodworker IS Prince Jaist and holds the boat, never the
+    // Once the mask is off, the Woodworker IS Prince Leo and holds the boat, never the
     // woodpile. spawnNPCs seats him at the boat on a fresh Emberwick, and the reveal / isle
     // re-entry relocate a cached one - but if royalGarb ever flips while a stale Woodworker
     // is still parked at his Act I woodpile (an old save, a dev jump, no world re-entry), none
-    // of those fire. Catch it here, once, so his name/garb (Prince Jaist, royal blue) can never
-    // disagree with where he's standing. jaistToBoat is idempotent; _atBoat stops the re-check.
-    if(n.id==='woody' && !n._atBoat && P.story && P.story.royalGarb && G.worldId==='isle' && typeof jaistToBoat==='function'){
-      jaistToBoat(n); n._atBoat=1;
+    // of those fire. Catch it here, once, so his name/garb (Prince Leo, royal blue) can never
+    // disagree with where he's standing. leoToBoat is idempotent; _atBoat stops the re-check.
+    if(n.id==='woody' && !n._atBoat && P.story && P.story.royalGarb && G.worldId==='isle' && typeof leoToBoat==='function'){
+      leoToBoat(n); n._atBoat=1;
     }
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
-    if(n.hums && !n.hidden && !(n.id==='woody' && P.story && P.story.royalGarb)){ // the Woodworker hums a tune he can't name (the royal anthem) - but once he remembers he's Prince Jaist, he hums no more
+    if(n.hums && !n.hidden && !(n.id==='woody' && P.story && P.story.royalGarb)){ // the Woodworker hums a tune he can't name (the royal anthem) - but once he remembers he's Prince Leo, he hums no more
       n.humT=(n.humT===undefined? rnd(1,4):n.humT)-dt;
       if(n.humT<=0){ n.humT=rnd(2.6,5.2); addFloat('♪', n.x, n.y-1.9, 'rgba(206,196,232,0.92)', 0.9); }
     }

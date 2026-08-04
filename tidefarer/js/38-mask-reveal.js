@@ -17,7 +17,7 @@
      * Vath, robed in violet fire, prising her name out of her and sealing the
        mask over her face
      * the wicked mask itself, his spite worn as her own face
-     * the names surfacing at last - JOAN, and her brother JAIST
+     * the names surfacing at last - JOAN, and her brother LEO
 
    On its final beat it hands off (onDone) to the reunion in 06-dialog.js,
    which sets the story state, drops the banner, and plays the sibling cards.
@@ -70,9 +70,9 @@ const MR_BEATS = [
   // the name surfaces - JOAN
   { who:'', html:'<i>And then — under all of it, the thing he buried deepest. The name the sea kept from you.</i>',
     title:'JOAN', fog:0.08, gold:1, violet:0, burst:1, flash:1.2, shake:0.5 },
-  // and her brother's - JAIST
+  // and her brother's - LEO
   { who:'', html:'<i>And his, surfacing beside it — the brother who read the books and named the stars while you ran at every storm.</i>',
-    title:'JAIST', gold:1, fog:0.05, burst:0.6 },
+    title:'LEO', gold:1, fog:0.05, burst:0.6 },
   // the warm landing (clickable close)
   { who:'', html:'<i>You are not the sea’s nameless castaway. You are Joan of Aldermere — and at last, you remember.</i>',
     gold:0.92, fog:0.04 },

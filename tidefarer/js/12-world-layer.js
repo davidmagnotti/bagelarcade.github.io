@@ -2496,7 +2496,7 @@ function freeWarden(m){
 // The WARDING VEIL: a warding read from the hush-frost spellbook the Rimebound guarded,
 // hiding its bearer from Vath's eye and letting you steal back to the old islands (all but
 // the capital, which Vath holds outright). The book is retrieved from the Rimefissure's
-// reward chest (the Hush-Frost Spellbook) and cast by your brother Jaist in dialogue; this
+// reward chest (the Hush-Frost Spellbook) and cast by your brother Leo in dialogue; this
 // helper just sets the flags. `silent` sets them with no fanfare - used by that scene (which
 // plays its own casting cutscene), save-migration, and the dev menu.
 function grantVathVeil(silent){
@@ -2508,7 +2508,7 @@ function grantVathVeil(silent){
   if(silent) return;
   if(Snd.magic) Snd.magic();
   banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
-  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Jaist reads the warding from the hush-frost spellbook and settles it over you - cut from the ice the Warden wept.</i> “The robed man\'s eye is on the old islands now, watching every sea-road home. But not on <b>you</b> - not while this holds.” <b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s influence slides past you now, and the ferry can steal you back to the old islands - Barik, the Sunward Isle, Windsurf, Emberwick.</b> <i>“But not the capital. His gaze never leaves the throne he stole. Aldermere stays shut to us.”</i>'); }, 900);
+  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Leo reads the warding from the hush-frost spellbook and settles it over you - cut from the ice the Warden wept.</i> “The robed man\'s eye is on the old islands now, watching every sea-road home. But not on <b>you</b> - not while this holds.” <b style="color:#c9b0ff">You learn the WARDING VEIL. Vath\'s influence slides past you now, and the ferry can steal you back to the old islands - Barik, the Sunward Isle, Windsurf, Emberwick.</b> <i>“But not the capital. His gaze never leaves the throne he stole. Aldermere stays shut to us.”</i>'); }, 900);
   if(typeof autoSave==='function') autoSave();
 }
 function updateFrostFolkMood(){
@@ -2517,7 +2517,7 @@ function updateFrostFolkMood(){
   set('bryn',['The cold\'s gone KIND again - you can breathe without it biting, and there\'s seals back on the floes. A boat\'ll work the strait-edge by morning.','Still deep in snow, thank the Warden - but it\'s OUR winter now, not his. We owe you the whole season, friend.']);
   set('sigrid',['The glacier\'s stopped bleeding that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in.']);
 }
-// Jaist sails the reaches at his sister's side and holds the way home while she takes
+// Leo sails the reaches at his sister's side and holds the way home while she takes
 // the isle - the same watch he keeps on Stormreach. On the Frozen Isle he waits by the
 // Frostferry landing, where the princess brings the hush-frost spellbook up from the Rimefissure
 // for him to read and cast. Only present once Act II is underway (when the Frozen Isle opens).
@@ -2526,8 +2526,8 @@ function placeFrostBrother(){
   if(G.npcs.some(n=>n.id==='brother')) return;
   const D=(typeof FROST_ZONES!=='undefined' && FROST_ZONES.dock) ? FROST_ZONES.dock : {x:40,y:118};
   const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x+3), Math.round(D.y-4), 8)) || [D.x+3, D.y-4];
-  const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
-    {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+  const b=makeNPC('brother','Leo, Your Brother the Prince', sp[0], sp[1],
+    {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
     ["Go on - I'll hold the landing. If Hearthhold has the right of it, whatever Vath bound is down the Rimefissure, past the deep ice.",
      "The whole strait talks of a robed man on the glacier. That's Vath, or his handiwork. Find what he hid down there, Joan - and mind the cold.",
      "Bring me anything strange you turn up in the deep. Old script, old magic - that's my half of this fight, remember?"],0.1);
@@ -3744,8 +3744,8 @@ function spawnReachFolk(){
   // here on every visit so you always land beside him and the boat (not just the cutscene).
   if(!G.npcs.some(n=>n.id==='brother')){
     const sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(Z.strand.x+2), Math.round(Z.strand.y+1), 5)) || [Z.strand.x+2, Z.strand.y+1];
-    const b=makeNPC('brother','Jaist, Your Brother the Prince', sp[0], sp[1],
-      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
+    const b=makeNPC('brother','Leo, Your Brother the Prince', sp[0], sp[1],
+      {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#3b5a7a',pants:'#33302a',cloak:'#274052',hairstyle:'short'},
       ["Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
        "I'll keep a fire lit here on the strand. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
        "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."],0.1);
@@ -3848,7 +3848,7 @@ function placeObjectsReachDeep(){
     cleared:!!(P.story && P.story.tombBossDown) });
   // No loose loot chest down in the vault: the catacomb's one true keeping is the Tidefarer's
   // verse, sealed in the reward room past the warden (the 'reachverse' branch in openChest) -
-  // the thing Jaist sent you down here to find, not a stray tonic on the boss-room floor.
+  // the thing Leo sent you down here to find, not a stray tonic on the boss-room floor.
   G.critters=[];
   // THE BONE GATE (y37) gets its own visible bone-portcullis so the wall you cannot
   // yet pass reads as a sealed gate, not an invisible barrier - it grinds up (bars and
@@ -4403,7 +4403,7 @@ function spawnCrownFolk(){
      'Isle-folk, factors, off-duty guardsmen - they all end their night under my roof, whatever they started it as.',
      'A clean bed and a hot bowl, same price as ever. The court can keep its banquets.'],0.6);
     inn.nightOwl=true; G.npcs.push(inn); }   // a good innkeep is up as long as the lamps are lit
-  // ---- Jaist, Your Brother the Prince: once the mask is off and Act I's homecoming is
+  // ---- Leo, Your Brother the Prince: once the mask is off and Act I's homecoming is
   // underway, he crosses from the isles at your side and WALKS THE CAPITAL WITH YOU -
   // from the quay up to the Tideglass Palace and the audience with the King. He trails
   // the player (follow) rather than holding a post, and only stands here during that
@@ -4411,8 +4411,8 @@ function spawnCrownFolk(){
   if(P.story && P.story.unmasked && !P.story.act1End){
     const S=Z.spawn||{x:H.x,y:H.y};
     const bp=findOpenNear(Math.round(S.x+1),Math.round(S.y-1),8)||[S.x+1,S.y-1];
-    const bro=makeNPC('brother','Jaist, Your Brother the Prince', bp[0], bp[1],
-      {skin:'#d8a97a',hair:'#7a5a3a',shirt:'#2f5fa0',pants:'#33302a',cloak:'#25406a',hairstyle:'short'},
+    const bro=makeNPC('brother','Leo, Your Brother the Prince', bp[0], bp[1],
+      {skin:'#d8a97a',hair:'#e8cd6e',shirt:'#2f5fa0',pants:'#33302a',cloak:'#25406a',hairstyle:'short'},
       ['Lead on, Joan. Whatever waits in that throne room, we walk into it together this time.',
        'So this is Aldermere with my own eyes, and not a page in a book. Father is up past the forecourt - take us to him.',
        'Every wall of this city was raised for the three of us. Let us go and give the old man back two of the three.'],0);
@@ -4445,7 +4445,7 @@ function updateCrownFolkMood(){
     'A royal writ, an open purse, and the King\'s own hope riding on you. Do not squander them.']);
   set('brea',['Hear it! The King has named the traveler his own hand abroad - go where they go, and you go with the crown\'s blessing!']);
 }
-// THE RECKONING: once Jaist has learned the founders' seal, the ferry runs to Aldermere for
+// THE RECKONING: once Leo has learned the founders' seal, the ferry runs to Aldermere for
 // the final confrontation. The capital has fallen - Vath holds the throne, the King is long
 // gone, the guards and folk are fled, and violet corruption bleeds out from the palace. The
 // city is empty but for Vath, waiting on the stolen throne. Ends when Vath is bound (vathDown).
@@ -4474,13 +4474,13 @@ function spawnCrownReckoning(){
     m.hx=sp[0]; m.hy=sp[1]; m.respawnT=-1; m.state='idle'; m.noAggroT=1e9;
     m.sealed=true; m.invuln=true; m.customAI=1; m.vstage=0; m.arena=1;
   }
-  // Jaist, caged in black glass on the dais - kept unseen (sealed) until the ambush reveals him,
+  // Leo, caged in black glass on the dais - kept unseen (sealed) until the ambush reveals him,
   // then a fixed, invulnerable object right up until stage 3, when it becomes destructible.
   const cs=(typeof findOpenNear==='function' && findOpenNear(Math.round(PA.x), Math.round(PA.y+2), 6)) || [PA.x, PA.y+2];
   const cage=spawnMob('mage', cs[0], cs[1]);
   if(cage){
     cage.kind='cage'; cage.brotherCage=1; cage.boss=false; cage.bigBoss=false;
-    cage.title="JAIST'S CAGE"; cage.name="Jaist's Cage";
+    cage.title="LEO'S CAGE"; cage.name="Leo's Cage";
     cage.maxhp=520; cage.hp=520; cage.dmg=0; cage.speed=0; cage.aggro=0;
     cage.hx=cs[0]; cage.hy=cs[1]; cage.respawnT=-1; cage.state='idle';
     cage.customAI=1; cage.invuln=true; cage.sealed=true; cage.noAggroT=1e9;
@@ -6798,7 +6798,7 @@ function openChest(b){
     else { giveGold(rndi(120,180)); give('ore',2); banner('THE MAW\'S DEEP HOARD','ORE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
   // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the SEALING BOOK -
-  // the one working the old line hid away, strong enough to bind Vath. You carry it to Jaist
+  // the one working the old line hid away, strong enough to bind Vath. You carry it to Leo
   // (the woody/brother 'sealTome' scenes in 06-dialog.js), who reads and learns the seal.
   if(b.tidewardHoard){
     bumpStat('chests'); P.story=P.story||{};
@@ -6806,7 +6806,7 @@ function openChest(b){
     giveGold(rndi(300,450)); give('crystal',2); give('pearl',1);
     P.story.sealTome=1; give('sealtome',1);
     banner('THE TIDEWARD VAULT','THE FOUNDERS’ SEALING WORK');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders’ vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid open atop it all, a heavy book bound in tide-worn hide, its pages cut deep in the old royal script.</i> <i>You cannot read a word of it, but you know the weight of what it is - the founders raised their sentinel over this one working above every coin in the vault.</i> <b style="color:#ffe9a8">You take the Founders’ Sealing Book.</b> <i>This is the thing that could end Vath - not a blade, but a binding. Carry it to <b>Jaist</b>; only your brother can read the old hand, and only he could ever cast it.</i>'); },500);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders’ vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid open atop it all, a heavy book bound in tide-worn hide, its pages cut deep in the old royal script.</i> <i>You cannot read a word of it, but you know the weight of what it is - the founders raised their sentinel over this one working above every coin in the vault.</i> <b style="color:#ffe9a8">You take the Founders’ Sealing Book.</b> <i>This is the thing that could end Vath - not a blade, but a binding. Carry it to <b>Leo</b>; only your brother can read the old hand, and only he could ever cast it.</i>'); },500);
     setTimeout(autoSave,300); return;
   }
   // THE RIMEFISSURE'S REWARD: the hush-frost spellbook the Rimebound was set to guard.
@@ -6824,12 +6824,12 @@ function openChest(b){
     }
     P.story.veilTome=1; give('veilrune',1);
     banner('A SECRET, KEPT IN ICE','THE HUSH-FROST SPELLBOOK');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b>, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Jaist</b> ever loved - you cannot read a word of it. <i>It is older than the cold, maybe older than the crown; the Rimebound was set to keep it here long before any living grief, and what its frost-pages actually DO you cannot begin to guess.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. If anyone alive can read it, it is Jaist.</i>'); },520);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b>, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Leo</b> ever loved - you cannot read a word of it. <i>It is older than the cold, maybe older than the crown; the Rimebound was set to keep it here long before any living grief, and what its frost-pages actually DO you cannot begin to guess.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. If anyone alive can read it, it is Leo.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }
   // THE DROWNED CATACOMB'S REWARD: the Tidefarer's verse, cut into a stone deep in the warden's
-  // vault. This - not a coffer of coin - is what Jaist sent you down here to find. The princess
+  // vault. This - not a coffer of coin - is what Leo sent you down here to find. The princess
   // copies it off the wall to carry up to her brother the scholar, who reads the old royal script
   // (see the 'brother' scene in 06-dialog.js): the Act II clue that turns the isle-by-isle
   // freeing into a HUNT for the great queen's hidden grave and the sealing weapon in it.
@@ -6845,7 +6845,7 @@ function openChest(b){
     }
     P.story.reachProphecy=1; give('reachverse',1); giveGold(rndi(80,130));
     banner('THE DROWNED VERSE','THE THING THIS PLACE WAS HIDING');
-    toast('You copied down the <b style="color:#c9b0ff">Drowned Verse</b> - old royal script you can\'t read. Carry it up to <b>Jaist</b>.',6000);
+    toast('You copied down the <b style="color:#c9b0ff">Drowned Verse</b> - old royal script you can\'t read. Carry it up to <b>Leo</b>.',6000);
     setTimeout(autoSave,300);
     return;
   }
@@ -7115,7 +7115,7 @@ function boatMenu(){
   // once the seas are calm every dock is a ferry hub, but WHERE it will carry you
   // depends on the act. In Act I: the settled routes and the capital. In Act II the
   // whole archipelago is open and you sail where you like - only the capital stays
-  // shut until Jaist learns the founders' seal and the reckoning is at hand.
+  // shut until Leo learns the founders' seal and the reckoning is at hand.
   const A2       = !!(P.story && P.story.act2);
   let all;
   if(!A2){
@@ -7129,7 +7129,7 @@ function boatMenu(){
          ['Sail to the Aerie Isle','aerie'],['Sail to Barik','main'],
          ['Sail to the Sunward Isle','east'],['Sail to Windsurf Isle','wind'],
          ['Slip back to Emberwick','isle']];
-    // the capital stays shut all through Act II - until Jaist learns the founders' seal and
+    // the capital stays shut all through Act II - until Leo learns the founders' seal and
     // it is time for the reckoning. Then, and only then, the ferry will run to Aldermere.
     if(P.story && P.story.sealLearned) all.push(['Sail to Aldermere — the reckoning','crown']);
   }
@@ -7229,13 +7229,13 @@ function switchWorld(id){
   // in hand. Run on EVERY isle entry (Emberwick is cached, so a fresh regen may never fire
   // after the last gift lands) - placeEmberTomb self-guards against double-placing.
   if(id==='isle' && typeof placeEmberTomb==='function') placeEmberTomb();
-  // Jaist has left the woodpile for good once the mask is off (royalGarb). Emberwick is cached
+  // Leo has left the woodpile for good once the mask is off (royalGarb). Emberwick is cached
   // from Act I, though, so a return in Act II can restore a Woodworker NPC still parked at his
   // old woodpile - "stuck by the wood pile again." Walk him down to the boat on every isle
-  // entry; jaistToBoat is idempotent, so it's harmless when he's already there. (Fresh regens
+  // entry; leoToBoat is idempotent, so it's harmless when he's already there. (Fresh regens
   // spawn him at the boat.)
-  if(id==='isle' && P.story && P.story.royalGarb && typeof jaistToBoat==='function'){
-    jaistToBoat((G.npcs||[]).find(n=>n.id==='woody'));
+  if(id==='isle' && P.story && P.story.royalGarb && typeof leoToBoat==='function'){
+    leoToBoat((G.npcs||[]).find(n=>n.id==='woody'));
   }
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
   // chain below is the one exception, left armed on purpose).

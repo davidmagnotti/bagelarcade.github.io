@@ -10,7 +10,7 @@ function npcRoyalLook(npc){
   return npc.look;
 }
 function npcDisplayName(npc){
-  if(npc && npc.id==='woody' && P.story && P.story.royalGarb) return 'Prince Jaist';
+  if(npc && npc.id==='woody' && P.story && P.story.royalGarb) return 'Prince Leo';
   return npc.name;
 }
 function drawPortrait(npc){
@@ -95,11 +95,11 @@ function setDialog(text,btns,raw){
   });
 }
 // === THE FOUNDERS' SEAL: the princess brings the Sealing Book up from the Tideward Crypt to
-// Jaist. He reads the old royal script, understands the binding for what it is - and what it
+// Leo. He reads the old royal script, understands the binding for what it is - and what it
 // will ask of him - and, afraid but certain, agrees to learn it and be the one to seal Vath.
 // Learning it opens the road back to the capital for the reckoning. Shared by both the boat
-// Jaist (woody, royalGarb) on Emberwick and the companion 'brother' NPC on the other isles.
-function jaistSealScene(){
+// Leo (woody, royalGarb) on Emberwick and the companion 'brother' NPC on the other isles.
+function leoSealScene(){
   P.story=P.story||{};
   const agree=()=>{
     P.story.sealLearned=1;
@@ -107,7 +107,7 @@ function jaistSealScene(){
     if(Snd.levelup) Snd.levelup();
     if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(255,233,168,0.9)',56);
     if(typeof burst==='function') burst(P.x,P.y-0.5,'#ffe9a8',22,2.8);
-    if(typeof banner==='function') banner('THE SEAL IS LEARNED','JAIST WILL BIND THE SHADOW');
+    if(typeof banner==='function') banner('THE SEAL IS LEARNED','LEO WILL BIND THE SHADOW');
     setDialog('<i>He closes the book on his thumb and stands, and for the first time since the surf gave him back he does not look like a woodcutter or a scholar - he looks like his father\'s son.</i> “Then it\'s time, Joan. No more isles, no more waiting. We sail for Aldermere and I put this working on Vath myself - while you keep him off me long enough to speak it to the end.” <i>His hand is steady on the cover now.</i> “Take us home. Let\'s finish it.”',
       [{label:'Sail for the capital', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog();
         if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">The road to Aldermere is open.</b> Board the ferry and sail to the capital - Vath holds the throne, and the seal rides with your brother.',8000),500); }}]);
@@ -116,8 +116,8 @@ function jaistSealScene(){
     setDialog('<i>His scholar\'s calm cracks.</i> “Joan, do you understand what this is? A binding this old isn\'t spoken and forgotten - it takes root in the one who casts it. If I seal him with this, part of me goes into the cage with him. I felt it lift off the page just reading the first line.” <i>He is quiet a long moment, afraid, and then he makes himself nod.</i> “...But I\'m the only one who can read the hand, and the only one who can hold the words. So it has to be me. I\'ll learn it. Every line.”',
       [{label:'I\'ll be right beside you, brother', cls:'gold', fn:agree}]);
   };
-  setDialog('<i>You lay the heavy book in your brother\'s hands. Jaist goes still the instant he sees the script down its spine - then he opens it, and the colour leaves his face.</i> “...This is the founders\' hand. The oldest of it.” <i>His eyes race the first page, and his breath goes shallow.</i> “Joan. This is a <b>sealing</b> - a binding meant for something that cannot be killed, only caged. This is what they raised that guardian to keep from the world.”',
-    [{label:'Read it, Jaist', fn:p2}]);
+  setDialog('<i>You lay the heavy book in your brother\'s hands. Leo goes still the instant he sees the script down its spine - then he opens it, and the colour leaves his face.</i> “...This is the founders\' hand. The oldest of it.” <i>His eyes race the first page, and his breath goes shallow.</i> “Joan. This is a <b>sealing</b> - a binding meant for something that cannot be killed, only caged. This is what they raised that guardian to keep from the world.”',
+    [{label:'Read it, Leo', fn:p2}]);
 }
 function buildDialogContent(npc){
   // Speaking with Bram is what unlocks gathering - remember it the moment his dialog opens
@@ -287,23 +287,23 @@ function buildDialogContent(npc){
     const afterReveal=()=>{
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
-      // Jaist has remembered he is the prince: he leaves the woodpile for good this instant.
+      // Leo has remembered he is the prince: he leaves the woodpile for good this instant.
       // Walk the live Woodworker NPC down to the boat so he no longer hums his logs or paces
-      // the yard - he holds the way home now, not a woodcutter dancing. jaistToBoat also moves
+      // the yard - he holds the way home now, not a woodcutter dancing. leoToBoat also moves
       // his home-post (hx,hy), so the wander/separation tether can't drag him back uphill to the
       // woodpile. (Fresh Act II regens spawn him at the boat via spawnNPCs; the cached-Emberwick
       // case is caught again on isle entry in switchWorld, so he is never stranded at the woodpile.)
-      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(typeof jaistToBoat==='function') jaistToBoat(w); else if(w){ w.hums=false; w.wander=0; w.tx=null; } }
+      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(typeof leoToBoat==='function') leoToBoat(w); else if(w){ w.hums=false; w.wander=0; w.tx=null; } }
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
-      // The animated flood has just surfaced the names JOAN and JAIST, so we no longer
+      // The animated flood has just surfaced the names JOAN and LEO, so we no longer
       // re-narrate the naming here. It lands straight on the two of them: a wordless
       // look, then the shared memory of who did this to them - the brother talking.
-      const reunion=()=>storyCard('<i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile. Then the smile fades - you both remember the rest in the same breath.</i> “Vath,” <i>you say, the way you name a wound.</i> “It was always Vath - and Father is still out there in his grip.” <i>The salt-bleached rags fall away and you stand in your own colours at last: a deep royal magenta, your hair swept up in the old high ponytail. Beside you, Jaist trades the woodpile grey for his own bright blue and shoulders his axe like the sword it should have been.</i> “Take me to Father,” <i>he says.</i> “And I\'m not letting you walk into Vath alone this time.”',
+      const reunion=()=>storyCard('<i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile. Then the smile fades - you both remember the rest in the same breath.</i> “Vath,” <i>you say, the way you name a wound.</i> “It was always Vath - and Father is still out there in his grip.” <i>The salt-bleached rags fall away and you stand in your own colours at last: a deep royal magenta, your hair swept up in the old high ponytail. Beside you, Leo trades the woodpile grey for his own bright blue and shoulders his axe like the sword it should have been.</i> “Take me to Father,” <i>he says.</i> “And I\'m not letting you walk into Vath alone this time.”',
         {label:'To Aldermere', onOk:()=>{
           setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
         }});
@@ -313,7 +313,7 @@ function buildDialogContent(npc){
       closeDialog();
       // the animated memory-flood: the mask lifts and shatters, the amnesia fog tears
       // loose, and it all comes back - the boat, Vath's curse, the wicked mask, and the
-      // names JOAN and JAIST. Falls straight through to the reunion if the layer is absent.
+      // names JOAN and LEO. Falls straight through to the reunion if the layer is absent.
       if(typeof maskRevealCutscene==='function') maskRevealCutscene(afterReveal);
       else afterReveal();
     };
@@ -340,33 +340,33 @@ function buildDialogContent(npc){
     return;
   }
   // Act II climax: you carry the Founders' Sealing Book up from the Tideward Crypt to the
-  // boat where Jaist keeps the way home. He reads it, fears it, and agrees to seal Vath.
-  if(npc.id==='woody' && P.story && P.story.royalGarb && P.story.sealTome && !P.story.sealLearned){ jaistSealScene(); return; }
+  // boat where Leo keeps the way home. He reads it, fears it, and agrees to seal Vath.
+  if(npc.id==='woody' && P.story && P.story.royalGarb && P.story.sealTome && !P.story.sealLearned){ leoSealScene(); return; }
   // Seal learned, capital road open: he keeps the book close and his eyes on the sea-road home.
   if(npc.id==='woody' && P.story && P.story.royalGarb && P.story.sealLearned){
-    setDialog('<i>Jaist stands by the boat with the Founders\' Sealing Book shut under his arm, the words already going round in him.</i> “I have it, Joan - every line of the binding, and it has me. There\'s nothing left to gather and no one left to ask. Take us to Aldermere. Hold Vath off me while I speak it, and we end this today.”',
+    setDialog('<i>Leo stands by the boat with the Founders\' Sealing Book shut under his arm, the words already going round in him.</i> “I have it, Joan - every line of the binding, and it has me. There\'s nothing left to gather and no one left to ask. Take us to Aldermere. Hold Vath off me while I speak it, and we end this today.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // Act II underway: Jaist keeps the boat on Emberwick and the way home while the princess
+  // Act II underway: Leo keeps the boat on Emberwick and the way home while the princess
   // pulls Vath's hooks out of the old isles and hunts down the working that can bind him.
   if(npc.id==='woody' && P.story && P.story.act1End){
     setDialog('<i>Your brother stands at the tideline, one hand near the axe, looking east past every isle you know.</i> “Father bought us this - so don\'t waste it grieving. Vath holds the old islands now, and we don\'t have the strength to take them back yet. So we go and get it.” <i>He almost smiles.</i> “Pull his hooks out of the isles, sister - island by island, the way you always could. Somewhere out past the charts is the thing that binds him for good. Bring me anything written in the old hand, and I\'ll read us the rest of the way. I\'ll keep the boat.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
-  // THE ENDING: at the dawn celebration, Jaist offers you the throne at his side. You want the
+  // THE ENDING: at the dawn celebration, Leo offers you the throne at his side. You want the
   // horizon, not a crown - so he takes it, and asks one last favour that points past every chart.
   if(npc.id==='brother' && P.story && P.story.gameWon){
     const toCredits=()=>{ closeDialog(); if(typeof rollCredits==='function') rollCredits();
       else if(typeof banner==='function') banner('THE SHADOW IS SEALED','THE END — FOR NOW'); };
     const favour=()=>setDialog('<i>He settles the stolen crown onto his own brow - and for the first time it looks like it belongs there. Then he grins, the old scheming-brother grin.</i> “So. One favour, before you go. Those charts Old Mabley keeps swearing about - black water past Stormreach, isles no living hand has named - they\'re real. I\'ve seen the soundings. Something out there is stirring, sister, the way something stirred here.” <i>He grips your arm.</i> “Go and see. Free whatever needs freeing. And come home and tell me all of it - I\'ll keep the lamp lit and the sea-road open.” <b style="color:var(--ember)">Beyond the charted isles, a new tide is rising. (Act III — coming soon.)</b>',
       [{label:'I\'ll send word from the edge of the map', cls:'gold', fn:toCredits}]);
-    const takeIt=()=>setDialog('<i>Old Mabley, three steps down, isn\'t even pretending not to listen.</i> “There\'s black water past Stormreach, majesty-to-be,” <i>he calls up.</i> “Charts washed in from the deep. Isles with no names on them - and no warrior on them either.” <i>Jaist looks from the old sailor to you, and something passes between the two of you that needs no words: you both know exactly where you\'ll be within the month.</i> “Then I\'ll keep the throne warm,” <i>he says softly.</i> “Somebody has to. It was always going to be me - the reader, not the blade.”',
-      [{label:'You\'ll be a good king, Jaist', fn:favour}]);
-    const decline=()=>setDialog('<i>You shake your head before he\'s even done asking, and he laughs, because of course he knew.</i> “No. I didn\'t come all this way across every sea in the world to sit still on a chair, Jaist - not even a gold one. You were always the one who loved these halls. I love what\'s past the harbour wall.” <i>He nods, unsurprised, a little proud.</i> “The tide keeps throwing you back out to it, doesn\'t it.”',
+    const takeIt=()=>setDialog('<i>Old Mabley, three steps down, isn\'t even pretending not to listen.</i> “There\'s black water past Stormreach, majesty-to-be,” <i>he calls up.</i> “Charts washed in from the deep. Isles with no names on them - and no warrior on them either.” <i>Leo looks from the old sailor to you, and something passes between the two of you that needs no words: you both know exactly where you\'ll be within the month.</i> “Then I\'ll keep the throne warm,” <i>he says softly.</i> “Somebody has to. It was always going to be me - the reader, not the blade.”',
+      [{label:'You\'ll be a good king, Leo', fn:favour}]);
+    const decline=()=>setDialog('<i>You shake your head before he\'s even done asking, and he laughs, because of course he knew.</i> “No. I didn\'t come all this way across every sea in the world to sit still on a chair, Leo - not even a gold one. You were always the one who loved these halls. I love what\'s past the harbour wall.” <i>He nods, unsurprised, a little proud.</i> “The tide keeps throwing you back out to it, doesn\'t it.”',
       [{label:'Someone has to see what\'s out there', fn:takeIt}]);
-    setDialog('<i>Jaist waits for you at the foot of the palace stair, the whole freed sea cheering at his back. He looks at you a long moment - the sister who went into the dark for him and came back out.</i> “We did it. Both of us, home, and the shadow in the stone.” <i>His voice goes careful.</i> “Father\'s throne stands empty, Joan. By blood it\'s yours before it\'s mine - you\'re the elder. Rule with me. Aldermere would follow you into the sea and back.”',
+    setDialog('<i>Leo waits for you at the foot of the palace stair, the whole freed sea cheering at his back. He looks at you a long moment - the sister who went into the dark for him and came back out.</i> “We did it. Both of us, home, and the shadow in the stone.” <i>His voice goes careful.</i> “Father\'s throne stands empty, Joan. By blood it\'s yours before it\'s mine - you\'re the elder. Rule with me. Aldermere would follow you into the sea and back.”',
       [{label:'Take the throne? Not me.', cls:'gold', fn:decline},
        {label:'Hear him out', fn:decline}]);
     return;
@@ -405,7 +405,7 @@ function buildDialogContent(npc){
       if(typeof sailEpilogue==='function') sailEpilogue();
       else toast('<b style="color:#c9a0ff">Vath holds the Tideglass magic now</b>, and the strait behind you is his. But you and your brother live - and somewhere past the charted isles is the strength to come back for him. <b style="color:var(--ember)">Set your prow for Stormreach, and Act II.</b>',10000);
     };
-    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, my firstborn, that I gave to the water with my own blind hand. And you-” <i>his voice fails on the prince.</i> “...Jaist. My boy. Both of you. Alive.”',
+    setDialog('<i>King Aldous rises from the Tideglass Throne, and reads your bare face and the man at your side in a single breath. The crown does not know how to weep; the old man beneath it does.</i> “A masked stranger unmaking my enemy\'s work, isle by isle - and all this time it was YOU. Joan. My daughter, my firstborn, that I gave to the water with my own blind hand. And you-” <i>his voice fails on the prince.</i> “...Leo. My boy. Both of you. Alive.”',
       [{label:'We came home, Father.', cls:'gold', fn:toCutscene}]);
     return;
   }
@@ -499,7 +499,7 @@ function buildDialogContent(npc){
     return;
   }
   // === THE TIDEFARER'S VERSE: the princess brings the prophecy up from the catacomb ====
-  // On the strand Jaist told her to "find what this place is hiding." This is her answer:
+  // On the strand Leo told her to "find what this place is hiding." This is her answer:
   // the verse-stone copied out of the Drowned Vault. He reads the old royal script their
   // father made them both learn - and names the hunt it sets them on. Fires once.
   if(npc.id==='brother' && P.story && P.story.reachProphecy && !P.story.reachProphecyRead){
@@ -511,19 +511,19 @@ function buildDialogContent(npc){
       setDialog('<i>His eyes race the lines, and his breath catches.</i> “…the weapon the great queen forged to seal the shadow, and she lies buried with it, not where the histories laid her.” <i>He reads it again, slower, to be sure of it.</i> “Joan - this isn\'t a grave-song. It\'s a <b>prophecy</b>, in our own ancestor\'s hand. The Tidefarer forged a weapon that could end Vath for good, and it lies in her hidden grave - not the tomb the histories gave her. It doesn\'t say <i>where</i>… but a thing named is a thing that can be found.” <i>He rolls the rubbing careful into his case.</i> “I\'ll keep reading what\'s left. Go on freeing the isles - only now we know what we\'re freeing them TOWARD.”',
         [{label:'A name at last', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog(); }}]);
     };
-    setDialog('<i>You lay the verse-rubbing in your brother\'s hands. Jaist goes still the moment he sees the letters running down it.</i> “Old royal script - the founders\' hand, or near enough. And this cadence...” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
+    setDialog('<i>You lay the verse-rubbing in your brother\'s hands. Leo goes still the moment he sees the letters running down it.</i> “Old royal script - the founders\' hand, or near enough. And this cadence...” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
       [{label:'Read it, brother', fn:read}]);
     return;
   }
-  // === THE FOUNDERS' SEAL: brought to the companion Jaist on any isle he holds ==========
-  if(npc.id==='brother' && P.story && P.story.sealTome && !P.story.sealLearned){ jaistSealScene(); return; }
+  // === THE FOUNDERS' SEAL: brought to the companion Leo on any isle he holds ==========
+  if(npc.id==='brother' && P.story && P.story.sealTome && !P.story.sealLearned){ leoSealScene(); return; }
   if(npc.id==='brother' && P.story && P.story.sealLearned){
-    setDialog('<i>Jaist keeps the Founders\' Sealing Book shut under his arm, the binding already turning in him.</i> “I have every line of it, sister - and it has me. Take us to Aldermere when you\'re ready; hold Vath off me while I speak the seal, and we finish this.”',
+    setDialog('<i>Leo keeps the Founders\' Sealing Book shut under his arm, the binding already turning in him.</i> “I have every line of it, sister - and it has me. Take us to Aldermere when you\'re ready; hold Vath off me while I speak the seal, and we finish this.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
   // === THE WARDING VEIL: the brother reads the hush-frost spellbook ==========
-  // The princess brings the Hush-Frost Spellbook up from the Rimefissure; Jaist, the
+  // The princess brings the Hush-Frost Spellbook up from the Rimefissure; Leo, the
   // scholar, reads the old royal script and casts the warding that hides them both from
   // Vath's eye - shown as its own overlay cutscene (veilCastCutscene, 39-more-cutscenes.js).
   // Casting the veil is what reopens the sea-roads to the old islands (boatMenu reads
@@ -531,7 +531,7 @@ function buildDialogContent(npc){
   // carries other secrets - abilities the old line hid across the isles - which seeds the
   // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
-    const homeCard=()=>storyCard('<i>The warding settles and holds.</i> <b style="color:#c9b0ff">The way home is open again</b> - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>. <i>Jaist thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Not the capital, though - not till we\'re ready for Vath himself. And this is more than a hiding-spell, sister: the old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
+    const homeCard=()=>storyCard('<i>The warding settles and holds.</i> <b style="color:#c9b0ff">The way home is open again</b> - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>. <i>Leo thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Not the capital, though - not till we\'re ready for Vath himself. And this is more than a hiding-spell, sister: the old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
         {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
     const cast=()=>{
       closeDialog();
@@ -553,21 +553,21 @@ function buildDialogContent(npc){
       setDialog('<i>He works down the frost-page, lips moving.</i> “It\'s a warding of some kind - a hiding-spell, I think. The rest is past me at a glance.” <i>He looks up.</i> “Only one way to learn what it does. Hold still, sister - let me try it on you.”',
         [{label:'Cast it, brother', cls:'gold', fn:cast}]);
     };
-    setDialog('<i>You lay the ice-bound book in your brother\'s hands. Jaist goes still the moment he sees the marks.</i> “Old royal script - the founders\' hand, or older. Where did you...” <i>His scholar\'s eyes are already racing the page.</i>',
+    setDialog('<i>You lay the ice-bound book in your brother\'s hands. Leo goes still the moment he sees the marks.</i> “Old royal script - the founders\' hand, or older. Where did you...” <i>His scholar\'s eyes are already racing the page.</i>',
       [{label:'It was in the deep ice, past the Rimebound', fn:p2}]);
     return;
   }
-  // Stormreach, after the verse is read: Jaist holds the boat with the hunt in mind, so his
+  // Stormreach, after the verse is read: Leo holds the boat with the hunt in mind, so his
   // idle chatter no longer sends you to "find what this place is hiding" - you already did.
-  // (Reach-world only, so it never overrides the Frozen-Isle Jaist's landing lines.)
+  // (Reach-world only, so it never overrides the Frozen-Isle Leo's landing lines.)
   if(npc.id==='brother' && typeof G!=='undefined' && G.worldId==='reach' && P.story && P.story.reachProphecyRead){
-    setDialog('<i>Jaist keeps the Drowned Verse close and an eye on the moored boat.</i> “Every curse you break is a step nearer her grave - the Tidefarer\'s, and the weapon in it. Keep pulling Vath\'s hooks out of the isles, sister. I\'ll hold the way home, and I\'ll keep puzzling the verse.”',
+    setDialog('<i>Leo keeps the Drowned Verse close and an eye on the moored boat.</i> “Every curse you break is a step nearer her grave - the Tidefarer\'s, and the weapon in it. Keep pulling Vath\'s hooks out of the isles, sister. I\'ll hold the way home, and I\'ll keep puzzling the verse.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
   // After the Veil is cast: the brother holds the Frozen landing and points you home.
   if(npc.id==='brother' && P.story && P.story.vathVeil){
-    setDialog('<i>Jaist keeps a weather-eye on the strait and the moored boat, the frost-book open across his knee.</i> “The Veil holds - I can feel it holding. His curses have had free run of the old islands while we were gone; there\'s no telling what\'s festered. Sail back and undo them, one at a time - I\'ll keep the way home, same as ever, and keep reading. There are powers written in here yet, sister. If any of them can turn Vath, I\'ll find it.”',
+    setDialog('<i>Leo keeps a weather-eye on the strait and the moored boat, the frost-book open across his knee.</i> “The Veil holds - I can feel it holding. His curses have had free run of the old islands while we were gone; there\'s no telling what\'s festered. Sail back and undo them, one at a time - I\'ll keep the way home, same as ever, and keep reading. There are powers written in here yet, sister. If any of them can turn Vath, I\'ll find it.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }

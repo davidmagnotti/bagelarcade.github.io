@@ -2474,14 +2474,14 @@ function drawNPC(n,s){
   let nlook=n.look, nname=n.name;
   if(n.id==='woody' && P.story && P.story.royalGarb){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
-    nname='Prince Jaist';
+    nname='Prince Leo';
   }
   // n.swing lets an NPC animate a weapon strike (Rask's practice slash in the parry
   // drill); a live swing bypasses the sprite cache so the blade actually moves. `moving`
   // (an NPC walking toward a wander target) also draws live, so a walking/dancing NPC gets a
   // smooth 60fps gait instead of the 8-frame cached walk - the cache is for NPCs standing still.
   drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
-  // name (the brother-prince Jaist rides at your side across the Act II isles;
+  // name (the brother-prince Leo rides at your side across the Act II isles;
   // he needs no floating name-tag trailing him everywhere he goes)
   // The name reads over the head only once you've MET this soul (spoken to them - P.met),
   // or while you stand close enough to speak - the same approach-fade the landmark and
@@ -3356,7 +3356,7 @@ function drawMob(m,s){
     cx.restore(); cx.lineCap='butt';
     drawMobBars&&drawMobBars(m,s); return;
   }
-  // ===== THE RECKONING: Vath's three forms + Jaist's cage (bespoke) =====
+  // ===== THE RECKONING: Vath's three forms + Leo's cage (bespoke) =====
   if(m.kind==='vathhusk'){   // STAGE 1: the man peels away into a lean shadow-thing
     drawShadowAt(cx,s.x,s.y,16);
     if(m.windup>0){ const wp=1-Math.min(1,m.windup/0.55); cx.strokeStyle='rgba(230,60,45,'+(0.5+0.35*Math.sin(G.time*24)).toFixed(2)+')'; cx.lineWidth=2.5; cx.beginPath(); cx.ellipse(s.x,s.y,26+wp*12,(26+wp*12)*0.5,0,0,TAU); cx.stroke(); }
@@ -3437,7 +3437,7 @@ function drawMob(m,s){
     cx.restore();
     drawMobBars&&drawMobBars(m,s); return;
   }
-  if(m.kind==='cage'){   // Jaist, caged in black glass on the dais
+  if(m.kind==='cage'){   // Leo, caged in black glass on the dais
     drawShadowAt(cx,s.x,s.y,16);
     const t=G.time, hurt=m.hurtT>0;
     cx.save(); cx.translate(s.x,s.y);
@@ -3446,7 +3446,7 @@ function drawMob(m,s){
     cx.save(); cx.translate(0,-6);
     cx.fillStyle='#2f5fa0'; cx.beginPath(); cx.ellipse(0,-14,5,8,0,0,TAU); cx.fill();
     cx.fillStyle='#d8a97a'; cx.beginPath(); cx.arc(0,-22,4,0,TAU); cx.fill();
-    cx.fillStyle='#7a5a3a'; cx.beginPath(); cx.arc(0,-24,4.2,Math.PI,TAU); cx.fill();
+    cx.fillStyle='#e8cd6e'; cx.beginPath(); cx.arc(0,-24,4.2,Math.PI,TAU); cx.fill();
     cx.restore();
     cx.strokeStyle='rgba(40,16,70,0.95)'; cx.lineWidth=2.6; cx.lineCap='round';
     for(let i=-2;i<=2;i++){ const bx=i*5.5; cx.beginPath(); cx.moveTo(bx,-2); cx.lineTo(bx,-44); cx.stroke(); }

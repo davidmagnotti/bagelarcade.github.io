@@ -192,7 +192,7 @@ function loadCode(str){
   // Warding Veil catch-up: the Veil now comes from the Rimefissure's reward chest (the
   // Hush-Frost Spellbook), read into a spell by your brother. Credit the book to any Act II
   // save that already cleared the Rimefissure (deepDone) but predates this flow, so they can
-  // complete the casting with Jaist on the Frozen Isle and reopen the old islands. Saves that
+  // complete the casting with Leo on the Frozen Isle and reopen the old islands. Saves that
   // already earned the Veil under the old rules keep it (guarded by !vathVeil).
   if(P.story.deepDone && P.story.act2 && !P.story.vathVeil && !P.story.veilTome){
     P.story.veilTome=1; P.inv=P.inv||{}; P.inv.veilrune=(P.inv.veilrune||0)+1;
