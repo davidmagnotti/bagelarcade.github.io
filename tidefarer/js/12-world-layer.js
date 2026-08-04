@@ -7075,14 +7075,10 @@ function sailTo(dest, msg){
 }
 function boatMenu(){
   // once the seas are calm every dock is a ferry hub, but WHERE it will carry you
-  // depends on the act. In Act I: the settled routes and the capital. In Act II
-  // Vath holds the old world, so the ferry runs a GATED chain - Stormreach, then
-  // the Frozen Isle (once the Barrow Brute falls), then the Aerie - and only the
-  // Warding Veil steals you back to the old islands. Never the capital.
+  // depends on the act. In Act I: the settled routes and the capital. In Act II the
+  // whole archipelago is open and you sail where you like - only the capital stays
+  // shut until Jaist learns the founders' seal and the reckoning is at hand.
   const A2       = !!(P.story && P.story.act2);
-  const beatReach= !!(P.story && P.story.reachBossDown);  // Barrow Brute down - Stormreach is a port again
-  const frostWon = !!(P.story && P.story.frostFreed);     // Weeping Warden freed - the Frozen Isle is done
-  const veil     = !!(P.story && P.story.vathVeil);       // the Warding Veil cloaks you from Vath's eye
   let all;
   if(!A2){
     // ACT I: the settled routes and the capital. The far reaches - Stormreach, the
@@ -7090,11 +7086,11 @@ function boatMenu(){
     all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
          ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
   } else {
-    all=[['Sail to Stormreach','reach']];                          // the storm-coast hub, where the prince holds the boat
-    if(beatReach) all.push(['Sail to the Frozen Isle','frost']);   // the Brute's fall thaws the strait north
-    if(frostWon)  all.push(['Sail to the Aerie Isle','aerie']);    // the last far reach opens once the Frozen Isle is won
-    if(veil) all.push(['Sail to Barik','main'],['Sail to the Sunward Isle','east'],
-                      ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle']);
+    // ACT II: the whole archipelago is open - sail wherever you like, near reach or far.
+    all=[['Sail to Stormreach','reach'],['Sail to the Frozen Isle','frost'],
+         ['Sail to the Aerie Isle','aerie'],['Sail to Barik','main'],
+         ['Sail to the Sunward Isle','east'],['Sail to Windsurf Isle','wind'],
+         ['Slip back to Emberwick','isle']];
     // the capital stays shut all through Act II - until Jaist learns the founders' seal and
     // it is time for the reckoning. Then, and only then, the ferry will run to Aldermere.
     if(P.story && P.story.sealLearned) all.push(['Sail to Aldermere — the reckoning','crown']);
@@ -7113,11 +7109,7 @@ function boatMenu(){
     ? '“Calm seas on the settled routes now, friend, and a clear run to the capital. The far reaches - Stormreach, the Aerie, the Frozen strait - no ferryman will chance those yet. Where to?”'
     : sealed
       ? '“So it\'s Aldermere at last... aye, I\'ll take you, though the water off the capital\'s gone black as pitch and every gull\'s fled it. Whatever you mean to do there - do it. Where to?”'
-    : veil
-      ? '“The Veil\'s on you, friend - Vath\'s eye slides right past. The old isles are open to us again... all but the capital. Never the capital. Where to?”'
-      : beatReach
-        ? '“The Brute\'s down and the reef\'s gone quiet - the strait north to the Frozen Isle runs clear at last. Where to?”'
-        : '“Storm\'s eased enough for a short hop, friend. Where to?”';
+      : '“Seas are yours to roam now, friend - every isle on the chart, near reach or far. Only the capital stays shut against us. Where to?”';
   setDialog(line,
     dests.map(([lbl,dst])=>({label:lbl, fn:()=>{ closeDialog(); sailTo(dst); }}))
       .concat([{label:'Stay ashore',ghost:true,fn:closeDialog}]));
@@ -7185,7 +7177,7 @@ function switchWorld(id){
   // THE RECKONING: sailing into the fallen capital for the final confrontation with Vath.
   if(id==='crown' && crownReckoning()){
     if(typeof banner==='function') banner('ALDERMERE','THE THRONE VATH STOLE');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The ferryman will not put in past the quay. Aldermere stands dead ahead - and it IS dead: the watch-fires cold, the wall unmanned, not a guard nor a soul on the long streets. A violet stain has crept out from the palace and soaked the whole city through, and the nearer the throne, the more the stone seems to <b>breathe</b>.</i> <b style="color:#c9a0ff">Vath is on the throne. Your father is nowhere.</b> <i>Climb to the palace. Keep him off Jaist long enough for your brother to speak the seal to its end.</i>'); }, 900);
+    // (the arrival narration card was removed - the banner alone marks the reckoning)
   }
   // Act IV: coming back to Emberwick with the last hunt underway - make sure Vath
   // is on the green if you'd already drawn him out and left mid-fight.

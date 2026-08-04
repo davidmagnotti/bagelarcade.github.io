@@ -231,6 +231,9 @@ function spawnNPCs(){
        'That tune in my head? No idea the name. My hands seem to, though - I stack the logs to it.'],0.25);
       w.hums=true; return w; })()
   ];
+  // Act II: Jaist keeps the boat and the way home now, so the old ferry-captain is gone from
+  // the Emberwick dock - his Act I shipwright work is long done and the story has sailed past him.
+  if(P.story && P.story.act2) G.npcs = G.npcs.filter(n=>n.id!=='brant');
   // Pip the cat
   G.cat = {x:34.5, y:31.5, face:1, anim:0, wt:2, found:false, home:{x:34.5,y:31.5}};
 }
