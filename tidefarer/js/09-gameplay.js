@@ -1062,7 +1062,11 @@ function killMob(m,skill){
     // Castellan...) falls under its own name - never the Hollow Spirit's
     Snd.boss(); G.shake=0.85; G.slowmo=1.1;
     shockwave(m.x,m.y,'rgba(160,255,200,0.9)',80);
-    banner((m.title||'THE FOE')+' FALLS','A SHADOW LIFTS FROM THIS PLACE');
+    // Most regional bosses were a curse Vath let fester, so felling them lifts a shadow.
+    // The Tideward Guardian is no curse - it is the founders' own sentinel, guarding their
+    // vault since long before Vath - so it falls under a founders' line, not a shadow-lifted one.
+    const bossSub=(m.tidewardboss||m.wardking)?'THE FOUNDERS’ LAST WARD YIELDS':'A SHADOW LIFTS FROM THIS PLACE';
+    banner((m.title||'THE FOE')+' FALLS',bossSub);
   } else Snd.hit();
   // The Hoarfrost Bear guarded the Glacier Vault's den - felling it opens the way down.
   if(m.vaultbear){

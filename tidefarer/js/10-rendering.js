@@ -3520,7 +3520,7 @@ function drawHorse(s){
 function drawPlayer(s){
   // plunging into the Emberdeep pit: the hero tumbles down, shrinking and fading into the dark,
   // then respawns (see eastFall / emberRespawn). Drawn in place of the normal figure.
-  {const _drop = (typeof G!=='undefined') && (G._emberDrop||G._mawDrop||G._windDrop||G._forgePlunge);
+  {const _drop = (typeof G!=='undefined') && (G._emberDrop||G._mawDrop||G._windDrop||G._forgePlunge||G._tombPlunge);
   if(_drop){
     const p=Math.min(1, _drop.t/_drop.dur), g=cx;
     g.save();

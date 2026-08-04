@@ -91,6 +91,31 @@ function setDialog(text,btns,raw){
     el.onclick=()=>b.fn(); bx.appendChild(el);
   });
 }
+// === THE FOUNDERS' SEAL: the princess brings the Sealing Book up from the Tideward Crypt to
+// Jaist. He reads the old royal script, understands the binding for what it is - and what it
+// will ask of him - and, afraid but certain, agrees to learn it and be the one to seal Vath.
+// Learning it opens the road back to the capital for the reckoning. Shared by both the boat
+// Jaist (woody, royalGarb) on Emberwick and the companion 'brother' NPC on the other isles.
+function jaistSealScene(){
+  P.story=P.story||{};
+  const agree=()=>{
+    P.story.sealLearned=1;
+    if(typeof take==='function') take('sealtome',1);
+    if(Snd.levelup) Snd.levelup();
+    if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(255,233,168,0.9)',56);
+    if(typeof burst==='function') burst(P.x,P.y-0.5,'#ffe9a8',22,2.8);
+    if(typeof banner==='function') banner('THE SEAL IS LEARNED','JAIST WILL BIND THE SHADOW');
+    setDialog('<i>He closes the book on his thumb and stands, and for the first time since the surf gave him back he does not look like a woodcutter or a scholar - he looks like his father\'s son.</i> “Then it\'s time, Joan. No more isles, no more waiting. We sail for Aldermere and I put this working on Vath myself - while you keep him off me long enough to speak it to the end.” <i>His hand is steady on the cover now.</i> “Take us home. Let\'s finish it.”',
+      [{label:'Sail for the capital', cls:'gold', fn:()=>{ if(typeof autoSave==='function') autoSave(); closeDialog();
+        if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">The road to Aldermere is open.</b> Board the ferry and sail to the capital - Vath holds the throne, and the seal rides with your brother.',8000),500); }}]);
+  };
+  const p2=()=>{
+    setDialog('<i>His scholar\'s calm cracks.</i> “Joan, do you understand what this is? A binding this old isn\'t spoken and forgotten - it takes root in the one who casts it. If I seal him with this, part of me goes into the cage with him. I felt it lift off the page just reading the first line.” <i>He is quiet a long moment, afraid, and then he makes himself nod.</i> “...But I\'m the only one who can read the hand, and the only one who can hold the words. So it has to be me. I\'ll learn it. Every line.”',
+      [{label:'I\'ll be right beside you, brother', cls:'gold', fn:agree}]);
+  };
+  setDialog('<i>You lay the heavy book in your brother\'s hands. Jaist goes still the instant he sees the script down its spine - then he opens it, and the colour leaves his face.</i> “...This is the founders\' hand. The oldest of it.” <i>His eyes race the first page, and his breath goes shallow.</i> “Joan. This is a <b>sealing</b> - a binding meant for something that cannot be killed, only caged. This is what they raised that guardian to keep from the world.”',
+    [{label:'Read it, Jaist', fn:p2}]);
+}
 function buildDialogContent(npc){
   // Speaking with Bram is what unlocks gathering - remember it the moment his dialog opens
   // (see hasMetBram / hitNode: no chopping or mining until you've been to the forge).
@@ -310,6 +335,15 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
+  // Act II climax: you carry the Founders' Sealing Book up from the Tideward Crypt to the
+  // boat where Jaist keeps the way home. He reads it, fears it, and agrees to seal Vath.
+  if(npc.id==='woody' && P.story && P.story.royalGarb && P.story.sealTome && !P.story.sealLearned){ jaistSealScene(); return; }
+  // Seal learned, capital road open: he keeps the book close and his eyes on the sea-road home.
+  if(npc.id==='woody' && P.story && P.story.royalGarb && P.story.sealLearned){
+    setDialog('<i>Jaist stands by the boat with the Founders\' Sealing Book shut under his arm, the words already going round in him.</i> “I have it, Joan - every line of the binding, and it has me. There\'s nothing left to gather and no one left to ask. Take us to Aldermere. Hold Vath off me while I speak it, and we end this today.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // Act II teaser, once Act I has closed on the capital.
   if(npc.id==='woody' && P.story && P.story.act1End){
     setDialog('<i>Your brother stands at the tideline, looking east past every isle you know.</i> “Father bought us this - don\'t waste it grieving. Vath has the Tideglass magic now, and we don\'t have the strength to take it back. Not yet.” <i>He almost smiles.</i> “So we go and get strong. There are isles out past the charts, and allies we haven\'t made. When we come back for him, we come back ready. <b style="color:var(--ember)">(Act II - coming soon.)</b>”',
@@ -447,6 +481,13 @@ function buildDialogContent(npc){
     };
     setDialog('<i>You lay the ancient chart in your brother\'s hands. Jaist goes still the moment he sees the letters along its edge.</i> “Old royal script - Grandmother\'s hand, or near enough. And these coastlines...” <i>He stops, already reading.</i> “The catacomb. Of course it was the catacomb.”',
       [{label:'Read it, brother', fn:read}]);
+    return;
+  }
+  // === THE FOUNDERS' SEAL: brought to the companion Jaist on any isle he holds ==========
+  if(npc.id==='brother' && P.story && P.story.sealTome && !P.story.sealLearned){ jaistSealScene(); return; }
+  if(npc.id==='brother' && P.story && P.story.sealLearned){
+    setDialog('<i>Jaist keeps the Founders\' Sealing Book shut under his arm, the binding already turning in him.</i> “I have every line of it, sister - and it has me. Take us to Aldermere when you\'re ready; hold Vath off me while I speak the seal, and we finish this.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
   // === THE WARDING VEIL: the brother reads the hush-frost spellbook ==========

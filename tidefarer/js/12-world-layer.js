@@ -6040,7 +6040,9 @@ function placeEmberTombObjects(){
   setSolid(40,104,0); setTile(40,104,T.RUIN);
   for(const [tx,ty] of [[34,98],[46,98],[26,70],[54,70],[26,58],[54,58],[26,32],[54,32],[24,4],[56,4],[40,3]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
   G._tombVoid=new Set(); G._tombPlunge=null; G._tombCheck={x:40.5,y:90.5};
-  const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); if(((x*3+y)%3)===0) G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
+  // Every void cell reads as opaque black pit, so what LOOKS like a fall is exactly what
+  // drops you (the old 1-in-3 scatter left plunge-tiles that looked like solid floor).
+  const voidRect=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inb(x,y) && walkTile(tileAt(x,y))){ G._tombVoid.add(x+','+y); G.decor.push({kind:'bonepit', x:x+0.5, y:y+0.5}); } };
   voidRect(28,52,52,53);        // THE BROKEN SPAN gap - a 2-tile void the base dash clears (the old longer-dash requirement is gone)
   voidRect(26,10,54,15);        // THE SUNDERING CHASM gap (double dash)...
   // ...but leave a small mid-island to land the first dash on, then dash again to the vault
@@ -6706,13 +6708,16 @@ function openChest(b){
     if((P.tools&&P.tools.pick||0)<2){ if(typeof grantDelvebreaker==='function') grantDelvebreaker(); }
     else { giveGold(rndi(120,180)); give('ore',2); banner('THE MAW\'S DEEP HOARD','ORE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
-  // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the trail to the weapon.
+  // EMBERWICK CAPSTONE - THE TIDEWARD VAULT: the founders' hoard, and the SEALING BOOK -
+  // the one working the old line hid away, strong enough to bind Vath. You carry it to Jaist
+  // (the woody/brother 'sealTome' scenes in 06-dialog.js), who reads and learns the seal.
   if(b.tidewardHoard){
     bumpStat('chests'); P.story=P.story||{};
     shockwave(b.x,b.y,'rgba(240,220,150,0.9)',64); burst(b.x,b.y-0.5,'#ffe9a8',26,3); if(Snd.levelup) Snd.levelup();
     giveGold(rndi(300,450)); give('crystal',2); give('pearl',1);
-    banner('THE TIDEWARD VAULT','THE FOUNDERS\' HOARD');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders\' vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid atop it all, a slab of tide-worn stone graven with a name and a map you half-know.</i> “The <b>Tidefarer</b>,” <i>you read, and the old prophecy your brother copied out of Stormreach\'s catacombs stirs in your memory - a weapon forged to seal an evil, hidden on an isle off Emberwick.</i> <b style="color:#ffe9a8">The trail to the weapon lies open.</b> <i>(Act II climax - to be continued.)</i>'); },500);
+    P.story.sealTome=1; give('sealtome',1);
+    banner('THE TIDEWARD VAULT','THE FOUNDERS’ SEALING WORK');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The Tideward Guardian sinks to its knees and is still, and the founders’ vault gives up its keeping: old crowned coin, ember-glass, a great pearl - and, laid open atop it all, a heavy book bound in tide-worn hide, its pages cut deep in the old royal script.</i> <i>You cannot read a word of it, but you know the weight of what it is - the founders raised their sentinel over this one working above every coin in the vault.</i> <b style="color:#ffe9a8">You take the Founders’ Sealing Book.</b> <i>This is the thing that could end Vath - not a blade, but a binding. Carry it to <b>Jaist</b>; only your brother can read the old hand, and only he could ever cast it.</i>'); },500);
     setTimeout(autoSave,300); return;
   }
   // THE RIMEFISSURE'S REWARD: the hush-frost spellbook the Rimebound was set to guard.
@@ -7039,7 +7044,9 @@ function boatMenu(){
     if(frostWon)  all.push(['Sail to the Aerie Isle','aerie']);    // the last far reach opens once the Frozen Isle is won
     if(veil) all.push(['Sail to Barik','main'],['Sail to the Sunward Isle','east'],
                       ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle']);
-    // the capital is never listed in Act II: Vath's gaze holds the throne.
+    // the capital stays shut all through Act II - until Jaist learns the founders' seal and
+    // it is time for the reckoning. Then, and only then, the ferry will run to Aldermere.
+    if(P.story && P.story.sealLearned) all.push(['Sail to Aldermere — the reckoning','crown']);
   }
   const dests=all.filter(([lbl,dst])=>dst!==G.worldId);
   dlg.open=true; dlg.npc=null;
@@ -7050,8 +7057,11 @@ function boatMenu(){
   pg.fillStyle='#8f6a3e'; pg.beginPath(); pg.moveTo(12,44); pg.quadraticCurveTo(36,60,60,44); pg.lineTo(52,38); pg.quadraticCurveTo(36,48,20,38); pg.closePath(); pg.fill();
   pg.strokeStyle='#4f3a24'; pg.lineWidth=3; pg.beginPath(); pg.moveTo(36,38); pg.lineTo(36,14); pg.stroke();
   pg.fillStyle='#e8e0d0'; pg.beginPath(); pg.moveTo(36,16); pg.quadraticCurveTo(50,22,36,34); pg.closePath(); pg.fill();
+  const sealed = !!(P.story && P.story.sealLearned);
   const line = !A2
     ? '“Calm seas on the settled routes now, friend, and a clear run to the capital. The far reaches - Stormreach, the Aerie, the Frozen strait - no ferryman will chance those yet. Where to?”'
+    : sealed
+      ? '“So it\'s Aldermere at last... aye, I\'ll take you, though the water off the capital\'s gone black as pitch and every gull\'s fled it. Whatever you mean to do there - do it. Where to?”'
     : veil
       ? '“The Veil\'s on you, friend - Vath\'s eye slides right past. The old isles are open to us again... all but the capital. Never the capital. Where to?”'
       : beatReach
