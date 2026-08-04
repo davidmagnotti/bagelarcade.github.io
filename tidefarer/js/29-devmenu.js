@@ -224,6 +224,9 @@ function unlockAll(){
   P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
   P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
+  // with all four gifts now in hand, open the Emberwick capstone mouth live if you're
+  // standing on the isle (otherwise switchWorld places it on your next landing there)
+  if(typeof placeEmberTomb==='function'){ try{ placeEmberTomb(); }catch(e){} }
   ui(); note('All weapons, board, moa, tools + the 4 gifts (dive/longdash/flamesnare/dbldash) unlocked');
 }
 function heal(){ P.hp=P.maxhp; P.arrows=P.maxArrows||20; P.poisonT=0; ui(); note('Restored to full'); }
