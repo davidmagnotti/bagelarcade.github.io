@@ -287,6 +287,23 @@
   .ovCard h1 span{color:var(--ember);}
   .ovCard p{font-size:14px;line-height:1.6;color:var(--parch-dim);margin:14px 0 22px;}
   .ovCard .btn{font-size:16px;padding:13px 34px;}
+  /* THE RECKONING - ending credits roll */
+  #creditsOv{background:radial-gradient(ellipse at 50% 40%, rgba(24,12,34,.86), rgba(6,4,10,.97));overflow:hidden;flex-direction:column;}
+  #creditsScroll{position:absolute;left:0;right:0;top:100%;text-align:center;padding:0 24px;
+    color:var(--parch);font-family:var(--font-serif);animation:creditsRoll 46s linear forwards;}
+  #creditsScroll h1{font-size:clamp(30px,6vw,52px);letter-spacing:3px;color:var(--ember);
+    text-shadow:0 0 24px rgba(199,123,255,.4),0 4px 10px #000;margin:0 0 6px;}
+  #creditsScroll h2{font-size:clamp(15px,3vw,20px);letter-spacing:4px;color:#c9b0ff;margin:52px 0 4px;text-transform:uppercase;}
+  #creditsScroll p{font-size:clamp(13px,2.4vw,16px);line-height:1.7;color:var(--parch-dim);margin:6px auto;max-width:560px;}
+  #creditsScroll .role{color:var(--parch);}
+  #creditsScroll .epi{font-style:italic;color:#cbb8e6;max-width:600px;}
+  @keyframes creditsRoll{from{transform:translateY(0);}to{transform:translateY(calc(-100% - 90vh));}}
+  #creditsFin{position:relative;text-align:center;opacity:0;transition:opacity 2.4s ease;pointer-events:none;}
+  #creditsFin.show{opacity:1;pointer-events:auto;}
+  #creditsFin h1{font-family:var(--font-serif);font-size:clamp(38px,8vw,72px);letter-spacing:4px;color:var(--parch);
+    text-shadow:0 0 30px rgba(199,123,255,.45),0 4px 12px #000;margin:0;}
+  #creditsFin p{color:var(--parch-dim);font-size:15px;margin:14px 0 22px;}
+  #creditsFin .btn{font-size:16px;padding:13px 34px;}
   /* story cards - an important beat that waits for an explicit press */
   .storyCard{max-width:600px;}
   .storyCard p{font-size:16px;line-height:1.72;color:var(--parch);margin:6px 0 24px;}

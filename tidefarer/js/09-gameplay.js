@@ -948,9 +948,8 @@ function vathBecomeMonster(m){
   banner('VATH UNBOUND','THE SHADOW SHEDS ITS SHAPE');
   if(typeof updateBossUI==='function') updateBossUI();
 }
-// PHASE 2 END -> Beat 3 seam. The demon is broken but not gone - it cannot be killed, only
-// SEALED. Hold it here; Beat 3 replaces this with Jaist speaking the founders' seal, the
-// ending, and the credits. (P.story.vathDown / P.story.vathSealed drive that beat.)
+// PHASE 2 END -> BEAT 3: the demon is broken but cannot be killed, only SEALED. Jaist speaks
+// the founders' seal, pays the cost he feared, and cages Vath - then the ending and credits.
 function crownVathSealSeam(m){
   m.vathSealed=1; m.dead=true; m.respawnT=-1; m.state='idle'; m.invuln=true;
   P.story=P.story||{}; P.story.vathDown=1;
@@ -960,8 +959,61 @@ function crownVathSealSeam(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.9),color:'#c77bff',size:rnd(2,4),grav:-0.05}); }
   banner('THE MONSTER IS BROKEN','NOW — THE SEAL');
   if(typeof updateBossUI==='function') updateBossUI();
-  setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The demon-shape buckles and cannot rise - but it does not die, and you know in your bones it never will. It can only be caged.</i> <b style="color:#ffe9a8">"Jaist — NOW! The seal!"</b> <i>Your brother is already opening the founders\' book.</i> <b style="color:var(--ember)">(Beat 3 to follow: Jaist speaks the seal, the ending, and the credits.)</b>'); }, 900);
+  setTimeout(vathSealEnding, 900);
   if(typeof autoSave==='function') autoSave();
+}
+// BEAT 3 - the sealing, the ending, the credits. Three story beats, then the reel rolls.
+function vathSealEnding(){
+  P.story=P.story||{}; P.story.vathSealed=1; P.story.gameWon=1; P.story.finale=1;
+  if(typeof award==='function') award('enchantersbane');
+  const seal=()=>{ if(typeof storyCard!=='function'){ rollCredits(); return; }
+    storyCard('<i>You hold the line one breath more - and behind you Jaist begins to read. Not the low, easy voice he read you to sleep with; this is the founders\' hand spoken ALOUD, and each word lands like a stone dropped down a deep well. The violet demon strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth. The cage closes over him.</i>',
+      {label:'Hold the line', onOk:cost}); };
+  const cost=()=>{ storyCard('<i>The seal roots the way Jaist swore it would - into the one who casts it. He staggers; for a breath the violet crawls up his own arm before the binding drags it down into the stone with Vath. When he lowers the book his hair has gone white at one temple and his hand will not stop shaking - but he is smiling, and he is HIM, all the way through.</i> <b style="color:#ffe9a8">"It held,"</b> <i>he says, hardly believing it. "Sister - it HELD."</i>',
+      {label:'Go to him', onOk:after}); };
+  const after=()=>{ storyCard('<i>The violet drains out of Aldermere like a tide going out. The watch-fires will be relit, the streets refilled, the wall manned again - but not by your father. He spent the last of the Tideglass buying the two of you this hour, a long time ago now, and he is not coming back to see it kept. You stand with your brother in the hush of the throne room, the stolen crown cold on its empty seat, and for the first time since a wave took everything, there is nothing left in all the isles that is hunting you.</i> <b style="color:#ffe9a8">The shadow is sealed. The isles are free. You are home.</b>',
+      {label:'The Tidefarer\'s tale', onOk:rollCredits}); };
+  seal();
+}
+// The ending credits reel: a slow scroll, then the Fin card fades in. A click skips to Fin.
+const CREDITS_HTML =
+  '<h1>TIDEFARER</h1>'+
+  '<p class="epi">For the great queen who first calmed these waters - and for the two of her line who calmed them again.</p>'+
+  '<h2>The Isles, After</h2>'+
+  '<p><span class="role">Emberwick</span> keeps its founders\' crypt shut once more, and a woodcutter\'s abandoned woodpile that nobody can quite bring themselves to clear.</p>'+
+  '<p><span class="role">Barik, the Sunward Isle, Windsurf, the Aerie, the Frozen strait, Stormreach</span> - every curse pulled up by the root, every guardian its own self again.</p>'+
+  '<p><span class="role">Aldermere</span> lights its watch-fires anew, and crowns the two the tide threw back.</p>'+
+  '<h2>The Tidefarers</h2>'+
+  '<p><span class="role">Joan</span> &mdash; the masked princess, the warrior who freed the isles</p>'+
+  '<p><span class="role">Jaist</span> &mdash; her brother, the scholar-prince, who read the seal and paid its price</p>'+
+  '<p><span class="role">King Aldous</span> &mdash; who spent the last of the Tideglass to buy his children an hour</p>'+
+  '<p><span class="role">Vath the Emberbinder</span> &mdash; the shadow, caged at last</p>'+
+  '<h2>The Folk of the Isles</h2>'+
+  '<p>Elder Maren &middot; Sage Orin &middot; Bram the Smith &middot; Rask the Bladesworn &middot; Captain Brant &middot; Finn &middot; Willa &middot; Nia &amp; Pip</p>'+
+  '<p>Warden Kell &middot; Mora &middot; Tibb &middot; Sigrid &middot; Bryn &middot; Ashwing &middot; the Rookmother &middot; and every soul who kept a lamp lit</p>'+
+  '<h2>Thank you for playing</h2>'+
+  '<p class="epi">A Bagel Arcade adventure.</p>';
+function rollCredits(){
+  const ov=document.getElementById('creditsOv');
+  if(!ov){ if(typeof banner==='function') banner('THE SHADOW IS SEALED','THE END — THANK YOU FOR PLAYING'); return; }
+  const scroll=document.getElementById('creditsScroll'), fin=document.getElementById('creditsFin');
+  if(scroll) scroll.innerHTML=CREDITS_HTML;
+  if(fin) fin.classList.remove('show');
+  ov.style.display='flex';
+  G.paused=true; G._credits=1;
+  if(typeof cinematic==='function') cinematic(true);
+  if(scroll){ scroll.style.animation='none'; void scroll.offsetWidth; scroll.style.animation=''; }   // restart the reel
+  const showFin=()=>{ if(fin) fin.classList.add('show'); };
+  clearTimeout(G._creditsFinT); G._creditsFinT=setTimeout(showFin, 45000);
+  ov.onclick=(e)=>{ if(e.target && e.target.id==='creditsBtn') return; showFin(); };   // click to skip to Fin
+  const btn=document.getElementById('creditsBtn');
+  if(btn) btn.onclick=()=>{
+    clearTimeout(G._creditsFinT);
+    ov.style.display='none'; ov.onclick=null; G.paused=false; G._credits=0;
+    if(typeof cinematic==='function') cinematic(false);
+    if(typeof refreshUI==='function') refreshUI();
+    if(typeof autoSave==='function') autoSave();
+  };
 }
 function vathEscapes(m){
   // The enchanter is not surprised, and he does not die. He studies you - the
