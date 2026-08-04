@@ -2365,7 +2365,7 @@ function drawDecor(b,s){
     // silhouette (hinged at the foot, laid out behind/beside them) - replacing the
     // old wide contact oval, which pooled out in front of the door and read as a
     // detached round blob. The cheap oval stays for everything else (and low-gfx).
-    if(!LOWFX && typeof drawBuildingShadow==='function' && typeof buildingCasts==='function' && buildingCasts(b.kind)) drawBuildingShadow(b,S,s,BS);
+    if(typeof drawBuildingShadow==='function' && typeof buildingCasts==='function' && buildingCasts(b.kind)) drawBuildingShadow(b,S,s,BS);
     else if(b.kind==='tower') drawShadowAt(cx, s.x, s.y+4, 15);   // tight foot shadow for tall, narrow towers
     else drawShadowAt(cx,s.x,s.y, b.kind==='pillar'?12: b.kind==='lamp'?8 : b.kind==='castle'?(b.grand?150:92) : b.kind==='volcano'?66 : b.kind==='resort'?86 : 30);
   }

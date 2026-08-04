@@ -148,8 +148,9 @@ function _d25cloudBank(baseY, amp, period, parX, seed, tint, alpha){
    a real planar cast shadow: the sprite's own black silhouette, hinged at
    its foot, flattened onto the ground and sheared toward the sun's away-side
    so it lies BEHIND-and-to-one-side of the building - the shape you'd expect
-   the walls and roof to throw. A thin contact core at the foot keeps the
-   base planted. Skipped at the low-gfx tier (keeps the cheap oval there).
+   the walls and roof to throw. Runs in every quality tier (it's a single
+   extra drawImage per building) so the round blob is gone on phones too,
+   which sit in the low-gfx tier where the artefact was most obvious.
    ===================================================================== */
 
 /* which decor kinds get the silhouette cast (standing walls with a footprint) */
@@ -183,17 +184,15 @@ function drawBuildingShadow(b,S,s,BS){
     if(t>=0.06 && t<=0.44){ low=Math.min(1,Math.abs((t-0.25)/0.19)); dir=(t<0.25)?1:-1; }
     else { low=0.92; dir=(t<0.25||t>0.9)?1:-1; }
   }
-  let alpha=0.26*(1-0.5*Math.min(1,night));
+  let alpha=0.28*(1-0.5*Math.min(1,night));
   if(alpha<0.03) return;
   const flat  = 0.30 + low*0.26;          // vertical foreshortening of the laid-down shape
   const shear = dir*(0.30 + low*0.55);     // lateral lean toward the sun's away-side
   const baseY = s.y + 7;                    // hinge just under the wall foot
   const g=cx;
-  // thin contact core first, tucked under the footprint (mostly hidden by the
-  // sprite) so the base reads planted without a blob spilling out front
-  g.fillStyle='rgba(0,0,0,'+(alpha*0.6).toFixed(3)+')';
-  g.beginPath(); g.ellipse(s.x, baseY-1, w*0.30, Math.max(4,h*0.05), 0, 0, TAU); g.fill();
-  // the projected silhouette, hinged at the foot and skewed onto the ground
+  // the projected silhouette, hinged at the foot and skewed onto the ground. No
+  // separate contact oval - the silhouette's own base seats the building, and a
+  // round pool out front is exactly the artefact we're getting rid of.
   const sil=_d25silhouette(S);
   g.save();
   g.globalAlpha=alpha;
