@@ -169,14 +169,12 @@ function _d25silhouette(S){
   S._sil=c; return c;
 }
 
-/* Draw the planar cast shadow for one building. `s` is the tile-origin screen
-   point; the sprite is drawn with its foot at s.y+~10, spanning S.height*BS up. */
-function drawBuildingShadow(b,S,s,BS){
-  const w=S.width*BS, h=S.height*BS;
+/* Sun placement for the cast: how LOW it sits (0 at noon -> a tight shadow, 1
+   near the horizon -> a long one) and which side it throws to. Fixed to a gentle
+   afternoon on the always-daylight tutorial isle and underground. Shared so every
+   caster - buildings, trees - agrees on where the light is. */
+function _d25sun(){
   const night=(typeof nightAmount==='function')?nightAmount():0;
-  // sun angle: how LOW it sits (0 at noon -> a tight shadow, 1 near the horizon
-  // -> a long one) and which side it throws to. Fixed to a gentle afternoon on
-  // the always-daylight tutorial isle and underground.
   const fixed=(G.worldId==='isle') || (typeof inDungeon==='function' && inDungeon());
   let low=0.45, dir=1;
   if(!fixed){
@@ -184,27 +182,43 @@ function drawBuildingShadow(b,S,s,BS){
     if(t>=0.06 && t<=0.44){ low=Math.min(1,Math.abs((t-0.25)/0.19)); dir=(t<0.25)?1:-1; }
     else { low=0.92; dir=(t<0.25||t>0.9)?1:-1; }
   }
-  let alpha=0.28*(1-0.5*Math.min(1,night));
+  return {low, dir, night};
+}
+
+/* Core planar cast: the sprite's silhouette, hinged at (cx0,footY), folded back
+   onto the ground. `flat` is the cast length as a MULTIPLE of sprite height (>1
+   rises past the top of the sprite, so it emerges BEHIND it up-screen rather than
+   being hidden by the sprite drawn on top); `shear` leans it to the back-side. */
+function _d25fold(S, cx0, footY, w, h, flat, shear, alpha){
   if(alpha<0.03) return;
-  // The cast is a copy of the sprite, hinged at the foot and folded back onto the
-  // ground AWAY from the viewer (up-screen = behind). It has to be TALLER than the
-  // house is on screen, or the house sprite (drawn on top) hides it and only the
-  // front-base sliver peeks out - which reads as a shadow in FRONT. Over-tall, it
-  // rises past the roofline and clearly emerges behind the building.
-  const flat  = 0.78 + low*0.5;            // cast length as a multiple of sprite height (~>1 => past the roof)
-  const shear = dir*(0.55 + low*0.35);     // lateral lean, so it emerges to the back-SIDE, not straight up over the roof
-  const baseY = s.y + 6;                    // hinge at the wall foot
   const g=cx;
-  // the projected silhouette, hinged at the foot and skewed onto the ground. No
-  // separate contact oval - the silhouette's own base seats the building, and a
-  // round pool out front is exactly the artefact we're getting rid of.
-  const sil=_d25silhouette(S);
   g.save();
   g.globalAlpha=alpha;
-  g.translate(s.x, baseY);
+  g.translate(cx0, footY);
   g.transform(1, 0, shear, flat, 0, 0);   // (x,y) -> (x + shear*y, flat*y); y<=0 above the hinge
-  g.drawImage(sil, -w/2, -h, w, h);
+  g.drawImage(_d25silhouette(S), -w/2, -h, w, h);
   g.restore();
+}
+
+/* Draw the planar cast shadow for one building. `s` is the tile-origin screen
+   point; the sprite is drawn with its foot at s.y+~10, spanning S.height*BS up. */
+function drawBuildingShadow(b,S,s,BS){
+  const {low,dir,night}=_d25sun();
+  const flat  = 0.78 + low*0.5;            // cast length as a multiple of sprite height (~>1 => past the roof)
+  const shear = dir*(0.55 + low*0.35);     // lateral lean, so it emerges to the back-SIDE, not straight up over the roof
+  _d25fold(S, s.x, s.y+6, S.width*BS, S.height*BS, flat, shear, 0.28*(1-0.5*Math.min(1,night)));
+}
+
+/* Draw the cast shadow for a tree/foliage node. Same fold, tuned a touch shorter
+   and fainter than a building's - a canopy shadow gets long and heavy fast, and
+   forests overlap. `cx0`,`footY` are the trunk foot; `scale` matches the (slightly
+   taller) sprite scale so the shadow tracks the canopy. */
+function drawTreeCast(S, cx0, footY, scale){
+  if(!S) return;
+  const {low,dir,night}=_d25sun();
+  const flat  = 0.60 + low*0.42;
+  const shear = dir*(0.50 + low*0.34);
+  _d25fold(S, cx0, footY, S.width*scale, S.height*scale, flat, shear, 0.20*(1-0.5*Math.min(1,night)));
 }
 
 /* ---- 2: parallax horizon, drawn on the backdrop before the ground ---- */
