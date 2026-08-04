@@ -180,14 +180,20 @@ function _d25silhouette(S){
    caster - buildings, trees - agrees on where the light is. */
 function _d25sun(){
   const night=(typeof nightAmount==='function')?nightAmount():0;
+  // The world's key light is a FIXED upper-left sun - every sprite, wall and roof is
+  // shaded to it - so a cast shadow always falls BEHIND-and-to-the-RIGHT of its caster
+  // (up-screen on the iso plane, leaning right, away from the light). Only its LENGTH
+  // breathes with the day: tight at noon, long toward dawn/dusk. We deliberately do NOT
+  // swing the side across the day - the old moving-sun flip (dir -> -1 after midday, and
+  // dir=1 on the fixed-daylight isle) put the cast on the wrong side of buildings whose
+  // baked lit/shadow faces never move, so a house threw its shadow toward its own lit wall.
   const fixed=(G.worldId==='isle') || (typeof inDungeon==='function' && inDungeon());
-  let low=0.45, dir=1;
+  let low=0.45;
   if(!fixed){
     const t=G.dayT;
-    if(t>=0.06 && t<=0.44){ low=Math.min(1,Math.abs((t-0.25)/0.19)); dir=(t<0.25)?1:-1; }
-    else { low=0.92; dir=(t<0.25||t>0.9)?1:-1; }
+    low = (t>=0.06 && t<=0.44) ? Math.min(1,Math.abs((t-0.25)/0.19)) : 0.92;
   }
-  return {low, dir, night};
+  return {low, dir:1, night};   // dir:+1 == to the right, every hour of every day
 }
 
 /* Core planar cast: the sprite's silhouette, hinged at (cx0,footY), folded back
@@ -198,12 +204,13 @@ function _d25sun(){
 function _d25fold(S, cx0, footY, w, h, castLen, lean, alpha){
   if(alpha<0.03 || castLen<1) return;
   const flat  = castLen / h;               // Y-scale that turns the h-tall silhouette into a castLen-tall shadow
-  const shear = lean * flat;               // so the top shifts by lean*castLen, independent of sprite height
+  const shear = -lean * flat;              // negate so a POSITIVE `lean` throws the far end to the RIGHT: the top
+                                           // (y=-h) shifts by -shear*h = +lean*castLen, independent of sprite height
   const g=cx;
   g.save();
   g.globalAlpha=alpha;
   g.translate(cx0, footY);
-  g.transform(1, 0, shear, flat, 0, 0);   // (x,y) -> (x + shear*y, flat*y); y<=0 above the hinge
+  g.transform(1, 0, shear, flat, 0, 0);   // (x,y) -> (x + shear*y, flat*y); y<=0 above the hinge, so the far end leans right
   g.drawImage(_d25silhouette(S), -w/2, -h, w, h);
   g.restore();
 }
