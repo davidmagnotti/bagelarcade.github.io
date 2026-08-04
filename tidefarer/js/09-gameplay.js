@@ -12,17 +12,20 @@ function moveEntity(e,dx,dy,rad,waterOK,diveOK){
   let ny=e.y+dy;
   if(!circleBlocked(e.x,ny,rad,waterOK,diveOK) && !(mobPit && G._mawPits.has((e.x|0)+','+(ny|0)))) e.y=ny;
 }
-function unstickEntity(e, waterOK){
+function unstickEntity(e, waterOK, diveOK){
   // if an entity is embedded in water or a solid, snap it to the nearest open tile.
   // waterOK (a windsurfer) treats light shallows as valid footing, so the board is
   // never yanked back to shore - without it, a surfer on the water reads as "stuck".
-  if(!circleBlocked(e.x,e.y,0.26,waterOK)) return false;
+  // diveOK (a diver) treats deep water the same: a diver crossing a SOLID deep-water
+  // ford (the Tideward Crypt's Sunken Ford) stands on tiles circleBlocked calls solid,
+  // so without this the safety-net snaps them straight back to the shore lip.
+  if(!circleBlocked(e.x,e.y,0.26,waterOK,diveOK)) return false;
   for(let d=0;d<=8;d++) for(let oy=-d;oy<=d;oy++) for(let ox=-d;ox<=d;ox++){
     if(Math.max(Math.abs(ox),Math.abs(oy))!==d) continue;
     const tx=Math.round(e.x)+ox, ty=Math.round(e.y)+oy;
     if(!inb(tx,ty)) continue;
     const tt=tileAt(tx,ty);
-    if((walkTile(tt) || (waterOK && tt===T.SHALLOW)) && !circleBlocked(tx+0.5,ty+0.5,0.3,waterOK)){
+    if((walkTile(tt) || (waterOK && tt===T.SHALLOW) || (diveOK && (tt===T.DEEP||tt===T.SHALLOW))) && !circleBlocked(tx+0.5,ty+0.5,0.3,waterOK,diveOK)){
       e.x=tx+0.5; e.y=ty+0.5; return true;
     }
   }
@@ -1409,7 +1412,7 @@ function updatePlayer(dt){
   // safety net: never leave the player wedged between water and land. A windsurfer
   // (surf unlocked) counts light shallows as valid footing, so the board isn't
   // snapped back to shore the instant it touches the water.
-  if(!G.interior && unstickEntity(P, P.unlocked&&P.unlocked.surf)){
+  if(!G.interior && unstickEntity(P, P.unlocked&&P.unlocked.surf, P.unlocked&&P.unlocked.dive)){
     hintOnce('unstuck','Solid ground found its way back under your boots.');
   }
   if((G.interior || (typeof inDungeon==='function' && inDungeon())) && P.riding){
