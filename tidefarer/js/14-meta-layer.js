@@ -76,7 +76,7 @@ function saveCode(){
     projects:P.projects,contract:P.contract,lore:P.loreRead,stats:P.stats,ach:P.ach,
     perks:P.perks||{},perkAvail:P.perkAvail||{},
     story:P.story||{act:1,necklace:true},
-    disc:P.disc||{},expl:packExpl(),flags};
+    disc:P.disc||{},met:P.met||{},expl:packExpl(),flags};
   // Remember an open conversation so exiting mid-dialogue resumes it on return
   // (only a real NPC talk - transient stalls/shop sub-menus are not restored).
   if(typeof dlg!=='undefined' && dlg.open && dlg.npc && dlg.npc.id) d.dnpc=dlg.npc.id;
@@ -242,7 +242,7 @@ function loadCode(str){
   if(qs('board')==='done' && !P.quests.sail && !(P.unlocked && P.unlocked.surf)){
     P.unlocked=P.unlocked||{}; P.unlocked.surf=true;
   }
-  P.disc=d.disc||{}; unpackExpl(d.expl);
+  P.disc=d.disc||{}; P.met=d.met||{}; unpackExpl(d.expl);
   P.dead=false; P.fishing=null; P.combo=0; P.rollT=0;
   applyWorldFlags(d.flags&&d.flags.isle);
   if(P.projects.lanes) placeLaneLamps();
