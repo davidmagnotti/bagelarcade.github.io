@@ -259,6 +259,12 @@ function enterHouse(b){
       F('bed',7.6,5.3,1.0,0.62);
       if(typeof isNight==='function' && isNight()) F('aelin',3.3,2.5,0.5,0.5);
     }
+    // The Cathedral of the Tide, the capital's magic tower, keeps a pilgrim's
+    // cot in its study - stretch out and rest here free, same as Aelin's Spire.
+    else if(String(b.label||'').toLowerCase().includes('cathedral')){
+      I.restfree=1;
+      F('bed',7.6,5.3,1.0,0.62);
+    }
   }
   if(b.kind==='resort'){
     // The Breakers is a bespoke open-air resort: a marble lobby with a front

@@ -4218,7 +4218,7 @@ function placeObjectsCrown(){
   if(kit) kit.kitchen=1;
   addBuilding('lamp', PA.x-14, PA.y+11, ''); addBuilding('lamp', PA.x-17, PA.y+7, '');
   // ---- the Cathedral of the Tide ----
-  addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide');
+  addBuilding('tower', T2.x, T2.y, 'The Cathedral of the Tide').tall=true;   // the capital's spire stands twice as tall, same as Orin's tower on Emberwick
   addBuilding('lamp', T2.x-3, T2.y+3, ''); addBuilding('lamp', T2.x+3, T2.y+3, '');
   // ---- Crown Plaza: the civic heart ----
   addBuilding('well', PL.x, PL.y, 'The Kings\' Fountain');
