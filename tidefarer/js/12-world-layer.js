@@ -2110,7 +2110,7 @@ function placeObjectsAerieDeep(){
   // Each chamber is a long maze of solid stone cut through by a snaking corridor you must weave.
   // Vath's curse fires lances of violet light ACROSS each corridor on a beat: watch the telegraph
   // and slip past a lance only while it's dark. Touch a live lance and you're ZAPPED - you wake at
-  // the hall's mouth with a little less blood (-5 HP). At the far end of each maze a WARD-PLATE
+  // the hall's mouth with a little less health (-5 HP). At the far end of each maze a WARD-PLATE
   // waits; step onto it to grind the gate up. Cursed raptors keep swooping in as you go.
   G._aerieVoid=new Set(); G._aerieCross=[]; G._aerieFallHint=0; G._aerieT=0; G._aerieBeams=[]; G._aerieMazeTiles=[];
   G._aerieSpawnT=6; G._aerieZap=null;
@@ -2515,7 +2515,7 @@ function updateFrostFolkMood(){
   if(!(P.story && P.story.frostFreed)) return;
   const set=(id,lines)=>{ const n=G.npcs.find(x=>x.id===id); if(n){ n.idleLines=lines; n.li=0; } };
   set('bryn',['The cold\'s gone KIND again - you can breathe without it biting, and there\'s seals back on the floes. A boat\'ll work the strait-edge by morning.','Still deep in snow, thank the Warden - but it\'s OUR winter now, not his. We owe you the whole season, friend.']);
-  set('sigrid',['The glacier\'s stopped bleeding that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in.']);
+  set('sigrid',['The glacier\'s stopped leaking that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.','It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in.']);
 }
 // Jaist sails the reaches at his sister's side and holds the way home while she takes
 // the isle - the same watch he keeps on Stormreach. On the Frozen Isle he waits by the
@@ -2748,7 +2748,7 @@ function freeColossus(m){
   // card stays only as a fallback if the overlay layer is missing.
   setTimeout(()=>{
     if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(m, ()=>{ if(typeof autoSave==='function') autoSave(); });
-    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It settles calm into the melt, <i>and the ice it guarded gives up its secret: an old <b>book</b>, bound in frost that will not thaw. This one Vath never set to hunt you - he set it here to keep something buried.</i>');
+    else if(typeof storyCard==='function') storyCard('The violet drains out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It settles calm into the melt, <i>and the ice it guarded gives up its secret: an old <b>book</b>, bound in frost that will not thaw. This one Vath never set to hunt you - he set it here to keep something buried.</i>');
   },1400);
 }
 
@@ -3051,7 +3051,7 @@ function placeObjectsMillDeep(){
   valve('D', 8,27, ['d1']); valve('D', 13,27, ['d2']); valve('D', 18,27, ['d3']); valve('D', 23,27, ['d4']); valve('D', 28,27, ['d5']);
   // ---- THE GRINDING HAZARDS ----
   // the drowned works still turn where the shaft never fully seized: rusted spike-grates snap up
-  // through the floor and toothed grind-blades sweep the open stretches. A clip costs blood, not a
+  // through the floor and toothed grind-blades sweep the open stretches. A clip costs health, not a
   // restart - and a DASH's roll frames pass clean through. The deeper the hall, the harder it grinds.
   G._millT=0; G._millSpikes=[]; G._millAxes=[];
   // Each spike-grate spans the hall WALL TO WALL (x7-33) along one open floor row between the
@@ -3153,7 +3153,7 @@ function updateMillDeep(dt){
     const flood = ph>=0.64 && ph<0.86;   // the impassable window (a hair inside the visual, so the tell is honest)
     if(flood){
       const onDoor = Math.floor(P.y)===w.y && Math.floor(P.x)>=w.dx0 && Math.floor(P.x)<=w.dx1;
-      if(onDoor && !safe){   // washed back downstream (south) and bloodied - unless a dash carries you through
+      if(onDoor && !safe){   // washed back downstream (south) and battered - unless a dash carries you through
         HIT(15, P.x, w.y+0.5); P.y=w.y+1.55; P.click=null; P.moving=false;
         shockwave(P.x, w.y+0.5, 'rgba(150,205,235,0.7)', 26); Snd.step&&Snd.step(6);
       }
@@ -4576,7 +4576,7 @@ QUESTS.feud1={ giver:'maelis', title:'The Vael Feud', kind:'kill', kill:{raider:
   doneText:'Six hoods emptied. My cousin will sulk for a season - Barik thanks you in gold and in standing. But the March still has a spine: the man who holds his war-tent. Come back when you have the stomach for him.',
   rw:{gold:220, item:{potion:2}, xp:{melee:300, archery:300, magic:300}}, unlocks:['sting1','feud2'] };
 QUESTS.feud2={ giver:'maelis', title:'Break the March', kind:'kill', kill:{raidcap:1}, xpL:300,
-  brief:'Driving off his hirelings only bloodied my cousin\'s nose. The March will not kneel while his <b>Castellan</b> holds the war-tent - a captain worth ten raiders, and he knows it. Go to the north-east March, call the man out, and put his standard in the dirt. Come ready, and come armored.',
+  brief:'Driving off his hirelings only bruised my cousin\'s pride. The March will not kneel while his <b>Castellan</b> holds the war-tent - a captain worth ten raiders, and he knows it. Go to the north-east March, call the man out, and put his standard in the dirt. Come ready, and come armored.',
   log:'Confront and defeat the Castellan of the Vael at the war-tent in the north-east March. (Lv 14 - come ready.)',
   doneText:'The Castellan down and the standard fallen? Then the March is mine in all but name, and my cousin has no sword left to hide behind. Barik will remember this - and so will I. Take a captain\'s due.',
   rw:{gold:340, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };
@@ -4606,7 +4606,7 @@ QUESTS.undermaw1={ giver:'torv', title:'What the Deep Keeps', kind:'visit', zone
   doneText:'You found it and kept your skin - that\'s rarer than the gold. Whatever you carried out, you earned.',
   rw:{gold:90, item:{elixir:1}, xp:{mining:200}} };
 /* ---------- the bounty quest & relic ---------- */
-QUESTS.bounty = { giver:'kell', title:'Blood for Greyharbor', kind:'kill', kill:{elite:8},
+QUESTS.bounty = { giver:'kell', title:'The Greyharbor Bounty', kind:'kill', kill:{elite:8},
   brief:"The wilds have turned. Crimson-ringed beasts - elites, we call them - press on the road every season. Cull eight of them: wolves on Wolfcrag, bones in Barrowfield, muck-things in the Mirefen. Greyharbor pays well.",
   log:'Slay 8 elite beasts anywhere on the mainland.',
   doneText:"Eight heads' worth of quiet. The road breathes easier - and so do I. Greyharbor's coin, as promised. If you're still hungry, the Peak keeps its own secret.",
@@ -4682,7 +4682,7 @@ QUESTS.enchanter = { giver:'orin', title:"The Enchanter's Tide", kind:'talk', ta
   doneText:'',   // resolved by the unmasking scene (buildDialogContent, woody)
   rw:{gold:200, item:{elixir:2}, xp:{melee:400, magic:400, archery:400}} };
 QUESTS.homecoming = { giver:'woody', title:'Homecoming', kind:'talk', talkTo:'aldous', xpL:520,
-  brief:"Your brother the prince walks free at last - and Vath means the throne now, and the Tideglass magic in your father's blood. Take ship for Aldermere and bring both of you before King Aldous, before the enchanter reaches him first.",
+  brief:"Your brother the prince walks free at last - and Vath means the throne now, and the Tideglass magic in your father's veins. Take ship for Aldermere and bring both of you before King Aldous, before the enchanter reaches him first.",
   log:'Bring the prince before King Aldous in the Tideglass Palace, Aldermere - before Vath does.',
   doneText:'',   // resolved by the capital confrontation scene
   rw:{gold:300, hp:20, item:{elixir:3}, xp:{melee:300, archery:300, magic:300}} };
@@ -4820,7 +4820,7 @@ function bindVath(m){
   const woodyNudge=()=>toast('Behind you the <b>Woodworker</b> sways, a hand to his head. <b style="color:var(--ember)">Speak with him.</b>',7000);
   setTimeout(()=>{
     if(typeof vathBoundCutscene==='function') vathBoundCutscene(m, woodyNudge);
-    else storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. Your blood has caged me before - a lifetime ago, and lifetimes before that - and every seal your line ever set, I have outwaited. Delayed. Never once undone. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
+    else storyCard('<i>You cut the violet cords one by one - and the last, freed, whips back and takes HIM, his own leash closing on his own throat.</i> <b style="color:#c9a0ff">"Clever. Cruel. You\'d have woven a fine binding yourself."</b> <i>The enchantment folds him into the old standing stone.</i> <b style="color:#c9a0ff">"No stone holds forever, first mate. Your line has caged me before - a lifetime ago, and lifetimes before that - and every seal your kind ever set, I have outwaited. Delayed. Never once undone. I will thaw. I will come back."</b> <i>Then quiet, and violet light dying in the grass.</i>',
       {onOk:woodyNudge});
   },1200);
   // credit the kill quest cleanly (death was intercepted). Delayed so the bind
@@ -7262,7 +7262,7 @@ function switchWorld(id){
     setTimeout(()=>toast('<i>Bottomless fire-pits bar the fire-heart.</i> They are spanned only by <b>turning basalt slabs</b> and <b>floating stone isles</b>, with open pit between every ledge and slab - so you must <b>DASH</b> (tap <b>Ctrl</b> or <b>L</b> / the dodge button) to board a slab or hop an isle, ride the turning ones round, then dash off to the next. Miss and you fall into the pit and climb back out singed (<b>-5 HP</b>), starting the crossing over. One chamber is barred by a gate with a <b>fire-lever</b>; the last, deepest chamber is a wide isle-field where <b>cave bats</b> swoop from the tunnels to shove you into the dark - cut them down or weave past, and press on to Ashwing.',9500),1800); }
   if(id==='reachdeep' && !P.prog.tombSeen && !(P.story && P.story.tombBossDown)){ P.prog.tombSeen=1;
     setTimeout(()=>banner('THE DROWNED CATACOMB','FOLLOW THE BONEWRIGHT - TREAD THE WARD-DANCE TRUE'),1200);
-    setTimeout(()=>toast('<i>The Ossuary is a lock, and the key is a dance.</i> In each chamber a <b>spectral bonewright rises and treads the floor-stones in a set order</b> - <b>watch the pattern</b>, then <b>walk the same stones in the same sequence</b> to spring the ward-gate open. A <b>wrong stone</b> looses a bone-green ward-jolt (a little blood, no restart) and shows you the dance again, so take your time and read it. <b>Follow the pattern true in all three chambers</b> and the <b>Bone Gate</b> grinds up onto the Drowned Vault.',9500),1800); }
+    setTimeout(()=>toast('<i>The Ossuary is a lock, and the key is a dance.</i> In each chamber a <b>spectral bonewright rises and treads the floor-stones in a set order</b> - <b>watch the pattern</b>, then <b>walk the same stones in the same sequence</b> to spring the ward-gate open. A <b>wrong stone</b> looses a bone-green ward-jolt (a little sting, no restart) and shows you the dance again, so take your time and read it. <b>Follow the pattern true in all three chambers</b> and the <b>Bone Gate</b> grinds up onto the Drowned Vault.',9500),1800); }
   if(id==='aeriedeep' && !P.prog.underSeen && !(P.story && P.story.aerieFreed)){ P.prog.underSeen=1;
     setTimeout(()=>banner('THE UNDERCLIMB','WEAVE THE MAZE - TIME THE WARD-LANCES'),1200);
     setTimeout(()=>toast('<i>Each chamber is a maze of solid stone, its corridors snaking north.</i> Weave it, and time the <b>ward-lances</b> that sweep each corridor: watch the telegraph and slip across only while a lance is <b>dark</b>. <b>Touch a lit lance and you die</b> - you wake at the hall\'s mouth with <b>5 less HP</b> and the crossing to redo. Reach the far side and the gate grinds up. <b>The curse seals the climb until you put down the Tome-Warden below.</b>',9500),1800); }

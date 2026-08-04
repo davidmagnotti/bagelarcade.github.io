@@ -157,7 +157,7 @@ function buildDialogContent(npc){
        }}]);
     return;
   }
-  // The Royal Audience - a scripted scene that opens Act III. The King receives
+  // The Royal Audience - a scripted scene that opens the finale. The King receives
   // the curse-breaker, his gaze snags on the pendant (rare, short, unexplained),
   // and he tells the tragedy that binds Vath to the throne, then charges you.
   // Starts simply on talking to the King, any time before he has charged you
@@ -169,7 +169,7 @@ function buildDialogContent(npc){
             P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
             completeQuest('audience');
             if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
-            banner('ACT III','THE ENCHANTER\'S TIDE');
+            banner('THE ENCHANTER\'S TIDE','THE KING\'S CHARGE');
             // launch the finale trail: the pendant is the thread. Send the player
             // back to Orin on Emberwick to have it read.
             if(!P.quests.pendant){ P.quests.pendant='active'; P.prog.pendant=0; }
@@ -179,7 +179,7 @@ function buildDialogContent(npc){
         }}]);
     };
     const p2=()=>{
-      setDialog('“Long years past, I had a wife I did not deserve - and a fever took her while our children were small, before either was grown enough to keep the memory. A fierce slip of a daughter who would sooner duel the guard than curtsy, and a boy still small enough to carry. Then the curses began - waters that ate ships, beasts that would not lie down, isle after isle turning strange and cruel. My most trusted man swore he could hunt their root, and counselled me the safest place for my blood was at his own side. Fool that grief had made me, I let him take them: my daughter, my young son, and himself. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals, or so the word came back. We recovered timbers and grief, nothing else. I buried two empty coffins - my girl, my boy - and mourned Vath as a loyal man lost in my service.”',
+      setDialog('“Long years past, I had a wife I did not deserve - and a fever took her while our children were small, before either was grown enough to keep the memory. A fierce slip of a daughter who would sooner duel the guard than curtsy, and a boy still small enough to carry. Then the curses began - waters that ate ships, beasts that would not lie down, isle after isle turning strange and cruel. My most trusted man swore he could hunt their root, and counselled me the safest place for my kin was at his own side. Fool that grief had made me, I let him take them: my daughter, my young son, and himself. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals, or so the word came back. We recovered timbers and grief, nothing else. I buried two empty coffins - my girl, my boy - and mourned Vath as a loyal man lost in my service.”',
         [{label:'…And now?', fn:p3}]);
     };
     setDialog('<i>The King\'s eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit. Let me tell you why the sight of you unsteadies me.”',
@@ -303,7 +303,7 @@ function buildDialogContent(npc){
   }
   // After the unmasking, before you reach the capital: the prince is impatient to sail.
   if(npc.id==='woody' && P.story && P.story.unmasked && !P.story.act1End){
-    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s blood - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, Joan.”',
+    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s veins - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, Joan.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }

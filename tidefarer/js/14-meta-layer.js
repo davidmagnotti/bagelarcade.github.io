@@ -4,7 +4,7 @@
 P.stats=P.stats||{}; P.ach=P.ach||{}; P.combo=0; P.comboT=0;
 
 const ACH={
-  firstblood:{t:'First Blood',d:'Slay your first foe.'},
+  firststrike:{t:'First Strike',d:'Best your first foe.'},
   slayer:{t:'Slayer',d:'Defeat 25 foes.'},
   woodsman:{t:'Woodsman',d:'Gather wood 15 times.'},
   stonebreaker:{t:'Stonebreaker',d:'Gather stone 15 times.'},
@@ -51,7 +51,7 @@ function checkStats(){
   if((s.stone||0)>=15) award('stonebreaker');
   if((s.fish||0)>=5) award('angler');
   if((s.wheat||0)>=5) award('greenthumb');
-  if((s.kills||0)>=1) award('firstblood');
+  if((s.kills||0)>=1) award('firststrike');
   if((s.kills||0)>=25) award('slayer');
   if((s.chests||0)>=4) award('plunderer');
   if((s.ore||0)>=5) award('prospector');

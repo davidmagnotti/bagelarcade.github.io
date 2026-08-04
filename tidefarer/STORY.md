@@ -7,7 +7,7 @@ collected at the end.
 
 ---
 
-## The three-act spine — [new, canonical]
+## The story spine — [new, canonical]
 
 This is the governing structure. Everything below hangs off it.
 
@@ -19,18 +19,22 @@ This is the governing structure. Everything below hangs off it.
 - **Act II — The prophecy and the weapon.** You sail the shattered isles,
   **discover the prophecy** of the Tidefarer, and **retrieve the magical item**
   it names — the means to seal Vath. This is the treasure hunt: the prophecy is
-  the map, the item is the prize.
-- **Act III — The battle for the capital.** The sea to Aldermere finally opens.
-  You **fight Vath's controlled troops across the capital**, then **face Vath
-  himself** in the throne hall.
+  the map, the item is the prize. **With the spell won, the sea to Aldermere
+  opens and you sail for the capital to end it.**
+- **The finale — Facing Vath.** At the Tideglass throne you **face Vath himself**
+  in the throne hall. The two gifts converge — Joan's slow-time and Jaist's seal
+  — and Vath is **sealed, not killed**: the Tidefarer's unfinished work,
+  completed. There is no separate capital campaign; the arc runs straight from
+  winning the spell to the confrontation.
 
 > **Reconciling with the older draft.** An earlier version of these notes ended
-> Act I on the "six months later" crossing and put the Emberwick tomb reveal in
-> Act III. Under the canonical spine above, the crossing is the **Act I → II
-> bridge** (you sail out to find the means to fight back), the Emberwick tomb /
-> prophecy / item is the **heart of Act II**, and Act III is the **capital
-> assault**. The isle-spirit exploration content is the **body of Act II** —
-> the sailing you do while chasing the prophecy.
+> Act I on the "six months later" crossing, put the Emberwick tomb reveal late,
+> and imagined a third act of fighting through the capital. Under the spine
+> above, the crossing is the **Act I → II bridge** (you sail out to find the
+> means to fight back), the Emberwick tomb / prophecy / item is the **heart of
+> Act II**, and the **finale is the confrontation with Vath** — no capital
+> assault. The isle-spirit exploration content is the **body of Act II** — the
+> sailing you do while chasing the prophecy.
 
 ---
 
@@ -160,7 +164,7 @@ the whole history.**
 | Vath has other names; an ancestor once beat something like him | II | **Book/scattered lore** + the **Stormreach prophecy** | The *shape* of the truth. **[seed built]** |
 | Vath has been beside the family longer than you've been alive; he curses rather than kills because he cannot touch your blood | II (mid/late) | **Vath soliloquy** | The villain gut-punch. Stop here — **do not** spend his origin. |
 | His many names, the long con, and how he turned the Tidefarer's own spell against her | II climax | **The Tidefarer's spirit** | The deepest history, from his victim's mouth — weightier than a boast. |
-| The seal, the slow-time gift, "a warrior and a mind" | II climax | **The book** | Sets up the Act III finale. |
+| The seal, the slow-time gift, "a warrior and a mind" | II climax | **The book** | Sets up the finale. |
 
 **Act I — seed only, explain nothing.** Leave Act I knowing the advisor is
 wrong and nothing more.
@@ -170,8 +174,8 @@ his manipulation made physical. Drip the shape of the truth through lore and the
 prophecy; land the confidant reveal as a soliloquy; save the origin for the
 Tidefarer.
 
-**Act III — no new history, just payoff.** The capital assault *is* the "turn
-the kingdom against them" rule made playable.
+**The finale — no new history, just payoff.** The confrontation with Vath is the
+reckoning the whole voyage has been building to — the spell won, the seal cast.
 
 ---
 
@@ -185,8 +189,8 @@ the kingdom against them" rule made playable.
 2. **State the "can't be touched" rule explicitly — it's load-bearing.** Vath's
    own magic and anything he *directly* controls cannot harm royal blood, but
    people and creatures he *manipulates* can. This single rule explains why he
-   curses instead of killing, why the whole capital's soldiers are the Act III
-   threat, and why the finale is about the kingdom, not a duel. Never break it.
+   curses instead of killing, and why every boss you face is a victim he has
+   enthralled and turned on you rather than a foe he made. Never break it.
 3. **Make the two loopholes mirror each other.** The seam — "if he can't touch
    them, how did he curse them?" — is answered by "new magic he researched." Lean
    in: **the curse is his researched loophole; the Tidefarer's seal is the
@@ -225,7 +229,7 @@ Sailing the shattered isles is the body of the act.
 ### Navigation: Stormreach is the turnstile — [new gating]
 
 After you **defeat Stormreach**, the sea opens: you may sail to **any isle except
-the capital**. Aldermere stays sealed until Act III — you are not ready for Vath,
+the capital**. Aldermere stays sealed until the finale — you are not ready for Vath,
 and the story keeps that door shut on purpose.
 
 > **Change from today:** the ferry currently runs a fixed chain (Stormreach →
@@ -350,7 +354,7 @@ Each isle gets a dungeon ending in a boss tied to its spirit — clearing it qui
 the surface hazard.
 
 **Gating — Act II only.** These open when Act II does (Stormreach falls) and
-close before the Act III finale — the same turnstile that seals the capital
+close before the finale — the same turnstile that seals the capital
 fences the isle bosses inside Act II. Dungeon mouths stay shut until Stormreach
 is cleared, and once the story crosses into the Emberwick tomb / capital endgame
 they are no longer enterable. Nothing here is reachable in Act I, and nothing
@@ -426,14 +430,12 @@ See the Backstory section above for the full sequence.
 
 ---
 
-## Act III — the battle for the capital
+## The finale — facing Vath
 
-The sea to **Aldermere** finally opens.
+With the sealing spell won, the sea to **Aldermere** finally opens. You sail for
+the capital and go straight to the throne hall — no army to cut through, no
+campaign across the city, just the reckoning you have been sailing toward.
 
-- **Fight through the capital — [new].** Vath's magic cannot touch your blood,
-  so he throws the thing that can: **the kingdom itself.** Battle his controlled
-  soldiers and creatures across the capital. This is the "turn the whole kingdom
-  against them" rule made playable — the reason the finale is a war, not a duel.
 - **Face Vath — [new].** The two gifts converge: **Joan's slow-time** creates the
   openings and survives his onslaught; **Jaist's seal** finishes it. He is
   **sealed, not killed** — the Tidefarer's unfinished work, completed. Callback:
@@ -454,8 +456,9 @@ The sea to **Aldermere** finally opens.
 5. **Emberwick Tidefarer tomb** (Act II climax) — the reveal, headstone strike,
    guardian fight, and the book granting the two gifts. Ties mechanic (1) to
    story.
-6. **The capital assault** (Act III) — controlled-troop encounters across
-   Aldermere and the Vath finale (slow-time + seal).
+6. **The finale** — sail to Aldermere and face Vath in the throne hall
+   (slow-time + seal). No capital campaign; the arc runs straight from winning
+   the spell to the confrontation.
 
 ---
 
@@ -479,7 +482,7 @@ The sea to **Aldermere** finally opens.
 - **Boss = spirit, or guardian?** Is each isle boss the maddened spirit itself,
   or a guardian standing between you and calming it?
 - **Act II boss gating — mandatory or optional?** Must every isle boss fall
-  before Act III opens, or can the player enter the finale having skipped some?
+  before the finale opens, or can the player enter the finale having skipped some?
   Once cleared, do the dungeons stay open within Act II or lock behind you?
 - **The brother's seal in the finale** — a controlled ally, a scripted cutscene
   role, or a mechanic you protect during the Vath fight?

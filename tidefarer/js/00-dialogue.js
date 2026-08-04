@@ -34,7 +34,7 @@ const DIALOGUE = {
       "A captain without a ship is just a man who stares at the sea.",
       "Greyharbor, cross the strait. Finest port this side of anywhere.",
       "There's an old sailing-hymn my crew's grandfathers hummed - the Tide-Queen's anthem, for the warrior-queen who first calmed these waters. Fine tune. But her name, in the last verse? Worn clean out of the song. Nobody living can call it back.",
-      "That five-point star some folk stitch for luck - older than luck, that. The old blood-mark of the tide-queen's line, passed hand to hand down her whole house. You don't earn a mark like that. You're born owed it."
+      "That five-point star some folk stitch for luck - older than luck, that. The old star-mark of the tide-queen's line, passed hand to hand down her whole house. You don't earn a mark like that. You're born owed it."
     ],
     "finn": [
       "Fish bite best where the water ripples.",
@@ -563,7 +563,7 @@ const DIALOGUE = {
         "Still deep in snow, thank the Warden - but it's OUR winter now, not his. We owe you the whole season, friend."
       ],
       "sigrid": [
-        "The glacier's stopped bleeding that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.",
+        "The glacier's stopped leaking that violet - clean frost again, up there. I could kiss you, but my lips would freeze, so take my thanks instead.",
         "It is itself again, up there. Gentle as ever. You gave us back our guardian - and a winter we can live in."
       ]
     }
@@ -683,7 +683,7 @@ const DIALOGUE = {
       doneText: "PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything."
     },
     "mushrooms": {
-      brief: "Hm. You move like someone who has never once had to move fast. That will get you killed in the ruins. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will grind them into a draught that quickens the blood. Then I will teach your feet the one lesson worth more than any blade.",
+      brief: "Hm. You move like someone who has never once had to move fast. That will get you killed in the ruins. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will grind them into a draught that quickens the pulse. Then I will teach your feet the one lesson worth more than any blade.",
       log: "Gather 3 bluecaps from the Whisperwood for Orin.",
       doneText: "Bluecaps crushed, essence bound, and down it goes… there. <i>He walks you through it twice in the tower yard - a low push off the back foot, a breath of speed, and gone before the blow lands.</i> That is the DASH. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not spend this old trick on just anyone. Take those quick feet down to Elder Maren - tell her old Orin says you're ready for the Hollow Spirit. A sword is only half of what a fighter owes their feet."
     },
@@ -828,7 +828,7 @@ const DIALOGUE = {
       doneText: "Six hoods emptied. My cousin will sulk for a season - Barik thanks you in gold and in standing. But the March still has a spine: the man who holds his war-tent. Come back when you have the stomach for him."
     },
     "feud2": {
-      brief: "Driving off his hirelings only bloodied my cousin's nose. The March will not kneel while his <b>Castellan</b> holds the war-tent - a captain worth ten raiders, and he knows it. Go to the north-east March, call the man out, and put his standard in the dirt. Come ready, and come armored.",
+      brief: "Driving off his hirelings only bruised my cousin's pride. The March will not kneel while his <b>Castellan</b> holds the war-tent - a captain worth ten raiders, and he knows it. Go to the north-east March, call the man out, and put his standard in the dirt. Come ready, and come armored.",
       log: "Confront and defeat the Castellan of the Vael at the war-tent in the north-east March. (Lv 14 - come ready.)",
       doneText: "The Castellan down and the standard fallen? Then the March is mine in all but name, and my cousin has no sword left to hide behind. Barik will remember this - and so will I. Take a captain's due."
     },
@@ -908,7 +908,7 @@ const DIALOGUE = {
       doneText: ""
     },
     "homecoming": {
-      brief: "Your brother the prince walks free at last - and Vath means the throne now, and the Tideglass magic in your father's blood. Take ship for Aldermere and bring both of you before King Aldous, before the enchanter reaches him first.",
+      brief: "Your brother the prince walks free at last - and Vath means the throne now, and the Tideglass magic in your father's veins. Take ship for Aldermere and bring both of you before King Aldous, before the enchanter reaches him first.",
       log: "Bring the prince before King Aldous in the Tideglass Palace, Aldermere - before Vath does.",
       doneText: ""
     },

@@ -372,7 +372,7 @@ const SECTIONS=[
     ['Undermaw',()=>copyDungeonLink('undermaw')], ['Rainbow Road',()=>copyDungeonLink('skydungeon')],
   ]],
   ['Story / Act', [
-    ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Act III',()=>setAct(3)],
+    ['Act I',()=>setAct(1)], ['Act II',()=>setAct(2)], ['Finale',()=>setAct(3)],
     ['★ Act II return phase (Veil + 4 gifts + refresh isles)',()=>enterReturnPhase()],
     ['Reset Act I ending (replay)',()=>resetActOneEnding()],
   ]],

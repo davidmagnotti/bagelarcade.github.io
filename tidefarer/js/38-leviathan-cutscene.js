@@ -56,7 +56,7 @@ const LV_FREED = [
     ens:0, calm:1 },
   // the reveal: a robed figure resolves on the breakwater, violet at the wrists
   { who:'The Leviathan, Unbound',
-    html:'<b style="color:#8fd8ff">"He stood upon your stone wall as the cold words took me - a landman, robed, </b><b style="color:#c9a0ff">violet at his wrists</b><b style="color:#8fd8ff">, whispering the old deep-magic into my blood. There. He watches yet."</b>',
+    html:'<b style="color:#8fd8ff">"He stood upon your stone wall as the cold words took me - a landman, robed, </b><b style="color:#c9a0ff">violet at his wrists</b><b style="color:#8fd8ff">, whispering the old deep-magic into my bones. There. He watches yet."</b>',
     ens:0, calm:1, vath:1 },
   // Vath turns and is gone; the shard of his binding tears loose to your hand (wordless)
   { who:'', html:'', ens:0, calm:1, vath:0, flash:0.5, title:'THE LEVIATHAN, UNBOUND', hold:2000 },

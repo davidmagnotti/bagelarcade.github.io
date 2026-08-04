@@ -68,7 +68,7 @@ function useStairs(dir){
   if(fade){ fade.style.opacity=1; setTimeout(()=>{ fade.style.opacity=0; },140); }
 }
 function palaceKingSpeak(){
-  // the throne hosts the scripted scenes: the audience (Act III) and the Act I
+  // the throne hosts the scripted scenes: the audience (the finale) and the Act I
   // capital finale (the confrontation with Vath, and its aftermath). Route those
   // through buildDialogContent so the King's NPC dialogue handlers run. The
   // audience now opens simply on speaking to the King (before he's charged you),
