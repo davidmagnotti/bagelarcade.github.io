@@ -13,6 +13,16 @@
      stale index.html that still points at old scripts). -->
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>Tidefarer</title>
+<!-- Installable-app (PWA) wiring: manifest + icons + theme colour. Lets the game
+     be packaged for the Microsoft/Xbox Store (via PWABuilder) and installed to a
+     home screen / desktop. See sw.js for the offline cache. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0c0c0d">
+<meta name="application-name" content="Tidefarer">
+<meta name="apple-mobile-web-app-title" content="Tidefarer">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="styles.css?v=317">
 </head>
 <body>
@@ -342,5 +352,15 @@
 <script src="js/43-hollow-cutscene.js?v=317"></script>
 <script src="js/44-shore-cutscene.js?v=317"></script>
 <script src="js/45-isle-hazards.js?v=317"></script>
+<!-- Register the offline service worker. Kept last and guarded so it never blocks
+     the game boot; failures (e.g. file:// or an unsupported browser) are silent. -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+</script>
+
 </body>
 </html>
