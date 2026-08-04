@@ -355,6 +355,17 @@ function buildDialogContent(npc){
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
+  // Old Wend on the plaza steps of the Act II capital: ask why the watch is gone and he tells
+  // you the King has withdrawn into himself and dismissed the whole garrison. Quiet foreboding
+  // for the reckoning still ahead - no guards left in Aldermere.
+  if(npc.id==='wend'){
+    const guards=()=>setDialog('<i>He gives a slow, uneasy nod up toward the palace.</i> “Sent away. Every last one of them - Captain Halvard and all his watch, marched out the gates a fortnight past and not a man called back. The King\'s own order, they tell me.” <i>He drops his voice.</i> “But the King... he hasn\'t been himself. Not for a good while now. Sits that throne day and night, won\'t see his stewards, won\'t hear his court. A man sends off the very swords that keep him safe - you tell me what that means, friend, for these old bones don\'t like the shape of it. A capital with no watch at all. I never thought I\'d live to walk it.”',
+      [{label:'Farewell', ghost:true, fn:closeDialog}]);
+    setDialog('<i>An old man sits alone on the plaza steps, watching the bare gate-posts where the watch used to stand.</i> “Quiet, isn\'t it? Too quiet for a capital. You feel it too - I can see that you do.”',
+      [{label:'Where are all the guards?', cls:'gold', fn:guards},
+       {label:'Farewell', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // The capital, at the last: the King knows both his children at a glance - then
   // Vath storms the hall. But this is a trap. The King rises to fight and buys his
   // children's escape - only to burn out the very Tideglass strength Vath came to

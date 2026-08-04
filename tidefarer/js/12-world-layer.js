@@ -4309,6 +4309,10 @@ function placeObjectsCrown(){
 function crownLettucePlot(){ const GA=CROWN_ZONES.garden; return {x:Math.round(GA.x-12), y:Math.round(GA.y+8)}; }
 function spawnCrownFolk(){
   const Z=CROWN_ZONES, PA=Z.palace, PL=Z.plaza, M=Z.market, H=Z.harbor, GA=Z.garden, BA=Z.barracks, D=Z.dock;
+  // In Act II the King has withdrawn into Vath's shadow and dismissed his whole watch, so the
+  // capital stands guardless - no Captain Halvard, no City Guard on any post (see below). Old
+  // Wend, on the plaza steps, is the one who'll tell you why.
+  const a2=!!(P.story && P.story.act2);
   // ---- King Aldous: he holds court INSIDE the Tideglass Palace only, never out
   // in the plaza. He still lives in G.npcs (the palace throne figure opens his
   // dialogue), but `throne` keeps him permanently hidden from the open city. ----
@@ -4325,25 +4329,39 @@ function spawnCrownFolk(){
     ['His Majesty grieves in public now, which is new. For all those long years he did it behind a shut door.',
      'Do not speak of the lost prince within the King\'s hearing unless you mean to ruin his week. The whole court steps around it.',
      'Aldermere runs on ledgers and patience. I supply both.'],0.2));
-  // ---- Captain of the Guard ----
-  { const halvard=makeNPC('halvard','Captain Halvard', BA.x+0.5, BA.y+2.5,
-    {skin:'#b5825a',hair:'#3a2f26',shirt:'#5a2f2f',pants:'#33282a',beard:'#3a2f26',hairstyle:'short'},
-    ['The Garrison drills dawn to dark. A soft capital is a short one.',
-     'You carry yourself like you\'ve put down worse than street thieves. Good. The realm can always use another arm.',
-     'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2);
-    halvard.nightOwl=true; G.npcs.push(halvard); }   // a captain holds his post round the clock
-  // ---- soldiers posted through the city: a walled, patrolled, SAFE capital.
-  // The watch stands its posts DAY AND NIGHT (nightOwl) - troops don't troop indoors at dusk. ----
-  { const gLook={skin:'#bd8f60',hair:'#3a2f26',shirt:'#42506a',pants:'#2e3340',trim:'#c9a24e',armor:1,hairstyle:'short'};
-    const gLines=['Move along, citizen. The peace holds while we hold it.',
-                  'Aldermere sleeps easy because we do not.',
-                  'Nothing gets past the wall on my watch - not thief, not wraith, not worse.',
-                  'The night shift is the long one. Keep your lantern lit and your business honest.'];
-    [[PA.x-3,PA.y+6],[PA.x+4,PA.y+6],[PL.x-5,PL.y+1],[PL.x+6,PL.y-1],[H.x+2,H.y+2],[M.x-4,M.y+2]].forEach((p,i)=>{
-      const g=makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05);
-      g.nightOwl=true; g.noBark=1;   // the watch stands silent - no floating idle chatter over their heads (still speaks if you talk to them)
-      G.npcs.push(g);
-    }); }
+  // ---- The Garrison: the Captain and the whole city watch - present in Act I, but ENTIRELY
+  // gone in Act II, when the King has sent them all away. No guards anywhere in the capital. ----
+  if(!a2){
+    // ---- Captain of the Guard ----
+    { const halvard=makeNPC('halvard','Captain Halvard', BA.x+0.5, BA.y+2.5,
+      {skin:'#b5825a',hair:'#3a2f26',shirt:'#5a2f2f',pants:'#33282a',beard:'#3a2f26',hairstyle:'short'},
+      ['The Garrison drills dawn to dark. A soft capital is a short one.',
+       'You carry yourself like you\'ve put down worse than street thieves. Good. The realm can always use another arm.',
+       'Trouble on the isles? We hear things. Robed men, curses lifting. Someone out there is doing the crown\'s work for it.'],0.2);
+      halvard.nightOwl=true; G.npcs.push(halvard); }   // a captain holds his post round the clock
+    // ---- soldiers posted through the city: a walled, patrolled, SAFE capital.
+    // The watch stands its posts DAY AND NIGHT (nightOwl) - troops don't troop indoors at dusk. ----
+    { const gLook={skin:'#bd8f60',hair:'#3a2f26',shirt:'#42506a',pants:'#2e3340',trim:'#c9a24e',armor:1,hairstyle:'short'};
+      const gLines=['Move along, citizen. The peace holds while we hold it.',
+                    'Aldermere sleeps easy because we do not.',
+                    'Nothing gets past the wall on my watch - not thief, not wraith, not worse.',
+                    'The night shift is the long one. Keep your lantern lit and your business honest.'];
+      [[PA.x-3,PA.y+6],[PA.x+4,PA.y+6],[PL.x-5,PL.y+1],[PL.x+6,PL.y-1],[H.x+2,H.y+2],[M.x-4,M.y+2]].forEach((p,i)=>{
+        const g=makeNPC('cguard'+i,'City Guard', p[0]+0.5, p[1]+0.5, {...gLook}, gLines, 0.05);
+        g.nightOwl=true; g.noBark=1;   // the watch stands silent - no floating idle chatter over their heads (still speaks if you talk to them)
+        G.npcs.push(g);
+      }); }
+  } else {
+    // ---- Act II: Old Wend keeps the plaza steps where the watch used to stand, and will tell
+    // you why the guards are gone - the King hasn't been himself, and sent them all away. ----
+    const wp=(typeof findOpenNear==='function' && findOpenNear(Math.round(PL.x), Math.round(PL.y+3), 8)) || [PL.x, PL.y+3];
+    const wend=makeNPC('wend','Old Wend', wp[0], wp[1],
+      {skin:'#c2a07e',hair:'#d8d2c6',shirt:'#5a4a3a',pants:'#3a3228',beard:'#d8d2c6',beardLong:true,hairstyle:'short',build:{w:0.98,head:0.92,stoop:1.4}},
+      ['A capital with no watch on the wall. Sixty years I\'ve lived here and never seen the like.',
+       'Don\'t mind me, friend. Old men and empty streets - we keep each other company.',
+       'The gate-posts stand bare. You could walk a wraith straight up to the throne and no one to say it nay.'],0.1);
+    wend.nightOwl=true; G.npcs.push(wend);
+  }
   // ---- the Herald: town crier in the plaza ----
   G.npcs.push(makeNPC('brea','Brea the Herald', PL.x+0.5, PL.y+2.5,
     {skin:'#8a5a3a',hair:'#2a2018',shirt:'#7a5a2f',pants:'#4a3a24',hairstyle:'bun'},
@@ -4404,11 +4422,14 @@ function spawnCrownFolk(){
 }
 function spawnMobsCrown(){
   const Z=CROWN_ZONES, BA=Z.barracks;
-  // the capital is a safe city - a training yard for the garrison, no foes
-  const yd=findOpenNear(Math.round(BA.x+3),Math.round(BA.y+4),5);
-  if(yd) spawnMob('dummy',yd[0],yd[1]);
-  const yd2=findOpenNear(Math.round(BA.x-3),Math.round(BA.y+4),5);
-  if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+  // the capital is a safe city - a training yard for the garrison, no foes. In Act II the
+  // garrison is gone, so the training yard stands empty - no drill-dummies either.
+  if(!(P.story && P.story.act2)){
+    const yd=findOpenNear(Math.round(BA.x+3),Math.round(BA.y+4),5);
+    if(yd) spawnMob('dummy',yd[0],yd[1]);
+    const yd2=findOpenNear(Math.round(BA.x-3),Math.round(BA.y+4),5);
+    if(yd2) spawnMob('dummy',yd2[0],yd2[1]);
+  }
   // garden hares raiding the palace lettuce beds - harmless pests for Gale's quest
   const LG=crownLettucePlot();
   for(const [dx,dy] of [[-2,-1],[2,0],[0,2]]){ const sp=findOpenNear(LG.x+dx, LG.y+dy, 4); if(sp) spawnMob('hare', sp[0], sp[1]); }
@@ -7133,6 +7154,11 @@ function switchWorld(id){
   const FRESH_UNTIL_WON={ milldeep:'millDone', frostvault:'vaultDone', reachdeep:'tombBossDown', undermaw:'undermawDown', barikdeep:'barikDeepDone', winddeep:'galeDeepDone', sunwarddeep:'ashenForgeDone', skydeep:'stormTempleDone', embertomb:'tidewardDone' };
   const _fw=FRESH_UNTIL_WON[id];
   if(_fw && !(P.story && P.story[_fw])) delete WORLDS[id];
+  // The capital's population changes with the story - the living Act I court, the guardless
+  // Act II city the King emptied, and the fallen reckoning - and none of those transitions
+  // invalidate its cache on their own. Regenerate crown fresh on every entry so it always
+  // matches the current state (and a stale Act I copy can never keep guards on the wall).
+  if(id==='crown') delete WORLDS[id];
   if(WORLDS[id]){
     const w=WORLDS[id];
     G.map=w.map; G.solid=w.solid; G.variant=w.variant; G.nodes=w.nodes; G.decor=w.decor;
@@ -7331,17 +7357,21 @@ function switchWorld(id){
   if(id==='undermaw' && !P.prog.mawSeen){ P.prog.mawSeen=1;
     if(!(P.story && P.story.undermawDown)) setTimeout(()=>toast('<i>The dark ahead breathes - something dens here, and a stone door stands shut past it.</i> <b>Put the beast down</b> and the Hoard Door will grind open.',6800),1400); }
   if(id==='crown'){
-    // the King grants an audience once you've broken at least one of Vath's
-    // curses on the isles (vathMet) - the herald offers it in the plaza.
-    if(P.story && P.story.vathMet && !(P.story.act>=3) && !P.quests.audience) P.quests.audience='avail';
-    // the palace gate is guarded; the kitchen-run delivery is how you earn the
-    // run of the gate. Available from your first day in the capital.
-    if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
-    if(qs('lettuce')!=='done' && !P.quests.lettuce) P.quests.lettuce='avail';
-    // capital side-work: the gardener, the factor, and the garrison captain
-    if(qs('roses')!=='done' && !P.quests.roses) P.quests.roses='avail';
-    if(qs('larder')!=='done' && !P.quests.larder) P.quests.larder='avail';
-    if(qs('garrison')!=='done' && !P.quests.garrison) P.quests.garrison='avail';
+    // All of the capital's Act I court-work retires in Act II: the King has withdrawn and sent
+    // the garrison away, so its givers (Captain Halvard, the guarded palace gate) are gone.
+    if(!(P.story && P.story.act2)){
+      // the King grants an audience once you've broken at least one of Vath's
+      // curses on the isles (vathMet) - the herald offers it in the plaza.
+      if(P.story && P.story.vathMet && !(P.story.act>=3) && !P.quests.audience) P.quests.audience='avail';
+      // the palace gate is guarded; the kitchen-run delivery is how you earn the
+      // run of the gate. Available from your first day in the capital.
+      if(qs('kitchenrun')!=='done' && !P.quests.kitchenrun && !(P.story&&P.story.kingTold)) P.quests.kitchenrun='avail';
+      if(qs('lettuce')!=='done' && !P.quests.lettuce) P.quests.lettuce='avail';
+      // capital side-work: the gardener, the factor, and the garrison captain
+      if(qs('roses')!=='done' && !P.quests.roses) P.quests.roses='avail';
+      if(qs('larder')!=='done' && !P.quests.larder) P.quests.larder='avail';
+      if(qs('garrison')!=='done' && !P.quests.garrison) P.quests.garrison='avail';
+    }
     if(P.story && P.story.kingTold) updateCrownFolkMood();
     if(!P.prog.crownSeen){ P.prog.crownSeen=1; }
   }
