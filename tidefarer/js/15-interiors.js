@@ -203,10 +203,12 @@ function enterHouse(b){
         setTimeout(()=>{ fadeH.style.opacity=0; },120); },750);
       return;
     }
-    // b.closedMsg: a custom "shut for the night" line for this door; else a generic one
-    blockMsg(b.closedMsg || [nightClosedLine(),
+    // b.closedMsg: a custom "shut for the night" line for this door; else a generic one.
+    // Igloos get a plain, no-fuss line (no "light under the door / locked" - it reads odd
+    // for a snow-block door): the door simply doesn't budge till dawn.
+    blockMsg(b.closedMsg || (b.kind==='igloo' ? 'The door doesn\u2019t budge.' : [nightClosedLine(),
       '\u201cWe are abed!\u201d calls a voice inside. The door stays shut till dawn.',
-      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)]);
+      'No light under the door, and the latch will not lift. Locked.'][rndi(0,2)]));
     Snd.step(5); return;
   }
   const kinds={

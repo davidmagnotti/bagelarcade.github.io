@@ -2362,10 +2362,12 @@ function genFrost(){
 function placeObjectsFrost(){
   const Z=FROST_ZONES, V=Z.village, D=Z.dock, GL=Z.glacier, RW=Z.rimewood;
   // Hearthhold is a huddle of snow-block igloos against the cold
-  addBuilding('igloo', V.x-4, V.y-3, 'Hearthhold igloo');
-  addBuilding('igloo', V.x+3, V.y-2, 'The Kettle & Hearth (Inn)');
-  addBuilding('igloo', V.x+5, V.y+3, 'The Icewright\'s igloo');
-  addBuilding('igloo', V.x-6, V.y+2, 'Frostferry lodge');
+  // spaced well apart around the hollow so each igloo reads as its own dwelling,
+  // not a huddle stacked on top of the well
+  addBuilding('igloo', V.x-8, V.y-4, 'Hearthhold igloo');
+  addBuilding('igloo', V.x+6, V.y-5, 'The Kettle & Hearth (Inn)');
+  addBuilding('igloo', V.x+8, V.y+4, 'The Icewright\'s igloo');
+  addBuilding('igloo', V.x-7, V.y+5, 'Frostferry lodge');
   addBuilding('well', V.x, V.y, 'Frostspring well');
   addBuilding('lamp', D.x, D.y-1, '');
   // the ferry boat floats just off the landing - walk OUT from the island centre
@@ -3723,7 +3725,7 @@ function placeObjectsReach(){
   for(let i=0;i<120;i++){ const ax=Math.floor(pr()*MAPW), ay=Math.floor(pr()*MAPH), t=tileAt(ax,ay);
     if(((t===T.SOIL&&pr()<0.14)||(t===T.RUIN&&pr()<0.22)||(t===T.SAND&&pr()<0.10)) && !solidAt(ax,ay) && dist(ax,ay,Z.camp.x,Z.camp.y)>5){
       const n=addNode(t===T.SAND?'tree':'rock',ax,ay); if(n&&t===T.SAND) n.palm=1; } }
-  G.decor.push({kind:'chest', x:Z.barrow.x+0.5, y:Z.barrow.y-7+0.5, rich:10});
+  G.decor.push({kind:'chest', x:Z.barrow.x+0.5, y:Z.barrow.y-7+0.5, rich:10, armorgift:2});
   G.critters=[];
 }
 function spawnReachFolk(){
@@ -6437,6 +6439,11 @@ function shelterBarikFolk(){
   };
   // spread across the forecourt and the approach south of the gate, so it reads as a crowd taking refuge
   huddle('sela',-3,6); huddle('ivo',-1,6); huddle('rook',1,6); huddle('mira',3,6);
+  // Act II Mira has no ribbon-and-thieves errand any more - just grief for the drowning isle
+  { const _m=G.npcs && G.npcs.find(n=>n.id==='mira'); if(_m) _m.idleLines=[
+    'I keep the needles moving so my hands forget to shake.',
+    'Look at the water - grey as a grave and climbing. Whatever that man did out east, it is drowning us slow.',
+    'I do not care about silk or ribbons now. I only want the sea to go back to blue.']; }
   huddle('bree',-4,8); huddle('saffi',-2,8); huddle('dockhand',0,8); huddle('hedda',2,8); huddle('torv',4,8);
   huddle('moss',-3,10); huddle('hermit',-1,10); huddle('aelin',1,10);
   // Warden Kell alone holds the landing you arrive at, to turn you back into the keep
@@ -6575,6 +6582,22 @@ function openChest(b){
   // tool-gate content persistence: any chest carrying a stable tgid records itself
   // opened, so it is not re-placed when the world regenerates on reload (35-toolgate-content.js)
   if(b.tgid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[b.tgid]=1; }
+  // AN ARMOR CACHE: the Barrow Brute's hoard held plate, not coin. Grants (and equips) an
+  // armor upgrade - never a downgrade if you already wear better.
+  if(b.armorgift){
+    bumpStat('chests');
+    const tier=b.armorgift, names=['Traveler’s Clothes','Iron Armor','Steel Plate'], red=[0,15,30];
+    shockwave(b.x,b.y,'rgba(200,205,215,0.9)',52); burst(b.x,b.y-0.5,'#cdd4de',18,2.5); if(Snd.levelup) Snd.levelup();
+    const already=(P.armorOwn||0)>=tier;
+    P.armorOwn=Math.max(P.armorOwn||0, tier);
+    if((P.armor||0)<tier) P.armor=tier;   // auto-equip the better plate
+    giveGold(rndi(40,80));
+    if(typeof buildHotbar==='function') buildHotbar();
+    if(typeof refreshUI==='function') refreshUI();
+    if(already){ banner('THE BARROW HOARD','ARMOR YOU ALREADY BETTER - AND OLD COIN'); }
+    else banner('THE BARROW HOARD', (names[tier]||'ARMOR').toUpperCase()+' - TURNS ASIDE '+(red[tier]||0)+'% OF EVERY BLOW');
+    setTimeout(autoSave,300); return;
+  }
   // THE DROWNED VAULT'S REWARD: the Pearl of the Deep - the gift to DIVE, to cross the
   // drowned water Vath's flood raised over the old islands.
   if(b.divegift){
