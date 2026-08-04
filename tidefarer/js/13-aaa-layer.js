@@ -224,14 +224,10 @@ function _epiLandfall(){
   if(typeof cinematic==='function') cinematic(false);
   if(typeof ui==='function') ui(); else if(typeof refreshUI==='function') refreshUI();
   if(typeof banner==='function') banner('STORMREACH','ACT II — THE STORM-COAST');
-  // the prince stays with the boat; the princess takes the isle
-  setTimeout(()=>{ if(typeof storyCard==='function') storyCard(
-    '<i>The keel bites black shingle and holds. You step down into a rain that has never once stopped, and the little sloop settles behind you.</i> '
-    + '“This is where I earn my keep,” <i>your brother says, already lashing the bow-line to a spar of old wreck.</i> '
-    + '“One of us guards the way home &mdash; and it isn\'t going to be the one who reads maps for a living. I\'ll hold the strand, and the boat.” '
-    + '<i>He grips your arm the way he did when you were children, except now his hand is steady.</i> '
-    + '“Go on into the isle, sister. Find out what Stormreach is hiding. I\'ll be right here when you need the sea again.”',
-    {label:'Take the isle', onOk:()=>{ if(typeof autoSave==='function') autoSave(); }}); }, 600);
+  // The prince stays with the beached sloop (placeReachHomecoming) while the princess
+  // takes the isle. No wall-of-text landing card - the banner marks the arrival, and the
+  // prince is right there on the strand to talk to.
+  if(typeof autoSave==='function') autoSave();
 }
 // The prince and the beached sloop, stationed on Wreckstrand where the cutscene lands.
 function placeReachHomecoming(){
@@ -463,7 +459,6 @@ const THR = {
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,
   vAdv:0, kAdv:0, flee:0, pflee:0, gold:0.12, violet:0, clash:0, guards:0, kingDown:0, dark:0,
-  kHand:0, vHand:0,   // casting gesture: how far the King's / Vath's hands are raised (0..1)
   fx:1.3, fy:0.9, zoom:1.18, stepH:0, stepP:0, stepK:0, stepV:0,
   hero:null, prince:null, king:null, vath:null, _ph:null, _pp:null, _pk:null, _pv:null,
   flash:0, flashT:5, pulseR:0, take:0, strike:0, bigStrike:0, sparks:[],
@@ -519,7 +514,7 @@ function throneCutscene(){
   THR.cv=cv; THR.cx=cv.getContext('2d');
   THR.t=0; THR.prev=0; THR.idx=0;
   THR.vAdv=0; THR.kAdv=0; THR.flee=0; THR.pflee=0; THR.gold=0.12; THR.violet=0; THR.clash=0; THR.guards=0; THR.kingDown=0; THR.dark=0;
-  THR.kHand=0; THR.vHand=0; clearTimeout(THR._autoTO);
+  clearTimeout(THR._autoTO);
   THR.fx=THR_STAGE[0].foc[0]; THR.fy=THR_STAGE[0].foc[1]; THR.zoom=THR_STAGE[0].zoom;
   THR.stepH=0; THR.stepP=0; THR.stepK=0; THR.stepV=0;
   THR.hero={...HERO0}; THR.prince={...PRIN0}; THR.king={...KING0}; THR.vath={...VATH0};
@@ -620,19 +615,8 @@ function _thrLoop(ts){
   THR.guards  = e(THR.guards,  b.guards||0,   2.0);
   THR.kingDown= e(THR.kingDown,st.kingDown||0,1.6);
   THR.dark    = e(THR.dark,    b.dark?1:0,    0.8);
-  // Vath's hand pose across the beats: absent at the homecoming (0), rising as he enters (1),
-  // fully raised on his gathering (2), then thrust down to loose the strike (3+), and closing
-  // to a grasp as he takes the Tideglass (10), lowered once it is done (11+). (The King's own
-  // hand-raise is computed but only ever drawn when he faces the camera - see _thrDraw.)
-  const _i=THR.idx;
-  // The King faces Vath for the whole confrontation (back-to-camera), so his cast-hands would
-  // only ever render as a mis-placed pair behind him - keep them down for good once Vath is here.
-  const kHandT = 0;
-  // Vath lifts his hands to LOOSE the beam: fully raised from his threat through the clash and
-  // the great bait-beam (beats 2-11), high again as he seizes the Tideglass (12), lowered after (13+).
-  const vHandT = _i<=0 ? 0 : _i===1 ? 0.6 : (_i>=2 && _i<=11) ? 1 : _i===12 ? 0.85 : 0;
-  THR.kHand = e(THR.kHand, kHandT, 3.2);
-  THR.vHand = e(THR.vHand, vHandT, 3.2);
+  // (The raised "casting-hands" overlay was removed - each figure keeps its own sprite's
+  // hands and the sorcery reads from the auras/beams - so there is no hand-pose to ease here.)
   THR.fx=e(THR.fx,st.foc[0],1.6); THR.fy=e(THR.fy,st.foc[1],1.6);
   THR.zoom=e(THR.zoom,st.zoom||1.15,1.4);
   THR.take=Math.max(0,THR.take-dt*0.5);
@@ -714,7 +698,6 @@ function _thrDraw(){
   const _cb=THR.beats[THR.idx]||THR.beats[0];
   const kMid={x:(THR.hero.x+THR.prince.x)/2, y:(THR.hero.y+THR.prince.y)/2};
   const kingDir=_cb.kingFace==='kids'?_thrFace(THR.king,kMid):_thrFace(THR.king,THR.vath);
-  const kingAway=(kingDir.x+kingDir.y)*0.5 < -0.15;   // matches drawHumanoid's own `away`
   { const look=down>0.5?LOOK_KSPENT:LOOK_KING;
     const ds=down*down*(3-2*down);        // smooth collapse
     items.push({d:THR.king.x+THR.king.y, fn:()=>_thrActor(SC,Z,THR.king,look,kingDir,THR.stepK*(1-ds),
@@ -743,22 +726,10 @@ function _thrDraw(){
   }
   items.sort((a,b)=>a.d-b.d);
   for(const it of items) it.fn();
-  // hands raised in front: the casting gesture that precedes and then looses the beams. Drawn
-  // ONLY for a figure that faces the camera - a back-to-camera figure's "front" hands would
-  // land on the wrong side of him (behind his head), so we skip them. The King turns to Vath
-  // (away) for the whole confrontation, so in practice only Vath's hand shows. Anchored to the
-  // figure's ACTUALLY-DRAWN chest - drawHumanoid's own bob plus the King's lift/drop/scale.
-  const _bob=(step,size)=>{ const w=Math.abs(step||0)>0.0001;
-    return w ? Math.abs(Math.sin(step))*2.2*size : (Math.sin(G.time*2.1)*0.5+0.5)*0.9*size; };
-  if(THR.vHand>0.02 && THR.vAdv>0.03){
-    const vGY=SC(THR.vath.x,THR.vath.y).y - _bob(THR.stepV,1.34*Z);
-    _thrHands(SC,Z,THR.vath,THR.vHand,LOOK_VATH.skin,LOOK_VATH.robe,'150,66,238',true,vGY,1);
-  }
-  if(THR.kHand>0.02 && !kingAway){
-    const kSc=1-0.17*down;
-    const kGY=SC(THR.king.x,THR.king.y).y - 12*Z*(1-THR.kAdv) + 11*Z*down - _bob(THR.stepK,1.34*Z*kSc);
-    _thrHands(SC,Z,THR.king,THR.kHand,LOOK_KING.skin,LOOK_KING.robe,'255,170,46',false,kGY,kSc);
-  }
+  // (No separate raised "casting-hands" overlay. Each figure keeps the two hands its own
+  // sprite draws, and the sorcery reads from the auras and the beams below. The old overlay
+  // stacked an extra, floating hand in FRONT of a camera-facing caster - Vath's telltale
+  // "third hand" - so it was removed.)
   // Vath's opening lash, thrown past the King toward the children and caught on his gold
   if(THR.strike>0.01) _thrStrike(SC,Z,THR.strike,t);
   // the killing bolt: one great beam from Vath that hurls the spent King to the floor
@@ -799,39 +770,12 @@ function _thrActor(SC,Z,pos,look,dir,step,opt){
   // opt.tip (radians) topples the figure over its feet - a body falling and lying on the floor
   if(opt.tip) { cx.translate(s.x, gy); cx.rotate(opt.tip); cx.translate(-s.x, -gy); }
   try{ if(typeof drawHumanoid==='function')
-    drawHumanoid(cx,s.x,gy,Object.assign({},look,{size,dir,step:step||0,hurt:!!opt.hurt,weapon:opt.weapon})); }catch(err){}
+    // stillT:0 keeps a back-to-camera figure from falling into the relaxed "hands clasped
+    // behind the back" idle pose - wrong for the King (and the children) mid-confrontation.
+    // With it off, a back-turned figure stands with arms at its sides instead.
+    drawHumanoid(cx,s.x,gy,Object.assign({},look,{size,dir,step:step||0,stillT:0,hurt:!!opt.hurt,weapon:opt.weapon})); }catch(err){}
   cx.restore();
   cx.restore();
-}
-// Raised hands in front of a figure - the casting gesture. `amt` 0..1 lifts the forearms;
-// the palms glow in the figure's magic colour as the power gathers, so the beams read as
-// loosed FROM the hands. `single` draws one arm (Vath), else two (the King), framing his chest.
-// `baseY`/`sc` lock the hands to the figure's ACTUALLY-DRAWN body (its lift/drop/scale), so
-// they ride his chest as he steps down off the dais instead of floating off at a fixed height.
-function _thrHands(SC,Z,pos,amt,skin,sleeve,col,single,baseY,sc){
-  const cx=THR.cx, s=SC(pos.x,pos.y);
-  const by=(baseY!=null?baseY:s.y);            // the sprite's drawn base (feet), incl. lift/drop
-  sc=sc||1;
-  const shY=by-25*Z*sc;                        // where the arms leave the body
-  const hY =by-(28+12*amt)*Z*sc;               // the raised hands, higher as the gesture peaks
-  const sp=7*Z*sc;
-  const arms = single ? [ {hx:s.x+7*Z*sc, ox:s.x+3.5*Z*sc} ]
-                      : [ {hx:s.x-sp, ox:s.x-3.5*Z*sc}, {hx:s.x+sp, ox:s.x+3.5*Z*sc} ];
-  for(const a of arms){
-    // the raised forearm (sleeve), body -> hand
-    cx.save(); cx.lineCap='round'; cx.strokeStyle=sleeve; cx.lineWidth=4.6*Z*sc;
-    cx.beginPath(); cx.moveTo(a.ox,shY); cx.lineTo(a.hx,hY); cx.stroke();
-    cx.strokeStyle='rgba(24,16,10,0.5)'; cx.lineWidth=1; cx.stroke(); cx.restore();
-    // the palm glow (magic gathering)
-    cx.save(); cx.globalCompositeOperation='lighter';
-    const r=13*Z*sc*Math.max(0.4,amt);
-    const g=cx.createRadialGradient(a.hx,hY,1,a.hx,hY,r);
-    g.addColorStop(0,`rgba(${col},${0.75*amt})`); g.addColorStop(1,`rgba(${col},0)`);
-    cx.fillStyle=g; cx.beginPath(); cx.arc(a.hx,hY,r,0,TAU); cx.fill(); cx.restore();
-    // the mitt
-    cx.fillStyle=skin; cx.beginPath(); cx.arc(a.hx,hY,3.3*Z*sc,0,TAU); cx.fill();
-    cx.strokeStyle='rgba(24,16,10,0.85)'; cx.lineWidth=1.3*Z; cx.stroke();
-  }
 }
 // the tiled iso floor of the nave: cool stone, a royal carpet up the centre, a raised dais
 function _thrFloor(SC,Z,t,gold,violet){
