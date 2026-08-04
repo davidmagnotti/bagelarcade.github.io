@@ -1688,7 +1688,7 @@ function updateNPCs(dt){
     }
     // NPCs no longer bark idle chatter in floating bubbles over their heads -
     // their lines are heard only when you actually talk to them (see buildDialogContent).
-    if(n.hums && !n.hidden){ // the Woodworker hums a tune he can't name (the royal anthem)
+    if(n.hums && !n.hidden && !(n.id==='woody' && P.story && P.story.royalGarb)){ // the Woodworker hums a tune he can't name (the royal anthem) - but once he remembers he's Prince Jaist, he hums no more
       n.humT=(n.humT===undefined? rnd(1,4):n.humT)-dt;
       if(n.humT<=0){ n.humT=rnd(2.6,5.2); addFloat('♪', n.x, n.y-1.9, 'rgba(206,196,232,0.92)', 0.9); }
     }

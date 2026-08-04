@@ -259,6 +259,12 @@ function buildDialogContent(npc){
     const afterReveal=()=>{
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
+      // Jaist has remembered he is the prince: he leaves the woodpile for good this instant.
+      // Neutralise the live Woodworker NPC so he no longer hums his logs or paces the yard -
+      // he holds the boat and the way home now, not a woodcutter dancing. (On the next Act II
+      // landing spawnNPCs re-places him down at the boat; this just stops the stale dance
+      // between the reveal and that regen.)
+      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(w){ w.hums=false; w.wander=0; w.tx=null; } }
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
