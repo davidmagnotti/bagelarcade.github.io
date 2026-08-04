@@ -1470,7 +1470,7 @@ function drawHumanoid(g,sx,sy,o){
   const headScale=hdF*(o.hero?1.12:1);                  // hero head grander; build.head resizes per character
   if(headScale!==1) g.scale(headScale,headScale);
   if(walking) g.rotate(sw1*0.035);
-  const HR=12.3, HRY=13.9; // oval: taller than wide, even after iso foreshorten
+  const HR=11.3, HRY=14.2; // oval: slimmed from a round ball into a more face-like oval
   // ball with soft top-light - round, not flat
   const hg=g.createRadialGradient(-3.5,-5.5,2, 0,-1,15.5);
   hg.addColorStop(0,shade(skin,13)); hg.addColorStop(0.62,skin); hg.addColorStop(1,shade(skin,-9));
@@ -1587,7 +1587,7 @@ function drawHumanoid(g,sx,sy,o){
           const ex2=e*eSp+fx*0.9;
           g.fillStyle='#241a12'; // round button eyes - softer brown-black, gentler than jet
           g.beginPath();
-          g.arc(ex2,eyeY,1.95,0,TAU);
+          g.arc(ex2,eyeY,2.15,0,TAU);
           g.fill();
           // a single, calm catch-light (the old twin highlights read as glassy doll eyes)
           g.fillStyle='rgba(255,255,255,0.8)';
