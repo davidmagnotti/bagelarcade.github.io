@@ -811,6 +811,21 @@ function drawHouse(g,w,h,wall,roof,roofDk,scale=1,chim=true){
     g.moveTo(chX-6*scale, roofY+3*scale); g.lineTo(chX+6*scale, roofY+7*scale);
     g.stroke();
   }
+  // ---- omnipresent WARM-WALNUT INK SILHOUETTE (the anti-Roblox lever #1) ----
+  // Every storybook sprite in this world carries a walnut ink line; the houses
+  // were the one part of the cast drawn without one, so they read flatter than
+  // the characters beside them. A heavy, warm #241a10 hull round the roof diamond
+  // and the wall silhouette snaps each building forward as a hand-drawn prop
+  // (never a flat-shaded box). Rounded joins/caps; weight scaled to the form so
+  // the big roof takes a heavier line than the walls, the way an inked line does.
+  g.strokeStyle='#241a10'; g.lineJoin='round'; g.lineCap='round';
+  g.lineWidth=2.6*scale;                                    // big form -> heavier hull
+  g.beginPath();                                            // roof diamond
+  g.moveTo(eL.x,eL.y); g.lineTo(apX,apY); g.lineTo(eR.x,eR.y); g.lineTo(frX,frY); g.closePath(); g.stroke();
+  g.lineWidth=2.1*scale;                                    // walls a touch lighter
+  g.beginPath();                                            // wall silhouette: outer edges + base V
+  g.moveTo(bx-bw/2,byBase-bh); g.lineTo(bx-bw/2,byBase-18*scale);
+  g.lineTo(bx,byBase); g.lineTo(bx+bw/2,byBase-18*scale); g.lineTo(bx+bw/2,byBase-bh); g.stroke();
   spriteGrain(g,w,h,1);   // plaster/timber tooth so walls & roof aren't flat gradients
 }
 /* tower dressing, shared by SPR.tower and SPR.towerTall: staggered stone
