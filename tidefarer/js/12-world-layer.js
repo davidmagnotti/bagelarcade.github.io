@@ -6806,8 +6806,8 @@ function openChest(b){
       setTimeout(autoSave,300); return;
     }
     P.story.reachProphecy=1; give('reachverse',1); giveGold(rndi(80,130));
-    banner('THE DROWNED CHART','THE THING THIS PLACE WAS HIDING');
-    toast('You picked up the <b style="color:#c9b0ff">Drowned Chart</b> - old royal script you can\'t read. Carry it up to <b>Jaist</b>.',6000);
+    banner('THE DROWNED VERSE','THE THING THIS PLACE WAS HIDING');
+    toast('You copied down the <b style="color:#c9b0ff">Drowned Verse</b> - old royal script you can\'t read. Carry it up to <b>Jaist</b>.',6000);
     setTimeout(autoSave,300);
     return;
   }
