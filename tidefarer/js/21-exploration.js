@@ -332,6 +332,7 @@ document.getElementById('wipeConfirm').onclick=()=>{
   // just cleared, and enterGame() would load it back (skipping the intro).
   G.wiping=true;
   store.clear();
+  try{ SafeStore.del('emberwickPreFinale'); }catch(e){}   // drop the post-credits rewind snapshot too
   document.getElementById('confirmWipe').style.display='none';
   // Full reset: reload so boot() rebuilds a pristine world and player from
   // scratch, then enterGame() begins the new-game intro - no stale in-memory

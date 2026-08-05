@@ -11,6 +11,28 @@
 // derived from the palace zone so it always sits in the forecourt.
 function vathArena(){ const PA=CROWN_ZONES.palace; return {cx:PA.x, cy:PA.y+7, r:8}; }
 
+/* ---- POST-CREDITS REWIND -------------------------------------------------
+   Snapshot the world at the point of no return (the throne-room doors slam), so the
+   ending screen can offer to set the player back down in the capital with the reckoning
+   still ahead of them. Kept in its OWN storage key so it never clobbers the main autosave
+   (the finished tale is preserved). The snapshot's hero is placed at the Kingsferry Quay -
+   well clear of the arena trigger - so a restore doesn't instantly re-spring the ambush. */
+function snapshotPreFinale(){
+  if(typeof saveCode!=='function' || (typeof G!=='undefined' && G.noPersist)) return;
+  const ox=P.x, oy=P.y;
+  try{
+    const q=(typeof CROWN_ZONES!=='undefined') && CROWN_ZONES.dock;
+    if(q){ const o=(typeof findOpenNear==='function' && findOpenNear(Math.round(q.x),Math.round(q.y),10))||[q.x,q.y]; P.x=o[0]+0.5; P.y=o[1]+0.5; }
+    SafeStore.set('emberwickPreFinale', saveCode());
+  }catch(e){}
+  finally{ P.x=ox; P.y=oy; }
+}
+function hasPreFinale(){ try{ return !!SafeStore.get('emberwickPreFinale'); }catch(e){ return false; } }
+function restorePreFinale(){
+  try{ const s=SafeStore.get('emberwickPreFinale'); if(!s) return false; return (typeof loadCode==='function') ? loadCode(s) : false; }
+  catch(e){ return false; }
+}
+
 /* =====================================================================
    SPEAKER PORTRAITS  -  busts painted into the story-card portrait canvas
    (storyCard's opts.speaker.draw). Same art vocabulary as the in-world
@@ -158,6 +180,7 @@ function dropCageFire(){
 function startVathIntro(boss){
   if(G._vathIntro) return;
   G._vathIntro=1;
+  if(typeof snapshotPreFinale==='function') snapshotPreFinale();   // capture "before the final fight" for the post-credits rewind
   const A=vathArena();
   // stand the player at the arena's heart so the flame-ring closes cleanly around them
   const ps=(typeof findOpenNear==='function' && findOpenNear(Math.round(A.cx), Math.round(A.cy+2), 5)) || [A.cx, A.cy+2];

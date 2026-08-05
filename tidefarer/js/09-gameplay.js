@@ -1011,15 +1011,34 @@ function rollCredits(){
   if(scroll){ scroll.style.animation='none'; void scroll.offsetWidth; scroll.style.animation=''; }   // restart the reel
   const showFin=()=>{ if(fin) fin.classList.add('show'); };
   clearTimeout(G._creditsFinT); G._creditsFinT=setTimeout(showFin, 45000);
-  ov.onclick=(e)=>{ if(e.target && e.target.id==='creditsBtn') return; showFin(); };   // click to skip to Fin
+  ov.onclick=(e)=>{ if(e.target && (e.target.id==='creditsBtn'||e.target.id==='creditsRewindBtn')) return; showFin(); };   // click to skip to Fin
   const btn=document.getElementById('creditsBtn');
-  if(btn) btn.onclick=()=>{
+  if(btn) btn.onclick=()=>{                       // "Sail on" - stay in the freed, celebrating capital
     clearTimeout(G._creditsFinT);
     ov.style.display='none'; ov.onclick=null; G.paused=false; G._credits=0;
     if(typeof cinematic==='function') cinematic(false);
     if(typeof refreshUI==='function') refreshUI();
     if(typeof autoSave==='function') autoSave();
   };
+  // "Back to before the reckoning" - restore the pre-finale snapshot (only offered if one
+  // was captured this playthrough). Loads it into play WITHOUT overwriting the finished
+  // autosave, so the completed tale is kept safe.
+  const rbtn=document.getElementById('creditsRewindBtn');
+  if(rbtn){
+    rbtn.style.display = (typeof hasPreFinale==='function' && hasPreFinale()) ? '' : 'none';
+    rbtn.onclick=()=>{
+      clearTimeout(G._creditsFinT);
+      ov.style.display='none'; ov.onclick=null; G._credits=0; G.paused=false; G.state='play';
+      if(typeof cinematic==='function') cinematic(false);
+      if(typeof restorePreFinale==='function' && restorePreFinale()!==false){
+        G.state='play'; G.paused=false;
+        if(typeof toast==='function') toast('<b style="color:var(--ember)">The tide turns back.</b> You stand in Aldermere once more, the reckoning still ahead of you - your finished tale kept safe. Walk up to the throne room when you are ready.',8000);
+      } else {
+        if(typeof refreshUI==='function') refreshUI();
+        if(typeof autoSave==='function') autoSave();
+      }
+    };
+  }
 }
 function vathEscapes(m){
   // The enchanter is not surprised, and he does not die. He studies you - the
