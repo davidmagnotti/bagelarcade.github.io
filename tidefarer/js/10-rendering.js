@@ -1687,9 +1687,10 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='skybird'){
-    // a small bright bird perched on a cloud-post, wings shifting
-    const g=cx, t=G.time, flap=Math.sin(t*3)*3, hop=Math.sin(t*1.4)*1.5;
-    drawShadowAt(g,s.x,s.y,9); g.save(); g.translate(s.x,s.y-6+hop);
+    // a bright bird perched on a cloud-post, wings shifting - drawn a touch
+    // larger than a songbird so it reads as big enough to bear you aloft
+    const g=cx, t=G.time, flap=Math.sin(t*3)*3, hop=Math.sin(t*1.4)*1.5, SC=1.5;
+    drawShadowAt(g,s.x,s.y,9*SC); g.save(); g.translate(s.x,s.y-6+hop); g.scale(SC,SC);
     // little cloud-perch
     g.fillStyle='rgba(235,240,250,0.85)'; g.beginPath(); g.ellipse(0,6,12,4,0,0,TAU); g.fill();
     // body
