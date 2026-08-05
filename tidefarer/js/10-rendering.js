@@ -705,7 +705,11 @@ function render(){
   // cinematic grade: cool shadows, film grain (full-screen blend passes -
   // costly on weak desktop GPUs). Skip on the title/menu so the loading
   // screen stays light, and skip entirely at the lowest quality tier.
-  if(fxOn('grade') && G.state==='play') drawGritGrade();
+  // Gate on FX.grade directly (not fxOn) so the "Cinematic color grade" toggle
+  // is honoured at every quality tier. fxOn() force-enables effects at High
+  // detail, which pinned the grade's half-res smoothed overlay on and softened
+  // the whole frame (text included) with no working way to turn it off.
+  if(FX.grade && G.state==='play') drawGritGrade();
   // vignette (gradient geometry only depends on VW/VH - build once, reuse)
   if(DBG.vignette && fxOn('vignette')){
     const vk=VW+'x'+VH;
