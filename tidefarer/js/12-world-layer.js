@@ -2196,7 +2196,7 @@ function placeObjectsAerieDeep(){
   G.decor=G.decor||[];
   // the catacomb walls that give the chambers their shape (static baked scenery) - so
   // the solid stone reads as real walls, never invisible collision
-  for(const [x,y] of AERIE_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  for(const [x,y] of AERIE_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), theme:'bone'});
   // the way back up the Underclimb, in the landing hall
   G.decor.push({kind:'tunnelmouth', x:75.5, y:122.5, deep:1, up:1, label:'the way up'});
   setSolid(75,122,0); setTile(75,122,T.RUIN);
@@ -2253,7 +2253,7 @@ function placeObjectsAerieDeep(){
     const [pcx,pcy]=plateK.split(',').map(Number), plateTile=[cX(pcx)+1, cY(pcy)+1];
     // wall-fill the chamber around the carved maze
     for(let y=wall[1];y<=wall[3];y++) for(let x=wall[0];x<=wall[2];x++){ if(!inb(x,y)||solidAt(x,y)||safe.has(x+','+y)) continue;
-      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true}); }
+      setSolid(x,y,1); G._aerieMazeTiles.push([x,y]); G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), maze:true, theme:'bone'}); }
     // the true path entry -> gate, for placing the ward-lances that guard it
     const path=[]; let k=K(eCx,eCy); while(k && k!==gK){ path.push(k); k=par[k]; } path.push(gK);
     const innerN=path.length-2; const idxs=[];
@@ -3092,7 +3092,7 @@ function genMillDeep(){
 function placeObjectsMillDeep(){
   G.decor=G.decor||[];
   // the stone walls that give the rooms their shape (static baked scenery)
-  for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  for(const [x,y] of MILL_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), theme:'mill'});
   G.decor.push({kind:'dungeonmouth', mill:1, exit:1, x:19.5, y:98.5, label:'the way up'});  // back to the surface
   setSolid(19,98,0); setTile(19,98,T.RUIN);
   // THE COG-GATE: a gear-driven portcullis at the mouth of the Grinding Floor. It stands open
@@ -3378,7 +3378,7 @@ function genUndermaw(){
 }
 function placeObjectsUndermaw(){
   G.decor=G.decor||[];
-  for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  for(const [x,y] of UNDERMAW_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), theme:'maw'});
   G.decor.push({kind:'dungeonmouth', undermaw:1, exit:1, x:22.5, y:188.5, label:'the way up'});
   setSolid(22,188,0); setTile(22,188,T.RUIN);
   // A second way out at the very top, in the Deep Hoard beyond the boss: once the
@@ -3929,10 +3929,22 @@ function genReachDeep(){
 function placeObjectsReachDeep(){
   G.decor=G.decor||[];
   // the catacomb stone that gives the rooms their shape (baked static scenery)
-  for(const [x,y] of REACHDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  for(const [x,y] of REACHDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), theme:'brine'});
   G.decor.push({kind:'tombmouth', x:40.5, y:88.5, up:1, label:'the way up'});   // back to the graveyard
   setSolid(40,88,0); setTile(40,88,T.RUIN);
   for(const [tx,ty] of [[32,80],[48,80],[28,58],[52,58],[28,50],[52,50],[28,44],[52,44],[30,10],[50,10],[40,8],[56,85],[63,78],[57,72]]) if(inb(tx,ty)) G.decor.push({kind:'lamp',x:tx+0.5,y:ty+0.5});
+  // STANDING FLOOD - the "drowned" made literal: shallow brine pooled on the stone (visual only, no
+  // collision - see the floodwater decal in drawDecor). Kept to the low ground - the Sunken Stair
+  // landing, the silt Bone Annex, a corridor sump, and the Drowned Vault's margins - and clear of the
+  // Ossuary dance-stones, the ward-gate rows (37/47/54) and the reward room, so it never confuses the
+  // puzzle or the fight. Guarded onto carved floor so a pool never draws atop a wall.
+  const flood=(x,y,r)=>{ if(inb(x,y) && !solidAt(x,y) && tileAt(x,y)===T.RUIN) G.decor.push({kind:'floodwater', x:x+0.5, y:y+0.5, r:r}); };
+  for(const [fx,fy,fr] of [
+    [33,86,2.0],[38,87,1.6],[46,86,1.9],[43,83,1.4],[35,79,1.3],   // the Sunken Stair landing
+    [61,85,1.8],[57,85,1.4],[63,80,1.6],[62,75,1.5],[55,72,1.6],[59,72,1.3],  // the silt Bone Annex
+    [40,74,1.5],[40,67,1.4],                                         // the corridor sump
+    [30,32,1.9],[50,32,1.9],[40,33,1.6],[32,22,1.5],[48,22,1.5]      // the Drowned Vault margins
+  ]) flood(fx,fy,fr);
   // THE BONE ANNEX cache (off the Sunken Stair's east passage) - optional detour loot
   if(!(P.story && P.story.sideCacheTaken && P.story.sideCacheTaken.reach))
     G.decor.push({kind:'chest', x:54.5, y:71.5, sideCache:'reach', loot:'bone', title:'THE BONE ANNEX', sub:'GRAVE-GOODS THE CATACOMB KEPT'});

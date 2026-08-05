@@ -426,7 +426,7 @@ function render(){
   for(const b of G.decor){ const cm=b.grand?28:(b.kind==='tower'&&b.tall)?12:2; if(b.x<minX-cm||b.x>maxX+cm||b.y<minY-cm||b.y>maxY+cm) continue;
     // (static decor is a cheap drawImage blit, so it's drawn live + depth-sorted
     //  in both modes now - no separate scenery bake, so occlusion is correct.)
-    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn'||b.kind==='dplate')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
+    const dd=(b.kind==='firepit'||b.kind==='spinwheel'||b.kind==='froststream'||b.kind==='icefloe'||b.kind==='driftslab'||b.kind==='conveytile'||b.kind==='bonepit'||b.kind==='windpit'||b.kind==='fadetile'||b.kind==='spiketile'||b.kind==='dancebtn'||b.kind==='dplate'||b.kind==='floodwater')? -9990 : b.x+b.y;   // flat lava/water/pit/road & floor-plates are floor-level: always beneath the actors that stand on them
     items.push({d:dd, kind:b.kind==='lamp'?'lamp':'decor', o:b}); }
   for(const n of G.npcs) items.push({d:n.x+n.y, kind:'npc', o:n});
   for(const m of G.mobs){ if(!m.dead && !m.sealed) items.push({d:m.x+m.y, kind:'mob', o:m}); }
@@ -1028,6 +1028,27 @@ function drawDecor(b,s){
     g.beginPath(); g.ellipse(0,-ry*0.1,rx*0.3,ry*0.3,0,0,TAU); g.fill();
     g.restore(); return;
   }
+  if(b.kind==='floodwater'){
+    // a still, ankle-deep flood pooled over dungeon stone - PURELY VISUAL (no collision), so a
+    // drowned room reads as dark brine lapping the floor rather than dry grey stone. Sits at floor
+    // level (dd=-9990) so actors and graves stand IN it. Dark & semi-transparent = shallow, not deep.
+    const g=cx, r=b.r||1.4, rx=r*TW/2, ry=r*TH/2, t=G.time;
+    g.save(); g.translate(s.x,s.y);
+    g.fillStyle='rgba(12,30,34,0.55)';                     // dark brine body
+    g.beginPath(); g.ellipse(0,0,rx,ry,0,0,TAU); g.fill();
+    g.fillStyle='rgba(30,70,78,0.32)';                     // teal inner shallow
+    g.beginPath(); g.ellipse(0,-ry*0.1,rx*0.7,ry*0.7,0,0,TAU); g.fill();
+    const cr=mulberry32((b.x*61+b.y*37)>>>0);
+    for(let i=0;i<3;i++){                                  // drifting surface glints
+      const a=cr()*TAU, rr=cr()*rx*0.55, ph=cr()*TAU, gl=0.10+0.10*Math.sin(t*1.3+ph);
+      g.fillStyle='rgba(150,205,210,'+gl.toFixed(3)+')';
+      g.beginPath(); g.ellipse(Math.cos(a)*rr, Math.sin(a)*rr*0.55, 3+cr()*3, 1+cr(), 0,0,TAU); g.fill();
+    }
+    // a faint sheen arc toward the camera
+    g.strokeStyle='rgba(170,210,215,'+(0.10+0.06*Math.sin(t*0.9+b.y)).toFixed(3)+')'; g.lineWidth=1;
+    g.beginPath(); g.ellipse(0,ry*0.2,rx*0.55,ry*0.35,0,0.2,Math.PI-0.2); g.stroke();
+    g.restore(); return;
+  }
   if(b.kind==='vathfire'){   // the violet flame-ring that seals the reckoning arena
     const g=cx; g.save(); g.translate(s.x,s.y);
     const t=G.time*9 + (b.ph||0);
@@ -1409,14 +1430,18 @@ function drawDecor(b,s){
   }
   if(b.kind==='ewall'){
     // a chunky raised wall block - the dungeon's real walls. Palette varies by b.theme so each
-    // Act II dungeon reads distinctly (brine sea-stone, wind-scoured pale, forge basalt, storm
-    // slate, tideglass). Default = the original basalt (the older shipped dungeons).
+    // dungeon reads distinctly: brine sea-stone, wind-scoured gale slate, forge basalt, storm
+    // slate, tideglass - plus maw (Barik beast-den earth), mill (Windsurf wet moss-stone) and
+    // bone (the Aerie's pale sky-lit ossuary). Default = the original neutral basalt.
     const WT={
       brine:{l:'#173036', r:'#0f2429', t:'#2b5560', sp:'rgba(10,40,44,0.5)', ridge:'rgba(130,200,205,0.45)'},
       gale: {l:'#3b4048', r:'#2f343c', t:'#5c636e', sp:'rgba(255,255,255,0.14)', ridge:'rgba(215,228,240,0.55)'},
       forge:{l:'#2a1a12', r:'#1e120c', t:'#43291b', sp:'rgba(0,0,0,0.2)', ridge:'rgba(255,138,60,0.5)'},
       storm:{l:'#20263a', r:'#161b2c', t:'#39426a', sp:'rgba(10,14,30,0.5)', ridge:'rgba(150,192,255,0.5)'},
-      tide: {l:'#2f4a5e', r:'#213847', t:'#6f9db0', sp:'rgba(255,255,255,0.14)', ridge:'rgba(232,202,120,0.6)'}
+      tide: {l:'#2f4a5e', r:'#213847', t:'#6f9db0', sp:'rgba(255,255,255,0.14)', ridge:'rgba(232,202,120,0.6)'},
+      maw:  {l:'#33231b', r:'#251912', t:'#4d3325', sp:'rgba(70,18,12,0.30)',  ridge:'rgba(196,120,86,0.5)'},
+      mill: {l:'#26322b', r:'#1a2620', t:'#3c5045', sp:'rgba(150,190,150,0.16)', ridge:'rgba(150,205,175,0.5)'},
+      bone: {l:'#514a40', r:'#3d372e', t:'#726858', sp:'rgba(232,226,208,0.16)', ridge:'rgba(150,192,255,0.55)'}
     };
     const th=WT[b.theme]||{l:'#2f2823', r:'#241e19', t:'#48403a', sp:'rgba(0,0,0,0.16)', ridge:'rgba(122,106,92,0.5)'};
     const g=cx, H=16, v=b.s||0;
