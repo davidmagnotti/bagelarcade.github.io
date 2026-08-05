@@ -52,7 +52,7 @@ var FARMS={
       lines:["Nothing grows on the ice - so we grow it under glass, warm as a hearth.",
              "Turnip, beet, hardy things. They don't mind the cold, and neither do I.",
              "Seed in the warm beds and they'll come up green for you. Try it."] } },
-  reach:{ anchor:[56,66], barn:'Castaway Croft',
+  reach:{ anchor:[56,66], barn:'Castaway Croft', stone:1,   // sea-stone barn to match the storm-houses
     farmer:{ id:'nella', name:'Nella the Castaway-Grower',
       look:{skin:'#c08850',hair:'#3a2a1c',shirt:'#6a5a44',pants:'#4a3f30',hat:'straw',hairstyle:'bun',apron:'#5a4a34'},
       lines:["Storm wrecked us here, so we planted. A camp with a field is a home.",
@@ -105,7 +105,7 @@ function plantFarm(cfg){
   var a=cfg.anchor;
   var spot=findOpenNear(a[0],a[1],20); if(!spot) return;
   var bx=spot[0], by=spot[1];
-  if(cfg.barn && typeof addBuilding==='function') addBuilding('barn',bx,by,cfg.barn);
+  if(cfg.barn && typeof addBuilding==='function'){ var bb=addBuilding('barn',bx,by,cfg.barn); if(bb && cfg.stone) bb.stone=1; }
   // spawn the farmer BEFORE tilling, so a plot never lands on their feet.
   if(cfg.farmer && typeof makeNPC==='function'){
     var fp=findOpenNear(bx-3,by,6) || findOpenNear(bx+3,by,6) || findOpenNear(bx,by-3,6);

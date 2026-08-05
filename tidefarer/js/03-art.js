@@ -518,6 +518,10 @@ function buildSprites(){
     g.fillStyle='#606069'; g.fillRect(w/2-42,h-29,24,5);
   });
   SPR.barn = makeCanvas(180,150,(g,w,h)=> drawHouse(g,w,h,'#b0563a','#8c3f2a','#6d3120',1.25,false));
+  // Stormreach reads as one storm-beaten stone camp: this sea-stone barn matches the
+  // grey concrete storm-houses (SPR.stormhut) so the Castaway Croft isn't the odd red
+  // roof out. Same barn proportions - only the palette turns to weathered stone.
+  SPR.barnstone = makeCanvas(180,150,(g,w,h)=> drawHouse(g,w,h,'#9b978d','#6e6a62','#4f4c46',1.25,false));
   SPR.tower = makeCanvas(120,210,(g,w,h)=>{
     g.fillStyle='#8d8296'; g.fillRect(w/2-26,60,52,h-84);
     g.fillStyle='#7a7086'; g.fillRect(w/2-26,60,16,h-84);

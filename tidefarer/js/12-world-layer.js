@@ -3789,7 +3789,7 @@ function placeObjectsReach(){
   // gave up on lean-tos long ago - these are squat, buttressed concrete shelters
   // that shrug off the reef-storms (see SPR.stormhut).
   addBuilding('stormhut', Z.camp.x-3, Z.camp.y-2, 'Castaway storm-house');
-  addBuilding('stormhut', Z.camp.x+3, Z.camp.y+1, 'Sea-wall shelter');
+  addBuilding('stormhut', Z.camp.x+3, Z.camp.y+1, 'The Castaway Berth (Inn)');   // Brinna's stone-walled inn
   addBuilding('well', Z.camp.x, Z.camp.y, 'Rain-catch');
   addBuilding('lamp', Z.camp.x-4, Z.camp.y+3, ''); addBuilding('lamp', Z.camp.x+4, Z.camp.y-3, '');
   // the Brute's Barrow: a ring of raised stones round the monster's ground
@@ -3841,6 +3841,15 @@ function spawnReachFolk(){
     {skin:'#8f6a48',hair:'#3a352c',shirt:'#6a5a3a',pants:'#33302a'},
     ['Every hull I mend by the water, that Barrow-brute wanders down and stamps to kindling for the joy of it.',
      'Silence the brute and I’ll keep this berth sound for any ship that dares the reefs. My word on it.'],0.5));
+  // The innkeeper Mora promises ("a berth here, a hot meal") - the castaways keep a dry
+  // bed and a banked fire in the stone storm-house against the reef-storms. Talk to Brinna
+  // to rest the night (heal + set your dawn respawn), same as any island inn.
+  { const isp=(typeof findOpenNear==='function' && findOpenNear(Z.camp.x+2, Z.camp.y-1, 5)) || [Z.camp.x+2, Z.camp.y-1];
+    const inn=makeNPC('brinna','Brinna the Innkeeper', isp[0], isp[1],
+      {skin:'#b9895c',hair:'#4a3a2c',shirt:'#5a4a5e',pants:'#3a3340',apron:'#a99a86',hairstyle:'bun'},
+      ['A dry bed and a banked fire behind good stone walls - that\'s all the storm-coast can promise, but the reef-storm can\'t touch either. Ten gold sees you safe to dawn.',
+       'Every soul the sea spat up on this shingle has slept under my eaves at least once. There\'s always a berth at Stormreach - the door\'s never barred to a wet sailor.'],0.6);
+    inn.nightOwl=true; G.npcs.push(inn); }
   // Your brother the prince holds the Wreckstrand landing and the beached sloop - the way
   // home - while you take the isle. Set up when you first make landfall in Act II, and kept
   // here on every visit so you always land beside him and the boat (not just the cutscene).

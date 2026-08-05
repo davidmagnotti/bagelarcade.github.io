@@ -2549,6 +2549,7 @@ function drawDecor(b,s){
   }
   const S= b.kind==='bazaar' ? SPR.bazaar[(b.variant||0)%SPR.bazaar.length]
          : (b.kind==='tower' && b.tall) ? SPR.towerTall
+         : (b.kind==='barn' && b.stone && SPR.barnstone) ? SPR.barnstone   // sea-stone barn (Stormreach)
          : SPR[b.kind==='pillar'? (b.broken?'pillarBroken':'pillar') : b.kind];
   if(!S) return;
   // castle sprite is 5x native (1500px); the grand palace draws it at ~0.9 for a
