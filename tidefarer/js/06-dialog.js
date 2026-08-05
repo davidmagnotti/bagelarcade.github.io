@@ -125,6 +125,26 @@ function leoSealScene(){
   setDialog('<i>You lay the heavy book in your brother\'s hands. Leo goes still the instant he sees the script down its spine - then he opens it, and the colour leaves his face.</i> “...This is the founders\' hand. The oldest of it.” <i>His eyes race the first page, and his breath goes shallow.</i> “Joan. This is a <b>sealing</b> - a binding meant for something that cannot be killed, only caged. This is what they raised that guardian to keep from the world.”',
     [{label:'Read it, Leo', fn:p2}]);
 }
+// Every quest-giver used to sign off an accepted quest with the same "Good. I'll be
+// here." - fine once, grating by the tenth NPC. Pull a line from a small pool instead,
+// keyed off the quest id so a given quest always reads the same (no flicker on re-open)
+// while neighbouring quests sound different. Corvo and a few others keep bespoke lines
+// upstream; this only covers the generic accept path.
+const QUEST_ACCEPT_LINES = [
+  'Good. I\'ll be here.',
+  'Aye, that\'ll do. Off you go.',
+  'Good - I\'ll not stray far.',
+  'That\'s the spirit. I\'ll be about when it\'s done.',
+  'Right you are. Come find me after.',
+  'Then it\'s settled. Luck to you.',
+  'Well met. I\'ll keep your place.',
+  'Good hunting - I\'ll be waiting on word.',
+];
+function questAcceptLine(id){
+  let h=0; const s=String(id||'');
+  for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))|0;
+  return QUEST_ACCEPT_LINES[Math.abs(h)%QUEST_ACCEPT_LINES.length];
+}
 function buildDialogContent(npc){
   // Speaking with Bram is what unlocks gathering - remember it the moment his dialog opens
   // (see hasMetBram / hitNode: no chopping or mining until you've been to the forge).
@@ -677,7 +697,7 @@ function buildDialogContent(npc){
         + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
         withTravel(npc,[{label:'! Accept quest', cls:'gold', fn:()=>{
             acceptQuest(id);
-            setDialog('“Good. I\'ll be here.”'
+            setDialog('“'+questAcceptLine(id)+'”'
               + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
               + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
               [{label:'Off I go',fn:closeDialog}]);
