@@ -307,6 +307,23 @@ function primaryQuest(){
   for(const id of order) if(qs(id)==='avail') return null;
   return null;
 }
+// Is quest `id`'s objective actually in the world we are standing in? questTargetPos hands back
+// a bare x,y that is NOT world-aware: several early quests return fixed tutorial-isle / mainland
+// coordinates, so carrying an unfinished one onto a LATER isle would drop its arrow and map-pin
+// onto whatever building happened to sit at those coordinates there - most notoriously the
+// Windsurf water-wheel, which read as a live "objective" while the actual chore was a farm back
+// on the home isle. Only guide the player when the quest truly belongs here: its giver stands in
+// this world, its talk-target is here, or a live kill-target for it roams this world.
+function questBelongsHere(id){
+  const q=QUESTS[id]; if(!q) return false;
+  if(q.giver && G.npcs && G.npcs.some(n=>n.id===q.giver)) return true;
+  if(q.talkTo && G.npcs && G.npcs.some(n=>n.id===q.talkTo)) return true;
+  if(q.kind==='kill' && q.kill && G.mobs && G.mobs.some(m=>!m.dead && q.kill[m.kind])) return true;
+  return false;
+}
+// The world-guarded primary quest, for the on-screen arrow and the map pins - so a stale
+// out-of-world objective never highlights a random building on the isle you are actually on.
+function primaryQuestHere(){ const id=primaryQuest(); return (id && questBelongsHere(id)) ? id : null; }
 
 /* ---------------- toasts & floating text ---------------- */
 let toastT=null;

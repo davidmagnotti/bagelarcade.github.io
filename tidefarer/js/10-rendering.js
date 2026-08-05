@@ -4250,7 +4250,7 @@ function drawMarkers(){
     } else { ib.style.display='flex'; ib.textContent=it.label; }
   } else if(isTouch) ib.style.display='none';
   // quest direction arrow (edge of screen)
-  const pq=primaryQuest();
+  const pq=primaryQuestHere();
   if(pq){
     const tp=questTargetPos(pq);
     if(tp){
@@ -4357,7 +4357,7 @@ function drawMinimap(){
     g.beginPath(); g.arc(px,py,5.5,0,TAU); g.fillStyle='rgba(0,0,0,0.55)'; g.fill();
     g.beginPath(); g.arc(px,py,3.4,0,TAU); g.fillStyle='#ff3b30'; g.fill();
     g.lineWidth=1.5; g.strokeStyle='#fff'; g.stroke();
-    const pq=primaryQuest();
+    const pq=primaryQuestHere();
     if(pq){ const tp=questTargetPos(pq);
       if(tp){ const qx=clamp((tp.x-sx)/vw*120,4,116), qy=clamp((tp.y-sy)/vw*120,4,116);
         g.fillStyle='#ff9a3c'; g.beginPath(); g.arc(qx,qy,3.4,0,TAU); g.fill(); } }
@@ -4398,7 +4398,7 @@ function drawBigMap(){
   const dot=(x,y,col,r)=>{ g.fillStyle=col; g.beginPath(); g.arc(x/MAPW*384,y/MAPH*384,r||4,0,TAU); g.fill();
     g.strokeStyle='rgba(0,0,0,0.6)'; g.stroke(); };
   g.font='bold 11px "Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif'; g.textAlign='center';
-  const pqM=primaryQuest();
+  const pqM=primaryQuestHere();
   if(pqM){
     const tp=questTargetPos(pqM);
     if(tp){
@@ -4415,7 +4415,7 @@ function drawBigMap(){
   P.disc=P.disc||{};
   for(const k in ZONES){ const z=ZONES[k]; if(P.disc[G.worldId+':'+k]) lbl(z.x, z.y-3, z.name); }
   dot(P.x,P.y,'#fff',4);
-  const pq=primaryQuest();
+  const pq=primaryQuestHere();
   if(pq){ const tp=questTargetPos(pq); if(tp) dot(tp.x,tp.y,'#ff9a3c',5); }
   document.getElementById('mapLegend').innerHTML=
     '<span><b style="color:#fff">●</b> You</span><span><b style="color:#ff9a3c">●</b> Quest</span>'+
