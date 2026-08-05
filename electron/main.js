@@ -42,6 +42,9 @@ ipcMain.on('cloud:read-sync', (event) => {
   event.returnValue = readSave();
 });
 
+// The in-game pause menu's "Exit" button asks us to close the app.
+ipcMain.on('app:quit', () => app.quit());
+
 ipcMain.handle('cloud:write', (_event, blob) => {
   try {
     fs.mkdirSync(SAVE_DIR, { recursive: true });

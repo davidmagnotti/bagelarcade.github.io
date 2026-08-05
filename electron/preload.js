@@ -10,7 +10,14 @@
 // the TOP of this preload (which executes before any page script) using a
 // synchronous IPC read. Writes happen later and can be async.
 
-const { ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
+
+// Minimal desktop bridge exposed to the game. Its presence is also how the
+// pause menu knows to reveal the "Exit" button (hidden on the web build).
+contextBridge.exposeInMainWorld('electronAPI', {
+  isElectron: true,
+  quit: () => ipcRenderer.send('app:quit'),
+});
 
 // A localStorage key that records when we last mirrored, so we only restore
 // from the file when the file is genuinely newer than what's on this machine.

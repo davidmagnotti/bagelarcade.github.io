@@ -110,6 +110,17 @@ document.getElementById('quitTitleBtn').onclick=()=>{
   const conf=document.getElementById('wipeConfirm'); if(conf) conf.disabled=true;
   if(!isTouch && inp){ try{ inp.focus(); }catch(e){} }
 };
+// "Exit": desktop (Electron) build only. A browser tab can't close itself, so
+// on the web this button stays hidden; when the Electron bridge is present we
+// reveal it and quit the app (saving first, so nothing is lost on the way out).
+(function(){
+  const exitBtn=document.getElementById('exitGameBtn');
+  if(!exitBtn) return;
+  if(window.electronAPI && typeof window.electronAPI.quit==='function'){
+    exitBtn.style.display='';
+    exitBtn.onclick=()=>{ try{ autoSave(); }catch(e){} window.electronAPI.quit(); };
+  }
+})();
 document.getElementById('cfgMus').oninput=function(){ CFG.mus=this.value/100; saveCfg(); };
 document.getElementById('cfgSfx').oninput=function(){ CFG.sfx=this.value/100; saveCfg(); Snd.tone(660,0.07,'sine',0.06); };
 document.getElementById('cfgShakeOn').onclick=()=>{ CFG.shake=1; saveCfg(); syncCfgUI(); };

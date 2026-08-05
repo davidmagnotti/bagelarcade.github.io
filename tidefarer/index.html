@@ -165,6 +165,10 @@
     <div id="pauseBtns">
       <button class="btn gold" id="resumeBtn">Resume</button>
       <button class="btn ghostly" id="quitTitleBtn">Start Over</button>
+      <!-- Desktop (Electron) only: closes the app. Hidden on the web build,
+           where a page can't close its own tab. Revealed by 17-pause-menu.js
+           when the Electron bridge (window.electronAPI) is present. -->
+      <button class="btn ghostly" id="exitGameBtn" style="display:none;">Exit</button>
     </div>
   </div>
 </div>
