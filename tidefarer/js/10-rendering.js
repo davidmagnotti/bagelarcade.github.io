@@ -208,6 +208,33 @@ function buildSceneryCache(){
   sceneryCache=c; scnWorld=G.worldId; scnDecorN=G.decor.length;
 }
 
+/* A soft DIRECTIONAL KEY across the whole ground plane, drawn UNDER the actors: warm
+   light from the sun's upper-left, cooling and deepening toward the lower-right. The
+   flat, seam-erased terrain and the open sea carry no light direction of their own, so
+   this is what gives big grass/sand/water expanses their form and stops the ground
+   reading as a flat tilemap. `soft-light` shades rather than tints, so tile colours are
+   preserved. Full-detail surface worlds only; skipped underground, indoors, and in the
+   flat Act-I storybook look. The warm key fades out at night (the night wash owns that),
+   leaving just the shadow-side deepening. */
+function drawGroundLight(){
+  if(LOWFX || SAFE) return;
+  if(typeof VW==='undefined') return;
+  if(G.interior) return;
+  if(typeof inDungeon==='function' && inDungeon()) return;
+  if(typeof storybookOn==='function' && storybookOn()) return;
+  const night=(typeof nightAmount==='function') ? Math.min(1,nightAmount()) : 0;
+  const key   = 0.13*(1-0.72*night);     // warm sun key, gone by deep night
+  const shade = 0.15 + 0.05*night;       // shadow-side deepening, a touch heavier at night
+  const g=cx.createLinearGradient(0,0,VW*0.92,VH);
+  g.addColorStop(0,    'rgba(255,238,201,'+key.toFixed(3)+')');
+  g.addColorStop(0.46, 'rgba(255,240,210,0)');
+  g.addColorStop(1,    'rgba(15,21,44,'+shade.toFixed(3)+')');
+  cx.save();
+  cx.globalCompositeOperation='soft-light';
+  cx.fillStyle=g; cx.fillRect(0,0,VW,VH);
+  cx.restore();
+}
+
 function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
@@ -369,6 +396,8 @@ function render(){
       if(i===0) cx.moveTo(s.x,s.y); else cx.lineTo(s.x,s.y); }
     cx.stroke(); cx.setLineDash([]);
   }
+  // directional key on the ground plane + sea, under the actors (see drawGroundLight)
+  drawGroundLight();
 
   // ---- object/entity pass (depth sorted) ----
   const items=[];

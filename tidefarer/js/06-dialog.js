@@ -200,7 +200,7 @@ function buildDialogContent(npc){
             P.story.kingTold=1; P.story.act=Math.max(P.story.act||1,3);
             completeQuest('audience');
             if(typeof updateCrownFolkMood==='function') updateCrownFolkMood();
-            banner('ACT III','THE ENCHANTER\'S TIDE');
+            banner('THE ENCHANTER\'S TIDE','THE KING\'S CHARGE');
             // launch the finale trail: the pendant is the thread. Send the player
             // back to Orin on Emberwick to have it read.
             if(!P.quests.pendant){ P.quests.pendant='active'; P.prog.pendant=0; }
@@ -366,7 +366,7 @@ function buildDialogContent(npc){
   if(npc.id==='brother' && P.story && P.story.gameWon){
     const toCredits=()=>{ closeDialog(); if(typeof rollCredits==='function') rollCredits();
       else if(typeof banner==='function') banner('THE SHADOW IS SEALED','THE END — FOR NOW'); };
-    const favour=()=>setDialog('<i>He settles the stolen crown onto his own brow - and for the first time it looks like it belongs there. Then he grins, the old scheming-brother grin.</i> “So. One favour, before you go. Those charts Old Mabley keeps swearing about - black water past Stormreach, isles no living hand has named - they\'re real. I\'ve seen the soundings. Something out there is stirring, sister, the way something stirred here.” <i>He grips your arm.</i> “Go and see. Free whatever needs freeing. And come home and tell me all of it - I\'ll keep the lamp lit and the sea-road open.” <b style="color:var(--ember)">Beyond the charted isles, a new tide is rising. (Act III — coming soon.)</b>',
+    const favour=()=>setDialog('<i>He settles the stolen crown onto his own brow - and for the first time it looks like it belongs there. Then he grins, the old scheming-brother grin.</i> “So. One favour, before you go. Those charts Old Mabley keeps swearing about - black water past Stormreach, isles no living hand has named - they\'re real. I\'ve seen the soundings. Something out there is stirring, sister, the way something stirred here.” <i>He grips your arm.</i> “Go and see. Free whatever needs freeing. And come home and tell me all of it - I\'ll keep the lamp lit and the sea-road open.” <b style="color:var(--ember)">Beyond the charted isles, a new tide is rising. (Coming soon.)</b>',
       [{label:'I\'ll send word from the edge of the map', cls:'gold', fn:toCredits}]);
     const takeIt=()=>setDialog('<i>Old Mabley, three steps down, isn\'t even pretending not to listen.</i> “There\'s black water past Stormreach, majesty-to-be,” <i>he calls up.</i> “Charts washed in from the deep. Isles with no names on them - and no warrior on them either.” <i>Leo looks from the old sailor to you, and something passes between the two of you that needs no words: you both know exactly where you\'ll be within the month.</i> “Then I\'ll keep the throne warm,” <i>he says softly.</i> “Somebody has to. It was always going to be me - the reader, not the blade.”',
       [{label:'You\'ll be a good king, Leo', fn:favour}]);
