@@ -1890,13 +1890,20 @@ function askDragonFlight(){
 }
 function askAshwingHome(){
   // Ashwing waits at the Windsurf harbour, the dragon that bore you down here - and he is the way
-  // UP. Crossing between the isles is the ferry's work now (the boat at the pier); the dragon only
-  // lifts you to the cloud-sea. NOT gated on the tide - the way up is always open.
-  const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }},
-               {label:'Not just yet', ghost:true, fn:closeDialog} ];
+  // UP. He always lifts you to the Cloudreach; once you carry the CLOUD-CHART down from the Broken
+  // Crown he'll also bear you across to the Sunward Isle - the isles the chart maps. Sea-crossings
+  // are the ferryman's work at the pier. NOT gated on the tide - the way up is always open.
+  const haveChart = !!(P.story && P.story.skyMapTaken);
+  const btns=[ {label:'Fly up into the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); flyToCloudreach(); }} ];
+  if(haveChart) btns.push({label:'Fly to the Sunward Isle', fn:()=>{ closeDialog();
+    flyToWorld('east','You climb Ashwing\'s warm shoulder and he springs from the harbour - Windsurf falls away behind, and the Sunward Isle swells green out of the sea ahead.'); }});
+  btns.push({label:'Not just yet', ghost:true, fn:closeDialog});
   // open the dialog window (dlg.open + display + portrait) via lairDialog, not a bare setDialog
   // into a hidden panel - otherwise the flight menu never shows
-  lairDialog('Ashwing','<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He\'ll carry you up past the last cloud whenever you say the word; the sea-crossings he leaves to the ferryman at the pier.</i>', btns);
+  const line = haveChart
+    ? '<i>Ashwing swings his great head round and dips it to the Cloud-Chart, tracing a wing-tip along its inked wind-roads - warm, patient, ready. He\'ll carry you up to the Cloudreach or across to the Sunward Isle whenever you say the word; the sea-crossings he leaves to the ferryman at the pier.</i>'
+    : '<i>Ashwing swings his great head round and rumbles low - warm, patient, ready. He\'ll carry you up past the last cloud whenever you say the word; the sea-crossings he leaves to the ferryman at the pier.</i>';
+  lairDialog('Ashwing', line, btns);
 }
 /* The signal beacon on the Windward Bluffs. Until the strait is calmed you are stranded on
    Windsurf by the killing tide - no wing will risk that water. Once it's calm, lighting the
