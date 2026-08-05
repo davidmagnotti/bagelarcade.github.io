@@ -19,6 +19,7 @@ const PAL = {
 const TILE_SPR = {}; // [tileType][variant]
 const FRINGE={};
 let SHORE_AO=null;   // [dir] soft dark contact shadow the raised land casts onto the water at the shore
+let SHORE_SURF=null; // [dir] soft pale wet-surf lip on the water right at a sand/grass edge
 function buildFringes(){
   const defs={1:{c:PAL.sand,c2:PAL.sand2}, 2:{c:PAL.path,c2:PAL.path2},
               3:{c:PAL.grass,c2:PAL.grassHi,tuft:true}, 4:{c:PAL.forest,c2:PAL.forest2,tuft:true}};
@@ -90,12 +91,51 @@ function buildShoreAO(){
     SHORE_AO.push(makeCanvas(TW,TH,(g)=>{
       g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
       const m=mid[di];
-      // dark at the shore edge, fading toward the tile centre (open water)
-      const gr=g.createLinearGradient(m[0],m[1], 32+(32-m[0])*0.35, 16+(16-m[1])*0.35);
-      gr.addColorStop(0,   'rgba(6,13,26,0.36)');
-      gr.addColorStop(0.5, 'rgba(6,13,26,0.13)');
-      gr.addColorStop(1,   'rgba(6,13,26,0)');
+      // a SOFT depth cue at the shore edge, fading toward open water. Kept gentle and pulled
+      // in: the old band was dark + cold and, drawn on every land-adjacent edge, DOUBLED into
+      // harsh black blotches at inner corners, hard-outlining the stair-stepped coast. Lower
+      // alpha + a warmer teal-dark reads as the shallows deepening under the bank, not an outline.
+      const gr=g.createLinearGradient(m[0],m[1], 32+(32-m[0])*0.28, 16+(16-m[1])*0.28);
+      gr.addColorStop(0,   'rgba(12,26,34,0.20)');
+      gr.addColorStop(0.5, 'rgba(12,26,34,0.07)');
+      gr.addColorStop(1,   'rgba(12,26,34,0)');
       g.fillStyle=gr; g.fillRect(0,0,TW,TH);
+      g.restore();
+    }));
+  }
+}
+/* SHORELINE SURF: a soft, pale, wavy wet-lip on the WATER right where it meets a sand or
+   grassy bank. Baked per diamond-edge like the fringes. The land->water colour step is the
+   harshest edge on the map (bright sand hard against blue); a translucent foamy band with a
+   RAGGED inner edge breaks that straight diamond seam and reads as surf washing the shore,
+   so the coast looks organic instead of a stair-step of tiles. Drawn under the sand overhang. */
+function buildShoreSurf(){
+  const edges=[[[32,0],[64,16]], [[64,16],[32,32]], [[32,32],[0,16]], [[0,16],[32,0]]]; // TR RB BL LT
+  SHORE_SURF=[];
+  for(let di=0;di<4;di++){
+    SHORE_SURF.push(makeCanvas(TW,TH,(g)=>{
+      const r=mulberry32(900+di*17);
+      g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
+      const [p1,p2]=edges[di], cxm=32, cym=16;
+      // a ragged band hugging the edge, bleeding a little way in toward open water
+      const N=9, outer=[], inner=[];
+      for(let i=0;i<=N;i++){ const t=i/N;
+        const ox=p1[0]+(p2[0]-p1[0])*t, oy=p1[1]+(p2[1]-p1[1])*t;
+        outer.push([ox,oy]);
+        const depth=(3+r()*6)/16;   // how far this point of the surf reaches inward
+        inner.push([ox+(cxm-ox)*depth, oy+(cym-oy)*depth]);
+      }
+      g.beginPath(); g.moveTo(outer[0][0],outer[0][1]);
+      for(const p of outer) g.lineTo(p[0],p[1]);
+      for(let i=N;i>=0;i--) g.lineTo(inner[i][0],inner[i][1]);
+      g.closePath();
+      g.fillStyle='rgba(224,240,244,0.26)'; g.fill();   // pale translucent foam
+      // a brighter, thinner crest right on the sand edge itself
+      g.save(); g.clip();
+      g.strokeStyle='rgba(255,255,255,0.30)'; g.lineWidth=2; g.lineJoin='round';
+      g.beginPath(); g.moveTo(outer[0][0],outer[0][1]);
+      for(const p of outer) g.lineTo(p[0],p[1]); g.stroke();
+      g.restore();
       g.restore();
     }));
   }

@@ -415,6 +415,9 @@ function render(){
           const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
           // shore contact shadow: any land neighbour casts onto the water (under the land lip)
           if(nc>0 && SHORE_AO) cx.drawImage(SHORE_AO[nb[2]], sx-TW/2, sy-TH/2);
+          // a soft foamy surf-lip on the water at a beach/grass edge, easing the harsh
+          // sand->water colour step (drawn on the water, under the bank's overhang)
+          if((nc===1||nc===3) && SHORE_SURF) cx.drawImage(SHORE_SURF[nb[2]], sx-TW/2, sy-TH/2);
           // then the beach/grass bank raggedly overhangs the waterline on top of it
           if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
         }
