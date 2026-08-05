@@ -2196,6 +2196,22 @@ function updateMobs(dt){
         if((m.swing||0)>0.14 && Math.random()<0.5){ // frost breath as the slam lands
           G.parts.push({x:m.x+rnd(-1.5,1.5),y:m.y-0.6,vx:rnd(-0.4,0.4),vy:-rnd(0.3,0.9),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.04}); }
       }
+      if(m.kind==='icecolossus' && !m.freed){
+        // THE RIMEBOUND, over its lumbering slam, hurls jagged SHARDS OF ICE at you from
+        // across the arena - telegraphed and PARRYABLE (meet the white flash and a shard flies
+        // back at it). The binding drives it into a wider, faster spray once past half health.
+        m.shootCd=(m.shootCd||rnd(1.6,2.6))-dt;
+        if(m.shootCd<=0 && l>1.8 && l<15 && !((m.stunT||0)>0)){
+          const hurt=m.hp<m.maxhp*0.5;
+          m.shootCd = hurt? rnd(1.3,2.0) : rnd(2.2,3.0); m.swing=Math.max(m.swing||0,0.35);
+          addFloat('ICE SHARDS', m.x, m.y-3.4, '#bfe8ff', 1.1);
+          if(Snd.noise) Snd.noise(0.22,0.08,240,0.5);
+          const base=Math.atan2(dy,dx), spread = hurt? [-0.34,-0.17,0,0.17,0.34] : [-0.16,0,0.16];
+          for(const off of spread){ const ca=base+off;
+            G.projs.push({kind:'iceshard',x:m.x,y:m.y-1.2,vx:Math.cos(ca)*7.0,vy:Math.sin(ca)*7.0,life:2.2,dmg:Math.round(d.dmg*0.6),from:'mob',owner:m}); }
+          for(let k=0;k<4;k++) G.parts.push({x:m.x+rnd(-1,1),y:m.y-1.0,vx:rnd(-0.3,0.3),vy:-rnd(0.2,0.8),life:0.5,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4),grav:0.03});
+        }
+      }
       if(m.kind==='leviathan' && !m.freed){
         // bound in the deep - it never leaves the water, but it GIVES CHASE now: it swims
         // hard after you across the light-water arena to close to slam range, still hurling
@@ -2306,6 +2322,7 @@ function updateProjs(dt){
     if(p.kind==='bolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#ffb26b',size:3,grav:0});
     if(p.kind==='snarebolt'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.32,color:'#6fe0c8',size:3,grav:0});
     if(p.kind==='hex'&&Math.random()<0.6) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.5,0.5),vy:rnd(-0.5,0.2),life:0.3,color:'#c77bff',size:3,grav:0});
+    if(p.kind==='iceshard'&&Math.random()<0.65) G.parts.push({x:p.x,y:p.y-0.4,vx:rnd(-0.4,0.4),vy:rnd(-0.4,0.2),life:0.32,color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(1.6,2.8),grav:0.02});
     if(p.kind==='arrow'&&Math.random()<0.5) G.parts.push({x:p.x,y:p.y-0.35,vx:0,vy:0,life:0.18,color:'rgba(230,225,205,0.55)',size:2});
     const tx=Math.floor(p.x), ty=Math.floor(p.y);
     // a player shot striking a ward-eye mechanism works its gate (checked before the wall-kill so a

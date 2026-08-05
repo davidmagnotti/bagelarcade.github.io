@@ -550,22 +550,23 @@ function buildDialogContent(npc){
   // carries other secrets - abilities the old line hid across the isles - which seeds the
   // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
-    const homeCard=()=>storyCard('<i>The warding settles and holds.</i> <b style="color:#c9b0ff">The way home is open again</b> - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>. <i>Leo thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Not the capital, though - not till we\'re ready for Vath himself. And this is more than a hiding-spell, sister: the old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
-        {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
+    // The casting plays as its own overlay cutscene, whose closing beats already say the
+    // way home is open and point you back at the old islands - so there is NO follow-up
+    // popup card here (removed by request). We just save once the scene ends.
+    const afterCast=()=>{ if(typeof autoSave==='function') autoSave(); };
     const cast=()=>{
       closeDialog();
       if(typeof take==='function') take('veilrune',1);
       if(typeof grantVathVeil==='function') grantVathVeil(true);   // sets vathVeil + spells.veil, silently
       else { P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1; }
-      // the casting plays as its own overlay cutscene; the home/next-steps card follows it.
-      if(typeof veilCastCutscene==='function') veilCastCutscene(homeCard);
+      if(typeof veilCastCutscene==='function') veilCastCutscene(afterCast);
       else {
         if(Snd.magic) Snd.magic();
         if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.9)',64);
         if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',26,3);
         G.slowmo=Math.max(G.slowmo||0,1.1);
         banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
-        setTimeout(homeCard,700);
+        setTimeout(afterCast,700);
       }
     };
     const p2=()=>{

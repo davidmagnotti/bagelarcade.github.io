@@ -121,8 +121,11 @@ const MC_VEIL = [
     calm:0.7, snow:0.9, flash:0.6, shatter:1 },
   { who:'', html:'', calm:1, snow:1, dive:0.6, title:'THE WARDING VEIL', hold:2000 },
   { who:'Leo',
-    html:'<b style="color:#c9b0ff">“There.”</b> <i>He opens his eyes.</i> “It\'s a scholar\'s trick, not a warrior\'s — it won\'t stop a blade, mind. But Vath hunts by his witch-sight, and to that you\'re a blank stretch of open sea now. He won\'t see you coming.”',
+    html:'<b style="color:#c9b0ff">“There.”</b> <i>He opens his eyes.</i> “It\'s a scholar\'s trick, not a warrior\'s — it won\'t stop a blade. But Vath hunts by his witch-sight, and to that you\'re a blank stretch of open sea now. He won\'t see you coming.”',
     calm:1, snow:0.7, dive:1 },
+  { who:'Leo',
+    html:'<b style="color:#c9b0ff">“…and the way home is open again.”</b> <i>He thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Sail back to the old islands — Barik, the Sunward Isle, Windsurf, Emberwick — and pull his hooks out of them, one by one. Not the capital, not yet. I\'ll mind the boat and read on; there are <b style="color:#ffd76a">Powers</b> written in here still.”',
+    calm:1, snow:0.5, dive:1 },
 ];
 
 /* The Maw-Stalker (the Undermaw scorpion) falls in the deep dark. No freed-victim
@@ -767,33 +770,20 @@ function drawVeilScene(cx,W,H,t){
   if(snow>0.02) drawGentleSnow(cx,W,H,t,snow*0.7);
 }
 function drawScholar(cx,x,footY,s,calm,t){
+  // LEO the scholar-prince, drawn as his ACTUAL figure (the same drawHumanoid sprite he
+  // wears in the world), reading from the open, glowing spellbook.
   cx.save(); cx.translate(x,footY);
-  // LEO the scholar-prince: a dark-blue cloak over a bright blue tunic (his royal colours)
-  cx.fillStyle='#274052';   // cloak
-  cx.beginPath();
-  cx.moveTo(0,-s*1.02);
-  cx.quadraticCurveTo(-s*0.46,-s*0.5,-s*0.52,s*0.02);
-  cx.lineTo(s*0.52,s*0.02);
-  cx.quadraticCurveTo(s*0.46,-s*0.5,0,-s*1.02);
-  cx.closePath(); cx.fill();
-  cx.fillStyle='#3b5a7a';   // tunic panel down the front
-  cx.beginPath();
-  cx.moveTo(0,-s*0.88);
-  cx.quadraticCurveTo(-s*0.22,-s*0.46,-s*0.24,s*0.02);
-  cx.lineTo(s*0.24,s*0.02);
-  cx.quadraticCurveTo(s*0.22,-s*0.46,0,-s*0.88);
-  cx.closePath(); cx.fill();
-  // head: short brown hair framing a skin face (hair ellipse behind, face shifted down so hair rims the top)
-  const jhy=-s*0.98;
-  cx.fillStyle='#e8cd6e'; cx.beginPath(); cx.ellipse(0,jhy,s*0.17,s*0.19,0,0,TAU); cx.fill();
-  cx.fillStyle='#d8a97a'; cx.beginPath(); cx.ellipse(0,jhy+s*0.05,s*0.13,s*0.14,0,0,TAU); cx.fill();
-  // the open spellbook, held before him, glowing brighter as the casting takes
-  const bx=0, by=-s*0.36, bw=s*0.36, bh=s*0.12;
+  if(typeof drawHumanoid==='function'){
+    drawHumanoid(cx,0,0,{skin:'#d8a97a',hair:'#e8cd6e',shirt:'#3b5a7a',pants:'#33302a',
+      trim:'#c9a24e',hairstyle:'short',size:s/74,dir:{x:0.4,y:0.9},step:0});
+  }
+  // the open spellbook, held before him at chest height, glowing brighter as the casting takes
+  const bx=0, by=-s*0.52, bw=s*0.28, bh=s*0.10;
   cx.save(); cx.globalCompositeOperation='lighter';
-  const bg=cx.createRadialGradient(bx,by,1,bx,by,s*0.62);
+  const bg=cx.createRadialGradient(bx,by,1,bx,by,s*0.56);
   bg.addColorStop(0,'rgba(206,178,255,'+(0.35+0.42*calm).toFixed(3)+')');
   bg.addColorStop(1,'rgba(206,178,255,0)');
-  cx.fillStyle=bg; cx.beginPath(); cx.arc(bx,by,s*0.62,0,TAU); cx.fill(); cx.restore();
+  cx.fillStyle=bg; cx.beginPath(); cx.arc(bx,by,s*0.56,0,TAU); cx.fill(); cx.restore();
   // book covers (open V)
   cx.fillStyle='#5a3f6e'; cx.strokeStyle='#c9b0ff'; cx.lineWidth=Math.max(1,s*0.014);
   cx.beginPath(); cx.moveTo(bx-bw,by+bh*0.4); cx.lineTo(bx,by-bh*0.2); cx.lineTo(bx,by+bh); cx.closePath(); cx.fill(); cx.stroke();
@@ -814,32 +804,15 @@ function drawVeilSister(cx,x,footY,s,calm,dive,t){
     dg.addColorStop(0.72,'rgba(196,216,255,'+a.toFixed(3)+')');
     dg.addColorStop(1,'rgba(160,140,225,0)');
     cx.fillStyle=dg; cx.beginPath(); cx.arc(0,-s*0.5,s*0.98,0,TAU); cx.fill(); cx.restore(); }
-  // JOAN the warrior-princess, fading as the veil sinks in: deep-magenta royal tunic,
-  // gold trim, and her high ponytail - the silhouette that reads as HER, not another robe.
+  // JOAN the warrior-princess, drawn as her ACTUAL figure (her royal wear + ponytail),
+  // fading translucent as the veil sinks into her.
   cx.globalAlpha=Math.max(0.14, 1-hidden*0.72);
-  cx.fillStyle='#a2286a';   // magenta tunic
-  cx.beginPath();
-  cx.moveTo(0,-s*0.9);
-  cx.quadraticCurveTo(-s*0.3,-s*0.42,-s*0.34,s*0.02);
-  cx.lineTo(s*0.34,s*0.02);
-  cx.quadraticCurveTo(s*0.3,-s*0.42,0,-s*0.9);
-  cx.closePath(); cx.fill();
-  cx.strokeStyle='#e6c25a'; cx.lineWidth=Math.max(1,s*0.028);   // gold belt-trim
-  cx.beginPath(); cx.moveTo(-s*0.3,-s*0.16); cx.lineTo(s*0.3,-s*0.16); cx.stroke();
-  const shy=-s*0.86;
-  // the high ponytail, swept up-and-back behind the head (drawn first, so it sits behind)
-  cx.fillStyle='#7a4526';
-  cx.beginPath();
-  cx.moveTo(s*0.06, shy-s*0.06);
-  cx.quadraticCurveTo(s*0.36, shy-s*0.18, s*0.30, shy-s*0.42);
-  cx.quadraticCurveTo(s*0.22, shy-s*0.14, s*0.02, shy+s*0.02);
-  cx.closePath(); cx.fill();
-  // hair cap + skin face
-  cx.fillStyle='#7a4526'; cx.beginPath(); cx.ellipse(0,shy,s*0.15,s*0.17,0,0,TAU); cx.fill();
-  cx.fillStyle='#e8c9a0'; cx.beginPath(); cx.ellipse(0,shy+s*0.05,s*0.12,s*0.13,0,0,TAU); cx.fill();
-  // a blade at her side, catching the frost-light
-  cx.strokeStyle='rgba(214,228,248,'+(0.75*(1-hidden)).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.03);
-  cx.beginPath(); cx.moveTo(s*0.34,0); cx.lineTo(s*0.5,-s*0.52); cx.stroke();
+  if(typeof drawHumanoid==='function'){
+    drawHumanoid(cx,0,0,{hero:true,fem:true,skin:'#d8a97a',hair:'#7a4526',shirt:'#a2286a',
+      pants:'#5a1a3e',trim:'#e6c25a',hairstyle:'ponytail',crest:true,weapon:'sword',wtier:2,
+      size:s/74,dir:{x:-0.4,y:0.9},step:0});
+  }
+  cx.globalAlpha=1;
   cx.restore();
 }
 
