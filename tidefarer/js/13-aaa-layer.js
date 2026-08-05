@@ -454,7 +454,7 @@ const THR = {
       html:'“What happened is that the old King’s own son and daughter came home to seize his throne — and struck him down with sorcery when he refused them. They fled east across the water as I arrived. …Would that I had been sooner.”',
       vath:1, gold:0.05, violet:0.55, clash:0, flee:1, guards:1 },
     { who:'The Captain', title:'END OF ACT I',
-      html:'“The prince… and the princess… did this. We’ll put every hull on the water after them.”',
+      html:'“Yes, of course… Lord Vath, what should we do?”',
       vath:1, gold:0.04, violet:0.5, clash:0, flee:1, guards:1, dark:1 },
   ],
   raf:0, t:0, prev:0, cv:null, cx:null, idx:0,

@@ -2460,6 +2460,67 @@ function genFrost(){
   carveLine(Z.dock.x,Z.dock.y, Z.village.x,Z.village.y, T.PATH,0);
   carveLine(Z.village.x,Z.village.y, Z.glacier.x,Z.glacier.y-Z.glacier.r+2, T.PATH,0);
 }
+// THE RIMEFISSURE PASS - raise a range of ice-crag mountains around the way down, threaded by a
+// single winding pass you must climb through. Everything is guarded so it can never soft-lock: it
+// keeps the isle's roads and town clear of peaks, re-carves the roads afterward, and BFS-verifies
+// the hollow is reachable from the road (straight-cutting a fallback corridor if it somehow isn't).
+function placeRimefissureMountains(Z){
+  const V=Z.village, GL=Z.glacier, D=Z.dock;
+  const J=[72,86];                                     // the junction where the pass leaves the road
+  const way=[ J, [66,88], [60,86], [56,90], [52,88], [49,92] ];
+  const HF=way[way.length-1];                          // the hollow - the fissure mouth sits here
+  const passHalf=1.5, wallHalf=4.8, hollowR=2.5;
+  const roads=[ [D.x,D.y, V.x,V.y], [V.x,V.y, GL.x, GL.y-GL.r+2] ];   // never wall these over
+  const nearRoad=(x,y)=>{ for(const r of roads){ if(distToSeg(x,y, r[0],r[1], r[2],r[3])<2.6) return true; } return false; };
+  const nearZone=(x,y)=> dist(x,y,V.x,V.y)<10.5 || dist(x,y,GL.x,GL.y)<GL.r+1 || dist(x,y,D.x,D.y)<6.5;
+  const segMin=(x,y)=>{ let m=1e9; for(let i=0;i<way.length-1;i++){ const dd=distToSeg(x,y, way[i][0],way[i][1], way[i+1][0],way[i+1][1]); if(dd<m) m=dd; } return m; };
+  let x0=99,y0=99,x1=0,y1=0; for(const p of way){ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); }
+  const pad=Math.ceil(wallHalf)+2, rng=mulberry32(SEED+404), crags=[];
+  for(let y=y0-pad;y<=y1+pad;y++) for(let x=x0-pad;x<=x1+pad;x++){
+    if(!inb(x,y)) continue;
+    const dH=dist(x,y,HF[0],HF[1]), dS=segMin(x,y);
+    if(dH<=hollowR || dS<=passHalf){                   // the walkable pass + hollow floor: trodden snow
+      if(walkTile(tileAt(x,y))){ setTile(x,y,T.PATH); setSolid(x,y,0); }
+      continue;
+    }
+    if(dS<=wallHalf){                                   // the mountain wall flanking the pass
+      if(nearRoad(x,y) || nearZone(x,y)) continue;      // keep the roads & town clear
+      if(!walkTile(tileAt(x,y))) continue;              // never wall the open sea
+      setTile(x,y,T.SNOW); setSolid(x,y,1);
+      const r=rng();
+      if(r<0.62) crags.push({x,y, big: dS<=wallHalf*0.6});   // the crags close to the pass loom biggest
+      else if(r<0.80) G.decor.push({kind:'icespire', x:x+0.5, y:y+0.5});
+      else if(r<0.90) addNode('rock', x, y);            // a bare ice-boulder to break the peaks up
+      // else a bare solid snow shoulder between the peaks
+    }
+  }
+  for(const c of crags){ const rr=mulberry32(((c.x*131+c.y*57)>>>0)+7);
+    const h=(c.big?58:42)+Math.floor(rr()*(c.big?34:22)), w=17+Math.floor(rr()*12);
+    G.decor.push({kind:'icecrag', x:c.x+0.5, y:c.y+0.5, h, w, lean:(rr()*2-1)*0.8}); }
+  // connect the pass mouth to the road, and RE-CARVE the roads so raising the peaks can
+  // never have pinched them shut (carveLine only paints walkable tiles, so it self-limits)
+  carveLine(J[0],J[1], Math.round(V.x+(GL.x-V.x)*0.42), Math.round(V.y+(GL.y-V.y)*0.42), T.PATH, 0);
+  carveLine(D.x,D.y, V.x,V.y, T.PATH,0);
+  carveLine(V.x,V.y, GL.x,GL.y-GL.r+2, T.PATH,0);
+  // BFS from the junction over walkable ground: if the hollow got sealed off, straight-cut a
+  // 2-wide fallback corridor so the fissure is ALWAYS reachable.
+  const key=(x,y)=>x+','+y, seen=new Set([key(J[0],J[1])]), q=[[J[0],J[1]]]; let reached=false;
+  while(q.length){ const [cx3,cy3]=q.shift();
+    if(Math.abs(cx3-HF[0])+Math.abs(cy3-HF[1])<=1){ reached=true; break; }
+    for(const [ox,oy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=cx3+ox, ny=cy3+oy;
+      if(!inb(nx,ny) || seen.has(key(nx,ny))) continue;
+      if(solidAt(nx,ny) || !walkTile(tileAt(nx,ny))) continue;
+      seen.add(key(nx,ny)); q.push([nx,ny]); } }
+  if(!reached){ for(let i=0;i<way.length-1;i++) carveLine(way[i][0],way[i][1], way[i+1][0],way[i+1][1], T.PATH, 1);
+    for(let i=0;i<way.length;i++){ const p=way[i]; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) setSolid(p[0]+dx,p[1]+dy,0); } }
+  // the fissure mouth, deep in the hollow, with lamps and a cairn signpost up the pass
+  G.decor.push({kind:'dungeonmouth', x:HF[0]+0.5, y:HF[1]+0.5, label:'the Rimefissure', name:'THE RIMEFISSURE'});
+  setSolid(HF[0],HF[1],0); setTile(HF[0],HF[1],T.PATH);
+  addBuilding('lamp', HF[0]-2, HF[1]+1, ''); addBuilding('lamp', HF[0]+2, HF[1]+1, '');
+  addBuilding('lamp', J[0], J[1], '');                 // a lamp marks the turn off the road
+  addBuilding('lamp', way[2][0], way[2][1]-1, '');     // a lamp midway up the pass
+  G.decor.push({kind:'pillar', x:J[0]+0.5, y:J[1]+0.9, broken:false, loreKey:'rimefissure'});   // a cairn signpost at the mouth of the pass
+}
 function placeObjectsFrost(){
   const Z=FROST_ZONES, V=Z.village, D=Z.dock, GL=Z.glacier, RW=Z.rimewood;
   // Hearthhold is a huddle of snow-block igloos against the cold
@@ -2484,17 +2545,10 @@ function placeObjectsFrost(){
   for(let i=0;i<10;i++){ const a=pr()*TAU, rr=2+pr()*(RW.r-2);
     const ax=Math.round(RW.x+Math.cos(a)*rr), ay=Math.round(RW.y+Math.sin(a)*rr);
     if(inb(ax,ay) && tileAt(ax,ay)===T.SNOW && !solidAt(ax,ay) && dist(ax,ay,V.x,V.y)>5) addNode('rock',ax,ay); }
-  // THE RIMEFISSURE: the way down into the ice dungeon. It used to hide off in a far
-  // corner of the Rimewood where nobody found it; now it yawns open right beside the
-  // glacier road, a short signposted spur of trodden snow leading to its lamplit mouth.
-  { const jx=Math.round(V.x + (GL.x-V.x)*0.44), jy=Math.round(V.y + (GL.y-V.y)*0.44); // a junction on the road up
-    const spot=findOpenNear(jx-5, jy+2, 8) || [jx-5, jy+2];
-    carveLine(jx, jy, spot[0], spot[1], T.PATH, 0);   // a spur peeling off the main road
-    for(let y=spot[1]-1;y<=spot[1]+1;y++) for(let x=spot[0]-1;x<=spot[0]+1;x++) if(inb(x,y) && !solidAt(x,y)) setTile(x,y,T.PATH); // a trodden clearing at the mouth
-    G.decor.push({kind:'dungeonmouth', x:spot[0]+0.5, y:spot[1]+0.5, label:'the Rimefissure', name:'THE RIMEFISSURE'});
-    addBuilding('lamp', spot[0]-2, spot[1]+1, ''); addBuilding('lamp', spot[0]+2, spot[1]+1, '');
-    addBuilding('lamp', jx, jy, '');                  // a lamp marks the turn off the road
-    G.decor.push({kind:'pillar', x:jx+0.5, y:jy+0.9, broken:false, loreKey:'rimefissure'}); } // a cairn signpost at the junction
+  // THE RIMEFISSURE: the way down is buried deep in a range of ice-crag MOUNTAINS now -
+  // a winding trodden-snow pass climbs up off the glacier road, threading between towering
+  // frozen peaks, to the sheltered hollow where the fissure finally opens. (see below)
+  placeRimefissureMountains(Z);
   // THE HOARFROST BEAR'S DEN: a cave mouth in the Rimewood flats, mid-way between
   // the village and the glacier. A great ice-bear dens across its mouth - the way
   // down into the Glacier Vault only opens once the beast is driven off.
@@ -2540,6 +2594,16 @@ function spawnFrostFolk(){
      'No seals on the floes, no fish beneath them - but a warm bed I can still give you. Rest here whenever the ice gets into your bones.',
      'Come in from that wind before it takes your ears off. Sleep\'s ten gold; the thaw, if you can win it, is on the house.'],0.5);
     inn.nightOwl=true; G.npcs.push(inn); }   // an innkeep on a frozen coast keeps the hearth lit round the clock
+  // ---- Rurik: the furrier who meets every ferry at the landing with a spare
+  // coat (see 48-frost-coats.js - greets you and bundles you both up on arrival) ----
+  { const D=Z.dock, sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x), Math.round(D.y-3), 6)) || [D.x, D.y-3];
+    const look=(typeof frostFurrierLook==='function') ? frostFurrierLook()
+      : {skin:'#c99e78',hair:'#d8d2c4',beard:'#d8d2c4',shirt:'#7a563a',pants:'#3a2f26',hat:'hood',hatColor:'#664630',trim:'#e6ddc8',hairstyle:'short'};
+    const rurik=makeNPC('rurik','Rurik the Furrier', sp[0], sp[1], look,
+      ['A coat and a kettle - that\'s the whole trick of living up here. Keep the both of them full.',
+       'You keep that fur on while you\'re on my ice, hear? Southerners go blue at the lips first, and I\'d hate to lose you.',
+       'Off up the glacier, down the fissure, off to fight some horror in the deep - fine, fine. But you go BUNDLED, or you don\'t go off my landing.'],0.3);
+    rurik.nightOwl=true; G.npcs.push(rurik); }   // he keeps the landing round the clock, coats ready
 }
 function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
@@ -2690,7 +2754,7 @@ function placeObjectsFrostDeep(){
     if(x>=FROST_ISLAND.x0 && x<=FROST_ISLAND.x1 && y>=FROST_ISLAND.y0 && y<=FROST_ISLAND.y1) continue;   // the island stays dry land
     G._frostVoid.add(x+','+y); G.decor.push({kind:'froststream', x:x+0.5, y:y+0.5, seed:(x*5+y*11)%9}); }
   const floe=(cy,cx,amp,spd,phase)=>{ const f={kind:'icefloe', cx:cx+0.5, y:cy+0.5, x:cx+0.5, prevx:cx+0.5, amp, spd, phase, w:5, h:3}; G.decor.push(f); G._frostFloes.push(f); };
-  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._frostWheels.push(w); };
+  const wheel=(hx,hy,r,spd,ang0)=>{ const w={kind:'spinwheel', ice:1, x:hx+0.5, y:hy+0.5, hx:hx+0.5, hy:hy+0.5, r, spd, ang:ang0, armw:1.15}; G.decor.push(w); G._frostWheels.push(w); };   // ice:1 -> rendered as a frozen slab (see drawDecor spinwheel)
   // SOUTH HALF: floes (3 apart, so they touch as they line up) from the entry ledge to the island
   floe(88,42,6,0.5,0.0); floe(85,42,6,0.5,1.3); floe(82,42,6,0.5,2.6); floe(79,42,6,0.5,3.9);
   floe(76,42,6,0.5,5.2); floe(73,42,6,0.5,0.7); floe(70,42,6,0.5,2.0);
@@ -2842,15 +2906,9 @@ function freeColossus(m){
   giveGold(150); give('elixir',2);
   if(typeof openRewardRoom==='function') openRewardRoom();   // the sealed vault at the arena's back grinds open - prize + climb-out within
   banner('THE RIMEBOUND IS FREED','THE CURSE SLOUGHS AWAY LIKE SPRING ICE');
-  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js): the violet
-  // bleeds out of the great ice-whale and it settles calm into the melt, laying bare the
-  // book it was set to guard. It carries that "guarding a secret" beat the old story-card
-  // held, so the card is dropped (as the Leviathan's "Where it sank..." card was) - the old
-  // card stays only as a fallback if the overlay layer is missing.
-  setTimeout(()=>{
-    if(typeof rimeboundFreedCutscene==='function') rimeboundFreedCutscene(m, ()=>{ if(typeof autoSave==='function') autoSave(); });
-    else if(typeof storyCard==='function') storyCard('The violet bleeds out of the great ice-thing - a whale of the deep, once, that wandered too near the cold. It settles calm into the melt, <i>and the ice it guarded gives up its secret: an old <b>book</b>, bound in frost that will not thaw. This one Vath never set to hunt you - he set it here to keep something buried.</i>');
-  },1400);
+  // No freeing cutscene here (removed by request): the banner marks the moment, and the
+  // prize card at the reward chest carries the rest. Just settle and save.
+  setTimeout(()=>{ if(typeof autoSave==='function') autoSave(); }, 1000);
 }
 
 /* =====================================================================
@@ -6981,7 +7039,7 @@ function openChest(b){
     }
     P.story.veilTome=1; give('veilrune',1);
     banner('A SECRET, KEPT IN ICE','THE HUSH-FROST SPELLBOOK');
-    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>Past the freed Rimebound, the melt lays bare an old iron coffer, and in it a <b>book bound in ice that will not thaw</b>, scored deep in the old royal script.</i> The kind your father made you both learn and only <b>Leo</b> ever loved - you cannot read a word of it. <i>It is older than the cold, maybe older than the crown; the Rimebound was set to keep it here long before any living grief, and what its frost-pages actually DO you cannot begin to guess.</i> <b style="color:#c9b0ff">You take the Hush-Frost Spellbook.</b> <i>Carry it up out of the ice to your brother. If anyone alive can read it, it is Leo.</i>'); },520);
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The melt lays the coffer bare, and inside - <b>just an old book</b>, ice-bound and scored in a script only Leo could read. Carry it up to your brother.</i>'); },520);
     setTimeout(autoSave,300);
     return;
   }
@@ -7278,10 +7336,12 @@ function boatMenu(){
   const A2       = !!(P.story && P.story.act2);
   let all;
   if(!A2){
-    // ACT I: the settled routes and the capital. The far reaches - Stormreach, the
-    // Aerie, the Frozen strait - stay closed to any ferryman until Act II.
-    all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-         ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
+    // ACT I: the settled isles, Emberwick, and the capital - every port runs the full ferry.
+    // The far reaches (Stormreach, the Aerie, the Frozen strait) are Act II content and stay
+    // closed to any ferryman until then.
+    all=[['Sail to Barik','main'],['Sail to the Sunward Isle','east'],
+         ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle'],
+         ['Sail to Aldermere, the Capital','crown']];
   } else {
     // ACT II: the whole archipelago is open - sail wherever you like, near reach or far.
     all=[['Sail to Stormreach','reach'],['Sail to the Frozen Isle','frost'],
@@ -7393,7 +7453,10 @@ function switchWorld(id){
   // old woodpile - "stuck by the wood pile again." Walk him down to the boat on every isle
   // entry; leoToBoat is idempotent, so it's harmless when he's already there. (Fresh regens
   // spawn him at the boat.)
-  if(id==='isle' && P.story && P.story.royalGarb && typeof leoToBoat==='function'){
+  // Sailing off Emberwick after the reveal ends his "stay at the woodpile" scene - from then
+  // on he takes the dock like the comment above intends.
+  if(id!=='isle' && P.story && P.story.leoStay) P.story.leoStay=0;
+  if(id==='isle' && P.story && P.story.royalGarb && !P.story.leoStay && typeof leoToBoat==='function'){
     leoToBoat((G.npcs||[]).find(n=>n.id==='woody'));
   }
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
@@ -7488,6 +7551,9 @@ function switchWorld(id){
     if(P.story && P.story.iceBearDown && qs('rimebound')!=='done' && !P.quests.rimebound) P.quests.rimebound='avail';
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
     if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
+    // The cursed cold takes you the moment you land - you arrive FREEZING, and
+    // pull on the fur coat (or, the first time, are given one). See 48-frost-coats.js
+    if(typeof enterFrost==='function') enterFrost();
   }
   if(id==='sky'){
     // The Rainbow Road is the way DOWN off the Cloudreach: run it, calm the sky, and

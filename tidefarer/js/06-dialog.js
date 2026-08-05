@@ -125,6 +125,26 @@ function leoSealScene(){
   setDialog('<i>You lay the heavy book in your brother\'s hands. Leo goes still the instant he sees the script down its spine - then he opens it, and the colour leaves his face.</i> “...This is the founders\' hand. The oldest of it.” <i>His eyes race the first page, and his breath goes shallow.</i> “Joan. This is a <b>sealing</b> - a binding meant for something that cannot be killed, only caged. This is what they raised that guardian to keep from the world.”',
     [{label:'Read it, Leo', fn:p2}]);
 }
+// Every quest-giver used to sign off an accepted quest with the same "Good. I'll be
+// here." - fine once, grating by the tenth NPC. Pull a line from a small pool instead,
+// keyed off the quest id so a given quest always reads the same (no flicker on re-open)
+// while neighbouring quests sound different. Corvo and a few others keep bespoke lines
+// upstream; this only covers the generic accept path.
+const QUEST_ACCEPT_LINES = [
+  'Good. I\'ll be here.',
+  'Aye, that\'ll do. Off you go.',
+  'Good - I\'ll not stray far.',
+  'That\'s the spirit. I\'ll be about when it\'s done.',
+  'Right you are. Come find me after.',
+  'Then it\'s settled. Luck to you.',
+  'Well met. I\'ll keep your place.',
+  'Good hunting - I\'ll be waiting on word.',
+];
+function questAcceptLine(id){
+  let h=0; const s=String(id||'');
+  for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))|0;
+  return QUEST_ACCEPT_LINES[Math.abs(h)%QUEST_ACCEPT_LINES.length];
+}
 function buildDialogContent(npc){
   // Speaking with Bram is what unlocks gathering - remember it the moment his dialog opens
   // (see hasMetBram / hitNode: no chopping or mining until you've been to the forge).
@@ -293,27 +313,20 @@ function buildDialogContent(npc){
     const afterReveal=()=>{
       P.story.masked=0; P.story.unmasked=1; P.story.remembered=1; P.story.siblingsKnown=1;
       P.story.royalGarb=1;   // the castaway is the princess again: true colours, true look
-      // Leo has remembered he is the prince: he leaves the woodpile for good this instant.
-      // Walk the live Woodworker NPC down to the boat so he no longer hums his logs or paces
-      // the yard - he holds the way home now, not a woodcutter dancing. leoToBoat also moves
-      // his home-post (hx,hy), so the wander/separation tether can't drag him back uphill to the
-      // woodpile. (Fresh Act II regens spawn him at the boat via spawnNPCs; the cached-Emberwick
-      // case is caught again on isle entry in switchWorld, so he is never stranded at the woodpile.)
-      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(typeof leoToBoat==='function') leoToBoat(w); else if(w){ w.hums=false; w.wander=0; w.tx=null; } }
+      P.story.leoStay=1;     // for THIS Emberwick scene he stays at the woodpile, not the boat;
+                             // cleared the moment you sail off, so he takes the dock from then on
+      // Leo has remembered he is the prince, but for THIS scene he stays put at the woodpile.
+      // Settle the live Woodworker NPC in place (no more humming his logs or pacing the yard)
+      // WITHOUT walking him down to the boat - he moves to the dock later, on the next crossing.
+      { const w=((typeof G!=='undefined'&&G.npcs)||[]).find(n=>n.id==='woody'); if(w){ w.hums=false; w.wander=0; w.tx=null; } }
       P.story.act=Math.max(P.story.act||1,4);
       if(qs('enchanter')==='active'){ P.prog.enchanter=1; completeQuest('enchanter'); }
       if(!P.quests.homecoming) P.quests.homecoming='active';
       banner('THE MASK COMES OFF','THE WARRIOR PRINCESS RETURNS');
       if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(240,220,150,0.85)',54);
       if(Snd.levelup) Snd.levelup();
-      // The animated flood has just surfaced the names JOAN and LEO, so we no longer
-      // re-narrate the naming here. It lands straight on the two of them: a wordless
-      // look, then the shared memory of who did this to them - the brother talking.
-      const reunion=()=>storyCard('<i>For one long breath the woodpile and all the lost years fall away, and the two of you simply look at each other - and smile. Then the smile fades - you both remember the rest in the same breath.</i> “Vath,” <i>you say, the way you name a wound.</i> “It was always Vath - and Father is still out there in his grip.” <i>The salt-bleached rags fall away and you stand in your own colours at last: a deep royal magenta, your hair swept up in the old high ponytail. Beside you, Leo trades the woodpile grey for his own bright blue and shoulders his axe like the sword it should have been.</i> “Take me to Father,” <i>he says.</i> “And I\'m not letting you walk into Vath alone this time.”',
-        {label:'To Aldermere', onOk:()=>{
-          setTimeout(()=>toast('Your brother the prince walks at your side now. <b style="color:var(--ember)">Sail to Aldermere and bring both of you before King Aldous</b> - before Vath reaches the throne first.',8000),400);
-        }});
-      setTimeout(reunion,700);
+      // No flowery reunion card - the banner lands, then a plain nudge toward the next step.
+      setTimeout(()=>toast('You know him now - your brother, <b>Prince Leo</b>. Find <b>Captain Brant</b> at the dock and <b style="color:var(--ember)">sail to Aldermere</b> to reach your father, King Aldous, before Vath does.',8000),700);
     };
     const p5=()=>{
       closeDialog();
@@ -341,7 +354,7 @@ function buildDialogContent(npc){
   }
   // After the unmasking, before you reach the capital: the prince is impatient to sail.
   if(npc.id==='woody' && P.story && P.story.unmasked && !P.story.act1End){
-    setDialog('<i>The prince has left the woodpile for good; he keeps one hand near the axe and his eyes on the water.</i> “Why are we still on this rock? Vath wants what runs in Father\'s blood - the Tideglass magic - and every hour we wait is an hour closer to him having it. <b>Sail to Aldermere.</b> I\'m right behind you, Joan.”',
+    setDialog('<i>The prince keeps an axe in easy reach and his eyes on the water.</i> “Every hour on this rock is an hour lost, sister. Father is out there in Vath\'s grip - we need to reach him. Find Brant and <b>sail to Aldermere</b>; I\'m right behind you, Joan.”',
       [{label:'Farewell', ghost:true, fn:closeDialog}]);
     return;
   }
@@ -537,22 +550,23 @@ function buildDialogContent(npc){
   // carries other secrets - abilities the old line hid across the isles - which seeds the
   // hunt for the power to finally fight Vath.
   if(npc.id==='brother' && P.story && P.story.veilTome && !P.story.vathVeil){
-    const homeCard=()=>storyCard('<i>The warding settles and holds.</i> <b style="color:#c9b0ff">The way home is open again</b> - the ferry can steal you back to the old islands: <b>Barik</b>, the <b>Sunward Isle</b>, <b>Windsurf</b>, and <b>Emberwick</b>. <i>Leo thumbs to the next frost-page, his eyes alight the way they used to over a hard passage.</i> “Not the capital, though - not till we\'re ready for Vath himself. And this is more than a hiding-spell, sister: the old line wrote whole workings into it, hidden away isle by isle - <b style="color:#ffd76a">Powers</b>. Go pull his hooks out of the old islands, and I\'ll read on. I\'ll mind the boat.”',
-        {label:'Sail for the old islands', onOk:()=>{ if(typeof autoSave==='function') autoSave(); if(typeof toast==='function') setTimeout(()=>toast('<b style="color:var(--ember)">Sail back to the old islands</b> - the Warding Veil hides you from Vath. Board the ferry when you\'re ready.',7000),500); }});
+    // The casting plays as its own overlay cutscene, whose closing beats already say the
+    // way home is open and point you back at the old islands - so there is NO follow-up
+    // popup card here (removed by request). We just save once the scene ends.
+    const afterCast=()=>{ if(typeof autoSave==='function') autoSave(); };
     const cast=()=>{
       closeDialog();
       if(typeof take==='function') take('veilrune',1);
       if(typeof grantVathVeil==='function') grantVathVeil(true);   // sets vathVeil + spells.veil, silently
       else { P.story.vathVeil=1; P.spells=P.spells||{}; P.spells.veil=1; }
-      // the casting plays as its own overlay cutscene; the home/next-steps card follows it.
-      if(typeof veilCastCutscene==='function') veilCastCutscene(homeCard);
+      if(typeof veilCastCutscene==='function') veilCastCutscene(afterCast);
       else {
         if(Snd.magic) Snd.magic();
         if(typeof shockwave==='function') shockwave(P.x,P.y,'rgba(201,176,255,0.9)',64);
         if(typeof burst==='function') burst(P.x,P.y-0.5,'#c9b0ff',26,3);
         G.slowmo=Math.max(G.slowmo||0,1.1);
         banner('THE WARDING VEIL','VATH\'S EYE SLIDES PAST YOU');
-        setTimeout(homeCard,700);
+        setTimeout(afterCast,700);
       }
     };
     const p2=()=>{
@@ -684,7 +698,7 @@ function buildDialogContent(npc){
         + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
         withTravel(npc,[{label:'! Accept quest', cls:'gold', fn:()=>{
             acceptQuest(id);
-            setDialog('“Good. I\'ll be here.”'
+            setDialog('“'+questAcceptLine(id)+'”'
               + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
               + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
               [{label:'Off I go',fn:closeDialog}]);
@@ -776,7 +790,13 @@ function shopButtons(npc,btns){
   // Mira the seamstress does not sell the recovered Stolen Silk - it's the one-off bolt
   // the brigands took, meant for Wren's ribbon, not stock to buy back over the counter.
   if(npc.id==='brant' && qs('wreck')==='done'){
-    btns.unshift({label:'Set sail for Greyharbor', fn:()=>{ closeDialog(); departEarly(); }});
+    // Once you've found your brother, Brant's boat is a full ferry - sail anywhere,
+    // the capital included. Before that, it's the one crossing to Barik.
+    if(P.story && P.story.unmasked){
+      btns.unshift({label:'Take ship — where to?', fn:()=>{ closeDialog(); boatMenu(); }});
+    } else {
+      btns.unshift({label:'Set sail for Greyharbor', fn:()=>{ closeDialog(); departEarly(); }});
+    }
   }
   if(npc.id==='corvo' && P.prog.eastSail){
     btns.unshift({label:'Set sail east - the Sunward Isle', fn:()=>{
@@ -787,7 +807,7 @@ function shopButtons(npc,btns){
   }
   if(npc.id==='corvoE'){
     btns.unshift({label:'Where\'s the boat?', ghost:true, fn:()=>{
-      setDialog('“Right there off the landing, riding at anchor.” <i>He nods out at the water.</i> “Walk out and <b>step aboard the sloop</b> yourself when you\'re ready - give the word to the tiller and she\'ll run you home to Barik. I\'ll stay and mind Wren.”',
+      setDialog('“Right there off the landing, riding at anchor.” <i>He nods out at the water.</i> “Walk out and <b>step aboard the sloop</b> yourself when you\'re ready - give the word to the tiller and she\'ll run you across to Barik. I\'ll stay and mind Wren.”',
         [{label:'Aye, Captain', ghost:true, fn:closeDialog}]);
     }});
   }

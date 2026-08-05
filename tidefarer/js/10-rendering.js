@@ -654,6 +654,10 @@ function render(){
   // gale on Windsurf) - self-gated on the Veil + that isle's boss flag (45-isle-hazards.js)
   if(typeof drawIsleHazard==='function') drawIsleHazard();
 
+  // The Frozen Isle's cursed cold: an icy vignette that bites while you're
+  // uncoated, and everyone's breath smoking in the wind (48-frost-coats.js)
+  if(typeof drawFrostChill==='function') drawFrostChill();
+
   // sickly miasma near the Old Ruins
   const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<14){ cx.fillStyle='rgba(70,100,70,'+(0.10*(1-ruinD/14)).toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
@@ -1432,6 +1436,38 @@ function drawDecor(b,s){
     cx.save(); cx.translate(s.x,s.y); cx.scale(1.4,1.4);
     drawDragon(cx,0,0,{face:b.face||-1, enspelled:false, hurtT:0});
     cx.restore(); return;
+  }
+  if(b.kind==='icecrag'){
+    // a towering crag of ice-rock - the mountains you climb through to reach the Rimefissure.
+    // Height/width/lean vary per crag (set at build time) so a cluster reads as a real range.
+    const g=cx, h=b.h||46, w=b.w||18, lean=(b.lean||0);
+    drawShadowAt(g,s.x,s.y,Math.min(15,w*0.8));
+    g.save(); g.translate(s.x,s.y);
+    const pkX=lean*w*0.35;                       // summit offset
+    // the peak silhouette (a craggy outline with a shoulder on the right)
+    g.beginPath();
+    g.moveTo(-w,6);
+    g.lineTo(-w*0.5,6-h*0.52);
+    g.lineTo(-w*0.16,6-h*0.8);
+    g.lineTo(pkX,6-h);                            // summit
+    g.lineTo(w*0.34,6-h*0.6);
+    g.lineTo(w*0.72,6-h*0.32);
+    g.lineTo(w,6);
+    g.closePath();
+    const gr=g.createLinearGradient(0,6-h,0,6);
+    gr.addColorStop(0,'#d2e7f2'); gr.addColorStop(0.5,'#9cc0d6'); gr.addColorStop(1,'#5d879f');
+    g.fillStyle=gr; g.fill();
+    g.strokeStyle='rgba(56,96,120,0.7)'; g.lineWidth=1.3; g.stroke();
+    // shaded left face
+    g.fillStyle='rgba(38,72,94,0.42)';
+    g.beginPath(); g.moveTo(pkX,6-h); g.lineTo(-w*0.16,6-h*0.8); g.lineTo(-w*0.5,6-h*0.52); g.lineTo(-w,6); g.lineTo(-w*0.18,6); g.closePath(); g.fill();
+    // snow cap on the summit
+    g.fillStyle='#eef7fc';
+    g.beginPath(); g.moveTo(pkX,6-h); g.lineTo(pkX-w*0.26,6-h*0.74); g.quadraticCurveTo(pkX,6-h*0.84, pkX+w*0.24,6-h*0.72); g.closePath(); g.fill();
+    // a crevice line or two catching frost-light
+    g.strokeStyle='rgba(74,116,140,0.55)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(pkX,6-h*0.92); g.lineTo(-w*0.18,6-h*0.16); g.moveTo(pkX+w*0.22,6-h*0.56); g.lineTo(w*0.5,6-h*0.04); g.stroke();
+    g.restore(); return;
   }
   if(b.kind==='icespire'){
     const g=cx; drawShadowAt(g,s.x,s.y,10); g.save(); g.translate(s.x,s.y);
@@ -2237,18 +2273,38 @@ function drawDecor(b,s){
     g.restore(); return;
   }
   if(b.kind==='spinwheel'){
-    // a basalt slab that turns on a central spindle over the lava. Drawn as a flat iso
+    // a slab that turns on a central spindle over a pit/channel. Drawn as a flat iso
     // parallelogram from hub to tip, projected via worldToScreen so its swing reads true.
+    // Two dresses: a basalt slab over lava (default) and a FROZEN slab over the icy channel
+    // (b.ice) - a pale drift-ice plate with a frosted rim and a cold blue spindle-glimmer.
     const g=cx, ang=b.ang, cA=Math.cos(ang), sA=Math.sin(ang), pA=b.armw, px=-sA, py=cA;
     const c1=worldToScreen(b.hx - px*pA, b.hy - py*pA);
     const c2=worldToScreen(b.hx + cA*b.r - px*pA, b.hy + sA*b.r - py*pA);
     const c3=worldToScreen(b.hx + cA*b.r + px*pA, b.hy + sA*b.r + py*pA);
     const c4=worldToScreen(b.hx + px*pA, b.hy + py*pA);
+    const hs=worldToScreen(b.hx,b.hy);   // the spindle hub
+    if(b.ice){
+      g.fillStyle='rgba(40,86,112,0.42)'; g.beginPath(); g.moveTo(c1.x,c1.y+5); g.lineTo(c2.x,c2.y+5); g.lineTo(c3.x,c3.y+5); g.lineTo(c4.x,c4.y+5); g.closePath(); g.fill();   // wet shadow on the black water
+      const gr=g.createLinearGradient(c1.x,c1.y,c3.x,c3.y); gr.addColorStop(0,'#eaf6ff'); gr.addColorStop(0.5,'#c4e0ee'); gr.addColorStop(1,'#93bcd4');   // pale drift-ice, top-lit
+      g.fillStyle=gr; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
+      g.strokeStyle='#6f9fb8'; g.lineWidth=1.4; g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.85)'; g.lineWidth=1;   // frosted highlight along the leading edge
+      g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.stroke();
+      // a cracked facet seam down the middle of the plate + a branch, so it reads as split ice
+      g.strokeStyle='rgba(214,236,248,0.7)'; g.lineWidth=0.9;
+      const mid1={x:(c1.x+c4.x)/2,y:(c1.y+c4.y)/2}, mid2={x:(c2.x+c3.x)/2,y:(c2.y+c3.y)/2};
+      g.beginPath();
+      g.moveTo(mid1.x,mid1.y); g.lineTo(mid2.x,mid2.y);
+      g.moveTo((mid1.x*0.5+mid2.x*0.5),(mid1.y*0.5+mid2.y*0.5)); g.lineTo((c2.x*0.6+c3.x*0.4),(c2.y*0.6+c3.y*0.4));
+      g.stroke();
+      g.fillStyle='#5e93b0'; g.beginPath(); g.ellipse(hs.x,hs.y-1,5.5,3,0,0,TAU); g.fill();   // the frozen spindle boss
+      g.fillStyle='rgba(150,210,240,'+(0.45+0.3*Math.sin(G.time*3+b.hx)).toFixed(2)+')'; g.beginPath(); g.arc(hs.x,hs.y-2,2,0,TAU); g.fill();   // cold blue glimmer, not lava
+      return;
+    }
     g.fillStyle='rgba(0,0,0,0.28)'; g.beginPath(); g.moveTo(c1.x,c1.y+5); g.lineTo(c2.x,c2.y+5); g.lineTo(c3.x,c3.y+5); g.lineTo(c4.x,c4.y+5); g.closePath(); g.fill();
     g.fillStyle='#6a5f52'; g.beginPath(); g.moveTo(c1.x,c1.y); g.lineTo(c2.x,c2.y); g.lineTo(c3.x,c3.y); g.lineTo(c4.x,c4.y); g.closePath(); g.fill();
     g.strokeStyle='#2a241e'; g.lineWidth=1.4; g.stroke();
     g.strokeStyle='#8a7f6e'; g.lineWidth=1; g.beginPath(); g.moveTo((c1.x+c4.x)/2,(c1.y+c4.y)/2); g.lineTo((c2.x+c3.x)/2,(c2.y+c3.y)/2); g.stroke();   // seam down the slab
-    const hs=worldToScreen(b.hx,b.hy);   // the spindle hub
     g.fillStyle='#3a332c'; g.beginPath(); g.ellipse(hs.x,hs.y-1,5.5,3,0,0,TAU); g.fill();
     g.fillStyle='rgba(255,150,60,'+(0.4+0.3*Math.sin(G.time*3+b.hx)).toFixed(2)+')'; g.beginPath(); g.arc(hs.x,hs.y-2,2,0,TAU); g.fill();
     return;
@@ -2659,6 +2715,10 @@ function drawNPC(n,s){
   if(n.id==='woody' && P.story && P.story.royalGarb){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
     nname='Prince Leo';
+  }
+  // On the Frozen Isle, Leo bundles into a matched fur coat too (48-frost-coats.js)
+  if(n.id==='brother' && typeof frostCoatWorn==='function' && frostCoatWorn() && typeof frostCoatLook==='function'){
+    nlook=frostCoatLook({...n.look});
   }
   // n.swing lets an NPC animate a weapon strike (Rask's practice slash in the parry
   // drill); a live swing bypasses the sprite cache so the blade actually moves. `moving`
@@ -4100,6 +4160,9 @@ function drawPlayer(s){
   const _pz=P.z||0;
   drawShadowAt(cx,s.x,s.y, _pz>0 ? 14*Math.max(0.55,1-_pz/26) : 14);
   if(_pz>0) s={x:s.x, y:s.y-_pz};
+  // FREEZING on the Frozen Isle: a hard shiver shudders the figure (the shadow
+  // stays planted). The coat, once on, stills it. (48-frost-coats.js)
+  if(typeof frostShakeX==='function'){ const _sh=frostShakeX(); if(_sh) s={x:s.x+_sh, y:s.y}; }
   drawPlayerFigure(s);
   drawCarriedFlame(s);
 }
@@ -4146,8 +4209,9 @@ function drawPlayerFigure(s){
     ((P.gatherT||0)>0? P.gatherKind :
      P.fishing? 'rod' : (P.unlocked.melee? 'sword' : null)); // kit in hand while gathering; no phantom blade before the forge
   // one adventurer, one outfit - weapons only change what's in your hands
+  // Joan never wears the big closed-eye grin - it read as odd/off on her. She stays
+  // composed: calm by default, set for battle near foes, wincing only when hurt.
   const expr = P.hurtT>0? 'hurt'
-    : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
   const look={hero:true, fem:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     trim:P.swordTier>0?'#8a6d30':null,   // no pauldrons: they broadened her shoulders into a triangular silhouette
@@ -4161,6 +4225,8 @@ function drawPlayerFigure(s){
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;
+  // On the Frozen Isle you pull a fur-lined coat over everything (48-frost-coats.js)
+  if(typeof frostCoatWorn==='function' && frostCoatWorn() && typeof frostCoatLook==='function') frostCoatLook(look);
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32, turn:1,   // the overworld hero yaws for true 8-way facing
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, moveT:P.moveT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, published for the mount; seated legs hang plumb
@@ -4285,6 +4351,15 @@ function drawProj(p,s){
     g.fillStyle='#e9f3ff'; g.beginPath(); g.arc(0,0,6,0,TAU); g.fill();                          // packed snow
     g.fillStyle='#ffffff'; g.beginPath(); g.arc(-1.8,-2,2.4,0,TAU); g.fill();                    // highlight
     g.fillStyle='rgba(150,190,220,0.5)'; g.beginPath(); g.arc(2,2.2,1.8,0,TAU); g.fill();        // shaded belly
+    g.restore();
+  } else if(p.kind==='iceshard'){
+    // a jagged sliver of ice the Rimebound hurls - a sharp pale dart pointed along its flight,
+    // with a cold halo, so it reads as a fast, parryable ranged threat (not a lobbed snowball)
+    const g=cx, ang=Math.atan2(p.vy,p.vx); g.save(); g.translate(s.x, s.y-12); g.rotate(ang);
+    g.fillStyle='rgba(180,224,248,0.30)'; g.beginPath(); g.arc(0,0,8,0,TAU); g.fill();            // frosty halo
+    g.fillStyle='#dff2ff'; g.strokeStyle='#7fb4d4'; g.lineWidth=1;                                 // the shard body
+    g.beginPath(); g.moveTo(9,0); g.lineTo(-4,-3.2); g.lineTo(-2,0); g.lineTo(-4,3.2); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#ffffff'; g.beginPath(); g.moveTo(9,0); g.lineTo(0,-1.4); g.lineTo(1,0); g.closePath(); g.fill();   // lit facet
     g.restore();
   } else if(p.kind==='spout'){
     // a hurled gout of seawater, trailing droplets

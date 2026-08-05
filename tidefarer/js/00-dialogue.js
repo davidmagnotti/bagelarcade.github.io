@@ -291,7 +291,7 @@ const DIALOGUE = {
 
   // ---- ids that recur on more than one isle ----------------------------
   idleByWorld: {
-    "brother": {  // Leo on the Frozen Isle vs. Stormreach
+    "brother": {  // Leo: the Frozen Isle, Stormreach, and the capital (Act I homecoming)
       "frost": [
         "Go on - I'll hold the landing. If Hearthhold has the right of it, whatever Vath bound is down the Rimefissure, past the deep ice.",
         "The whole strait talks of a robed man on the glacier. That's Vath, or his handiwork. Find what he hid down there, Joan - and mind the cold.",
@@ -299,8 +299,13 @@ const DIALOGUE = {
       ],
       "reach": [
         "Go on - I'll mind the boat. If this rock stoves a hull the way the charts promised, someone has to keep our way home afloat.",
-        "I'll keep a fire lit here on the strand. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
+        "I'll hold the strand here. Find what this place is hiding, Joan - nothing I'd have to write a ballad about.",
         "Storm won't let up. Shout if the isle bites back and I'll come running, axe and all."
+      ],
+      "crown": [
+        "Father is up past the forecourt, Joan - the King himself. Let's go and stand before him, the two of us.",
+        "We came all this way to reach him. Take us up to the throne room - Father has to hear what Vath has done.",
+        "Whatever waits in there, we walk into it together this time. Lead on to Father, the King."
       ]
     }
   },
