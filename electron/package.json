@@ -1,0 +1,56 @@
+{
+  "name": "tidefarer-desktop",
+  "productName": "Tidefarer",
+  "version": "1.0.0",
+  "description": "Tidefarer — desktop / Steam build (Electron shell around the web game).",
+  "main": "main.js",
+  "author": "Bagel Arcade",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.bagelarcade.tidefarer",
+    "productName": "Tidefarer",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../tidefarer",
+        "to": "tidefarer"
+      }
+    ],
+    "extraFiles": [
+      "steam_appid.txt"
+    ],
+    "win": {
+      "target": "dir",
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "target": "dir",
+      "icon": "build/icon.png",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "dir",
+      "icon": "build/icon.png",
+      "category": "Game"
+    }
+  }
+}

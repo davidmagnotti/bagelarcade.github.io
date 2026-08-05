@@ -1,2 +1,6 @@
 node_modules/
 dist/
+
+# The repo-root .gitignore ignores package.json globally (for its app-assets
+# tooling); this app needs its manifest tracked, so re-include it here.
+!package.json
