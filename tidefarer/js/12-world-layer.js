@@ -4545,11 +4545,11 @@ QUESTS.roadclear={ giver:'kell', title:'Clear the King\'s Road', kind:'kill', ki
   log:'Slay 8 wolves along Barik\'s roads and highlands.',
   doneText:'The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin.',
   rw:{gold:80, item:{wardstone:1}, xp:{melee:200, archery:120}} };
-QUESTS.hedda1={ giver:'hedda', title:'Bluecap Stew', kind:'gather', need:{mushroom:6},
-  brief:'Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you\'ll eat with us besides.',
-  log:'Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.',
-  doneText:'Smell that? That\'s Barik in a pot. Take your share and your coin.',
-  rw:{gold:40, item:{bread:2}, xp:{farming:180}}, unlocks:['hedda2'] };
+QUESTS.hedda1={ giver:'hedda', title:'Welcome to the Rows', kind:'special', count:6,
+  brief:'Truth is I could use another pair of hands in the rows, and you don\'t look like one to mind good dirt. Tell you what - take some seed and work my plots yourself: plant it, let it come up gold, and pull the wheat. Bring in six bushels to get the hang of it, and keep every last one - a farmhand eats what a farmhand grows.',
+  log:'Plant and harvest 6 wheat at Hedda\'s field (keep every bushel).',
+  doneText:'Look at you - born to the dirt. The field\'s yours whenever you\'ve a mind to work it, and whatever you grow you keep, always. Here\'s a little more seed on me, and my thanks.',
+  rw:{item:{seed:6}, gold:20, xp:{farming:200}}, unlocks:['hedda2'] };
 QUESTS.hedda2={ giver:'hedda', title:'Mire in the Fields', kind:'kill', kill:{slime:6},
   brief:'Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.',
   log:'Destroy 6 slimes around the Mirefen and Farmsteads.',

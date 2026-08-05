@@ -342,6 +342,7 @@ function questProgressText(id){
     return ((MOBDEF[k]&&MOBDEF[k].name+'s')||'Elites')+' '+(P.prog[id]||0)+'/'+q.kill[k]; }
   if(q.kind==='visit') return 'Find '+ZONES[q.zone].name;
   if(id==='harvest') return 'Harvested '+(P.prog.harvest||0)+'/'+q.count;
+  if(id==='hedda1') return 'Harvested '+(P.prog.hedda1||0)+'/'+q.count;
   if(id==='cat') return (G.cat&&G.cat.following)? 'Pip follows you - bring him to Nia!' : 'Search the Whisperwood';
   if(id==='sail') return (P.story&&P.story.haveSail)? 'Stormsail recovered - carry it to Nessa' : (P.story&&P.story.millDone)? 'Take the sail from the vault' : 'Defeat the guardian in the Undermill';
   return '';

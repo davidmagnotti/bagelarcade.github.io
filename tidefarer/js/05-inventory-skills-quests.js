@@ -63,6 +63,7 @@ function questReady(id){
   if(q.kind==='visit') return (P.prog[id]||0)>=1;
   if(q.kind==='special'){
     if(id==='harvest') return (P.prog.harvest||0) >= q.count;
+    if(id==='hedda1') return (P.prog.hedda1||0) >= q.count;
     if(id==='cat') return P.petPip;
     if(id==='echoes') return Object.keys(P.loreRead||{}).length>=7;
     if(id==='profit') return (P.prog.profit||0)>=12;
@@ -104,6 +105,7 @@ function acceptQuest(id){
     setTimeout(()=>toast('<b style="color:var(--ember)">Axe &amp; pick in hand!</b> You can <b>chop trees</b> and <b>mine stone</b> now. Bring Bram <b>1 wood</b> and <b>1 stone</b> and he\'ll forge your iron sword.',5600),400); }
   if(id==='fish' && typeof giveRod==='function') giveRod();   // Finn hands over the rod as he sets you to fish
   if(id==='harvest'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }
+  if(id==='hedda1'){ giveQuiet('seed',6); addFloat('+6 Wheat Seeds', P.x,P.y-1.4,'#ffe9a8'); }   // Hedda hands over seed so you can work her rows straight away
   if(id==='kitchenrun'){ giveQuiet('crate',1); addFloat("+ Victualler's Crate", P.x,P.y-1.4,'#ffe9a8'); }
   if(id==='gravelord') ensureGravelord(true);
   if(id==='king'){ // Maren speaks the ward open - the causeway to the King is unsealed
@@ -267,6 +269,7 @@ function questTargetPos(id){
     if(id==='embers') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='mossbrew') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='roadclear') return {x:ZONES.highlands.x,y:ZONES.highlands.y};
+    if(id==='hedda1') return ZONES.farm? {x:ZONES.farm.x,y:ZONES.farm.y} : null;   // her tilled rows at the steading
     if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
     if(id==='nets') return nearestFishNode() || {x:ZONES.dock.x-2,y:ZONES.dock.y};
     if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};

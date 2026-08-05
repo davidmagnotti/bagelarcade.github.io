@@ -713,9 +713,9 @@ const DIALOGUE = {
       doneText: "The carters are already singing about it. Off-key. Greyharbor thanks you properly: in coin."
     },
     "hedda1": {
-      brief: "Harvest crew works dawn to dark and eats like it. Bluecaps from Blackpine make the only stew worth the name. Six caps and you'll eat with us besides.",
-      log: "Gather 6 bluecap mushrooms from Blackpine Reach for Hedda.",
-      doneText: "Smell that? That's Barik in a pot. Take your share and your coin."
+      brief: "Truth is I could use another pair of hands in the rows, and you don't look like one to mind good dirt. Tell you what - take some seed and work my plots yourself: plant it, let it come up gold, and pull the wheat. Bring in six bushels to get the hang of it, and keep every last one - a farmhand eats what a farmhand grows.",
+      log: "Plant and harvest 6 wheat at Hedda's field (keep every bushel).",
+      doneText: "Look at you - born to the dirt. The field's yours whenever you've a mind to work it, and whatever you grow you keep, always. Here's a little more seed on me, and my thanks."
     },
     "hedda2": {
       brief: "Every wet season the Mirefen leaks its muck-things into my east rows. They eat seed, root, and hope, in that order. Six burst slimes buys my fields a season.",

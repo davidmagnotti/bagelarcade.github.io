@@ -541,6 +541,7 @@ function usePlot(pl){
     const amt = 1 + (Math.random()<P.skills.farming.lvl*0.15 ? 1:0);
     give('wheat',amt); addXP('farming',10);
     if(qs('harvest')==='active'){ P.prog.harvest=(P.prog.harvest||0)+1; updateQuestUI(); }
+    if(qs('hedda1')==='active'){ P.prog.hedda1=(P.prog.hedda1||0)+1; updateQuestUI(); }   // Hedda's rows: a harvest counts toward her welcome quest
     burst(pl.x+0.5,pl.y,'#ffd76a',8);
   }
 }
