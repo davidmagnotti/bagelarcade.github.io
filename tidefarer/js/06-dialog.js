@@ -634,26 +634,13 @@ function buildDialogContent(npc){
       return;
     }
     const canPay=(P.gold||0)>=1000;
-    setDialog('<i>A broad thief in a patched greatcoat plants himself between you and the cache, thumbs hooked in his belt.</i> “Well, well - come for the pretty cloth, have you? That dawn-silk’s worth a fortune off-isle, and it’s mine by right of taking. Tell you what, friend: <b style="color:#ffd76a">one thousand gold</b> and you’ll have what you came for, no blood spilt. Fair’s fair.”',
+    setDialog('<i>A broad thief in a patched greatcoat plants himself between you and the cache, thumbs hooked in his belt.</i> “Well, well - come for the pretty cloth, have you? That dawn-silk’s worth a fortune off-isle, and it’s mine by right of taking. Tell you what, friend: <b style="color:#ffd76a">one thousand gold</b> and the bolt’s yours, no blood spilt. Fair’s fair.”',
       [ (canPay
           ? {label:'Pay 1,000 gold', cls:'gold', fn:()=>{
               P.gold-=1000; if(Snd.coin)Snd.coin(); P.story.brakkPaid=1;
-              let msg;
-              if(qs('ribbon2')==='active'){
-                // he fenced the weaver's whole cart - finished ribbons and all - so paying up
-                // hands you a dawn ribbon outright and saves the loom-trip: skip Mira, on to Corvo.
-                give('ribbon',1);
-                P.quests.ribbon2='done';
-                if(qs('ribbon3')!=='done' && qs('ribbon3')!=='active'){ P.quests.ribbon3='active'; P.prog.ribbon3=0; }
-                if(typeof updateQuestUI==='function') updateQuestUI();
-                setTimeout(()=>{ try{ toast('<b>Quest updated:</b> A Ribbon for Wren - bring the ribbon to <b>Captain Corvo</b> at the east cove.',5600); }catch(e){} }, 500);
-                msg='<i>Brakk bites the coin, then digs a dawn-colored ribbon out of a stolen bundle and flicks it to you.</i> “Lifted the weaver’s whole cart, didn’t we - ribbons and all. There’s your bow, no loom needed. Now off my hill, before the boys get ideas.”';
-              } else {
-                give('silk',1);
-                msg='<i>Brakk bites the coin, grins, and tosses you a bolt of the stolen silk.</i> “Pleasure doing business. Now off my hill, before the boys get ideas.”';
-              }
-              if(typeof refreshUI==='function') refreshUI(); if(typeof autoSave==='function') autoSave();
-              setDialog(msg, [{label:'Leave', ghost:true, fn:closeDialog}]);
+              give('silk',1); if(typeof refreshUI==='function') refreshUI(); if(typeof autoSave==='function') autoSave();
+              setDialog('<i>Brakk bites the coin, grins, and tosses you the bolt of stolen silk.</i> “Pleasure doing business. Now off my hill, before the boys get ideas.”',
+                [{label:'Leave', ghost:true, fn:closeDialog}]);
             }}
           : {label:'Pay 1,000 gold', ghost:true, fn:()=>{
               setDialog('<i>Brakk snorts.</i> “A THOUSAND, I said. Come back when your purse is fatter - or don’t come back at all.”',
