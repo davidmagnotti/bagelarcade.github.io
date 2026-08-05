@@ -7233,13 +7233,15 @@ function attemptSail(){
     return;
   }
   // Stormreach is only reachable by sea, so its berth is always a ferry. But in
-  // Act II the storm-coast opens stranded: the Barrow Brute's reef eats any hull
-  // that launches, so there's no sailing at all until the Brute is down and the
-  // port breathes again (P.story.reachBossDown). Beating Stormreach is the first
-  // link of the Act II chain that unlocks the Frozen Isle (see boatMenu).
+  // Act II the storm-coast opens stranded: the reef eats any hull that launches until
+  // the isle's great warden is put down. EITHER Stormreach boss breaks the strait open -
+  // the Barrow Brute on the coast (reachBossDown) OR the Drowned Minotaur in the catacomb
+  // (tombBossDown), whose prize is the very chart that points the way north. Felling one
+  // is enough to sail on (matches bossCleared.reach in 14-meta-layer.js and the ferry-opens
+  // line in the drownedwarden quest).
   if(G.worldId==='reach'){
-    if(P.story && P.story.act2 && !P.story.reachBossDown){
-      blockMsg('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the Barrow Brute walks it, sister. Put the great brute down - then we sail."</b>');
+    if(P.story && P.story.act2 && !P.story.reachBossDown && !P.story.tombBossDown){
+      blockMsg('Your brother lays a hand on the bow-line and shakes his head. <b>"No boat outlives that reef while the great brute walks it, sister. Put the warden down - the one on the barrow road, or the one below the graves - then we sail."</b>');
       return;
     }
     boatMenu(); return;
