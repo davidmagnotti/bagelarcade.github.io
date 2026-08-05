@@ -170,7 +170,7 @@ function frame(ts){
 }
 
 function boot(){
-  buildTiles(); buildFringes(); buildSprites(); buildIcons(); buildExtraSprites();
+  buildTiles(); buildFringes(); buildShoreAO(); buildSprites(); buildIcons(); buildExtraSprites();
   weatherAll();
   G.worldId='isle';
   genIsleAll();

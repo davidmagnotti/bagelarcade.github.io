@@ -18,6 +18,7 @@ const PAL = {
 
 const TILE_SPR = {}; // [tileType][variant]
 const FRINGE={};
+let SHORE_AO=null;   // [dir] soft dark contact shadow the raised land casts onto the water at the shore
 function buildFringes(){
   const defs={1:{c:PAL.sand,c2:PAL.sand2}, 2:{c:PAL.path,c2:PAL.path2},
               3:{c:PAL.grass,c2:PAL.grassHi,tuft:true}, 4:{c:PAL.forest,c2:PAL.forest2,tuft:true}};
@@ -76,6 +77,28 @@ function buildFringes(){
 }
 function terrainCls(t){
   return (t===T.DEEP||t===T.SHALLOW)?0 : t===T.SAND?1 : t===T.GRASS?3 : t===T.FOREST?4 : 2;
+}
+/* SHORE CONTACT SHADOW: a soft dark band the raised land casts onto the water right at
+   the waterline, one per diamond edge. Baked once (like the fringes), so it costs a single
+   cheap drawImage per coastal edge and makes the coast read as land sitting ABOVE the sea
+   instead of a flat paper cut-out. Falls off quickly into open water. */
+function buildShoreAO(){
+  // per-edge midpoints in local 64x32 diamond space: TR, RB, BL, LT
+  const mid=[[48,8],[48,24],[16,24],[16,8]];
+  SHORE_AO=[];
+  for(let di=0;di<4;di++){
+    SHORE_AO.push(makeCanvas(TW,TH,(g)=>{
+      g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
+      const m=mid[di];
+      // dark at the shore edge, fading toward the tile centre (open water)
+      const gr=g.createLinearGradient(m[0],m[1], 32+(32-m[0])*0.35, 16+(16-m[1])*0.35);
+      gr.addColorStop(0,   'rgba(6,13,26,0.36)');
+      gr.addColorStop(0.5, 'rgba(6,13,26,0.13)');
+      gr.addColorStop(1,   'rgba(6,13,26,0)');
+      g.fillStyle=gr; g.fillRect(0,0,TW,TH);
+      g.restore();
+    }));
+  }
 }
 function buildTiles(){
   const specs = {
