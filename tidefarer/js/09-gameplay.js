@@ -1889,7 +1889,7 @@ function updateNPCs(dt){
     // is still parked at his Act I woodpile (an old save, a dev jump, no world re-entry), none
     // of those fire. Catch it here, once, so his name/garb (Prince Leo, royal blue) can never
     // disagree with where he's standing. leoToBoat is idempotent; _atBoat stops the re-check.
-    if(n.id==='woody' && !n._atBoat && P.story && P.story.royalGarb && G.worldId==='isle' && typeof leoToBoat==='function'){
+    if(n.id==='woody' && !n._atBoat && P.story && P.story.royalGarb && !P.story.leoStay && G.worldId==='isle' && typeof leoToBoat==='function'){
       leoToBoat(n); n._atBoat=1;
     }
     // NPCs no longer bark idle chatter in floating bubbles over their heads -

@@ -7241,10 +7241,12 @@ function boatMenu(){
   const A2       = !!(P.story && P.story.act2);
   let all;
   if(!A2){
-    // ACT I: the settled routes and the capital. The far reaches - Stormreach, the
-    // Aerie, the Frozen strait - stay closed to any ferryman until Act II.
-    all=[['Sail home to Barik','main'],['Sail to the Sunward Isle','east'],
-         ['Sail to Windsurf Isle','wind'],['Sail to Aldermere, the Capital','crown']];
+    // ACT I: the settled isles, Emberwick, and the capital - every port runs the full ferry.
+    // The far reaches (Stormreach, the Aerie, the Frozen strait) are Act II content and stay
+    // closed to any ferryman until then.
+    all=[['Sail to Barik','main'],['Sail to the Sunward Isle','east'],
+         ['Sail to Windsurf Isle','wind'],['Slip back to Emberwick','isle'],
+         ['Sail to Aldermere, the Capital','crown']];
   } else {
     // ACT II: the whole archipelago is open - sail wherever you like, near reach or far.
     all=[['Sail to Stormreach','reach'],['Sail to the Frozen Isle','frost'],
@@ -7356,7 +7358,10 @@ function switchWorld(id){
   // old woodpile - "stuck by the wood pile again." Walk him down to the boat on every isle
   // entry; leoToBoat is idempotent, so it's harmless when he's already there. (Fresh regens
   // spawn him at the boat.)
-  if(id==='isle' && P.story && P.story.royalGarb && typeof leoToBoat==='function'){
+  // Sailing off Emberwick after the reveal ends his "stay at the woodpile" scene - from then
+  // on he takes the dock like the comment above intends.
+  if(id!=='isle' && P.story && P.story.leoStay) P.story.leoStay=0;
+  if(id==='isle' && P.story && P.story.royalGarb && !P.story.leoStay && typeof leoToBoat==='function'){
     leoToBoat((G.npcs||[]).find(n=>n.id==='woody'));
   }
   // Act I side-work is suppressed once Act II opens - Barik's story has moved on (the Duchess
