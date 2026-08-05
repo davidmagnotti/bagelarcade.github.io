@@ -7,7 +7,7 @@
      own ?v= version, a version bump is simply a new URL that gets cached fresh —
      no manifest of files to hand-maintain here.
    Bump CACHE when you want to purge every old entry in one go. */
-const CACHE = 'tidefarer-v348';
+const CACHE = 'tidefarer-v349';
 
 /* Precache the bare shell so the very first offline launch works even before the
    player has loaded every script online. The rest fills in at runtime. */
