@@ -32,11 +32,11 @@ var GATES={
   basalt:{   tool:'pick', req:2, kind:'rock', hp:24, tag:'BASALT', noTag:true,   // no floating name-tag; the stone just reads violet on sight
              color:'#c79bff', glow:'rgba(120,70,180,1)', spark:'#d9b8ff',
              need:'the dungeon-forged <b>Cragbreaker Pick</b>', drop:'ore', dropN:2, skill:'mining' },
-  slagiron:{ tool:'pick', req:3, kind:'rock', hp:26, tag:'SLAGIRON',
-             color:'#e0955a', glow:'rgba(190,95,45,1)', spark:'#f2b98a',
+  slagiron:{ tool:'pick', req:3, kind:'rock', hp:26, tag:'SLAGIRON',   // reads clear RED on sight
+             color:'#ff5a4a', glow:'rgba(224,70,55,1)', spark:'#ff9a86',
              need:'the mill-forged <b>Cograzor Pick</b>', drop:'ore', dropN:3, skill:'mining' },
-  emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE', noTag:true,   // nameless, reads green on sight
-             color:'#46c96a', glow:'rgba(45,190,80,1)', spark:'#a8f0b8',
+  emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE', noTag:true,   // nameless, reads clear BLUE on sight
+             color:'#4aa8ff', glow:'rgba(55,140,230,1)', spark:'#a8d4ff',
              need:'the forge-tempered <b>Emberbreaker Pick</b>', drop:'crystal', dropN:2, skill:'mining' },
   // VATH-WARD: not natural stone but sorcery made solid - a bright-violet ward Vath
   // raised to cut Barik off from itself. Any dungeon-forged pickaxe (pick tier >= 2)
@@ -67,7 +67,8 @@ function gateBlocked(n){
   if(Snd.tone) Snd.tone(170,0.07,'square',0.05,-40);
   burst(n.x, n.y-(cfg.kind==='rock'?0.4:1.1), cfg.spark, 5, 1.4);
   if(!P._gateNagT || G.time>P._gateNagT){ P._gateNagT=G.time+2.6;
-    toastErr('Your '+(cfg.tool==='axe'?'axe':'pick')+' barely marks the <b style="color:'+cfg.color+'">'+cfg.tag.toLowerCase()+'</b> - only '+cfg.need+' '+(cfg.tool==='axe'?'fells':'breaks')+' it.',4200); }
+    // don't name the exact tool - just that it needs a stronger one; the colour is the clue to note
+    toastErr('Your '+(cfg.tool==='axe'?'axe':'pick')+' barely marks the <b style="color:'+cfg.color+'">'+cfg.tag.toLowerCase()+'</b> - it will take a stronger '+(cfg.tool==='axe'?'axe':'pick')+' than you carry.',4200); }
   return true;
 }
 

@@ -1415,12 +1415,15 @@ function hurtPlayer(dmg,src){
   // separately, in updateProjs (they get batted back). Marquee bosses (bigBoss)
   // hit too hard to fully turn - a parry only softens their blow, never negates it.
   if((P.parryT||0)>0 && src && src.kind && src.kind!=='wraith' && src.x!=null && parryCovers(src.x,src.y)){
-    if(src.bigBoss){ dmg*=0.35; onParry(src.x,src.y); }   // chip through - can't be fully turned
+    // The Maw-Stalker can be fully turned like a common foe: a clean parry negates its blow and
+    // leaves it reeling, momentarily stunned and wide open. Other marquee bosses hit too hard
+    // to fully turn - a parry only chips their blow to a sliver.
+    if(src.bigBoss && !src.undermawBeast){ dmg*=0.35; onParry(src.x,src.y); }   // chip through - can't be fully turned
     else {
       onParry(src.x,src.y);
-      src.stunT=Math.max(src.stunT||0,1.1); src.windup=0; src.swing=0;   // left wide open
+      src.stunT=Math.max(src.stunT||0, src.bigBoss?1.4:1.1); src.windup=0; src.swing=0; src.lunge=0;   // left wide open, reeling
       const kx=src.x-P.x, ky=src.y-P.y, kl=Math.hypot(kx,ky)||1;
-      if(!src.boss) moveEntity(src, kx/kl*0.6, ky/kl*0.6);   // shoved back off the failed swing
+      if(!src.boss) moveEntity(src, kx/kl*0.6, ky/kl*0.6);   // common foes are shoved back; bosses just reel in place
       return;
     }
   }
@@ -1515,6 +1518,10 @@ document.getElementById('respawnBtn').onclick=()=>{
     for(const m of G.mobs){ if(m.undermawBeast && !m.dead){ m.sealed=true; m.entranceDone=false; m.introKind=null; } }
     if(typeof invalidateScenery==='function') invalidateScenery();
     G._mawDenSealed=0;
+    // Don't dump the hero back at the beast's feet: set them down just OUTSIDE the now-open Den
+    // Gate (the corridor south of it), a breather to heal and steel up before walking back in.
+    // This overrides the boss-checkpoint that startBossIntro dropped inside the den.
+    P.bossCheck={w:G.worldId, x:22.5, y:38.5};
   }
   const toll=Math.floor((P.gold||0)*0.15);
   if(toll>0){ P.gold-=toll;

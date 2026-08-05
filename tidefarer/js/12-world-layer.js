@@ -3311,18 +3311,18 @@ function placeObjectsUndermaw(){
   // deliberately small (1.5 tiles) so the gaps between them read wide - the centre-to-centre
   // spine hop stays ~3 tiles (still dashable), but with less slab under you the jumps land
   // tighter and the R3/R4 scars feel more spread out.
-  const slab=(cx,cy,amp,spd,phase)=>{ const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:1.5, h:1.5}; G.decor.push(s); G._mawSlabs.push(s); };
+  const slab=(cx,cy,amp,spd,phase,sz)=>{ sz=sz||1.5; const s={kind:'driftslab', ax:cx-amp, ay:cy, bx:cx+amp, by:cy, spd, phase:phase||0, x:cx-amp, y:cy, prevx:cx-amp, prevy:cy, w:sz, h:sz}; G.decor.push(s); G._mawSlabs.push(s); };
   // scatter a navigable FIELD of small sliding platforms across a big black pit: a guaranteed
   // zig-zag "spine" of dash-hops from the south ledge to the north, plus spread-out extra
   // platforms (left and right) so there are several routes up.
-  const field=(nY,sY,seed)=>{
+  const field=(nY,sY,seed,sz)=>{
     let prng=(seed>>>0)||1; const rng=()=>{ prng=(prng*1664525+1013904223)>>>0; return prng/4294967296; };
     let px=22;
     for(let y=sY-2; y>=nY+2; y-=3){
       px=Math.max(11, Math.min(33, px + (rng()<0.5?-3:3)));                 // spine hop (<=3 tiles: dashable)
-      slab(px, y, 1.0, 0.55+rng()*0.3, rng()*6.28);                         // the spine platform (guarantees a path)
+      slab(px, y, 1.0, 0.55+rng()*0.3, rng()*6.28, sz);                     // the spine platform (guarantees a path)
       for(const ex of [11,18,26,33]){ if(Math.abs(ex-px)>=5 && rng()<0.5)   // extras, spread wide left and right
-        slab(Math.max(10,Math.min(34,ex)), y, 1.0, 0.55+rng()*0.3, rng()*6.28); }
+        slab(Math.max(10,Math.min(34,ex)), y, 1.0, 0.55+rng()*0.3, rng()*6.28, sz); }
     }
   };
   // ---- R1: THE BONE-YARD - a solid-floored chamber where a horde of the maw's
@@ -3335,8 +3335,9 @@ function placeObjectsUndermaw(){
   // the Maw-Stalker rouse (see updateUndermaw). No retreat until the beast falls.
   G._mawDenSealed=0;
   G.decor.push({kind:'catgate', x:22, y:34, open:true, gate:'den', tiles:MAW_DENGATE.slice(), label:'the Den Gate'});
-  // ---- R3: a longer, busier scar ----
-  pit(6,38, 79,105); field(79,105, 6203);
+  // ---- R3: a longer, busier scar. Its platforms run 20% larger (sz 1.8 vs the 1.5 default)
+  // so the early scar lands more forgivingly - R4 beyond keeps the tighter standard slabs. ----
+  pit(6,38, 79,105); field(79,105, 6203, 1.8);
   G._mawCross.push({y0:76,y1:108, sx:22, sy:107});
   // ---- R4: the scar under archer fire ----
   pit(6,38, 41,67); field(41,67, 7207);
@@ -3429,11 +3430,11 @@ function buildMawConveyor(){
   // gap between belts - a dash clears it), and the tiles are 2 wide, so at every instant a
   // continuous zig-zag of dashable hops (a guaranteed path) spans the pit even while it all
   // slides. `p` (=4) keeps the worst hop inside a plain dash's reach.
-  const x0=9.5, x1=33.5, span=x1-x0, p=4, n=span/p, spd=2.0, w=2;
+  const x0=9.5, x1=33.5, span=x1-x0, p=4, n=span/p, spd=2.0, w=2.4;   // tiles run 20% wider than before, so landings are more forgiving and the gaps read tighter
   const lane=(ly,dir)=>{
     for(let k=0;k<n;k++){
       const x = dir>0 ? x0 + k*p : x1 - k*p;   // rightward belts fill from the left, leftward belts from the right
-      const t={kind:'conveytile', x, y:ly+0.5, prevx:x, prevy:ly+0.5, x0, x1, dir, spd, w, h:2, falling:false, fallT:0};
+      const t={kind:'conveytile', x, y:ly+0.5, prevx:x, prevy:ly+0.5, x0, x1, dir, spd, w, h:2.4, falling:false, fallT:0};
       G.decor.push(t); G._mawConvey.push(t);
     }
   };

@@ -622,6 +622,26 @@ function buildDialogContent(npc){
       return;
     }
   }
+  // Captain Corvo's first ask plays as TWO beats: he lays out what the wizard did to his cove,
+  // and only when you jump at the chance to sail does he let you down easy with the ribbon errand.
+  if(npc.id==='corvo' && P.quests.ribbon1==='avail'){
+    const q=QUESTS.ribbon1;
+    setDialog('<b style="color:var(--ember)">'+q.title+'</b><br>“How did you break those pesky violet stones? Ha - I should have known better than to trust the word of that wicked wizard. I promised to sail him to an island east of every chart, and leaving those cursed stones strewn across my cove is how he repays me.”',
+      withTravel(npc,[{label:'“Take me to that isle!”', cls:'gold', fn:()=>{
+          setDialog('“Oh - you want ME to take you there? Ha, I\'d love nothing more, truly - but my girl Wren has been asking after a ribbon from Mira in the village, and I can\'t leave my boat to sail out that way. Tell you what: you fetch me a ribbon, and I\'ll run you out to that isle whenever you want, free of charge. Mira weaves the best at Thimble and Thread in Greyharbor.”'
+            + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>' + rewardText(q),
+            withTravel(npc,[{label:'! Accept quest', cls:'gold', fn:()=>{
+                acceptQuest('ribbon1');
+                setDialog('“Good. Off to Mira with you - I\'ll be right here, minding the sloop.”'
+                  + '<div class="objbox"><b>Objective:</b> '+q.log+'</div>'
+                  + '<div style="font-size:11px;color:var(--parch-dim);margin-top:6px;">Follow the gold <b style="color:#ffd76a">◆</b> marker and check the tracker, top-right. Return here when it reads <b style="color:#ffd76a">Ready</b>.</div>',
+                  [{label:'Off I go',fn:closeDialog}]);
+              }},
+             {label:'Later', ghost:true, fn:closeDialog}]));
+        }},
+       {label:'Later', ghost:true, fn:closeDialog}]));
+    return;
+  }
   // 3) offer available quest
   for(const id in QUESTS){
     if(P.quests[id]==='avail' && QUESTS[id].giver===npc.id){
