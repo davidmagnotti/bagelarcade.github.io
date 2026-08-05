@@ -2329,6 +2329,19 @@ function updateProjs(dt){
         if(m.dead||m.sealed) continue;
         if(p.homeTo && m!==p.homeTo) continue;   // seeking the thrower - ignore bystanders
         if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
+          // A warden that TURNS ARROWS: the Drowned Minotaur bats a loosed shaft straight
+          // back at the archer (arrows only - magic still bites). It becomes a mob shot, so
+          // you must PARRY the returned shaft or eat it - the bow alone won't win this fight.
+          if(m.reflectArrows && p.kind==='arrow' && !p.reflected){
+            p.reflected=1; p.from='mob'; p.owner=m; p.homeTo=null; p.parried=0; p.skill=null;
+            const rsp=Math.max(Math.hypot(p.vx,p.vy)||10, 12);
+            const rdx=P.x-m.x, rdy=(P.y-0.3)-(m.y-0.3), rl=Math.hypot(rdx,rdy)||1;
+            p.x=m.x; p.y=m.y-0.5; p.vx=rdx/rl*rsp; p.vy=rdy/rl*rsp; p.life=Math.max(p.life,1.5);
+            if(typeof onParry==='function') onParry(p.x,p.y);
+            burst(p.x,p.y-0.3,'#ffe08a',12,2.6); if(Snd&&Snd.tone) Snd.tone(320,0.06,'square',0.05,-30);
+            if(typeof hintOnce==='function') hintOnce('minotaurReflect','<b>The Drowned Minotaur bats your arrows back at you.</b> Close in with the sword - or <b>PARRY</b> the shaft it returns.');
+            break;
+          }
           if(p.aoe){ for(const m2 of G.mobs){ if(!m2.dead && !m2.sealed && dist(p.x,p.y,m2.x,m2.y)<p.aoe){
               damageMob(m2,p.dmg,{x:p.vx/10,y:p.vy/10},p.skill);
               if(p.snare && !isBossMob(m2)){ m2.snareT=p.snare; m2.windup=0;

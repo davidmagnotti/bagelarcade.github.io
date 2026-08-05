@@ -26,7 +26,9 @@
 
 var DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
 // isle world id -> loot the hidden area holds
-var EMBER_ROOMS={ east:'materials', reach:'trove', wind:'elixirs' };
+// reach's emberstone 'trove' is hand-placed as a fully green-stone-ringed vault by the
+// catacomb mouth (see placeObjectsReach in 12-world-layer.js), not a roaming pocket.
+var EMBER_ROOMS={ east:'materials', wind:'elixirs' };
 var SLAG_ROOMS ={ main:'elixirs', wind:'trove', frost:'materials', east:'trove' };
 
 function strHash(s){ var h=2166136261>>>0; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }

@@ -3828,6 +3828,31 @@ function placeObjectsReach(){
     if(((t===T.SOIL&&pr()<0.14)||(t===T.RUIN&&pr()<0.22)||(t===T.SAND&&pr()<0.10)) && !solidAt(ax,ay) && dist(ax,ay,Z.camp.x,Z.camp.y)>5){
       const n=addNode(t===T.SAND?'tree':'rock',ax,ay); if(n&&t===T.SAND) n.palm=1; } }
   G.decor.push({kind:'chest', x:Z.barrow.x+0.5, y:Z.barrow.y-7+0.5, rich:10, armorgift:2});
+  // --- THE STORM-COAST VAULT: a 'trove' chest ringed on EVERY side by pick-gated GREEN
+  // STONE (emberstone), set on the open ground by the catacomb mouth. Shatter any one stone
+  // with the tier-4 Emberbreaker Pick and the whole ring falls at once (shared gid + ward).
+  // Persisted in P.story.tg, so a mined ring / looted chest stays that way. (Replaces the
+  // roaming emberstone hideaway for the reach - see EMBER_ROOMS in 37-dungeon-hideaways.js.)
+  (function(){
+    const GID='reach:crack';
+    const TG=(P.story&&P.story.tg)||{};
+    if(TG[GID+':loot']) return;                        // already looted - place nothing
+    const GV=Z.graves;
+    const busy=(x,y)=>{ for(const n of G.nodes) if(n.tx===x&&n.ty===y) return true;
+      for(const d of G.decor) if(Math.round(d.x-0.5)===x&&Math.round(d.y-0.5)===y) return true; return false; };
+    const openCell=(x,y)=> inb(x,y) && !solidAt(x,y) && walkTile(tileAt(x,y)) && tileAt(x,y)!==T.PATH && !busy(x,y);
+    const clear3=(x,y)=>{ for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) if(!openCell(x+dx,y+dy)) return false; return true; };
+    let spot=null;                                     // an open 3x3 near the catacomb mouth
+    for(let r=3; r<=12 && !spot; r++) for(let a=0; a<16 && !spot; a++){ const th=a/16*TAU;
+      const cx0=Math.round(GV.x+Math.cos(th)*r), cy0=Math.round(GV.y+Math.sin(th)*r*0.9);
+      if(clear3(cx0,cy0)) spot=[cx0,cy0]; }
+    if(!spot) return;
+    const [cx0,cy0]=spot;
+    G.decor.push({kind:'chest', x:cx0+0.5, y:cy0+0.5, tgcache:'trove', tgid:GID+':loot'});
+    if(!TG[GID] && typeof addGateNode==='function')    // ring all eight sides in green stone
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]){
+        const g=addGateNode('emberstone', cx0+dx, cy0+dy); if(g){ g.gid=GID; g.ward=1; } }
+  })();
   G.critters=[];
 }
 function spawnReachFolk(){
@@ -4145,7 +4170,8 @@ function spawnMobsReachDeep(){
     const sp=findOpenNear(Z.heart.x, Z.heart.y, 6) || [Z.heart.x, Z.heart.y];
     const w=spawnMob('minotaur', sp[0], sp[1]);
     if(w){ w.boss=true; w.bigBoss=true; w.title='THE DROWNED MINOTAUR'; w.subtitle='WARDEN OF THE DROWNED VAULT'; w.tombboss=1; w.ach='deepwarden';
-      w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; w.entrance='rise'; }
+      w.hp=w.maxhp=900; w.dmg=34; w.lvl=14; w.hx=sp[0]; w.hy=sp[1]; w.respawnT=-1; w.entrance='rise';
+      w.reflectArrows=1; }   // the warden bats loosed arrows back at the archer (updateProjs)
   }
   // skeletons haunt the vault only - the Ossuary above is left to its ward-dance
   for(let i=0;i<3;i++){ const z=Z.heart, a=Math.random()*TAU, r2=Math.random()*z.r*0.5;
