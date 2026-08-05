@@ -4145,8 +4145,9 @@ function drawPlayerFigure(s){
     ((P.gatherT||0)>0? P.gatherKind :
      P.fishing? 'rod' : (P.unlocked.melee? 'sword' : null)); // kit in hand while gathering; no phantom blade before the forge
   // one adventurer, one outfit - weapons only change what's in your hands
+  // Joan never wears the big closed-eye grin - it read as odd/off on her. She stays
+  // composed: calm by default, set for battle near foes, wincing only when hurt.
   const expr = P.hurtT>0? 'hurt'
-    : (P.cheerT||0)>0? 'happy'
     : G.mobs.some(m=>!m.dead&&m.state==='chase'&&dist(P.x,P.y,m.x,m.y)<9)? 'battle' : 'calm';
   const look={hero:true, fem:true, expr, skin:'#d8a97a',hair:'#7a4526',shirt:'#3f6e56',pants:'#3c3833',
     trim:P.swordTier>0?'#8a6d30':null,   // no pauldrons: they broadened her shoulders into a triangular silhouette
