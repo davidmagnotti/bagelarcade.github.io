@@ -126,8 +126,12 @@ function pickClickTarget(wx,wy){
     else if(b.kind==='well'&&P.projects.well) cand.push({type:'inter',x:b.x,y:b.y,r:1.1,range:1.7,go:()=>doInteract()});
     else if(b.kind==='bazaar' && b.shop) cand.push({type:'inter',x:b.x,y:b.y+0.9,r:1.2,range:1.9,go:()=>openStallShop(b)});
     else if(b.kind==='house'||b.kind==='house2'||b.kind==='igloo'||b.kind==='forge'||b.kind==='barn'||b.kind==='tower'||b.kind==='resort'||b.kind==='castle'||b.kind==='windmill'||b.kind==='waterwheel'){
-      const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
-      cand.push({type:'inter',x:doorX,y:doorY,r:1.5,range:b.grand?2.6:1.7,go:()=>enterHouse(b)}); }
+      // The Tideglass Palace gate seals for good once Act I closes: the King is gone,
+      // the reckoning holds the forecourt, and the old Great Hall is never enterable
+      // again (it used to be reachable straight through the arena fire).
+      if(!(b.grand && P.story && P.story.act1End)){
+        const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
+        cand.push({type:'inter',x:doorX,y:doorY,r:1.5,range:b.grand?2.6:1.7,go:()=>enterHouse(b)}); } }
   }
   // the hot springs: click near the pool to Rest (zone-based, no marker object)
   if(ZONES.springs && G.worldId==='isle'){
