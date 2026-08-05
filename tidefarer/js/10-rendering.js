@@ -239,6 +239,7 @@ function render(){
   cx.setTransform(DPR,0,0,DPR,0,0);
   // sky/ocean backdrop (cloud worlds get open sky instead of dark ocean)
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
+  const night = (typeof nightAmount==='function') ? nightAmount() : 0;   // hoisted so the water sun-glint (ground pass) can read it too
   // the Rainbow Road's little stepping-isles gently sway (skyIsleSwingAt); skipped in
   // low-gfx, where the ground is a static blit and a sway would slide actors off it.
   const SKYSWING = !LOWFX && G.worldId==='skydungeon' && typeof skyIsleSwingAt==='function';
@@ -482,8 +483,7 @@ function render(){
     }
     cx.globalAlpha=1;
   }
-  // fireflies
-  const night=nightAmount();
+  // fireflies (night is hoisted to the top of render)
   if(fxOn('fireflies') && night>0.1){
     for(const f of G.fireflies){
       const s=worldToScreen(f.x,f.y);

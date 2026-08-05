@@ -1944,6 +1944,39 @@ function hollowFightOn(){
   for(const m of G.mobs) if(m.kind==='boss' && m.hollowGuard && !m.dead && !m.sealed) return true;
   return false;
 }
+/* THE WIND SPIRIT (Cloudreach, Rainbow Road) - a fast parry-duel. It zips around you
+   in quick orbiting dashes, then commits: it dashes IN and throws a single telegraphed
+   melee strike (a red ! builds, flares WHITE) that you PARRY on the white flash. A clean
+   parry leaves it reeling wide open (the parry in hurtPlayer stuns it). It sets m.windup
+   like any melee foe, so the shared tell + parry resolution below handle the strike - the
+   only bespoke part is the movement and when it decides to commit. Kept snappy on purpose. */
+function windSpiritTick(m,dt,dx,dy,l,d){
+  const spd=(m.speed||3.9);
+  m.wsT=(m.wsT||0)-dt;
+  if(!m.wsPhase){ m.wsPhase='circle'; m.wsT=rnd(0.7,1.2); m.wsDir=Math.random()<0.5?1:-1; }
+  if((m.windup||0)>0) return;   // mid-telegraph: the shared resolver runs the strike/parry
+  if((m.swing||0)>0){ m.wsPhase='circle'; if(m.wsT<=0) m.wsT=rnd(0.5,0.9); return; }   // just struck / was parried
+  if(m.wsPhase==='circle'){
+    // fast orbit around the player, sweeping to a new angle each frame
+    const R=3.2, ang=Math.atan2(m.y-P.y, m.x-P.x), tang=ang + m.wsDir*dt*3.6;
+    const tx=P.x+Math.cos(tang)*R, ty=P.y+Math.sin(tang)*R;
+    const mx=tx-m.x, my=ty-m.y, ml=Math.hypot(mx,my)||1;
+    moveEntity(m, mx/ml*spd*1.2*dt, my/ml*spd*1.2*dt);
+    m.face=(P.x<m.x?-1:1);
+    if(Math.random()<0.45) G.parts.push({x:m.x,y:m.y-1,vx:rnd(-0.3,0.3),vy:rnd(-0.25,0.15),life:rnd(0.25,0.5),color:'#e8f2ff',size:rnd(1.5,3),grav:0});
+    if(m.wsT<=0){ m.wsPhase='commit'; m.wsT=rnd(0.55,0.9); m.wsDir=-m.wsDir; }
+  } else {   // commit: dash straight in, then throw the parryable strike
+    if(l>1.7){
+      moveEntity(m, dx/(l||1)*spd*1.75*dt, dy/(l||1)*spd*1.75*dt); m.face=(dx<0?-1:1);
+      if(Math.random()<0.6) G.parts.push({x:m.x,y:m.y-1,vx:-dx/(l||1)*1.2,vy:-dy/(l||1)*0.6,life:rnd(0.2,0.4),color:'#dfeaff',size:rnd(1.6,3.2),grav:0});
+      if(m.wsT<=0){ m.wsPhase='circle'; m.wsT=rnd(0.6,1.0); }   // couldn't reach - re-circle
+    } else if((m.hitCd||0)<=0){
+      m.windup=0.55; m.hitCd=1.0; m.face=(dx<0?-1:1);   // the strike: shared tell/parry code takes it from here
+      if(Snd.noise) Snd.noise(0.16,0.05,320,0.6);
+      m.wsPhase='circle'; m.wsT=rnd(0.7,1.1);
+    }
+  }
+}
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -2018,12 +2051,15 @@ function updateMobs(dt){
       if(Math.abs(dx)>0.35) m.face=dx<0?-1:1; // hysteresis: chasing straight up/down no longer mirror-flips every frame
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
+      // the Wind Spirit runs its own fast dash-around-then-parryable-strike loop (still uses
+      // the shared wind-up tell + parry resolution below), so it skips the generic chase/poke
+      if(m.windspirit && !((m.stunT||0)>0) && !((m.snareT||0)>0)){ windSpiritTick(m,dt,dx,dy,l,d); }
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
       // archetypes only reshape ordinary foes - boss variants of these kinds keep their scripted fight
       const heavy = HEAVIES[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       const lunger = LUNGERS[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       // stormlight-stunned foes freeze where they stand - no advance and (below) no attack
-      if(l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+      if(!m.windspirit && l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires
@@ -2045,7 +2081,7 @@ function updateMobs(dt){
         } else if((m.detourLock||0)<=0){ m.wedgeT=0; }
       }
       // telegraphed strike: wind up, then the blow lands - roll through it!
-      if(l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+      if(!m.windspirit && l<1.15+(m.boss?0.5:0) && m.hitCd<=0 && !P.dead && !(m.windup>0) && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         // Wind-ups are long enough to read: a red ! builds, then the last PARRY_WIN
         // seconds flare WHITE (the parry moment). HEAVIES telegraph slowest and hit hard.
         // wraiths get a short, tell-less wind-up (no parry cue, no red !); everything else telegraphs to read
