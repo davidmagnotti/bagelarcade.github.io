@@ -123,7 +123,32 @@ function dropVathFire(){
   for(let y=Math.floor(A.cy-A.r-1); y<=Math.ceil(A.cy+A.r+1); y++)
     for(let x=Math.floor(A.cx-A.r-1); x<=Math.ceil(A.cx+A.r+1); x++)
       if(inb(x,y)){ const dd=dist(x,y,A.cx,A.cy); if(dd>=A.r-0.6 && dd<=A.r+0.6) setSolid(x,y,0); }
-  G.decor = G.decor.filter(d=>d.kind!=='vathfire');
+  G.decor = G.decor.filter(d=>d.kind!=='vathfire' || d.cageRing);   // leave any cage ring standing
+  if(typeof invalidateScenery==='function') invalidateScenery();
+}
+
+/* ---- STAGE 3 signpost: once Vath is formless and no blade can touch him, the
+   sealing-fire leaves the arena wall and coils in a tight ring around the caged
+   brother - a beacon that says "the way to end this is HERE, break the cage." The
+   ring is DECOR ONLY (never solid), so you walk straight through it to strike the
+   cage; it's just the objective, lit up. ---- */
+function raiseCageFire(cage){
+  if(!cage || G._cageFire) return; G._cageFire=1;
+  const R=2.4;
+  for(let y=Math.floor(cage.y-R-1); y<=Math.ceil(cage.y+R+1); y++)
+    for(let x=Math.floor(cage.x-R-1); x<=Math.ceil(cage.x+R+1); x++){
+      if(!inb(x,y)) continue;
+      const dd=dist(x+0.5,y+0.5,cage.x,cage.y);
+      if(dd>=R-0.55 && dd<=R+0.55 && walkTile(tileAt(x,y)))
+        G.decor.push({kind:'vathfire', cageRing:1, x:x+0.5, y:y+0.5, ph:Math.random()*TAU});
+    }
+  if(typeof invalidateScenery==='function') invalidateScenery();
+  if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+  G.shake=Math.max(G.shake||0,0.7);
+}
+function dropCageFire(){
+  if(!G._cageFire) return; G._cageFire=0;
+  G.decor = G.decor.filter(d=>!(d.kind==='vathfire' && d.cageRing));
   if(typeof invalidateScenery==='function') invalidateScenery();
 }
 
@@ -215,11 +240,15 @@ function vathToStage3(m){
   m.state='chase'; m.windup=0; m.slamCd=2.2; m.reachCd=3.4;
   if(typeof Snd!=='undefined' && Snd.boss) Snd.boss(); G.shake=1.1; G.slowmo=Math.max(G.slowmo||0,1.2);
   if(typeof shockwave==='function') shockwave(m.x,m.y,'rgba(60,10,90,0.95)',150);
-  // the cage becomes destructible now
+  // the cage becomes destructible now - and the sealing-fire leaves the arena wall to
+  // ring the cage, pointing you straight at the one thing that can end the fight
   const cage=G.mobs.find(c=>c.brotherCage && !c.dead);
-  if(cage){ cage.invuln=false; cage.sealed=false; cage.maxhp=cage.maxhp||520; cage.hp=cage.maxhp; }
+  if(cage){ cage.invuln=false; cage.sealed=false; cage.maxhp=cage.maxhp||520; cage.hp=cage.maxhp;
+    if(typeof dropVathFire==='function') dropVathFire();       // the wall of fire falls...
+    if(typeof raiseCageFire==='function') raiseCageFire(cage); // ...and re-forms around your brother
+  }
   if(typeof banner==='function') banner('VATH THE FORMLESS','SMASH THE CAGE — SET LEO FREE');
-  if(typeof toast==='function') toast('<b style="color:#c9a0ff">Your blade passes clean through him.</b> He cannot be cut - only <b>SEALED</b>. <b style="color:var(--ember)">Break Leo\'s cage</b> so your brother can speak the founders\' seal, and stay ahead of Vath while you do.',9000);
+  if(typeof toast==='function') toast('<b style="color:#c9a0ff">Your blade passes clean through him.</b> He cannot be cut - only <b>SEALED</b>. <b style="color:var(--ember)">The sealing-fire draws in around the cage</b> - break through it and free Leo so he can speak the founders\' seal, and stay ahead of Vath while you do.',9000);
   if(typeof updateBossUI==='function') updateBossUI();
 }
 
@@ -282,6 +311,7 @@ function updateVathBoss(m,dt){
    binding, and Vath is dragged down into the stone. Then the collapse. ---- */
 function cageBreak(cage){
   cage.cageBroken=1; cage.dead=true; cage.respawnT=-1;
+  if(typeof dropCageFire==='function') dropCageFire();   // the ring gutters out as the glass shatters
   const boss=G.mobs.find(m=>m.crownVath && !m.dead);
   if(boss){ boss.sealing=1; boss.invuln=true; boss.state='idle'; boss.windup=0; }
   if(typeof Snd!=='undefined' && Snd.boss) Snd.boss(); G.shake=1.0; G.slowmo=Math.max(G.slowmo||0,1.2);

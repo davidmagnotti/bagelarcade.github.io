@@ -4462,7 +4462,7 @@ function genCrownAll(){
 // fight. The rage/monster phase 2 and the sealing ending hang off crownVathDown / vathDown.)
 function spawnCrownReckoning(){
   const Z=CROWN_ZONES, PA=Z.palace;
-  G._crownConfront=0; G._vathIntro=0; G._vathFire=0;
+  G._crownConfront=0; G._vathIntro=0; G._vathFire=0; G._cageFire=0;
   // Vath waits UNSEEN (sealed = not rendered/targeted) until you cross into the throne arena,
   // then springs the ambush from behind you (startVathIntro). vstage 0 = pre-fight.
   const base=[Math.round(PA.x), Math.round(PA.y+3)];

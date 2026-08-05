@@ -143,7 +143,7 @@ function armReckoning(){
   P.story.act1End=1; P.story.sealTome=1; P.story.sealLearned=1;
   ['vathDown','vathSealed','gameWon','finale','crownDawn'].forEach(f=>{ delete P.story[f]; });
   delete P.prog.celebrationSeen; delete P.prog.dawnRoom;
-  G._vathIntro=0; G._vathFire=0;
+  G._vathIntro=0; G._vathFire=0; G._cageFire=0;
   if(typeof WORLDS!=='undefined') delete WORLDS.crown;
   if(typeof tp==='function') tp('crown'); else if(typeof switchWorld==='function') switchWorld('crown');
   note('Reckoning armed - walk up to the throne room');
