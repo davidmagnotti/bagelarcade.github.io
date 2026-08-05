@@ -98,14 +98,14 @@ function palaceKingSpeak(){
 function kitchenInterior(){
   const I={kind:'kitchen', w:14, h:9, ret:null, exit:{x:7,y:8.1}, t:0, furn:[], kitchen:1};
   const F=(type,x,y,hw,hh,solid)=>I.furn.push({type,x,y,hw:hw||0.6,hh:hh||0.5,solid:solid!==false});
-  F('hearth',2.2,1.35,1.1,0.35);
-  F('shelf',5,1.3,1.2,0.3); F('shelf',9.2,1.3,1.2,0.3);
-  F('table',7,3.6,1.7,0.7);
-  F('barrel',11.6,2.2,0.45,0.4); F('barrel',12.2,3.0,0.45,0.4);
+  F('hearth',2.2,1.35,1.1,0.35);       // the great cooking hearth (a cauldron swings over it)
+  F('stove',4.7,1.4,0.7,0.4);          // a cast-iron range with a stockpot
+  F('shelf',6.8,1.3,1.1,0.3); F('shelf',9.2,1.3,1.1,0.3);   // dish shelves
+  F('table',7,3.7,1.7,0.7);            // the prep table
+  F('barrel',11.6,2.2,0.45,0.4); F('barrel',12.2,3.0,0.45,0.4);   // flour & provisions
   F('crate',1.7,4.6,0.55,0.45); F('crate',2.5,5.1,0.55,0.45);
   F('stool',6.0,4.9,0.35,0.3); F('stool',8.0,5.0,0.35,0.3);
-  F('rug',7,5.4,0,0,false);
-  F('cook',10.2,4.4,0.4,0.45);
+  F('cook',10.2,4.4,0.4,0.45);         // Nan the Cook
   return I;
 }
 function cookSpeak(){
@@ -648,6 +648,19 @@ function drawFurniture(f,s){
       cx.fillStyle='#e8c860'; cx.fillRect(s.x-2.5,s.y-11,5,6);
       break;
     case 'crate': iBox(s,1.0,0.9,14,'#7d5834','#5a3d24','#4a3322'); break;
+    case 'stove':
+      iBox(s,1.3,0.95,15,'#3a3d43','#2a2c31','#202226');   // cast-iron range body
+      { const gl=0.6+0.4*Math.sin(G.interior.t*6+s.x);      // glowing fire-door
+        cx.fillStyle='rgba(255,140,50,'+(0.55*gl).toFixed(2)+')'; cx.fillRect(s.x-7,s.y-10,14,6);
+        cx.strokeStyle='#17181b'; cx.lineWidth=1; cx.strokeRect(s.x-7,s.y-10,14,6); }
+      // a big stockpot on the cooktop
+      cx.fillStyle='#5c626d'; cx.fillRect(s.x-9,s.y-26,18,9);
+      cx.fillStyle='#7c828c'; cx.beginPath(); cx.ellipse(s.x,s.y-26,9,4,0,0,TAU); cx.fill();
+      cx.fillStyle='#4c515a'; cx.beginPath(); cx.ellipse(s.x,s.y-17,9,4,0,0,TAU); cx.fill();
+      cx.strokeStyle='#43474d'; cx.lineWidth=2;              // pot handles
+      cx.beginPath(); cx.moveTo(s.x-9,s.y-23); cx.lineTo(s.x-12,s.y-22); cx.moveTo(s.x+9,s.y-23); cx.lineTo(s.x+12,s.y-22); cx.stroke();
+      if(Math.random()<0.22) G.parts.push({x:f.x,y:f.y-0.5,vx:rnd(-0.1,0.1),vy:-rnd(0.4,0.9),life:rnd(0.7,1.3),color:'rgba(232,232,236,0.5)',size:rnd(1.4,2.8),grav:-0.06});
+      break;
     case 'hay':
       iBox(s,1.7,1.3,13,'#c9a24e','#a8843c','#8f6f30');
       cx.strokeStyle='rgba(120,90,30,0.6)'; cx.lineWidth=1;
@@ -888,6 +901,29 @@ function drawWallDecor(kind,w2s,I){
       cx.moveTo(x,y+4); cx.lineTo(x,y-10); cx.moveTo(x-4,y-10); cx.lineTo(x+4,y-10);
       cx.moveTo(x+18,y+4); cx.lineTo(x+18,y-8); cx.stroke(); });
   }
+  if(kind==='kitchen'){
+    // a pot-rack: an iron rail with hanging pans, a pot and a ladle
+    at(5.4,(x,y)=>{
+      cx.fillStyle='#2f3237'; cx.fillRect(x-32,y+2,64,3);                       // the rail
+      cx.strokeStyle='#4c515a'; cx.lineWidth=1;                                  // hooks
+      for(const hx of [-22,-6,10,24]){ cx.beginPath(); cx.moveTo(x+hx,y+5); cx.lineTo(x+hx,y+9); cx.stroke(); }
+      cx.fillStyle='#7c828c';                                                    // frying pan (bowl + handle)
+      cx.beginPath(); cx.arc(x-22,y+16,8,0,Math.PI); cx.fill();
+      cx.fillStyle='#5c626d'; cx.fillRect(x-23,y+9,2,5); cx.fillRect(x-34,y+15,12,2);
+      cx.fillStyle='#8a919d'; cx.beginPath(); cx.arc(x-4,y+15,7,0,Math.PI); cx.fill(); cx.fillRect(x-5,y+9,2,6);   // small pot
+      cx.fillStyle='#6c727c'; cx.beginPath(); cx.arc(x+12,y+17,9,0,Math.PI); cx.fill(); cx.fillRect(x+11,y+9,2,8);  // big pot
+      cx.strokeStyle='#c9b990'; cx.lineWidth=2;                                  // a hung ladle
+      cx.beginPath(); cx.moveTo(x+26,y+9); cx.lineTo(x+26,y+20); cx.stroke();
+      cx.fillStyle='#c9b990'; cx.beginPath(); cx.arc(x+26,y+21,2.4,0,TAU); cx.fill();
+    });
+    // a hung braid of onions/garlic on the far side
+    at(11.2,(x,y)=>{
+      cx.strokeStyle='#8a6a34'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(x,y+2); cx.lineTo(x,y+22); cx.stroke();
+      for(let i=0;i<5;i++){ cx.fillStyle= i%2? '#d8b06a':'#e8dcbd';
+        cx.beginPath(); cx.ellipse(x+(i%2?4:-4),y+6+i*3.4,3.2,4,0,0,TAU); cx.fill(); }
+    });
+    return;
+  }
   if(kind==='house2'){
     at(4.4,(x,y)=>{ cx.strokeStyle='rgba(201,185,144,0.75)'; cx.lineWidth=1;
       for(let i=0;i<5;i++){ cx.beginPath(); cx.moveTo(x-26+i*13,y-12); cx.quadraticCurveTo(x-20+i*13,y+8,x-26+i*13,y+16); cx.stroke(); }
@@ -937,6 +973,11 @@ function renderInterior(){
       cx.fillStyle=(x+y)%2? '#e4ebf4':'#d3ddea';
       cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
       cx.strokeStyle='rgba(150,175,205,0.3)'; cx.lineWidth=1; cx.stroke();
+    } else if(I.kitchen){
+      // scrubbed white-and-grey kitchen tile, grouted
+      cx.fillStyle=(x+y)%2? '#e9e7df':'#d3cfc4';
+      cx.beginPath(); cx.moveTo(s.x,s.y-TH/2); cx.lineTo(s.x+TW/2,s.y); cx.lineTo(s.x,s.y+TH/2); cx.lineTo(s.x-TW/2,s.y); cx.closePath(); cx.fill();
+      cx.strokeStyle='rgba(110,108,100,0.35)'; cx.lineWidth=1; cx.stroke();
     } else if(I.palace){
       // grey flagstone; the central courtyard is an open green atrium
       const court = I.courtyard && x+0.5>=I.courtyard.x0 && x+0.5<=I.courtyard.x1 && y+0.5>=I.courtyard.y0 && y+0.5<=I.courtyard.y1;
@@ -957,19 +998,28 @@ function renderInterior(){
   if(!I.resort && !I.sky){   // the ramparts are open to the sky - no enclosing walls
     for(let x=0;x<I.w;x++){
       const a=w2s(x,0), b=w2s(x+1,0);
-      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : I.palace? (x%2?'#6e6a63':'#615d57') : I.theme? (x%2?I.theme.wall[0]:I.theme.wall[1]) : (x%2? '#4a3626':'#443122');
+      cx.fillStyle= I.lair? (x%2?'#231510':'#1a0f0b') : I.igloo? (x%2?'#e6edf6':'#d6e0ec') : I.palace? (x%2?'#6e6a63':'#615d57') : I.kitchen? (x%2?'#e7e4db':'#dcd8ce') : I.theme? (x%2?I.theme.wall[0]:I.theme.wall[1]) : (x%2? '#4a3626':'#443122');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
     }
     for(let y=0;y<I.h;y++){
       const a=w2s(0,y), b=w2s(0,y+1);
-      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : I.palace? (y%2?'#615d57':'#55524c') : I.theme? (y%2?shade(I.theme.wall[0],-14):shade(I.theme.wall[1],-14)) : (y%2? '#3a2a1c':'#352718');
+      cx.fillStyle= I.lair? (y%2?'#1d110d':'#150c09') : I.igloo? (y%2?'#d6e0ec':'#c6d3e3') : I.palace? (y%2?'#615d57':'#55524c') : I.kitchen? (y%2?'#dcd8ce':'#d0ccc1') : I.theme? (y%2?shade(I.theme.wall[0],-14):shade(I.theme.wall[1],-14)) : (y%2? '#3a2a1c':'#352718');
       cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(b.x-TW/2,b.y-TH/2);
       cx.lineTo(b.x-TW/2,b.y-TH/2-WH); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.closePath(); cx.fill();
     }
     // baseboard strip + faint vertical studs, so the two walls read as built
     // timber-and-plaster surfaces instead of flat colour fills (skip snow/stone/lair)
-    if(!I.lair && !I.igloo && !I.palace){
+    if(I.kitchen){
+      // white wall-tile: faint grout courses (horizontal + vertical) on both walls
+      cx.strokeStyle='rgba(120,118,110,0.30)'; cx.lineWidth=1;
+      for(let c=1;c<=4;c++){ const yo=c*13;
+        let a=w2s(0,0), b2=w2s(I.w,0); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2-yo); cx.lineTo(b2.x-TW/2,b2.y-TH/2-yo); cx.stroke();
+        let c2=w2s(0,0), d2=w2s(0,I.h); cx.beginPath(); cx.moveTo(c2.x-TW/2,c2.y-TH/2-yo); cx.lineTo(d2.x-TW/2,d2.y-TH/2-yo); cx.stroke(); }
+      for(let x=1;x<I.w;x++){ const a=w2s(x,0); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.stroke(); }
+      for(let y=1;y<I.h;y++){ const a=w2s(0,y); cx.beginPath(); cx.moveTo(a.x-TW/2,a.y-TH/2); cx.lineTo(a.x-TW/2,a.y-TH/2-WH); cx.stroke(); }
+    }
+    if(!I.lair && !I.igloo && !I.palace && !I.kitchen){
       const base = (I.theme && typeof shade==='function') ? shade(I.theme.wall[1],-26) : '#2b1f14';
       cx.fillStyle=base;
       for(let x=0;x<I.w;x++){ const a=w2s(x,0), b=w2s(x+1,0);
@@ -1048,6 +1098,17 @@ function renderInterior(){
         cx.moveTo(s.x-10+i*8,s.y-18);
         cx.quadraticCurveTo(s.x-8+i*8+fl,s.y-32-i*3, s.x-6+i*8,s.y-18);
         cx.closePath(); cx.fill();
+      }
+      // the palace kitchen hangs a cauldron on a swing-arm over the fire, gently steaming
+      if(I.kitchen){
+        cx.strokeStyle='#2a2c30'; cx.lineWidth=2;                       // pot-hook arm
+        cx.beginPath(); cx.moveTo(s.x,s.y-42); cx.lineTo(s.x,s.y-30); cx.stroke();
+        cx.fillStyle='#33363b'; cx.beginPath(); cx.ellipse(s.x,s.y-22,12,7,0,0,TAU); cx.fill();   // cauldron belly
+        cx.fillStyle='#3f4349'; cx.fillRect(s.x-12,s.y-27,24,6);
+        cx.fillStyle='#2a2c30'; cx.beginPath(); cx.ellipse(s.x,s.y-27,12,4,0,0,TAU); cx.fill();   // rim/mouth
+        cx.strokeStyle='#1a1c1f'; cx.lineWidth=2;                       // bail handle
+        cx.beginPath(); cx.arc(s.x,s.y-30,11,Math.PI*1.05,Math.PI*1.95); cx.stroke();
+        if(Math.random()<0.3) G.parts.push({x:hf.x,y:hf.y-0.7,vx:rnd(-0.1,0.1),vy:-rnd(0.4,0.9),life:rnd(0.9,1.5),color:'rgba(232,232,236,0.5)',size:rnd(1.6,3),grav:-0.06});
       }
     }
   }

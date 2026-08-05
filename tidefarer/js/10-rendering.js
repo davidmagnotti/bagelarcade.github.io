@@ -2618,17 +2618,31 @@ function drawDecor(b,s){
     cx.beginPath(); cx.moveTo(mx,mb-62); cx.lineTo(mx+15+bil,mb-59); cx.lineTo(mx,mb-56); cx.closePath(); cx.fill();
   }
   if(b.kind==='forge' || b.kind==='house' || b.kind==='house2'){
-    // procedural chimney smoke, anchored to the seated chimney tip
+    // procedural chimney smoke, anchored to the seated chimney tip. The palace kitchen
+    // (b.kitchen) puffs a fuller, taller, warmer plume - a cook-fire always going - so the
+    // building reads as a working kitchen from outside, not just another cottage.
     const tipX=s.x-S.width*BS/2+101*BS, tipY=s.y-S.height*BS+10+36*BS;
-    const rate=b.kind==='forge'?0.45:0.28, hs=(b.x*7+b.y*13)%10;
-    for(let i=0;i<3;i++){
-      const ph=((G.time*rate)+(i/3)+hs*0.137)%1;
-      const a=(1-ph)*(b.kind==='forge'?0.30:0.20)*(0.4+0.6*Math.min(1,ph*5));
+    const kit=!!b.kitchen;
+    const rate=b.kind==='forge'?0.45:(kit?0.42:0.28), hs=(b.x*7+b.y*13)%10;
+    const puffs=kit?5:3;
+    for(let i=0;i<puffs;i++){
+      const ph=((G.time*rate)+(i/puffs)+hs*0.137)%1;
+      const a=(1-ph)*(b.kind==='forge'?0.30:(kit?0.26:0.20))*(0.4+0.6*Math.min(1,ph*5));
       if(a<=0.01) continue;
-      cx.fillStyle=(b.kind==='forge'?'rgba(120,120,128,':'rgba(205,200,192,')+a+')';
+      cx.fillStyle=(b.kind==='forge'?'rgba(120,120,128,':(kit?'rgba(234,228,216,':'rgba(205,200,192,'))+a+')';
       cx.beginPath();
-      cx.arc(tipX+Math.sin(ph*6+hs)*5*ph, tipY-ph*36, 3+ph*7, 0, TAU);
+      cx.arc(tipX+Math.sin(ph*6+hs)*5*ph, tipY-ph*(kit?44:36), 3+ph*(kit?9:7), 0, TAU);
       cx.fill();
+    }
+    // a little hung sign by the kitchen door: a pot on a bracket, so it reads as the cook-house
+    if(kit){
+      const px=s.x-S.width*BS/2+30*BS, py=s.y-S.height*BS+52*BS;
+      cx.strokeStyle='#3a2c1c'; cx.lineWidth=2;
+      cx.beginPath(); cx.moveTo(px,py-14); cx.lineTo(px,py); cx.lineTo(px+14,py); cx.stroke();   // bracket
+      cx.fillStyle='#e7ddc9'; cx.fillRect(px+3,py+1,16,13);                                       // sign board
+      cx.strokeStyle='#3a2c1c'; cx.lineWidth=1; cx.strokeRect(px+3,py+1,16,13);
+      cx.fillStyle='#5c626d'; cx.beginPath(); cx.arc(px+11,py+9,4,0,Math.PI); cx.fill();          // a pot symbol
+      cx.fillRect(px+7,py+7,8,1.4); cx.fillRect(px+4,py+6,2,2); cx.fillRect(px+15,py+6,2,2);
     }
   }
   if(b.kind==='lamp' && nightAmount()>0.15){
