@@ -139,6 +139,27 @@ const MC_MAW = [
     ens:0, calm:1 },
 ];
 
+/* THE SEAL - the Act II finale close. Leo shatters the black-glass cage, opens the
+   founders' book, and speaks the old binding that drags the formless Vath down into
+   the throne-hall floor. `ens` = Vath's violet still present, `dive` = how far he is
+   folded into the stone (0 looming, 1 gone), `calm` = the seal taking hold and the
+   hall going quiet. The seal's cost writes itself on Leo (a white streak, a violet-
+   bitten arm) as `calm` climbs. onDone hands off to vathSealComplete (the collapse
+   fade + the dawn room). */
+const MC_SEAL = [
+  { who:'', html:'', ens:1, dive:0, calm:0, shake:0.55, hold:1500 },
+  { who:'', html:'<i>The black glass breaks like a held breath let go - and Leo is on his feet with the founders\' book already open.</i>',
+    ens:1, dive:0, shatter:1, flash:0.8, shake:0.6 },
+  { who:'', html:'<i>Not the low voice he read you to sleep with - this is the old hand spoken ALOUD, each word dropping like a stone down a deep well. The formless thing that was Vath strains against nothing you can see, then less, then not at all.</i>',
+    ens:0.7, dive:0.35, calm:0.3 },
+  { who:'Vath', html:'<b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth.</i>',
+    ens:0.4, dive:0.72, flash:0.6, shake:0.45 },
+  { who:'Leo', html:'<i>The seal roots into the one who casts it. For a breath the violet crawls up his own arm before the binding drags it down into the stone with Vath. When he lowers the book his hair has gone white at one temple - but he is smiling, and he is HIM, all the way through.</i> <b style="color:#ffe9a8">"It held. Sister - it HELD."</b>',
+    ens:0.12, dive:0.95, calm:0.85, title:'THE SHADOW IS SEALED' },
+  { who:'', html:'<i>The violet drains out of Aldermere like a tide going out, and with it the very last of your strength. Your knees give; Leo catches you before the marble does.</i> <b style="color:var(--ember)">The shadow is sealed. The isles are free.</b>',
+    ens:0, dive:1, calm:1 },
+];
+
 /* ---------- driver ---------- */
 function mcResize(){
   const cv=MC.cv; if(!cv) return;
@@ -194,7 +215,8 @@ function mcShow(i){
       tap.textContent = last
         ? (MC.kind==='storm'?'take the high road ›' : MC.kind==='rime'?'let it rest in the deep ›'
            : MC.kind==='vath'?'turn to your brother ›' : MC.kind==='aerie'?'climb to the light ›'
-           : MC.kind==='veil'?'the way home opens ›' : MC.kind==='maw'?'on into the dark ›' : 'walk back down ›')
+           : MC.kind==='veil'?'the way home opens ›' : MC.kind==='maw'?'on into the dark ›'
+           : MC.kind==='seal'?'let the dark take you ›' : 'walk back down ›')
         : 'click to continue ›';
     }
     if(sub){ sub.classList.remove('show'); void sub.offsetWidth; sub.classList.add('show'); }
@@ -261,6 +283,15 @@ function mcMotes(dt){
     for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=Math.max(MC.W,MC.H)*(0.18+Math.random()*0.22);
       MC.motes.push({x:cxm+Math.cos(a)*r, y:cy+Math.sin(a)*r*0.7, tx:cxm, ty:cy, life:1,
         col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.4)}); }
+  } else if(MC.kind==='seal'){
+    // the seal drags the violet DOWN into the seam in the throne-hall floor - thicker as
+    // Vath folds in (dive) and on the snap - then it drains off entirely as calm settles.
+    const sealX=MC.W*0.6, sealY=MC.H*0.80;
+    const rate = 20*MC.ens + 44*MC.shatter + 34*(MC.dive*(1-MC.dive)*4);
+    MC._macc+=dt*rate; let n=Math.floor(MC._macc); MC._macc-=n; if(n>4) n=4;
+    for(let i=0;i<n;i++){ const a=Math.random()*TAU, r=Math.max(MC.W,MC.H)*(0.16+Math.random()*0.24);
+      MC.motes.push({x:sealX+Math.cos(a)*r, y:sealY+Math.sin(a)*r*0.6 - MC.H*0.12, tx:sealX, ty:sealY, life:1,
+        col:Math.random()<0.5?'160,110,240':'199,123,255', size:rnd(2,4.4)}); }
   } else if(MC.kind==='maw'){
     // Vath's violet clings to the fallen beast, then blows OFF and up on the break, guttering out
     if(MC.shatter>0.02){
@@ -317,6 +348,7 @@ function mcDraw(){
   else if(MC.kind==='rime')   drawRimeScene(cx,W,H,t);
   else if(MC.kind==='storm')  drawStormScene(cx,W,H,t);
   else if(MC.kind==='vath')   drawVathScene(cx,W,H,t);
+  else if(MC.kind==='seal')   drawSealScene(cx,W,H,t);
   else if(MC.kind==='aerie')  drawAerieScene(cx,W,H,t);
   else if(MC.kind==='veil')   drawVeilScene(cx,W,H,t);
   else if(MC.kind==='maw')    drawMawScene(cx,W,H,t);
@@ -332,7 +364,7 @@ function mcDraw(){
 
   // the break flash - tinted to the scene (cold for frost/sky, violet for Vath, warm for the pyre)
   if(MC.flash>0.01){
-    const fc = MC.kind==='vath' ? '199,140,255' : MC.kind==='aerie' ? '255,196,120' : MC.kind==='maw' ? '190,120,240' : '226,244,255';
+    const fc = (MC.kind==='vath'||MC.kind==='seal') ? '199,140,255' : MC.kind==='aerie' ? '255,196,120' : MC.kind==='maw' ? '190,120,240' : '226,244,255';
     cx.fillStyle='rgba('+fc+','+(0.5*MC.flash).toFixed(3)+')'; cx.fillRect(0,0,W,H);
   }
   cx.restore();  // shake
@@ -811,6 +843,120 @@ function drawVeilSister(cx,x,footY,s,calm,dive,t){
   cx.restore();
 }
 
+/* ===================== THE SEAL ===================== */
+function drawSealScene(cx,W,H,t){
+  const ens=MC.ens, dive=MC.dive, calm=MC.calm, floorY=H*0.70;
+  // the throne hall: violet-bruised dark, draining to a clean cold black as the seal takes
+  const sky=cx.createLinearGradient(0,0,0,floorY);
+  sky.addColorStop(0, mixHex('#0a0812','#1c1030', Math.min(1,ens*0.75)));
+  sky.addColorStop(1, mixHex('#171320','#291642', Math.min(1,ens*0.55)));
+  cx.fillStyle=sky; cx.fillRect(0,0,W,floorY+2);
+  // colonnade flanking the nave
+  cx.fillStyle='#0a0910';
+  for(const sgn of [-1,1]){ const bx=sgn<0?W*0.13:W*0.87, w=W*0.075;
+    cx.beginPath(); cx.moveTo(bx-w,floorY); cx.lineTo(bx-w*0.7,H*0.07); cx.lineTo(bx+w*0.6,H*0.045);
+    cx.lineTo(bx+w,H*0.24); cx.lineTo(bx+w*0.7,floorY); cx.closePath(); cx.fill(); }
+  // the stolen throne up the nave, its demon-violet dying as the seal takes
+  drawSealThrone(cx, W*0.5, floorY-2, Math.min(W,H)*0.22, Math.max(0,ens*(1-calm*0.85)));
+  // the marble floor
+  const gr=cx.createLinearGradient(0,floorY,0,H);
+  gr.addColorStop(0, mixHex('#2b2734','#241634', Math.min(1,ens*0.5))); gr.addColorStop(1,'#0a0910');
+  cx.fillStyle=gr; cx.fillRect(0,floorY,W,H-floorY);
+  // the seal-seam on the floor - the violet crack Vath is dragged down through
+  const sealX=W*0.6, sealY=floorY+H*0.10, seamS=Math.min(W,H)*0.24;
+  drawSealSeam(cx, sealX, sealY, seamS, dive, calm, t);
+  // Vath's formless shadow, hauled down into the seam (fades + sinks + shrinks as dive rises)
+  if((1-dive)>0.02){
+    if(ens>0.1) drawVathCords(cx, sealX, sealY - seamS*0.5*(1-dive), seamS*0.5, ens*(1-dive), t);
+    cx.save();
+    cx.beginPath(); cx.rect(0,0,W, sealY+seamS*0.06); cx.clip();   // clip at the seam so he vanishes INTO the floor
+    const vsz=Math.min(W,H)*0.16*(1-dive*0.45);
+    drawVathFigure(cx, sealX, sealY - seamS*0.12 + dive*seamS*0.7, vsz, (1-dive)*Math.max(0.35,ens));
+    cx.restore();
+  }
+  // shattered black-glass cage shards by Leo, fading as it all settles
+  drawCageShards(cx, W*0.36, floorY+H*0.03, Math.min(W,H)*0.20, calm, t);
+  // Leo, risen, reading the founders' book - the seal's cost writing itself on him
+  drawSealLeo(cx, W*0.36, floorY+H*0.03, Math.min(W,H)*0.26, calm, dive, t);
+}
+function drawSealThrone(cx,x,footY,s,glow){
+  cx.save();
+  if(glow>0.02){ cx.save(); cx.globalCompositeOperation='lighter';
+    const g=cx.createRadialGradient(x,footY-s*0.7,2,x,footY-s*0.7,s*1.1);
+    g.addColorStop(0,'rgba(150,50,200,'+(0.4*glow).toFixed(3)+')'); g.addColorStop(1,'rgba(150,50,200,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(x,footY-s*0.7,s*1.1,0,TAU); cx.fill(); cx.restore(); }
+  cx.fillStyle='#14121c';
+  cx.beginPath();
+  cx.moveTo(x-s*0.34,footY); cx.lineTo(x-s*0.34,footY-s*0.6);
+  cx.lineTo(x-s*0.5,footY-s*1.25); cx.lineTo(x-s*0.18,footY-s*0.95);
+  cx.lineTo(x,footY-s*1.35); cx.lineTo(x+s*0.18,footY-s*0.95);
+  cx.lineTo(x+s*0.5,footY-s*1.25); cx.lineTo(x+s*0.34,footY-s*0.6);
+  cx.lineTo(x+s*0.34,footY); cx.closePath(); cx.fill();
+  cx.restore();
+}
+function drawSealSeam(cx,x,y,s,dive,calm,t){
+  const flare=Math.max(0, dive*(1-calm*0.7));   // brightest mid-seal, closes to a dim scar
+  cx.save();
+  if(flare>0.02){ cx.save(); cx.globalCompositeOperation='lighter';
+    const g=cx.createRadialGradient(x,y,2,x,y,s*0.9);
+    g.addColorStop(0,'rgba(190,120,255,'+(0.5*flare).toFixed(3)+')'); g.addColorStop(1,'rgba(120,40,180,0)');
+    cx.fillStyle=g; cx.beginPath(); cx.ellipse(x,y,s*0.9,s*0.34,0,0,TAU); cx.fill(); cx.restore(); }
+  cx.strokeStyle='rgba(210,150,255,'+(0.3+0.5*flare).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.03); cx.lineCap='round';
+  cx.beginPath();
+  cx.moveTo(x-s*0.7, y);
+  for(let i=1;i<=6;i++){ const f=i/6; cx.lineTo(x-s*0.7+f*s*1.4, y+Math.sin(f*9+t*2)*s*0.05); }
+  cx.stroke();
+  cx.restore();
+}
+function drawCageShards(cx,x,footY,s,calm,t){
+  const a=Math.max(0,1-calm*0.9); if(a<0.03) return;   // shards fade as the scene settles
+  cx.save(); cx.globalAlpha=a;
+  const shards=[[-0.5,-0.12,0.5],[0.52,0.02,-0.4],[-0.22,0.2,0.2],[0.36,0.24,0.7],[-0.62,0.3,-0.3]];
+  for(const [dx,dy,rot] of shards){
+    cx.save(); cx.translate(x+dx*s, footY+dy*s); cx.rotate(rot);
+    cx.fillStyle='#160a24'; cx.strokeStyle='rgba(180,120,240,'+(0.5*a).toFixed(3)+')'; cx.lineWidth=Math.max(1,s*0.02);
+    cx.beginPath(); cx.moveTo(0,-s*0.18); cx.lineTo(s*0.08,s*0.06); cx.lineTo(-s*0.07,s*0.05); cx.closePath();
+    cx.fill(); cx.stroke(); cx.restore();
+  }
+  cx.restore();
+}
+function drawSealLeo(cx,x,footY,s,calm,dive,t){
+  cx.save(); cx.translate(x,footY);
+  // his royal blue cloak + tunic, gold-trimmed
+  cx.fillStyle='#274052';
+  cx.beginPath(); cx.moveTo(0,-s*1.02); cx.quadraticCurveTo(-s*0.46,-s*0.5,-s*0.52,s*0.02);
+  cx.lineTo(s*0.52,s*0.02); cx.quadraticCurveTo(s*0.46,-s*0.5,0,-s*1.02); cx.closePath(); cx.fill();
+  cx.fillStyle='#3b5a7a';
+  cx.beginPath(); cx.moveTo(0,-s*0.88); cx.quadraticCurveTo(-s*0.22,-s*0.46,-s*0.24,s*0.02);
+  cx.lineTo(s*0.24,s*0.02); cx.quadraticCurveTo(s*0.22,-s*0.46,0,-s*0.88); cx.closePath(); cx.fill();
+  cx.strokeStyle='#c9a24e'; cx.lineWidth=Math.max(1,s*0.02);
+  cx.beginPath(); cx.moveTo(0,-s*0.86); cx.lineTo(0,0); cx.stroke();
+  // the seal biting up his sleeve mid-cast, then fading as it takes
+  const bite=Math.max(0, Math.min(1,(dive-0.2)/0.6) * (1-calm*0.6));
+  if(bite>0.03){ cx.save(); cx.globalCompositeOperation='lighter'; cx.strokeStyle='rgba(199,123,255,'+(0.6*bite).toFixed(3)+')';
+    cx.lineWidth=Math.max(1,s*0.03); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(-s*0.4,-s*0.2); cx.lineTo(-s*0.28,-s*0.44); cx.lineTo(-s*0.16,-s*0.6); cx.stroke(); cx.restore(); }
+  // head: blonde hair + skin, with the white streak the seal leaves at one temple
+  const jhy=-s*0.98;
+  cx.fillStyle='#e8cd6e'; cx.beginPath(); cx.ellipse(0,jhy,s*0.17,s*0.19,0,0,TAU); cx.fill();
+  if(calm>0.5){ cx.fillStyle='rgba(236,230,216,'+Math.min(1,(calm-0.5)/0.35).toFixed(3)+')';
+    cx.beginPath(); cx.ellipse(s*0.1,jhy-s*0.02,s*0.05,s*0.13,0.2,0,TAU); cx.fill(); }
+  cx.fillStyle='#d8a97a'; cx.beginPath(); cx.ellipse(0,jhy+s*0.05,s*0.13,s*0.14,0,0,TAU); cx.fill();
+  // the founders' book, open, blazing as the binding is spoken, dimming as it takes
+  const bx=0, by=-s*0.36, bw=s*0.38, bh=s*0.12;
+  const power=Math.max(dive*(1-calm*0.5), 0.2*(1-calm));
+  cx.save(); cx.globalCompositeOperation='lighter';
+  const bg=cx.createRadialGradient(bx,by,1,bx,by,s*0.7);
+  bg.addColorStop(0,'rgba(206,178,255,'+(0.3+0.55*power).toFixed(3)+')'); bg.addColorStop(1,'rgba(206,178,255,0)');
+  cx.fillStyle=bg; cx.beginPath(); cx.arc(bx,by,s*0.7,0,TAU); cx.fill(); cx.restore();
+  cx.fillStyle='#4a3560'; cx.strokeStyle='#e0c46a'; cx.lineWidth=Math.max(1,s*0.014);
+  cx.beginPath(); cx.moveTo(bx-bw,by+bh*0.4); cx.lineTo(bx,by-bh*0.2); cx.lineTo(bx,by+bh); cx.closePath(); cx.fill(); cx.stroke();
+  cx.beginPath(); cx.moveTo(bx+bw,by+bh*0.4); cx.lineTo(bx,by-bh*0.2); cx.lineTo(bx,by+bh); cx.closePath(); cx.fill(); cx.stroke();
+  cx.fillStyle='rgba(240,232,255,'+(0.6+0.3*power).toFixed(3)+')';
+  cx.beginPath(); cx.moveTo(bx-bw*0.88,by+bh*0.32); cx.lineTo(bx,by-bh*0.12); cx.lineTo(bx+bw*0.88,by+bh*0.32); cx.lineTo(bx,by+bh*0.52); cx.closePath(); cx.fill();
+  cx.restore();
+}
+
 /* ---------- shared helpers ---------- */
 // a robed figure with violet cuffs, resolving and fading (the Vath reveal)
 function drawVathFigure(cx,x,y,s,amt){
@@ -938,6 +1084,7 @@ function vathBoundCutscene(m, onDone){ mcPlay('vath', MC_VATH, {ens:1, calm:0, d
 function aerieFreedCutscene(m, onDone){ mcPlay('aerie', MC_AERIE, {ens:1, calm:0}, onDone, m); }
 function veilCastCutscene(onDone){ mcPlay('veil', MC_VEIL, {ens:0, calm:0, snow:0.2, dive:0}, onDone, null); }
 function mawStalkerCutscene(m, onDone){ mcPlay('maw', MC_MAW, {ens:1, calm:0}, onDone, m); }
+function sealCutscene(onDone){ mcPlay('seal', MC_SEAL, {ens:1, dive:0, calm:0}, onDone, null); }
 window.wardenFreedCutscene=wardenFreedCutscene;
 window.rimeboundFreedCutscene=rimeboundFreedCutscene;
 window.stormEyeCutscene=stormEyeCutscene;
@@ -945,5 +1092,6 @@ window.vathBoundCutscene=vathBoundCutscene;
 window.aerieFreedCutscene=aerieFreedCutscene;
 window.veilCastCutscene=veilCastCutscene;
 window.mawStalkerCutscene=mawStalkerCutscene;
+window.sealCutscene=sealCutscene;
 
 })();

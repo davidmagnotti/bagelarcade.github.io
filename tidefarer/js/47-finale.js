@@ -319,6 +319,10 @@ function cageBreak(cage){
   for(let i=0;i<36;i++){ const a=Math.random()*TAU, s=rnd(1,5);
     G.parts.push({x:cage.x,y:cage.y-0.6,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:rnd(0.8,1.9),color:i%2?'#1a0e2e':'#c9b0ff',size:rnd(2,4),grav:-0.04}); }
   if(typeof banner==='function') banner('THE CAGE SHATTERS','LEO IS FREE — NOW, THE SEAL');
+  // Play the animated seal cutscene - Leo shatters the cage, reads the founders' binding,
+  // and Vath is dragged down into the throne-hall floor - then hand off to the collapse +
+  // dawn. Falls through to the static story-card sequence if the cutscene is unavailable.
+  if(typeof sealCutscene==='function'){ sealCutscene(vathSealComplete); return; }
   const p1=()=>{ if(typeof storyCard!=='function'){ vathSealComplete(); return; }
     storyCard('<i>The black glass breaks like a held breath let go, and Leo is on his feet with the founders\' book already open. Not the low voice he read you to sleep with - this is the old hand spoken ALOUD, and each word drops like a stone down a deep well. The formless thing that was Vath strains against nothing you can see, then less, then not at all.</i> <b style="color:#c9a0ff">"You think a CHILD can hold what a hundred of your blood could not-"</b> <i>The book takes the last word out of his mouth.</i>',
       {label:'Hold the line', onOk:p2, speaker:vathSpeaker('shadow')}); };
