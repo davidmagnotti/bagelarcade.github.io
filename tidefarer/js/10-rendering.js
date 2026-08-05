@@ -311,9 +311,21 @@ function render(){
         // gentle animated sheen + drifting sparkles (per-water-tile path ops -
         // one of the biggest costs on a software-rendered canvas; drop at LOWFX)
         if(!LOWFX){
+          // SUN-GLINT: directional specular on the crests, warm and biased toward the
+          // upper-left sun, so the sea reads as a lit, rippled surface (its depth colour
+          // is already graded by elevWaterTint). The glitter concentrates on the sun side
+          // of the view and calms toward the lower-right - the sea's own "sun path".
           const ph=Math.sin(G.time*1.6 + x*0.9 + y*1.3);
-          if(ph>0.86){ cx.fillStyle='rgba(255,255,255,0.10)';
-            cx.beginPath(); cx.ellipse(sx, sy+2, 10, 3, 0, 0, TAU); cx.fill(); }
+          if(ph>0.80){
+            const a=(ph-0.80)/0.20;
+            const sunBias=(0.55+0.45*(1-Math.min(1,(sx/(VW||1))*0.6+(sy/(VH||1))*0.6)))*(1-0.6*night);   // brighter up-left, fades at night
+            cx.save(); cx.globalCompositeOperation='lighter';
+            cx.fillStyle='rgba(255,248,224,'+(0.17*a*sunBias).toFixed(3)+')';   // warm sun sheen on the crest
+            cx.beginPath(); cx.ellipse(sx-3, sy+1, 9, 2.6, -0.5, 0, TAU); cx.fill();
+            cx.fillStyle='rgba(255,255,255,'+(0.30*a*a*sunBias).toFixed(3)+')'; // hot specular pip on its sun-facing edge
+            cx.beginPath(); cx.ellipse(sx-5, sy, 2.4, 1.1, -0.5, 0, TAU); cx.fill();
+            cx.restore();
+          }
           // (the old per-DEEP-tile dark ellipse was removed: it stamped one blob
           //  on every tile = a regular grid. Depth darkening is now the smooth
           //  overlapping blobs in elevTileFX/js-33.)
