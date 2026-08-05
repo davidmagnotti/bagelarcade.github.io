@@ -210,7 +210,7 @@ function buildDialogContent(npc){
         }}]);
     };
     const p2=()=>{
-      setDialog('“Long years past, I had a wife I did not deserve - and a fever took her while our children were small, before either was grown enough to keep the memory. A fierce slip of a daughter who would sooner duel the guard than curtsy, and a boy still small enough to carry. Then the curses began - waters that ate ships, beasts that would not lie down, isle after isle turning strange and cruel. My most trusted man swore he could hunt their root, and counselled me the safest place for my blood was at his own side. Fool that grief had made me, I let him take them: my daughter, my young son, and himself. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship off the shoals, or so the word came back. We recovered timbers and grief, nothing else. I buried two empty coffins - my girl, my boy - and mourned Vath as a loyal man lost in my service.”',
+      setDialog('“Long years past, a fever took my wife while our children were small - a fierce slip of a daughter who\'d sooner duel the guard than curtsy, and a boy still small enough to carry. Then the curses began: waters that ate ships, beasts that would not lie down. My most trusted man swore he could hunt their root, and counselled me the safest place for my blood was at his own side. Fool that grief had made me, I let him take them both. His name was <b>Vath</b>.” <i>His jaw tightens.</i> “A storm took the ship, or so the word came back - timbers and grief, nothing else. I buried two empty coffins and mourned Vath as a loyal man lost in my service.”',
         [{label:'…And now?', fn:p3}]);
     };
     setDialog('<i>The King\'s eyes catch on the pendant at your throat, and something crosses his face like a cloud over the sun.</i> “That medallion. Where did you—” <i>He stops himself.</i> “…Forgive me. An old man sees the dead in every stranger\'s face. You are the curse-breaker. Sit. Let me tell you why the sight of you unsteadies me.”',
@@ -908,7 +908,7 @@ function shopButtons(npc,btns){
       P.riding=P.riding?0:1; closeDialog(); toast(P.riding?'Chestnut trots up, ears forward. <b>Mounted.</b>':'Chestnut wanders to the nearest grass. <b>Dismounted.</b>',2800);
     }});
   }
-  if(npc.id==='perrin' || npc.id==='saffi' || npc.id==='lani' || npc.id==='wenna' || npc.id==='greta' || npc.id==='hollis'){
+  if(npc.id==='saffi' || npc.id==='lani' || npc.id==='wenna' || npc.id==='greta' || npc.id==='hollis'){
     btns.unshift({label:'Rest the night (10g)', fn:()=>{
       if(P.gold<10){
         setDialog('“Ten gold for the bed, friend. The hearth\'s warmth is free to look at.”',

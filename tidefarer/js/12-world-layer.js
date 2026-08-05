@@ -4437,12 +4437,6 @@ function spawnCrownFolk(){
      'They tell me to remarry, to name an heir from the cousins. I tell them the sea still owes me an answer first.',
      'You have the look of someone the tide keeps throwing back. I know that look. I wear it.'],0.15);
     k.throne=1; return k; })());
-  // ---- Lord Steward Perrin: runs the kingdom day to day ----
-  G.npcs.push(makeNPC('perrin','Lord Steward Perrin', PA.x-4.5, PA.y+6.5,
-    {skin:'#c79a6a',hair:'#5a4a38',shirt:'#4a4a5a',pants:'#33303c',robe:'#3a3a4c',trim:'#9a9aa8',hairstyle:'short'},
-    ['His Majesty grieves in public now, which is new. For all those long years he did it behind a shut door.',
-     'Do not speak of the lost prince within the King\'s hearing unless you mean to ruin his week. The whole court steps around it.',
-     'Aldermere runs on ledgers and patience. I supply both.'],0.2));
   // ---- The Garrison: the Captain and the whole city watch - present in Act I, but ENTIRELY
   // gone in Act II, when the King has sent them all away. No guards anywhere in the capital. ----
   if(!a2){
@@ -4555,8 +4549,6 @@ function updateCrownFolkMood(){
   set('aldous',['Long years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.',
     'You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.',
     'Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them.']);
-  set('perrin',['His Majesty has not stood so straight in decades. Whatever passed between you gave the old grief a direction. That is no small gift.',
-    'A royal writ, an open purse, and the King\'s own hope riding on you. Do not squander them.']);
   set('brea',['Hear it! The King has named the traveler his own hand abroad - go where they go, and you go with the crown\'s blessing!']);
 }
 // THE RECKONING: once Leo has learned the founders' seal, the ferry runs to Aldermere for

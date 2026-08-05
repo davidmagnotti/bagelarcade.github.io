@@ -8,7 +8,7 @@
 
    Layout:
      idle        - each NPC's everyday chatter, by NPC id -> [lines]
-     idleByWorld - NPCs whose id repeats across isles (perrin, brother)
+     idleByWorld - NPCs whose id repeats across isles (brother)
      idleVariant - story-swapped looks (woody after the reveal, maelis wed)
      farmers     - the per-isle island farmers (36-island-farms)
      curse       - Act II per-isle "wounded / healed" chatter {dmg, res}
@@ -291,17 +291,6 @@ const DIALOGUE = {
 
   // ---- ids that recur on more than one isle ----------------------------
   idleByWorld: {
-    "perrin": {  // Emberwick innkeep vs. Aldermere lord steward
-      "isle": [
-        "A bed, a hearth, and no questions past dark. Ten gold.",
-        "Night's for wolves and worries. Neither gets past my door."
-      ],
-      "crown": [
-        "His Majesty grieves in public now, which is new. For all those long years he did it behind a shut door.",
-        "Do not speak of the lost prince within the King's hearing unless you mean to ruin his week. The whole court steps around it.",
-        "Aldermere runs on ledgers and patience. I supply both."
-      ]
-    },
     "brother": {  // Leo on the Frozen Isle vs. Stormreach
       "frost": [
         "Go on - I'll hold the landing. If Hearthhold has the right of it, whatever Vath bound is down the Rimefissure, past the deep ice.",
@@ -575,10 +564,6 @@ const DIALOGUE = {
       "Long years I called Vath a drowned man and mourned him beside my own. Now I know he swam. Find him, traveler. Find what he did with my son and daughter.",
       "You wear that pendant like it was made for you. Perhaps that is why I trust you with this - though I could not say why.",
       "Go where the curses lead. They are his handwriting. Follow them to the hand that wrote them."
-    ],
-    "perrin": [
-      "His Majesty has not stood so straight in decades. Whatever passed between you gave the old grief a direction. That is no small gift.",
-      "A royal writ, an open purse, and the King's own hope riding on you. Do not squander them."
     ],
     "brea": [
       "Hear it! The King has named the traveler his own hand abroad - go where they go, and you go with the crown's blessing!"
@@ -981,7 +966,6 @@ function _dlgIdleFor(npc){
   const id = npc.id;
   const w  = (typeof G!=='undefined' && G.worldId) || '';
   const st = (typeof P!=='undefined' && P.story) || {};
-  if(id==='perrin')  return (w==='crown') ? DIALOGUE.idleByWorld.perrin.crown : DIALOGUE.idleByWorld.perrin.isle;
   if(id==='brother') return (DIALOGUE.idleByWorld.brother[w]) || DIALOGUE.idleByWorld.brother.reach;
   if(id==='woody')   return st.royalGarb  ? DIALOGUE.idleVariant.woodyRoyal : DIALOGUE.idle.woody;
   if(id==='maelis')  return st.duchessWed ? DIALOGUE.idleVariant.maelisWed  : DIALOGUE.idle.maelis;
