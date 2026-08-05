@@ -130,7 +130,17 @@ function enterHouse(b){
   if(G.interior) return;
   // The old waterwheel IS the mouth of the Gale Spire in Act II - stepping inside drops you
   // straight down the shaft rather than into any mill interior (see placeWindHazard).
-  if(b.galeSpire){ if(typeof useGateDungeon==='function') useGateDungeon(b); return; }
+  if(b.galeSpire){
+    // The Gale Spire opens only once Rell's plea - "The Drowning of Windsurf" (windRestore) -
+    // sends you down it. Before you take that on, the shaft is just a cold black drop with no
+    // reason to make it; the descent stays barred so you can't wander into the dungeon early.
+    const mayDescend = qs('windRestore')==='active' || qs('windRestore')==='done' || (P.story && P.story.galeDeepDone);
+    if(!mayDescend){
+      toastErr('A black shaft drops away beneath the old wheel-house, breathing cold wind - but there is no sense climbing down into it blind. <b>Rell at the harbour</b> knows what fouls the works; speak with him first.',5200);
+      Snd.step&&Snd.step(5); return;
+    }
+    if(typeof useGateDungeon==='function') useGateDungeon(b); return;
+  }
   if(b.grand){ // the Aldermere palace GATE - guarded; you need the King's leave
     // Once Act I closes, the Great Hall is sealed for good: the King is gone, the
     // reckoning holds the forecourt, and the old interior must never be re-enterable

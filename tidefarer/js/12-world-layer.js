@@ -1785,10 +1785,11 @@ function placeObjectsWind(){
 function spawnWindFolk(){
   const Z=WIND_ZONES, T2=Z.town, M=Z.market, R=Z.resort, D=Z.dock, MI=Z.mill, WH=Z.wheel;
   // Rell - harbormaster at the docks: explains the treacherous waters (the PR-B hook)
-  G.npcs.push(makeNPC('rell','Rell the Harbormaster', D.x+1.5, D.y+0.5,
+  { const rell=makeNPC('rell','Rell the Harbormaster', D.x+1.5, D.y+0.5,
     {skin:'#a9784e',hair:'#2a2622',shirt:'#33566e',pants:'#2c3540',beard:'#2a2622'},
     ['Off Ashwing\'s back? Then you\'re one of a lucky few - no hull\'s crossed our straits in a season.',
-     'Something churns the deep water out past the reef. It eats boats, and it\'s eating this town.'],0.4));
+     'Something churns the deep water out past the reef. It eats boats, and it\'s eating this town.'],0.4);
+    rell.nightOwl=true; G.npcs.push(rell); }   // a harbormaster keeps the watch round the clock - the harbour never closes
   // Mayor / concierge of the resort
   G.npcs.push(makeNPC('coralie','Coralie of the Breakers', R.x+1.5, R.y+2.5,
     {skin:'#caa27b',hair:'#3a2e26',shirt:'#5a7a6a',pants:'#3a3a44',apron:'#e0d4bc',hairstyle:'bun'},

@@ -306,6 +306,18 @@ function inSafeZone(x,y){
   }
   return false;
 }
+// The inhabited places a night-wraith must never haunt. Broader than inSafeZone (which guards
+// only the one home village, for the player's combat safety): this shuns EVERY settlement on
+// the isle - the keep, the March, harbour rows and hamlets alike - so the dark keeps to the wild
+// between them. A wraith that drifts within this buffer dissolves back to mist, and none spawn
+// inside it.
+const WRAITH_SHUN = ['village','dock','farm','castle','vael','town','market','resort','camp','landing'];
+function nearVillage(x,y,pad){
+  pad=(pad==null)?3:pad;
+  for(const k of WRAITH_SHUN){ const z=ZONES[k];
+    if(z && dist(x,y,z.x,z.y) < (z.r||6)+pad) return true; }
+  return false;
+}
 function spawnMob(kind,x,y,elite){
   const d=MOBDEF[kind];
   const hp=Math.round(d.hp*(elite?2.3:1));

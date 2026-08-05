@@ -211,7 +211,9 @@ function nearestInteract(){
       if(!(b.grand && P.story && P.story.act1End)){
         const doorX=b.door?b.door.x:b.x, doorY=b.door?b.door.y:(b.y+(b.kind==='resort'?2.2:0.9));
         const d=dist(P.x,P.y,doorX,doorY);
-        if(d<(b.grand?2.6:1.8) && d<bd){ bd=d; best={type:'door',o:b,label:b.galeSpire?'Descend the Gale Spire':b.grand?'Enter the palace':'Enter'}; }
+        if(d<(b.grand?2.6:1.8) && d<bd){ bd=d;
+          const mayGale = qs('windRestore')==='active'||qs('windRestore')==='done'||(P.story&&P.story.galeDeepDone);
+          best={type:'door',o:b,label:b.galeSpire?(mayGale?'Descend the Gale Spire':'The Gale Spire (see Rell)'):b.grand?'Enter the palace':'Enter'}; }
       }
     }
     if(b.kind==='lairmouth'){ const d=dist(P.x,P.y,b.x,b.y);
@@ -2527,12 +2529,12 @@ function updateWorld(dt){
   // from the isles entirely (they no longer spawn, see below for dispersing strays).
   const isleCleared = P.story && P.story.bossCleared && P.story.bossCleared[G.worldId];
   const act2 = !!(P.story && P.story.act2);
-  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !inSafeZone(P.x,P.y)){
+  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !nearVillage(P.x,P.y,6)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;
       const nx=Math.round(P.x+Math.cos(a2)*dd2), ny=Math.round(P.y+Math.sin(a2)*dd2);
-      if(inb(nx,ny) && walkTile(tileAt(nx,ny)) && !solidAt(nx,ny) && !inSafeZone(nx,ny)){
+      if(inb(nx,ny) && walkTile(tileAt(nx,ny)) && !solidAt(nx,ny) && !nearVillage(nx,ny,4)){
         const m=spawnMob('wraith', nx,ny, Math.random()<0.15);
         m.night=1;
         m.lvl=Math.max(2,Math.min(8,(P.level||1)-2)); // the dark measures you, but stays two rungs under - never scales up to your level
@@ -2540,6 +2542,12 @@ function updateWorld(dt){
         burst(nx+0.5,ny,'#8fa8d8',12,2.2);
       }
     }
+  }
+  // A wraith must never come NEAR a village: one that drifts within any settlement's lamplight -
+  // spawned there, or chased there at the player's heels - dissolves back to mist at once, so the
+  // hearths stay safe and the dark keeps to the wild ground between them.
+  for(const m of G.mobs) if(m.night && !m.dead && nearVillage(m.x,m.y)){
+    m.dead=true; m.respawnT=1e9; burst(m.x,m.y-0.5,'#c8d8e8',10,1.8);
   }
   if(night<0.15 || act2){
     // dawn quietly clears the night mobs (nightfall/dawn toasts removed by request) -

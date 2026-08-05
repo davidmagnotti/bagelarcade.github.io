@@ -733,9 +733,7 @@ function vendorShop(npc,line,wares){
 function shopButtons(npc,btns){
   // Bram no longer runs a crafting bench - the tutorial smith just gives quests and
   // talk now; gear is earned through the isle's tasks and foes (and the crossing kit).
-  if(npc.id==='orin'){
-    btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
-  }
+  // Orin brews nothing now - Sage Orin is a talk-only NPC (lore, hints, quests), no tonic bench.
   if(npc.id==='willa'){
     btns.unshift({label:'Cook at the hearth…', fn:()=>cookMenu(npc)});
   }
