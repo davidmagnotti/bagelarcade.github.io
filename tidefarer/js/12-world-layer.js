@@ -666,6 +666,15 @@ function spawnBarikFolk(){
   // worrying sister marches him down to the harbor, so on later visits he stands by the
   // boats beside Brenna (his reunion chatter is swapped in by applyIdleDialogue). See
   // the torv1 hook in completeQuest (05-inventory-skills-quests.js) for the live move.
+  // Brakk, chief of the Pinewood thieves - he lolls by the stolen-silk cache and will PARLEY:
+  // a thousand gold for the bolt, or tell him to get stuffed and he sets his guards on you.
+  // (His full dialog - the extortion, the pay-off, the "GET 'EM, BOYS!" - lives in 06-dialog.js.)
+  { const bsp=(typeof findOpenNear==='function' && findOpenNear(162,152,5)) || [162,152];
+    const bk=makeNPC('brakk','Brakk, Pinewood Chief', bsp[0], bsp[1],
+      {skin:'#b58a5e',hair:'#2a2018',shirt:'#5a3630',pants:'#38302a',hat:'hood',hatColor:'#3a2a24',beard:'#2a2018',weapon:'sword',wtier:1,build:{w:1.15,head:0.92}},
+      ["Mind where you step, sailor - everything on this hill is mine.",
+       "That dawn-silk fetches a fortune off-isle. I'm not fool enough to just hand it back."],0);
+    bk.nightOwl=true; G.npcs.push(bk); }
   const torvLook={skin:'#b98f68',hair:'#3a3a3c',shirt:'#4a4440',pants:'#332f2c',beard:'#4a4a4c',armor:1};
   if(P.story && P.story.torvHome){
     const dz=ZONES.dock;
@@ -799,8 +808,9 @@ function spawnMobsMain(){
     ['raider', ZONES.vael, 8, 0.45],
     ['skeleton', ZONES.undermaw, 5, 0.9, {tag:'scarSkel', hideWhen:'undermawDown'}],  // the bone-kin at the scar's mouth - gone once the Maw-Stalker falls
     ['wolf',     {x:150,y:316,r:8}, 5, 0.4],   // the spire road earns its length
-    ['skeleton', {x:172,y:325,r:7}, 5, 0.45],
-    ['brigand',  {x:162,y:148,r:6}, 5, 0.25]   // they guard what they stole
+    ['skeleton', {x:172,y:325,r:7}, 5, 0.45]
+    // (the brigands are no longer a random pack - they stand as fixed GUARDS around their
+    //  cache, placed below so you can sneak/sprint the gaps; see the guard ring after the loop)
   ];
   // practice dummies: Rook's yard by his range (dry side - the shore bites).
   // (Aelin's Spire keeps no range now - the Weaver sends students for bluecaps, not bolts.)
@@ -818,6 +828,21 @@ function spawnMobsMain(){
       const s=findOpenNear(Math.round(z.x+Math.cos(a)*dd),Math.round(z.y+Math.sin(a)*dd),4);
       if(s){ const m=spawnMob(kind,s[0],s[1], pr()<eliteP); if(m && opt && opt.tag) m[opt.tag]=1; }
     }
+  }
+  // THE PINEWOOD THIEVES: no longer a roaming swarm - they stand as GUARDS at fixed posts
+  // ringing their stolen-silk cache (162.5,146.5), slow-footed and half-watching (a small
+  // aggro radius), so a careful hero can creep the gaps or sprint straight past, crack the
+  // chest, and be gone before they close. Their chief Brakk (spawnBarikFolk) will parley -
+  // or, if you tell him to get stuffed, set every guard on you (see his dialog, 06-dialog.js).
+  // posts ring the cache to the NORTH and flanks; the SOUTH approach is Brakk's to hold, so you
+  // meet him first. A careful line straight up the middle threads just outside their watch (a
+  // sneak), while veering toward a flank wakes one - and they're too slow to catch a sprint.
+  for(const [gx,gy] of [[158,144],[166,144],[159,148],[165,148],[162,142]]){
+    const s=findOpenNear(gx,gy,4) || [gx,gy];
+    const m=spawnMob('brigand', s[0], s[1]);
+    // drowsy at their watch (small aggro) until you draw close or Brakk calls them - but once
+    // you've told Brakk to get stuffed, his boys stay on the warpath across saves and revisits.
+    if(m){ m.brigandGuard=1; m.state='idle'; m.noAggroT=0; m.aggro=(P.story&&P.story.brakkProvoked)?16:3.0; }
   }
   // a den of wolves atop Wolfcrag (the old Greymaw den - now just a thick pack)
   { const wr=mulberry32(SEED+77);
@@ -4583,7 +4608,7 @@ QUESTS.ribbon2={ giver:'mira', title:'A Ribbon for Wren', kind:'gather', need:{s
 QUESTS.ribbon3={ giver:'corvo', title:'A Ribbon for Wren', kind:'gather', need:{ribbon:1}, xpL:260, stageOf:'ribbon', stage:3,
   brief:'You have it? Wren will be over the moon and halfway back.',
   log:'(3/3) Bring the Sunset Ribbon to Captain Corvo at the east cove.',
-  doneText:'She will wear it till the color goes. A bargain is a bargain - and the tide is with us NOW. Say the word, any time, and we run east for the Sunward Isle.',
+  doneText:'She will wear it till the color goes. A bargain is a bargain. Say the word, any time, and we run east for the Sunward Isle.',
   rw:{gold:150, item:{elixir:1}, xp:{archery:140}} };
 QUESTS.hunt1={ giver:'huk', title:'Bristleback Cull', kind:'kill', kill:{boar:6}, xpL:170,
   brief:'The bristlebacks breed quicker than the palms can feed them, eh, and now they are into our gardens. Thin the sounder for me - six boars - and Kohana eats easy either way. No rush about it.',

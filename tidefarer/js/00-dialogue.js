@@ -750,7 +750,7 @@ const DIALOGUE = {
     "ribbon3": {
       brief: "You have it? Wren will be over the moon and halfway back.",
       log: "(3/3) Bring the Sunset Ribbon to Captain Corvo at the east cove.",
-      doneText: "She will wear it till the color goes. A bargain is a bargain - and the tide is with us NOW. Say the word, any time, and we run east for the Sunward Isle."
+      doneText: "She will wear it till the color goes. A bargain is a bargain. Say the word, any time, and we run east for the Sunward Isle."
     },
     "hunt1": {
       brief: "The bristlebacks breed quicker than the palms can feed them, eh, and now they are into our gardens. Thin the sounder for me - six boars - and Kohana eats easy either way. No rush about it.",

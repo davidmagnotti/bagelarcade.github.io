@@ -622,6 +622,40 @@ function buildDialogContent(npc){
       return;
     }
   }
+  // Brakk, the Pinewood thieves' chief: a parley over the stolen silk. Pay his ransom and the
+  // bolt's yours, no blood spilt; tell him to get stuffed and he sets every guard on you. Once
+  // provoked, there's no more talking - just his boys. (The guards are flagged brigandGuard in
+  // spawnMobsMain; "GET 'EM, BOYS!" flips them all to a committed chase.)
+  if(npc.id==='brakk'){
+    P.story=P.story||{};
+    if(P.story.brakkProvoked){
+      setDialog('<i>Brakk bares his teeth over the din.</i> “Talk’s DONE, sailor - should’ve paid when you had the manners!”',
+        [{label:'(back away)', ghost:true, fn:closeDialog}]);
+      return;
+    }
+    const canPay=(P.gold||0)>=1000;
+    setDialog('<i>A broad thief in a patched greatcoat plants himself between you and the cache, thumbs hooked in his belt.</i> “Well, well - come for the pretty cloth, have you? That dawn-silk’s worth a fortune off-isle, and it’s mine by right of taking. Tell you what, friend: <b style="color:#ffd76a">one thousand gold</b> and the bolt’s yours, no blood spilt. Fair’s fair.”',
+      [ (canPay
+          ? {label:'Pay 1,000 gold', cls:'gold', fn:()=>{
+              P.gold-=1000; if(Snd.coin)Snd.coin(); P.story.brakkPaid=1;
+              give('silk',1); if(typeof refreshUI==='function') refreshUI(); if(typeof autoSave==='function') autoSave();
+              setDialog('<i>Brakk bites the coin, grins, and tosses you the bolt.</i> “Pleasure doing business. Now off my hill, before the boys get ideas.”',
+                [{label:'Leave', ghost:true, fn:closeDialog}]);
+            }}
+          : {label:'Pay 1,000 gold', ghost:true, fn:()=>{
+              setDialog('<i>Brakk snorts.</i> “A THOUSAND, I said. Come back when your purse is fatter - or don’t come back at all.”',
+                [{label:'…', ghost:true, fn:closeDialog}]);
+            }}),
+        {label:'“Get stuffed.”', cls:'gold', fn:()=>{
+            P.story.brakkProvoked=1; closeDialog();
+            if(typeof toast==='function') toast('<b style="color:#ff8a5a">Brakk spits in the dirt.</b> “Ha! GET ’EM, BOYS!”',4200);
+            if(Snd.boss)Snd.boss(); G.shake=Math.max(G.shake||0,0.45); if(typeof buzz==='function') buzz(18);
+            for(const m of G.mobs){ if(m.brigandGuard && !m.dead){ m.aggro=16; m.state='chase'; m.noAggroT=0; } }
+          }},
+        {label:'(step back)', ghost:true, fn:closeDialog}
+      ]);
+    return;
+  }
   // Captain Corvo's first ask plays as TWO beats: he lays out what the wizard did to his cove,
   // and only when you jump at the chance to sail does he let you down easy with the ribbon errand.
   if(npc.id==='corvo' && P.quests.ribbon1==='avail'){
