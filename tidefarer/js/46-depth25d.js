@@ -154,13 +154,13 @@ function _d25cloudBank(baseY, amp, period, parX, seed, tint, alpha){
    ===================================================================== */
 
 /* which decor kinds get the silhouette cast (standing walls with a footprint) */
-const _D25_CAST = {house:1,house2:1,barn:1,forge:1,hut:1,stormhut:1,igloo:1,tower:1,bazaar:1,castle:1};
+const _D25_CAST = {house:1,house2:1,barn:1,forge:1,hut:1,stormhut:1,igloo:1,tower:1,bazaar:1,castle:1,lamp:1};
 function buildingCasts(kind){ return !!_D25_CAST[kind]; }
 /* TALL structures whose shadow length may grow with their real height - a wizard
-   tower or a castle throws a long cast. Everything else is "short" and gets a
-   modest, height-independent shadow (a house and a hut drop the same one, and it
-   never looms taller than the wall it belongs to). */
-const _D25_TALL = {tower:1, castle:1};
+   tower or a castle throws a long cast, and so does a slender lamp post. Everything
+   else is "short" and gets a modest, height-independent shadow (a house and a hut
+   drop the same one, and it never looms taller than the wall it belongs to). */
+const _D25_TALL = {tower:1, castle:1, lamp:1};
 
 /* Black silhouette of a sprite, cached on the sprite canvas itself (baked once
    per sprite, so it costs a single extra drawImage per building per frame). */
