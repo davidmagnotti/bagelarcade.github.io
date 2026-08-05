@@ -257,7 +257,10 @@ function addNode(kind,x,y){
   // master fells the same tree in a hit or two.
   const n = {kind,x:x+0.5,y:y+0.5,tx:x,ty:y,hp:9,maxhp:9,dead:false,respawn:0,
              variant:rndi(0,2), sway:Math.random()*TAU};
-  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=12; }
+  // trees fell quicker than stone splits - a normal pine drops in ~3 swings of a tier-1 axe
+  // (stone keeps its 9 hp). Big forest heartwoods still take noticeably longer.
+  if(kind==='tree'){ n.hp=n.maxhp=6; }
+  if(kind==='tree' && tileAt(x,y)===T.FOREST && Math.random()<0.35){ n.big=true; n.hp=n.maxhp=9; }
   G.nodes.push(n);
   if(kind==='tree'||kind==='rock') setSolid(x,y,1);
   return n;
@@ -283,9 +286,20 @@ function placeObjects(){
   const rr = mulberry32(SEED+13);
   for(let i=0;i<26;i++){ const x=rndiR(rr,4,MAPW-5), y=rndiR(rr,4,MAPH-5);
     if((tileAt(x,y)===T.GRASS||tileAt(x,y)===T.FOREST) && !blockedZone(x,y) && !solidAt(x,y) && rr()<0.7) addNode('rock',x,y); }
-  // bluecap mushrooms in the Whisperwood
+  // bluecap mushrooms in the Whisperwood - each cleared into its own little glade so the
+  // glow always reads plainly and never hides behind a trunk (they only glow where the shade
+  // thins, anyway). Trees are already placed above, so we just open a gap around each cap.
   const shroomSpots = [[30,36],[35,41],[28,40],[36,34],[31,44],[38,39],[26,35]];
-  for(const [x,y] of shroomSpots){ const s=findOpenNear(x,y,3); if(s) addNode('mushroom',s[0],s[1]); }
+  for(const [x,y] of shroomSpots){
+    const s=findOpenNear(x,y,3); if(!s) continue;
+    const m=addNode('mushroom',s[0],s[1]);
+    // fell any trees crowding the cap (including the ones in FRONT that would draw over its
+    // sprite) so the bluecap stands clear in a small clearing - freeing their solid tiles too.
+    G.nodes=G.nodes.filter(n=>{
+      if(n.kind==='tree' && dist(n.tx,n.ty,m.tx,m.ty)<2.4){ setSolid(n.tx,n.ty,0); return false; }
+      return true;
+    });
+  }
   // old orchard: apple trees in a loose ring
   const orr=mulberry32(SEED+71);
   for(let i=0;i<9;i++){

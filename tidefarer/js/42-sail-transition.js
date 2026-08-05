@@ -1,7 +1,7 @@
 /* ============================================================================
    42-sail-transition.js  -  the "sailing between isles" loading screen
    ----------------------------------------------------------------------------
-   A brief (~1.6s) painted vignette that plays over every sea voyage: a little
+   A brief (~3.5s) painted vignette that plays over every sea voyage: a little
    boat rides a dusk-lit swell toward the horizon while the world quietly swaps
    underneath the cover of the overlay. Replaces the old plain fade-to-black in
    sailTo()/departEarly() (see js/12-world-layer.js), which now call
@@ -17,13 +17,13 @@
 (function(){
   'use strict';
 
-  // Timeline (ms) - a ~2.5s voyage. The heavy world generation runs during the
+  // Timeline (ms) - a ~3.5s voyage. The heavy world generation runs during the
   // opaque hold (see SWITCH_AT), so the boat keeps sailing smoothly while the
   // destination loads underneath the cover, then the overlay wipes to reveal it.
   const FADE_IN   = 420;   // overlay wipes up to fully opaque
   const SWITCH_AT = 640;   // world swap - safely after we're opaque, hidden
   const FADE_OUT  = 460;   // overlay wipes back to reveal the new isle
-  const TOTAL     = 2500;  // whole voyage, start to hidden
+  const TOTAL     = 3500;  // whole voyage, start to hidden (a second longer on the water)
 
   const reduced = (function(){
     try{ return window.matchMedia &&

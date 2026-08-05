@@ -239,6 +239,15 @@ function rewardText(q){
   if(rw.xp){ const sk=Object.keys(rw.xp).filter(s=>SKILLS[s]); if(sk.length) parts.push(sk.map(s=>SKILLS[s].name).join(' & ')+' experience'); }
   return parts.length? '<div class="rwline">Reward: '+parts.join(' · ')+'</div>' : '';
 }
+// The nearest live fishing spot to the player - so a "catch fish" objective always points at
+// real rippling water on the shore, never a hardcoded dock offset that can land out in open
+// sea (as the Barik harbor's did) or a fishing hole that's since moved (Emberwick's SE cove).
+function nearestFishNode(){
+  let best=null, bd=Infinity;
+  for(const n of (G.nodes||[])){ if(n.kind!=='fish' || n.dead) continue;
+    const d=dist(P.x,P.y,n.x,n.y); if(d<bd){ bd=d; best=n; } }
+  return best? {x:best.x, y:best.y} : null;
+}
 function questTargetPos(id){
   const q=QUESTS[id];
   if(qs(id)==='active' && !questReady(id)){
@@ -249,7 +258,8 @@ function questTargetPos(id){
     if(id==='skeletons'||id==='king') return {x:ZONES.ruins.x,y:ZONES.ruins.y};
     if(id==='cat') return (G.cat && !G.cat.found)? {x:ZONES.forest.x,y:ZONES.forest.y} : null;
     if(id==='bounty') return ZONES.highlands? {x:ZONES.highlands.x,y:ZONES.highlands.y} : {x:ZONES.ruins.x,y:ZONES.ruins.y};
-    if(id==='shells'||id==='pearlq') return {x:ZONES.dock.x,y:ZONES.dock.y-2};
+    if(id==='pearlq') return nearestFishNode() || {x:ZONES.dock.x,y:ZONES.dock.y-2}; // pearls come off a fishing line
+    if(id==='shells') return {x:ZONES.dock.x,y:ZONES.dock.y-2};
     if(id==='springs') return {x:ZONES.springs.x,y:ZONES.springs.y};
     if(id==='cove') return {x:ZONES.cove.x,y:ZONES.cove.y};
     if(id==='orchard') return {x:ZONES.orchard.x,y:ZONES.orchard.y};
@@ -258,7 +268,7 @@ function questTargetPos(id){
     if(id==='mossbrew') return {x:ZONES.forest.x,y:ZONES.forest.y};
     if(id==='roadclear') return {x:ZONES.highlands.x,y:ZONES.highlands.y};
     if(id==='hedda2') return {x:ZONES.meadow.x,y:ZONES.meadow.y};
-    if(id==='nets') return {x:ZONES.dock.x-2,y:ZONES.dock.y};
+    if(id==='nets') return nearestFishNode() || {x:ZONES.dock.x-2,y:ZONES.dock.y};
     if(id==='feud1') return {x:ZONES.vael.x,y:ZONES.vael.y};
     if(id==='feud2') return {x:ZONES.vael.x-6.5,y:ZONES.vael.y+6.5};
     if(id==='sting1') return {x:ZONES.desert.x,y:ZONES.desert.y};
@@ -281,7 +291,7 @@ function questTargetPos(id){
       return w? {x:w.x,y:w.y} : (ZONES.glacier? {x:ZONES.glacier.x,y:ZONES.glacier.y} : null); }
     if(id==='ribbon2' && !has('silk',1)) return {x:162.5,y:146.5}; // the brigands' silk cache, north of Blackpine
     if(id==='mushrooms') return {x:ZONES.forest.x,y:ZONES.forest.y};
-    if(id==='fish') return {x:ZONES.dock.x-3,y:ZONES.dock.y};
+    if(id==='fish') return nearestFishNode() || {x:ZONES.dock.x-3,y:ZONES.dock.y};
     if(id==='harvest') return {x:59.5,y:63};
     if(id==='sharpen') return {x:52,y:47};
     if(id==='bladeoath'){ const r=G.npcs&&G.npcs.find(n=>n.id==='rask'); return r? {x:r.x,y:r.y} : (ZONES.grove? {x:ZONES.grove.x,y:ZONES.grove.y} : {x:ZONES.meadow.x,y:ZONES.meadow.y}); }

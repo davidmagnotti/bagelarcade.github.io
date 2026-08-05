@@ -488,6 +488,16 @@ function placeObjectsMain(){
   for(let i=0;i<16;i++){ const a=mnr()*TAU, dd=2+mnr()*(ZONES.mines.r-3);
     const x=Math.round(ZONES.mines.x+Math.cos(a)*dd), y=Math.round(ZONES.mines.y+Math.sin(a)*dd);
     if(walkTile(tileAt(x,y))&&!solidAt(x,y)) addNode('rock',x,y); }
+  // a guaranteed handful of fishing spots right in the HARBOR shallows, by the docks - so
+  // Sela's "Nets of Barik" has rippling water at hand's reach and its objective marker points
+  // to a real fishing hole on the shore, not out at the open sea off the end of the pier.
+  { const D=ZONES.dock; let hp=0;
+    for(let yy=D.y-7; yy<=D.y+7 && hp<4; yy++) for(let xx=D.x-11; xx<=D.x+3 && hp<4; xx++){
+      if(tileAt(xx,yy)!==T.SHALLOW) continue;
+      let land=false; for(const dxy of [[1,0],[-1,0],[0,1],[0,-1]]) if(walkTile(tileAt(xx+dxy[0],yy+dxy[1]))) land=true;
+      if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,xx,yy)<3)){ const n=addNode('fish',xx,yy); n.bob=Math.random()*TAU; hp++; }
+    }
+  }
   let placed=0;
   for(let tries=0;tries<12000&&placed<20;tries++){
     const x=rndiR(r,3,MAPW-4), y=rndiR(r,3,MAPH-4);

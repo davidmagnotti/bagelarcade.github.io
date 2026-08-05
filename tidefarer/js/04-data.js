@@ -262,7 +262,7 @@ const MOBDEF = {
   skeleton:{hp:46, dmg:26, speed:2.3, aggro:6.5, xp:42, gold:[2,4], name:'Skeleton'},
   archer:{hp:26, dmg:27, speed:2.5, aggro:9, xp:38, gold:[2,4], name:'Barrow Archer'},
   gravelord:{hp:150, dmg:42, speed:2.95, aggro:10, xp:150, gold:[18,26], name:'Gravelord Varek'},
-  boss:{hp:210, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow Spirit'},
+  boss:{hp:260, dmg:25, speed:2.4, aggro:9, xp:220, gold:[30,40], lvl:5, name:'The Hollow Spirit'},  // a touch more HP to make up for no respawning bone-guard mid-duel
   scorpion:{hp:300, dmg:34, speed:3.2, aggro:8, xp:300, gold:[40,60], lvl:13, name:'Sunscour Scorpion'},
   raider:{hp:280, dmg:30, speed:3.0, aggro:9, xp:280, gold:[35,55], lvl:12, name:'Vael Raider'},
   raidcap:{hp:820, dmg:40, speed:3.15, aggro:12, xp:620, gold:[120,180], lvl:14, name:'Castellan of the Vael'},

@@ -49,17 +49,16 @@ const HS_BEATS = [
   // the crown splits and the shroud tears loose: a pale release-light, the violet blows off,
   // the strait beyond falls flat (wordless, the big beat)
   { who:'', html:'', ens:0.12, calm:0.5, crown:0, shatter:1, flash:1.05, shake:0.65, hold:1800 },
-  { who:'The Hollow Spirit',
-    html:'<b style="color:#a9e0b8">"…quiet. The crown is quiet at last. I kept it, breaker - and it kept me, long past my grave, and would not let me lie."</b>',
-    ens:0, calm:0.95 },
-  // the seed of Vath: it names the shadow that woke it - no more than that
+  // the seed of Vath: it names the shadow that woke it - no more than that. (Its first
+  // spoken breath - the reflective "the crown is quiet" line was folded into the farewell
+  // below to spare a click.)
   { who:'The Hollow Spirit',
     html:'<b style="color:#a9e0b8">"I did not wake of my own will. A shadow came over the strait - a robed thing, </b><b style="color:#c9a0ff">violet at the wrist</b><b style="color:#a9e0b8">, whispering the dead awake to seal your ships beneath the tide. Mark it well. It is not done with your shore."</b>',
-    ens:0, calm:1 },
+    ens:0, calm:0.95 },
   // the curse lifts off the whole strait; the title card falls (wordless)
   { who:'', html:'', ens:0, calm:1, crown:0, flash:0.5, title:'THE CURSE BREAKS', hold:2100 },
   { who:'The Hollow Spirit',
-    html:'<b style="color:#a9e0b8">"The water is yours again. The strait lies open, and the dead lie still. Let a keel cross it and think of me kindly, if you think of me at all. Rest now, breaker - I mean to."</b>',
+    html:'<b style="color:#a9e0b8">"The crown is quiet at last, breaker - it kept me long past my grave, and would not let me lie. Now the water is yours again: the strait lies open and the dead lie still. Let a keel cross it and think of me kindly, if you think of me at all. Rest now - I mean to."</b>',
     ens:0, calm:1 },
 ];
 
@@ -83,6 +82,9 @@ function hsPlay(beats, init, onDone){
   HS.ens=1; HS.calm=0; HS.crown=1; HS.rest=0; HS.flash=0; HS.shake=0; HS.shatter=0;
   if(init) Object.assign(HS, init);
   HS.motes.length=0;
+  // a fixed scatter of stars over the strait (generated once so they don't jitter frame to
+  // frame): veiled behind the curse's bruise, kindling in as the sky clears and calms.
+  HS.stars=[]; for(let i=0;i<64;i++) HS.stars.push({x:Math.random(), y:Math.random()*0.5, r:Math.random()*1.1+0.35, ph:Math.random()*TAU});
   HS.ended=false; HS.started=false; HS.running=true;
   const title=document.getElementById('hsTitle'), sub=document.getElementById('hsSub');
   if(sub) sub.classList.remove('show'); if(title) title.classList.remove('show');
@@ -214,6 +216,16 @@ function hsDraw(){
   sky.addColorStop(0.7, mixHex('#16283a','#241640', Math.min(1,ens*0.6)));
   sky.addColorStop(1, mixHex('#2a4658','#341f4c', Math.min(1,ens*0.5)));
   cx.fillStyle=sky; cx.fillRect(0,0,W,horizon+2);
+
+  // a faint starfield over the strait: dimmed under the curse's violet bruise, kindling in
+  // and gently twinkling as the sky clears and the water calms
+  if(HS.stars){ cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle='#dfeeff';
+    for(const st of HS.stars){ const tw=0.55+0.45*Math.sin(t*1.6+st.ph);
+      const a=(0.10+0.5*calm)*(1-ens*0.55)*tw;
+      if(a<=0.01) continue;
+      cx.globalAlpha=a; cx.beginPath(); cx.arc(st.x*W, st.y*horizon, st.r, 0, TAU); cx.fill();
+    }
+    cx.globalAlpha=1; cx.restore(); }
 
   // a cold moon, veiled while the curse holds, brightening as it breaks
   const mx=W*0.72, my=horizon*0.40, mr=Math.min(W,H)*0.055;

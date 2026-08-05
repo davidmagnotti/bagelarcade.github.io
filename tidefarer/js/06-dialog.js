@@ -613,7 +613,11 @@ function buildDialogContent(npc){
         + rewardText(q),
         withTravel(npc,[{label:'✓ Complete - '+q.title, cls:'gold', fn:()=>{
             completeQuest(id);
-            setDialog('“'+q.doneText+'”',[{label:'Continue',fn:()=>buildDialogContent(npc)}]);
+            // A quest that teaches a skill (Orin's dash) hands you off to the lesson card, not
+            // back into his brew menu: on Continue, CLOSE the dialog so the held dash card pops
+            // over a clear screen (closeDialog fires P._dashCardPending) instead of the shop list.
+            const cont = (q.rw && q.rw.dash) ? closeDialog : ()=>buildDialogContent(npc);
+            setDialog('“'+q.doneText+'”',[{label:'Continue',fn:cont}]);
         }},{label:'Not yet',ghost:true,fn:closeDialog}]));
       return;
     }

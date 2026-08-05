@@ -1927,6 +1927,15 @@ const HEAVIES={polarbear:1,minotaur:1,raidcap:1,scorpion:1,gravelord:1};
 function ruinsBound(m){ return !!(m.hollowGuard || (G.worldId==='isle' && (m.kind==='skeleton'||m.kind==='gravelord'))); }
 const ISLE_SKELE_CAP=6;   // keep the barrow from filling with an endless bone-heap if you ignore them
 function liveIsleSkeletons(){ let n=0; for(const x of G.mobs) if(x.kind==='skeleton' && !x.dead) n++; return n; }
+// The Hollow Spirit fight is "on" once the King himself has risen (unsealed) and still stands.
+// While it lasts the barrow's bones stay down where they fall - no respawning court to fight
+// alongside the duel. (His own phase-summons still rise; those are flagged never to respawn.)
+// His fall then clears every skeleton for good, see killMob's boss branch.
+function hollowFightOn(){
+  if(G.worldId!=='isle') return false;
+  for(const m of G.mobs) if(m.kind==='boss' && m.hollowGuard && !m.dead && !m.sealed) return true;
+  return false;
+}
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -1934,8 +1943,11 @@ function updateMobs(dt){
     if(m.sealed) continue;                 // walled behind the ward-gate - inert until it opens
     if(m.dead){
       if(m.respawnT>0){ m.respawnT-=dt;
+        // while the Hollow Spirit is roused, hold every barrow skeleton down - no fresh bones
+        // mid-duel (rechecked in a few seconds in case you fell him and it reopens elsewhere)
+        if(m.respawnT<=0 && m.kind==='skeleton' && hollowFightOn()){ m.respawnT=4; }
         // hold a skeleton's respawn while the barrow is already crowded - no bone-heap
-        if(m.respawnT<=0 && m.kind==='skeleton' && G.worldId==='isle' && liveIsleSkeletons()>=ISLE_SKELE_CAP){ m.respawnT=6; }
+        else if(m.respawnT<=0 && m.kind==='skeleton' && G.worldId==='isle' && liveIsleSkeletons()>=ISLE_SKELE_CAP){ m.respawnT=6; }
         else if(m.respawnT<=0 && dist(P.x,P.y,m.hx,m.hy)>10){ m.dead=false; m.hp=m.maxhp; m.x=m.hx; m.y=m.hy; m.state='idle'; }
         else if(m.respawnT<=0) m.respawnT=5;
       }
