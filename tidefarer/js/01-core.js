@@ -223,7 +223,15 @@ function resize(){
   /* Cap the backing store to a pixel budget so a big high-DPI desktop panel
      (e.g. Surface) isn't asked to fill a canvas several times the size of a
      phone's every frame. Phones stay under budget, so they're unaffected. */
-  const BUDGET = 2000000; // ~1080p worth of device pixels
+  // Cap the backing store to a pixel budget so a big high-DPI *phone* isn't
+  // asked to fill an oversized canvas every frame. On a fullscreen desktop
+  // monitor (1440p/4K) that ~1080p cap would render the whole scene below
+  // native and CSS-upscale it — visibly soft. The desktop/Steam build has a
+  // real GPU and a large display, so it renders at native resolution instead.
+  // window.electronAPI is present only in the desktop shell (set by preload.js
+  // before this runs).
+  const DESKTOP_APP = (typeof window!=='undefined' && !!window.electronAPI);
+  const BUDGET = DESKTOP_APP ? 16000000 : 2000000; // 16M ≈ 4K native; ~1080p on the web
   const px = VW*VH*dpr*dpr;
   if(px > BUDGET) dpr *= Math.sqrt(BUDGET/px);
   DPR = Math.max(0.4, dpr);
