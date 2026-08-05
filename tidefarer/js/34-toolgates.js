@@ -77,7 +77,9 @@ function clearGateNode(n){
   var cfg=GATES[n.gate]||{};
   n.dead=true; n.gone=true; setSolid(n.tx,n.ty,0);
   // persist: a placed gate (n.gid) stays felled across save/reload (35-toolgate-content.js)
-  if(n.gid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[n.gid]=1; }
+  if(n.gid){ P.story=P.story||{}; P.story.tg=P.story.tg||{}; P.story.tg[n.gid]=1;
+    if(P.story.tgSeen) delete P.story.tgSeen[n.gid];   // opened - drop its sealed-way map pip
+  }
   // MULTI-TILE WARD: a ward wall whose stones share one gid falls as one - break any
   // stone and the rest of the ring shatters with it (the Hedda-ward; see 41-barik-ward.js).
   if(n.ward && n.gid){
@@ -114,6 +116,8 @@ function drawGateAura(n,s){
   // stones (vathward) suppresses the per-stone tag - it'd be 19 labels of noise; the
   // crystals read for themselves and Kell's word names them.
   var d=dist(P.x,P.y,n.x,n.y);
+  // note a sealed way you CANNOT yet open, so it stays marked on the map to return to
+  if(n.gid && d<11 && tierOf(cfg.tool) < cfg.req) noteGateSeen(n);
   if(d<9 && !cfg.noTag){
     var top=(cfg.kind==='rock')? -52 : -106;
     cx.globalAlpha=Math.max(0,Math.min(1,(9-d)/3.2));
@@ -123,6 +127,36 @@ function drawGateAura(n,s){
     cx.globalAlpha=1;
   }
   cx.restore();
+}
+
+/* ---- the sealed-way tracker: remember gates you can't yet open, mark them on the map ----
+   A placed gate (n.gid) you walk up to while it's still above your tool tier is recorded in
+   P.story.tgSeen[gid] = {w,x,y,gate}; it saves with P.story and is dropped when the gate is
+   felled (clearGateNode). gateSeenList() hands the map layers the unopened pips for THIS world,
+   flagged `openable` once you finally carry the tool that cuts them - so the revisit loop has a
+   memory aid instead of resting on the player recalling a coloured rock an hour later. */
+function noteGateSeen(n){
+  if(!n || !n.gid) return;
+  var cfg=GATES[n.gate]; if(!cfg) return;
+  P.story=P.story||{};
+  if(P.story.tg && P.story.tg[n.gid]) return;          // already felled - nothing to remember
+  P.story.tgSeen=P.story.tgSeen||{};
+  if(P.story.tgSeen[n.gid]) return;                    // already noted
+  P.story.tgSeen[n.gid]={ w:G.worldId, x:n.tx, y:n.ty, gate:n.gate };
+  if(typeof hintOnce==='function') hintOnce('gatemark',
+    'A sealed way you can\'t open yet is now marked on your map - a coloured pip. Come back once you\'ve won the tool that cuts its colour; it opens for good.');
+}
+function gateSeenList(){
+  var out=[]; if(!P.story || !P.story.tgSeen) return out;
+  var opened=P.story.tg||{};
+  for(var gid in P.story.tgSeen){
+    if(opened[gid]) continue;
+    var e=P.story.tgSeen[gid]; if(!e || e.w!==G.worldId) continue;
+    var cfg=GATES[e.gate]; if(!cfg) continue;
+    out.push({ x:e.x+0.5, y:e.y+0.5, color:cfg.color, gate:e.gate,
+               openable: tierOf(cfg.tool) >= cfg.req });
+  }
+  return out;
 }
 
 /* ---- grants: the two dungeon-forged tools ---- */
@@ -200,6 +234,7 @@ function spawnToolgateSandbox(){
 /* ---- exports ---- */
 window.GATES=GATES; window.addGateNode=addGateNode;
 window.gateBlocked=gateBlocked; window.clearGateNode=clearGateNode; window.drawGateAura=drawGateAura;
+window.gateSeenList=gateSeenList;
 window.grantRivenedge=grantRivenedge; window.grantCragbreaker=grantCragbreaker;
 window.grantDelvebreaker=grantDelvebreaker;
 window.grantCograzor=grantCograzor; window.grantEmberbreaker=grantEmberbreaker;

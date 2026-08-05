@@ -4304,6 +4304,18 @@ function drawMinimap(){
       g.beginPath(); g.arc(zx,zy,2.4,0,TAU); g.fill();
       g.strokeStyle='rgba(0,0,0,0.5)'; g.lineWidth=1; g.stroke();
     }
+    // sealed toolgate pips - a coloured diamond (vs the round zone dots) at each sealed way you've
+    // noted but can't yet open; a white ring once you carry the tool that cuts it, so the map says
+    // "you can open this now." Colour is the gate's own (blue ironwood, violet basalt, red slagiron...).
+    if(typeof gateSeenList==='function') for(const gm of gateSeenList()){
+      const gx=(gm.x-sx)/vw*120, gy=(gm.y-sy)/vw*120;
+      if(gx<-3||gx>123||gy<-3||gy>123) continue;
+      g.save(); g.translate(gx,gy); g.rotate(Math.PI/4);
+      g.fillStyle=gm.color; g.fillRect(-2.4,-2.4,4.8,4.8);
+      g.strokeStyle='rgba(0,0,0,0.6)'; g.lineWidth=1; g.strokeRect(-2.4,-2.4,4.8,4.8);
+      g.restore();
+      if(gm.openable){ g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=1.4; g.beginPath(); g.arc(gx,gy,5,0,TAU); g.stroke(); }
+    }
     // the player: a bright red dot with a dark halo + white ring, so it reads on ANY terrain
     const px=(P.x-sx)/vw*120, py=(P.y-sy)/vw*120;
     g.beginPath(); g.arc(px,py,5.5,0,TAU); g.fillStyle='rgba(0,0,0,0.55)'; g.fill();
@@ -4366,10 +4378,23 @@ function drawBigMap(){
     g.fillStyle='rgba(0,0,0,0.65)'; g.fillText(text,px+1,py+1); g.fillStyle='#f0e2c0'; g.fillText(text,px,py); };
   P.disc=P.disc||{};
   for(const k in ZONES){ const z=ZONES[k]; if(P.disc[G.worldId+':'+k]) lbl(z.x, z.y-3, z.name); }
+  // sealed toolgate markers - a coloured diamond per noted-but-unopened way, ringed white once you
+  // carry the tool that opens it. Gives the Metroidvania revisit loop a real memory aid.
+  const seals = (typeof gateSeenList==='function') ? gateSeenList() : [];
+  for(const gm of seals){
+    const gx=gm.x/MAPW*384, gy=gm.y/MAPH*384;
+    g.save(); g.translate(gx,gy); g.rotate(Math.PI/4);
+    g.fillStyle=gm.color; g.fillRect(-4,-4,8,8);
+    g.strokeStyle='rgba(0,0,0,0.7)'; g.lineWidth=1.5; g.strokeRect(-4,-4,8,8);
+    g.restore();
+    if(gm.openable){ g.strokeStyle='rgba(255,255,255,0.95)'; g.lineWidth=2; g.beginPath(); g.arc(gx,gy,8,0,TAU); g.stroke(); }
+  }
   dot(P.x,P.y,'#fff',4);
   const pq=primaryQuest();
   if(pq){ const tp=questTargetPos(pq); if(tp) dot(tp.x,tp.y,'#ff9a3c',5); }
+  const openHere = seals.filter(s=>s.openable).length;
   document.getElementById('mapLegend').innerHTML=
     '<span><b style="color:#fff">●</b> You</span><span><b style="color:#ff9a3c">●</b> Quest</span>'+
+    (seals.length ? '<span><b style="color:#e0c0ff">◆</b> Sealed way ('+seals.length+(openHere?', '+openHere+' openable now':'')+')</span>' : '')+
     '<span style="color:#ffd76a">Tap a discovered region to travel there.</span>';
 }
