@@ -295,7 +295,7 @@ const MOBDEF = {
   // -- the Rainbow Road (sky-dungeon) --
   skywraith:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Sky Wraith'},           // pale cloud-shades barring the perches (Storm Temple storm-shades reuse this)
   skybat:{hp:120, dmg:16, speed:4.3, aggro:12, xp:96, gold:[6,14], lvl:10, name:'Storm Bat'},               // the Rainbow Road's roosting swarm - same fight as the old sky wraith, now a winged cloud-bat
-  skygrabber:{hp:900, dmg:6, speed:5.1, aggro:16, xp:0, gold:[0,0], lvl:11, name:'The Cloud-Snatcher'},     // cannot be slain - faster than you, so dash to juke it or stun it with a sword-blow; it only grabs at point-blank
+  skygrabber:{hp:280, dmg:6, speed:5.1, aggro:16, xp:420, gold:[25,50], lvl:11, name:'The Cloud-Snatcher'},  // fast; grabs at point-blank. Now KILLABLE - juke it and wear it down, or fight it head-on
   stormwraith:{hp:560, dmg:26, speed:3.9, aggro:13, xp:520, gold:[40,70], lvl:11, name:'The Storm-Wraith'}, // the Rainbow Road mini-boss, spawned as "The Wind Spirit" in spawnMobsSky
   stormeye:{hp:900, dmg:24, speed:1.4, aggro:20, xp:900, gold:[0,0], lvl:13, name:'The Storm-Eye'}          // final sky boss: shielded, hurls dodge-only gale-wisps; only vulnerable when it discharges
 };

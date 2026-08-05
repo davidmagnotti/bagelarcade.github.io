@@ -1153,6 +1153,7 @@ function killMob(m,skill){
   buzz(13);
   gainLXP((m.lvl||1)*6+4);
   m.dead=true; m.respawnT = m.bigBoss? -1 : rnd(24,40);
+  if(m.grabber){ m.respawnT=-1; P.story=P.story||{}; P.story.skySnatcherDown=1; }   // the Cloud-Snatcher, slain, is gone for good
   const d=MOBDEF[m.kind];
   burst(m.x,m.y-0.4,'#fff',14,3);
   shockwave(m.x,m.y,'rgba(255,255,255,0.75)',30);

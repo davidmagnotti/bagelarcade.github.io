@@ -6784,6 +6784,22 @@ function openChest(b){
     }
     setTimeout(autoSave,300); return;
   }
+  // THE STORMWARD QUIVER: a deep cache of arrows (and the bow itself, if you somehow arrived
+  // without it) on the last perch before the Storm-Eye - the boss only the bow can strike.
+  if(b.skyarrows){
+    bumpStat('chests');
+    P.story=P.story||{}; P.story.skyArrowsTaken=1; P.unlocked=P.unlocked||{};
+    shockwave(b.x,b.y,'rgba(255,215,106,0.85)',48); burst(b.x,b.y-0.5,'#ffd76a',18,2.6); Snd.levelup&&Snd.levelup();
+    const gotBow=!P.unlocked.bow;
+    P.unlocked.bow=true;
+    P.maxArrows=Math.max(P.maxArrows||20, 40);   // a deeper quiver for the boss...
+    P.arrows=P.maxArrows;                         // ...filled to the brim
+    if(typeof buildHotbar==='function') buildHotbar();
+    if(typeof refreshUI==='function') refreshUI();
+    banner('THE STORMWARD QUIVER','A DEEP QUIVER - 40 SHAFTS FOR THE STORM-EYE');
+    setTimeout(()=>{ if(typeof storyCard==='function') storyCard('<i>The perch\'s cache gives up a fat sheaf of gull-grey shafts and a broader quiver to carry them.</i> <b style="color:var(--ember)">Your quiver deepens to 40 arrows, filled to the brim'+(gotBow?', and a stormward bow to loose them':'')+'.</b> <i>Ahead on the Broken Crown, the <b>Storm-Eye</b> feels nothing but the bow - wait for it to DISCHARGE its guard, then loose.</i>', {label:'OK'}); },400);
+    setTimeout(autoSave,300); return;
+  }
   // THE BROKEN CROWN: the Cloud-Chart - the map you carry to Ashwing to be borne between isles.
   if(b.skymap){
     bumpStat('chests');

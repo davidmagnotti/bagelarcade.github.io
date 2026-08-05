@@ -9,13 +9,16 @@
    (see spawnRoadShades) - the storm scattered them the length of the run, so
    the road has to be fought through, not just dashed across.
    ===================================================================== */
+// A STRAIGHT VERTICAL COLUMN (all x=60), evenly spaced up the cloud, so every hop across
+// the dash-gaps is the same clean step instead of an alternating diagonal zig-zag. The old
+// quiet waypoint perch (i4) was dropped to shorten the run by one hop. Five stepping-isles
+// above the landing now: bats, the fading bridge, the snatcher, more bats, the Storm-Eye.
 const SKY_ISLES = [
   {key:'start', x:60, y:156, r:5},
-  {key:'i1',    x:60, y:134, r:4, puzzle:1}, // defeat four storm bats
-  {key:'i2',    x:76, y:112, r:5, puzzle:2}, // tread the rune-tiles in order
-  {key:'i3',    x:44, y:92,  r:5, puzzle:3}, // dodge the cloud-snatcher, cross over
-  {key:'i4',    x:76, y:72,  r:6, puzzle:4}, // a quiet waypoint perch (ward parts on arrival)
-  {key:'i5',    x:44, y:52,  r:4, puzzle:5}, // three more storm bats
+  {key:'i1',    x:60, y:130, r:4, puzzle:1}, // defeat four storm bats
+  {key:'i2',    x:60, y:104, r:5, puzzle:2}, // the fading rainbow bridge (i2 -> i3)
+  {key:'i3',    x:60, y:79,  r:5, puzzle:3}, // dodge the cloud-snatcher, cross over
+  {key:'i5',    x:60, y:53,  r:5, puzzle:5}, // three more storm bats
   {key:'i6',    x:60, y:28,  r:7, puzzle:6}  // the Storm-Eye
 ];
 // THE CROWN-VAULT: a small still room north of the Broken Crown, walled off until the
@@ -26,16 +29,16 @@ function skyIsle(k){ return SKY_ISLES.find(s=>s.key===k); }
 function skyVaultTile(x,y){ return dist(x,y, SKY_VAULT.x, SKY_VAULT.y) <= SKY_VAULT.r+0.4; }
 /* ---------- gentle side-to-side sway for the little stepping-isles ----------
    The small isles you hop across drift left and right on the high wind - one slow,
-   one brisk, alternating up the road. The landing (start), the quiet fourth perch
-   (i4 the Windward Perch), and the boss-isle (i6 the Broken Crown) stay dead still, so
-   a fight (or a rest) never shifts under your feet. This is a purely visual, screen-space offset applied in the
+   one brisk, alternating up the road. The landing (start) and the boss-isle (i6 the Broken
+   Crown) stay dead still, so a fight (or a rest) never shifts under your feet. This is a
+   purely visual, screen-space offset applied in the
    renderer: an isle's tiles, its decor, and whoever stands on it all sway together,
    so footing, dashes and the gaps between isles play exactly as before. */
 const SKY_SWING = {
   i1:{amp:7, spd:0.8, phase:0.0},   // slow
   i2:{amp:7, spd:1.7, phase:1.2},   // fast
   i3:{amp:7, spd:0.8, phase:2.4},   // slow
-  i5:{amp:7, spd:1.7, phase:3.6}    // fast
+  i5:{amp:7, spd:1.7, phase:3.6}    // fast (the landing, and the boss-isle i6, stay dead still)
 };
 // horizontal screen-space sway (px) for a world position, if it sits on a swaying isle
 function skyIsleSwingAt(wx,wy){
@@ -48,16 +51,14 @@ function skyIsleSwingAt(wx,wy){
 const SKY_GATES = [
   {gate:'g1', a:'i1', b:'i2', flag:'skyG1'},
   {gate:'g2', a:'i2', b:'i3', flag:'skyG2'},
-  {gate:'g4', a:'i4', b:'i5', flag:'skyG4'},
   {gate:'g5', a:'i5', b:'i6', flag:'skyG5'}
 ];
 const SKYDUNGEON_ZONES = {
   start: {x:60, y:156, r:6, name:'The Rainbow Landing', lv:[9,11]},
-  i1:    {x:60, y:134, r:5, name:'The Bat-Perch',       lv:[9,11]},
-  i2:    {x:76, y:112, r:5, name:'The Rune-Tiles',      lv:[9,11]},
-  i3:    {x:44, y:92,  r:6, name:"The Snatcher's Isle", lv:[10,11]},
-  i4:    {x:76, y:72,  r:7, name:'The Windward Perch',  lv:[10,12]},
-  i5:    {x:44, y:52,  r:5, name:'The Second Perch',    lv:[10,12]},
+  i1:    {x:60, y:130, r:5, name:'The Bat-Perch',       lv:[9,11]},
+  i2:    {x:60, y:104, r:5, name:'The Fading Bridge',   lv:[9,11]},
+  i3:    {x:60, y:79,  r:6, name:"The Snatcher's Isle", lv:[10,11]},
+  i5:    {x:60, y:53,  r:5, name:'The Second Perch',    lv:[10,12]},
   i6:    {x:60, y:28,  r:8, name:'The Broken Crown',    lv:[11,13]}
 };
 if(typeof WORLD_DEFS!=='undefined'){
@@ -141,7 +142,7 @@ function placeObjectsSkyDungeon(){
   // travelling wave. Cross while the tiles are solid; step on a faded one and you drop
   // through the cloud, back to i2 to try again. Each band spans the full width, so there's
   // no edge to sneak along - just time your steps to the wave.
-  G._skyFade={tiles:[], speed:0.48, onFrac:0.74, entryX:76.5, entryY:112.5};
+  { const _i2=skyIsle('i2'); G._skyFade={tiles:[], speed:0.48, onFrac:0.74, entryX:_i2.x+0.5, entryY:_i2.y+0.5}; }
   G._skyFadeT=0;
   { const a=skyIsle('i2'), b=skyIsle('i3'), ax=a.x, ay=a.y, L=Math.hypot(b.x-ax,b.y-ay), ux=(b.x-ax)/L, uy=(b.y-ay)/L;
     for(let yy=0;yy<MAPH;yy++) for(let xx=0;xx<MAPW;xx++){
@@ -181,6 +182,13 @@ function placeObjectsSkyDungeon(){
   if(!(P.story && P.story.skyMapTaken))
     G.decor.push({kind:'chest', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-0.5, skymap:1});
   G.decor.push({kind:'skybird', x:SKY_VAULT.x+0.5, y:SKY_VAULT.y-2.0, up:1, name:'THE WIND-LOST BIRD', labelY:-46});
+  // A STORMWARD QUIVER cache on the Second Perch (i5) - the last isle before the Broken Crown.
+  // A deep, full quiver of arrows for the Storm-Eye, the one foe only the bow can bite.
+  if(!(P.story && P.story.skyArrowsTaken)){
+    const s5=skyIsle('i5');
+    const cp=(typeof findOpenNear==='function' && findOpenNear(Math.round(s5.x), Math.round(s5.y+2), 3)) || [Math.round(s5.x), Math.round(s5.y+2)];
+    G.decor.push({kind:'chest', x:cp[0]+0.5, y:cp[1]+0.5, skyarrows:1});
+  }
   // ---- FLOATING RAINBOW PLATFORMS ----
   // break each road (except the fading bridge) into rainbow platforms with open-sky GAPS you must
   // DASH across; fall between them and the wind bears you back to the isle behind you.
@@ -234,12 +242,14 @@ function spawnSkyWraith(x,y,puzzle,elite){
   if(m){ m.puzzle=puzzle; m.respawnT=-1; m.lvl=Math.max(9,Math.min(12,P.level)); m.hx=m.x; m.hy=m.y; }
   return m;
 }
-// The cloud-snatcher only appears once you're deep enough in: the rune-tiles (isle 2)
-// must be solved so the wind-ward bridge to its isle has parted. It's invulnerable and
-// leashed to its isle, so once spawned it simply persists until the whole road is calm.
+// The cloud-snatcher only appears once you're deep enough in: the rune-tiles (isle 2) must
+// be solved so the wind-ward bridge to its isle has parted. It's fast and grabs at point-
+// blank, but it can now be KILLED (a real health bar) - dash-juke it and wear it down, or
+// just fight it head-on. It stays leashed to its isle.
 function ensureSnatcher(){
   P.story=P.story||{};
   if(P.story.skyDungeonDone) return;          // road's calm - the snatcher is gone
+  if(P.story.skySnatcherDown) return;         // you slew it - it does not come back
   if(!P.story.skyG2) return;                  // not far enough in yet (rune-tiles unsolved)
   if(G.mobs.some(m=>m.grabber && !m.dead)) return;   // already prowling
   const s=skyIsle('i3');
@@ -248,7 +258,7 @@ function ensureSnatcher(){
   const gcx=s.x+0.5, gcy=s.y-2.0, gr=s.r-0.5;
   const sp=findOpenNear(Math.round(gcx),Math.round(gcy),3) || [Math.round(gcx),Math.round(gcy)];
   const g=spawnMob('skygrabber', sp[0], sp[1]);
-  if(g){ g.grabber=1; g.invuln=1; g.respawnT=-1; g.gcx=gcx; g.gcy=gcy; g.gr=gr; g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
+  if(g){ g.grabber=1; g.maxhp=g.hp=280; g.respawnT=-1; g.gcx=gcx; g.gcy=gcy; g.gr=gr; g.hx=g.gcx; g.hy=g.gcy; g.state='chase'; g.noAggroT=0; }
 }
 /* ---------- roaming storm-bats: patrol the open stretches between the isles ----------
    The rainbow road used to be a quiet dash-and-cross with nothing to fight in-between.
@@ -259,9 +269,8 @@ function ensureSnatcher(){
    in the dash-gap pits. */
 const SKY_ROAD_PATROLS = [
   {a:'start', b:'i1', n:1},   // the first climb off the landing - one lone shade
-  {a:'i1',    b:'i2', n:2},   // the run up to the rune-tiles
-  {a:'i3',    b:'i4', n:2},   // past the snatcher's isle, on toward the storm-perch
-  {a:'i4',    b:'i5', n:2},   // between the two perches
+  {a:'i1',    b:'i2', n:2},   // the run up to the fading bridge
+  {a:'i3',    b:'i5', n:2},   // past the snatcher's isle, on toward the storm-perch
   {a:'i5',    b:'i6', n:2}    // the last approach to the Broken Crown
 ];
 // nearest solid road tile centre to (x,y) - never an isle, never a dash-gap pit
@@ -453,7 +462,8 @@ function updateSkyDungeon(dt){
   if(G._skyFade && !P.story.skyG2){
     G._skyFadeT=(G._skyFadeT||0)+dt;
     // a one-time nudge on first approach
-    if(!G._fadeHint && dist(P.x,P.y,76,112)<7){ G._fadeHint=1;
+    const _fi2=skyIsle('i2');
+    if(!G._fadeHint && _fi2 && dist(P.x,P.y,_fi2.x,_fi2.y)<7){ G._fadeHint=1;
       toast('<b>The Rainbow Bridge fades in and out.</b> Cross while the tiles are lit - step on a faded one and you drop through the cloud. Time your steps to the wave; each band holds only a moment.',6000); }
     // dropped through a faded tile -> back to i2 to try the crossing again. A short GRACE
     // means a tile fading out from under you doesn't drop you the instant it flickers - you
@@ -485,21 +495,11 @@ function updateSkyDungeon(dt){
     banner('THE PERCH IS CLEARED','THE WIND-WARD PARTS');
     if(typeof autoSave==='function') autoSave();
   }
-  if(!P.story.skyG5 && P.story.skyG4 && G.mobs.filter(m=>m.puzzle===5 && !m.dead).length===0){
+  if(!P.story.skyG5 && G.mobs.filter(m=>m.puzzle===5 && !m.dead).length===0){
     P.story.skyG5=1; openSkyGate('g5');
     banner('THE SECOND PERCH IS CLEARED','THE LAST WIND-WARD PARTS');
     toast('Three more bats gone to mist, and the final wind-ward parts. Only the <b>Broken Crown</b> lies ahead now.',4600);
     if(typeof autoSave==='function') autoSave();
-  }
-  // i4 is a quiet waypoint (no mini-boss): stepping onto the perch parts the ward onward to
-  // the Second Perch. No fight, no prize - just the road opening up as you cross.
-  if(!P.story.skyG4 && !P.story.skyDungeonDone){
-    const s4=skyIsle('i4');
-    if(s4 && dist(P.x,P.y,s4.x,s4.y) < 3.2){
-      P.story.skyG4=1; openSkyGate('g4');
-      banner('THE WINDWARD PERCH','THE WIND-WARD PARTS');
-      if(typeof autoSave==='function') autoSave();
-    }
   }
   // THE BROKEN CROWN ARENA SEAL: stepping onto i6 while the Storm-Eye lives slams the wind-ward
   // (g5) shut behind you and holds it - no retreat until the eye is out. It reopens on the kill.
@@ -520,15 +520,15 @@ function updateSkyDungeon(dt){
     const d=dist(m.x,m.y,m.gcx,m.gcy);
     if(d>m.gr){ m.x=m.gcx+(m.x-m.gcx)/d*m.gr; m.y=m.gcy+(m.y-m.gcy)/d*m.gr; m.tx=null; } // cannot leave its isle
     // it only grabs at point-blank (and never mid-stun) - so a dash-juke or a sword-stun slips you past
-    if(!P.dead && (P.rollT||0)<=0 && (m.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<0.6 && (G.time-(m._grabT||0))>0.7){
+    if(!P.dead && (P.rollT||0)<=0 && (m.stunT||0)<=0 && dist(P.x,P.y,m.x,m.y)<0.6 && (G.time-(m._grabT||0))>1.3){
       m._grabT=G.time;
       if(Snd.boss) Snd.boss(); G.shake=0.5; buzz(20);
       burst(P.x,P.y-0.5,'#bcd8ff',14,2.4); shockwave(P.x,P.y,'rgba(160,200,255,0.8)',34);
       // it no longer hurls you back to the landing - a grip just STUNS you for a beat. It
       // shoves you a little off itself so you're not pinned in a stun-loop, then you wrench free.
-      if(typeof stunPlayer==='function') stunPlayer(0.9);
+      if(typeof stunPlayer==='function') stunPlayer(0.6);
       const gx=P.x-m.x, gy=P.y-m.y, gd=Math.hypot(gx,gy)||1;
-      P.x+=gx/gd*1.3; P.y+=gy/gd*1.3; P.click=null; P.moving=false;
+      P.x+=gx/gd*1.8; P.y+=gy/gd*1.8; P.click=null; P.moving=false;   // shoved further clear so you're never pinned
       if(!G._snatchHint){ G._snatchHint=1; toast('The <b>cloud-snatcher</b> gets a cold grip on you - it <b>stuns</b> you for a moment before you wrench loose. <i>It cannot leave its isle: dash-juke it, or rattle it with a sword-blow, and slip past.</i>',5200); }
     }
   }
@@ -724,7 +724,7 @@ function enterSkyDungeon(){
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1;
   if(Snd.boss) Snd.boss();
   P._skyReturn={x:P.x, y:P.y}; P.click=null; P.moving=false;
-  toast('The bird springs onto a rising ribbon of colour and you run out after her - onto a <b>rainbow road</b> laid across the open cloud, six tiny isles glinting away into the blue above.',5200);
+  toast('The bird springs onto a rising ribbon of colour and you run out after her - onto a <b>rainbow road</b> laid across the open cloud, five tiny isles glinting away into the blue above.',5200);
   setTimeout(()=>{ try{ switchWorld('skydungeon'); if(typeof autoSave==='function') autoSave();
       banner('THE RAINBOW ROAD','SIX ISLES, AND A SOURED WIND');
     } finally { setTimeout(()=>{ if(fd) fd.style.opacity=0; G._flying=0; G._flyUntil=0; },240); } }, 1000);
