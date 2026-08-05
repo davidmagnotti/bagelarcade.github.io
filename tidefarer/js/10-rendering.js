@@ -371,6 +371,9 @@ function render(){
         const nbs=[[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
         for(const nb of nbs){
           const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
+          // shore contact shadow: any land neighbour casts onto the water (under the land lip)
+          if(nc>0 && SHORE_AO) cx.drawImage(SHORE_AO[nb[2]], sx-TW/2, sy-TH/2);
+          // then the beach/grass bank raggedly overhangs the waterline on top of it
           if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
         }
       }
