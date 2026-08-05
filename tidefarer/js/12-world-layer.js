@@ -1623,16 +1623,18 @@ function genWind(){
   carveDisc(Z.mill.x,Z.mill.y,Z.mill.r,T.GRASS,false);
   carveDisc(Z.bluffs.x,Z.bluffs.y,Z.bluffs.r,T.GRASS,false);
   carveDisc(Z.dock.x,Z.dock.y,5,T.SAND,false);
-  // a cobbled plaza in the market and resort forecourt
-  carveDisc(Z.market.x,Z.market.y,3,T.PATH,false);
+  // cobbled plazas at the town green, the market, and the resort forecourt
+  carveDisc(Z.town.x,  Z.town.y,   3,T.PATH,false);
+  carveDisc(Z.market.x,Z.market.y, 3,T.PATH,false);
   carveDisc(Z.resort.x,Z.resort.y+3,2,T.PATH,false);
-  // roads knitting the city together
-  carveLine(Z.dock.x,Z.dock.y, Z.town.x,Z.town.y, T.PATH,0);
-  carveLine(Z.town.x,Z.town.y, Z.market.x,Z.market.y, T.PATH,0);
-  carveLine(Z.market.x,Z.market.y, Z.mill.x,Z.mill.y, T.PATH,0);
-  carveLine(Z.town.x,Z.town.y, Z.resort.x,Z.resort.y, T.PATH,0);
-  carveLine(Z.town.x,Z.town.y, Z.wheel.x,Z.wheel.y, T.PATH,0);
-  carveLine(Z.market.x,Z.market.y, Z.bluffs.x,Z.bluffs.y, T.PATH,0);
+  // roads knitting the city together - width 1 so they read as proper cobbled
+  // streets (a main street dock -> town -> market -> mill, with spurs off it)
+  carveLine(Z.dock.x,Z.dock.y, Z.town.x,Z.town.y, T.PATH,1);
+  carveLine(Z.town.x,Z.town.y, Z.market.x,Z.market.y, T.PATH,1);
+  carveLine(Z.market.x,Z.market.y, Z.mill.x,Z.mill.y, T.PATH,1);
+  carveLine(Z.town.x,Z.town.y, Z.resort.x,Z.resort.y, T.PATH,1);
+  carveLine(Z.town.x,Z.town.y, Z.wheel.x,Z.wheel.y, T.PATH,1);
+  carveLine(Z.market.x,Z.market.y, Z.bluffs.x,Z.bluffs.y, T.PATH,1);
   // the harbor breakwater: a plank jetty reaching out over the water, where the
   // bound leviathan haunts the strait (the treacherous-tide quest happens here)
   const D=Z.dock;
@@ -1674,13 +1676,14 @@ function placeObjectsWind(){
   for(let dy=-2;dy<=0;dy++) for(let dx=-2;dx<=3;dx++) setSolid(WH.x+dx, WH.y+dy, 1);  // mill-house + the wheel to its east; front face flush at WH.y so nothing slips behind
   for(let dx=-2;dx<=0;dx++) setSolid(WH.x+dx, WH.y, 0);                               // doorway on the mill-house front face, where the arch is drawn - open ground right in front
   wheel.door={x:WH.x-0.5, y:WH.y+1.4};                                               // hotspot one tile out front on clear ground, right where you walk up
-  // ---- the working town: two tidy terraces facing the green, well at centre ----
-  addBuilding('house2', T2.x-4, T2.y-6, 'Harbor Guildhall');
-  addBuilding('house',  T2.x+2, T2.y-6, 'The Trade Winds Inn');
-  addBuilding('house2', T2.x-8, T2.y-1, 'The Chandlery');
-  addBuilding('house',  T2.x+7, T2.y-1, 'Breezy Cottage');
-  addBuilding('house',  T2.x-5, T2.y+5, 'Windsurf Inn (Inn)');
-  addBuilding('house2', T2.x+3, T2.y+5, 'Sailmaker\'s Loft');
+  // ---- the working town: two even terraces of three facing the green, well at
+  // centre. Rows sit north & south of the green, evenly spaced, so the city reads
+  // as laid-out streets rather than scattered cottages ----
+  const TROW=[['house2','Harbor Guildhall'],['house','The Trade Winds Inn'],['house2','The Chandlery'],
+              ['house','Breezy Cottage'],['house','Windsurf Inn (Inn)'],['house2','Sailmaker\'s Loft']];
+  const HX=[-8,0,8];
+  TROW.forEach(([k,l],i)=>{ const row=(i<3?-1:1), col=HX[i%3];
+    addBuilding(k, T2.x+col, T2.y+row*7, l); });
   addBuilding('well',   T2.x, T2.y, 'Town well');
   // ---- Trade Row: a proper market, stalls lined in two neat rows either side
   // of the plaza aisle, east and west kept open for the roads ----
@@ -1702,9 +1705,9 @@ function placeObjectsWind(){
   addBuilding('lamp', D.x+3, D.y+1, '');
   addBuilding('lamp', M.x-6, M.y, ''); addBuilding('lamp', M.x+6, M.y, '');
   addBuilding('lamp', R.x-4, R.y+3, ''); addBuilding('lamp', R.x+4, R.y+3, '');
-  // town-green lamps at the terrace corners
-  addBuilding('lamp', T2.x-6, T2.y-4, ''); addBuilding('lamp', T2.x+5, T2.y-4, '');
-  addBuilding('lamp', T2.x-6, T2.y+4, ''); addBuilding('lamp', T2.x+5, T2.y+4, '');
+  // town-green lamps at the four terrace corners, framing the plaza evenly
+  addBuilding('lamp', T2.x-6, T2.y-4, ''); addBuilding('lamp', T2.x+6, T2.y-4, '');
+  addBuilding('lamp', T2.x-6, T2.y+4, ''); addBuilding('lamp', T2.x+6, T2.y+4, '');
   // greenery - leafy town trees & bluff palms so the city feels lived-in
   const pr=mulberry32(SEED+11);
   for(let i=0;i<200;i++){
