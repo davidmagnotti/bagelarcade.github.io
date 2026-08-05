@@ -63,6 +63,19 @@ function invalidateScenery(){ sceneryCache=null; }
 // overworld big map then reads as an all-gray sheet on return. switchWorld calls this after
 // it sets G.worldId, so the next drawBigMap rebuilds from the correct G.map.
 function invalidateMapBase(){ mapBaseWorld=null; }
+// LARGE-SCALE GROUND VARIATION: a low-frequency value-noise field sampled from WORLD
+// position (not per-tile), so it varies smoothly across ~11 tiles. Baked as a soft
+// value wash (lighten/darken, hue-neutral) over the open outdoor ground, it gives big
+// grass/sand/dirt expanses macro form and breaks the "every tile identical" read that
+// makes flat terrain look like a repeated tilemap. Rebuilt per world.
+let _gMac=null, _gMacWorld=null;
+function groundMacro(){
+  if(_gMac && _gMacWorld===G.worldId) return _gMac;
+  const seed=(((WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].seed)||1)>>>0) ^ 0x9e3779b9;
+  const gridN=Math.max(6, Math.round(Math.max(MAPW,MAPH)/11));   // ~11 tiles per macro cell
+  _gMac=makeNoise(seed>>>0, gridN); _gMacWorld=G.worldId; return _gMac;
+}
+const MACRO_TILE={[T.GRASS]:1,[T.FOREST]:1,[T.SAND]:1,[T.SOIL]:1,[T.PATH]:1};
 function buildGroundCache(){
   GC_S=gcScale();
   const {OX,OY,W,H}=gcDims();
@@ -72,6 +85,7 @@ function buildGroundCache(){
   const CLOUD = !!(WORLD_DEFS[G.worldId] && WORLD_DEFS[G.worldId].cloud);
   const EL = (typeof elevActive==='function') && elevActive();
   if(EL) ensureHeight();
+  const mac = CLOUD ? null : groundMacro();
   for(let y=0;y<MAPH;y++) for(let x=0;x<MAPW;x++){
     const t=G.map[y*MAPW+x], sx=isoX(x,y)+OX, sy=isoY(x,y)+OY;
     if(CLOUD && (t===T.DEEP||t===T.SHALLOW)) continue;   // open sky - stays transparent so the backdrop shows
@@ -85,6 +99,17 @@ function buildGroundCache(){
       if(mc<4) for(const nb of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
         const nc=terrainCls(tileAt(x+nb[0],y+nb[1]));
         if(nc>mc && FRINGE[nc]) g.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
+      }
+      // macro value wash over open outdoor ground (hue-neutral lighten/darken)
+      if(mac && MACRO_TILE[t]){
+        const d=mac(x/MAPW, y/MAPH)-0.5, a=Math.min(0.30, Math.abs(d)*1.15);
+        if(a>0.02){
+          g.save(); diamond(g,sx,sy-L,TW,TH); g.clip();
+          g.globalCompositeOperation='soft-light'; g.globalAlpha=a;
+          g.fillStyle = d>0 ? '#ffffff' : '#000000';
+          g.fillRect(sx-TW/2, sy-TH/2-L, TW, TH);
+          g.globalCompositeOperation='source-over'; g.globalAlpha=1; g.restore();
+        }
       }
     }
     if(EL) elevTileFX(g,x,y,sx,sy);   // baked once: sun wash + contact shadows are free here
@@ -278,6 +303,8 @@ function render(){
   // paints cliff faces, and rides actors up on the raised ground beneath them.
   const EL = (typeof elevActive==='function') && elevActive();
   if(EL) ensureHeight();
+  // macro ground-variation field for the live (high-detail) tile pass - see buildGroundCache
+  const macLive = (!CLOUD && !LOWFX) ? groundMacro() : null;
 
   // ---- ground pass ----
   if(DBG.ground){
@@ -370,6 +397,18 @@ function render(){
             const nt=tileAt(x+nb[0],y+nb[1]);
             const nc=terrainCls(nt);
             if(nc>mc && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2-L);
+          }
+        }
+        // macro value wash: low-frequency, world-positioned lighten/darken so big
+        // grass/sand/dirt expanses get form and don't read as one repeated tile
+        if(macLive && MACRO_TILE[t]){
+          const d=macLive(x/MAPW, y/MAPH)-0.5, a=Math.min(0.30, Math.abs(d)*1.15);
+          if(a>0.02){
+            cx.save(); diamond(cx,sx,sy-L,TW,TH); cx.clip();
+            cx.globalCompositeOperation='soft-light'; cx.globalAlpha=a;
+            cx.fillStyle = d>0 ? '#ffffff' : '#000000';
+            cx.fillRect(sx-TW/2, sy-TH/2-L, TW, TH);
+            cx.globalCompositeOperation='source-over'; cx.globalAlpha=1; cx.restore();
           }
         }
       }

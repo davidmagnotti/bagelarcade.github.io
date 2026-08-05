@@ -122,12 +122,18 @@ function buildTiles(){
         // built surfaces (water, path, soil, plank, ruin) keep the old edging.
         const NATURAL = (tn===T.GRASS||tn===T.FOREST||tn===T.SAND||tn===T.SNOW||tn===T.ICE);
         const WATER = (tn===T.DEEP || tn===T.SHALLOW);
+        // dirt road (PATH) and tilled soil (SOIL) join the seamless set too: their old
+        // two-tone-by-variant fill + south-edge stroke printed a hard light/dark CHECKERBOARD
+        // of diamonds across every dirt expanse (the loudest "it's a tilemap" tell). A single
+        // base tone plus the mottling / pebbles / furrows below carries the texture instead,
+        // so dirt reads as continuous ground rather than laid tiles.
+        const EARTH = (tn===T.PATH || tn===T.SOIL);
         // Water joins the seamless set too: the sea should read as ONE surface.
         // Both water types share a single base tone - the entire shore->abyss
         // gradient is painted on top by the smooth overlapping depth blobs
         // (js/33-elevation), so there's no hard shallow/deep colour step and no
         // grid of two-tone diamonds. Animated sheen/caustics live in the ground pass.
-        const SEAMLESS = NATURAL || WATER;
+        const SEAMLESS = NATURAL || WATER || EARTH;
         const base = WATER ? '#33708f' : (SEAMLESS ? c1 : ((v%2)?c1:c2));
         diamond(g,TW/2,TH/2,TW,TH); g.fillStyle = base; g.fill();
         // Over-cover the diamond's own anti-aliased rim with the base tone, so
