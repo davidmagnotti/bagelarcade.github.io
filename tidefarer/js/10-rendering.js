@@ -654,6 +654,10 @@ function render(){
   // gale on Windsurf) - self-gated on the Veil + that isle's boss flag (45-isle-hazards.js)
   if(typeof drawIsleHazard==='function') drawIsleHazard();
 
+  // The Frozen Isle's cursed cold: an icy vignette that bites while you're
+  // uncoated, and everyone's breath smoking in the wind (48-frost-coats.js)
+  if(typeof drawFrostChill==='function') drawFrostChill();
+
   // sickly miasma near the Old Ruins
   const ruinD=ZONES.ruins? dist(P.x,P.y,ZONES.ruins.x,ZONES.ruins.y) : 999;
   if(ruinD<14){ cx.fillStyle='rgba(70,100,70,'+(0.10*(1-ruinD/14)).toFixed(3)+')'; cx.fillRect(-20,-20,VW+40,VH+40); }
@@ -2659,6 +2663,10 @@ function drawNPC(n,s){
     nlook={...n.look, shirt:'#2f6ad6', pants:'#26407a', trim:'#e6c25a'};
     nname='Prince Leo';
   }
+  // On the Frozen Isle, Leo bundles into a matched fur coat too (48-frost-coats.js)
+  if(n.id==='brother' && typeof frostCoatWorn==='function' && frostCoatWorn() && typeof frostCoatLook==='function'){
+    nlook=frostCoatLook({...n.look});
+  }
   // n.swing lets an NPC animate a weapon strike (Rask's practice slash in the parry
   // drill); a live swing bypasses the sprite cache so the blade actually moves. `moving`
   // (an NPC walking toward a wander target) also draws live, so a walking/dancing NPC gets a
@@ -4099,6 +4107,9 @@ function drawPlayer(s){
   const _pz=P.z||0;
   drawShadowAt(cx,s.x,s.y, _pz>0 ? 14*Math.max(0.55,1-_pz/26) : 14);
   if(_pz>0) s={x:s.x, y:s.y-_pz};
+  // FREEZING on the Frozen Isle: a hard shiver shudders the figure (the shadow
+  // stays planted). The coat, once on, stills it. (48-frost-coats.js)
+  if(typeof frostShakeX==='function'){ const _sh=frostShakeX(); if(_sh) s={x:s.x+_sh, y:s.y}; }
   drawPlayerFigure(s);
   drawCarriedFlame(s);
 }
@@ -4161,6 +4172,8 @@ function drawPlayerFigure(s){
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
   look.armor=P.armor||0;
+  // On the Frozen Isle you pull a fur-lined coat over everything (48-frost-coats.js)
+  if(typeof frostCoatWorn==='function' && frostCoatWorn() && typeof frostCoatLook==='function') frostCoatLook(look);
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32, turn:1,   // the overworld hero yaws for true 8-way facing
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, moveT:P.moveT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, published for the mount; seated legs hang plumb

@@ -2540,6 +2540,16 @@ function spawnFrostFolk(){
      'No seals on the floes, no fish beneath them - but a warm bed I can still give you. Rest here whenever the ice gets into your bones.',
      'Come in from that wind before it takes your ears off. Sleep\'s ten gold; the thaw, if you can win it, is on the house.'],0.5);
     inn.nightOwl=true; G.npcs.push(inn); }   // an innkeep on a frozen coast keeps the hearth lit round the clock
+  // ---- Rurik: the furrier who meets every ferry at the landing with a spare
+  // coat (see 48-frost-coats.js - greets you and bundles you both up on arrival) ----
+  { const D=Z.dock, sp=(typeof findOpenNear==='function' && findOpenNear(Math.round(D.x), Math.round(D.y-3), 6)) || [D.x, D.y-3];
+    const look=(typeof frostFurrierLook==='function') ? frostFurrierLook()
+      : {skin:'#c99e78',hair:'#d8d2c4',beard:'#d8d2c4',shirt:'#7a563a',pants:'#3a2f26',hat:'hood',hatColor:'#664630',trim:'#e6ddc8',hairstyle:'short'};
+    const rurik=makeNPC('rurik','Rurik the Furrier', sp[0], sp[1], look,
+      ['A coat and a kettle - that\'s the whole trick of living up here. Keep the both of them full.',
+       'You keep that fur on while you\'re on my ice, hear? Southerners go blue at the lips first, and I\'d hate to lose you.',
+       'Off up the glacier, down the fissure, off to fight some horror in the deep - fine, fine. But you go BUNDLED, or you don\'t go off my landing.'],0.3);
+    rurik.nightOwl=true; G.npcs.push(rurik); }   // he keeps the landing round the clock, coats ready
 }
 function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
@@ -7456,6 +7466,9 @@ function switchWorld(id){
     if(P.story && P.story.iceBearDown && qs('rimebound')!=='done' && !P.quests.rimebound) P.quests.rimebound='avail';
     if(P.story && P.story.frostFreed) updateFrostFolkMood();
     if(!P.prog.frostSeen){ P.prog.frostSeen=1; }
+    // The cursed cold takes you the moment you land - you arrive FREEZING, and
+    // pull on the fur coat (or, the first time, are given one). See 48-frost-coats.js
+    if(typeof enterFrost==='function') enterFrost();
   }
   if(id==='sky'){
     // The Rainbow Road is the way DOWN off the Cloudreach: run it, calm the sky, and
