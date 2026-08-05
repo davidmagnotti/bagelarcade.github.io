@@ -70,7 +70,7 @@ function brewMenu(npc){
   const tonic={mushroom:2, crystal:1};
   const great={potion:2, crystal:1, mushroom:1};
   const gooTonic={goo:3};
-  setDialog('“The cellar\'s warm and the crystals are humming. What shall we draw off the boil?”',
+  setDialog('“The counter\'s set and the crystals are humming. What shall we draw off the boil?”',
     [{label:'Render slime goo (3 goo → 1 tonic)', fn:()=>{
         if(!canPay(gooTonic)){ setDialog('“Slime goo, of all things - but render <b>three globs</b> and the muck thickens into honest medicine. '+costText(gooTonic)+'.”',
           [{label:'Back',fn:()=>brewMenu(npc)}]); return; }

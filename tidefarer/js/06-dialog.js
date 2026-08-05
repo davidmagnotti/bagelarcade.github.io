@@ -755,6 +755,9 @@ function shopButtons(npc,btns){
       [{item:'bread',price:5},{item:'cookedfish',price:7},{item:'apple',price:3},{item:'potion',price:30}])});
   }
   if(npc.id==='ivo'){
+    // the herbalist will also brew from what YOU bring in off the wilds (bluecaps, ember
+    // crystals, slime goo) - the crafting bench Orin used to keep, moved to the herb-makers
+    btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Tonics and tidebalm, every one brewed on this counter. The blue one\'s twice the mend - and twice the coin.',
       [{item:'potion',price:30},{item:'elixir',price:70}])});
   }
@@ -863,6 +866,8 @@ function shopButtons(npc,btns){
     }});
   }
   if(npc.id==='rook'){
+    // the apothecary brews to order too, from the makings you gather
+    btns.unshift({label:'Brew tonics…', fn:()=>brewMenu(npc)});
     btns.unshift({label:'Buy remedies…', fn:()=>vendorShop(npc,'Straight off the shelf, friend - the red Ember Tonic for the small hurts, the blue elixir for when the small hurts aren\'t. What\'ll it be?',
       [{item:'potion',price:30},{item:'elixir',price:70}])});
   }
