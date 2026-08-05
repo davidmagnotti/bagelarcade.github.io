@@ -421,6 +421,24 @@ function render(){
           // then the beach/grass bank raggedly overhangs the waterline on top of it
           if((nc===1||nc===3) && FRINGE[nc]) cx.drawImage(FRINGE[nc][nb[2]], sx-TW/2, sy-TH/2);
         }
+        // corner-rounding: where two adjacent edges both border a beach/grass bank, round the
+        // sharp convex land point into a smooth headland so the coast stops reading as a staircase
+        if(CORNER){
+          // per corner: the two flanking cardinal neighbours + the diagonal behind the corner
+          const corners=[[0,[-1,0],[0,-1],[-1,-1]],[1,[0,-1],[1,0],[1,-1]],
+                         [2,[1,0],[0,1],[1,1]],   [3,[0,1],[-1,0],[-1,1]]];
+          for(const cc of corners){
+            const na=terrainCls(tileAt(x+cc[1][0], y+cc[1][1]));
+            const nbc=terrainCls(tileAt(x+cc[2][0], y+cc[2][1]));
+            // convex land point (both flanking edges are bank) -> round into a headland.
+            // (Lone diagonal spits are deliberately NOT capped - that leaves sand nubs
+            //  stranded out in the water.)
+            if((na===1||na===3) && (nbc===1||nbc===3)){
+              const cls=(na===1||nbc===1)?1:3;   // prefer a sand headland; else grass
+              if(CORNER[cls]) cx.drawImage(CORNER[cls][cc[0]], sx-TW/2, sy-TH/2);
+            }
+          }
+        }
       }
     }
   }

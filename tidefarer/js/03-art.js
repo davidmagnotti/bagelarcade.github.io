@@ -20,6 +20,7 @@ const TILE_SPR = {}; // [tileType][variant]
 const FRINGE={};
 let SHORE_AO=null;   // [dir] soft dark contact shadow the raised land casts onto the water at the shore
 let SHORE_SURF=null; // [dir] soft pale wet-surf lip on the water right at a sand/grass edge
+let CORNER=null;     // [cls][corner] rounded sand/grass fillet that smooths a convex coast corner
 function buildFringes(){
   const defs={1:{c:PAL.sand,c2:PAL.sand2}, 2:{c:PAL.path,c2:PAL.path2},
               3:{c:PAL.grass,c2:PAL.grassHi,tuft:true}, 4:{c:PAL.forest,c2:PAL.forest2,tuft:true}};
@@ -138,6 +139,43 @@ function buildShoreSurf(){
       g.restore();
       g.restore();
     }));
+  }
+}
+/* CORNER-ROUNDED COAST: the coastline is locked to tile diamonds, so it stair-steps. Where two
+   adjacent edges of a WATER tile both border a beach/grass bank, the land forms a sharp convex
+   point poking into the water (the outward tip of each step). These sprites drop a small rounded
+   sand/grass fillet on that corner so the point reads as a smooth headland instead of a diamond
+   tip - turning the staircase into a rounded shore. One sprite per land class per diamond corner
+   (Top / Right / Bottom / Left). Drawn on top of the edge fringes. */
+function buildCorners(){
+  const defs={1:{c:PAL.sand, c2:PAL.sand2}, 3:{c:PAL.grass, c2:PAL.grassHi}};
+  const cpos=[[32,0],[64,16],[32,32],[0,16]];   // Top, Right, Bottom, Left in local diamond space
+  CORNER={};
+  for(const cls in defs){
+    CORNER[cls]=[];
+    for(let ci=0;ci<4;ci++){
+      CORNER[cls].push(makeCanvas(TW,TH,(g)=>{
+        const r=mulberry32(700+(+cls)*23+ci*7);
+        g.save(); diamond(g,TW/2,TH/2,TW,TH); g.clip();
+        const [px,py]=cpos[ci], mx=32, my=16;
+        const dx=mx-px, dy=my-py, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl;
+        // a squashed, slightly-wavy sand blob seated just inside the corner, bulging toward
+        // open water - its rounded edge replaces the sharp diamond tip
+        const inset=7, R=12, ccx=px+ux*inset, ccy=py+uy*inset;
+        g.beginPath();
+        for(let a=0;a<=14;a++){ const ang=a/14*TAU, rr=R+(r()-0.5)*3;
+          const qx=ccx+Math.cos(ang)*rr, qy=ccy+Math.sin(ang)*rr*0.6;
+          if(a===0) g.moveTo(qx,qy); else g.lineTo(qx,qy); }
+        g.closePath();
+        g.fillStyle=defs[cls].c; g.fill();
+        // a little texture + a soft wet rim toward the water so it doesn't read as a flat lump
+        g.save(); g.clip();
+        for(let i=0;i<5;i++){ g.fillStyle= r()<0.5? defs[cls].c2 : 'rgba(0,0,0,0.06)';
+          g.fillRect(ccx+(r()-0.5)*R*1.6, ccy+(r()-0.5)*R, 1.5+r()*2, 1.2); }
+        g.restore();
+        g.restore();
+      }));
+    }
   }
 }
 function buildTiles(){
