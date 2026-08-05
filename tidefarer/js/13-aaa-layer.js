@@ -1292,5 +1292,13 @@ function ambientFX(dt){
     G.parts.push({x:P.x+rnd(-8,8),y:P.y+rnd(-8,8),vx:rnd(-0.25,-0.05),vy:rnd(-0.25,-0.05),
       life:rnd(2,4),color:'rgba(160,155,145,0.6)',size:1.6});
   }
+  // Mount Kea's breath inside the Sunward dungeons: fine grey ash sifting down, and the odd
+  // ember floating up off the molten seams - so the deep reads as the living heart of a volcano.
+  if(G.worldId==='eastdeep' || G.worldId==='sunwarddeep'){
+    if(Math.random()<0.75) G.parts.push({x:P.x+rnd(-9,9), y:P.y+rnd(-11,-2), vx:rnd(-0.1,0.28), vy:rnd(0.5,1.15),
+      life:rnd(2.6,4.6), color:'rgba(150,140,132,0.5)', size:rnd(1,2)});
+    if(Math.random()<0.5) G.parts.push({x:P.x+rnd(-9,9), y:P.y+rnd(-4,6), vx:rnd(-0.15,0.15), vy:-rnd(0.5,1.3),
+      life:rnd(0.8,1.8), color:Math.random()<0.5?'#ff8a44':'#ffb457', size:rnd(1,2.2), glow:true});
+  }
 }
 

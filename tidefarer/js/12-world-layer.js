@@ -1247,7 +1247,9 @@ function placeObjectsEastDeep(){
   if(!(P.unlocked && P.unlocked.dash)){ P.unlocked=P.unlocked||{}; P.unlocked.dash=true; toast('The heat quickens your step - you can <b>DASH</b> here (tap <b>Ctrl</b> or <b>L</b> / the dodge button).',4200); }
   const Z=EASTDEEP_ZONES;
   // the basalt walls that give the rooms their shape (baked static scenery)
-  for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5)});
+  // the Emberthroat's walls read as warm volcanic basalt (ember-veined), matching the Ashen
+  // Forge and the isle above - not the neutral grey stone of the older dungeons.
+  for(const [x,y] of EDEEP_WALLS) G.decor.push({kind:'ewall', x:x+0.5, y:y+0.5, s:((x*7+y*13)%5), theme:'forge'});
   // the way back up the Emberthroat, in the landing chamber
   G.decor.push({kind:'dungeonmouth', ember:1, exit:1, x:40.5, y:135.5, label:'the way up'});
   setSolid(40,135,0); setTile(40,135,T.RUIN);
@@ -1340,6 +1342,15 @@ function placeObjectsEastDeep(){
   edeepLava(24,6,1.6); edeepLava(56,6,1.6);
   G.decor.push({kind:'dragonrest', x:40.5, y:9.5});
   G.decor.push({kind:'chest', x:26.5, y:15.5, deep:1, rich:9});
+  // glowing lava-cracks seamed through the basalt floors, so the whole climb reads as the
+  // living inside of Mount Kea (theming only - a floor-level glow on walkable stone, never in
+  // a crossing pit or on a slab). Mirrors the Ashen Forge's molten seams.
+  { const LS=mulberry32((SEED||1)+913);
+    for(let i=0;i<44;i++){ const gx=25+Math.floor(LS()*30), gy=3+Math.floor(LS()*134);
+      if(inb(gx,gy) && tileAt(gx,gy)===T.RUIN && !solidAt(gx,gy)
+         && !(G._eastChasm && G._eastChasm.has(gx+','+gy))
+         && !G.decor.some(d=>d.kind==='driftslab' && Math.abs(d.x-(gx+0.5))<1.7 && Math.abs(d.y-(gy+0.5))<1.7))
+        G.decor.push({kind:'lavacrack', x:gx+0.5, y:gy+0.5, seed:i, big:i%6===0}); } }
   G.critters=[];
   // an already-won run (story-complete, or dev-toggled) opens straight to Ashwing: gates up
   // and the chasms filled to solid basalt, so there's no timing to redo
