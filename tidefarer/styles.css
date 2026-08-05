@@ -309,6 +309,24 @@
   .storyCard p{font-size:16px;line-height:1.72;color:var(--parch);margin:6px 0 24px;}
   .storyCard p b{color:var(--ember);}
   .storyCard p i{color:var(--parch-dim);font-style:italic;}
+  /* character-dialogue treatment: when a story beat is SOMEONE SPEAKING, a framed
+     portrait + name plate turns the plain card into a proper conversation panel.
+     --spk is the speaker's tint, set per-call; it washes the frame and name. */
+  .storySpeaker{display:flex;align-items:center;gap:15px;justify-content:center;margin:2px 0 18px;}
+  .storySpeaker canvas{width:76px;height:76px;flex:0 0 auto;border-radius:12px;image-rendering:auto;
+    background:radial-gradient(ellipse at 50% 35%, rgba(30,20,44,.9), rgba(8,6,12,.96));
+    border:1.5px solid var(--spk,rgba(201,160,255,.7));
+    box-shadow:0 0 22px -2px var(--spk,rgba(201,160,255,.55)),0 4px 12px rgba(0,0,0,.55),inset 0 0 14px rgba(0,0,0,.5);}
+  .storyNameWrap{text-align:left;min-width:0;}
+  #storyName{font-family:var(--font-serif);font-size:23px;letter-spacing:1.5px;line-height:1.1;
+    color:var(--spk,var(--parch));text-shadow:0 0 16px var(--spk,rgba(201,160,255,.5)),0 2px 6px #000;}
+  #storyRole{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--parch-dim);margin-top:5px;}
+  /* while a speaker is up, lift the card off the scene with a tinted edge + a hairline
+     rule under the name plate, so speech reads as delivered, not narrated */
+  .storyCard.speaking{border:1px solid var(--spk,rgba(201,160,255,.28));border-radius:16px;
+    padding:26px 30px;background:linear-gradient(180deg, rgba(20,16,30,.55), rgba(10,8,16,.72));
+    box-shadow:0 0 40px -6px var(--spk,rgba(201,160,255,.4)),0 10px 40px rgba(0,0,0,.6);}
+  .storyCard.speaking .storySpeaker{border-bottom:1px solid var(--spk,rgba(201,160,255,.22));padding-bottom:16px;}
   /* Act I climax: the throne-hall cutscene, then the sailing epilogue below.
      Both reuse the .epiTitle / .epiSub caption styling. */
   #thrOv,#epiOv,#dgOv,#hsOv,#shOv{background:#05070d;overflow:hidden;cursor:pointer;}

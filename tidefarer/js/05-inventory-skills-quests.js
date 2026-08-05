@@ -317,6 +317,25 @@ function storyCard(html, opts){
   // here as well (the italic narration stays). No more quote marks anywhere.
   if(typeof html==='string') html=html.replace(/[“”]/g,'').replace(/ {2,}/g,' ');
   document.getElementById('storyText').innerHTML=html;
+  // Optional SPEAKER treatment: opts.speaker = {name, role, tint, draw(ctx,w,h)}. When
+  // present, the card wears a framed portrait + name plate and reads as character
+  // dialogue rather than plain narration. Absent -> the classic narration card.
+  const card=document.getElementById('storyCardEl'), spEl=document.getElementById('storySpeaker');
+  if(card && spEl){
+    const spk=opts.speaker;
+    if(spk){
+      const nm=document.getElementById('storyName'), ro=document.getElementById('storyRole');
+      if(nm) nm.textContent=spk.name||'';
+      if(ro){ ro.textContent=spk.role||''; ro.style.display=spk.role?'block':'none'; }
+      card.style.setProperty('--spk', spk.tint||'rgba(201,160,255,.7)');
+      card.classList.add('speaking'); spEl.style.display='flex';
+      const pc=document.getElementById('storyPortrait');
+      if(pc){ const pg=pc.getContext('2d'); pg.clearRect(0,0,pc.width,pc.height);
+        if(typeof spk.draw==='function'){ try{ spk.draw(pg,pc.width,pc.height); }catch(e){} } }
+    } else {
+      card.classList.remove('speaking'); card.style.removeProperty('--spk'); spEl.style.display='none';
+    }
+  }
   const bt=document.getElementById('storyBtn');
   bt.textContent=opts.label||'Continue';
   ov.style.display='flex';

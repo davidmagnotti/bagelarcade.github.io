@@ -198,7 +198,11 @@
 </div>
 
 <div class="overlay" id="storyOv" style="display:none;">
-  <div class="ovCard storyCard">
+  <div class="ovCard storyCard" id="storyCardEl">
+    <div class="storySpeaker" id="storySpeaker" style="display:none;">
+      <canvas id="storyPortrait" width="120" height="120"></canvas>
+      <div class="storyNameWrap"><div id="storyName"></div><div id="storyRole"></div></div>
+    </div>
     <p id="storyText"></p>
     <button class="btn gold" id="storyBtn">Continue</button>
   </div>

@@ -3357,6 +3357,48 @@ function drawMob(m,s){
     drawMobBars&&drawMobBars(m,s); return;
   }
   // ===== THE RECKONING: Vath's three forms + Leo's cage (bespoke) =====
+  if(m.kind==='vathmorph'){   // THE SHEDDING: the robed man tears apart into the shadow husk
+    const p=Math.min(1,1-(m.morphT||0)/(m.morphMax||1));   // 0 -> 1 transformation progress
+    const t=G.time, fl=m.face||1;
+    const jit=p*3.0, jx=(Math.sin(t*47)+Math.sin(t*31))*jit*0.5, jy=Math.sin(t*53)*jit*0.4;   // shudders harder as he comes apart
+    drawShadowAt(cx,s.x,s.y,16+p*8);
+    // a violet corona swelling under him as the shape destabilises
+    cx.save(); cx.globalCompositeOperation='lighter';
+    const rg=cx.createRadialGradient(s.x,s.y-30,2,s.x,s.y-30,34+p*24);
+    rg.addColorStop(0,'rgba(150,50,200,'+(0.16+0.4*p).toFixed(2)+')'); rg.addColorStop(1,'rgba(90,20,140,0)');
+    cx.fillStyle=rg; cx.beginPath(); cx.arc(s.x,s.y-30,34+p*24,0,TAU); cx.fill(); cx.restore();
+    // --- the human mask, fading out and shuddering ---
+    if(p<0.92){ cx.save(); cx.globalAlpha=Math.max(0,1-p*1.08);
+      drawHumanoid(cx, s.x+jx, s.y+jy, {skin:'#c2a892',hair:'#241a2e',beard:'#2a2038',robe:'#4a2a5e',rune:true,
+        weapon:'staff', size:1.18, dir:{x:fl,y:0.25}, step:0});
+      cx.restore();
+      // violet fractures racing up the human shape as it splits
+      if(p>0.12){ cx.save(); cx.translate(s.x+jx,s.y+jy); cx.globalCompositeOperation='lighter';
+        cx.strokeStyle='rgba(210,140,255,'+(0.5*Math.min(1,p*1.6)).toFixed(2)+')'; cx.lineWidth=1.6; cx.lineCap='round';
+        for(let i=-2;i<=2;i++){ cx.beginPath(); cx.moveTo(i*2,-6); cx.lineTo(i*5+Math.sin(t*5+i)*2,-22-p*18); cx.lineTo(i*4,-42-p*20); cx.stroke(); }
+        cx.restore(); }
+    }
+    // --- the shadow husk rising up through him, forming head-last ---
+    if(p>0.1){ const a2=Math.min(1,(p-0.1)/0.7), rise=1-a2;
+      cx.save(); cx.translate(s.x-jx, s.y+rise*10); cx.scale(fl,1); cx.globalAlpha=a2; cx.lineJoin='round'; cx.lineCap='round';
+      const DARK='#1a0e2e', MID='#3a1a5e', EDGE='#7a2fb0', breath=Math.sin(t*4)*1.2, gy=-46*a2;
+      cx.strokeStyle=DARK; cx.lineWidth=7;
+      cx.beginPath(); cx.moveTo(-5,-2); cx.lineTo(-6,gy*0.55); cx.stroke();
+      cx.beginPath(); cx.moveTo(5,-2); cx.lineTo(6,gy*0.55); cx.stroke();
+      cx.fillStyle=MID; cx.beginPath(); cx.moveTo(-8,gy*0.55); cx.quadraticCurveTo(0,gy*0.6+breath,8,gy*0.55);
+      cx.lineTo(6,gy-2-breath); cx.quadraticCurveTo(0,gy-8-breath,-6,gy-2-breath); cx.closePath(); cx.fill();
+      cx.strokeStyle=EDGE; cx.lineWidth=2;
+      for(let i=-1;i<=1;i++){ cx.beginPath(); cx.moveTo(i*5,gy-4); cx.quadraticCurveTo(i*9,gy-12,i*7+Math.sin(t*3+i)*2,gy-18-p*4); cx.stroke(); }
+      cx.fillStyle=DARK; cx.beginPath(); cx.arc(0,gy-10-breath,7,0,TAU); cx.fill();
+      cx.save(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(199,123,255,0.95)';
+      cx.beginPath(); cx.arc(-2.5,gy-11-breath,1.7,0,TAU); cx.arc(2.5,gy-11-breath,1.7,0,TAU); cx.fill(); cx.restore();
+      cx.restore();
+    }
+    // a white-violet flash at the snap into the finished husk
+    if(p>0.82){ const f=1-(p-0.82)/0.18; cx.save(); cx.globalCompositeOperation='lighter';
+      cx.fillStyle='rgba(220,180,255,'+(0.55*f).toFixed(2)+')'; cx.beginPath(); cx.arc(s.x,s.y-34,24+(1-f)*34,0,TAU); cx.fill(); cx.restore(); }
+    return;
+  }
   if(m.kind==='vathhusk'){   // STAGE 1: the man peels away into a lean shadow-thing
     drawShadowAt(cx,s.x,s.y,16);
     if(m.windup>0){ const wp=1-Math.min(1,m.windup/0.55); cx.strokeStyle='rgba(230,60,45,'+(0.5+0.35*Math.sin(G.time*24)).toFixed(2)+')'; cx.lineWidth=2.5; cx.beginPath(); cx.ellipse(s.x,s.y,26+wp*12,(26+wp*12)*0.5,0,0,TAU); cx.stroke(); }
