@@ -925,36 +925,61 @@ function placeObjectsEast(){
   addBuilding('lamp', VO.x-3, VO.y+VO.r-1, '');
   addBuilding('lamp', VO.x+3, VO.y+VO.r-1, '');
   const pr2=mulberry32(SEED+7);
-  // the grove proper: thick palms
   const GR=EAST_ZONES.grove;
-  for(let gy=-GR.r;gy<=GR.r;gy++) for(let gx=-GR.r;gx<=GR.r;gx++){
-    const px=GR.x+gx, py=GR.y+gy;
-    if(Math.hypot(gx,gy)<=GR.r && inb(px,py) && tileAt(px,py)===T.FOREST && !solidAt(px,py) && pr2()<0.26){
-      const n=addNode('tree',px,py); n.palm=1;
-    }
+  // Palms hold a two-tile berth from every dirt road, so the paths stay open and read
+  // as cut THROUGH the jungle rather than lined by a hedge of trees at their edge.
+  const nearRoad=(x,y,rad)=>{ for(let ry=-rad;ry<=rad;ry++) for(let rx=-rad;rx<=rad;rx++){
+    const xx=x+rx,yy=y+ry; if(inb(xx,yy) && tileAt(xx,yy)===T.PATH) return true; } return false; };
+  // A LUSH TROPICAL JUNGLE across the whole wild isle: palms grow thick everywhere
+  // OUTSIDE the village clearing, the dock cove and Mount Kea's ash slopes - thickest of
+  // all inside Palmwatch Grove - so the land between the settlements feels like untamed
+  // jungle, not bare grass with a few scattered trees. A per-tile sweep (rather than the
+  // old handful of random throws that mostly splashed into the sea) makes the density
+  // reliable; the road berth above keeps the paths clear.
+  for(let y=2;y<MAPH-2;y++) for(let x=2;x<MAPW-2;x++){
+    const t=tileAt(x,y);
+    if((t!==T.GRASS && t!==T.FOREST && t!==T.SAND) || solidAt(x,y)) continue;
+    if(dist(x,y,V.x,V.y) < 11) continue;              // leave the village clearing open
+    if(dist(x,y,D.x,D.y) < 6)  continue;              // and the dock cove
+    if(dist(x,y,VO.x,VO.y) < VO.r+1) continue;        // no palms on the mountain's ash
+    if(nearRoad(x,y,2)) continue;                     // two-tile berth from the dirt road
+    const inGrove = dist(x,y,GR.x,GR.y) <= GR.r;
+    const p = inGrove ? 0.36 : (t===T.FOREST ? 0.30 : t===T.GRASS ? 0.14 : 0.05);
+    if(pr2()<p){ const n=addNode('tree',x,y); n.palm=1; }
   }
-  // palms scattered across the whole isle - denser now so the smaller island still feels lush
-  for(let i=0;i<360;i++){
-    const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
-    const t=tileAt(ax,ay);
-    if((t===T.FOREST || (t===T.GRASS&&pr2()<0.26) || (t===T.SAND&&pr2()<0.28)) && !solidAt(ax,ay)
-       && dist(ax,ay,V.x,V.y)>6 && dist(ax,ay,D.x,D.y)>4 && dist(ax,ay,VO.x,VO.y)>VO.r-2){
-      const n=addNode('tree',ax,ay); n.palm=1;
-    }
-  }
-  // shells on the beaches
-  for(let i=0;i<26;i++){
-    const ax=Math.floor(pr2()*MAPW), ay=Math.floor(pr2()*MAPH);
-    if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay)) addNode('shell',ax,ay);
-  }
-  // a lush frame of palms ringing the village clearing so it doesn't feel bare
-  for(let i=0;i<80;i++){
-    const a=pr2()*TAU, rr=8+pr2()*8;
+  // a denser frame of palms hugging the village edge so the clearing sits nestled in
+  // jungle - kept off the roads so the two road-mouths out of the village stay clear
+  for(let i=0;i<90;i++){
+    const a=pr2()*TAU, rr=8+pr2()*4;
     const ax=Math.round(V.x+Math.cos(a)*rr), ay=Math.round(V.y+Math.sin(a)*rr);
     if(inb(ax,ay) && (tileAt(ax,ay)===T.GRASS||tileAt(ax,ay)===T.FOREST) && !solidAt(ax,ay)
-       && dist(ax,ay,V.x,V.y)>7.5 && dist(ax,ay,D.x,D.y)>4 && pr2()<0.72){
+       && dist(ax,ay,V.x,V.y)>7.5 && dist(ax,ay,D.x,D.y)>4 && !nearRoad(ax,ay,1) && pr2()<0.6){
       const n=addNode('tree',ax,ay); n.palm=1;
     }
+  }
+  // ---- THE TROPICAL STRAND ----------------------------------------------------------
+  // shells on the beaches (a bounded, spaced-out handful - they're harvestable)
+  { let shells=0;
+    for(let tries=0; tries<9000 && shells<24; tries++){
+      const ax=3+Math.floor(pr2()*(MAPW-6)), ay=3+Math.floor(pr2()*(MAPH-6));
+      if(tileAt(ax,ay)===T.SAND && !solidAt(ax,ay) && !G.nodes.some(n=>n.kind==='shell'&&dist(n.tx,n.ty,ax,ay)<6)){
+        addNode('shell',ax,ay); shells++;
+      }
+    }
+  }
+  // cosmetic beach life scattered across the sand - starfish, sun-bleached driftwood,
+  // sea-oat dune grass and fallen coconuts - so the strand feels warm and tropical
+  // rather than an empty tan border. A per-tile sweep so the thin sand ring reliably
+  // fills (these are non-solid ground decor, so they never block a step).
+  const STAR=['#e07a4a','#e2a03a','#d76a7a','#d98a3a'];
+  for(let y=2;y<MAPH-2;y++) for(let x=2;x<MAPW-2;x++){
+    if(tileAt(x,y)!==T.SAND || solidAt(x,y)) continue;
+    if(dist(x,y,D.x,D.y)<3) continue;                 // keep the landing itself uncluttered
+    const rr=pr2();
+    if(rr<0.020) G.decor.push({kind:'starfish', x:x+0.3+pr2()*0.4, y:y+0.3+pr2()*0.4, rot:pr2()*TAU, c:STAR[(pr2()*STAR.length)|0]});
+    else if(rr<0.030) G.decor.push({kind:'driftwood', x:x+0.5, y:y+0.5, rot:(pr2()-0.5)*1.1});
+    else if(rr<0.095) G.decor.push({kind:'dunegrass', x:x+0.2+pr2()*0.6, y:y+0.2+pr2()*0.6, ph:pr2()*TAU});
+    else if(rr<0.120) G.decor.push({kind:'coconut', x:x+0.3+pr2()*0.4, y:y+0.4+pr2()*0.3});
   }
   // friendly island critters that just wander - hens & cats about the village,
   // crabs scuttling the cove beach

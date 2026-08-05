@@ -932,6 +932,55 @@ function drawDecor(b,s){
     cx.fillStyle='#ffd76a'; cx.beginPath(); cx.arc(s.x+sw,s.y-9,1.5,0,TAU); cx.fill();
     return;
   }
+  if(b.kind==='starfish'){
+    // a little five-armed starfish drying on the sand, flattened onto the ground plane
+    const g=cx; g.save(); g.translate(s.x,s.y-2); g.rotate(b.rot||0);
+    g.fillStyle=b.c||'#e07a4a'; g.beginPath();
+    for(let i=0;i<10;i++){ const a=i*Math.PI/5-Math.PI/2, rr=(i%2)?2.6:6.6;
+      const px=Math.cos(a)*rr, py=Math.sin(a)*rr*0.7; i?g.lineTo(px,py):g.moveTo(px,py); }
+    g.closePath(); g.fill();
+    g.fillStyle='rgba(255,255,255,0.32)';
+    for(let i=0;i<5;i++){ const a=i*TAU/5-Math.PI/2; g.beginPath(); g.arc(Math.cos(a)*3.4,Math.sin(a)*3.4*0.7,0.7,0,TAU); g.fill(); }
+    g.restore(); return;
+  }
+  if(b.kind==='driftwood'){
+    // a sun-bleached log washed up on the beach, one stubby broken branch
+    const g=cx; g.save(); g.translate(s.x,s.y-1); g.rotate(b.rot||0);
+    g.fillStyle='rgba(0,0,0,0.12)'; g.beginPath(); g.ellipse(0,3,13,3.4,0,0,TAU); g.fill();
+    g.fillStyle='#c8bca0'; g.beginPath(); g.roundRect(-13,-3.6,26,7,3.2); g.fill();
+    g.fillStyle='#b0a382'; g.beginPath(); g.roundRect(-13,0.2,26,3.2,2); g.fill();          // shaded underside
+    g.strokeStyle='rgba(120,100,70,0.5)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(-9,-1.4); g.lineTo(9,-1.4); g.moveTo(-9,1.1); g.lineTo(8,1.1); g.stroke();
+    g.strokeStyle='rgba(90,72,48,0.55)'; g.beginPath(); g.ellipse(-12,-0.2,1.8,2.8,0,0,TAU); g.stroke();  // end grain
+    g.strokeStyle='#b0a382'; g.lineWidth=3; g.lineCap='round';
+    g.beginPath(); g.moveTo(5,-2.2); g.lineTo(9,-7); g.stroke();
+    g.restore(); return;
+  }
+  if(b.kind==='dunegrass'){
+    // sea-oat dune grass - taller, tan-gold blades with a seed-head, at home on the sand
+    const sw=Math.sin(G.time*1.5+(b.ph||0))*2.6;
+    cx.strokeStyle='#c7b06a'; cx.lineWidth=1.4; cx.lineCap='round';
+    cx.beginPath();
+    for(let i=-3;i<=3;i++){
+      cx.moveTo(s.x+i*1.8, s.y);
+      cx.quadraticCurveTo(s.x+i*2.2+sw*0.6, s.y-8, s.x+i*2.6+sw, s.y-13-Math.abs(i)*0.6);
+    }
+    cx.stroke();
+    cx.strokeStyle='rgba(228,209,150,0.85)'; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(s.x+sw*0.8,s.y-10); cx.lineTo(s.x+1.6+sw,s.y-15); cx.stroke();
+    return;
+  }
+  if(b.kind==='coconut'){
+    // a little pile of fallen coconuts pooled on the sand beneath the palms
+    const g=cx; g.save(); g.translate(s.x,s.y-2);
+    g.fillStyle='rgba(0,0,0,0.12)'; g.beginPath(); g.ellipse(0,3,8,3,0,0,TAU); g.fill();
+    for(const [nx,ny] of [[-3,0],[3,-1],[0,2]]){
+      g.fillStyle='#6b4a2b'; g.beginPath(); g.arc(nx,ny,3.4,0,TAU); g.fill();
+      g.fillStyle='#573c22'; g.beginPath(); g.arc(nx+1,ny+1,3.4,0.2,Math.PI*0.9); g.fill();
+      g.fillStyle='rgba(255,240,200,0.25)'; g.beginPath(); g.arc(nx-1,ny-1,1.1,0,TAU); g.fill();
+    }
+    g.restore(); return;
+  }
   if(b.kind==='lettuce'){
     // a leafy head of lettuce - a rosette of blue-green leaves, some nibbled
     cx.fillStyle='rgba(0,0,0,0.14)'; cx.beginPath(); cx.ellipse(s.x,s.y+1,7,3,0,0,TAU); cx.fill();
