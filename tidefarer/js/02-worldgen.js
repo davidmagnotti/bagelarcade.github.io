@@ -351,6 +351,22 @@ function placeObjects(){
       if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<5)){ const n=addNode('fish',x,y); n.bob=Math.random()*TAU; placed++; }
     }
   }
+  // A quiet fishing cove on the isle's SOUTH-EAST shore, down past the orchard - a tight
+  // cluster of spots so Finn the Fisher's new haunt reads as a proper fishing hole, with
+  // water right at hand for the rod he gives you. ZONES.sefish marks the shore tile he
+  // stands on, so spawnNPCs can seat Finn right by his lines (see js/04-data.js).
+  let seLand=null, sePlaced=0; const sef=mulberry32(SEED+55);
+  for(let tries=0; tries<9000 && sePlaced<5; tries++){
+    const x=rndiR(sef,68,MAPW-4), y=rndiR(sef,68,MAPH-4);   // SE quadrant only
+    if(tileAt(x,y)===T.SHALLOW){
+      let land=null; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) if(walkTile(tileAt(x+dx,y+dy))) land=[x+dx,y+dy];
+      if(land && !G.nodes.some(n=>n.kind==='fish'&&dist(n.tx,n.ty,x,y)<4)){
+        const n=addNode('fish',x,y); n.bob=Math.random()*TAU; sePlaced++;
+        if(!seLand) seLand=land;
+      }
+    }
+  }
+  ZONES.sefish = seLand ? {x:seLand[0], y:seLand[1]} : {x:ZONES.orchard.x+6, y:ZONES.orchard.y+4};
   // ruin pillars & crypt platform - just a single pair framing the King's ground
   // at the northern spit (kept sparse so the ruin reads clean, not cluttered)
   const pillars=[[43,9],[49,9]];

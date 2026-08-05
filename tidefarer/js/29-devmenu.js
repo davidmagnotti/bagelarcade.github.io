@@ -246,7 +246,7 @@ function unlockAll(){
   // the four returned-isle gifts (Act II)
   P.unlocked.dive=true; P.unlocked.swiftstep=true; P.unlocked.dash2=true; P.spells=P.spells||{}; P.spells.flamesnare=1;
   P.swordTier=Math.max(P.swordTier||0,3); P.armorOwn=Math.max(P.armorOwn||0,2); P.armor=Math.max(P.armor||0,2);
-  P.kit=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
+  P.kit=true; P.rod=true; if(P.tools){ P.tools.axe=1; P.tools.pick=1; }
   // with all four gifts now in hand, open the Emberwick capstone mouth live if you're
   // standing on the isle (otherwise switchWorld places it on your next landing there)
   if(typeof placeEmberTomb==='function'){ try{ placeEmberTomb(); }catch(e){} }

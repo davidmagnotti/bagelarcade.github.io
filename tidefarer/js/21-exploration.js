@@ -262,6 +262,7 @@ function startFresh(){
   // she washes ashore already masked - the mask rides with her the whole journey,
   // and only comes off when her brother finally coaxes it free (Act I's close).
   P.story=P.story||{}; P.story.masked=1;
+  P.rod=false;   // a fresh castaway has no fishing rod - Finn hands one over on the SE shore
   for(const k in EXPL) delete EXPL[k];
   Snd.init(); Amb.ensure(); Music.nextT=0;
   document.getElementById('titleOv').style.display='none';

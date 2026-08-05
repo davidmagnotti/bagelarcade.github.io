@@ -26,7 +26,13 @@ function openDialog(npc){
   P.click=null;
   // you've now met this soul: their name reads over their head for good (drawNPC).
   // Before this first word, the name only fades in when you stand close enough to speak.
-  if(npc && npc.id){ P.met=P.met||{}; P.met[npc.id]=1; }
+  if(npc && npc.id){
+    P.met=P.met||{};
+    // Finn's gift: fishing takes a rod, and he's the one who hands it over. Grant it the first
+    // time you speak with him so the south-east cove's lines are yours to cast right away.
+    if(npc.id==='finn' && !P.rod && typeof giveRod==='function') giveRod();
+    P.met[npc.id]=1;
+  }
   const dl=dist(P.x,P.y,npc.x,npc.y)||1;
   npc.face={x:(P.x-npc.x)/dl, y:(P.y-npc.y)/dl};
   dlg.open=true; dlg.npc=npc;

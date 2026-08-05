@@ -40,7 +40,7 @@ const DIALOGUE = {
       "Fish bite best where the water ripples.",
       "Night fish are the honest ones - they bite from hunger, not habit.",
       "Salt cures fish and moods alike.",
-      "Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that."
+      "Quiet cove, this southern shore - the fish don't mind. Used to be a ship a week put in at the old dock, mind. Now? Nobody comes, nobody goes. Strange tide, that."
     ],
     "willa": [
       "Wheat here grows in minutes, not months. Old island magic.",
@@ -668,9 +668,9 @@ const DIALOGUE = {
       doneText: "Not a drop of goo on you! Willa's cows can graze again - here's coin for a clean job, and my thanks."
     },
     "fish": {
-      brief: "Tide's kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.",
+      brief: "Here - take this rod; every caster needs one and this old girl's earned company. Now find where the water ripples along the shore, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.",
       log: "Catch 3 fish at rippling water. Interact to cast, again on the \"!\"",
-      doneText: "Beautiful catch! You've got dock-hands, friend. Take these tonics - brewed them from sea kelp myself."
+      doneText: "Beautiful catch! You've got sea-hands, friend. Take these tonics - brewed them from sea kelp myself."
     },
     "harvest": {
       brief: "Soil's turned and begging for seed. Take these - plant them in the tilled plots, and wheat grows quick as gossip on this island. Harvest four bundles for me.",

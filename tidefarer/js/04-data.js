@@ -42,6 +42,7 @@ const P = {
   weapon:'melee', unlocked:{melee:false,bow:false,staff:false},
   level:1, xpL:0, bank:0, vault:{}, quickItem:'potion', bind:null, bossCheck:null, horse:0, riding:0, home:0, homeUp:{},
   swordTier:0, // 0 rusty, 1 iron
+  rod:false, // fishing rod - Finn's gift on the SE shore; gates casting (see hasRod)
   atkCd:0, swing:0, hurtT:0, lastCombat:-99, regenT:0,
   inv:{potion:2, seed:0}, gold:0,
   skills:{}, // {lvl, xp}
@@ -142,9 +143,9 @@ const QUESTS = {
     doneText:'Not a drop of goo on you! Willa\'s cows can graze again - here\'s coin for a clean job, and my thanks.',
     rw:{gold:25, xp:{melee:120}}, unlocks:['mushrooms'] },
   fish:{ giver:'finn', title:'Supper for Three', kind:'gather', need:{fish:3},
-    brief:'Tide\'s kind today. Grab a spot on the dock where the water ripples, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.',
+    brief:'Here - take this rod; every caster needs one and this old girl\'s earned company. Now find where the water ripples along the shore, cast, and strike the moment you feel a bite. Three fish feeds my family - keep any extra.',
     log:'Catch 3 fish at rippling water. Interact to cast, again on the "!"',
-    doneText:'Beautiful catch! You\'ve got dock-hands, friend. Take these tonics - brewed them from sea kelp myself.',
+    doneText:'Beautiful catch! You\'ve got sea-hands, friend. Take these tonics - brewed them from sea kelp myself.',
     rw:{item:{potion:3}, xp:{fishing:150}, gold:5} },
   harvest:{ giver:'willa', title:'Golden Rows', kind:'special', count:4,
     brief:'Soil\'s turned and begging for seed. Take these - plant them in the tilled plots, and wheat grows quick as gossip on this island. Harvest four bundles for me.',
@@ -191,8 +192,13 @@ function spawnNPCs(){
     (()=>{ const b=makeNPC('brant','Captain Brant',27.5,63.8,{skin:'#c98d5f',hair:'#8a8578',shirt:'#2e4a5e',pants:'#3a3229',cloak:'#274052',beard:'#8a8578',beardLong:true,necklace:'#c9a24e',size:1.04,build:{w:1.08,head:0.9}},
       ['The Tidewalker\'s taken worse. Not much worse, mind.','Gull Reef gave her that gash. Reef always collects a toll.','A captain without a ship is just a man who stares at the sea.','Greyharbor, cross the strait. Finest port this side of anywhere.','There\'s an old sailing-hymn my crew\'s grandfathers hummed - the Tide-Queen\'s anthem, for the warrior-queen who first calmed these waters. Fine tune. But her name, in the last verse? Worn clean out of the song. Nobody living can call it back.','That five-point star some folk stitch for luck - older than luck, that. The old blood-mark of the tide-queen\'s line, passed hand to hand down her whole house. You don\'t earn a mark like that. You\'re born owed it.'],false);
       b.nightOwl=true; return b; })(), // a captain sleeps aboard - findable at any hour
-    (()=>{ const f=makeNPC('finn','Finn the Fisher',31.5,61,{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c',build:{w:0.95,head:0.95,stoop:0.7}},
-      ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Used to be a ship a week put in at this dock. Now? Nobody arrives anymore. Nobody leaves, neither. Strange tide, that.'],0.5);
+    // Finn keeps his lines down on the isle's SOUTH-EAST shore now, past the orchard, where a
+    // quiet cove ripples (placeObjects seeds ZONES.sefish + a cluster of fishing spots there).
+    // He's the one who puts a rod in your hand - fishing needs it, and it's his to give.
+    (()=>{ const sf=(typeof ZONES!=='undefined'&&ZONES.sefish)||{x:ZONES.orchard.x+6,y:ZONES.orchard.y+4};
+      const sp=(typeof findOpenNear==='function' && findOpenNear(sf.x,sf.y,5)) || [sf.x,sf.y];
+      const f=makeNPC('finn','Finn the Fisher',sp[0],sp[1],{skin:'#e2b184',hair:'#c98f1e',shirt:'#3e6f8f',pants:'#5a4632',hat:'straw',beard:'#a8791c',build:{w:0.95,head:0.95,stoop:0.7}},
+      ['Fish bite best where the water ripples.','Night fish are the honest ones - they bite from hunger, not habit.','Salt cures fish and moods alike.','Quiet cove, this southern shore - the fish don\'t mind. Used to be a ship a week put in at the old dock, mind. Now? Nobody comes, nobody goes. Strange tide, that.'],0.5);
       f.nightOwl=true; return f; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),

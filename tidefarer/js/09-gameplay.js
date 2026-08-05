@@ -393,6 +393,26 @@ function hasMetBram(){
   if(typeof G!=='undefined' && G.worldId && G.worldId!=='isle') return true;
   return false;
 }
+// Fishing is Finn's craft to grant: no casting until he's put a rod in your hand, down on
+// the isle's south-east shore. Old saves are grandfathered generously (already fished, spoke
+// with Finn, or have sailed off Emberwick) so no returning player finds a dead line - and
+// loadCode() also grandfathers every save that predates the rod.
+function hasRod(){
+  if(P.rod) return true;
+  if(P.met && P.met.finn) return true;                        // spoke to Finn - he handed one over
+  if(qs('fish')==='done' || qs('fish')==='active') return true;
+  const fs=P.skills && P.skills.fishing;
+  if(fs && (fs.lvl>1 || fs.xp>0)) return true;                // has already fished
+  if(typeof G!=='undefined' && G.worldId && G.worldId!=='isle') return true;  // long past Emberwick
+  return false;
+}
+// Finn's gift. Idempotent, so first-talk (openDialog) and the quest-accept both land it once.
+function giveRod(){
+  if(P.rod) return;
+  P.rod=true;
+  if(typeof addFloat==='function') addFloat('+ Fishing Rod', P.x, P.y-1.4, '#9ecbe8');
+  setTimeout(()=>{ try{ toast('<b style="color:var(--ember)">Fishing rod in hand!</b> Find rippling water along the shore, cast, then strike on the <b style="color:var(--ember)">!</b>',5200); }catch(e){} }, 400);
+}
 function hitNode(n){
   facePoint(n.x,n.y);
   // hold gathering behind the smith - hack a tree or a rock before seeing Bram and you're
@@ -484,6 +504,12 @@ function hitNode(n){
   }
 }
 function fishAction(n){
+  // No rod, no cast. A soft nag (throttled so it doesn't spam) points you at Finn's SE shore.
+  if(!hasRod()){
+    if(!P._rodNagT || G.time>P._rodNagT){ P._rodNagT=G.time+3;
+      toastErr('You\'ve no line to cast - see <b>Finn the Fisher</b> down on the isle\'s <b>south-east</b> shore; a rod is his to give.',3800); }
+    P.click=null; return;
+  }
   if(!P.fishing){
     P.fishing={node:n, t:0, biteAt:rnd(1.2,3), bit:false, bitT:0};
     addFloat('cast…',P.x,P.y-1.4,'#9ecbe8'); Snd.splash();
