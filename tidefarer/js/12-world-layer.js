@@ -1099,6 +1099,9 @@ function dragonLairSpeak(){
   if(qs('wyrm')==='done' || P.eastDragonFreed){
     const haveChart = !!(P.story && P.story.skyMapTaken);
     const fbtns=[{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ askDragonFlight(); }}];
+    // deep in the fire-heart he'll also just set you back down at the mountain's mouth on the
+    // surface (mended), so you needn't re-climb the whole dungeon to leave
+    if(G.worldId==='eastdeep') fbtns.push({label:'Just set me down at the mountain’s mouth', fn:()=>{ closeDialog(); P.hp=P.maxhp; if(typeof refreshUI==='function') refreshUI(); if(typeof exitEmberDungeon==='function') exitEmberDungeon(); }});
     if(haveChart) fbtns.push({label:'Fly me on to Windsurf', fn:()=>{ closeDialog();
       flyToWorld('wind','Ashwing springs from the fire-shelf and climbs - the Sunward Isle falls away, and far off Windsurf rises bright on the water ahead.'); }});
     fbtns.push({label:'Rest a while', ghost:true, fn:closeDialog});
@@ -1114,9 +1117,9 @@ function dragonLairSpeak(){
   lairDialog('Ashwing',
     '“You crossed my whole burning house with a blade in your fist. Vath’s errand, I would wager - he covets my fire, bottled.”',
     [{label:'Continue', fn:()=> lairDialog('Ashwing',
-      '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell her I said—”',
+      '“I have warmed these waters since your grandmothers were girls. I am no monster, child - only old, and kind, and very tired. Go home, and tell him I said—”',
       [{label:'Continue', fn:()=> lairDialog('Vath',
-        'A voice pours from the walls, and the air turns cold and violet: “Sentiment. Sleep, wyrm - or kill for me.” <i>Ashwing swings his great head toward you, fighting it - and losing. He is between you and the only way out.</i>',
+        'A voice pours from the walls, and the air turns cold and violet: “Sentiment. Sleep, wyrm.” <i>Ashwing swings his great head toward you, fighting it - and losing. He is between you and the only way out.</i>',
         [{label:'Stand and fight', cls:'gold', fn:()=>{ closeDialog(); if(G.interior) exitHouse();
         // the enthrall now plays as a full animated cutscene (the violet takes him); it hands
         // straight to the fight (awakenDragon(true), already bound) on its final beat
@@ -1418,6 +1421,22 @@ function wheelCarry(wheels, dt){
 // crossing, -5 HP) if the open pit under them has no slab. Mid-dash you're airborne over the
 // pit - that's the only way across the gaps, so boarding a slab always takes an active dash.
 function updateEastDeep(dt){
+  // DRAGON REMATCH: after a death, Ashwing waits bound, healed and dormant on his rest-spot
+  // with the Dragon Gate standing open and you set down just south of it. Step back NORTH
+  // through the gate and it slams shut behind you and he turns on you at once - no cutscene,
+  // no talk, straight into the fight. (Runs before the wheels early-return below.)
+  if(G.dragonRematch && !P.dead && P.y < EDEEP.gate3.y){
+    G.dragonRematch=0; G.dragonSealed=1;
+    const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');
+    if(g3){ g3.open=false; for(let x=g3.x0;x<=g3.x1;x++) setSolid(x,g3.gy,1);
+      invalidateScenery&&invalidateScenery();
+      shockwave&&shockwave(g3.x0+1.5, g3.gy+0.5, 'rgba(255,140,60,0.92)', 50); }
+    G.shake=Math.max(G.shake||0,0.5); Snd.boss&&Snd.boss(); G.slowmo=Math.max(G.slowmo||0,0.6);
+    const dr=G.dragonMob || G.mobs.find(m=>m.kind==='dragon' && !m.dead && !m.fainted);
+    if(dr){ dr.enspelled=true; dr.ensAmt=1; dr.entranceDone=true; dr.state='chase'; dr.noAggroT=0;
+      dr.lungeCd=rnd(2,3.5); dr.hitCd=0; dr.fireCd=rnd(2.2,3.4); G.dragonMob=dr; }
+    if(typeof banner==='function') banner('ASHWING, ENTHRALLED','BREAK THE SPELL - DO NOT LET HIM FALL TO IT');
+  }
   const wheels=G._eastWheels||[]; if(!wheels.length) return;
   for(const w of wheels) w.ang += w.spd*dt;
   G._eastT=(G._eastT||0)+dt; updateDriftSlabs(G._eastSlabs, G._eastT);   // drift the vault ferry
@@ -4722,7 +4741,7 @@ QUESTS.lettuce={ giver:'gale', title:'Rabbits in the Royal Lettuce', kind:'kill'
   doneText:'Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they\'re from Gale, she\'ll know what to do with them.',
   rw:{gold:50, item:{lettuce:3, elixir:1}, xp:{farming:180}} };
 QUESTS.wyrm={ giver:'vath', title:'The Wyrm of Mount Kea', kind:'kill', kill:{dragon:1}, xpL:320,
-  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom.',
+  brief:'You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure down into the Emberdeep, and put the beast down at the bottom. The Emberthroat is barred to all but its bearer - so take my key, and let yourself in.',
   log:'Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)',
   doneText:'Ashwing sleeps easy now, and so does Kohana.',
   rw:{gold:220, item:{potion:3}, xp:{melee:420, archery:420, magic:420}} };

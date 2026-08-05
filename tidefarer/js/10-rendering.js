@@ -4166,6 +4166,17 @@ function drawProj(p,s){
     cx.fillStyle='rgba(255,154,60,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#ffce7a'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();
     cx.fillStyle='#fff3d0'; cx.beginPath(); cx.arc(s.x,s.y-12,2.4,0,TAU); cx.fill();
+  } else if(p.kind==='fireball'){
+    // a great lobbed gout of dragonfire - reads big and hot so it's clearly parryable
+    const g=cx, fl=0.82+0.18*Math.sin(G.time*22+(p.x+p.y));
+    for(let i=3;i>=1;i--){ g.fillStyle='rgba(255,150,50,'+(0.5-i*0.12)+')';   // ember trail
+      g.beginPath(); g.arc(s.x-p.vx*i*0.6, s.y-12-p.vy*i*0.6, 3.6-i*0.7,0,TAU); g.fill(); }
+    g.save(); g.translate(s.x, s.y-12);
+    g.fillStyle='rgba(255,140,40,0.30)'; g.beginPath(); g.arc(0,0,10.5*fl,0,TAU); g.fill();   // fiery halo
+    g.fillStyle='#ff7a1e'; g.beginPath(); g.arc(0,0,6,0,TAU); g.fill();                          // outer flame
+    g.fillStyle='#ffce6a'; g.beginPath(); g.arc(0,0,3.4,0,TAU); g.fill();                        // hot core
+    g.fillStyle='#fff3d0'; g.beginPath(); g.arc(-1.1,-1.1,1.5,0,TAU); g.fill();                  // white-hot centre
+    g.restore();
   } else if(p.kind==='hex'){
     cx.fillStyle='rgba(150,60,210,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#c77bff'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();

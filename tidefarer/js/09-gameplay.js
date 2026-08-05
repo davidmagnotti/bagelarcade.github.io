@@ -1105,26 +1105,35 @@ function dragonFaints(m){
   // freed Ashwing basking by the volcano (see spawnEastFolk's dragonrest placement)
   if(typeof WORLDS!=='undefined') delete WORLDS.east;
   if(typeof freeDragon==='function') freeDragon(m.x,m.y-0.4);
-  // Ashwing lingers right where he fell, freed and grateful - he does not fly off on
-  // his own; he stays at your side and offers the lift up to the Cloudreach at once.
+  // The giant enthralled husk does not linger: once the spell breaks he shrinks back to
+  // the old dozing Ashwing and takes his rest-spot again (the dragonrest decor, which shows
+  // the instant no live dragon mob remains). disperseDragon runs at the transformation beat
+  // below - NOT only when a lift button is pressed - so he can never be left giant on the
+  // circle where he fell if the offer is dismissed.
   const disperseDragon=()=>{ if(m && !m.dead){ m.dead=true; m.respawnT=-1;
     for(let i=0;i<24;i++){ const a=Math.random()*TAU, sp=rnd(1,4);
       G.parts.push({x:m.x,y:m.y-0.6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.4,life:rnd(0.9,1.8),
         color:Math.random()<0.5?'#ffd24a':'#8fd0a0',size:rnd(2,5),grav:-0.2}); } } };
+  // borne up on his shoulder, mended: he sets you down either at the mountain's mouth on the
+  // surface (the Emberthroat) OR clear up above the cloud-sea on the Cloudreach - your call.
+  const flyUp=(fn)=>{ closeDialog(); disperseDragon(); P.hp=P.maxhp; if(typeof refreshUI==='function') refreshUI(); fn(); };
   const offerLift=()=>{
     P.story=P.story||{}; P.story.skyKnown=1;
-    setDialog('<i>Ashwing settles beside you, warm as a banked forge, and rumbles up toward the weather beyond the smoke-hole.</i> “There is a place above the clouds, little flame - a rock adrift in the cloud-sea, the whole archipelago spread below like a map. Climb onto my shoulder and I will bear you up.”',
-      [{label:'Fly me up to the Cloudreach', cls:'gold', fn:()=>{ closeDialog(); disperseDragon(); if(typeof askDragonFlight==='function') askDragonFlight(); }},
-       {label:'Not just yet', ghost:true, fn:()=>{ closeDialog(); disperseDragon(); }}]);
+    const btns=[{label:'Bear me up to the Cloudreach', cls:'gold', fn:()=>flyUp(()=>{ if(typeof askDragonFlight==='function') askDragonFlight(); })}];
+    if(G.worldId==='eastdeep') btns.push({label:'Just set me down at the mountain’s mouth', fn:()=>flyUp(()=>{ if(typeof exitEmberDungeon==='function') exitEmberDungeon(); })});
+    btns.push({label:'Rest a while', ghost:true, fn:()=>{ closeDialog(); disperseDragon(); }});
+    setDialog('<i>Ashwing settles beside you, warm as a banked forge, and rumbles up toward the weather beyond the smoke-hole.</i> “Climb onto my shoulder, little flame, and I will bear you up - out to the mountain’s mouth, or clear above the clouds to a rock adrift in the cloud-sea, the whole archipelago spread below like a map. Say where.”',
+      btns);
   };
   // the freeing plays as a full animated cutscene (the violet shatters, his green
-  // floods back), then hands off to Ashwing's offer of a lift up to the Cloudreach.
-  // Fall through to the old story-card if the cutscene layer isn't loaded.
+  // floods back), then hands off to Ashwing's offer of a lift. disperseDragon fires as the
+  // transformation lands so the freed, dozing (normal-size) Ashwing is already back on his
+  // rest-spot behind the offer. Fall through to a story-card if the cutscene layer is absent.
   if(typeof dragonFreedCutscene==='function'){
-    setTimeout(()=>dragonFreedCutscene(offerLift), 700);
+    setTimeout(()=>{ disperseDragon(); dragonFreedCutscene(offerLift); }, 700);
   } else {
-    setTimeout(()=>storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled the moment the chain broke - gone from the isle entirely, the way his kind goes. You will meet him again, I think. But not here.”',
-      {onOk:offerLift}),1200);
+    setTimeout(()=>{ disperseDragon(); storyCard('<b style="color:#ffcf8a">The violet shatters.</b> Ashwing sinks to the ash - breathing, himself again. “You could have run me through. You broke the chain instead. My thanks, little flame.” <i>His great eye narrows.</i> “The binder\'s fire reached for your mind on the climb, and found no hold. That is not luck - but I do not know what it is. He fled the moment the chain broke - gone from the isle entirely, the way his kind goes. You will meet him again, I think. But not here.”',
+      {onOk:offerLift}); },1200);
   }
   if(qs('wyrm')==='active') completeQuest('wyrm');
 }
@@ -1486,14 +1495,31 @@ document.getElementById('respawnBtn').onclick=()=>{
     m.summoned=[false,false];               // bosses may summon their guard anew
     if(typeof m.hx==='number'){ m.x=m.hx; m.y=m.hy; }   // sent back to its post
   }
-  // if you died sealed in Ashwing's chamber, reset the encounter: unseal the Dragon
-  // Gate and clear the wyrm so re-entering re-triggers (and re-seals) the fight cleanly
+  // Died to Ashwing? DON'T tear the encounter down and make you re-earn the cutscene. Leave
+  // him standing, still bound and still PURPLE, healed and dormant on his rest-spot; open the
+  // Dragon Gate and set you down just OUTSIDE it. The instant you step back north through the
+  // gate it slams shut behind you and he turns on you again at once - no cutscene, no dialogue,
+  // straight back into the fight (see updateEastDeep's rematch trigger).
   if(G.dragonSealed){
     const g3=G.decor.find(d=>d.kind==='firegate' && d.gate==='g3');
     if(g3){ g3.open=true; for(let x=g3.x0;x<=g3.x1;x++){ setSolid(x,g3.gy,0); setTile(x,g3.gy,T.RUIN); }
       if(typeof invalidateScenery==='function') invalidateScenery(); }
-    for(const m of G.mobs){ if(m.kind==='dragon' && !m.fainted){ m.dead=true; m.respawnT=-1; } }
-    G.dragonMob=null; G.dragonSealed=0;
+    const dr=G.mobs.find(m=>m.kind==='dragon' && !m.dead && !m.fainted);
+    if(dr){
+      dr.hp=dr.maxhp; dr.enspelled=true; dr.ensAmt=1; dr.entranceDone=true;   // whole, and still violet
+      dr.state='idle'; dr.tx=null; dr.windup=0; dr.swing=0; dr.lunge=0;
+      dr.lungeCd=1e9; dr.hitCd=1e9; dr.fireCd=1e9; dr.noAggroT=1e9;            // dormant until you re-enter
+      dr.x=dr.hx=40.5; dr.y=dr.hy=9.5;                                          // back on his rest-spot in the chamber
+      G.dragonMob=dr; G.dragonRematch=1;
+    } else {   // no live dragon to reuse (edge case): fall back to the old clean reset
+      for(const m of G.mobs){ if(m.kind==='dragon' && !m.fainted){ m.dead=true; m.respawnT=-1; } }
+      G.dragonMob=null;
+    }
+    G.dragonSealed=0;
+    // set you down just SOUTH of the now-open Dragon Gate, in the doorway corridor (below the
+    // bat-roost band, so nothing harries you here) - a breather before you walk back in. This
+    // overrides the in-chamber boss-checkpoint startBossIntro dropped when he first roused.
+    P.bossCheck={w:G.worldId, x:40.5, y:21.5};
   }
   // if you died sealed in the Warden's Crypt, reset the encounter: raise the crypt seal and
   // re-seal the Tome-Warden so re-entering the room re-triggers (and re-seals) the fight cleanly
@@ -2229,6 +2255,21 @@ function updateMobs(dt){
         if((m.swing||0)>0.15 && Math.random()<0.7){ const ba=Math.atan2(dy,dx)+rnd(-0.35,0.35), rr=rnd(0.6,3.6);
           G.parts.push({x:m.x+Math.cos(ba)*rr, y:m.y-0.6+Math.sin(ba)*rr*0.7, vx:Math.cos(ba)*1.7, vy:Math.sin(ba)*1.7,
             life:0.42, color:Math.random()<0.5?'#ff7a1e':'#ffd24a', size:rnd(2.5,5), grav:0}); }
+        // once the binding drives him past HALF health, the enthralled wyrm hurls GOUTS OF
+        // FIRE from range - big, slow, readable balls of flame you can dodge aside from or
+        // PARRY straight back at him. A tight double once he's badly hurt (below a quarter).
+        if(m.hp < m.maxhp*0.5){
+          m.fireCd=(m.fireCd||rnd(2.2,3.4))-dt;
+          if(m.fireCd<=0 && l>2.4 && l<12 && !((m.stunT||0)>0)){
+            m.fireCd=rnd(2.6,3.8); m.swing=Math.max(m.swing||0,0.3);
+            addFloat('FIREBALL', m.x, m.y-3.4, '#ff9a3c', 1.1);
+            const spread = m.hp < m.maxhp*0.25 ? [-0.16,0.16] : [0];
+            for(const off of spread){ const ca=Math.atan2(dy,dx)+off;
+              G.projs.push({kind:'fireball', x:m.x, y:m.y-1.1, vx:Math.cos(ca)*6.4, vy:Math.sin(ca)*6.4,
+                life:2.4, dmg:Math.round(d.dmg*0.5), from:'mob', owner:m}); }
+            if(Snd.noise) Snd.noise(0.26,0.08,200,0.6);
+          }
+        }
       }
       if(m.kind==='boss'){ // the Hollow Spirit alone raises bone and calls the dead
         m.shootCd-=dt;

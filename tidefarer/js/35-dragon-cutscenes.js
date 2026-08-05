@@ -45,7 +45,7 @@ const DG_ENTHRALL = [
     html:'“Little flame — <b>run.</b> His hand is in my skull, and I cannot — I cannot hold—”',
     ens:0.56, violet:0.86, fire:0.5 },
   { who:'Vath',
-    html:'<b style="color:#c9a0ff">“You never could refuse me, old serpent. Sleep — or kill for me.”</b>',
+    html:'<b style="color:#c9a0ff">“You never could refuse me, old serpent. Sleep — or burn for me.”</b>',
     ens:0.82, violet:1, fire:0.34 },
   // the change closes over him, an eye snaps open, he turns on you (wordless)
   { who:'', html:'', ens:1, violet:1, fire:0.26, title:'ASHWING, ENTHRALLED',

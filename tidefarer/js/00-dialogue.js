@@ -813,7 +813,7 @@ const DIALOGUE = {
       doneText: "Ha! Look at them run! The beds are mine again - for tonight, anyway. Here, straight from the good rows. Tell Nan in the palace kitchen they're from Gale, she'll know what to do with them."
     },
     "wyrm": {
-      brief: "You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure DOWN into the Emberdeep, and put the beast down at the bottom.",
+      brief: "You feel the heat off the mountain? A wyrm nests in the fire-heart, deep under the caldera - old, and lately black of heart. It has become a torment to the folk of this isle - scorching their groves, driving them off the high ground - and it will render Kohana to ash by the next storm, mark me. Climb the ash road, take the fissure down into the Emberdeep, and put the beast down at the bottom. The Emberthroat is barred to all but its bearer - so take my key, and let yourself in.",
       log: "Climb Mount Kea, descend the caldera fissure into the Emberdeep, solve its three locks, and confront the wyrm at the end. (Lv 8+ recommended.)",
       doneText: "Ashwing sleeps easy now, and so does Kohana."
     },
