@@ -1,23 +1,32 @@
 /* ============================================================================
    COLD OPEN  (prototype, flag-gated)   -   js/50-coldopen.js
    ----------------------------------------------------------------------------
-   Replaces the passive shore CUTSCENE with PLAYABLE gameplay: the very first
-   thing the player does is FIGHT. You are the princess (unmasked, royal garb),
-   on the deck of your ship in the night storm, and a cursed violet spirit
-   climbs the rail. You cut it down with the REAL combat engine (sword + dash +
-   parry). Then the cursed sea rises, the deck goes out from under you, and the
-   curse takes your memory, your face (the mask), and your trained techniques -
-   but NOT the blade in your hand. You wash ashore a masked castaway who still
-   carries a warrior's sword, and Elder Maren reads you for what you are.
+   Replaces the passive shore CUTSCENE with a PLAYABLE, taught opening: the very
+   first thing the player does is FIGHT. You are the princess (unmasked, royal
+   garb) on the storm-lit deck of your ship. A brief prompt teaches the combat
+   (chain strikes into a finisher, dash, parry); you PRACTISE on a few small
+   violet wisps; then a huge purple spirit heaves up out of the black water and
+   you cannot best it. It cannot take your life - the royal blood forbids it -
+   so it takes something else: your memory. You wash ashore a masked, amnesiac
+   castaway who still carries a warrior's sword, and Elder Maren reads you for
+   what you are.
+
+   THE SEQUENCE
+     1. Board the ship-deck world (a ship-shaped plank hull ringed by black sea).
+     2. Intro card teaches "use your skills"; hands control to the fight.
+     3. PRACTISE: cut down 3 small wisps with the real combat engine.
+     4. The big spirit rises - invulnerable, unwinnable (a scripted loss).
+     5. DEFEAT: "I cannot take you from this world... but I can take something else."
+     6. The memory-theft wash -> you wake amnesiac on Emberwick's shore.
 
    DESIGN INTENT
-     - The FIGHTING is the hook. A new player is swinging a sword in the first
-       ~15 seconds, not watching a slideshow or running gathering errands.
-     - The amnesia premise is weaponised: you feel the power, then lose it, and
-       the whole game is climbing back to the ceiling this minute showed you.
+     - The FIGHTING is the hook, and it is TAUGHT by doing, not by a slideshow.
+     - The amnesia premise is weaponised and given a VILLAIN cause: the loss is
+       the inciting crime, and it seeds the lore rule (the old blood cannot be
+       killed by his magic - so he curses/takes instead).
      - You KEEP the sword ashore (Maren's "you carry a warrior's blade") but the
        curse strips the techniques (dash/parry) and memory - so you retrain with
-       Rask (parry) and Orin (dash), and Bram now fits ARMOR, not a first blade.
+       Rask (parry) and Orin (dash), and Bram now fits ARMOUR, not a first blade.
 
    SAFETY
      - OFF by default. Gated on window.COLDOPEN.on - flip it in the DEV menu
@@ -35,56 +44,67 @@
   var CO = window.COLDOPEN;
   var ON = function(){ return !!(CO && CO.on); };
 
-  /* ---- the deck: a small bespoke world, a plank ship-deck ringed by black sea.
-     Added as a WORLD_DEF so switchWorld drives it like any other world. The
-     surrounding DEEP water is non-walkable (walkTile), so it fences the arena
-     on its own - no solids needed. ------------------------------------------- */
+  var CLAMP_MIN = 20;   // during the cold open the player never dies - the loss is scripted
+  var WISPS = 3;        // small spirits to practise on before the big one
+
+  /* ---- the deck: a bespoke world - a ship-shaped plank hull (pointed bow to
+     the north) ringed by black sea. The surrounding DEEP water is non-walkable
+     (walkTile), so it fences the arena on its own. -------------------------- */
   function genDeck(){
-    var W=MAPW, H=MAPH, cx=W/2, cy=H/2, rx=6.4, ry=9.2;
+    var W=MAPW, H=MAPH, cx=W/2, cy=H/2, rx=13, ry=18;
     for(var y=0;y<H;y++){
+      var dyn=(y+0.5-cy)/ry;
+      var base=(Math.abs(dyn)<=1)? Math.sqrt(1-dyn*dyn)*rx : -1;
+      // narrow the forward half into a prow so it reads as a ship, not a raft
+      var taper=(y+0.5<cy)? (1-Math.pow((cy-(y+0.5))/cy,1.5)*0.5) : 1;
+      var hw=base*taper, hws=(base>=0? (base+1.7)*taper : -1);
       for(var x=0;x<W;x++){
-        var dx=(x+0.5-cx)/rx, dy=(y+0.5-cy)/ry;
-        G.map[y*W+x] = (dx*dx+dy*dy<=1) ? T.PLANK : T.DEEP;
-      }
-    }
-    // a ring of shallow around the hull so the plank doesn't meet the abyss with a hard edge
-    for(var y2=0;y2<H;y2++){
-      for(var x2=0;x2<W;x2++){
-        if(G.map[y2*W+x2]!==T.DEEP) continue;
-        var dx2=(x2+0.5-cx)/(rx+1.6), dy2=(y2+0.5-cy)/(ry+1.6);
-        if(dx2*dx2+dy2*dy2<=1) G.map[y2*W+x2]=T.SHALLOW;
+        var ddx=Math.abs(x+0.5-cx);
+        if(base>=0 && ddx<=hw) G.map[y*W+x]=T.PLANK;
+        else if(base>=0 && ddx<=hws) G.map[y*W+x]=T.SHALLOW;   // a soft shallows collar
+        else G.map[y*W+x]=T.DEEP;
       }
     }
   }
   if(typeof WORLD_DEFS!=='undefined' && !WORLD_DEFS.deck){
     WORLD_DEFS.deck = {
-      W:30, H:36, seed:12207,
-      zones:{ deck:{x:15, y:18, r:9, name:'The Deck'} },
-      spawn:{x:15.5, y:24.5},
+      W:44, H:50, seed:12207,
+      zones:{ deck:{x:22, y:25, r:16, name:'The Deck'} },
+      spawn:{x:22.5, y:36.5},
       title:'THE NIGHT STRAIT', sub:'A STORM WITH NO MERCY',
       gen: genDeck
     };
   }
 
-  /* ---- the purple spirit: a real, fightable mob (violet Night Wraith), tuned
-     to be a satisfying but WINNABLE first fight for a flailing new player. ---- */
-  function spawnColdSpirit(){
-    var m = (typeof spawnMob==='function') ? spawnMob('wraith', 15, 16, false) : null;
+  /* ---- small practice spirit: a weak, friendly-to-fight violet wisp. -------- */
+  function spawnWisp(x,y){
+    var m = (typeof spawnMob==='function') ? spawnMob('wraith', x, y, false) : null;
     if(!m) return null;
-    m.hp = m.maxhp = 80;      // ~6-8 clean sword hits
-    m.dmg = 7;                // gentle: the player has 100 HP and no armour yet
-    m.speed = Math.min(m.speed||4, 3.4);
-    m.aggro = 20;
-    m.boss = true; m.bigBoss = true;   // boss HP bar; never respawns
-    m.name = 'The Drowning Dark';
-    m.title = 'THE DROWNING DARK';
-    m.subtitle = 'IT RISES TO MEET YOU';
-    m.coldSpirit = 1;
+    m.hp = m.maxhp = 16;                 // ~2 hits
+    m.dmg = 4;                           // barely stings
+    m.speed = Math.min(m.speed||4, 2.4); // slow enough to read
+    m.aggro = 22;
+    m.name = 'A Wisp of the Dark';
+    m.coldWisp = 1;
     return m;
   }
 
-  /* ---- boot the board: princess kit, into the deck world, spawn the spirit,
-     then a one-card intro that hands control to the fight. ------------------- */
+  /* ---- the big spirit: invulnerable, unwinnable - the scripted defeat. ------ */
+  function spawnColdBoss(){
+    var m = (typeof spawnMob==='function') ? spawnMob('wraith', 22, 24, false) : null;
+    if(!m) return null;
+    m.hp = m.maxhp = 999;
+    m.dmg = 10; m.speed = Math.min(m.speed||4, 2.8); m.aggro = 30;
+    m.r = 0.9;
+    m.boss = true; m.bigBoss = true;
+    m.name = 'The Drowning Dark';
+    m.title = 'THE DROWNING DARK';
+    m.subtitle = 'IT RISES TO MEET YOU';
+    m.coldBoss = 1;
+    return m;
+  }
+
+  /* ---- boot the board: princess kit, deck world, teaching card -> practice. - */
   function coldOpenBoard(){
     if(typeof switchWorld!=='function'){ bailToShore(); return; }
     // the princess, as she was: unmasked, royal garb, and a trained warrior
@@ -94,12 +114,9 @@
     P.unlocked.melee = true; P.unlocked.dash = true; P.unlocked.parry = true;
     P.weapon = 'melee'; P.swordTier = Math.max(P.swordTier||0, 1);
     P.hp = P.maxhp;
-    CO._done = false;
+    CO.phase = 'intro'; CO.wispsLeft = WISPS; CO.bossT = 0; CO.bossHits = 0; CO._done = false;
 
     // Bram now fits ARMOUR, not a first blade (you kept the sword through the wreck).
-    // Rewrite his opening errand's reward + words for the cold-open path. applyQuestDialogue
-    // has already run at boot, so this override wins; a stock game always reloads fresh, so
-    // it never leaks into the shipping opening.
     if(typeof QUESTS!=='undefined' && QUESTS.kit && !QUESTS.kit._coArmor){
       var k = QUESTS.kit; k._coArmor = 1;
       k.rw = { armor:1, gold:5, xp:{ melee:60 } };
@@ -109,47 +126,88 @@
     }
 
     switchWorld('deck');
-    spawnColdSpirit();
     if(typeof banner==='function') banner('THE NIGHT STRAIT', 'A STORM WITH NO MERCY');
 
     if(typeof storyCard==='function'){
-      storyCard('<i>Rain on black water, and a storm with no mercy in it. Your ship pitches under you - and something climbs the rail: a shape of cold violet light, wrong and reaching. Your blade is already in your hand.</i>',
-        { label:'Cut it down', onOk:function(){ if(typeof toast==='function') toast('', 1); } });
-    }
+      storyCard('<i>Rain on black water, and a storm with no mercy in it. Your ship pitches under you - and the dark is climbing the rails: wisps of cold violet light, wrong and reaching.</i><br><br>You are of the royal blood, a warrior trained since you could stand - your body knows this. <b>Cut them down:</b> keep your strikes flowing to break into a heavier <b>finisher</b>, <b>dash</b> clear of their lunges, and time a swing into a blow to <b>parry</b> it.',
+        { label:'Draw steel', onOk:startPractice });
+    } else { startPractice(); }
   }
 
-  /* ---- the spirit falls -> the cursed sea rises and takes the ship. --------- */
+  function startPractice(){
+    CO.phase = 'practice'; CO.wispsLeft = WISPS;
+    spawnWisp(18,30); spawnWisp(26,30); spawnWisp(22,27);
+    if(typeof addFloat==='function') addFloat('USE YOUR SKILLS', P.x, P.y-3.0, '#c9b0ff', 1.2);
+  }
+
+  /* ---- practice cleared -> the big spirit rises. --------------------------- */
+  function coldOpenBoss(){
+    if(CO.phase==='defeat' || CO.phase==='done') return;
+    if(typeof banner==='function') banner('THE DROWNING DARK', 'IT RISES TO MEET YOU');
+    if(typeof storyCard==='function'){
+      storyCard('<i>The wisps were only its fingers. The black water heaves - and the dark itself rises out of it, vast and cold and reaching, filling the deck between you and the sky.</i>',
+        { label:'Stand and fight', onOk:beginBoss });
+    } else { beginBoss(); }
+  }
+  function beginBoss(){
+    CO.phase = 'boss'; CO.bossT = 0; CO.bossHits = 0;
+    spawnColdBoss();
+    if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+    if(typeof G!=='undefined'){ G.shake=0.9; G.slowmo=Math.max(G.slowmo||0,1.1); }
+    // Resolve the unwinnable fight on a timer (reliable regardless of frame pacing).
+    // Mashers trip it a touch earlier via the damageMob wrapper; this is the backstop.
+    setTimeout(function(){ if(CO.phase==='boss') triggerDefeat(); }, 6000);
+  }
+
+  /* ---- the scripted defeat: it cannot kill you, so it takes your memory. ---- */
+  function triggerDefeat(){
+    if(CO.phase==='defeat' || CO.phase==='done') return;
+    CO.phase = 'defeat';
+    coldOpenDefeat();
+  }
+  function coldOpenDefeat(){
+    // freeze the boss and stagger the hero for the beat
+    try{ (G.mobs||[]).forEach(function(m){ if(m && m.coldBoss){ m.state='idle'; m.frozen=1; } }); }catch(e){}
+    P.hurtT = 0.6;
+    if(typeof G!=='undefined'){ G.shake=1.0; G.slowmo=Math.max(G.slowmo||0,1.3); }
+    if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
+    if(typeof storyCard==='function'){
+      storyCard('<i>Your blade bites the dark and stops - it will not cut what has no flesh. Cold closes around you and lifts you off your feet. A voice comes, vast and unhurried:</i><br><br><b style="color:#c9a0ff">You are of the old blood, little tide. I cannot take you from this world - that door your line barred to me long ago.</b> <i>The grip tightens.</i> <b style="color:var(--ember)">...But I can take something else.</b>',
+        { label:'...', onOk:coldOpenWave });
+    } else { coldOpenWave(); }
+  }
+
+  /* ---- the memory-theft wash. --------------------------------------------- */
   function coldOpenWave(){
     if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
     if(typeof G!=='undefined'){ G.slowmo=Math.max(G.slowmo||0,1.2); G.shake=1.0; }
-    // a violet -> deep-dark full-screen wash (pure DOM, no engine coupling)
     var ov = document.getElementById('coWave');
     if(!ov){
       ov = document.createElement('div'); ov.id='coWave';
       ov.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0;'+
-        'transition:opacity 1.2s ease-in;background:radial-gradient(circle at 50% 62%, rgba(150,80,220,0.9), rgba(10,4,24,0.99));';
+        'transition:opacity 1.3s ease-in;background:radial-gradient(circle at 50% 55%, rgba(150,80,220,0.92), rgba(10,4,24,0.99));';
       document.body.appendChild(ov);
     }
     requestAnimationFrame(function(){ ov.style.opacity='1'; });
     setTimeout(function(){
       if(typeof storyCard==='function'){
-        storyCard('<i>The sea itself rises to answer - cold and wrong, lit from beneath. The deck goes out from under you and the dark closes over. Something is pulled from you as you sink: your name, your face, the light behind your eyes. Only the blade stays, locked in your hand.</i>',
+        storyCard('<i>The world tips away. Something is torn loose and carried off into the dark - your name, your face, the light behind your eyes. The cold takes all of it. Then the sea takes the rest, and closes over. Only the blade stays, locked in your hand.</i>',
           { label:'...', onOk:coldOpenAshore });
       } else { coldOpenAshore(); }
-    }, 1400);
+    }, 1500);
   }
 
-  /* ---- wash ashore: the curse has taken hold. Masked, memory gone, techniques
-     stripped - but the SWORD remains. Reuse the original startFresh for correct
-     cove placement / quests, with the shore cutscene skipped (we just played it
-     for real). --------------------------------------------------------------- */
+  /* ---- wash ashore, amnesiac: masked, memory + techniques gone, sword kept.
+     Reuse the original startFresh for correct cove/quests, cutscene skipped. -- */
   function coldOpenAshore(){
+    CO.phase = 'done';
     P.story = P.story || {};
     P.story.royalGarb = 0;                 // the royal wear is gone; _startFresh sets masked=1
     P.unlocked = P.unlocked || {};
     P.unlocked.dash = false;               // the curse took the trained techniques...
     P.unlocked.parry = false;
     // ...but NOT the blade: keep P.unlocked.melee + swordTier so Maren reads a warrior
+    P.hp = P.maxhp;
     CO._skip = true;                       // make shoreCutscene fall straight through to Maren
     if(typeof switchWorld==='function') switchWorld('isle');
     if(typeof CO._origStartFresh==='function') CO._origStartFresh();
@@ -160,9 +218,22 @@
   }
 
   function bailToShore(){
-    // last-ditch: if anything is missing, fall through to the stock opening so we never soft-lock
     CO._skip = false;
     if(typeof CO._origStartFresh==='function') CO._origStartFresh();
+  }
+
+  /* ---- per-frame: keep the hero alive (the loss is scripted), and time out the
+     unwinnable boss if the player just keeps swinging at it. ------------------ */
+  function tick(dt){
+    if(!ON() || typeof G==='undefined' || G.worldId!=='deck') return;
+    if(P && P.hp>0 && P.hp<CLAMP_MIN) P.hp=CLAMP_MIN;
+    if(CO.phase==='boss'){
+      CO.bossT = (CO.bossT||0) + (dt||0);
+      // resolve the unwinnable fight on time alone, so the loss always lands even
+      // if the player stops swinging or backs off (an early trip on futile hits
+      // lives in the damageMob wrapper for players who mash into it).
+      if(CO.bossT>=6) triggerDefeat();
+    }
   }
 
   /* ============================ wrappers ============================ */
@@ -196,12 +267,53 @@
     };
   }
 
-  // killMob: catch the spirit's death and fire the wave.
+  // killMob: count practice wisps; when the last falls, raise the big spirit.
   if(typeof window.killMob==='function'){
     var _killMob = window.killMob;
     window.killMob = function(m, skill){
       var r = _killMob.apply(this, arguments);
-      try{ if(ON() && m && m.coldSpirit && !CO._done){ CO._done=true; setTimeout(coldOpenWave, 750); } }catch(e){}
+      try{
+        if(ON() && m && m.coldWisp){
+          CO.wispsLeft = Math.max(0, (CO.wispsLeft||1) - 1);
+          if(CO.wispsLeft<=0 && CO.phase==='practice'){ CO.phase='transition'; setTimeout(coldOpenBoss, 900); }
+        }
+      }catch(e){}
+      return r;
+    };
+  }
+
+  // damageMob: the big spirit is invulnerable - blows land with "NO EFFECT", and
+  // enough futile hits (once the fight has had a beat to breathe) trip the defeat.
+  if(typeof window.damageMob==='function'){
+    var _damageMob = window.damageMob;
+    window.damageMob = function(m, dmg, knock, skill){
+      if(ON() && m && m.coldBoss){
+        m.hp = m.maxhp; m.hurtT = Math.max(m.hurtT||0, 0.12);
+        CO.bossHits = (CO.bossHits||0) + 1;
+        if((CO.bossHits % 2)===1 && typeof addFloat==='function') addFloat('NO EFFECT', m.x, m.y-1.6, '#b98fe0', 1.0);
+        if(CO.phase==='boss' && CO.bossHits>=5 && (CO.bossT||0)>=2.0) triggerDefeat();
+        return;   // never damages
+      }
+      return _damageMob.apply(this, arguments);
+    };
+  }
+
+  // hurtPlayer: keep the hero alive through the cold open (the loss is scripted).
+  if(typeof window.hurtPlayer==='function'){
+    var _hurtPlayer = window.hurtPlayer;
+    window.hurtPlayer = function(dmg, src){
+      var r = _hurtPlayer.apply(this, arguments);
+      try{ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && P && P.hp>0 && P.hp<CLAMP_MIN) P.hp=CLAMP_MIN; }catch(e){}
+      return r;
+    };
+  }
+
+  // updatePlayer: drive the per-frame tick right after the real update.
+  if(typeof window.updatePlayer==='function'){
+    var _updatePlayer = window.updatePlayer;
+    window.updatePlayer = function(dt){
+      var r = _updatePlayer.apply(this, arguments);
+      try{ tick(dt||0); }catch(e){}
       return r;
     };
   }
@@ -219,8 +331,7 @@
     window.devRegisterSection(['Cold open (prototype)', [
       ['Cold open: ' + (CO.on?'ON':'off'), function(b){ toggleColdOpen(b); }],
       ['Play the deck fight now', function(){
-        // jump straight into the cold open from anywhere (for testing)
-        CO.on = true; CO._done=false; CO._skip=false;
+        CO.on = true; CO._done=false; CO._skip=false; CO.phase=null;
         coldOpenBoard();
       }],
     ]]);
