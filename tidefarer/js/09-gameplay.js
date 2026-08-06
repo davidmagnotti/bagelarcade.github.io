@@ -712,6 +712,10 @@ function parryCovers(sx,sy){
 // follow-up grace. Returns true so callers can early-out of taking damage.
 function onParry(sx,sy){
   P.parrySuccess=0.22; P.parryT=Math.min(P.parryT||0,0.06);   // the guard is spent on a clean parry
+  // DEFLECT: a distinct blade-catch animation for the turned blow (drawn in drawPlayerFigure,
+  // rewarded with stamina in 49-combo-proto). Faces the blow's source.
+  P.deflectT=0.4; P.deflectMax=0.4;
+  { const dx=sx-P.x, dy=sy-P.y, l=Math.hypot(dx,dy)||1; P.deflectDir={x:dx/l,y:dy/l}; }
   P.lastCombat=G.time;
   const mx=(P.x+sx)/2, my=(P.y+sy)/2;
   addFloat('PARRY!', P.x, P.y-2.1, '#ffe08a', 1.3);
@@ -719,6 +723,21 @@ function onParry(sx,sy){
   G.hitStop=Math.max(G.hitStop||0,0.07); G.shake=Math.max(G.shake||0,0.18);
   Snd.crit&&Snd.crit(); buzz(14);
   return true;
+}
+/* DEFLECT on its own key (O): a trained defensive flick that opens the parry timing
+   window WITHOUT committing to a full attack swing. Time it to an incoming blow and it
+   turns aside - onParry then plays the blade-catch animation and refunds stamina. A short
+   recovery keeps it from being a held guard: it is timing, not holding. Reuses the exact
+   parry the sword-swing opens, so a slash still deflects too - O is just the dedicated key. */
+function tryDeflect(){
+  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
+  if(!((P.unlocked && P.unlocked.parry) || P.parryDrill)) return;   // deflect is the trained parry
+  if((P.deflectCd||0)>0 || (P.rollT||0)>0) return;
+  P.deflectCd=0.5;                                  // brief recovery between deflects
+  P.parryT=PARRY_WIN; P.parryMax=PARRY_WIN;         // open the timing window
+  P.swing=Math.max(P.swing||0,0.2);                 // a small blade flick (feedback; deals no damage)
+  P.lastCombat=G.time;
+  Snd.tone&&Snd.tone(520,0.05,'triangle',0.03,120);
 }
 /* Rask's parry lesson - a hands-on DRILL, not a lecture. He PITCHES a practice billet
    (a length of wood) at you; watch it close, and ATTACK as it reaches you to turn it
@@ -1660,6 +1679,8 @@ function updatePlayer(dt){
   // No movement freeze now - the parry rides your attack, so you keep your footing.
   P.parryT=Math.max(0,(P.parryT||0)-dt);
   P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
+  P.deflectT=Math.max(0,(P.deflectT||0)-dt);   // the deflect blade-catch animation beat
+  P.deflectCd=Math.max(0,(P.deflectCd||0)-dt); // recovery between O-key deflects
   if(P.parryDrill) updateParryDrill(dt);
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands
@@ -2448,6 +2469,9 @@ function updateProjs(dt){
       // well-timed swing bats the bone away before it ever reaches the body.
       if((P.parryT||0)>0 && !p.parried && dP<1.05 && parryCovers(p.x,p.y)){
           p.parried=1; p.from='player'; p.skill='melee';
+          // the same DEFLECT blade-catch as a melee parry, facing the batted shot
+          P.deflectT=0.4; P.deflectMax=0.4;
+          { const _dx=p.x-P.x, _dy=p.y-(P.y-0.3), _l=Math.hypot(_dx,_dy)||1; P.deflectDir={x:_dx/_l,y:_dy/_l}; }
           // Send the bone straight back to whoever threw it - so a parried King bone
           // flies at the KING even when his skeletons crowd you. When we know the thrower,
           // the returned bone HOMES to him and punches through lesser bones in the way,

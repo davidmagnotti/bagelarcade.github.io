@@ -4221,28 +4221,6 @@ function drawRollFX(s){
   cx.beginPath(); cx.ellipse(s.x,s.y-2,15,7,0,0,TAU); cx.stroke();
   cx.restore();
 }
-// A heater shield the hero raises while guarding - drawn once, cached, blitted in the
-// off-hand toward the guard direction (see the P.blocking block in drawPlayerFigure).
-let _PSHIELD=null;
-function playerShieldCanvas(){
-  if(_PSHIELD) return _PSHIELD;
-  _PSHIELD = makeCanvas(24,28,(g)=>{
-    // body
-    g.fillStyle='#7f93a8';
-    g.beginPath(); g.moveTo(12,1); g.lineTo(22,4.5); g.lineTo(22,15);
-    g.quadraticCurveTo(22,23,12,27); g.quadraticCurveTo(2,23,2,15); g.lineTo(2,4.5); g.closePath(); g.fill();
-    // rim
-    g.strokeStyle='#2b3742'; g.lineWidth=2; g.stroke();
-    // face shading + trim
-    g.fillStyle='rgba(255,255,255,0.16)'; g.beginPath(); g.moveTo(12,2.5); g.lineTo(12,25.5);
-    g.lineTo(3.5,15) ; g.lineTo(3.5,5.4); g.closePath(); g.fill();
-    g.strokeStyle='#c9a24e'; g.lineWidth=1.4;   // a bronze band + boss
-    g.beginPath(); g.moveTo(12,2); g.lineTo(12,26); g.moveTo(4,9); g.lineTo(20,9); g.stroke();
-    g.fillStyle='#c9a24e'; g.beginPath(); g.arc(12,12.5,2.4,0,TAU); g.fill();
-    g.strokeStyle='#7a5a18'; g.lineWidth=1; g.stroke();
-  });
-  return _PSHIELD;
-}
 function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
     ((P.gatherT||0)>0? P.gatherKind :
@@ -4270,21 +4248,31 @@ function drawPlayerFigure(s){
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, moveT:P.moveT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, published for the mount; seated legs hang plumb
     wtier: tool==='sword'? (P.swordTier||0) : 1});
-  // RAISED GUARD: an actual shield in the off-hand while blocking (49-combo-proto sets
-  // P.blocking). It rides toward the guard direction at chest height, over a cold glow.
-  if(P.blocking){
-    const gd=P.dir||{x:0,y:1};
-    const gx=s.x + gd.x*15, gy=s.y-17 + gd.y*7;
-    cx.save();
-    const _pulse=0.5+0.12*Math.sin(G.time*7);
-    cx.globalAlpha=_pulse; cx.fillStyle='rgba(150,190,240,0.55)';
-    cx.beginPath(); cx.ellipse(gx,gy,15,18,0,0,TAU); cx.fill();
-    cx.globalAlpha=1;
-    cx.drawImage(playerShieldCanvas(), gx-12, gy-14);
+  // DEFLECT: a timed slash that TURNED a blow (the core sets P.deflectT the instant a
+  // parry lands - melee or a batted shot). It reads as a blade-CATCH, distinct from a
+  // normal swing: the sword sweeps up into a bright steel gleam with a spark where steel
+  // met steel. The ordinary slash arc is suppressed below so it never reads as an attack.
+  if((P.deflectT||0)>0){
+    const dm=P.deflectMax||0.4, k=Math.max(0,Math.min(1,(P.deflectT||0)/dm));   // 1 -> 0 over the beat
+    const gd=P.deflectDir||P.dir||{x:0,y:1};
+    const ang=Math.atan2((gd.x+gd.y)*(TH/2),(gd.x-gd.y)*(TW/2));
+    const cxp=s.x+gd.x*10, cyp=s.y-18+gd.y*6;
+    cx.save(); cx.translate(cxp,cyp); cx.rotate(ang);
+    cx.globalAlpha=0.9*k;                                   // the catch gleam - a bright steel crescent
+    cx.strokeStyle='rgba(214,236,255,'+(0.9*k)+')'; cx.lineWidth=3.4; cx.lineCap='round';
+    cx.beginPath(); cx.arc(0,0,18,-1.15,1.15); cx.stroke();
+    cx.strokeStyle='rgba(255,255,255,'+(0.95*k)+')'; cx.lineWidth=1.5;
+    cx.beginPath(); cx.arc(0,0,18,-0.5,0.5); cx.stroke();
+    cx.restore();
+    const spx=cxp+gd.x*14, spy=cyp+gd.y*8;                  // the spark where steel meets steel
+    cx.save(); cx.globalAlpha=k;
+    const sr=cx.createRadialGradient(spx,spy,0, spx,spy,13*(0.5+k*0.5));
+    sr.addColorStop(0,'rgba(255,255,255,'+(0.95*k)+')'); sr.addColorStop(0.5,'rgba(200,230,255,'+(0.5*k)+')'); sr.addColorStop(1,'rgba(190,224,255,0)');
+    cx.fillStyle=sr; cx.beginPath(); cx.arc(spx,spy,13,0,TAU); cx.fill();
     cx.restore();
   }
-  // slash arc trail
-  if(P.swing>0 && P.weapon==='melee' && !P.fishing){
+  // slash arc trail (suppressed mid-deflect so the catch never reads as an attack swing)
+  if(P.swing>0 && P.weapon==='melee' && !P.fishing && !((P.deflectT||0)>0)){
     const a0=Math.atan2((P.dir.x+P.dir.y)*(TH/2),(P.dir.x-P.dir.y)*(TW/2));
     const pr=1-(P.swing/0.3);
     cx.save(); cx.translate(s.x,s.y-16); cx.rotate(a0); cx.scale(1,0.6);
