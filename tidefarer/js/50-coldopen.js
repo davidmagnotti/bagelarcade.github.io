@@ -28,19 +28,19 @@
        curse strips the techniques (dash/parry) and memory - so you retrain with
        Rask (parry) and Orin (dash), and Bram now fits ARMOUR, not a first blade.
 
-   SAFETY
-     - OFF by default. Gated on window.COLDOPEN.on - flip it in the DEV menu
-       ("Cold open (prototype)") or set localStorage tf_coldopen=1. With the flag
-       off, the wrappers pass straight through and the shipping opening is EXACTLY
-       as before (the shore cutscene).
+   MAINLINE
+     - This IS the opening now (the old passive shore cutscene is gone). ON by
+       default; a dev can still opt out in the DEV menu ("Cold open") or via
+       localStorage tf_coldopen=0, which falls back to waking on the shore with
+       Elder Maren (no cutscene, no deck fight).
      - Everything is monkey-patched onto the globals; the core files are
        untouched but for one small, coldOpen-gated line in startIntro (Maren).
    ============================================================================ */
 (function(){
   'use strict';
 
-  window.COLDOPEN = window.COLDOPEN || { on:false };
-  try{ if(typeof SafeStore!=='undefined' && SafeStore.get('tf_coldopen')==='1') window.COLDOPEN.on = true; }catch(e){}
+  window.COLDOPEN = window.COLDOPEN || { on:true };   // mainline: the cold open is the intro
+  try{ var _cv=(typeof SafeStore!=='undefined') && SafeStore.get('tf_coldopen'); if(_cv==='0') window.COLDOPEN.on=false; else if(_cv==='1') window.COLDOPEN.on=true; }catch(e){}
   var CO = window.COLDOPEN;
   var ON = function(){ return !!(CO && CO.on); };
 
@@ -208,17 +208,16 @@
     P.unlocked.parry = false;
     // ...but NOT the blade: keep P.unlocked.melee + swordTier so Maren reads a warrior
     P.hp = P.maxhp;
-    CO._skip = true;                       // make shoreCutscene fall straight through to Maren
+    // The old shore cutscene is gone, so the original startFresh's beginIntro drops
+    // straight to Elder Maren's first words (startIntro) - exactly what we want.
     if(typeof switchWorld==='function') switchWorld('isle');
     if(typeof CO._origStartFresh==='function') CO._origStartFresh();
     else bailToShore();
     var ov = document.getElementById('coWave');
     if(ov){ ov.style.transition='opacity 1s ease-out'; ov.style.opacity='0'; setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 1100); }
-    setTimeout(function(){ CO._skip = false; }, 800);
   }
 
   function bailToShore(){
-    CO._skip = false;
     if(typeof CO._origStartFresh==='function') CO._origStartFresh();
   }
 
@@ -254,16 +253,6 @@
       var begin = function(){ coldOpenBoard(); };
       if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', begin, {once:true});
       else begin();
-    };
-  }
-
-  // shoreCutscene: while _skip is set (the wash-ashore handoff), skip the ship
-  // slideshow entirely and go straight to Maren's first words.
-  if(typeof window.shoreCutscene==='function'){
-    var _shore = window.shoreCutscene;
-    window.shoreCutscene = function(onDone){
-      if(ON() && CO._skip){ if(typeof onDone==='function') onDone(); return; }
-      return _shore.apply(this, arguments);
     };
   }
 
@@ -323,12 +312,12 @@
     CO.on = !CO.on;
     try{ if(typeof SafeStore!=='undefined') SafeStore.set('tf_coldopen', CO.on?'1':'0'); }catch(e){}
     if(b) b.textContent = 'Cold open: ' + (CO.on?'ON':'off');
-    if(typeof note==='function') note('Cold open ' + (CO.on ? 'ON - "Start Over" now opens on the deck fight' : 'off - stock shore cutscene'));
+    if(typeof note==='function') note('Cold open ' + (CO.on ? 'ON (default) - "Start Over" opens on the deck fight' : 'off - wake on the shore with Maren, no cutscene'));
   }
   window.toggleColdOpen = toggleColdOpen;
 
   if(typeof window.devRegisterSection==='function'){
-    window.devRegisterSection(['Cold open (prototype)', [
+    window.devRegisterSection(['Cold open (the opening)', [
       ['Cold open: ' + (CO.on?'ON':'off'), function(b){ toggleColdOpen(b); }],
       ['Play the deck fight now', function(){
         CO.on = true; CO._done=false; CO._skip=false; CO.phase=null;

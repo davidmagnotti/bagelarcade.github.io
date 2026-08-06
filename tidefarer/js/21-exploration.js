@@ -191,7 +191,12 @@ function boot(){
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
-  enterGame();   // no title menu - drop straight into the saved adventure, or a fresh one
+  // Start the game (saved adventure, or a fresh one) only AFTER every classic script
+  // has parsed - the playable opening (js/50-coldopen.js) loads after this file and
+  // needs to have wrapped startFresh before a new game begins. Until then the frame
+  // loop just drifts the camera over the sleeping isle (G.state==='title').
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', enterGame, {once:true});
+  else enterGame();   // a re-boot after load (rare) can start at once
 }
 /* No title screen: on load, continue the saved adventure, or begin a new one
    (the shipwreck opening). A reset lives in the pause menu ("Start Over"). */
@@ -297,15 +302,13 @@ function startFresh(){
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   openingQuests();
   updateQuestUI();
-  // Open on the wreck the intro only ever described: the storm, the ship's lanterns
-  // swallowed by the cursed strait, the masked castaway washed onto the sand - then
-  // hand off to Elder Maren's first words (startIntro). The cutscene layer
-  // (js/44-shore-cutscene.js) loads AFTER this file, so on the very first boot() it
-  // is not defined yet - wait for DOMContentLoaded (which blocks on every classic
-  // script) before playing it, or run at once if the page is already loaded (a
-  // "Start Over" restart). Falls straight through to the first words if the layer is
-  // truly absent, so the opening never stalls.
-  const beginIntro=()=>{ if(typeof shoreCutscene==='function') shoreCutscene(startIntro); else startIntro(); };
+  // Wake on the sand and hand off to Elder Maren's first words (startIntro). The
+  // playable opening (the deck fight) lives in js/50-coldopen.js and wraps this
+  // whole function; when it runs, it only calls back here for the ashore landing,
+  // so this path is just "wake -> Maren." Wait for DOMContentLoaded on the very
+  // first boot() (classic scripts block it) so startIntro's NPCs exist, or run at
+  // once on a "Start Over" restart.
+  const beginIntro=()=>{ startIntro(); };
   if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', beginIntro, {once:true});
   else beginIntro();
 }
