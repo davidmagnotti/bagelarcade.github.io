@@ -191,7 +191,12 @@ function boot(){
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
   requestAnimationFrame(frame);
-  enterGame();   // no title menu - drop straight into the saved adventure, or a fresh one
+  // Start the game (saved adventure, or a fresh one) only AFTER every classic script
+  // has parsed - the playable opening (js/50-coldopen.js) loads after this file and
+  // needs to have wrapped startFresh before a new game begins. Until then the frame
+  // loop just drifts the camera over the sleeping isle (G.state==='title').
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', enterGame, {once:true});
+  else enterGame();   // a re-boot after load (rare) can start at once
 }
 /* No title screen: on load, continue the saved adventure, or begin a new one
    (the shipwreck opening). A reset lives in the pause menu ("Start Over"). */
@@ -236,8 +241,17 @@ function startIntro(){
   document.getElementById('dname').textContent=greeter.name;
   drawPortrait(greeter);
   const p4=()=>{
-    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your feet under you, then see <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
-      [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    // Cold open (js/50-coldopen.js): she washes in still gripping a warrior's
+    // blade, so Maren reads her for a fighter and sends her to Bram for ARMOUR,
+    // not a first sword. Stock opening (no cold open): the classic line.
+    const warrior = !!(P.story && P.story.coldOpen && P.unlocked && P.unlocked.melee);
+    if(warrior){
+      setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows.” <i>Her eye falls to the blade still locked in your grip - the way you hold it, even half-drowned.</i> “...And you\'re no fisherman. That\'s a warrior\'s sword, and warrior\'s hands on it. Whoever you were, the isle could use you. See <b>Bram the smith</b>, at the forge just here - he\'ll fit you with armour worthy of that steel. This isle has need of one like you.”',
+        [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    } else {
+      setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your feet under you, then see <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
+        [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    }
   };
   const p3=()=>{
     setDialog('<i>She waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>She nods slowly.</i> “The strait does that - takes the ship, the crew, and the memory with them. Don\'t claw at it: a name washes back, child, or you earn a new one.”',
@@ -288,15 +302,13 @@ function startFresh(){
   if(!SafeStore.persistent) setTimeout(()=>toast('Heads up: this browser view blocks saving - progress lasts <b>this session only</b>. Open the file directly in a browser tab to keep saves.',7000),1200);
   openingQuests();
   updateQuestUI();
-  // Open on the wreck the intro only ever described: the storm, the ship's lanterns
-  // swallowed by the cursed strait, the masked castaway washed onto the sand - then
-  // hand off to Elder Maren's first words (startIntro). The cutscene layer
-  // (js/44-shore-cutscene.js) loads AFTER this file, so on the very first boot() it
-  // is not defined yet - wait for DOMContentLoaded (which blocks on every classic
-  // script) before playing it, or run at once if the page is already loaded (a
-  // "Start Over" restart). Falls straight through to the first words if the layer is
-  // truly absent, so the opening never stalls.
-  const beginIntro=()=>{ if(typeof shoreCutscene==='function') shoreCutscene(startIntro); else startIntro(); };
+  // Wake on the sand and hand off to Elder Maren's first words (startIntro). The
+  // playable opening (the deck fight) lives in js/50-coldopen.js and wraps this
+  // whole function; when it runs, it only calls back here for the ashore landing,
+  // so this path is just "wake -> Maren." Wait for DOMContentLoaded on the very
+  // first boot() (classic scripts block it) so startIntro's NPCs exist, or run at
+  // once on a "Start Over" restart.
+  const beginIntro=()=>{ startIntro(); };
   if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', beginIntro, {once:true});
   else beginIntro();
 }
