@@ -1140,7 +1140,7 @@ function renderInterior(){
                      else { wg.addColorStop(0,'rgba(255,210,140,0.07)'); wg.addColorStop(1,'rgba(10,8,14,0.5)'); } } // torchlit hall
   else { wg.addColorStop(0,'rgba(255,170,90,0.06)'); wg.addColorStop(1,'rgba(0,0,0,0.55)'); }
   cx.fillStyle=wg; cx.fillRect(0,0,VW,VH);
-  drawGritGrade();
+  if(FX.grade) drawGritGrade();   // honour the Cinematic color grade toggle (off by default)
   // interact affordance: hotspots beat the door when closer
   const hs=interiorHotspot();
   const nearExit=I.exit && dist(P.x,P.y,I.exit.x,I.exit.y)<1.5;
