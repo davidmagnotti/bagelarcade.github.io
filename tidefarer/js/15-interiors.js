@@ -408,6 +408,27 @@ function enterHouse(b){
   }
   // Greyharbor: Rook's apothecary reads a remedy-book, not a sailor's letters
   if(G.worldId==='main' && lblL.includes('remed')) I.loreKey='remedies@main';
+  // Emberwick (the starting isle): the founding cast's homes should read as THEIRS,
+  // not as random themed strangers' houses. Each names its keeper and adds a
+  // signature furnishing, so the isle every player begins on feels handmade.
+  if(G.worldId==='isle'){
+    if(b.kind==='house' && lblL.includes('maren')){
+      // The Elder's cottage. Keep loreKey='house' so the default shelf still reads
+      // "Songs of the Well" (Orin's three-texts quest names that book) AND so
+      // applyHomeTheme leaves this bespoke room alone instead of theming it at random.
+      I.loreKey='house'; I.elder=1;
+      F('desk',2.6,4.7,1.0,0.6);                              // where she keeps the village records
+      F('books',4.4,1.3,0.7,0.3,true,'elder@isle');           // and her own chronicle of the isle
+    }
+    else if(b.kind==='forge'){
+      // Bram's smithy - give the gruff old smith a voice and something to Read.
+      I.loreKey='forge@isle';
+      F('shelf',6.0,4.8,1.0,0.3,true,'forge@isle');           // his work-book, pinned to the wall
+      F('barrel',3.4,4.7,0.45,0.4);                           // the slack-tub - water for quenching
+    }
+    // Willa's barn already reads its bespoke "Farmer's Almanac" (barn) and is a
+    // barn (not a house), so no random theme touches it - left as authored.
+  }
   // generic homes take on a deterministic theme (fisher, herbalist, weaver...) -
   // its own walls, floor mood, furniture and loot. Bespoke homes are left alone.
   if(typeof applyHomeTheme==='function') applyHomeTheme(I,b);

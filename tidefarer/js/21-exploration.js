@@ -112,7 +112,11 @@ function frame(ts){
     render();
     return;
   }
-  if(G.paused || G.menuPause){ render(); return; }
+  // Paused (or a modal has soft-paused the world): keep painting the scene the
+  // player is actually standing in. Inside a building we must call renderInterior()
+  // - the plain render() draws the overworld, which made pausing indoors look like
+  // it "kicked you outside" (the interior branch below never ran while paused).
+  if(G.paused || G.menuPause){ if(G.interior) renderInterior(); else render(); return; }
   G.time+=dt;
   // in-world boss entrance: the whole scene holds (player + foes frozen) while the
   // boss arrives on this same screen, then hands straight to the fight. See 13-aaa-layer.
