@@ -222,7 +222,7 @@ function nearestInteract(){
       if(d<2.2 && d<bd){ bd=d; best={type:'cave',o:b,label:'Enter'}; } }
     if(b.kind==='dungeonmouth'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<2.3 && d<bd){ bd=d; best={type: b.vault?'vaultdungeon': b.mill?'milldungeon': b.ember?'emberdungeon': b.undermaw?'undermawdungeon': b.drowned?'drowneddungeon': b.deepworld?'gatedungeon':'dungeon',o:b,
-        label: b.exit?'Climb out':(b.ember && !(P.story&&(P.story.emberKey||P.story.emberDone||qs('wyrm')==='done')))?'Locked - Ember-Key needed':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':'Descend'}; } }
+        label: b.exit?'Climb out':(b.ember && !(P.story&&(P.story.emberKey||P.story.emberDone||qs('wyrm')==='done')))?'Locked - Ember-Key needed':(b.vault && !(P.story&&P.story.iceBearDown))?'A bear’s den':(b.fissure && !(P.story&&P.story.frostFreed))?'The Warden bars it':'Descend'}; } }
     if(b.kind==='icelever'){ const d=dist(P.x,P.y,b.x,b.y);
       if(d<1.8 && d<bd){ bd=d; best={type:'lever',o:b,label:b.on?'Lever (thrown)':'Pull lever'}; } }
     if(b.kind==='emberlever'){ const d=dist(P.x,P.y,b.x,b.y);

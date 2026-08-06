@@ -2513,8 +2513,11 @@ function placeRimefissureMountains(Z){
       seen.add(key(nx,ny)); q.push([nx,ny]); } }
   if(!reached){ for(let i=0;i<way.length-1;i++) carveLine(way[i][0],way[i][1], way[i+1][0],way[i+1][1], T.PATH, 1);
     for(let i=0;i<way.length;i++){ const p=way[i]; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) setSolid(p[0]+dx,p[1]+dy,0); } }
-  // the fissure mouth, deep in the hollow, with lamps and a cairn signpost up the pass
-  G.decor.push({kind:'dungeonmouth', x:HF[0]+0.5, y:HF[1]+0.5, label:'the Rimefissure', name:'THE RIMEFISSURE'});
+  // the fissure mouth, deep in the hollow, with lamps and a cairn signpost up the pass.
+  // `fissure:1` marks it so the entrance stays sealed until the Weeping Warden (which stands
+  // athwart it) is put down - frostFreed opens the way (see 07-input.js + spawnFrostWarden).
+  G.decor.push({kind:'dungeonmouth', x:HF[0]+0.5, y:HF[1]+0.5, fissure:1, label:'the Rimefissure', name:'THE RIMEFISSURE'});
+  G.frostFissureMouth={x:HF[0], y:HF[1]};
   setSolid(HF[0],HF[1],0); setTile(HF[0],HF[1],T.PATH);
   addBuilding('lamp', HF[0]-2, HF[1]+1, ''); addBuilding('lamp', HF[0]+2, HF[1]+1, '');
   addBuilding('lamp', J[0], J[1], '');                 // a lamp marks the turn off the road
@@ -2607,14 +2610,27 @@ function spawnFrostFolk(){
 }
 function spawnFrostWarden(){
   if(G.mobs && G.mobs.some(m=>m.kind==='frostwarden' && !m.dead)) return null;
-  const GL=FROST_ZONES.glacier, sp=findOpenNear(Math.round(GL.x), Math.round(GL.y), 5) || [GL.x, GL.y];
+  // The Warden stands athwart the Rimefissure mouth, barring the deep ice until it's put
+  // down. Placed just in front of the fissure (not off at the glacier), so it reads as the
+  // thing blocking the way in - felling it (frostFreed) opens the descent.
+  const M=G.frostFissureMouth || {x:49, y:92};
+  let sp=null, bestD=1e9;                              // stand on the open tile closest to the mouth
+  for(let ry=-3; ry<=3; ry++) for(let rx=-3; rx<=3; rx++){
+    if(rx===0 && ry===0) continue;                     // never on the mouth tile itself
+    const x=Math.round(M.x)+rx, y=Math.round(M.y)+ry;
+    if(!inb(x,y) || solidAt(x,y) || !walkTile(tileAt(x,y))) continue;
+    const d=Math.abs(rx)+Math.abs(ry); if(d<bestD){ bestD=d; sp=[x,y]; }
+  }
+  if(!sp) sp=findOpenNear(Math.round(M.x), Math.round(M.y)+2, 6) || [M.x, M.y+2];
   const w=spawnMob('frostwarden', sp[0], sp[1]);
   if(w){ w.boss=true; w.bigBoss=true; w.enspelled=true; w.title='THE WEEPING WARDEN'; w.ach='thawwarden'; w.hx=sp[0]; w.hy=sp[1]; w.state='idle'; w.respawnT=-1; w.entrance='enthrall'; }
   return w;
 }
 function spawnMobsFrost(){
   const Z=FROST_ZONES;
-  if(qs('thaw')==='active' && !(P.story && P.story.frostFreed)) spawnFrostWarden();
+  // The Warden bars the Rimefissure, so it stands guard whenever the deep is still sealed -
+  // no longer tied to first accepting the thaw quest (beating it completes thaw either way).
+  if(!(P.story && P.story.frostFreed)) spawnFrostWarden();
   const yd=findOpenNear(Math.round(Z.village.x+7),Math.round(Z.village.y+5),5);
   if(yd) spawnMob('dummy',yd[0],yd[1]);
   // two vicious, high-level ice-maddened bears prowl the glacier margins and the
@@ -2639,24 +2655,18 @@ function freeWarden(m){
     G.parts.push({x:m.x,y:m.y-0.4,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:rnd(0.8,1.8),color:Math.random()<0.5?'#bfe8ff':'#e6f6ff',size:rnd(2,4.5),grav:0.05}); }
   P.story.frostFreed=1; P.story.vathMet=1;
   bossReward(m);
-  banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE CRUEL COLD BREAKS');
-  if(qs('thaw')==='active') completeQuest('thaw');
+  banner('THE ICE WEEPS AGAIN','THE WARDEN IS FREE - THE RIMEFISSURE OPENS');
+  if(qs('thaw')!=='done') completeQuest('thaw');   // the Warden guards the way from the start, so the kill settles thaw either way
   updateFrostFolkMood();
-  // Felling the surface Warden breaks the cruel cold - but the thing that hides you
-  // from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
+  // Felling the surface Warden opens the Rimefissure it guarded - but the thing that hides
+  // you from Vath (the WARDING VEIL) is not earned here. It waits deeper: the hush-frost
   // spellbook in the Rimefissure's reward chest, read into a spell by your brother.
-  // Sigrid points the way down. (see openChest `veiltome` + the 'brother' scene.)
-  // The freeing now plays as a full-overlay cutscene (js/39-more-cutscenes.js) - the same
-  // freed-victim bookend the Leviathan got: the violet sloughs off, the Warden weeps clean
-  // meltwater, a soft winter returns, and Vath is glimpsed on the glacier road. When it ends,
-  // Sigrid's pointer card (the trail down to the Rimefissure) follows. Falls back to the old
-  // story-card if the overlay layer is absent.
-  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You gave us back our guardian. And if you\'ve the nerve for the deep, there\'s one thing more: an <b>old warding sleeps in the ice down the Rimefissure</b>, past whatever the cold bound there - older than this curse, older than the crown, and no one living has read a word of it. Old magic, old script. Take it to your brother; a scholar\'s the only one who could ever work it.”',
+  // NO freeing cutscene (removed by request): Vath never reached the Frozen Isle, so there's
+  // no curse to slough off here. The banner marks the moment; Sigrid's pointer card - the
+  // trail down into the now-open Rimefissure - follows straight after.
+  const sigridCard=()=>storyCard('<i>On the road down, </i><b>Sigrid</b><i> catches your hands.</i> “You put the Warden down - the crack in the ice stands open now, the way we\'ve not dared in years. And if you\'ve the nerve for the deep, there\'s one thing more: an <b>old warding sleeps down the Rimefissure</b>, past whatever the cold bound there - older than the crown, and no one living has read a word of it. Old magic, old script. Take it to your brother; a scholar\'s the only one who could ever work it.”',
     {onOk:()=>{ if(typeof autoSave==='function') autoSave(); }});
-  setTimeout(()=>{
-    if(typeof wardenFreedCutscene==='function') wardenFreedCutscene(m, sigridCard);
-    else sigridCard();
-  },1400);
+  setTimeout(sigridCard, 900);
 }
 // The WARDING VEIL: a warding read from the hush-frost spellbook the Rimebound guarded,
 // hiding its bearer from Vath's eye and letting you steal back to the old islands (all but

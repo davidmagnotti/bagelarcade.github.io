@@ -114,7 +114,10 @@ function pickClickTarget(wx,wy){
       if(b.vault){ if(b.exit){ exitFrostVault(); } else if(!(P.story&&P.story.iceBearDown)){ blockMsg('The <b>Hoarfrost Bear</b>’s den, rank with old kills - drive the beast off before you go down.'); Snd.step&&Snd.step(5); } else { enterFrostVault(); } return; }
       if(b.mill){ b.exit? exitMillDungeon() : enterMillDungeon(); return; }
       if(b.undermaw){ b.exit? exitUndermaw() : enterUndermaw(); return; }
-      if(b.ember){ b.exit? exitEmberDungeon() : enterEmberDungeon(); } else { b.exit? exitFrostDungeon() : enterFrostDungeon(); } }});
+      if(b.ember){ b.exit? exitEmberDungeon() : enterEmberDungeon(); }
+      else if(b.exit){ exitFrostDungeon(); }
+      else if(b.fissure && !(P.story&&P.story.frostFreed)){ blockMsg('The <b>Weeping Warden</b> stands athwart the crack in the ice, barring the deep. Put it down and the Rimefissure will open.'); Snd.step&&Snd.step(5); }
+      else { enterFrostDungeon(); } }});
     else if(b.kind==='icelever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullIceLever(b)});
     else if(b.kind==='emberlever') cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullEmberLever(b)});
     else if(b.kind==='dlever' && !b.on) cand.push({type:'inter',x:b.x,y:b.y,r:1.0,range:1.7,go:()=>pullDungLever(b)});
