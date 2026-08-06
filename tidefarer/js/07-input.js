@@ -21,8 +21,19 @@ window.addEventListener('keydown',e=>{
     if(b){ e.preventDefault(); b.fn(); }
     return;
   }
+  // Enter or Space confirms the main choice, so a keyboard player never needs the mouse
+  // to progress a conversation (Accept Quest, Continue, ...). Number keys still pick any
+  // specific reply; Esc still backs out. (e.repeat guard: don't skip through on a hold.)
+  if(dlg.open && (k==='enter' || k===' ')){
+    e.preventDefault();
+    if(!e.repeat){ const b=dlg.btns && dlg.btns[0]; if(b) b.fn(); }
+    return;
+  }
   if(k==='e'||k==='enter'){ doInteract(); }
-  if(k===' '){ e.preventDefault(); input.attack=true; }
+  // Slash is Space OR K; deflect is O; dash is Ctrl OR L - so the right hand can rest on
+  // O / K / L for the timing combos while the left drives WASD.
+  if(k===' '||k==='k'){ if(k===' ') e.preventDefault(); input.attack=true; }
+  if(k==='o' && !e.repeat){ if(typeof tryDeflect==='function') tryDeflect(); }
   if(k==='1') selectWeapon('melee');
   if(k==='2') selectWeapon('bow');
   if(k==='4') useItem(P.quickItem||'potion');
@@ -36,7 +47,7 @@ window.addEventListener('keydown',e=>{
     togglePause(true);
   }
 });
-window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; if(e.key===' ') input.attack=false; });
+window.addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); keys[k]=false; if(e.key===' '||k==='k') input.attack=false; });
 
 /* Release every held control when the game loses focus. Without this, a movement
    key or an on-screen button held at the moment another window/pop-up steals focus

@@ -42,8 +42,8 @@ function build(){
     'background:rgba(16,12,7,.74);border:1px solid #4a3826;border-radius:10px;padding:6px 13px;'+
     'box-shadow:0 3px 10px rgba(0,0,0,.5);text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;';
   el.innerHTML=
-    '<div>⚔ <b>Space</b> Attack &nbsp;·&nbsp; ⟲ <b>Ctrl</b>/<b>L</b> Dash &nbsp;·&nbsp; <b>E</b> Interact</div>'+
-    '<div style="color:#8fe8cf;margin-top:1px;">time an attack → <b>Deflect</b> &nbsp;·&nbsp; attack→dash → <b>Cancel</b> &nbsp;·&nbsp; dash→dash → <b>Chain</b></div>';
+    '<div>⚔ <b>Space</b>/<b>K</b> Attack &nbsp;·&nbsp; ⟲ <b>Ctrl</b>/<b>L</b> Dash &nbsp;·&nbsp; ⛨ <b>O</b> Deflect &nbsp;·&nbsp; <b>E</b> Interact</div>'+
+    '<div style="color:#8fe8cf;margin-top:1px;">attack→dash → <b>Cancel</b> &nbsp;·&nbsp; dash→dash → <b>Chain</b> &nbsp;·&nbsp; time <b>O</b> to a blow → <b>Deflect</b> (refunds stamina)</div>';
   (document.body||document.documentElement).appendChild(el);
   return el;
 }

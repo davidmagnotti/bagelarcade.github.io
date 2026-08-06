@@ -724,6 +724,21 @@ function onParry(sx,sy){
   Snd.crit&&Snd.crit(); buzz(14);
   return true;
 }
+/* DEFLECT on its own key (O): a trained defensive flick that opens the parry timing
+   window WITHOUT committing to a full attack swing. Time it to an incoming blow and it
+   turns aside - onParry then plays the blade-catch animation and refunds stamina. A short
+   recovery keeps it from being a held guard: it is timing, not holding. Reuses the exact
+   parry the sword-swing opens, so a slash still deflects too - O is just the dedicated key. */
+function tryDeflect(){
+  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0) return;
+  if(!((P.unlocked && P.unlocked.parry) || P.parryDrill)) return;   // deflect is the trained parry
+  if((P.deflectCd||0)>0 || (P.rollT||0)>0) return;
+  P.deflectCd=0.5;                                  // brief recovery between deflects
+  P.parryT=PARRY_WIN; P.parryMax=PARRY_WIN;         // open the timing window
+  P.swing=Math.max(P.swing||0,0.2);                 // a small blade flick (feedback; deals no damage)
+  P.lastCombat=G.time;
+  Snd.tone&&Snd.tone(520,0.05,'triangle',0.03,120);
+}
 /* Rask's parry lesson - a hands-on DRILL, not a lecture. He PITCHES a practice billet
    (a length of wood) at you; watch it close, and ATTACK as it reaches you to turn it
    back. Land 3 clean parries and the guard is yours. A billet that gets past your
@@ -1631,6 +1646,7 @@ function updatePlayer(dt){
   P.parryT=Math.max(0,(P.parryT||0)-dt);
   P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
   P.deflectT=Math.max(0,(P.deflectT||0)-dt);   // the deflect blade-catch animation beat
+  P.deflectCd=Math.max(0,(P.deflectCd||0)-dt); // recovery between O-key deflects
   if(P.parryDrill) updateParryDrill(dt);
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands

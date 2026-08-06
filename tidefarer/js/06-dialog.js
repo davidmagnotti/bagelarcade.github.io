@@ -99,6 +99,17 @@ function setDialog(text,btns,raw){
     el.innerHTML = (kb && i<9 ? '<span style="opacity:.55;font-weight:normal">['+(i+1)+']</span> ' : '') + b.label;
     el.onclick=()=>b.fn(); bx.appendChild(el);
   });
+  // Make it plain that a keyboard alone can drive the whole conversation - no mouse ever
+  // needed. PC only (touch just taps the buttons). Lives inside #dbtns so it clears with it.
+  if(kb && btns.length){
+    const hint=document.createElement('div');
+    hint.style.cssText='flex:0 0 100%;order:99;margin-top:5px;text-align:center;'+
+      'font-size:10.5px;color:var(--parch-dim);opacity:.85;';
+    hint.innerHTML = btns.length>1
+      ? 'Keyboard: <b>1</b>–<b>'+Math.min(btns.length,9)+'</b> choose · <b>Enter</b> confirm · <b>Esc</b> close'
+      : '<b>Enter</b> or <b>Space</b> to continue';
+    bx.appendChild(hint);
+  }
 }
 // === THE FOUNDERS' SEAL: the princess brings the Sealing Book up from the Tideward Crypt to
 // Leo. He reads the old royal script, understands the binding for what it is - and what it
