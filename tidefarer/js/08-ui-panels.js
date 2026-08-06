@@ -448,8 +448,13 @@ function updateMountBtn(){
     if(db){
       db.style.display = (hide || !(P.unlocked && P.unlocked.dash))?'none':'';
       // gray the dash button while it's on cooldown; light it back up the moment it's ready
-      // (double-dash keeps it lit for the one chained roll inside the cooldown window)
-      const ready = (P.rollT||0)<=0 && ((P.rollCd||0)<=0 || (P.unlocked && P.unlocked.dash2 && !P.dashChain));
+      // (double-dash keeps it lit for the one chained roll inside the cooldown window).
+      // Once the flow is learned, a stamina CHAIN-dash is available mid-cooldown too - so
+      // the button reads as usable (undisabled) whenever a cancel/chain would actually fire.
+      const _comboLive = !!((window.COMBO && window.COMBO.on) || (P.unlocked && P.unlocked.combos));
+      const _chainCost = (window.COMBO && window.COMBO.cfg) ? window.COMBO.cfg.dashChain.cost : 25;
+      const _canChain = _comboLive && (P.stam||0) >= _chainCost;   // chain-dash costs stamina, works mid-cooldown
+      const ready = (P.rollT||0)<=0 && ((P.rollCd||0)<=0 || (P.unlocked && P.unlocked.dash2 && !P.dashChain) || _canChain);
       db.classList.toggle('cooldown', !ready);
     }
   }

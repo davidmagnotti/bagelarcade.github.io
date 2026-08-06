@@ -2728,7 +2728,20 @@ function drawNPC(n,s){
   // drill); a live swing bypasses the sprite cache so the blade actually moves. `moving`
   // (an NPC walking toward a wander target) also draws live, so a walking/dancing NPC gets a
   // smooth 60fps gait instead of the 8-frame cached walk - the cache is for NPCs standing still.
-  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
+  // A SPECTRAL npc (the Drowned Knight) draws translucent, wreathed in a cold aura,
+  // and hovers a hair off the ground - a ghost, not a body. Alpha is applied at draw
+  // time (not baked), so the still-figure sprite cache is untouched.
+  const _spectral = !!(nlook && nlook.spectral);
+  const _hov = _spectral ? Math.sin((typeof G!=='undefined'?G.time:0)*1.7 + (n.hx||0))*3.2 : 0;
+  if(_spectral){
+    cx.save();
+    cx.globalAlpha *= 0.6;
+    const _gr = cx.createRadialGradient(s.x, s.y-16, 2, s.x, s.y-16, 34);
+    _gr.addColorStop(0,'rgba(184,214,238,0.30)'); _gr.addColorStop(1,'rgba(184,214,238,0)');
+    cx.fillStyle=_gr; cx.beginPath(); cx.arc(s.x, s.y-16, 34, 0, Math.PI*2); cx.fill();
+  }
+  drawHumanoidCached(cx,s.x,s.y-_hov,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
+  if(_spectral) cx.restore();
   // name (the brother-prince Leo rides at your side across the Act II isles;
   // he needs no floating name-tag trailing him everywhere he goes)
   // The name reads over the head only once you've MET this soul (spoken to them - P.met),
@@ -4208,6 +4221,28 @@ function drawRollFX(s){
   cx.beginPath(); cx.ellipse(s.x,s.y-2,15,7,0,0,TAU); cx.stroke();
   cx.restore();
 }
+// A heater shield the hero raises while guarding - drawn once, cached, blitted in the
+// off-hand toward the guard direction (see the P.blocking block in drawPlayerFigure).
+let _PSHIELD=null;
+function playerShieldCanvas(){
+  if(_PSHIELD) return _PSHIELD;
+  _PSHIELD = makeCanvas(24,28,(g)=>{
+    // body
+    g.fillStyle='#7f93a8';
+    g.beginPath(); g.moveTo(12,1); g.lineTo(22,4.5); g.lineTo(22,15);
+    g.quadraticCurveTo(22,23,12,27); g.quadraticCurveTo(2,23,2,15); g.lineTo(2,4.5); g.closePath(); g.fill();
+    // rim
+    g.strokeStyle='#2b3742'; g.lineWidth=2; g.stroke();
+    // face shading + trim
+    g.fillStyle='rgba(255,255,255,0.16)'; g.beginPath(); g.moveTo(12,2.5); g.lineTo(12,25.5);
+    g.lineTo(3.5,15) ; g.lineTo(3.5,5.4); g.closePath(); g.fill();
+    g.strokeStyle='#c9a24e'; g.lineWidth=1.4;   // a bronze band + boss
+    g.beginPath(); g.moveTo(12,2); g.lineTo(12,26); g.moveTo(4,9); g.lineTo(20,9); g.stroke();
+    g.fillStyle='#c9a24e'; g.beginPath(); g.arc(12,12.5,2.4,0,TAU); g.fill();
+    g.strokeStyle='#7a5a18'; g.lineWidth=1; g.stroke();
+  });
+  return _PSHIELD;
+}
 function drawPlayerFigure(s){
   const tool = P.weapon==='bow' ? 'bow' : P.weapon==='staff' ? 'staff' :
     ((P.gatherT||0)>0? P.gatherKind :
@@ -4235,6 +4270,19 @@ function drawPlayerFigure(s){
     dir:P.dir, step:P.riding?0:(P.moving?P.anim:0), ride:!!P.riding, stillT:P.stillT||0, moveT:P.moveT||0, weapon:tool, swing:P.swing, hurt:P.hurtT>0,
     ridePh:MOUNT_PH, rideRun:MOUNT_RUN,   // gait phase, published for the mount; seated legs hang plumb
     wtier: tool==='sword'? (P.swordTier||0) : 1});
+  // RAISED GUARD: an actual shield in the off-hand while blocking (49-combo-proto sets
+  // P.blocking). It rides toward the guard direction at chest height, over a cold glow.
+  if(P.blocking){
+    const gd=P.dir||{x:0,y:1};
+    const gx=s.x + gd.x*15, gy=s.y-17 + gd.y*7;
+    cx.save();
+    const _pulse=0.5+0.12*Math.sin(G.time*7);
+    cx.globalAlpha=_pulse; cx.fillStyle='rgba(150,190,240,0.55)';
+    cx.beginPath(); cx.ellipse(gx,gy,15,18,0,0,TAU); cx.fill();
+    cx.globalAlpha=1;
+    cx.drawImage(playerShieldCanvas(), gx-12, gy-14);
+    cx.restore();
+  }
   // slash arc trail
   if(P.swing>0 && P.weapon==='melee' && !P.fishing){
     const a0=Math.atan2((P.dir.x+P.dir.y)*(TH/2),(P.dir.x-P.dir.y)*(TW/2));

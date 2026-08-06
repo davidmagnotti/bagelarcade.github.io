@@ -44,7 +44,18 @@
   window.COMBO.cfg = CFGP;
   try{ if(typeof SafeStore!=='undefined' && SafeStore.get('tf_combo')==='1') window.COMBO.on = true; }catch(e){}
 
-  var ON = function(){ return !!(window.COMBO && window.COMBO.on); };
+  // The advanced layer is live when: the dev flag forces it on, OR the player has
+  // earned it from the ancient knight (P.unlocked.combos), OR they're mid-drill with
+  // him (P.knightDrill) - the drill enables the moves before they're formally learned,
+  // the same way Rask's parry drill does.
+  var ON = function(){
+    return !!( (window.COMBO && window.COMBO.on) ||
+               (typeof P!=='undefined' && P && ((P.unlocked && P.unlocked.combos) || P.knightDrill)) );
+  };
+  // Is the shield available to raise? Once learned, or on loan during the knight's drill.
+  var shieldReady = function(){
+    return !!(ready() && ((P.unlocked && P.unlocked.shield) || P.knightDrill));
+  };
 
   /* ---- stamina state (lazy-attached to the player) ---- */
   function ready(){ return (typeof P!=='undefined') && P; }
@@ -117,7 +128,13 @@
     blockBtn=document.createElement('div');
     blockBtn.className='abtn small';
     blockBtn.id='blockBtn';
-    blockBtn.textContent='🛡';
+    // a crisp drawn shield-guard glyph (a heater shield with a bronze boss), not an emoji
+    blockBtn.innerHTML='<svg viewBox="0 0 24 28" width="30" height="34" aria-hidden="true">'+
+      '<path d="M12 1.5 L22 5 V15 C22 22.5 17.5 26 12 27.5 C6.5 26 2 22.5 2 15 V5 Z" '+
+        'fill="#cfe0f2" stroke="#26313c" stroke-width="1.6"/>'+
+      '<path d="M12 2.5 V26.4 M3.5 9 H20.5" stroke="#7f93a8" stroke-width="1.3"/>'+
+      '<circle cx="12" cy="12.5" r="2.6" fill="#c9a24e" stroke="#7a5a18" stroke-width="1"/>'+
+      '</svg>';
     blockBtn.style.background='radial-gradient(circle at 38% 32%, rgba(150,180,235,.75), rgba(60,90,150,.6))';
     // order: Talk / shield / dash / sword  -> sit the shield just above the dash button
     var dodge=document.getElementById('dodgeBtn');
@@ -138,7 +155,7 @@
     if(typeof isTouch==='undefined' || !isTouch) return;
     if(!blockBtn) buildBlockBtn();
     if(!blockBtn) return;
-    var show = ON() && ready() && P.unlocked && P.unlocked.shield &&
+    var show = ON() && ready() && shieldReady() &&
                !(typeof G!=='undefined' && G.interior);
     blockBtn.style.display = show ? '' : 'none';
     if(show){
@@ -149,18 +166,13 @@
   }
 
   /* ===================== per-frame: regen + block + HUD ===================== */
-  // Bram hands you the sword; the shield rides along while the prototype is on.
-  function grantShieldWithSword(){
-    if(ready() && P.unlocked && P.unlocked.melee && !P.unlocked.shield){ P.unlocked.shield=true; }
-  }
   function comboTick(dt){
     if(!ON() || !ensureStam()) { if(ready()) P.blocking=false; syncStamBar(); syncBlockBtn(); return; }
-    grantShieldWithSword();
 
     // --- block: hold to guard, drains stamina, drops when spent or when busy ---
     var kbHold = (typeof keys!=='undefined') && (keys['shift'] || keys['k']);
     var want = ((input && input.blockHeld) || kbHold) &&
-               P.unlocked && P.unlocked.shield && stamHas(1) &&
+               shieldReady() && stamHas(1) &&
                typeof G!=='undefined' && G.state==='play' &&
                !(typeof dlg!=='undefined' && dlg.open) && !G.interior &&
                !P.dead && (P.rollT||0)<=0 && (P.stunT||0)<=0;
@@ -172,6 +184,12 @@
     if(!P.blocking && P.stamRegenT<=0 && (P.stam||0)<P.stamMax){
       P.stam=Math.min(P.stamMax,(P.stam||0)+CFGP.regenRate*dt);
     }
+
+    // remember whether the attack button was held THIS frame, so the attack-cancel
+    // can fire only on a fresh re-press next frame (holding = free natural cadence,
+    // a deliberate re-tap during recovery = a stamina-costing combo cancel).
+    P._atkDownPrev = !!(typeof input!=='undefined' && input && (input.attack || input.mouseDown));
+    P._dashKeyPrev = !!(typeof keys!=='undefined' && (keys['control'] || keys['l']));
 
     syncStamBar();
     syncBlockBtn();
@@ -189,12 +207,16 @@
   }
 
   // tryAttack: cancel the recovery TAIL to re-swing faster, at a stamina cost.
-  // Only when a foe is actually in reach (so you never bleed stamina at the air),
-  // and only in the last `window` of recovery (so it's a rhythm shave, not a mash).
+  // Fires ONLY on a fresh re-press (not while the button is held - see _atkDownPrev),
+  // only when a foe is in reach (no bleeding stamina at the air), and only in the
+  // last `window` of recovery. So holding attack keeps the free natural cadence, and
+  // it's a deliberate faster-than-rhythm re-tap that spends stamina to compress the combo.
   if(typeof window.tryAttack==='function'){
     var _tryAttack=window.tryAttack;
     window.tryAttack=function(useMouse){
-      if(ON() && ensureStam() && P.weapon==='melee' &&
+      var downNow = !!(typeof input!=='undefined' && input && (input.attack || input.mouseDown));
+      var freshPress = downNow && !(ready() && P._atkDownPrev);
+      if(ON() && ensureStam() && freshPress && P.weapon==='melee' &&
          (P.atkCd||0)>0 && (P.atkCd||0)<=CFGP.atkCancel.window &&
          typeof G!=='undefined' && G.state==='play' &&
          !(typeof dlg!=='undefined' && dlg.open) && !G.interior &&
@@ -205,6 +227,7 @@
           spend(CFGP.atkCancel.cost);
           P.atkCd=0;          // clear the tail so the real swing fires now
           fx_cancel();
+          if(typeof G!=='undefined') P._evCancel=G.time;   // drill marker
         }
       }
       return _tryAttack.apply(this,arguments);
@@ -212,16 +235,22 @@
   }
 
   // tryRoll: CHAIN a dash mid-cooldown by spending stamina (present it to the
-  // original as a fresh, free dash). Without stamina it falls through to the
-  // stock behaviour (single dash, or dash2's one chain). Also catch the
-  // perfect-dodge riposte the original grants and refund stamina for the read.
+  // original as a fresh, free dash). A FIRST dash off cooldown is free - only a
+  // chained dash (dashing again before the cooldown clears) costs stamina. The
+  // dash key is polled every frame while held, so we chain only on a fresh press,
+  // never while Ctrl/L is held down (touch taps are already discrete). Without
+  // stamina it falls through to the stock behaviour (single dash, or dash2's one
+  // chain). Also catch the perfect-dodge riposte and refund stamina for the read.
   if(typeof window.tryRoll==='function'){
     var _tryRoll=window.tryRoll;
     window.tryRoll=function(){
-      if(ON() && ensureStam() && P.unlocked && P.unlocked.dash &&
+      var dashKeyNow = (typeof keys!=='undefined') && (keys['control'] || keys['l']);
+      var heldSpam = dashKeyNow && ready() && P._dashKeyPrev;   // key held from a prior frame
+      if(ON() && ensureStam() && !heldSpam && P.unlocked && P.unlocked.dash &&
          (P.rollT||0)<=0 && (P.rollCd||0)>0 && stamHas(CFGP.dashChain.cost)){
         spend(CFGP.dashChain.cost);
         P.rollCd=0; P.dashChain=0;   // hand the original a clean, chargeable dash
+        if(typeof G!=='undefined') P._evChain=G.time;   // drill marker
       }
       var beforeEmp = (ready() && P.empowerT) || 0;
       var r=_tryRoll.apply(this,arguments);
@@ -242,6 +271,7 @@
         spend(CFGP.block.hitCost);
         dmg = Math.max(1, dmg*(1-CFGP.block.reduce));
         fx_block(src.x, src.y);
+        if(typeof G!=='undefined') P._evBlock=G.time;   // drill marker
       }
       return _hurtPlayer.call(this, dmg, src);
     };
@@ -251,7 +281,7 @@
   function toggleCombo(b){
     window.COMBO.on = !window.COMBO.on;
     try{ if(typeof SafeStore!=='undefined') SafeStore.set('tf_combo', window.COMBO.on?'1':'0'); }catch(e){}
-    if(window.COMBO.on){ ensureStam(); grantShieldWithSword(); }
+    if(window.COMBO.on){ ensureStam(); }
     if(b) b.textContent='Combo system: '+(window.COMBO.on?'ON':'off');
     syncStamBar(); syncBlockBtn();
     if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & shield live':'off'));
@@ -263,6 +293,14 @@
   if(typeof window.devRegisterSection==='function'){
     window.devRegisterSection(['Combo prototype (experimental)', [
       ['Combo system: '+(window.COMBO.on?'ON':'off'), function(b){ toggleCombo(b); }],
+      ['Learn the flow (knight unlock)', function(){
+        if(!ready()) return;
+        P.unlocked=P.unlocked||{}; P.unlocked.combos=true; P.unlocked.shield=true;
+        P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1);
+        P.story=P.story||{}; P.story.flowLearned=1;
+        if(typeof buildHotbar==='function') buildHotbar();
+        if(typeof note==='function') note('The flow learned (combos + shield, as from the knight)');
+      }],
       ['Grant shield + sword', function(){
         if(!ready()) return;
         P.unlocked=P.unlocked||{}; P.unlocked.melee=true; P.unlocked.shield=true;
