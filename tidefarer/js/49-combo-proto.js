@@ -173,6 +173,12 @@
       P.stam=Math.min(P.stamMax,(P.stam||0)+CFGP.regenRate*dt);
     }
 
+    // remember whether the attack button was held THIS frame, so the attack-cancel
+    // can fire only on a fresh re-press next frame (holding = free natural cadence,
+    // a deliberate re-tap during recovery = a stamina-costing combo cancel).
+    P._atkDownPrev = !!(typeof input!=='undefined' && input && (input.attack || input.mouseDown));
+    P._dashKeyPrev = !!(typeof keys!=='undefined' && (keys['control'] || keys['l']));
+
     syncStamBar();
     syncBlockBtn();
   }
@@ -189,12 +195,16 @@
   }
 
   // tryAttack: cancel the recovery TAIL to re-swing faster, at a stamina cost.
-  // Only when a foe is actually in reach (so you never bleed stamina at the air),
-  // and only in the last `window` of recovery (so it's a rhythm shave, not a mash).
+  // Fires ONLY on a fresh re-press (not while the button is held - see _atkDownPrev),
+  // only when a foe is in reach (no bleeding stamina at the air), and only in the
+  // last `window` of recovery. So holding attack keeps the free natural cadence, and
+  // it's a deliberate faster-than-rhythm re-tap that spends stamina to compress the combo.
   if(typeof window.tryAttack==='function'){
     var _tryAttack=window.tryAttack;
     window.tryAttack=function(useMouse){
-      if(ON() && ensureStam() && P.weapon==='melee' &&
+      var downNow = !!(typeof input!=='undefined' && input && (input.attack || input.mouseDown));
+      var freshPress = downNow && !(ready() && P._atkDownPrev);
+      if(ON() && ensureStam() && freshPress && P.weapon==='melee' &&
          (P.atkCd||0)>0 && (P.atkCd||0)<=CFGP.atkCancel.window &&
          typeof G!=='undefined' && G.state==='play' &&
          !(typeof dlg!=='undefined' && dlg.open) && !G.interior &&
@@ -212,13 +222,18 @@
   }
 
   // tryRoll: CHAIN a dash mid-cooldown by spending stamina (present it to the
-  // original as a fresh, free dash). Without stamina it falls through to the
-  // stock behaviour (single dash, or dash2's one chain). Also catch the
-  // perfect-dodge riposte the original grants and refund stamina for the read.
+  // original as a fresh, free dash). A FIRST dash off cooldown is free - only a
+  // chained dash (dashing again before the cooldown clears) costs stamina. The
+  // dash key is polled every frame while held, so we chain only on a fresh press,
+  // never while Ctrl/L is held down (touch taps are already discrete). Without
+  // stamina it falls through to the stock behaviour (single dash, or dash2's one
+  // chain). Also catch the perfect-dodge riposte and refund stamina for the read.
   if(typeof window.tryRoll==='function'){
     var _tryRoll=window.tryRoll;
     window.tryRoll=function(){
-      if(ON() && ensureStam() && P.unlocked && P.unlocked.dash &&
+      var dashKeyNow = (typeof keys!=='undefined') && (keys['control'] || keys['l']);
+      var heldSpam = dashKeyNow && ready() && P._dashKeyPrev;   // key held from a prior frame
+      if(ON() && ensureStam() && !heldSpam && P.unlocked && P.unlocked.dash &&
          (P.rollT||0)<=0 && (P.rollCd||0)>0 && stamHas(CFGP.dashChain.cost)){
         spend(CFGP.dashChain.cost);
         P.rollCd=0; P.dashChain=0;   // hand the original a clean, chargeable dash
