@@ -2728,7 +2728,20 @@ function drawNPC(n,s){
   // drill); a live swing bypasses the sprite cache so the blade actually moves. `moving`
   // (an NPC walking toward a wander target) also draws live, so a walking/dancing NPC gets a
   // smooth 60fps gait instead of the 8-frame cached walk - the cache is for NPCs standing still.
-  drawHumanoidCached(cx,s.x,s.y,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
+  // A SPECTRAL npc (the Drowned Knight) draws translucent, wreathed in a cold aura,
+  // and hovers a hair off the ground - a ghost, not a body. Alpha is applied at draw
+  // time (not baked), so the still-figure sprite cache is untouched.
+  const _spectral = !!(nlook && nlook.spectral);
+  const _hov = _spectral ? Math.sin((typeof G!=='undefined'?G.time:0)*1.7 + (n.hx||0))*3.2 : 0;
+  if(_spectral){
+    cx.save();
+    cx.globalAlpha *= 0.6;
+    const _gr = cx.createRadialGradient(s.x, s.y-16, 2, s.x, s.y-16, 34);
+    _gr.addColorStop(0,'rgba(184,214,238,0.30)'); _gr.addColorStop(1,'rgba(184,214,238,0)');
+    cx.fillStyle=_gr; cx.beginPath(); cx.arc(s.x, s.y-16, 34, 0, Math.PI*2); cx.fill();
+  }
+  drawHumanoidCached(cx,s.x,s.y-_hov,{...nlook, size:(nlook.size||1)*1.28, dir:n.face, step:n.anim, swing:n.swing||0, moving:(n.tx!=null), name:nname, ph:n.hx*0.7+n.hy*1.3}, n);
+  if(_spectral) cx.restore();
   // name (the brother-prince Leo rides at your side across the Act II isles;
   // he needs no floating name-tag trailing him everywhere he goes)
   // The name reads over the head only once you've MET this soul (spoken to them - P.met),

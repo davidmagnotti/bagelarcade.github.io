@@ -243,11 +243,48 @@ function shapeHollowKingApproach(){
 }
 
 /* ---- object placement ---- */
+// --- The Drowned Knight's north-east training headland ---
+// He snaps to open ground near (87,23). The headland is all but pinched off by water
+// to the east and a forest belt to the south-west, so we (1) keep a training ARENA
+// clear of trees, and (2) carve a NARROW land ribbon down to the grove/meadow region
+// and keep it clear too, so the woods never wall the ghost off. Only on the home isle.
+const KNIGHT_ARENA = { x:87, y:23, r:6.2 };
+const KNIGHT_PATH  = [[87,24],[85,29],[82,32],[81,35],[83,39],[86,43],[85,47],[82,49]];
+const KNIGHT_PATH_W = 1.5;   // half-width of the cleared/carved ribbon (narrow, ~3 tiles)
+function _distToSeg(px,py, ax,ay, bx,by){
+  const dx=bx-ax, dy=by-ay, L=dx*dx+dy*dy||1;
+  let t=((px-ax)*dx+(py-ay)*dy)/L; t=t<0?0:(t>1?1:t);
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+function inKnightPath(x,y){
+  if(typeof G==='undefined' || G.worldId!=='isle') return false;
+  if(dist(x,y,KNIGHT_ARENA.x,KNIGHT_ARENA.y) < KNIGHT_ARENA.r) return true;
+  for(let i=0;i<KNIGHT_PATH.length-1;i++){
+    const a=KNIGHT_PATH[i], b=KNIGHT_PATH[i+1];
+    if(_distToSeg(x,y, a[0],a[1], b[0],b[1]) < KNIGHT_PATH_W) return true;
+  }
+  return false;
+}
+// Lay the land bridge + open the canopy along the ribbon: water -> sand, forest -> grass.
+// Called at the top of placeObjects (before trees), so the ribbon exists and trees skip it.
+function carveKnightApproach(){
+  if(typeof G==='undefined' || G.worldId!=='isle') return;
+  const minx=Math.max(1,KNIGHT_ARENA.x-9), maxx=Math.min(MAPW-2,KNIGHT_ARENA.x+9);
+  const miny=Math.max(1,4), maxy=Math.min(MAPH-2,52);
+  for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){
+    if(!inKnightPath(x+0.5,y+0.5)) continue;
+    const t=tileAt(x,y);
+    if(t===T.DEEP || t===T.SHALLOW) setTile(x,y,T.SAND);   // a slim causeway across the water
+    else if(t===T.FOREST) setTile(x,y,T.GRASS);            // thin the canopy to a clearing
+  }
+}
 function blockedZone(x,y){
   for(const k in ZONES){ const z=ZONES[k];
     if((k==='village'||k==='farm'||k==='dock'||k==='tower'||k==='meadow'||k==='ruins') && dist(x,y,z.x,z.y)<z.r) return true; }
   // keep Rask's training clearing OPEN - no trees inside it, though the woods ring it
   if(ZONES.grove && dist(x,y,ZONES.grove.x,ZONES.grove.y) < 4.4) return true;
+  // keep the Drowned Knight's arena + approach ribbon clear of trees & rocks
+  if(inKnightPath(x,y)) return true;
   return false;
 }
 function addNode(kind,x,y){
@@ -268,6 +305,7 @@ function addNode(kind,x,y){
 
 function placeObjects(){
   const r = mulberry32(SEED+9);
+  carveKnightApproach();   // lay the knight's land bridge + clearing before trees go down
   // trees
   for(let y=2;y<MAPH-2;y++) for(let x=2;x<MAPW-2;x++){
     const t = tileAt(x,y);

@@ -44,7 +44,18 @@
   window.COMBO.cfg = CFGP;
   try{ if(typeof SafeStore!=='undefined' && SafeStore.get('tf_combo')==='1') window.COMBO.on = true; }catch(e){}
 
-  var ON = function(){ return !!(window.COMBO && window.COMBO.on); };
+  // The advanced layer is live when: the dev flag forces it on, OR the player has
+  // earned it from the ancient knight (P.unlocked.combos), OR they're mid-drill with
+  // him (P.knightDrill) - the drill enables the moves before they're formally learned,
+  // the same way Rask's parry drill does.
+  var ON = function(){
+    return !!( (window.COMBO && window.COMBO.on) ||
+               (typeof P!=='undefined' && P && ((P.unlocked && P.unlocked.combos) || P.knightDrill)) );
+  };
+  // Is the shield available to raise? Once learned, or on loan during the knight's drill.
+  var shieldReady = function(){
+    return !!(ready() && ((P.unlocked && P.unlocked.shield) || P.knightDrill));
+  };
 
   /* ---- stamina state (lazy-attached to the player) ---- */
   function ready(){ return (typeof P!=='undefined') && P; }
@@ -138,7 +149,7 @@
     if(typeof isTouch==='undefined' || !isTouch) return;
     if(!blockBtn) buildBlockBtn();
     if(!blockBtn) return;
-    var show = ON() && ready() && P.unlocked && P.unlocked.shield &&
+    var show = ON() && ready() && shieldReady() &&
                !(typeof G!=='undefined' && G.interior);
     blockBtn.style.display = show ? '' : 'none';
     if(show){
@@ -149,18 +160,13 @@
   }
 
   /* ===================== per-frame: regen + block + HUD ===================== */
-  // Bram hands you the sword; the shield rides along while the prototype is on.
-  function grantShieldWithSword(){
-    if(ready() && P.unlocked && P.unlocked.melee && !P.unlocked.shield){ P.unlocked.shield=true; }
-  }
   function comboTick(dt){
     if(!ON() || !ensureStam()) { if(ready()) P.blocking=false; syncStamBar(); syncBlockBtn(); return; }
-    grantShieldWithSword();
 
     // --- block: hold to guard, drains stamina, drops when spent or when busy ---
     var kbHold = (typeof keys!=='undefined') && (keys['shift'] || keys['k']);
     var want = ((input && input.blockHeld) || kbHold) &&
-               P.unlocked && P.unlocked.shield && stamHas(1) &&
+               shieldReady() && stamHas(1) &&
                typeof G!=='undefined' && G.state==='play' &&
                !(typeof dlg!=='undefined' && dlg.open) && !G.interior &&
                !P.dead && (P.rollT||0)<=0 && (P.stunT||0)<=0;
@@ -215,6 +221,7 @@
           spend(CFGP.atkCancel.cost);
           P.atkCd=0;          // clear the tail so the real swing fires now
           fx_cancel();
+          if(typeof G!=='undefined') P._evCancel=G.time;   // drill marker
         }
       }
       return _tryAttack.apply(this,arguments);
@@ -237,6 +244,7 @@
          (P.rollT||0)<=0 && (P.rollCd||0)>0 && stamHas(CFGP.dashChain.cost)){
         spend(CFGP.dashChain.cost);
         P.rollCd=0; P.dashChain=0;   // hand the original a clean, chargeable dash
+        if(typeof G!=='undefined') P._evChain=G.time;   // drill marker
       }
       var beforeEmp = (ready() && P.empowerT) || 0;
       var r=_tryRoll.apply(this,arguments);
@@ -257,6 +265,7 @@
         spend(CFGP.block.hitCost);
         dmg = Math.max(1, dmg*(1-CFGP.block.reduce));
         fx_block(src.x, src.y);
+        if(typeof G!=='undefined') P._evBlock=G.time;   // drill marker
       }
       return _hurtPlayer.call(this, dmg, src);
     };
@@ -266,7 +275,7 @@
   function toggleCombo(b){
     window.COMBO.on = !window.COMBO.on;
     try{ if(typeof SafeStore!=='undefined') SafeStore.set('tf_combo', window.COMBO.on?'1':'0'); }catch(e){}
-    if(window.COMBO.on){ ensureStam(); grantShieldWithSword(); }
+    if(window.COMBO.on){ ensureStam(); }
     if(b) b.textContent='Combo system: '+(window.COMBO.on?'ON':'off');
     syncStamBar(); syncBlockBtn();
     if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & shield live':'off'));
@@ -278,6 +287,14 @@
   if(typeof window.devRegisterSection==='function'){
     window.devRegisterSection(['Combo prototype (experimental)', [
       ['Combo system: '+(window.COMBO.on?'ON':'off'), function(b){ toggleCombo(b); }],
+      ['Learn the flow (knight unlock)', function(){
+        if(!ready()) return;
+        P.unlocked=P.unlocked||{}; P.unlocked.combos=true; P.unlocked.shield=true;
+        P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1);
+        P.story=P.story||{}; P.story.flowLearned=1;
+        if(typeof buildHotbar==='function') buildHotbar();
+        if(typeof note==='function') note('The flow learned (combos + shield, as from the knight)');
+      }],
       ['Grant shield + sword', function(){
         if(!ready()) return;
         P.unlocked=P.unlocked||{}; P.unlocked.melee=true; P.unlocked.shield=true;
