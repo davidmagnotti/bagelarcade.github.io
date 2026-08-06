@@ -1108,7 +1108,7 @@ const WX={
     // Stormreach is locked in a permanent tempest - always raining, always thundering.
     // In Act II the returned old isles wear Vath's storm too: Barik & Windsurf rain
     // and thunder without pause until their spirit-dungeon is cleared (45-isle-hazards.js).
-    const STORM = (G.worldId==='reach') || (typeof isleStormActive==='function' && isleStormActive());
+    const STORM = (G.worldId==='reach') || (G.worldId==='deck') || (typeof isleStormActive==='function' && isleStormActive());
     if(STORM) this.target=1;
     this.rain += (this.target-this.rain)*Math.min(1,dt*(STORM?0.7:0.4));
     if(this.rain<0.02&&this.target===0) this.rain=0;
@@ -1116,7 +1116,7 @@ const WX={
     while(this.drops.length<want) this.drops.push({x:Math.random()*(VW+120)-60,y:Math.random()*VH,spd:rnd(620,900),len:rnd(9,16)});
     if(this.drops.length>want) this.drops.length=want;
     // Stormreach rain drives sideways; so does Windsurf's maddened gale (isleGaleActive)
-    const windDrift = (G.worldId==='reach' || (typeof isleGaleActive==='function' && isleGaleActive())) ? 0.5 : 0.18;
+    const windDrift = (G.worldId==='reach' || G.worldId==='deck' || (typeof isleGaleActive==='function' && isleGaleActive())) ? 0.5 : 0.18;
     for(const d of this.drops){
       d.y+=d.spd*dt; d.x+=d.spd*windDrift*dt;
       if(d.y>VH){ d.y=-20-Math.random()*40; d.x=Math.random()*(VW+120)-60;
