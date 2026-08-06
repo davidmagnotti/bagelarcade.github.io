@@ -2,7 +2,13 @@
 
 App-store publishing assets for **Tidefarer**. The installable-app (PWA) icons and
 manifest live with the game at `tidefarer/`; this folder holds the marketing assets
-for the Microsoft/Xbox Store and the Apple App Store.
+for the Microsoft/Xbox Store, the Apple App Store, and Steam.
+
+| Store | Folder | What's there |
+|-------|--------|--------------|
+| Apple App Store | `screenshots/apple/` | 1290×2796 portrait screenshots (app icon ships with the PWA at `tidefarer/icons/icon-1024.png`) |
+| Microsoft / Xbox | `screenshots/microsoft/` | 1920×1080 landscape screenshots |
+| **Steam** | `steam/` | Full graphical-asset set (capsules, library, hero, transparent logo, community icon) + 1920×1080 screenshots — see `steam/README.md` |
 
 All screenshots are captured from **live gameplay** (no cut-scenes): the isometric
 isle of Emberwick, its village and folk, the world map, and the quest / skill /
@@ -51,3 +57,12 @@ Screenshots are captured headlessly from the live game (Playwright + Chromium),
 driving past the opening cut-scene into free-roam before shooting. Re-run the
 capture against a local `python3 -m http.server` serving the repo root, pointed at
 `/tidefarer/`.
+
+The Steam capsule / library / logo / icon art is pure vector, rendered from
+`_source/scene.js` (the brand scene + `TIDEFARER` wordmark) by
+`_source/build-steam.js`:
+
+```sh
+cd _source
+NODE_PATH=$(npm root -g) node build-steam.js      # writes into ../steam
+```
