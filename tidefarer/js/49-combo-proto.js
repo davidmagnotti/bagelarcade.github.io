@@ -128,7 +128,13 @@
     blockBtn=document.createElement('div');
     blockBtn.className='abtn small';
     blockBtn.id='blockBtn';
-    blockBtn.textContent='🛡';
+    // a crisp drawn shield-guard glyph (a heater shield with a bronze boss), not an emoji
+    blockBtn.innerHTML='<svg viewBox="0 0 24 28" width="30" height="34" aria-hidden="true">'+
+      '<path d="M12 1.5 L22 5 V15 C22 22.5 17.5 26 12 27.5 C6.5 26 2 22.5 2 15 V5 Z" '+
+        'fill="#cfe0f2" stroke="#26313c" stroke-width="1.6"/>'+
+      '<path d="M12 2.5 V26.4 M3.5 9 H20.5" stroke="#7f93a8" stroke-width="1.3"/>'+
+      '<circle cx="12" cy="12.5" r="2.6" fill="#c9a24e" stroke="#7a5a18" stroke-width="1"/>'+
+      '</svg>';
     blockBtn.style.background='radial-gradient(circle at 38% 32%, rgba(150,180,235,.75), rgba(60,90,150,.6))';
     // order: Talk / shield / dash / sword  -> sit the shield just above the dash button
     var dodge=document.getElementById('dodgeBtn');
