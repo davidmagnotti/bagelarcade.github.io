@@ -3,14 +3,14 @@
    furniture (beds, hearths, orbs, rummage-ables) that make interiors live.
    ===================================================================== */
 P.loreRead=P.loreRead||{};
-ITEMS.shell={name:'Spiral Shell', desc:'A perfect beach spiral. Nia collects them.'};
-ITEMS.apple={name:'Orchard Apple', desc:'Crisp and sweet. Restores 10 HP.', use:'heal', heal:10};
-ITEMS.silk={name:'Stolen Silk', desc:'A bolt of dawn-colored silk, liberated back from the brigands.'};
-ITEMS.ribbon={name:'Sunset Ribbon', desc:'Mira\'s finest work. Made for a captain\'s daughter.'};
-ITEMS.coconut={name:'Coconut', desc:'Sweet water, rich meat. Restores 15 HP.', use:'heal', heal:15};
-ITEMS.boarmeat={name:'Boar Meat', desc:'Rich and gamey. Restores 22 HP.', use:'heal', heal:22};
-ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.'};
-ITEMS.lettuce={name:'Crisp Lettuce', desc:'Restores 8 HP. The King\'s favorite, apparently.', use:'heal', heal:8};
+ITEMS.shell={name:'Spiral Shell', desc:'A perfect beach spiral. Nia collects them.', cat:'material'};
+ITEMS.apple={name:'Orchard Apple', desc:'Crisp and sweet. Restores 10 HP.', use:'heal', heal:10, cat:'food'};
+ITEMS.silk={name:'Stolen Silk', desc:'A bolt of dawn-colored silk, liberated back from the brigands.', cat:'key'};
+ITEMS.ribbon={name:'Sunset Ribbon', desc:'Mira\'s finest work. Made for a captain\'s daughter.', cat:'key'};
+ITEMS.coconut={name:'Coconut', desc:'Sweet water, rich meat. Restores 15 HP.', use:'heal', heal:15, cat:'food'};
+ITEMS.boarmeat={name:'Boar Meat', desc:'Rich and gamey. Restores 22 HP.', use:'heal', heal:22, cat:'food'};
+ITEMS.page={name:'Lore Page', desc:'A page copied from an old island text. Orin wants these.', cat:'key'};
+ITEMS.lettuce={name:'Crisp Lettuce', desc:'Restores 8 HP. The King\'s favorite, apparently.', use:'heal', heal:8, cat:'food'};
 
 const LORE={
   cloudreach:{title:'The Windshrine Stones', text:'“Faces cut into cloud-worn granite, all turned skyward. The old script beneath them reads: <i>WE RAISED THESE TO THANK THE STORM ROC FOR THE RAIN SHE BRINGS - AND TO BEG HER FOR THE SHIP SHE TOOK.</i> A later hand, shakier: <i>she takes more than she gives now. Do not climb.</i>”'},

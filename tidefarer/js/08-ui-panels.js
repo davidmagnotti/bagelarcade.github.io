@@ -232,12 +232,14 @@ function refreshInvPanel(){
     cv2.getContext('2d').drawImage(ICONS[cv2.dataset.eqicon]||iconCanvas('stone'),0,0);
   });
   // ---- the satchel: tap selects; the action card below does the doing ----
-  const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0 && ITEMS[k]);   // skip any retired item left in an old save (e.g. the removed Greymaw's Fang)
+  // Charms/relics/boots aren't loose loot - they're always-on and already read out in
+  // the CHARMS line above, so keep them OUT of the satchel grid (no double-display).
+  const keysList=Object.keys(P.inv).filter(k=>P.inv[k]>0 && ITEMS[k] && (ITEMS[k].cat||'material')!=='charm');   // skip retired items + passive charms
   if(!keysList.length){ grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:12px;color:var(--parch-dim);">Satchel\u2019s empty. The island provides - go poke it.</div>'); return; }
   if(INV_SEL && !(P.inv[INV_SEL]>0)) INV_SEL=null;
   grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:11px;letter-spacing:2px;color:#9a917f;margin:2px 0 4px;">SATCHEL</div>');
-  const row=document.createElement('div'); row.style.cssText='grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;';
-  keysList.forEach(k=>{
+  // one tile for one item stack - tap to select for the action card below
+  const makeTile=k=>{
     const s=document.createElement('div'); s.className='islot'+(INV_SEL===k?' invsel':''); s.title=ITEMS[k].name+' - '+ITEMS[k].desc;
     const ic=document.createElement('canvas'); ic.width=ic.height=40; ic.getContext('2d').drawImage(ICONS[k]||iconCanvas('stone'),0,0);
     s.appendChild(ic);
@@ -248,9 +250,22 @@ function refreshInvPanel(){
       s.appendChild(q);
     }
     s.onclick=()=>{ INV_SEL=(INV_SEL===k?null:k); Snd.step&&Snd.step(6); refreshInvPanel(); };
-    row.appendChild(s);
+    return s;
+  };
+  // Group the satchel into labelled shelves so a late-game pile of 20+ item types reads
+  // at a glance. Anything without a known cat falls through to Materials. Each shelf sorts
+  // by name for a stable order that doesn't reshuffle as you pick things up.
+  const SATCHEL_CATS=[['material','MATERIALS'],['food','FOOD & DRINK'],['tool','TOOLS'],['key','KEY ITEMS']];
+  const known=new Set(SATCHEL_CATS.map(c=>c[0]));
+  const catOf=k=>{ const c=ITEMS[k].cat||'material'; return known.has(c)?c:'material'; };
+  SATCHEL_CATS.forEach(([cat,label])=>{
+    const keys=keysList.filter(k=>catOf(k)===cat).sort((a,b)=>ITEMS[a].name.localeCompare(ITEMS[b].name));
+    if(!keys.length) return;
+    grid.insertAdjacentHTML('beforeend','<div style="grid-column:1/-1;font-size:10px;letter-spacing:1.5px;color:var(--parch-dim);margin:6px 0 2px;">'+label+'</div>');
+    const row=document.createElement('div'); row.style.cssText='grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;';
+    keys.forEach(k=> row.appendChild(makeTile(k)));
+    grid.appendChild(row);
   });
-  grid.appendChild(row);
   if(INV_SEL){
     const k=INV_SEL, it=ITEMS[k];
     const canUse=!!it.use, canQuick=QUICK_ITEMS.includes(k);

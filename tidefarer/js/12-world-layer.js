@@ -4968,17 +4968,17 @@ QUESTS.mossbrew={ giver:'moss', title:'A Hermit\'s Kindness', kind:'gather', nee
   log:'Gather 4 bluecap mushrooms in the Blackpine Reach for Moss.',
   doneText:"Kind hands, kind harvest. Here - three bottles, brewed slow. And drink this thimble now: my quickroot draught. Your legs will remember it when one dodge is not enough.",
   rw:{item:{potion:3}, gold:20, xp:{farming:160}, dash2:true} };
-ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.'};
-ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.'};
-ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.'};
-ITEMS.frostchart = {name:"Tibb's Frostferry Chart", desc:"A wax-sealed sea-chart Tibb pressed on you at Stormreach, the road north marked in a raftwright's rough hand. It ends at the Frozen Isle, and beside the mark he has scrawled only: something lies sealed under that ice - the sort of thing a curse-breaker ought to go and get."};
+ITEMS.vathcurse = {name:"Vath's Curse-Mark", desc:'A shard of violet binding-magic, torn loose when the Bound Leviathan was freed. Cold as deep water, and unmistakably his work - proof of the enchanter\'s hand for the crown to see.', cat:'key'};
+ITEMS.relic = {name:'Stormwatch Relic', desc:'+4 damage to every attack. Torn from the Peak.', cat:'charm'};
+ITEMS.tidechart = {name:"The Tidefarer's Chart", desc:'An old sea-chart sealed in wax against the ice, drawn in the royal script. It marks an isle on no modern map - and a single grave upon it. The great queen, the Tidefarer, does not rest where the histories laid her; her true grave holds the weapon she forged to seal the shadow. Sage Orin of Emberwick might place these hidden waters.', cat:'key'};
+ITEMS.frostchart = {name:"Tibb's Frostferry Chart", desc:"A wax-sealed sea-chart Tibb pressed on you at Stormreach, the road north marked in a raftwright's rough hand. It ends at the Frozen Isle, and beside the mark he has scrawled only: something lies sealed under that ice - the sort of thing a curse-breaker ought to go and get.", cat:'key'};
 // -- side-quest reward gear: a consumable and three always-on trinkets, so
 //    optional work pays in more than coin --
-ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60};
-ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.'};
-ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.'};
-ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.'};
-ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.'};
+ITEMS.elixir = {name:'Greater Tonic', desc:'Restores 60 HP - twice a common tonic.', use:'heal', heal:60, cat:'food'};
+ITEMS.warcharm = {name:'Battleworn Charm', desc:'+5 damage to every attack.', cat:'charm'};
+ITEMS.boots = {name:'Trailblazer Boots', desc:'Sure-footed and swift - you move noticeably faster.', cat:'charm'};
+ITEMS.wardstone = {name:"Warden's Wardstone", desc:'Turns aside 2 damage from every blow you take.', cat:'charm'};
+ITEMS.crate = {name:"Victualler's Crate", desc:'Provisions for the palace kitchen. Do not eat the evidence.', cat:'key'};
 /* =====================================================================
    ACT I FINALE - "The Enchanter's Tide" turns. The King's audience sets you
    after Vath, and after the truth of his lost children. The pendant is a

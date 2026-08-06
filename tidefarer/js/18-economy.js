@@ -2,15 +2,15 @@
    RESOURCE ECONOMY - rare materials, smithing, cooking, brewing, trade
    ===================================================================== */
 P.tools=P.tools||{axe:0,pick:0}; P.armor=P.armor||0; P.armorOwn=Math.max(P.armorOwn||0,P.armor||0);
-ITEMS.hardwood={name:'Hardwood', desc:'Dense heartwood from the old forest pines.'};
-ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Shipwrights and smiths pay well for it.'};
-ITEMS.bar={name:'Iron Bar', desc:'A stamped bar of old iron - a curio now, but it still sells dear.'};
-ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.'};
-ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune - sells dearly."};
-ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25};
-ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20};
-ITEMS.stew={name:'Hearth Stew', desc:'Restores 45 HP. A whole meal in a bowl.', use:'heal', heal:45};
-ITEMS.roast={name:'Roast Boar', desc:'Restores 42 HP. Rich, dark, and dripping.', use:'heal', heal:42};
+ITEMS.hardwood={name:'Hardwood', desc:'Dense heartwood from the old forest pines.', cat:'material'};
+ITEMS.ore={name:'Iron Ore', desc:'Raw iron in the stone. Shipwrights and smiths pay well for it.', cat:'material'};
+ITEMS.bar={name:'Iron Bar', desc:'A stamped bar of old iron - a curio now, but it still sells dear.', cat:'material'};
+ITEMS.crystal={name:'Ember Crystal', desc:'Warm to the touch. Orin covets these.', cat:'material'};
+ITEMS.pearl={name:'Pearl', desc:"A fisher's fortune - sells dearly.", cat:'material'};
+ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 wheat.', use:'heal', heal:25, cat:'food'};
+ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20, cat:'food'};
+ITEMS.stew={name:'Hearth Stew', desc:'Restores 45 HP. A whole meal in a bowl.', use:'heal', heal:45, cat:'food'};
+ITEMS.roast={name:'Roast Boar', desc:'Restores 42 HP. Rich, dark, and dripping.', use:'heal', heal:42, cat:'food'};
 ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
 ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
 ACH.mastersmith={t:'Master Smith',d:'Wield the steel sword.'};
