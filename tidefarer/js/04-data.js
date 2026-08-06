@@ -19,7 +19,8 @@ const ITEMS = {
   cragbreaker:{name:'Cragbreaker Pick', desc:'A dungeon-forged pick of blackened steel. Shatters the violet basalt that seals the deep ways - and splits common stone far faster.'},
   delvebreaker:{name:'Delvebreaker Pick', desc:'A pick of star-dark iron from the Undermaw\'s deep hoard. Shatters the bright-violet wardstone Vath raised to cut Barik off - and splits common basalt the same.'},
   cograzor:{name:'Cograzor Pick', desc:'A mill-forged pick hafted from a broken gear-tooth. Breaks the rust-red slagiron that seals the mill-deep ways - and tears through common stone faster still.'},
-  emberbreaker:{name:'Emberbreaker Pick', desc:'A pick quenched in the Ashen Forge, its head still smoking. Shatters the molten emberstone that fused the old vaults shut - and any lesser stone gives at a touch.'}
+  emberbreaker:{name:'Emberbreaker Pick', desc:'A pick quenched in the Ashen Forge, its head still smoking. Shatters the molten emberstone that fused the old vaults shut - and any lesser stone gives at a touch.'},
+  reefpick:{name:'Coast-Warden Pick', desc:'The storm-coast\'s own pick, knapped from the green reef-stone it breaks and warded by the spirit that guarded it. Shatters the reef-stone the castaways raised to seal their dead - and any lesser stone gives at a touch.'}
 };
 const SKILLS = {
   melee:{name:'Melee', perk:'+2 dmg / lvl'},

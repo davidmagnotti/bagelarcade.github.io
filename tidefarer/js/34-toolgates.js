@@ -38,6 +38,12 @@ var GATES={
   emberstone:{ tool:'pick', req:4, kind:'rock', hp:30, tag:'EMBERSTONE', noTag:true,   // nameless, reads clear BLUE on sight
              color:'#4aa8ff', glow:'rgba(55,140,230,1)', spark:'#a8d4ff',
              need:'the forge-tempered <b>Emberbreaker Pick</b>', drop:'crystal', dropN:2, skill:'mining' },
+  // REEF-STONE: Stormreach's own green ward-stone, raised to seal the catacomb. Reads GREEN,
+  // nameless, and only the Coast-Warden Pick (pick tier 5, dropped by the Spirit Brute) bites
+  // it - so a player who already carries the Emberbreaker (tier 4) still can't shortcut it.
+  reefstone:{ tool:'pick', req:5, kind:'rock', hp:30, tag:'REEFSTONE', noTag:true,
+             color:'#3fd39a', glow:'rgba(45,190,130,1)', spark:'#a8f0d0',
+             need:'the storm-coast\'s <b>Coast-Warden Pick</b>', drop:'crystal', dropN:1, skill:'mining' },
   // VATH-WARD: not natural stone but sorcery made solid - a bright-violet ward Vath
   // raised to cut Barik off from itself. Any dungeon-forged pickaxe (pick tier >= 2)
   // shatters it; the Undermaw's own Delvebreaker is the nearest one. Used by the
@@ -203,6 +209,16 @@ function grantEmberbreaker(){
   storyCard('<i>A pick quenched in the Ashen Forge itself, its head still smoking.</i> <b style="color:#ff7a4a">You take the Emberbreaker Pick.</b> <i>The molten <b>emberstone</b> that fused the old sealed nooks shut shatters under it - and any lesser stone gives at a touch. The vaults the fire-rock kept from you are open now.</i>');
   if(typeof refreshUI==='function') refreshUI();
 }
+// THE COAST-WARDEN PICK (Stormreach) - dropped by the Spirit Brute. Tier 5, so it also breaks
+// every lesser stone; its own job is Stormreach's green REEF-STONE (sealing the catacomb).
+function grantReefpick(){
+  P.tools=P.tools||{axe:0,pick:0}; P.kit=true;
+  if((P.tools.pick||0)>=5) return;
+  P.tools.pick=5; give('reefpick',1);
+  banner('THE COAST-WARDEN PICK','GREEN REEF-STONE WILL SHATTER');
+  storyCard('<i>Cold in the chest the spirit warded, a pick knapped from the very green stone it breaks, its haft wound with salt-bleached cord.</i> <b style="color:#3fd39a">You take the Coast-Warden Pick.</b> <i>The green <b>reef-stone</b> the castaways raised to seal their dead shatters under it - and any lesser stone gives at a touch. The sealed catacomb is open to you now.</i>');
+  if(typeof refreshUI==='function') refreshUI();
+}
 
 /* ---- sandbox (dev): a hard gate of each, treasure behind, NO tools granted
         so you feel the bounce first; grant the tools from the dev menu. ---- */
@@ -238,6 +254,7 @@ window.gateSeenList=gateSeenList;
 window.grantRivenedge=grantRivenedge; window.grantCragbreaker=grantCragbreaker;
 window.grantDelvebreaker=grantDelvebreaker;
 window.grantCograzor=grantCograzor; window.grantEmberbreaker=grantEmberbreaker;
+window.grantReefpick=grantReefpick;
 window.spawnToolgateSandbox=spawnToolgateSandbox;
 
 })();

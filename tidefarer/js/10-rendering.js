@@ -815,7 +815,7 @@ function drawNode(n,s){
     // the pick-gated "basalt" barrier is the same boulder tinted violet - so it reads as
     // magicked stone on sight, no floating name needed (see GATES.basalt.noTag)
     const rockSpr=(n.gate==='basalt' && SPR.rockViolet)? SPR.rockViolet[n.variant]
-                : (n.gate==='emberstone' && SPR.rockGreen)? SPR.rockGreen[n.variant]
+                : ((n.gate==='emberstone'||n.gate==='reefstone') && SPR.rockGreen)? SPR.rockGreen[n.variant]
                 : SPR.rock[n.variant];
     cx.drawImage(rockSpr, s.x-35+sh, s.y-44);
     const cracks=n.maxhp-n.hp;

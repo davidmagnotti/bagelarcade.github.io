@@ -868,6 +868,30 @@ function damageMob(m,dmg,knock,skill){
       toast('Blade and bolt scatter off the Storm-Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
     return;
   }
+  // THE SPIRIT BRUTE: warded on its (slow-turning) FRONT, open at the BACK. A melee blow
+  // that lands behind its guard-front bites deep - ~5 clean back-hits fell it - while any
+  // blow on its front or side (and any non-melee hit) is turned aside for a chip. Its
+  // guard-front is m.bruteFace, rotated slowly in spiritBruteTick; get around behind it.
+  if(m.spiritBrute){
+    const sx=P.x-m.x, sy=P.y-m.y, sl=Math.hypot(sx,sy)||1;
+    const dot = m.bruteFace ? (m.bruteFace.x*sx+m.bruteFace.y*sy)/sl : 1;   // >0 = you're on its front
+    if(skill!=='melee' || dot > -0.1){
+      m.hp=Math.max(1, m.hp-1); m.hurtT=0.12;   // front/side never kills - only the back is open
+      if(Math.random()<0.7) addFloat('WARDED', m.x, m.y-2.1, '#bfe8ff', 1.0);
+      if(Snd.tone) Snd.tone(200,0.05,'square',0.045,-30);
+      burst(m.x,m.y-0.4,'#bfe8ff',4,1.4);
+      return;
+    }
+    const back=Math.max(1, Math.ceil((m.maxhp||100)/5));   // a fifth of its life per clean back-cut
+    m.hp-=back; m.hurtT=0.2; m.state='chase'; m.noAggroT=0;
+    addFloat(back+'!', m.x, m.y-1.3, '#ff5c48', 1.6);
+    addFloat('BACKSTAB!', m.x, m.y-2.6, '#ff9a5a', 1.3);
+    burst(m.x,m.y-0.4,'#ff9a5a',14,2.6); if(Snd.crit) Snd.crit();
+    G.hitStop=Math.max(G.hitStop,0.1);
+    // (no knockback - it's a boss, and shoving it would spoil your read on its slow-turning back)
+    if(m.hp<=0) killMob(m, skill);
+    return;
+  }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
     addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
@@ -1347,6 +1371,16 @@ function killMob(m,skill){
   if(m.reachboss){
     P.story=P.story||{}; P.story.reachBossDown=1;
     setTimeout(()=>toast('The brute crashes down and does not rise, and the storm-coast lets out a breath it has held for a lifetime. <b>Tibb</b> is already dragging fresh timber to the water. Stormreach is yours to walk in peace - and the castaways will name a cove for you.',6500), 1500);
+    if(typeof autoSave==='function') autoSave();
+  }
+  // THE SPIRIT BRUTE (Stormreach) - the warded guardian of the coast-warden's pick. Felling
+  // it drops a chest holding that pick, the one thing that shatters the green reef-stone
+  // sealing the Drowned Catacomb (see openChest `reefgift` + GATES.reefstone).
+  if(m.spiritBrute){
+    P.story=P.story||{}; P.story.spiritBruteDown=1;
+    const cs=(typeof findOpenNear==='function' && findOpenNear(Math.round(m.x), Math.round(m.y), 4)) || [m.x, m.y];
+    G.decor.push({kind:'chest', x:cs[0]+0.5, y:cs[1]+0.5, reefgift:1, title:'THE WARD-KEEPER’S CACHE', sub:'THE PICK THAT BREAKS THE GREEN REEF-STONE'});
+    setTimeout(()=>toast('The spirit comes apart in a wash of pale light, and the chest it warded stands open to you. <b>Take the pick within</b> - it alone shatters the green reef-stone sealing the catacomb.',6500), 1200);
     if(typeof autoSave==='function') autoSave();
   }
   // THE COG-BOUND (Undermill mini-boss) - felling it frees the seized gear-train,
@@ -2006,6 +2040,37 @@ function windSpiritTick(m,dt,dx,dy,l,d){
     }
   }
 }
+/* THE SPIRIT BRUTE (Stormreach) - a warded guardian that is near-immune to blows on its
+   GUARDED FRONT and wide open at the BACK. Its guard-front (m.bruteFace, a unit vector)
+   turns SLOWLY, so a quick player can dash around behind it and cut the exposed back
+   (see the m.spiritBrute branch in damageMob - ~5 clean back-hits fell it). It stalks in
+   slowly and periodically DASHES hard at you; its melee strike is the shared parryable
+   windup, and it bats arrows back (m.reflectArrows). Alone - no adds. */
+function spiritBruteTick(m,dt,dx,dy,l,d){
+  const spd=(m.speed||2.6), il=l||1;
+  // slow turn: rotate the guard-front toward you at a capped angular rate
+  if(!m.bruteFace) m.bruteFace={x:dx/il, y:dy/il};
+  const tgtA=Math.atan2(dy,dx), curA=Math.atan2(m.bruteFace.y,m.bruteFace.x);
+  let da=tgtA-curA; while(da>Math.PI)da-=2*Math.PI; while(da<-Math.PI)da+=2*Math.PI;
+  const cap=(m.bruteTurn||1.15)*dt;               // rad/s - slow enough to circle behind
+  const na=curA+Math.max(-cap,Math.min(cap,da));
+  m.bruteFace={x:Math.cos(na), y:Math.sin(na)};
+  m.face=(m.bruteFace.x<0?-1:1);                   // sprite flips with the (slow) guard-front
+  if((m.stunT||0)>0 || (m.recover||0)>0) return;
+  // DASH: a periodic hard closing lunge; otherwise a slow stalk that gives you the window
+  m.bruteDashCd=(m.bruteDashCd||rnd(1.8,3.0))-dt;
+  if((m.bruteDash||0)>0){
+    m.bruteDash-=dt;
+    moveEntity(m, dx/il*spd*2.7*dt, dy/il*spd*2.7*dt);
+    if(Math.random()<0.6) G.parts.push({x:m.x,y:m.y-0.6,vx:-dx/il,vy:-dy/il,life:0.28,color:'rgba(150,220,190,0.55)',size:2.6});
+  } else if(m.bruteDashCd<=0 && l>2.0 && l<8.5){
+    m.bruteDashCd=rnd(2.2,3.4); m.bruteDash=0.4;
+    addFloat('DASH!', m.x, m.y-2.4, '#9fe8c0', 1.1);
+    if(Snd.noise) Snd.noise(0.20,0.06,300,0.55);
+  } else if(l>1.5){
+    moveEntity(m, dx/il*spd*0.5*dt, dy/il*spd*0.5*dt);
+  }
+}
 function updateMobs(dt){
   updateHollowSeal();
   updateHollowFire(dt);
@@ -2077,18 +2142,21 @@ function updateMobs(dt){
         m.tx=m.hx; m.ty=m.hy; continue;
       }
       const dx=P.x-m.x, dy=P.y-m.y, l=Math.hypot(dx,dy)||1;
-      if(Math.abs(dx)>0.35) m.face=dx<0?-1:1; // hysteresis: chasing straight up/down no longer mirror-flips every frame
+      if(Math.abs(dx)>0.35 && !m.spiritBrute) m.face=dx<0?-1:1; // hysteresis: chasing straight up/down no longer mirror-flips every frame (the spirit brute turns slowly, in its own tick)
       if(!m.boss && inSafeZone(P.x,P.y)){ m.state='idle'; m.tx=null; m.windup=0; }
       if((m.snareT||0)>0){ m.snareT-=dt; } // rooted: the weave holds its feet
       // the Wind Spirit runs its own fast dash-around-then-parryable-strike loop (still uses
       // the shared wind-up tell + parry resolution below), so it skips the generic chase/poke
       if(m.windspirit && !((m.stunT||0)>0) && !((m.snareT||0)>0)){ windSpiritTick(m,dt,dx,dy,l,d); }
+      // the Spirit Brute stalks + dashes in its own tick (slow-turning guard-front); it still
+      // uses the shared parryable windup strike below, so it skips only the generic chase
+      if(m.spiritBrute && !((m.snareT||0)>0)){ spiritBruteTick(m,dt,dx,dy,l,d); }
       const stop = m.boss?1.3 : m.kind==='archer'?6.5 : 0.95;
       // archetypes only reshape ordinary foes - boss variants of these kinds keep their scripted fight
       const heavy = HEAVIES[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       const lunger = LUNGERS[m.kind] && !m.boss && !m.bigBoss && !m.customAI;
       // stormlight-stunned foes freeze where they stand - no advance and (below) no attack
-      if(!m.windspirit && l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
+      if(!m.windspirit && !m.spiritBrute && l>stop && !((m.snareT||0)>0) && !m.rooted && !((m.stunT||0)>0) && !((m.recover||0)>0)){
         const ox2=m.x, oy2=m.y;
         if((m.detourLock||0)>0){
           // committed detour: slide purely along the wall until the lock expires

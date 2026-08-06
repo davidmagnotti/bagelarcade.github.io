@@ -3897,10 +3897,10 @@ function placeObjectsReach(){
       const n=addNode(t===T.SAND?'tree':'rock',ax,ay); if(n&&t===T.SAND) n.palm=1; } }
   G.decor.push({kind:'chest', x:Z.barrow.x+0.5, y:Z.barrow.y-7+0.5, rich:10, armorgift:2});
   // --- THE STORM-COAST VAULT: a 'trove' chest ringed on EVERY side by pick-gated GREEN
-  // STONE (emberstone), set on the open ground by the catacomb mouth. Shatter any one stone
-  // with the tier-4 Emberbreaker Pick and the whole ring falls at once (shared gid + ward).
-  // Persisted in P.story.tg, so a mined ring / looted chest stays that way. (Replaces the
-  // roaming emberstone hideaway for the reach - see EMBER_ROOMS in 37-dungeon-hideaways.js.)
+  // REEF-STONE, set on the open ground by the catacomb mouth. Shatter any one stone with the
+  // Coast-Warden Pick (the Spirit Brute's drop) and the whole ring falls at once (shared gid
+  // + ward). Persisted in P.story.tg, so a mined ring / looted chest stays that way. (Replaces
+  // the roaming emberstone hideaway for the reach - see EMBER_ROOMS in 37-dungeon-hideaways.js.)
   (function(){
     const GID='reach:crack';
     const TG=(P.story&&P.story.tg)||{};
@@ -3917,9 +3917,28 @@ function placeObjectsReach(){
     if(!spot) return;
     const [cx0,cy0]=spot;
     G.decor.push({kind:'chest', x:cx0+0.5, y:cy0+0.5, tgcache:'trove', tgid:GID+':loot'});
-    if(!TG[GID] && typeof addGateNode==='function')    // ring all eight sides in green stone
+    if(!TG[GID] && typeof addGateNode==='function')    // ring all eight sides in green reef-stone
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]){
-        const g=addGateNode('emberstone', cx0+dx, cy0+dy); if(g){ g.gid=GID; g.ward=1; } }
+        const g=addGateNode('reefstone', cx0+dx, cy0+dy); if(g){ g.gid=GID; g.ward=1; } }
+  })();
+  // --- SEAL THE CATACOMB MOUTH: the castaways walled their dead behind green REEF-STONE. A
+  // ring of it round the tomb-mouth bars the descent until you shatter it with the Coast-Warden
+  // Pick (dropped by the Spirit Brute). Shared gid + ward: break any one stone and the whole
+  // seal falls. Persisted in P.story.tg; the descent itself is gated in enterReachDeep so you
+  // can't slip in from range while it stands. Placed AFTER the paths are carved so a later
+  // carveLine can't un-solid a seal-stone.
+  (function(){
+    const GID='reach:tomb';
+    const TG=(P.story&&P.story.tg)||{};
+    if(TG[GID]) return;                                 // already shattered - leave the mouth open
+    const GV=Z.graves, mx=Math.round(GV.x), my=Math.round(GV.y);
+    const occupied=(x,y)=>{ for(const n of G.nodes) if(n.tx===x&&n.ty===y) return true;
+      for(const d of G.decor){ if((d.kind==='tombmouth'||d.kind==='pillar'||d.kind==='grave') && Math.round(d.x-0.5)===x && Math.round(d.y-0.5)===y) return true; } return false; };
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]){
+      const x=mx+dx, y=my+dy;
+      if(!inb(x,y) || occupied(x,y) || !walkTile(tileAt(x,y))) continue;
+      const g=addGateNode('reefstone', x, y); if(g){ g.gid=GID; g.ward=1; }
+    }
   })();
   G.critters=[];
 }
@@ -3959,16 +3978,19 @@ function spawnReachFolk(){
 }
 function spawnMobsReach(){
   const Z=REACH_ZONES;
-  if(!(P.story && P.story.reachBossDown)){
+  // THE SPIRIT BRUTE wardens the barrow, guarding the coast-warden's pick. It stands ALONE
+  // (no raider escort): a warded guardian near-immune to blows on its slow-turning FRONT,
+  // undone only by cutting its exposed BACK - dash around behind it (~5 clean back-cuts).
+  // It bats arrows back, dashes hard, and drops the pick that shatters the reef-stone
+  // sealing the Drowned Catacomb (see spiritBruteTick + the m.spiritBrute branches).
+  if(!(P.story && P.story.spiritBruteDown)){
     const sp=findOpenNear(Z.barrow.x, Z.barrow.y, 6) || [Z.barrow.x, Z.barrow.y];
     const brute=spawnMob('raidcap', sp[0], sp[1]);
-    if(brute){ brute.boss=true; brute.bigBoss=true; brute.title='THE BARROW BRUTE'; brute.subtitle='WRECKER OF STORMREACH'; brute.reachboss=1; brute.ach='brutebane';
-      brute.hp=brute.maxhp=3000; brute.dmg=34; brute.lvl=13; brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; brute.entrance='rise'; }
+    if(brute){ brute.boss=true; brute.bigBoss=true; brute.spiritBrute=1; brute.reflectArrows=1;
+      brute.title='THE SPIRIT BRUTE'; brute.subtitle='WARD-KEEPER OF THE STORM-COAST'; brute.ach='brutebane';
+      brute.hp=brute.maxhp=260; brute.dmg=30; brute.lvl=13; brute.speed=2.6; brute.bruteTurn=1.15;
+      brute.hx=sp[0]; brute.hy=sp[1]; brute.respawnT=-1; brute.entrance='rise'; brute.enspelled=true; }
   }
-  // storm-driven raiders wash up around the barrow
-  if(!(P.story && P.story.reachBossDown)) for(let i=0;i<4;i++){ const a=Math.random()*TAU, r2=6+Math.random()*12;
-    const sp=findOpenNear(Math.round(Z.barrow.x+Math.cos(a)*r2), Math.round(Z.barrow.y+Math.sin(a)*r2), 5);
-    if(sp) spawnMob('raider', sp[0], sp[1]); }
 }
 function genReachAll(){ genReach(); bakeSolids(); placeObjectsReach(); placeReachHazard(); buildFoam(); spawnReachFolk(); spawnMobsReach(); buildMapBase(); }
 // ---------- THE DROWNED CATACOMB (reachdeep) - THE OSSUARY DANCE ----------
@@ -4251,6 +4273,13 @@ function spawnMobsReachDeep(){
 }
 function genReachDeepAll(){ genReachDeep(); placeObjectsReachDeep(); spawnMobsReachDeep(); buildMapBase(); }
 function enterReachDeep(){
+  // the mouth is walled behind green reef-stone until the Spirit Brute's pick shatters the
+  // seal (P.story.tg['reach:tomb'] is set when any seal-stone falls - see clearGateNode)
+  if(!(P.story && P.story.tg && P.story.tg['reach:tomb'])){
+    if(typeof blockMsg==='function') blockMsg('The mouth of the catacomb is walled behind green <b>reef-stone</b> - the castaways sealed their dead in, and the storm-coast set a spirit to guard the one pick that breaks it. <b>Shatter the reef-stone</b> to descend.');
+    if(Snd.step) Snd.step(5);
+    return;
+  }
   const fd=document.getElementById('fadeOv'); if(fd) fd.style.opacity=1; if(Snd.step) Snd.step(8);
   P._tombReturn={x:P.x, y:P.y+1.3}; P.click=null;
   setTimeout(()=>{ switchWorld('reachdeep'); if(fd) setTimeout(()=>{ fd.style.opacity=0; },200); }, 300);
@@ -7005,6 +7034,11 @@ function openChest(b){
     if((P.tools&&P.tools.pick||0)<4){ if(typeof grantEmberbreaker==='function') grantEmberbreaker(); }
     else { giveGold(rndi(120,180)); give('crystal',1); banner('THE FORGE-HOARD','EMBERSTONE AND OLD COIN'); }
     setTimeout(autoSave,300); return; }
+  // the Spirit Brute's cache: the Coast-Warden Pick that shatters Stormreach's green reef-stone
+  if(b.reefgift){ bumpStat('chests');
+    if((P.tools&&P.tools.pick||0)<5){ if(typeof grantReefpick==='function') grantReefpick(); }
+    else { giveGold(rndi(120,180)); give('crystal',1); banner('THE WARD-KEEPER’S CACHE','REEF-STONE AND OLD COIN'); }
+    setTimeout(autoSave,300); return; }
   if(b.slaggift){ bumpStat('chests');
     if((P.tools&&P.tools.pick||0)<3){ if(typeof grantCograzor==='function') grantCograzor(); }
     else { giveGold(rndi(120,180)); give('ore',2); banner('THE MILL-HOARD','SLAGIRON AND OLD COIN'); }
@@ -7575,9 +7609,10 @@ function switchWorld(id){
     if(typeof updateSkyCurseMood==='function') updateSkyCurseMood();
   }
   if(id==='reach'){
-    // the castaways' two tormentors: the Brute on the barrow road (Mora) and the
-    // Drowned Minotaur in the catacomb below (Tibb).
-    if(qs('barrowbrute')!=='done' && !P.quests.barrowbrute) P.quests.barrowbrute='avail';
+    // The old Barrow Brute (and Mora's "put the brute down" bounty) is retired: the barrow now
+    // holds the SPIRIT BRUTE, a ward-keeper guarding the Coast-Warden Pick - a mechanical gate
+    // (beat it, take the pick, break the reef-stone) rather than a quest. So barrowbrute is no
+    // longer offered.
     // Tibb's Act I catacomb bounty; under the Veil the same descent is reframed as Mora's Act II
     // restoration (reachRestore) below, so don't freshly re-offer this one in Act II.
     if(!(P.story&&P.story.vathVeil) && qs('drownedwarden')!=='done' && !P.quests.drownedwarden) P.quests.drownedwarden='avail';
