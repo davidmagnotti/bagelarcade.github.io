@@ -444,18 +444,34 @@ function updateMountBtn(){
   if(isTouch){
     const hide = !!G.interior;
     const ab=document.getElementById('attackBtn'), db=document.getElementById('dodgeBtn');
-    if(ab) ab.style.display = hide?'none':'';
+    // Shared button state language (see styles.css .cooldown / .cancel):
+    //   ready  -> its own colour (blue dash / red sword)   [no class]
+    //   GRAY   -> mid-animation / on cooldown, wait          .cooldown
+    //   GREEN  -> usable now but spends stamina (cancel/chain) .cancel
+    const _comboLive = !!((window.COMBO && window.COMBO.on) || (P.unlocked && P.unlocked.combos));
+    const _cfg = (window.COMBO && window.COMBO.cfg) || null;
+    // DODGE / dash
     if(db){
       db.style.display = (hide || !(P.unlocked && P.unlocked.dash))?'none':'';
-      // gray the dash button while it's on cooldown; light it back up the moment it's ready
-      // (double-dash keeps it lit for the one chained roll inside the cooldown window).
-      // Once the flow is learned, a stamina CHAIN-dash is available mid-cooldown too - so
-      // the button reads as usable (undisabled) whenever a cancel/chain would actually fire.
-      const _comboLive = !!((window.COMBO && window.COMBO.on) || (P.unlocked && P.unlocked.combos));
-      const _chainCost = (window.COMBO && window.COMBO.cfg) ? window.COMBO.cfg.dashChain.cost : 25;
-      const _canChain = _comboLive && (P.stam||0) >= _chainCost;   // chain-dash costs stamina, works mid-cooldown
-      const ready = (P.rollT||0)<=0 && ((P.rollCd||0)<=0 || (P.unlocked && P.unlocked.dash2 && !P.dashChain) || _canChain);
-      db.classList.toggle('cooldown', !ready);
+      const chainCost = _cfg ? _cfg.dashChain.cost : 25;
+      const dashing = (P.rollT||0)>0;
+      const onCd     = (P.rollCd||0)>0;
+      const freeReady = !dashing && (!onCd || (P.unlocked && P.unlocked.dash2 && !P.dashChain));
+      const canChain  = !dashing && onCd && _comboLive && (P.stam||0) >= chainCost;  // mid-cooldown, costs stamina
+      db.classList.toggle('cooldown', !freeReady && !canChain);
+      db.classList.toggle('cancel',   !freeReady &&  canChain);
+    }
+    // SWORD / attack - now grays after a swing and reactivates, matching the dash. A GREEN
+    // ring in the recovery tail means a stamina re-strike (a faster-than-rhythm cancel) is ready.
+    if(ab){
+      ab.style.display = hide?'none':'';
+      const atkCost = _cfg ? _cfg.atkCancel.cost   : 20;
+      const atkWin  = _cfg ? _cfg.atkCancel.window : 0.22;
+      const recovering = (P.atkCd||0)>0;
+      const foeNear = P.weapon==='melee' && G.mobs && G.mobs.some(m=>!m.dead && !m.sealed && dist(P.x,P.y,m.x,m.y)<2.2);
+      const canRestrike = recovering && (P.atkCd||0)<=atkWin && _comboLive && P.weapon==='melee' && foeNear && (P.stam||0) >= atkCost;
+      ab.classList.toggle('cooldown', recovering && !canRestrike);
+      ab.classList.toggle('cancel',   recovering &&  canRestrike);
     }
   }
   const btn=document.getElementById('mountBtn'); if(!btn) return;

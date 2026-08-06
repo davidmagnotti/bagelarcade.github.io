@@ -712,6 +712,10 @@ function parryCovers(sx,sy){
 // follow-up grace. Returns true so callers can early-out of taking damage.
 function onParry(sx,sy){
   P.parrySuccess=0.22; P.parryT=Math.min(P.parryT||0,0.06);   // the guard is spent on a clean parry
+  // DEFLECT: a distinct blade-catch animation for the turned blow (drawn in drawPlayerFigure,
+  // rewarded with stamina in 49-combo-proto). Faces the blow's source.
+  P.deflectT=0.4; P.deflectMax=0.4;
+  { const dx=sx-P.x, dy=sy-P.y, l=Math.hypot(dx,dy)||1; P.deflectDir={x:dx/l,y:dy/l}; }
   P.lastCombat=G.time;
   const mx=(P.x+sx)/2, my=(P.y+sy)/2;
   addFloat('PARRY!', P.x, P.y-2.1, '#ffe08a', 1.3);
@@ -1626,6 +1630,7 @@ function updatePlayer(dt){
   // No movement freeze now - the parry rides your attack, so you keep your footing.
   P.parryT=Math.max(0,(P.parryT||0)-dt);
   P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
+  P.deflectT=Math.max(0,(P.deflectT||0)-dt);   // the deflect blade-catch animation beat
   if(P.parryDrill) updateParryDrill(dt);
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands
@@ -2380,6 +2385,9 @@ function updateProjs(dt){
       // well-timed swing bats the bone away before it ever reaches the body.
       if((P.parryT||0)>0 && !p.parried && dP<1.05 && parryCovers(p.x,p.y)){
           p.parried=1; p.from='player'; p.skill='melee';
+          // the same DEFLECT blade-catch as a melee parry, facing the batted shot
+          P.deflectT=0.4; P.deflectMax=0.4;
+          { const _dx=p.x-P.x, _dy=p.y-(P.y-0.3), _l=Math.hypot(_dx,_dy)||1; P.deflectDir={x:_dx/_l,y:_dy/_l}; }
           // Send the bone straight back to whoever threw it - so a parried King bone
           // flies at the KING even when his skeletons crowd you. When we know the thrower,
           // the returned bone HOMES to him and punches through lesser bones in the way,

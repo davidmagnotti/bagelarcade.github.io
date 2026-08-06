@@ -14,14 +14,16 @@
          1. cancelling attack recovery to re-swing FASTER than the natural rhythm
          2. CHAINING dashes (the 2nd, 3rd, ... roll back-to-back)
          3. HOLDING the shield block
-     - RIPOSTE refills it: a perfect dodge (the existing P.empower reward) hands
-       back a big chunk, so reading a blow pays for the next flourish.
+     - RIPOSTE / DEFLECT refill it: a perfect dodge (P.empower) and a timed DEFLECT
+       (a turned blow - the core sets P.deflectT) each hand back a chunk, so reading
+       a blow pays for the next flourish.
      - NO hard exhaustion. At empty the advanced options simply wink out until it
        recharges; you never get stun-locked for spending it. This is an
        exploration RPG, not a soulslike.
-     - SHIELD is a hold-block, a SEPARATE tool from the timing-parry (which stays
-       exactly as it is). Bram already hands you the sword; the shield rides along
-       (P.unlocked.melee => P.unlocked.shield while the prototype is on).
+     - DEFLECT is a TIMED slash (the game's own parry, elevated into the flow) - not a
+       held shield. Time your strike to an incoming blow and it turns aside with a
+       distinct blade-catch animation (drawn in 10-rendering) and a stamina refund.
+       There is no shield item and no hold-block.
 
    Everything below is monkey-patched onto the globals so the core files
    (07-input, 08-ui-panels, 09-gameplay, 12-world-layer) stay untouched.
@@ -36,8 +38,8 @@
     regenRate:    45,     // stamina per second once regen kicks in
     atkCancel:  { window: 0.22, cost: 20 },   // re-swing once recovery has <= window left
     dashChain:  { cost: 25 },                 // stamina per chained (2nd+) dash
-    block:      { drain: 30, hitCost: 15, reduce: 0.6 },  // /s held, per blocked hit, dmg cut
     riposteRefund: 60,    // stamina handed back on a perfect-dodge riposte
+    deflectRefund: 45,    // stamina handed back on a timed DEFLECT (a turned blow)
   };
 
   window.COMBO = window.COMBO || { on:false };
@@ -52,11 +54,6 @@
     return !!( (window.COMBO && window.COMBO.on) ||
                (typeof P!=='undefined' && P && ((P.unlocked && P.unlocked.combos) || P.knightDrill)) );
   };
-  // Is the shield available to raise? Once learned, or on loan during the knight's drill.
-  var shieldReady = function(){
-    return !!(ready() && ((P.unlocked && P.unlocked.shield) || P.knightDrill));
-  };
-
   /* ---- stamina state (lazy-attached to the player) ---- */
   function ready(){ return (typeof P!=='undefined') && P; }
   function ensureStam(){
@@ -75,14 +72,6 @@
   }
   function fx_riposte(){
     if(typeof addFloat==='function') addFloat('+VIGOR', P.x, P.y-3.0, '#7fe0c0', 1.15);
-  }
-  function fx_block(sx,sy){
-    var mx=(P.x+(sx==null?P.x:sx))/2, my=(P.y+(sy==null?P.y:sy))/2;
-    if(typeof addFloat==='function') addFloat('BLOCK', P.x, P.y-2.0, '#bfd8ff', 1.15);
-    if(typeof burst==='function') burst(mx, my-0.3, '#cfe2ff', 10, 2.4);
-    if(typeof G!=='undefined'){ G.shake=Math.max(G.shake||0,0.14); G.hitStop=Math.max(G.hitStop||0,0.04); }
-    if(typeof buzz==='function') buzz(12);
-    if(typeof Snd!=='undefined' && Snd.tone) Snd.tone(300,0.06,'triangle',0.03,120);
   }
 
   /* ============================ HUD: stamina bar ============================ */
@@ -114,74 +103,26 @@
     ensureStam();
     var f=Math.max(0,Math.min(1,(P.stam||0)/(P.stamMax||CFGP.stamMax)));
     stamFill.style.width=(f*100)+'%';
-    // guard tint while blocking, spent-red flash when empty, teal otherwise
-    if(P.blocking) stamFill.style.background='linear-gradient(180deg,#bfd8ff,#5f8fd8)';
-    else if((P.stam||0)<CFGP.atkCancel.cost) stamFill.style.background='linear-gradient(180deg,#e8b98f,#b8683a)';
+    // spent-red flash when too low for a cancel, teal otherwise
+    if((P.stam||0)<CFGP.atkCancel.cost) stamFill.style.background='linear-gradient(180deg,#e8b98f,#b8683a)';
     else stamFill.style.background='linear-gradient(180deg,#8fe8cf,#2f9e86)';
   }
 
-  /* ========================= touch: shield button ========================= */
-  var blockBtn=null;
-  function buildBlockBtn(){
-    if(blockBtn || typeof isTouch==='undefined' || !isTouch) return;
-    var act=document.getElementById('actBtns'); if(!act) return;
-    blockBtn=document.createElement('div');
-    blockBtn.className='abtn small';
-    blockBtn.id='blockBtn';
-    // a crisp drawn shield-guard glyph (a heater shield with a bronze boss), not an emoji
-    blockBtn.innerHTML='<svg viewBox="0 0 24 28" width="30" height="34" aria-hidden="true">'+
-      '<path d="M12 1.5 L22 5 V15 C22 22.5 17.5 26 12 27.5 C6.5 26 2 22.5 2 15 V5 Z" '+
-        'fill="#cfe0f2" stroke="#26313c" stroke-width="1.6"/>'+
-      '<path d="M12 2.5 V26.4 M3.5 9 H20.5" stroke="#7f93a8" stroke-width="1.3"/>'+
-      '<circle cx="12" cy="12.5" r="2.6" fill="#c9a24e" stroke="#7a5a18" stroke-width="1"/>'+
-      '</svg>';
-    blockBtn.style.background='radial-gradient(circle at 38% 32%, rgba(150,180,235,.75), rgba(60,90,150,.6))';
-    // order: Talk / shield / dash / sword  -> sit the shield just above the dash button
-    var dodge=document.getElementById('dodgeBtn');
-    if(dodge) act.insertBefore(blockBtn, dodge); else act.appendChild(blockBtn);
-    var set=function(v){ return function(e){ if(input) input.blockHeld=v; if(e&&e.preventDefault) e.preventDefault(); }; };
-    if(window.PointerEvent){
-      blockBtn.addEventListener('pointerdown', set(true));
-      blockBtn.addEventListener('pointerup', set(false));
-      blockBtn.addEventListener('pointercancel', set(false));
-      blockBtn.addEventListener('pointerleave', set(false));
-    } else {
-      blockBtn.addEventListener('touchstart', set(true));
-      blockBtn.addEventListener('touchend', set(false));
-      blockBtn.addEventListener('touchcancel', set(false));
-    }
-  }
-  function syncBlockBtn(){
-    if(typeof isTouch==='undefined' || !isTouch) return;
-    if(!blockBtn) buildBlockBtn();
-    if(!blockBtn) return;
-    var show = ON() && ready() && shieldReady() &&
-               !(typeof G!=='undefined' && G.interior);
-    blockBtn.style.display = show ? '' : 'none';
-    if(show){
-      var ok = stamHas(1);
-      blockBtn.classList.toggle('cooldown', !ok);
-      blockBtn.style.outline = P.blocking ? '3px solid rgba(190,216,255,.9)' : 'none';
-    }
-  }
-
-  /* ===================== per-frame: regen + block + HUD ===================== */
+  /* ===================== per-frame: regen + deflect payoff + HUD ===================== */
   function comboTick(dt){
-    if(!ON() || !ensureStam()) { if(ready()) P.blocking=false; syncStamBar(); syncBlockBtn(); return; }
+    if(!ON() || !ensureStam()) { syncStamBar(); return; }
 
-    // --- block: hold to guard, drains stamina, drops when spent or when busy ---
-    var kbHold = (typeof keys!=='undefined') && (keys['shift'] || keys['k']);
-    var want = ((input && input.blockHeld) || kbHold) &&
-               shieldReady() && stamHas(1) &&
-               typeof G!=='undefined' && G.state==='play' &&
-               !(typeof dlg!=='undefined' && dlg.open) && !G.interior &&
-               !P.dead && (P.rollT||0)<=0 && (P.stunT||0)<=0;
-    P.blocking = !!want;
-    if(want){ P.stam=Math.max(0,(P.stam||0)-CFGP.block.drain*dt); P.stamRegenT=CFGP.regenDelay; }
+    // --- DEFLECT payoff: a timed slash that turns a blow (the game's parry, elevated
+    // into the flow) hands stamina back, so a good read fuels your next flourish. The
+    // core sets P.deflectT>0 the instant a blow is turned (melee or a batted shot); we
+    // catch the rising edge here so both paths pay out exactly once. ---
+    var dnow = P.deflectT||0;
+    if(dnow > (P._deflectPrev||0) + 0.001 && dnow > 0.3){ refund(CFGP.deflectRefund); fx_riposte(); }
+    P._deflectPrev = dnow;
 
-    // --- passive regen after the no-spend delay (never while actively guarding) ---
+    // --- passive regen after the no-spend delay ---
     P.stamRegenT=Math.max(0,(P.stamRegenT||0)-dt);
-    if(!P.blocking && P.stamRegenT<=0 && (P.stam||0)<P.stamMax){
+    if(P.stamRegenT<=0 && (P.stam||0)<P.stamMax){
       P.stam=Math.min(P.stamMax,(P.stam||0)+CFGP.regenRate*dt);
     }
 
@@ -192,7 +133,6 @@
     P._dashKeyPrev = !!(typeof keys!=='undefined' && (keys['control'] || keys['l']));
 
     syncStamBar();
-    syncBlockBtn();
   }
 
   /* ============================ wrappers ============================ */
@@ -259,23 +199,6 @@
     };
   }
 
-  // hurtPlayer: a raised shield chips a frontal blow. Parry (checked first inside
-  // the original) still wins outright; block is the fallback that softens what a
-  // parry didn't catch. Hazards/back-hits (no frontal source) cut straight through.
-  if(typeof window.hurtPlayer==='function'){
-    var _hurtPlayer=window.hurtPlayer;
-    window.hurtPlayer=function(dmg,src){
-      if(ON() && ready() && P.blocking && (P.rollT||0)<=0 && P.hurtT<=0 &&
-         src && src.x!=null && typeof parryCovers==='function' && parryCovers(src.x,src.y) &&
-         !(( P.parryT||0)>0) && ensureStam() && stamHas(CFGP.block.hitCost)){
-        spend(CFGP.block.hitCost);
-        dmg = Math.max(1, dmg*(1-CFGP.block.reduce));
-        fx_block(src.x, src.y);
-        if(typeof G!=='undefined') P._evBlock=G.time;   // drill marker
-      }
-      return _hurtPlayer.call(this, dmg, src);
-    };
-  }
 
   /* ============================ dev menu section ============================ */
   function toggleCombo(b){
@@ -283,8 +206,8 @@
     try{ if(typeof SafeStore!=='undefined') SafeStore.set('tf_combo', window.COMBO.on?'1':'0'); }catch(e){}
     if(window.COMBO.on){ ensureStam(); }
     if(b) b.textContent='Combo system: '+(window.COMBO.on?'ON':'off');
-    syncStamBar(); syncBlockBtn();
-    if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & shield live':'off'));
+    syncStamBar();
+    if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & deflect live':'off'));
   }
   window.toggleCombo=toggleCombo;
 
@@ -295,18 +218,11 @@
       ['Combo system: '+(window.COMBO.on?'ON':'off'), function(b){ toggleCombo(b); }],
       ['Learn the flow (knight unlock)', function(){
         if(!ready()) return;
-        P.unlocked=P.unlocked||{}; P.unlocked.combos=true; P.unlocked.shield=true;
+        P.unlocked=P.unlocked||{}; P.unlocked.combos=true;
         P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1);
         P.story=P.story||{}; P.story.flowLearned=1;
         if(typeof buildHotbar==='function') buildHotbar();
-        if(typeof note==='function') note('The flow learned (combos + shield, as from the knight)');
-      }],
-      ['Grant shield + sword', function(){
-        if(!ready()) return;
-        P.unlocked=P.unlocked||{}; P.unlocked.melee=true; P.unlocked.shield=true;
-        P.swordTier=Math.max(P.swordTier||0,1);
-        if(typeof buildHotbar==='function') buildHotbar();
-        if(typeof note==='function') note('Shield + sword granted');
+        if(typeof note==='function') note('The flow learned (stamina, cancels, chain & deflect)');
       }],
       ['Refill stamina', function(){ if(ensureStam()){ P.stam=P.stamMax; if(typeof note==='function') note('Stamina refilled'); } }],
     ]]);
