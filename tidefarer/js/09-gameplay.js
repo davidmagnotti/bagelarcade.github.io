@@ -622,7 +622,8 @@ function tryAttack(useMouse){
         Snd.noise(0.2,0.06,900,1);
       } else {
         P.combo=(P.combo||0)+1;
-        if(P.combo===2) addFloat('COMBO x2',P.x,P.y-2,'#ffce7a',1.1);
+        // (no 'COMBO x2' float - the finisher's own shockwave/hitstop is the payoff,
+        //  and with fast combo play the text fired on nearly every other swing)
       }
     } else { P.combo=0; }
   } else if(P.weapon==='bow'){
@@ -648,7 +649,9 @@ function tryAttack(useMouse){
 function xpForP(l){ return 70+55*l; }
 function gainLXP(n){
   P.xpL+=n;
-  addFloat('+'+n+' XP', P.x, P.y-2.6, '#c9b0ff');
+  // (no generic '+N XP' float - the skill-XP float already shows on the kill, and a
+  //  level milestone still fires its LEVEL banner below; two XP floats stacked at the
+  //  player on every kill was the main on-hit word-vomit)
   while(P.xpL>=xpForP(P.level) && P.level<20){
     P.xpL-=xpForP(P.level); P.level++;
     P.maxhp+=6; P.hp=P.maxhp; P.arrows=P.maxArrows||20;   // level-up tops the quiver too
@@ -953,7 +956,7 @@ function damageMob(m,dmg,knock,skill){
   if(skill==='archery' || skill==='magic'){
     P.comboT=1.4;
     P.combo=(P.combo||0)+1;
-    if(P.combo===2) addFloat('COMBO x2', P.x, P.y-2, '#ffce7a', 1.1);
+    // (COMBO x2 float removed - see the melee note above)
   }
   if(knock && !m.boss){ moveEntity(m, knock.x*0.35, knock.y*0.35); }
   if(m.hp<=0){

@@ -236,7 +236,20 @@ function spawnNPCs(){
        'I carve little boats, mostly. For someone. I forget who - but they will turn up.',
        'Where am I from? Ha. Woke here one morning, the wood needed chopping, so I chopped. Been happy since.',
        'That tune in my head? No idea the name. My hands seem to, though - I stack the logs to it.'],0.25);
-      w.hums=true; return w; })()
+      w.hums=true; return w; })(),
+    // The Drowned Knight - an ancient spirit who keeps the isle's lonely far NORTH-EAST
+    // headland. Not a living swordsman: a ghost, and dryly aware of it. Orin sends the
+    // curse-broken castaway up to "look around for an old friend"; the friend turns out
+    // to be long dead, and unbothered by it. He teaches the FLOW of blades - the cancels,
+    // chains and guard of the advanced combat layer (the drill lives in 50-ancient-knight.js).
+    (()=>{ const sp=(typeof findOpenNear==='function' && findOpenNear(87,23,9)) || [87,23];
+      const k=makeNPC('knight','The Drowned Knight',sp[0],sp[1],
+        {skin:'#c2d4e4',hair:'#a6bccf',shirt:'#39506a',pants:'#2b3c52',hairstyle:'short',beard:'#94aabd',
+         weapon:'sword',wtier:2,size:1.12,spectral:true,build:{w:1.02,head:0.9}},
+        ['The tide keeps its own counsel. I have learned to do the same.',
+         'You still breathe. How novel.',
+         'Stand where I fell, and the sea gives back the shape of a fight.'],0.12);
+      k.nightOwl=true; k.hoverPh=0; return k; })()
   ];
   // Act II: Leo keeps the boat and the way home now, so the old ferry-captain is gone from
   // the Emberwick dock - his Act I shipwright work is long done and the story has sailed past him.

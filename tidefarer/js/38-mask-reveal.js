@@ -49,22 +49,22 @@ const MR = {
    beat auto-advances after `hold` ms so the motion can carry it. */
 const MR_BEATS = [
   // the mask begins to lift; the first light bleeds through the grey (wordless)
-  { who:'', html:'', mask:0.55, fog:0.92, gold:0.14, shake:0.45, hold:1500 },
+  { who:'', html:'', mask:0.55, fog:0.92, gold:0.14, shake:0.45, hold:700 },
   // it comes away and shatters, long years of fog tearing loose with it
   { who:'', html:'<i>The mask comes away — and long years of fog tears loose with it.</i>',
     mask:0, fog:0.4, gold:0.5, shatter:1, flash:1.1, shake:0.6 },
   // the boat memory surfaces (wordless)
-  { who:'', html:'', mem:'boat', fog:0.3, gold:0.55, hold:1600 },
+  { who:'', html:'', mem:'boat', fog:0.3, gold:0.55, hold:750 },
   { who:'', html:'<i>A deck pitching in the black water. Cold rain, and the mast groaning overhead. Your little brother — small, screaming — and your arm thrown across him like a bar of iron.</i>',
     mem:'boat', gold:0.6 },
   // Vath and the curse (wordless punch)
-  { who:'', html:'', mem:'curse', fog:0.32, gold:0.4, violet:0.9, flash:0.9, shake:0.7, hold:1700 },
+  { who:'', html:'', mem:'curse', fog:0.32, gold:0.4, violet:0.9, flash:0.9, shake:0.7, hold:800 },
   { who:'Vath', html:'<b style="color:#c9a0ff">“Forget who you were, little tide. Wear my work as your own face.”</b>',
     mem:'curse', gold:0.38, violet:1 },
   { who:'', html:'<i>Robed in violet fire, he prised your name out of you like a splinter — and sealed the pale mask over your face so you could never lift it.</i>',
     mem:'curse', gold:0.42, violet:0.72 },
   // the wicked mask itself (wordless)
-  { who:'', html:'', mem:'maskvis', gold:0.46, violet:0.5, hold:1500 },
+  { who:'', html:'', mem:'maskvis', gold:0.46, violet:0.5, hold:700 },
   { who:'', html:'<i>His spite, given a face and made your own. You wore it isle to isle and never once knew whose it was.</i>',
     mem:'maskvis', gold:0.5, violet:0.4 },
   // the name surfaces - JOAN
@@ -106,7 +106,7 @@ function maskRevealCutscene(onDone){
   if(typeof cinematic==='function') cinematic(true);
   mrResize();
   window.addEventListener('resize', mrResize);
-  setTimeout(()=>mrShow(0), 550);   // brief fade-in, then the mask lifts
+  setTimeout(()=>mrShow(0), 350);   // brief fade-in, then the mask lifts
   ov.onclick=()=>{ if(MR.ended || !MR.started) return; mrNext(); };
   cancelAnimationFrame(MR.raf);
   MR.raf=requestAnimationFrame(mrLoop);
@@ -131,7 +131,7 @@ function mrShow(i){
   if(wordless){
     // a pure-action beat: hide the caption, let the motion play, then carry on by itself
     if(sub) sub.classList.remove('show');
-    MR._autoTO=setTimeout(()=>mrNext(), b.hold||1700);
+    MR._autoTO=setTimeout(()=>mrNext(), b.hold||800);
   } else {
     const tap=document.getElementById('mrTap');
     if(tap) tap.textContent=(i>=MR.beats.length-1)?'return ›':'click to continue ›';
@@ -148,14 +148,14 @@ function mrNext(){
   clearTimeout(MR._autoTO);
   if(MR.idx>=MR.beats.length-1){ mrFinish(); return; }
   const sub=document.getElementById('mrSub'); if(sub) sub.classList.remove('show');
-  setTimeout(()=>mrShow(MR.idx+1), 300);
+  setTimeout(()=>mrShow(MR.idx+1), 200);
 }
 function mrFinish(){
   if(MR.ended) return;
   MR.ended=true;
   const sub=document.getElementById('mrSub'); if(sub) sub.classList.remove('show');
   const title=document.getElementById('mrTitle'); if(title) title.classList.remove('show');
-  setTimeout(mrEnd, 1000);   // let the scene settle before handing back to the world
+  setTimeout(mrEnd, 600);   // let the scene settle before handing back to the world
 }
 function mrEnd(){
   MR.running=false; cancelAnimationFrame(MR.raf);

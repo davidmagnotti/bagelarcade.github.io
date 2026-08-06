@@ -611,6 +611,55 @@ function buildDialogContent(npc){
       shopButtons(npc,[{label:'I\'ll find Bram', ghost:true, fn:closeDialog}]));
     return;
   }
+  // Sage Orin's off-the-cuff nudge toward the Drowned Knight. Once the traveller can
+  // both turn a blade (parry) and dart aside (dash) - i.e. after Rask and Orin's own
+  // lesson - the old sage half-remembers "an old friend" up the far north-east headland.
+  // Shown ONCE (flag), then flows straight on into Orin's normal dialogue/quests.
+  if(npc.id==='orin' && (P.unlocked&&P.unlocked.parry) && (P.unlocked&&P.unlocked.dash) &&
+     !(P.unlocked&&P.unlocked.combos) && !(P.story&&P.story.knightHint)){
+    P.story=P.story||{}; P.story.knightHint=1;
+    setDialog('<i>As you make to leave, Orin waves a hand as though something has just surfaced.</i> “Oh - before you wander off. If you\'ve a taste for fighting <i>well</i>, and not merely fighting… there\'s an old friend of mine who keeps to the far <b>north-east headland</b>. Cantankerous sort. I\'ve not laid eyes on him in - hah - longer than I\'ll admit to. Go and poke about up there, would you? Tell him <b>Orin sent you</b>. He\'ll know what to make of someone like you.” <i>He has already turned back to his books, as if he never spoke.</i>',
+      [{label:'…the far north-east', fn:()=>buildDialogContent(npc)}]);
+    return;
+  }
+  // The Drowned Knight - the ancient spirit-protector who teaches the flow of blades
+  // (cancels, chains, guard). The drill and the unlock live in 50-ancient-knight.js.
+  if(npc.id==='knight' && !(P.unlocked&&P.unlocked.combos)){
+    P.story=P.story||{};
+    // Not yet a proper fighter: send them back to earn the basics first (mirrors Rask).
+    if(!((P.unlocked&&P.unlocked.parry) && (P.unlocked&&P.unlocked.dash))){
+      setDialog('<i>The spirit\'s gaze passes over you and finds you wanting.</i> “You\'ve the will - but not yet the craft. Come back when you can <b>turn a blade</b> and <b>dart aside</b>, and there\'ll be something in you worth the sharpening.”',
+        [{label:'I\'ll return', ghost:true, fn:closeDialog}]);
+      return;
+    }
+    // the training pitch (the three lessons), leading into the hands-on drill
+    var knightOffer=function(){
+      setDialog('<b style="color:#bcd8ee">“Any fool can swing. The trade is in the seams - the breath between one blow and the next, where a fight is truly won and lost.”</b> <i>He turns his spectral blade in the low light.</i> “I\'ll teach you to <b>cancel</b> a stroke you have already begun, to <b>chain</b> your footwork past its natural end, and to <b>set your guard</b> in the half-instant you are given. Three lessons. Then you will move like water - and the isles will learn to fear the tide again. Will you learn?”',
+        [{label:'Teach me', cls:'gold', fn:()=>{ closeDialog(); if(typeof beginKnightDrill==='function') beginKnightDrill(); }},
+         {label:'Not yet', ghost:true, fn:closeDialog}]);
+    };
+    if(P.knightDrill){
+      setDialog('<b>“The lesson stands. When your feet are ready, so am I.”</b>',
+        [{label:'I\'m ready', cls:'gold', fn:()=>{ closeDialog(); if(typeof knightDrillNudge==='function') knightDrillNudge(); }},
+         {label:'A moment', ghost:true, fn:closeDialog}]);
+      return;
+    }
+    if(!P.story.knightMet){
+      P.story.knightMet=1;
+      if(typeof knightRevealFx==='function') knightRevealFx();
+      setDialog('<i>You crest the headland expecting a person - Orin\'s "old friend." There is no one. Then the air goes cold, the light bends, and a knight in drowned armour stands where the wind had been, watching you with a quiet, dreadful patience.</i><br><b style="color:#bcd8ee">“You were expecting a pulse. Orin always did leave out the interesting part.”</b> <i>Something like a smile crosses the ruined helm.</i> “I am what remains of this isle\'s first protector - I have kept this rock since before your grandmother\'s grandmother drew her first breath. And you: curse-broken, nameless, and already quicker than you have any right to be.”',
+        [{label:'…you\'re a ghost?', fn:knightOffer}]);
+      return;
+    }
+    knightOffer();
+    return;
+  }
+  // After the flow is learned, the knight keeps the headland as a wry old mentor.
+  if(npc.id==='knight' && (P.unlocked&&P.unlocked.combos)){
+    setDialog('<i>The knight rests his spectral blade point-down, both hands folded on the pommel.</i> <b style="color:#bcd8ee">“You carry the flow now - wear it lightly, and it will not fail you.”</b> “Go on, tide-child. Break his curses off these islands, one by one. I have kept this headland a long age, and I will keep it yet - come back to me when an old sword\'s counsel would serve.”',
+      [{label:'Thank you', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // 1) talk-quest completion
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].kind==='talk' && QUESTS[id].talkTo===npc.id){

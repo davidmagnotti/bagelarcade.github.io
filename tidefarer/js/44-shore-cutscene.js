@@ -71,23 +71,23 @@ const SH = {
    beat's `swell:0` lets it recede as the dark closes over. */
 const SH_BEATS = [
   // the ship cresting a black swell, the frame closing to letterbox (wordless)
-  { who:'', html:'', storm:1, ship:1, ashore:0, bars:1, push:1.04, shake:0.5, bolt:1, hold:2100 },
+  { who:'', html:'', storm:1, ship:1, ashore:0, bars:1, push:1.04, shake:0.5, bolt:1, hold:950 },
   { who:'', html:'<i>A ship on the night strait, and a storm with no mercy in it. You do not remember boarding her. You do not remember your name.</i>',
     storm:1, ship:1, ashore:0, push:1.06 },
   // a strike splits the dark - the ship heeled hard over, her sail tearing (wordless)
-  { who:'', html:'', storm:1, ship:1, ashore:0, push:1.09, bolt:1, shake:0.55, hold:1600 },
+  { who:'', html:'', storm:1, ship:1, ashore:0, push:1.09, bolt:1, shake:0.55, hold:750 },
   // the cursed sea rises and takes her, lanterns snuffed one by one (wordless, the big beat)
-  { who:'', html:'', storm:1, ship:0, ashore:0, push:1.13, swell:1, flash:1.0, shake:0.8, hold:2600 },
+  { who:'', html:'', storm:1, ship:0, ashore:0, push:1.13, swell:1, flash:1.0, shake:0.8, hold:1150 },
   { who:'', html:'<i>It was no reef. The water itself rose to meet you - cold and wrong, lit from beneath - and the last of the lanterns was swallowed whole. The dark closed over.</i>',
     storm:1, ship:0, ashore:0, swell:0, push:1.05 },
   // the dark gives way to a breaking dawn on the shore (wordless dissolve)
-  { who:'', html:'', storm:0.14, ship:0, ashore:1, push:1.0, fx:0.5, fy:0.5, hold:2000 },
+  { who:'', html:'', storm:0.14, ship:0, ashore:1, push:1.0, fx:0.5, fy:0.5, hold:900 },
   // dawn on the empty strand: the tide has drawn back, the mask left in the sand (wordless)
-  { who:'', html:'', storm:0.08, ship:0, ashore:1, push:1.03, hold:1700 },
+  { who:'', html:'', storm:0.08, ship:0, ashore:1, push:1.03, hold:750 },
   { who:'', html:'<i>Then - dawn. Warm sand against your cheek, the tide drawing back off you at last. A pale mask lies half in the wet sand within reach - and your hand has already closed on it, before your eyes are even open. You do not know why.</i>',
     storm:0.06, ashore:1, push:1.05 },
   // a slow push onto the mask, catching the first light (wordless)
-  { who:'', html:'', storm:0.05, ashore:1, push:1.16, focus:[0.5,0.62], hold:1700 },
+  { who:'', html:'', storm:0.05, ashore:1, push:1.16, focus:[0.5,0.62], hold:750 },
   { who:'', html:'<i>A light comes bobbing down the shoreline - a lantern, and someone hurrying through the surf toward you. You have washed up on some strange, dark shore.</i>',
     storm:0.05, ashore:1, push:1.04 },
 ];
@@ -132,7 +132,7 @@ function shPlay(beats, init, onDone){
   if(typeof cinematic==='function') cinematic(true);
   shResize();
   window.addEventListener('resize', shResize);
-  setTimeout(()=>shShow(0), 500);   // brief fade-in, then the first beat
+  setTimeout(()=>shShow(0), 350);   // brief fade-in, then the first beat
   ov.onclick=()=>{ if(SH.ended || !SH.started) return; shNext(); };
   cancelAnimationFrame(SH.raf);
   SH.raf=requestAnimationFrame(shLoop);
@@ -153,7 +153,7 @@ function shShow(i){
   const wordless=!(b.html||'').replace(/<[^>]*>/g,'').trim();
   if(wordless){
     if(sub) sub.classList.remove('show');
-    SH._autoTO=setTimeout(()=>shNext(), b.hold||1700);
+    SH._autoTO=setTimeout(()=>shNext(), b.hold||800);
   } else {
     const tap=document.getElementById('shTap');
     if(tap) tap.textContent=(i>=SH.beats.length-1)?'wake on the shore ›':'click to continue ›';
@@ -170,14 +170,14 @@ function shNext(){
   clearTimeout(SH._autoTO);
   if(SH.idx>=SH.beats.length-1){ shFinish(); return; }
   const sub=document.getElementById('shSub'); if(sub) sub.classList.remove('show');
-  setTimeout(()=>shShow(SH.idx+1), 300);
+  setTimeout(()=>shShow(SH.idx+1), 200);
 }
 function shFinish(){
   if(SH.ended) return;
   SH.ended=true;
   const sub=document.getElementById('shSub'); if(sub) sub.classList.remove('show');
   const title=document.getElementById('shTitle'); if(title) title.classList.remove('show');
-  setTimeout(shEnd, 800);   // a beat, then hand off to Maren's first words
+  setTimeout(shEnd, 500);   // a beat, then hand off to Maren's first words
 }
 function shEnd(){
   SH.running=false; cancelAnimationFrame(SH.raf);
