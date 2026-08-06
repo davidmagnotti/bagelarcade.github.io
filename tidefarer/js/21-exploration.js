@@ -236,8 +236,17 @@ function startIntro(){
   document.getElementById('dname').textContent=greeter.name;
   drawPortrait(greeter);
   const p4=()=>{
-    setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your feet under you, then see <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
-      [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    // Cold open (js/50-coldopen.js): she washes in still gripping a warrior's
+    // blade, so Maren reads her for a fighter and sends her to Bram for ARMOUR,
+    // not a first sword. Stock opening (no cold open): the classic line.
+    const warrior = !!(P.story && P.story.coldOpen && P.unlocked && P.unlocked.melee);
+    if(warrior){
+      setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows.” <i>Her eye falls to the blade still locked in your grip - the way you hold it, even half-drowned.</i> “...And you\'re no fisherman. That\'s a warrior\'s sword, and warrior\'s hands on it. Whoever you were, the isle could use you. See <b>Bram the smith</b>, at the forge just here - he\'ll fit you with armour worthy of that steel. This isle has need of one like you.”',
+        [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    } else {
+      setDialog('“Here\'s what I know: you\'re on <b>Emberwick</b>, and you\'re breathing - which is more than the reef usually allows. Get your feet under you, then see <b>Bram the smith</b>, at the forge just here - he\'ll put a blade in your hand. This isle has need of one.”',
+        [{label:'Steady myself', cls:'gold', fn:()=>{ closeDialog(); afterIntro(); }}]);
+    }
   };
   const p3=()=>{
     setDialog('<i>She waits for a name, a heading - anything - and reads the blank on your face.</i> “...Nothing. Not even your own name.” <i>She nods slowly.</i> “The strait does that - takes the ship, the crew, and the memory with them. Don\'t claw at it: a name washes back, child, or you earn a new one.”',
