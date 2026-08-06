@@ -603,6 +603,19 @@ function buildDevToggle(){
 
 function initDev(){ buildDevToggle(); applyDevMode(); }
 if(document.body) initDev(); else window.addEventListener('DOMContentLoaded',initDev);
+
+// Public extension point: optional/experimental modules loaded AFTER this file
+// (e.g. the combo prototype) can add their own DEV section without reaching into
+// this IIFE's private SECTIONS array. Rebuilds the panel if it's already open so
+// the new section shows at once; otherwise it just appears next time DEV builds.
+window.devRegisterSection=function(section){
+  try{
+    if(!Array.isArray(section)) return false;
+    SECTIONS.push(section);
+    if(devEnabled()){ removeDevUI(); build(); }
+    return true;
+  }catch(e){ return false; }
+};
 // the pause menu markup may settle a beat after load - retry the toggle injection
 if(!document.getElementById('cfgDevOn')){ let n=0; const iv=setInterval(()=>{ if(buildDevToggle()||++n>40) clearInterval(iv); },250); }
 })();
