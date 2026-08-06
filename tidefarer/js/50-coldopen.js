@@ -96,6 +96,18 @@
     P.hp = P.maxhp;
     CO._done = false;
 
+    // Bram now fits ARMOUR, not a first blade (you kept the sword through the wreck).
+    // Rewrite his opening errand's reward + words for the cold-open path. applyQuestDialogue
+    // has already run at boot, so this override wins; a stock game always reloads fresh, so
+    // it never leaks into the shipping opening.
+    if(typeof QUESTS!=='undefined' && QUESTS.kit && !QUESTS.kit._coArmor){
+      var k = QUESTS.kit; k._coArmor = 1;
+      k.rw = { armor:1, gold:5, xp:{ melee:60 } };
+      k.brief = 'That\'s a warrior\'s blade you carry - but you\'ll not last a week on this isle in wet rags. Take my axe and pick off the rack: fell a tree for wood, break a rock for stone, and bring them back. I\'ll hammer you out armour worthy of that steel.';
+      k.log = 'Chop a tree for 1 wood and mine a rock for 1 stone with Bram\'s tools, then return to Bram for armour.';
+      k.doneText = 'Good hands - and now good plate to keep them swinging. *CLANG* - fitted and buckled. A blade\'s only half of it, though: go east, past the meadow, and find old Rask. He\'ll teach you to TURN a strike aside - the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you.';
+    }
+
     switchWorld('deck');
     spawnColdSpirit();
     if(typeof banner==='function') banner('THE NIGHT STRAIT', 'A STORM WITH NO MERCY');

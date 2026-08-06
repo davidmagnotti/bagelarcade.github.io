@@ -136,6 +136,8 @@ function completeQuest(id){
   if(rw.item) for(const it in rw.item) give(it,rw.item[it]);
   if(rw.sword){ P.swordTier=Math.max(P.swordTier,1); P.unlocked.melee=true; buildHotbar();
     toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon - tap the sword slot to wield it.'); }
+  if(rw.armor){ const t=rw.armor; P.armorOwn=Math.max(P.armorOwn||0,t); P.armor=Math.max(P.armor||0,t); if(typeof refreshUI==='function') refreshUI();
+    toast('<b style="color:var(--ember)">Armor forged!</b> Bram fits you with sturdy plate - blows land softer now.'); }
   if(rw.kit){ P.kit=true;
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; buildHotbar(); refreshUI();
@@ -229,6 +231,7 @@ function rewardText(q){
   if(rw.gold) parts.push('<b style="color:#ffd76a">'+rw.gold+' gold</b>');
   if(rw.item) for(const it in rw.item){ if(ITEMS[it]) parts.push(rw.item[it]+'× '+ITEMS[it].name); }
   if(rw.sword) parts.push('<b style="color:var(--ember)">the Iron Sword</b>');
+  if(rw.armor) parts.push('<b style="color:var(--ember)">sturdy Armor</b>');
   if(rw.kit) parts.push('a woodsman\'s <b>axe &amp; pick</b>');
   if(rw.bow) parts.push('<b style="color:var(--ember)">the Hunting Bow</b>');
   if(rw.staff) parts.push('<b style="color:var(--ember)">the Fire Staff</b>');
