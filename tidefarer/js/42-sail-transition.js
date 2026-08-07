@@ -171,8 +171,8 @@
       const bob  = reduced ? 0 : Math.sin(t * 2.4) * 5;
       const rock = reduced ? 0 : Math.sin(t * 1.9 + 0.6) * 0.05;   // radians
       const drift= reduced ? 0 : Math.sin(t * 0.7) * 8;            // gentle side sway
-      const bx = cx + drift, by = horizon + H * 0.055 + bob;
-      const scale = Math.max(1, H / 620);
+      const bx = cx + drift, by = horizon + H * 0.045 + bob;
+      const scale = Math.max(1.25, H / 480);   // a bigger vessel, riding higher toward the sun
 
       ctx.save();
       ctx.translate(bx, by);
@@ -207,53 +207,67 @@
     // Boat drawn around its own origin (waterline at y=0), silhouetted against
     // the sun with a warm rim of light on the sail and gunwale.
     function drawBoat(g, t){
-      // sail flutters just slightly
-      const flut = reduced ? 0 : Math.sin(t * 4) * 1.2;
+      const flut = reduced ? 0 : Math.sin(t * 4) * 1.4;   // sails breathe
+      const MAST = -96;                                    // a tall mast: the sail rides high now
 
-      // mast
+      // --- hull: a long, lean sailing ship, prow lifted toward the sun (to the right) ---
+      g.beginPath();
+      g.moveTo(-42, -9);                                   // stern gunwale
+      g.lineTo(46, -10);                                   // deck line running to the prow
+      g.quadraticCurveTo(60, -12, 55, 1);                  // raised prow
+      g.quadraticCurveTo(32, 15, 0, 16);                   // hull bottom
+      g.quadraticCurveTo(-30, 15, -46, 2);                 // to the stern
+      g.quadraticCurveTo(-48, -5, -42, -9);
+      g.closePath();
+      const hg = g.createLinearGradient(0, -10, 0, 16);
+      hg.addColorStop(0, '#3a2817'); hg.addColorStop(1, '#140d07');
+      g.fillStyle = hg; g.fill();
+      // a warm plank line + the ember-lit gunwale
+      g.strokeStyle = 'rgba(120,80,45,0.65)'; g.lineWidth = 1.4;
+      g.beginPath(); g.moveTo(-44, -2); g.quadraticCurveTo(0, 5, 54, -2); g.stroke();
+      g.strokeStyle = 'rgba(255,154,60,0.85)'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(-42, -9); g.lineTo(46, -10); g.quadraticCurveTo(60, -12, 55, 1); g.stroke();
+
+      // --- mast + bowsprit ---
       g.strokeStyle = '#1a120a'; g.lineWidth = 3;
-      g.beginPath(); g.moveTo(0, 2); g.lineTo(0, -46); g.stroke();
+      g.beginPath(); g.moveTo(0, -8); g.lineTo(0, MAST); g.stroke();
+      g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(46, -10); g.lineTo(70, -16); g.stroke();   // bowsprit spar off the prow
 
-      // sail (a warm-lit triangle billowing toward the sun)
+      // --- mainsail: a big warm-lit billow toward the sun ---
       g.beginPath();
-      g.moveTo(2, -44);
-      g.quadraticCurveTo(30 + flut, -30, 26 + flut, -6);
-      g.lineTo(2, -6);
+      g.moveTo(3, MAST + 8);
+      g.quadraticCurveTo(50 + flut, -56, 42 + flut, -14);
+      g.lineTo(3, -12);
       g.closePath();
-      const sg = g.createLinearGradient(2, -44, 28, -6);
-      sg.addColorStop(0, '#f4ead0');
-      sg.addColorStop(1, '#caa06a');
+      const sg = g.createLinearGradient(3, MAST, 46, -12);
+      sg.addColorStop(0, '#f6ecd2'); sg.addColorStop(1, '#c9a069');
       g.fillStyle = sg; g.fill();
-      // shaded back sail
-      g.beginPath();
-      g.moveTo(-2, -44);
-      g.quadraticCurveTo(-20 + flut, -28, -18 + flut, -8);
-      g.lineTo(-2, -8);
-      g.closePath();
-      g.fillStyle = '#8a6a44'; g.fill();
+      g.strokeStyle = 'rgba(150,110,60,0.45)'; g.lineWidth = 1; g.stroke();
 
-      // pennant at the masthead
+      // --- foresail / jib: a forward triangle out to the bowsprit ---
+      g.beginPath();
+      g.moveTo(2, MAST + 20);
+      g.quadraticCurveTo(44 + flut, -42, 68 + flut, -15);
+      g.lineTo(48, -11);
+      g.closePath();
+      const jg = g.createLinearGradient(2, MAST + 10, 68, -12);
+      jg.addColorStop(0, '#efe3c6'); jg.addColorStop(1, '#bf9760');
+      g.fillStyle = jg; g.fill();
+
+      // --- shaded aft sail, catching no sun ---
+      g.beginPath();
+      g.moveTo(-3, MAST + 12);
+      g.quadraticCurveTo(-28 + flut, -48, -24 + flut, -14);
+      g.lineTo(-3, -12);
+      g.closePath();
+      g.fillStyle = '#7c5e3c'; g.fill();
+
+      // pennant streaming from the masthead
       g.fillStyle = '#e05648';
       g.beginPath();
-      g.moveTo(0, -46);
-      g.lineTo(14 + flut * 2, -43);
-      g.lineTo(0, -40);
+      g.moveTo(0, MAST); g.lineTo(17 + flut * 2, MAST + 3); g.lineTo(0, MAST + 6);
       g.closePath(); g.fill();
-
-      // hull - dark walnut silhouette with a lit top edge
-      g.beginPath();
-      g.moveTo(-34, -6);
-      g.lineTo(34, -6);
-      g.quadraticCurveTo(26, 12, 0, 13);
-      g.quadraticCurveTo(-26, 12, -34, -6);
-      g.closePath();
-      const hg = g.createLinearGradient(0, -6, 0, 13);
-      hg.addColorStop(0, '#3a2817');
-      hg.addColorStop(1, '#1a120a');
-      g.fillStyle = hg; g.fill();
-      // ember rim light on the gunwale
-      g.strokeStyle = 'rgba(255,154,60,0.85)'; g.lineWidth = 2;
-      g.beginPath(); g.moveTo(-34, -6); g.lineTo(34, -6); g.stroke();
     }
     return true;
   }

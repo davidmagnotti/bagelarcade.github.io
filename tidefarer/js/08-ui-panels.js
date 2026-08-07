@@ -473,6 +473,13 @@ function updateMountBtn(){
       ab.classList.toggle('cooldown', recovering && !canRestrike);
       ab.classList.toggle('cancel',   recovering &&  canRestrike);
     }
+    // DEFLECT / parry - the third combat button, once the turning is learned. Grays during
+    // its brief recovery and lights back up the instant it's ready to time to the next blow.
+    const cb=document.getElementById('deflectBtn');
+    if(cb){
+      cb.style.display = (hide || !(P.unlocked && P.unlocked.parry))?'none':'';
+      cb.classList.toggle('cooldown', (P.deflectCd||0)>0 || (P.rollT||0)>0);
+    }
   }
   const btn=document.getElementById('mountBtn'); if(!btn) return;
   const show = isTouch && ownsMount() && !G.interior && !(typeof inDungeon==='function' && inDungeon()) && G.state==='play' && !P.dead;

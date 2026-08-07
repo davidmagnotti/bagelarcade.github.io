@@ -132,8 +132,9 @@ function frame(ts){
   }
   updatePlayer(dt);
   updateNPCs(dt);
-  updateMobs(dt);
-  updateProjs(dt);
+  // A conversation holds the fight: while a dialog is open, foes and their shots freeze
+  // so nothing carves you up mid-sentence (the world, NPCs and ambience still breathe).
+  if(!dlg.open){ updateMobs(dt); updateProjs(dt); }
   updateWorld(dt);
   WX.update(dt); Music.update(); Amb.update(dt); updateBossUI(); ambientFX(dt); updateGulls(dt);
   G.flash=Math.max(0,G.flash-raw*1.6);
@@ -186,11 +187,12 @@ function boot(){
   for(let i=0;i<6;i++) G.clouds.push({x:Math.random()*MAPW, y:Math.random()*MAPH,
     vx:rnd(0.25,0.5), vy:rnd(-0.12,0.12), r:rnd(48,90)});
   pressable(document.getElementById('dodgeBtn'), ()=>{ tryRoll(); });
+  { const _db=document.getElementById('deflectBtn'); if(_db) pressable(_db, ()=>{ if(typeof tryDeflect==='function') tryDeflect(); }); }
   buildHotbar(); refreshUI();
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
-    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather (time it to an enemy\'s blow to parry) · <b>⤸</b> - dodge roll · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> + <b>Space</b> · <b>Ctrl</b>/<b>L</b> dodge · time an attack to a foe\'s blow to <b>parry</b> · <b>E</b> interact · in dialog, <b>number keys</b> pick a reply · <b>1-2/4</b> hotbar · <b>gamepad supported</b>';
+    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>◆</b> - deflect (time it to a foe\'s blow) · <b>green button</b> - talk, fish, harvest'
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> · <b>Space</b>/<b>K</b> attack · <b>Ctrl</b>/<b>L</b> dash · <b>O</b> deflect (time it to a foe\'s blow) · <b>E</b> interact · in dialog, <b>Enter</b>/<b>number keys</b> · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
