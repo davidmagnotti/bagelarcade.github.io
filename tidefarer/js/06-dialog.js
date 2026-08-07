@@ -617,6 +617,19 @@ function buildDialogContent(npc){
   // kit is done (bladeoath offered or accepted), a single choice accepts, teaches,
   // AND completes it - so the guard is his in one conversation and the King unlocks.
   // If the newcomer arrives with no blade yet, he sends them to Bram to be armed first.
+  // You kept your craft through the wreck, so Rask has nothing to teach - he clocks it,
+  // hands you a tonic, and his oath-quest resolves. The isle's training is a refresher now.
+  if(npc.id==='rask' && (P.unlocked&&P.unlocked.parry) && qs('bladeoath')!=='done' &&
+     (qs('bladeoath')==='avail' || qs('bladeoath')==='active')){
+    P.quests.bladeoath='done';
+    if(typeof give==='function') give('potion',1);
+    if(typeof questReadySweep==='function') questReadySweep();
+    if(typeof updateQuestUI==='function') updateQuestUI();
+    if(typeof autoSave==='function') autoSave();
+    setDialog('<i>Rask watches you shift your weight a moment, and grunts - almost approving.</i> “…You already turn a blade like you were born to it. Whatever the sea took, it left THAT in your hands - nothing here for me to teach.” <i>He tosses you a small flask.</i> “Take a tonic for the road, and go put that steel to use.”',
+      shopButtons(npc,[{label:'My thanks', ghost:true, fn:closeDialog}]));
+    return;
+  }
   if(npc.id==='rask' && !(P.unlocked&&P.unlocked.parry) && qs('bladeoath')!=='done'){
     if(qs('bladeoath')==='avail' || qs('bladeoath')==='active'){
       const drilling = !!P.parryDrill;
