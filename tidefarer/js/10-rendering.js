@@ -528,6 +528,38 @@ function render(){
     } else if(pt.glow){
       cx.fillStyle=pt.color; cx.beginPath(); cx.arc(s.x,s.y-6,pt.size,0,TAU); cx.fill();
       cx.globalAlpha*=0.35; cx.beginPath(); cx.arc(s.x,s.y-6,pt.size*2.6,0,TAU); cx.fill();
+    } else if(pt.slash){
+      // a world-space crescent swept along the swing's aim - the blade's arc given
+      // presence in the world, not just on the little sprite. Orientation is read from
+      // a second projected point so it tracks the iso camera; the visible arc WIPES from
+      // the trailing edge to the leading edge as it expands and fades (a real cut, not a
+      // static shape). Spawned by slashArc() in js/52-combat-flourish.js.
+      const s2=worldToScreen(pt.x+pt.dx,pt.y+pt.dy);
+      const ang=Math.atan2(s2.y-s.y, s2.x-s.x);
+      const pr=1-pt.life/pt.max, R=pt.reach*20*(0.75+0.5*pr);
+      const a0=-pt.wide, lead=a0+2*pt.wide*Math.min(1,pr*1.4);
+      cx.save(); cx.translate(s.x,s.y-8); cx.rotate(ang); cx.scale(1,0.8);
+      cx.lineCap='round'; cx.globalAlpha=clamp(pt.life/pt.max,0,1)*0.9;
+      cx.strokeStyle=pt.color; cx.lineWidth=pt.lw*(1.05-0.55*pr);
+      cx.beginPath(); cx.arc(0,0,R,a0,lead); cx.stroke();
+      cx.globalAlpha*=0.55; cx.strokeStyle='#ffffff'; cx.lineWidth=Math.max(1,pt.lw*0.35);
+      cx.beginPath(); cx.arc(0,0,R*1.05,a0,lead); cx.stroke();
+      cx.restore();
+    } else if(pt.spark){
+      // a crisp impact star at the point a blow lands - a hot core with radiating glints
+      // that flare out and snap shut. The directional debris streaks are plain particles
+      // (spawned alongside in hitSpark); this is the flash that reads as "connect".
+      const pr=1-pt.life/pt.max, r=pt.size*(1+pr*0.9);
+      cx.save(); cx.translate(s.x,s.y-8);
+      cx.globalAlpha=clamp(pt.life/pt.max,0,1);
+      cx.strokeStyle=pt.color; cx.lineCap='round'; cx.lineWidth=2.2*(1-pr)+0.6;
+      cx.beginPath();
+      cx.moveTo(-r,0); cx.lineTo(r,0); cx.moveTo(0,-r*0.7); cx.lineTo(0,r*0.7);
+      cx.moveTo(-r*0.5,-r*0.4); cx.lineTo(r*0.5,r*0.4);
+      cx.moveTo(-r*0.5, r*0.4); cx.lineTo(r*0.5,-r*0.4);
+      cx.stroke();
+      cx.fillStyle='#fff'; cx.beginPath(); cx.arc(0,0,Math.max(1,r*0.2),0,TAU); cx.fill();
+      cx.restore();
     } else {
       cx.fillStyle=pt.color; cx.fillRect(s.x-pt.size/2, s.y-pt.size/2, pt.size, pt.size);
     }
