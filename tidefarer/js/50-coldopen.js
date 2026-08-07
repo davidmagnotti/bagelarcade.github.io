@@ -196,7 +196,7 @@
     // TEACH FIRST, then fight. Two quick PAUSED captions explain the mechanics with no
     // foes on the deck yet - so nothing swarms you while you're reading - then the waves begin.
     CO.phase='teach';
-    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> ('+(isT()?'the <b>⚔</b> button':'Space / K')+'), <b>dash</b> their lunges ('+(isT()?'<b>⤸</b>':'Ctrl / L')+'), and <b>deflect</b> a blow ('+(isT()?'<b>◆</b>':'the O key')+').', 6000, {pause:true, onDone:startGuide});
+    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> ('+(isT()?'the <b>⚔</b> button':'Space / K')+'), <b>dash</b> their lunges ('+(isT()?'<b>⤸</b>':'Ctrl / L')+'), and <b>parry</b> a blow ('+(isT()?'<b>◆</b>':'the O key')+').', 6000, {pause:true, onDone:startGuide});
   }
   function isT(){ return (typeof isTouch!=='undefined') && isTouch; }
 
@@ -244,6 +244,10 @@
   function guideTick(dt){
     if(CO.phase!=='guide' || !CO.guide) return;
     var g=CO.guide;
+    var s0=GUIDE_STEPS[g.i];
+    // While teaching a DASH step, keep the dash off cooldown so the lesson never stalls on
+    // the longer base cooldown - the player can always dash the instant they're told to.
+    if(s0 && s0.act==='dash') P.rollCd=0;
     if(g.lockT>0){ g.lockT-=dt; g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0); return; }
     var s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
     var did=false;

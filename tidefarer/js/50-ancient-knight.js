@@ -40,8 +40,8 @@ var LESSONS = [
     done:'Twice-quick. Few living feet manage it.',
     // two dash-starts inside a short window = a chained dash
     check:function(D){ var t=D.dashTimes; return t.length>=2 && (t[t.length-1]-t[t.length-2]) < 0.85; } },
-  { key:'deflect', title:'DEFLECT',
-    hint:function(){ return 'Lesson three - <b>DEFLECT</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ deflect</b> button':'press <b>O</b> (or attack)')+' <b>the instant my blow reaches you</b> to turn it aside. Timing, not flailing - a blade well-met needs no shield.'; },
+  { key:'deflect', title:'PARRY',
+    hint:function(){ return 'Lesson three - <b>PARRY</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ parry</b> button':'press <b>O</b> (or attack)')+' <b>the instant my blow reaches you</b> to turn it aside. Timing, not flailing - a blade well-met needs no shield.'; },
     done:'Turned clean. That is the whole of it.',
     // hands-on: driven by the throw-cycle in updateKnightDrill (parry the knight's strike)
     check:function(D){ return !!D._deflected; } },
@@ -117,7 +117,7 @@ function finishKnightDrill(){
     '• <b>Cancel</b> - '+(isTouchDev()?'attack, then dash':'attack, then dash (Ctrl / L)')+' to break a swing\'s recovery.<br>'+
     '• <b>Chain</b> - dash again mid-cooldown to keep moving (costs stamina).<br>'+
     '• <b>Re-strike</b> - '+(isTouchDev()?'tap attack again quickly':'tap attack again faster than the rhythm')+' to cut your recovery short (costs stamina).<br>'+
-    '• <b>Deflect</b> - '+(isTouchDev()?'time the <b>◆</b> button':'press <b>O</b> (or time a strike)')+' to an incoming blow to <b>turn it aside</b>, and it <b>refunds stamina</b>.<br>'+
+    '• <b>Parry</b> - '+(isTouchDev()?'time the <b>◆</b> button':'press <b>O</b> (or time a strike)')+' to an incoming blow to <b>turn it aside</b>, and it <b>refunds stamina</b>.<br>'+
     '• A <b>perfect dodge</b> refunds stamina too - reading a blow pays for your next flourish.';
   var showCard = function(){ if(typeof storyCard==='function') storyCard(msg,{label:'Move like water'}); else toastMsg(msg, 9000); };
   // if the finish lands mid-dialogue, hold the card until it closes (mirrors unlockDash)

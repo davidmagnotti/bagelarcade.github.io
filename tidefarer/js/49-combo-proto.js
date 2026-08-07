@@ -215,7 +215,7 @@
     if(window.COMBO.on){ ensureStam(); }
     if(b) b.textContent='Combo system: '+(window.COMBO.on?'ON':'off');
     syncStamBar();
-    if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & deflect live':'off'));
+    if(typeof note==='function') note('Combo prototype '+(window.COMBO.on?'ON - stamina, cancels & parry live':'off'));
   }
   window.toggleCombo=toggleCombo;
 
@@ -230,7 +230,7 @@
         P.unlocked.melee=true; P.swordTier=Math.max(P.swordTier||0,1);
         P.story=P.story||{}; P.story.flowLearned=1;
         if(typeof buildHotbar==='function') buildHotbar();
-        if(typeof note==='function') note('The flow learned (stamina, cancels, chain & deflect)');
+        if(typeof note==='function') note('The flow learned (stamina, cancels, chain & parry)');
       }],
       ['Refill stamina', function(){ if(ensureStam()){ P.stam=P.stamMax; if(typeof note==='function') note('Stamina refilled'); } }],
     ]]);

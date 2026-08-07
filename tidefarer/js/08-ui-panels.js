@@ -468,7 +468,9 @@ function updateMountBtn(){
       const dashing = (P.rollT||0)>0;
       const onCd     = (P.rollCd||0)>0;
       const freeReady = !dashing && (!onCd || (P.unlocked && P.unlocked.dash2 && !P.dashChain));
-      const canChain  = !dashing && onCd && _comboLive && (P.stam||0) >= chainCost;  // mid-cooldown, costs stamina
+      // a stamina dash only chains when it CANCELS a swing (still in attack recovery) - so the
+      // green "costs stamina" state shows only then; a plain cooldown with nothing to cancel is gray.
+      const canChain  = !dashing && onCd && _comboLive && (P.atkCd||0)>0 && P.weapon==='melee' && (P.stam||0) >= chainCost;
       db.classList.toggle('cooldown', !freeReady && !canChain);
       db.classList.toggle('cancel',   !freeReady &&  canChain);
     }

@@ -191,8 +191,8 @@ function boot(){
   buildHotbar(); refreshUI();
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
-    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>◆</b> - deflect (time it to a foe\'s blow) · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> · <b>Space</b>/<b>K</b> attack · <b>Ctrl</b>/<b>L</b> dash · <b>O</b> deflect (time it to a foe\'s blow) · <b>E</b> interact · in dialog, <b>Enter</b>/<b>number keys</b> · <b>gamepad supported</b>';
+    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>◆</b> - parry (time it to a foe\'s blow) · <b>green button</b> - talk, fish, harvest'
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> · <b>Space</b>/<b>K</b> attack · <b>Ctrl</b>/<b>L</b> dash · <b>O</b> parry (time it to a foe\'s blow) · <b>E</b> interact · in dialog, <b>Enter</b>/<b>number keys</b> · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;

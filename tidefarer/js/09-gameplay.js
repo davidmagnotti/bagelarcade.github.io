@@ -695,7 +695,7 @@ function unlockParry(msg){
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> It\'s all <b>timing</b>. Against a <b>melee</b> foe, a red <b style="color:#ff5a4a">!</b> builds as it winds up, then flares <b style="color:#fff">WHITE</b> - <b>deflect on that white flash</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn the blow and leave the striker staggered wide open. You can deflect a <b>thrown shot</b> just as well - an arrow, a bone, a bomb: it <b style="color:#fff">flares WHITE</b> as it closes, so <b>deflect on the incoming shot</b> and you\'ll bat it <b>right back at whoever threw it</b>. (A well-timed slash still turns a blow too; a hair early or late is fine.)';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> It\'s all <b>timing</b>. Against a <b>melee</b> foe, a red <b style="color:#ff5a4a">!</b> builds as it winds up, then flares <b style="color:#fff">WHITE</b> - <b>parry on that white flash</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn the blow and leave the striker staggered wide open. You can parry a <b>thrown shot</b> just as well - an arrow, a bone, a bomb: it <b style="color:#fff">flares WHITE</b> as it closes, so <b>parry on the incoming shot</b> and you\'ll bat it <b>right back at whoever threw it</b>. (A well-timed slash still turns a blow too; a hair early or late is fine.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -757,7 +757,7 @@ function beginParryDrill(){
   P.parryDrill={count:0, need:3, phase:'rest', t:1.0, proj:null};
   rask.drillWarn=0;
   if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s billet - three times');
-  toast('Rask <b>pitches a wooden billet</b> at you: watch it close, and <b>deflect as it reaches you</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn it back. A white ring flares on the billet at the instant to catch it. (A well-timed <b>slash</b> turns it too.) <b>Parry 3.</b>',7000);
+  toast('Rask <b>pitches a wooden billet</b> at you: watch it close, and <b>parry as it reaches you</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn it back. A white ring flares on the billet at the instant to catch it. (A well-timed <b>slash</b> turns it too.) <b>Parry 3.</b>',7000);
 }
 // Rask hurls a practice billet at the student. It's a normal enemy projectile, so the
 // existing shot-parry (updateProjs) turns it back and the shot-tell (drawProj) flares
@@ -817,7 +817,7 @@ function finishParryDrill(){
     document.getElementById('dialog').style.display='block';
     document.getElementById('dname').textContent = (typeof npcDisplayName==='function')? npcDisplayName(rask) : rask.name;
     if(typeof drawPortrait==='function') drawPortrait(rask);
-    setDialog('<i>Rask lowers his billet and gives a short, satisfied nod.</i> “Nice work - that\'s the turning. It\'s all in the eye: when a foe winds up, a red mark builds and then flares <b>white</b> - that flash is your moment. <b>Deflect</b> then ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') and you\'ll catch the blow on your blade, turn it aside, and leave the striker wide open - a clean catch even feeds your <b>vigor</b> back. A thrown shot\'s the same: deflect on the white flash and you\'ll bat it right back the way it came. A slash on the beat still turns a blow - but the deflect is surer, and costs you no swing.”',
+    setDialog('<i>Rask lowers his billet and gives a short, satisfied nod.</i> “Nice work - that\'s the turning. It\'s all in the eye: when a foe winds up, a red mark builds and then flares <b>white</b> - that flash is your moment. <b>Parry</b> then ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') and you\'ll catch the blow on your blade, turn it aside, and leave the striker wide open - a clean catch even feeds your <b>vigor</b> back. A thrown shot\'s the same: parry on the white flash and you\'ll bat it right back the way it came. A slash on the beat still turns a blow - but the parry is surer, and costs you no swing.”',
       [{label:'Got it', ghost:true, fn:closeDialog}]);
   }
 }

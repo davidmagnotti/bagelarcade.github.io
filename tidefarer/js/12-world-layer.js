@@ -7699,7 +7699,10 @@ function tryRoll(){
     if((m.lunge||0)>0 && md<2.5){ imminent=true; break; }
   }
   if(!imminent && G.projs){ for(const p of G.projs){ if(p.from==='mob' && dist(P.x,P.y,p.x,p.y)<1.7){ imminent=true; break; } } }
-  P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?0.62:1.0; buzz(9);
+  // A longer base cooldown makes the free dash a deliberate beat - so paying stamina to
+  // CANCEL it (dash again now) reads as a real burst. A perfect dodge and Swiftstep still
+  // cut it right back down, so skilled play stays fast.
+  P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?1.1:1.8; buzz(9);
   Snd.noise(0.16,0.05,600,0.7);
   if(imminent){
     P.empower=1; P.empowerT=3;
