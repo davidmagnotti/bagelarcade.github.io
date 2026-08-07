@@ -885,16 +885,13 @@ function damageMob(m,dmg,knock,skill){
   // still gates WHEN even an arrow can land: only while it's discharged, above.)
   if(m.stormeye && skill!=='archery'){
     m.hurtT=0.1;
-    if(Math.random()<0.35) addFloat('BOW ONLY', m.x, m.y-2.2, '#bfe8ff');
-    if(!P._eyeBowHint){ P._eyeBowHint=1;
-      toast('Blade and bolt scatter off the Storm-Eye - <b style="color:#bfe8ff">only your bow can strike it</b>. Wait for it to DISCHARGE, then loose an arrow.',5600); }
+    // the terse 'BOW ONLY' float carries the read - no tutorial popup
+    if(Math.random()<0.45) addFloat('BOW ONLY', m.x, m.y-2.2, '#bfe8ff');
     return;
   }
   if(skill==='archery' && (m.kind==='skeleton'||m.kind==='archer'||m.kind==='gravelord'||m.kind==='boss')){
     dmg=Math.round(dmg*1.75);
-    addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');
-    if(!P._boneHint){ P._boneHint=1;
-      toast('Old bones splinter - <b style="color:#ffd76a">arrows deal heavy bonus damage to skeletons!</b>',5000); }
+    addFloat('WEAK!', m.x, m.y-2.1, '#ffd76a');   // the 'WEAK!' float says it; no tutorial popup
   }
   let crit=false;
   // Deadeye perk (archery L5): sharply higher crit chance with the bow
