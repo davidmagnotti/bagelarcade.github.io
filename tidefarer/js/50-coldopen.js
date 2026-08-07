@@ -104,8 +104,8 @@
     var m = (typeof spawnMob==='function') ? spawnMob('minotaur', x, y, false) : null;
     if(!m) return null;
     m.hp=m.maxhp=999; m.dmg=10; m.speed=Math.min(m.speed||2,2.2); m.aggro=30; m.r=1.1;
-    m.boss=true; m.bigBoss=true; m.title='THE DEEP MAW'; m.subtitle='IT RISES TO MEET YOU';
-    m.name='The Deep Maw'; m.coldFoe='deepmaw'; m.coldBoss=1;
+    m.boss=true; m.bigBoss=true; m.title=null; m.subtitle=null;
+    m.name=''; m.coldFoe='deepmaw'; m.coldBoss=1;   // no name - it is only a shape in the dark
     return m;
   }
 
@@ -183,9 +183,66 @@
     // TEACH FIRST, then fight. Two quick PAUSED captions explain the mechanics with no
     // foes on the deck yet - so nothing swarms you while you're reading - then the waves begin.
     CO.phase='teach';
-    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> (Space / K), <b>dash</b> their lunges (Ctrl / L), and time <b>O</b> to <b>deflect</b> a blow.', 5600, {pause:true, onDone:function(){
-      coCaption('<b>WEAVE</b> it: <b>attack → dash</b> cancels your recovery, <b>dash → dash</b> chains, a <b>deflect</b> turns a blow. Mind the <b>stamina</b> bar under your health - it fuels the flow, and a deflect or perfect dodge refunds it. Now - <b>cut them down.</b>', 6800, {pause:true, onDone:startWaves});
-    }});
+    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> ('+(isT()?'the <b>⚔</b> button':'Space / K')+'), <b>dash</b> their lunges ('+(isT()?'<b>⤸</b>':'Ctrl / L')+'), and <b>deflect</b> a blow ('+(isT()?'<b>◆</b>':'the O key')+').', 6000, {pause:true, onDone:startGuide});
+  }
+  function isT(){ return (typeof isTouch!=='undefined') && isTouch; }
+
+  /* A hands-on guided lesson - dash, then slash, then dash again - highlighting each input
+     and WAITING for you to actually press it, so you learn the weave by doing all three.
+     No foes on the deck yet, so nothing rushes you. Cleared -> the waves begin. */
+  var GUIDE_STEPS=[
+    {act:'dash',  html:'<b>DASH</b> '+(isT()?'- tap <b>⤸</b>':'- press <b>Ctrl</b> or <b>L</b>'),           btn:'dodgeBtn'},
+    {act:'slash', html:'Now <b>SLASH</b> '+(isT()?'- tap <b>⚔</b>':'- press <b>Space</b> or <b>K</b>'),       btn:'attackBtn'},
+    {act:'dash',  html:'<b>DASH again</b> '+(isT()?'- tap <b>⤸</b>':'- Ctrl / L')+' — that\'s the weave',       btn:'dodgeBtn'},
+  ];
+  function ensureGuideCSS(){
+    if(document.getElementById('coGuideCSS')) return;
+    var st=document.createElement('style'); st.id='coGuideCSS';
+    st.textContent='#coGuide{position:fixed;left:0;right:0;bottom:20%;z-index:59;display:none;justify-content:center;pointer-events:none;}'+
+      '#coGuide .in{padding:10px 20px;border-radius:12px;background:rgba(14,8,24,.86);border:1px solid rgba(150,110,200,.5);'+
+      'color:#efe6d8;font-family:"Palatino Linotype",Palatino,Georgia,serif;font-size:17px;text-shadow:0 1px 3px #000;box-shadow:0 6px 24px rgba(0,0,0,.5);}'+
+      '#coGuide .in b{color:#8fe8cf;}'+
+      '.abtn.coGuideHi{animation:coPulse 0.8s ease-in-out infinite;outline:3px solid rgba(143,232,207,.95);}'+
+      '@keyframes coPulse{0%,100%{box-shadow:0 0 0 0 rgba(143,232,207,.0),inset 0 1px 0 rgba(240,226,192,.08);}50%{box-shadow:0 0 18px 5px rgba(143,232,207,.75);}}';
+    document.head.appendChild(st);
+  }
+  var guideEl=null;
+  function showGuidePrompt(html){ ensureGuideCSS();
+    if(!guideEl){ guideEl=document.createElement('div'); guideEl.id='coGuide'; guideEl.innerHTML='<div class="in"></div>'; document.body.appendChild(guideEl); }
+    guideEl.querySelector('.in').innerHTML=html; guideEl.style.display='flex';
+  }
+  function hideGuidePrompt(){ if(guideEl) guideEl.style.display='none'; }
+  function hiliteBtn(id,on){ var e=document.getElementById(id); if(e) e.classList.toggle('coGuideHi', !!on); }
+  function clearHilites(){ ['dodgeBtn','attackBtn','deflectBtn'].forEach(function(id){ hiliteBtn(id,false); }); }
+  function startGuide(){
+    CO.phase='guide';
+    CO.guide={ i:0, prevRoll:(P.rollT||0), prevAtk:(P.atkCd||0), lockT:0.35 };
+    presentGuideStep();
+  }
+  function presentGuideStep(){
+    var g=CO.guide, s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
+    showGuidePrompt(s.html); clearHilites(); hiliteBtn(s.btn,true);
+    g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0); g.lockT=0.3;
+  }
+  function endGuide(){
+    hideGuidePrompt(); clearHilites(); CO.guide=null;
+    coCaption('Good - <b>cancel</b> and <b>chain</b>, just like that. Mind the <b>stamina</b> bar under your health. Now - <b>cut them down.</b>', 4200, {pause:false, onDone:startWaves});
+  }
+  function guideTick(dt){
+    if(CO.phase!=='guide' || !CO.guide) return;
+    var g=CO.guide;
+    if(g.lockT>0){ g.lockT-=dt; g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0); return; }
+    var s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
+    var did=false;
+    if(s.act==='dash'){ if((P.rollT||0) > (g.prevRoll||0)+0.01 && (P.rollT||0)>0.1) did=true; }
+    else if(s.act==='slash'){ if((P.atkCd||0) > (g.prevAtk||0)+0.1) did=true; }
+    g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0);
+    if(did){
+      if(typeof addFloat==='function') addFloat('✓', P.x, P.y-2.6, '#bfe0ff', 1.4);
+      if(typeof Snd!=='undefined' && Snd.crit) Snd.crit();
+      g.i++;
+      if(g.i>=GUIDE_STEPS.length) endGuide(); else presentGuideStep();
+    }
   }
 
   /* A few escalating rounds of brine-crawlers, not one wave. Each round spawns in a
@@ -214,12 +271,13 @@
     if(CO.phase==='defeat'||CO.phase==='done') return;
     CO.phase='boss'; CO.bossT=0; CO.bossHits=0;
     spawnDeepMaw(22,29);   // close in front of the hero (spawn ~22,34) so it looms in view
-    if(typeof banner==='function') banner('THE DEEP MAW','IT RISES TO MEET YOU');
+    // no name, no title-card intro - it is just a vast cold shape rising from the black water
     if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
     if(typeof G!=='undefined'){ G.shake=0.9; G.slowmo=Math.max(G.slowmo||0,1.1); }
-    coCaption('The crawlers were only its fingers. The black water heaves - and the <b>Deep Maw</b> rises out of it, vast and cold, filling the deck between you and the sky.', 4500, {pause:false});
-    // the fight is unwinnable - resolve on a timer (mashers trip it sooner; see damageMob)
-    setTimeout(function(){ if(CO.phase==='boss') triggerDefeat(); }, 6500);
+    coCaption('The crawlers were only its fingers. The black water heaves, and something vast and cold rises out of it - filling the deck between you and the sky. <b>Throw everything you have at it.</b>', 4500, {pause:false});
+    // the fight is unwinnable - but let the player really wail on it first (see damageMob for
+    // the hit count). A long safety timer resolves it even for a passive player.
+    setTimeout(function(){ if(CO.phase==='boss') triggerDefeat(); }, 14000);
   }
 
   function triggerDefeat(){ if(CO.phase==='defeat'||CO.phase==='done') return; CO.phase='defeat'; coldOpenDefeat(); }
@@ -265,7 +323,8 @@
   function tick(dt){
     if(!ON() || typeof G==='undefined' || G.worldId!=='deck') return;
     if(P && P.hp>0 && P.hp<P.maxhp) P.hp=P.maxhp;   // unlimited health - the loss is scripted, not fought
-    if(CO.phase==='boss'){ CO.bossT=(CO.bossT||0)+(dt||0); if(CO.bossT>=7) triggerDefeat(); }
+    if(CO.phase==='guide') guideTick(dt);
+    if(CO.phase==='boss'){ CO.bossT=(CO.bossT||0)+(dt||0); if(CO.bossT>=15) triggerDefeat(); }
   }
 
   /* ========================= custom art (wrappers) ========================= */
@@ -400,7 +459,7 @@
       if(ON() && m && m.coldBoss){
         m.hp=m.maxhp; m.hurtT=Math.max(m.hurtT||0,0.12); CO.bossHits=(CO.bossHits||0)+1;
         if((CO.bossHits%2)===1 && typeof addFloat==='function') addFloat('NO EFFECT', m.x, m.y-2.4, '#b98fe0', 1.0);
-        if(CO.phase==='boss' && CO.bossHits>=5 && (CO.bossT||0)>=2.0) triggerDefeat();
+        if(CO.phase==='boss' && CO.bossHits>=18 && (CO.bossT||0)>=3.0) triggerDefeat();   // a real flurry first
         return;
       }
       return _damageMob.apply(this, arguments);

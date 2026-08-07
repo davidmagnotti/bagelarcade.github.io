@@ -36,8 +36,8 @@
     stamMax:      100,
     regenDelay:   0.7,    // seconds of NOT spending before stamina starts coming back
     regenRate:    45,     // stamina per second once regen kicks in
-    atkCancel:  { window: 0.22, cost: 20 },   // re-swing once recovery has <= window left
-    dashChain:  { cost: 25 },                 // stamina per chained (2nd+) dash
+    atkCancel:  { window: 0.22, cost: 14 },   // re-swing once recovery has <= window left
+    dashChain:  { cost: 14 },                 // stamina per chained (2nd+) dash - kept cheap so combos flow
     riposteRefund: 60,    // stamina handed back on a perfect-dodge riposte
     deflectRefund: 45,    // stamina handed back on a timed DEFLECT (a turned blow)
   };
