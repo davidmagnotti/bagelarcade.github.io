@@ -93,14 +93,15 @@ function buildHotbar(){
     hb.appendChild(s);
   });
 }
-const QUICK_ITEMS=['potion','elixir','bread','cookedfish','boarmeat','coconut','apple','fish','wheat'];
+const QUICK_ITEMS=['potion','elixir','vigor','bread','cookedfish','boarmeat','coconut','apple','fish','wheat'];
 function cycleQuickItem(){
   const cur=QUICK_ITEMS.indexOf(P.quickItem||'potion');
   for(let i=1;i<=QUICK_ITEMS.length;i++){
     const k=QUICK_ITEMS[(cur+i)%QUICK_ITEMS.length];
     if((P.inv[k]||0)>0 || k==='potion'){
       P.quickItem=k; buildHotbar();
-      toast('Quick slot: <b>'+ITEMS[k].name+'</b> \u00d7'+(P.inv[k]||0)+' <i>(heals '+ITEMS[k].heal+')</i>',2000);
+      const _eff = (ITEMS[k].heal!=null)? ' <i>(heals '+ITEMS[k].heal+')</i>' : (k==='vigor'? ' <i>(super stamina)</i>' : '');
+      toast('Quick slot: <b>'+ITEMS[k].name+'</b> \u00d7'+(P.inv[k]||0)+_eff,2000);
       Snd.pickup();
       hintOnce('quickswap','Tap the <b>\u21c4</b> badge (or press <b>R</b>) any time to swap the quick slot between tonics and food.');
       return;
@@ -124,6 +125,16 @@ function useItem(item){
     if(typeof refreshUI==='function') refreshUI();
     addFloat('+'+def.heal+' HP',P.x,P.y-1.4,'#7fe07f'); burst(P.x,P.y-0.6,'#e05648',8); Snd.pickup();
     buildHotbar(); refreshInvPanel();
+  }
+  else if(def.use==='vigor'){
+    // Super stamina: for 60s your stamina drains half as fast (49-combo-proto reads P.superStamT).
+    // Refills your wind on the spot so the boost is felt immediately.
+    take(item,1);
+    P.superStamT=60;
+    if(P.stamMax==null){ P.stamMax=(window.COMBO&&window.COMBO.cfg&&window.COMBO.cfg.stamMax)||100; }
+    P.stam=P.stamMax; P.stamRegenT=0;
+    addFloat('VIGOR - stamina x2',P.x,P.y-1.4,'#8fe8cf'); burst(P.x,P.y-0.6,'#3fdca8',10); Snd.pickup&&Snd.pickup();
+    buildHotbar(); refreshInvPanel(); if(typeof refreshUI==='function') refreshUI();
   }
   else if(def.use==='arrows'){
     if(!(P.unlocked&&P.unlocked.bow)){ toastErr('You\'ve no bow to fill a quiver for - not yet.'); return; }
@@ -473,6 +484,11 @@ function updateMountBtn(){
       ab.classList.toggle('cooldown', recovering && !canRestrike);
       ab.classList.toggle('cancel',   recovering &&  canRestrike);
     }
+    // The moment a cancel/chain actually fires (49-combo-proto stamps P._evCancel /
+    // P._evDashCancel = G.time), flash the button bright-green "open again" for a beat.
+    const _now = (typeof G!=='undefined')? G.time : 0;
+    if(ab) ab.classList.toggle('cancelFlash', (_now-(P._evCancel||-9)) >= 0 && (_now-(P._evCancel||-9)) < 0.32);
+    if(db) db.classList.toggle('cancelFlash', (_now-(P._evDashCancel||-9)) >= 0 && (_now-(P._evDashCancel||-9)) < 0.32);
     // DEFLECT / parry - the third combat button, once the turning is learned. Grays during
     // its brief recovery and lights back up the instant it's ready to time to the next blow.
     const cb=document.getElementById('deflectBtn');

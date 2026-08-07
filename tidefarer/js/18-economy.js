@@ -11,6 +11,22 @@ ITEMS.bread={name:'Fresh Bread', desc:'Restores 25 HP. Willa bakes it from 3 whe
 ITEMS.cookedfish={name:'Grilled Fish', desc:'Restores 20 HP.', use:'heal', heal:20};
 ITEMS.stew={name:'Hearth Stew', desc:'Restores 45 HP. A whole meal in a bowl.', use:'heal', heal:45};
 ITEMS.roast={name:'Roast Boar', desc:'Restores 42 HP. Rich, dark, and dripping.', use:'heal', heal:42};
+// Orin's Vigor Draught: for 60s your stamina drains half as fast (twice as long to run out),
+// so you can cancel and chain to your heart's content. Effect handled in useItem + 49-combo-proto.
+ITEMS.vigor={name:'Vigor Draught', desc:'For 60s your stamina lasts twice as long - chain and cancel freely.', use:'vigor'};
+// a teal, effervescent flask (distinct from the red Ember Tonic)
+if(typeof ICONS!=='undefined' && typeof makeCanvas==='function'){
+  ICONS.vigor=makeCanvas(40,40,(g)=>{
+    const T=Math.PI*2;
+    g.fillStyle='rgba(180,255,230,0.5)'; g.beginPath(); g.arc(20,23,11,0,T); g.fill(); g.fillRect(16,6,8,12);
+    g.fillStyle='#3fdca8'; g.beginPath(); g.arc(20,24,9,0,T); g.fill();
+    g.fillStyle='#bff6e2'; g.beginPath(); g.arc(20,24,9,Math.PI*1.05,Math.PI*1.6); g.fill();
+    g.fillStyle='#8a6238'; g.fillRect(15,4,10,5);
+    // rising bubbles
+    g.fillStyle='rgba(255,255,255,0.85)';
+    g.beginPath(); g.arc(17,20,1.7,0,T); g.arc(22,25,1.4,0,T); g.arc(20,16,1.2,0,T); g.fill();
+  });
+}
 ACH.prospector={t:'Prospector',d:'Pull 5 iron ore from the stone.'};
 ACH.pearldiver={t:'Pearl Diver',d:'Reel in a pearl.'};
 ACH.mastersmith={t:'Master Smith',d:'Wield the steel sword.'};
@@ -70,8 +86,16 @@ function brewMenu(npc){
   const tonic={mushroom:2, crystal:1};
   const great={potion:2, crystal:1, mushroom:1};
   const gooTonic={goo:3};
+  const vigor={mushroom:3};
   setDialog('“The counter\'s set and the crystals are humming. What shall we draw off the boil?”',
-    [{label:'Render slime goo (3 goo → 1 tonic)', fn:()=>{
+    [{label:'Brew a Vigor Draught (3 bluecap → 1 draught)', fn:()=>{
+        if(!canPay(vigor)){ setDialog('“Bring me <b>three bluecaps</b> and I\'ll set the vigor draught boiling - it keeps your legs under you when a fight runs long. '+costText(vigor)+'.”',
+          [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
+        pay(vigor); give('vigor',1); Snd.magic&&Snd.magic();
+        setDialog('“There - a <b>Vigor Draught</b>. Down it before a hard fight and your wind holds twice as long. Bring me three more caps whenever you want another.” <i>(+1 Vigor Draught)</i>',
+          [{label:'Brew more',fn:()=>brewMenu(npc)},{label:'Farewell',ghost:true,fn:closeDialog}]);
+      }},
+     {label:'Render slime goo (3 goo → 1 tonic)', fn:()=>{
         if(!canPay(gooTonic)){ setDialog('“Slime goo, of all things - but render <b>three globs</b> and the muck thickens into honest medicine. '+costText(gooTonic)+'.”',
           [{label:'Back',fn:()=>brewMenu(npc)}]); return; }
         pay(gooTonic); give('potion',1); Snd.magic();

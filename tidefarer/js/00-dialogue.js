@@ -673,9 +673,9 @@ const DIALOGUE = {
       doneText: "PIP! You found him! Thank you thank you thank you! Mama says these red drinks fix everything."
     },
     "mushrooms": {
-      brief: "Hm. You move like someone who has never once had to move fast. That will get you killed in the ruins. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I will grind them into a draught that quickens the blood. Then I will teach your feet the one lesson worth more than any blade.",
-      log: "Gather 3 bluecaps from the Whisperwood for Orin.",
-      doneText: "Bluecaps crushed, essence bound, and down it goes… there. <i>He walks you through it twice in the tower yard - a low push off the back foot, a breath of speed, and gone before the blow lands.</i> That is the DASH. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, washed up without even a name… I do not spend this old trick on just anyone. Take those quick feet down to Elder Maren - tell her old Orin says you're ready for the Hollow Spirit. A sword is only half of what a fighter owes their feet."
+      brief: "Ah - a new blade on the isle, and green as spring grass. Let old Orin do you a kindness before the ruins do you an unkindness. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I'll brew you a vigor draught: it keeps your wind long and your legs under you when a fight drags on. Bring me three caps any time you want another.",
+      log: "Gather 3 bluecaps from the Whisperwood for Orin's vigor draught.",
+      doneText: "Bluecaps crushed, essence bound, and… there. <i>He corks a small teal flask, still fizzing, and presses it into your hand.</i> A <b>Vigor Draught</b>. Down it before a hard fight and your stamina holds <b>twice as long</b> - cancel and chain to your heart's content. I brew them cheap for anyone with the sense to gather: three caps and I'll set another boiling. Now take that down to <b>Elder Maren</b> - tell her old Orin says you're ready for the Hollow Spirit."
     },
     "skeletons": {
       brief: "The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I'll give you a charm I've been saving for someone reckless.",

@@ -123,14 +123,22 @@
       'border:1px solid rgba(150,110,200,.35);box-shadow:0 6px 30px rgba(0,0,0,.5);'+
       'color:#efe6d8;font-family:"Palatino Linotype",Palatino,Georgia,serif;font-size:16px;'+
       'line-height:1.5;text-align:center;text-shadow:0 1px 3px #000;}'+
-      '#coCap .in b{color:#ffd7a0;} #coCap .in i{color:#c9b0ff;}';
+      '#coCap .in b{color:#ffd7a0;} #coCap .in i{color:#c9b0ff;}'+
+      '#coCap .tap{margin-top:9px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;'+
+      'color:#c9b0ff;opacity:.9;animation:coTapPulse 1.15s ease-in-out infinite;}'+
+      '@keyframes coTapPulse{0%,100%{opacity:.35;}50%{opacity:.95;}}';
     document.head.appendChild(st);
   }
+  // A story/teaching caption. PAUSED captions (opts.pause) hold the game and WAIT for you
+  // to tap / press a key - they show a "tap to continue" cue and never auto-advance out
+  // from under you (a long silent safety net only trips if you truly walk away). Ambient
+  // captions (pause:false) don't block; they fade on their own timer as before.
   function coCaption(html, dur, opts){
     opts=opts||{};
     ensureCapCSS();
     if(!capEl){ capEl=document.createElement('div'); capEl.id='coCap'; capEl.innerHTML='<div class="in"></div>'; document.body.appendChild(capEl); }
-    capEl.querySelector('.in').innerHTML = html;
+    var tapHint = opts.pause ? '<div class="tap">'+(isT()?'Tap to continue ▸':'Press Space / Enter ▸')+'</div>' : '';
+    capEl.querySelector('.in').innerHTML = html + tapHint;
     capEl.style.display='flex'; capEl.style.opacity='0';
     requestAnimationFrame(function(){ capEl.style.opacity='1'; });
     var wasPlay = (typeof G!=='undefined' && G.state==='play' && !G.paused);
@@ -146,7 +154,12 @@
       if(opts.onDone) opts.onDone();
     }
     function skip(e){ if(e&&e.preventDefault)e.preventDefault(); finish(); }
-    setTimeout(finish, dur||4000);
+    if(opts.pause){
+      // wait for the player - only a long fail-safe auto-advances (in case they set it down)
+      setTimeout(finish, Math.max(dur||4000, 45000));
+    } else {
+      setTimeout(finish, dur||4000);
+    }
     // allow click/key to skip after a short beat (so the opening tap doesn't blow past it)
     setTimeout(function(){ document.addEventListener('pointerdown', skip, true); window.addEventListener('keydown', skip, true); }, 600);
   }

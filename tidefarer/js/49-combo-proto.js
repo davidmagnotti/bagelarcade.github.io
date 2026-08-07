@@ -62,7 +62,10 @@
     return true;
   }
   function stamHas(n){ return (P.stam||0) >= n; }
-  function spend(n){ P.stam=Math.max(0,(P.stam||0)-n); P.stamRegenT=CFGP.regenDelay; }
+  // Orin's Vigor Draught (P.superStamT>0): stamina drains HALF as fast, so it lasts twice as
+  // long. We keep the gate costs (stamHas) at face value - the draught stretches the tank,
+  // it doesn't let you act on fumes - but the actual deduction is halved while it holds.
+  function spend(n){ if((P.superStamT||0)>0) n*=0.5; P.stam=Math.max(0,(P.stam||0)-n); P.stamRegenT=CFGP.regenDelay; }
   function refund(n){ P.stam=Math.min(P.stamMax||CFGP.stamMax,(P.stam||0)+n); }
 
   /* ---- little feedback helpers (reuse the game's own juice) ---- */
@@ -103,8 +106,9 @@
     ensureStam();
     var f=Math.max(0,Math.min(1,(P.stam||0)/(P.stamMax||CFGP.stamMax)));
     stamFill.style.width=(f*100)+'%';
-    // spent-red flash when too low for a cancel, teal otherwise
-    if((P.stam||0)<CFGP.atkCancel.cost) stamFill.style.background='linear-gradient(180deg,#e8b98f,#b8683a)';
+    // gold while Orin's Vigor Draught holds; spent-red when too low for a cancel; teal otherwise
+    if((P.superStamT||0)>0) stamFill.style.background='linear-gradient(180deg,#ffe6a0,#e0a63a)';
+    else if((P.stam||0)<CFGP.atkCancel.cost) stamFill.style.background='linear-gradient(180deg,#e8b98f,#b8683a)';
     else stamFill.style.background='linear-gradient(180deg,#8fe8cf,#2f9e86)';
   }
 
@@ -174,23 +178,27 @@
     };
   }
 
-  // tryRoll: CHAIN a dash mid-cooldown by spending stamina (present it to the
-  // original as a fresh, free dash). A FIRST dash off cooldown is free - only a
-  // chained dash (dashing again before the cooldown clears) costs stamina. The
-  // dash key is polled every frame while held, so we chain only on a fresh press,
-  // never while Ctrl/L is held down (touch taps are already discrete). Without
-  // stamina it falls through to the stock behaviour (single dash, or dash2's one
-  // chain). Also catch the perfect-dodge riposte and refund stamina for the read.
+  // tryRoll: CANCEL an attack by dashing out of its recovery, spending stamina to
+  // chain the dash even while the roll is still on cooldown (present it to the
+  // original as a fresh, free dash). This ONLY costs stamina when it's a genuine
+  // dash-CANCEL - you dash while still in a swing's recovery (P.atkCd>0). Plain
+  // repeated dashing with nothing to cancel never touches stamina: it just falls
+  // through to the stock dash, which respects its own cooldown for free. The dash
+  // key is polled every frame while held, so we chain only on a fresh press, never
+  // while Ctrl/L is held down (touch taps are already discrete). Also catch the
+  // perfect-dodge riposte and refund stamina for the read.
   if(typeof window.tryRoll==='function'){
     var _tryRoll=window.tryRoll;
     window.tryRoll=function(){
       var dashKeyNow = (typeof keys!=='undefined') && (keys['control'] || keys['l']);
       var heldSpam = dashKeyNow && ready() && P._dashKeyPrev;   // key held from a prior frame
-      if(ON() && ensureStam() && !heldSpam && P.unlocked && P.unlocked.dash &&
+      var cancelling = ready() && (P.atkCd||0)>0 && P.weapon==='melee';   // dashing out of a swing = a real cancel
+      if(ON() && ensureStam() && !heldSpam && cancelling && P.unlocked && P.unlocked.dash &&
          (P.rollT||0)<=0 && (P.rollCd||0)>0 && stamHas(CFGP.dashChain.cost)){
         spend(CFGP.dashChain.cost);
         P.rollCd=0; P.dashChain=0;   // hand the original a clean, chargeable dash
         if(typeof G!=='undefined') P._evChain=G.time;   // drill marker
+        P._evDashCancel=(typeof G!=='undefined')?G.time:0;   // UI: flash dodge btn green-available
       }
       var beforeEmp = (ready() && P.empowerT) || 0;
       var r=_tryRoll.apply(this,arguments);

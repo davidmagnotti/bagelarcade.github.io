@@ -4241,7 +4241,9 @@ function drawPlayerFigure(s){
   }
   if(P.weapon==='bow') look.quiver=true;   // the quiver joins the kit
   if(P.weapon==='staff') look.rune=true;   // a faint charm-glow, nothing more
-  look.armor=P.armor||0;
+  // The base plate Bram fits you with (tier 1) is a stat bump, not a new silhouette -
+  // it doesn't change your look. Only heavier, later armour (tier 2+) shows on the figure.
+  look.armor=(P.armor||0)>=2 ? (P.armor||0) : 0;
   // On the Frozen Isle you pull a fur-lined coat over everything (48-frost-coats.js)
   if(typeof frostCoatWorn==='function' && frostCoatWorn() && typeof frostCoatLook==='function') frostCoatLook(look);
   drawHumanoid(cx,s.x,s.y,{...look, size:1.32, turn:1,   // the overworld hero yaws for true 8-way facing

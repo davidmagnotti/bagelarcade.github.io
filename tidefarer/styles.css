@@ -121,6 +121,12 @@
   .abtn.cancel{filter:saturate(1.1) brightness(1.07);
     box-shadow: inset 0 1px 0 rgba(240,226,192,.08), inset 0 -3px 5px rgba(0,0,0,.5),
       0 0 0 3px rgba(122,232,150,.92), 0 0 15px 3px rgba(96,222,132,.72);}
+  /* The instant a cancel/chain fires, flash the button bright-green "available again" so the
+     player SEES the move opened back up - even if its animation immediately re-grays it. */
+  .abtn.cancelFlash{filter:saturate(1.15) brightness(1.15) !important;opacity:1 !important;
+    box-shadow: inset 0 1px 0 rgba(240,226,192,.12), 0 0 0 4px rgba(150,255,175,.98),
+      0 0 22px 7px rgba(120,240,150,.9) !important; animation:abtnCancelPop .34s ease-out;}
+  @keyframes abtnCancelPop{0%{transform:scale(1.14);}100%{transform:scale(1);}}
   #mountBtn{font-size:15px;background:
     radial-gradient(circle at 50% 46%, rgba(206,158,60,.55) 0%, rgba(150,108,40,.6) 42%, transparent 46%),
     linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);}
