@@ -249,8 +249,11 @@
   function coldOpenAshore(){
     CO.phase='done';
     P.story=P.story||{}; P.story.royalGarb=0;
-    // the Deep Maw tears the flow away with everything else - you re-earn it across the game
-    P.unlocked=P.unlocked||{}; P.unlocked.dash=false; P.unlocked.parry=false; P.unlocked.combos=false;
+    // the Deep Maw takes your name and your face - but NOT your muscle memory ("only the
+    // blade stays, locked in your hand"). You keep the full combat flow: dash, parry, and
+    // the cancels/chains/deflect + stamina. Training on the isle becomes a refresher, not
+    // a re-teach (see Orin, who just offers a tonic now).
+    P.unlocked=P.unlocked||{};
     P.hp=P.maxhp;
     if(typeof switchWorld==='function') switchWorld('isle');
     if(typeof CO._origStartFresh==='function') CO._origStartFresh(); else bailToShore();

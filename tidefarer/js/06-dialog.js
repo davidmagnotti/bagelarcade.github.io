@@ -87,6 +87,17 @@ function cleanSpeech(html){
 function setDialog(text,btns,raw){
   document.getElementById('dtext').innerHTML = raw? text : cleanSpeech(text);
   const bx=document.getElementById('dbtns'); bx.innerHTML='';
+  // TAP TO CONTINUE: tapping the dialog panel itself (not a button) advances a single-
+  // option dialog, so you never have to hunt for the little button. Multi-choice dialogs
+  // still need you to pick the specific reply. Bound once on the panel.
+  const _dp=document.getElementById('dialog');
+  if(_dp && !_dp._tapBound){ _dp._tapBound=1;
+    _dp.addEventListener('pointerdown', function(e){
+      if(!dlg.open || !dlg.btns) return;
+      if(e.target && e.target.closest && e.target.closest('button')) return;   // a real button tap picks that choice
+      if(dlg.btns.length===1 && dlg.btns[0] && typeof dlg.btns[0].fn==='function'){ e.preventDefault(); dlg.btns[0].fn(); }
+    });
+  }
   // Remember the live choices so keyboard players can pick one by number (see the
   // keydown handler in 07-input.js). Cleared when the dialog closes.
   dlg.btns=btns;

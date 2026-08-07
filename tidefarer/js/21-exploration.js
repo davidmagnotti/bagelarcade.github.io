@@ -264,7 +264,7 @@ function startIntro(){
       [{label:'Continue', fn:p4}]);
   };
   const p2=()=>{
-    setDialog('“Your ship went down on the strait in the night - I watched its lanterns swallowed from the headland. It was no reef that took you, child. Something <b>woke in our graveyard</b>, up on the isle\'s cold north tip - a spirit we buried and warded lifetimes ago - and its rising has turned the whole strait deadly. No hull has crossed off Emberwick since; the water itself reaches up and drags them under. Yours was only the last.” <i>The old woman studies the pale mask over your face, and thinks better of asking.</i> “You washed in wearing that mask, and reached for it before your eyes were open. Keep it, if it steadies you. Do you know it? Your ship, your name, where you were bound?”',
+    setDialog('“Your ship went down on the strait in the night - I watched its lanterns swallowed from the headland. Dark things have stirred off our shores of late, and the crossing has turned deadly; yours was only the last hull to try it.” <i>The old woman studies the pale mask over your face, and thinks better of asking.</i> “Keep the mask, if it steadies you. Do you know it - your ship, your name, where you were bound?”',
       [{label:'…I- I don\'t remember.', fn:p3}]);
   };
   setDialog('“Easy now - easy. You\'re alive. I felt the tide turn in the night and knew it had given something back.” <i>She sets you on your feet and steadies you.</i>',

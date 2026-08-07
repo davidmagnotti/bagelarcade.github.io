@@ -561,7 +561,7 @@ function tryAttack(useMouse){
   const it=nearestInteract();
   if(it && it.type==='node' && it.o.kind!=='fish'){
     const mobNear = G.mobs.some(m=>!m.dead && dist(P.x,P.y,m.x,m.y)<1.8);
-    if(!mobNear){ hitNode(it.o); P.atkCd=0.38; return; }
+    if(!mobNear){ hitNode(it.o); P.atkCd=0.38; if(it.o.kind==='tree'||it.o.kind==='rock') P.gatherAuto=it.o; return; }
   }
   // aim
   let aim;
@@ -1678,6 +1678,14 @@ function updatePlayer(dt){
   P.parrySuccess=Math.max(0,(P.parrySuccess||0)-dt);
   P.deflectT=Math.max(0,(P.deflectT||0)-dt);   // the deflect blade-catch animation beat
   P.deflectCd=Math.max(0,(P.deflectCd||0)-dt); // recovery between O-key deflects
+  // AUTO-GATHER: once you start on a tree or rock, the hero keeps swinging on her own
+  // (like a chest auto-opens) until it's felled or you step away - no repeated tapping.
+  if(P.gatherAuto){
+    const gn=P.gatherAuto;
+    const clickLoops = P.click && P.click.type==='gather' && P.click.n===gn;   // the click path already repeats
+    if(gn.dead || P.moving || (P.stunT||0)>0 || (typeof dlg!=='undefined'&&dlg.open) || dist(P.x,P.y,gn.x,gn.y)>1.9){ P.gatherAuto=null; }
+    else if(!clickLoops && (P.atkCd||0)<=0){ facePoint(gn.x,gn.y); P.atkCd=0.4; hitNode(gn); }
+  }
   if(P.parryDrill) updateParryDrill(dt);
   if(P.rollT>0){
     // a little hop through the roll (item 3): the dash leaves the ground and lands
