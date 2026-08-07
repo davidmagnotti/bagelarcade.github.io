@@ -2651,7 +2651,7 @@ function updateWorld(dt){
   // from the isles entirely (they no longer spawn, see below for dispersing strays).
   const isleCleared = P.story && P.story.bossCleared && P.story.bossCleared[G.worldId];
   const act2 = !!(P.story && P.story.act2);
-  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && !isleCleared && !P.dead && !nearVillage(P.x,P.y,6)){
+  if(night>0.55 && !act2 && !G.interior && !inDungeon() && G.worldId!=='crown' && G.worldId!=='sky' && G.worldId!=='deck' && !isleCleared && !P.dead && !nearVillage(P.x,P.y,6)){
     let nn=0; for(const m of G.mobs) if(m.night && !m.dead) nn++;
     if(nn<4 && Math.random()<dt*0.22){
       const a2=Math.random()*TAU, dd2=11+Math.random()*4;

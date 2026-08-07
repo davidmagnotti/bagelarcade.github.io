@@ -55,6 +55,8 @@ function tick(dt){
   if(isTouchDev() || padActive()){ if(el) setVisible(false); visT=0; wasCombat=false; return; }
   // only once the flow is actually learned - before that the hint would teach moves you can't do
   if(!(P.unlocked && P.unlocked.combos)){ if(el) setVisible(false); return; }
+  // the cold-open intro teaches the flow with its own captions - don't double up there
+  if(typeof G!=='undefined' && G.worldId==='deck'){ if(el) setVisible(false); return; }
   var playing = (typeof G!=='undefined' && G.state==='play' && !G.paused && !G.camCine && !G.interior &&
                  !(typeof dlg!=='undefined' && dlg.open) && !P.dead);
   if(!playing){ if(el) setVisible(false); visT=0; wasCombat=false; return; }

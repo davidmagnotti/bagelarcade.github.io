@@ -33,7 +33,7 @@
   var CO = window.COLDOPEN;
   var ON = function(){ return !!(CO && CO.on); };
 
-  var CLAMP_MIN = 20;   // the hero never dies in the cold open - the loss is scripted
+  // (the hero has unlimited health in the cold open - hp is clamped to full; the loss is scripted)
   var SMALLS = 3;       // brine-crawlers to practise on before the Deep Maw
 
   /* ========================= the deck world ========================= */
@@ -157,7 +157,9 @@
     P.story = P.story || {};
     P.story.masked=0; P.story.royalGarb=1; P.story.necklace=true; P.story.coldOpen=1;
     P.unlocked = P.unlocked || {};
-    P.unlocked.melee=true; P.unlocked.dash=true; P.unlocked.parry=true;
+    // The intro is a flash of your SKILLED self - the full flow is yours here (stamina,
+    // cancels, chains, deflect), which is what the Deep Maw tears away below (coldOpenAshore).
+    P.unlocked.melee=true; P.unlocked.dash=true; P.unlocked.parry=true; P.unlocked.combos=true;
     P.weapon='melee'; P.swordTier=Math.max(P.swordTier||0,1);
     P.hp=P.maxhp;
     CO.phase='intro'; CO.smallsLeft=SMALLS; CO.bossT=0; CO.bossHits=0;
@@ -182,7 +184,11 @@
     CO.phase='practice'; CO.smallsLeft=SMALLS;
     spawnCrawler(18,28); spawnCrawler(26,28); spawnCrawler(22,24);
     if(typeof addFloat==='function') addFloat('USE YOUR SKILLS', P.x, P.y-3.0, '#c9b0ff', 1.25);
-    coCaption('The dark is climbing the rails. Your body knows the blade - <b>cut them down:</b> chain your strikes for a <b>finisher</b>, <b>dash</b> from their lunges, time a swing to <b>parry</b>.', 6000, {pause:false});
+    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Cut them down:</b> chain your strikes into a <b>finisher</b>, <b>dash</b> their lunges, and time a swing to <b>deflect</b>.', 5200, {pause:false, onDone:function(){
+      // the flow, explained: animation-cancelling + the stamina economy (this is the intro's
+      // showcase of the full combat you re-earn across the game).
+      coCaption('Now <b>WEAVE</b> it: <b>attack, then dash</b> to <b>cancel</b> the swing\'s recovery - <b>dash again</b> to <b>chain</b> - or press <b>O</b> to <b>deflect</b> a blow. The <b>stamina</b> bar under your health is the fuel, and a deflect or a perfect dodge hands it back.', 7500, {pause:false});
+    }});
   }
 
   function coldOpenBoss(){
@@ -224,7 +230,8 @@
   function coldOpenAshore(){
     CO.phase='done';
     P.story=P.story||{}; P.story.royalGarb=0;
-    P.unlocked=P.unlocked||{}; P.unlocked.dash=false; P.unlocked.parry=false;
+    // the Deep Maw tears the flow away with everything else - you re-earn it across the game
+    P.unlocked=P.unlocked||{}; P.unlocked.dash=false; P.unlocked.parry=false; P.unlocked.combos=false;
     P.hp=P.maxhp;
     if(typeof switchWorld==='function') switchWorld('isle');
     if(typeof CO._origStartFresh==='function') CO._origStartFresh(); else bailToShore();
@@ -235,7 +242,7 @@
 
   function tick(dt){
     if(!ON() || typeof G==='undefined' || G.worldId!=='deck') return;
-    if(P && P.hp>0 && P.hp<CLAMP_MIN) P.hp=CLAMP_MIN;   // no death - the loss is scripted
+    if(P && P.hp>0 && P.hp<P.maxhp) P.hp=P.maxhp;   // unlimited health - the loss is scripted, not fought
     if(CO.phase==='boss'){ CO.bossT=(CO.bossT||0)+(dt||0); if(CO.bossT>=7) triggerDefeat(); }
   }
 
@@ -383,7 +390,7 @@
     var _hurtPlayer=window.hurtPlayer;
     window.hurtPlayer=function(dmg, src){
       var r=_hurtPlayer.apply(this, arguments);
-      try{ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && P && P.hp>0 && P.hp<CLAMP_MIN) P.hp=CLAMP_MIN; }catch(e){}
+      try{ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && P && P.hp>0 && P.hp<P.maxhp) P.hp=P.maxhp; }catch(e){}
       return r;
     };
   }
