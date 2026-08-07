@@ -41,7 +41,7 @@ var LESSONS = [
     // two dash-starts inside a short window = a chained dash
     check:function(D){ var t=D.dashTimes; return t.length>=2 && (t[t.length-1]-t[t.length-2]) < 0.85; } },
   { key:'deflect', title:'DEFLECT',
-    hint:function(){ return 'Lesson three - <b>DEFLECT</b>. I will strike; '+(isTouchDev()?'tap <b>⚔</b>':'press <b>O</b> (or attack)')+' <b>the instant my blow reaches you</b> to turn it aside. Timing, not flailing - a blade well-met needs no shield.'; },
+    hint:function(){ return 'Lesson three - <b>DEFLECT</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ deflect</b> button':'press <b>O</b> (or attack)')+' <b>the instant my blow reaches you</b> to turn it aside. Timing, not flailing - a blade well-met needs no shield.'; },
     done:'Turned clean. That is the whole of it.',
     // hands-on: driven by the throw-cycle in updateKnightDrill (parry the knight's strike)
     check:function(D){ return !!D._deflected; } },
@@ -89,14 +89,14 @@ function announceLesson(){
 function beginKnightDrill(){
   if(!ready()) return;
   clearKnightArena();   // sweep any wandered foes/clutter before the lesson starts
-  P.knightDrill = { lesson:0, t0:now(), lockT:0.6, guardT:0,
+  P.knightDrill = { lesson:0, t0:now(), lockT:1.3, guardT:0,
                     _prevAtk:0, _prevRoll:0, _lastAtk:-99, _dashStarted:false, dashTimes:[] };
   // top the tank so the chain/guard lessons never stall on an empty bar
   P.stamMax = P.stamMax || (window.COMBO && window.COMBO.cfg ? window.COMBO.cfg.stamMax : 100);
   P.stam = P.stamMax;
   if(typeof banner==='function') banner('THE FLOW OF BLADES', 'Three lessons - watch, and do');
-  // a short beat before the first instruction so the banner reads first
-  announceLesson();
+  // let the banner read first, then the first instruction eases in (no detection until lockT clears)
+  setTimeout(function(){ if(P.knightDrill && P.knightDrill.lesson===0) announceLesson(); }, 1000);
 }
 // re-state the current lesson (the dialogue "I'm ready" hook)
 function knightDrillNudge(){ if(P.knightDrill) announceLesson(); }
@@ -117,7 +117,7 @@ function finishKnightDrill(){
     '• <b>Cancel</b> - '+(isTouchDev()?'attack, then dash':'attack, then dash (Ctrl / L)')+' to break a swing\'s recovery.<br>'+
     '• <b>Chain</b> - dash again mid-cooldown to keep moving (costs stamina).<br>'+
     '• <b>Re-strike</b> - '+(isTouchDev()?'tap attack again quickly':'tap attack again faster than the rhythm')+' to cut your recovery short (costs stamina).<br>'+
-    '• <b>Deflect</b> - '+(isTouchDev()?'time a tap':'press <b>O</b> (or time a strike)')+' to an incoming blow to <b>turn it aside</b>, and it <b>refunds stamina</b>.<br>'+
+    '• <b>Deflect</b> - '+(isTouchDev()?'time the <b>◆</b> button':'press <b>O</b> (or time a strike)')+' to an incoming blow to <b>turn it aside</b>, and it <b>refunds stamina</b>.<br>'+
     '• A <b>perfect dodge</b> refunds stamina too - reading a blow pays for your next flourish.';
   var showCard = function(){ if(typeof storyCard==='function') storyCard(msg,{label:'Move like water'}); else toastMsg(msg, 9000); };
   // if the finish lands mid-dialogue, hold the card until it closes (mirrors unlockDash)
@@ -176,14 +176,15 @@ function updateKnightDrill(dt){
     if(typeof addFloat==='function') addFloat(L.title+'  ✓', P.x, P.y-2.6, '#bfe0ff', 1.5);
     if(typeof G!=='undefined'){ G.hitStop=Math.max(G.hitStop||0,0.08); }
     if(typeof Snd!=='undefined' && Snd.crit) Snd.crit();
-    toastMsg('<b style="color:#bcd8ee">'+L.done+'</b>', 2600);
+    toastMsg('<b style="color:#bcd8ee">'+L.done+'</b>', 2200);
     D.lesson++;
-    // reset per-lesson accumulators so the next lesson starts clean
-    D.guardT=0; D.dashTimes.length=0; D._lastAtk=-99; D.lockT=0.9;
+    // reset per-lesson accumulators so the next lesson starts clean; the lock covers the
+    // hand-off so the praise line reads before the next instruction eases in.
+    D.guardT=0; D.dashTimes.length=0; D._lastAtk=-99; D.lockT=1.4;
     D.proj=null; D._deflected=false; D.throwT=null;   // fresh state for the deflect cycle
     if(D.lesson >= LESSONS.length){ finishKnightDrill(); return; }
-    // announce the next lesson just after the lock so it reads in order
-    (function(nextIdx){ setTimeout(function(){ if(P.knightDrill && P.knightDrill.lesson===nextIdx) announceLesson(); }, 700); })(D.lesson);
+    // the praise line lingers, then the next lesson's instruction eases in after it
+    (function(nextIdx){ setTimeout(function(){ if(P.knightDrill && P.knightDrill.lesson===nextIdx) announceLesson(); }, 1250); })(D.lesson);
   }
 }
 

@@ -109,6 +109,10 @@
     radial-gradient(circle at 50% 46%, rgba(70,110,170,.5) 0%, rgba(45,72,115,.55) 42%, transparent 46%),
     linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);
     transition:opacity .14s ease, filter .14s ease;}
+  #deflectBtn{background:
+    radial-gradient(circle at 50% 46%, rgba(150,190,215,.5) 0%, rgba(90,130,160,.55) 42%, transparent 46%),
+    linear-gradient(180deg,#3a2c1c 0%,#2a1e12 60%,#20160c 100%);}
+  #deflectBtn svg{pointer-events:none;}
   /* Action-button state language: default = READY (its own colour - dodge blue, sword red).
      GRAY (.cooldown) = mid-animation / on cooldown, wait. GREEN ring (.cancel) = usable NOW
      but it'll spend stamina (a cancel or a chain). It returns to its ready colour when the
