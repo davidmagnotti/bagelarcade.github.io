@@ -180,15 +180,34 @@
     if(typeof WX!=='undefined'){ WX.rain=1; WX.target=1; WX.timer=999; }
     if(typeof banner==='function') banner('THE NIGHT STRAIT','A STORM WITH NO MERCY');
 
-    // straight into it - foes on the deck, a non-blocking caption to teach.
-    CO.phase='practice'; CO.smallsLeft=SMALLS;
-    spawnCrawler(18,28); spawnCrawler(26,28); spawnCrawler(22,24);
-    if(typeof addFloat==='function') addFloat('USE YOUR SKILLS', P.x, P.y-3.0, '#c9b0ff', 1.25);
-    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Cut them down:</b> chain your strikes into a <b>finisher</b>, <b>dash</b> their lunges, and time a swing to <b>deflect</b>.', 5200, {pause:false, onDone:function(){
-      // the flow, explained: animation-cancelling + the stamina economy (this is the intro's
-      // showcase of the full combat you re-earn across the game).
-      coCaption('Now <b>WEAVE</b> it: <b>attack, then dash</b> to <b>cancel</b> the swing\'s recovery - <b>dash again</b> to <b>chain</b> - or press <b>O</b> to <b>deflect</b> a blow. The <b>stamina</b> bar under your health is the fuel, and a deflect or a perfect dodge hands it back.', 7500, {pause:false});
+    // TEACH FIRST, then fight. Two quick PAUSED captions explain the mechanics with no
+    // foes on the deck yet - so nothing swarms you while you're reading - then the waves begin.
+    CO.phase='teach';
+    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> (Space / K), <b>dash</b> their lunges (Ctrl / L), and time <b>O</b> to <b>deflect</b> a blow.', 5600, {pause:true, onDone:function(){
+      coCaption('<b>WEAVE</b> it: <b>attack → dash</b> cancels your recovery, <b>dash → dash</b> chains, a <b>deflect</b> turns a blow. Mind the <b>stamina</b> bar under your health - it fuels the flow, and a deflect or perfect dodge refunds it. Now - <b>cut them down.</b>', 6800, {pause:true, onDone:startWaves});
     }});
+  }
+
+  /* A few escalating rounds of brine-crawlers, not one wave. Each round spawns in a
+     ring around the hero; clear it and the next rolls in after a short beat; clear the
+     last and the Deep Maw rises. */
+  var WAVES=[3,4,5];
+  function rr(a,b){ return a+Math.random()*(b-a); }
+  function startWaves(){ CO.wave=0; nextWave(); }
+  function nextWave(){
+    if(CO.phase==='defeat'||CO.phase==='done') return;
+    CO.wave=(CO.wave||0)+1;
+    if(CO.wave>WAVES.length){ CO.phase='transition'; setTimeout(coldOpenBoss,900); return; }
+    CO.phase='practice';
+    var n=WAVES[CO.wave-1], got=0;
+    for(var i=0;i<n;i++){
+      var a=(i/n)*Math.PI*2 + CO.wave*0.7;
+      var sx=Math.round(P.x+Math.cos(a)*rr(4,6.5)), sy=Math.round(P.y+Math.sin(a)*rr(4,6.5));
+      if(spawnCrawler(sx,sy)) got++;
+    }
+    CO.smallsLeft=Math.max(1,got);
+    if(CO.wave>1){ if(typeof banner==='function') banner('WAVE '+CO.wave, 'THE SEA IS NOT DONE WITH YOU'); }
+    else if(typeof addFloat==='function') addFloat('USE YOUR SKILLS', P.x, P.y-3.0, '#c9b0ff', 1.25);
   }
 
   function coldOpenBoss(){
@@ -365,7 +384,7 @@
     window.killMob=function(m, skill){
       var r=_killMob.apply(this, arguments);
       try{ if(ON() && m && m.coldSmall){ CO.smallsLeft=Math.max(0,(CO.smallsLeft||1)-1);
-        if(CO.smallsLeft<=0 && CO.phase==='practice'){ CO.phase='transition'; setTimeout(coldOpenBoss,900); } } }catch(e){}
+        if(CO.smallsLeft<=0 && CO.phase==='practice'){ CO.phase='between'; setTimeout(nextWave, 1100); } } }catch(e){}
       return r;
     };
   }
