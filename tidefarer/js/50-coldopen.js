@@ -205,13 +205,17 @@
   }
   function isT(){ return (typeof isTouch!=='undefined') && isTouch; }
 
-  /* A hands-on guided lesson - dash, then slash, then dash again - highlighting each input
-     and WAITING for you to actually press it, so you learn the weave by doing all three.
-     No foes on the deck yet, so nothing rushes you. Cleared -> the waves begin. */
+  /* A hands-on, PAUSED walk-through of CHAINING. The world FREEZES on each step and waits for
+     the one input it's teaching - and because a pause also freezes the swing's recovery timer
+     (atkCd doesn't tick while G.paused), you can take all the time you like and the dash still
+     lands as a true CANCEL. No foes on the deck yet. Cleared -> the waves begin. */
   var GUIDE_STEPS=[
-    {act:'dash',  html:'<b>DASH</b> '+(isT()?'- tap <b>⤸</b>':'- press <b>Ctrl</b> or <b>L</b>'),           btn:'dodgeBtn'},
-    {act:'slash', html:'Now <b>SLASH</b> '+(isT()?'- tap <b>⚔</b>':'- press <b>Space</b> or <b>K</b>'),       btn:'attackBtn'},
-    {act:'dash',  html:'<b>DASH again</b> '+(isT()?'- tap <b>⤸</b>':'- Ctrl / L')+' — that\'s the weave',       btn:'dodgeBtn'},
+    { act:'slash', keys:[' ','k'],       btn:'attackBtn',
+      html:'<b>SLASH</b> '+(isT()?'— tap <b>⚔</b>':'— press <b>Space</b> or <b>K</b>'), confirm:'SLASH' },
+    { act:'dash',  keys:['control','l'], btn:'dodgeBtn',
+      html:'Now <b>DASH</b> '+(isT()?'— tap <b>⤸</b>':'— press <b>Ctrl</b> or <b>L</b>')+' <i>while the swing still hangs</i> — that <b>CANCELS</b> the recovery', confirm:'CANCEL!' },
+    { act:'slash', keys:[' ','k'],       btn:'attackBtn',
+      html:'<b>SLASH again</b> '+(isT()?'— tap <b>⚔</b>':'— Space or K')+' — and you\'ve <b>CHAINED</b>', confirm:'CHAIN!' },
   ];
   function ensureGuideCSS(){
     if(document.getElementById('coGuideCSS')) return;
@@ -224,7 +228,7 @@
       '@keyframes coPulse{0%,100%{box-shadow:0 0 0 0 rgba(143,232,207,.0),inset 0 1px 0 rgba(240,226,192,.08);}50%{box-shadow:0 0 18px 5px rgba(143,232,207,.75);}}';
     document.head.appendChild(st);
   }
-  var guideEl=null;
+  var guideEl=null, guideKeyH=null, guidePtrEl=null, guidePtrH=null;
   function showGuidePrompt(html){ ensureGuideCSS();
     if(!guideEl){ guideEl=document.createElement('div'); guideEl.id='coGuide'; guideEl.innerHTML='<div class="in"></div>'; document.body.appendChild(guideEl); }
     guideEl.querySelector('.in').innerHTML=html; guideEl.style.display='flex';
@@ -234,38 +238,61 @@
   function clearHilites(){ ['dodgeBtn','attackBtn','deflectBtn'].forEach(function(id){ hiliteBtn(id,false); }); }
   function startGuide(){
     CO.phase='guide';
-    CO.guide={ i:0, prevRoll:(P.rollT||0), prevAtk:(P.atkCd||0), lockT:0.35 };
-    presentGuideStep();
+    CO.guide={ i:0 };
+    // one plain-words primer on what chaining IS, then the hands-on steps (each one freezes)
+    coCaption('<b>Chaining</b> is the heart of the blade: strike, then <b>dash or strike again before your swing finishes</b> to skip the recovery and flow straight into the next move. Let\'s walk it - the world holds still for each press.', 0, {pause:true, onDone:presentGuideStep});
+  }
+  // Arm one-shot listeners for exactly the input this step teaches. Both are CAPTURE-phase and
+  // fully swallow the event so the game's own keydown (window, bubble) and the touch button's own
+  // pointerdown (on the button) never also fire it - we drive the move ourselves, exactly once.
+  function armGuideInput(s){
+    disarmGuideInput();
+    guideKeyH=function(e){ var k=(e.key||'').toLowerCase(); if(e.code==='Space') k=' ';
+      if(s.keys.indexOf(k)>=0){ if(e.preventDefault) e.preventDefault(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); doGuideStep(s); } };
+    window.addEventListener('keydown', guideKeyH, true);   // capture: beats the game's bubble keydown
+    guidePtrH=function(e){ var btn=document.getElementById(s.btn);
+      if(btn && (e.target===btn || (btn.contains && btn.contains(e.target)))){
+        if(e.preventDefault) e.preventDefault(); if(e.stopPropagation) e.stopPropagation(); doGuideStep(s); } };
+    document.addEventListener('pointerdown', guidePtrH, true);   // capture: fires before the button's own handler
+  }
+  function disarmGuideInput(){
+    if(guideKeyH){ window.removeEventListener('keydown', guideKeyH, true); guideKeyH=null; }
+    if(guidePtrH){ document.removeEventListener('pointerdown', guidePtrH, true); guidePtrH=null; }
+    guidePtrEl=null;
   }
   function presentGuideStep(){
-    var g=CO.guide, s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
+    var g=CO.guide; if(!g) return;
+    var s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
+    if(s.act==='dash' && typeof P!=='undefined') P.rollCd=0;   // the taught dash must be free to fire
     showGuidePrompt(s.html); clearHilites(); hiliteBtn(s.btn,true);
-    g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0); g.lockT=0.3;
+    if(typeof G!=='undefined') G.paused=true;                  // FREEZE - also freezes atkCd, preserving the cancel
+    armGuideInput(s);
+  }
+  function doGuideStep(s){
+    disarmGuideInput();
+    if(typeof G!=='undefined') G.paused=false;                 // unfreeze so the move plays out
+    // perform the taught move SYNCHRONOUSLY, before the next frame - so the still-frozen atkCd
+    // is read now and the dash registers as a real cancel.
+    if(s.act==='dash'){ if(typeof P!=='undefined') P.rollCd=0; if(typeof tryRoll==='function') tryRoll(); }
+    else if(s.act==='slash'){ if(typeof tryAttack==='function') tryAttack(); }
+    // swallow the consumed input so the next live frame's poll doesn't repeat it
+    try{ if(typeof input!=='undefined' && input){ input.attack=false; input.mouseDown=false; }
+         if(typeof keys!=='undefined'){ keys['control']=false; keys['l']=false; keys[' ']=false; keys['k']=false; } }catch(e){}
+    clearHilites(); hideGuidePrompt();
+    if(typeof addFloat==='function' && typeof P!=='undefined') addFloat(s.confirm, P.x, P.y-2.7, '#8fe8cf', 1.55);
+    if(typeof Snd!=='undefined' && Snd.crit) Snd.crit();
+    var g=CO.guide; if(!g) return; g.i++;
+    // a brief LIVE beat so the move visibly plays, then the next step freezes again. Kept short
+    // after a slash so the recovery is still ticking (>0) when we freeze for the dash-cancel.
+    setTimeout(function(){ if(CO.phase==='guide' && CO.guide) presentGuideStep(); }, 240);
   }
   function endGuide(){
-    hideGuidePrompt(); clearHilites(); CO.guide=null;
-    coCaption('Good - <b>cancel</b> and <b>chain</b>, just like that. Mind the <b>stamina</b> bar under your health. Now - <b>cut them down.</b>', 4200, {pause:false, onDone:startWaves});
+    disarmGuideInput(); hideGuidePrompt(); clearHilites(); CO.guide=null;
+    if(typeof G!=='undefined') G.paused=false;
+    coCaption('That\'s the flow - <b>cancel</b> to keep the pressure on, and mind the <b>stamina</b> bar under your health. Now - <b>cut them down.</b>', 4200, {pause:false, onDone:startWaves});
   }
-  function guideTick(dt){
-    if(CO.phase!=='guide' || !CO.guide) return;
-    var g=CO.guide;
-    var s0=GUIDE_STEPS[g.i];
-    // While teaching a DASH step, keep the dash off cooldown so the lesson never stalls on
-    // the longer base cooldown - the player can always dash the instant they're told to.
-    if(s0 && s0.act==='dash') P.rollCd=0;
-    if(g.lockT>0){ g.lockT-=dt; g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0); return; }
-    var s=GUIDE_STEPS[g.i]; if(!s){ endGuide(); return; }
-    var did=false;
-    if(s.act==='dash'){ if((P.rollT||0) > (g.prevRoll||0)+0.01 && (P.rollT||0)>0.1) did=true; }
-    else if(s.act==='slash'){ if((P.atkCd||0) > (g.prevAtk||0)+0.1) did=true; }
-    g.prevRoll=(P.rollT||0); g.prevAtk=(P.atkCd||0);
-    if(did){
-      if(typeof addFloat==='function') addFloat('✓', P.x, P.y-2.6, '#bfe0ff', 1.4);
-      if(typeof Snd!=='undefined' && Snd.crit) Snd.crit();
-      g.i++;
-      if(g.i>=GUIDE_STEPS.length) endGuide(); else presentGuideStep();
-    }
-  }
+  // detection is now input-driven while the world is frozen, so there is nothing to poll here.
+  function guideTick(dt){}
 
   /* A few escalating rounds of brine-crawlers, not one wave. Each round spawns in a
      ring around the hero; clear it and the next rolls in after a short beat; clear the
