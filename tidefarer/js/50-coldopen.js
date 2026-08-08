@@ -198,10 +198,10 @@
     if(typeof WX!=='undefined'){ WX.rain=1; WX.target=1; WX.timer=999; }
     if(typeof banner==='function') banner('THE NIGHT STRAIT','A STORM WITH NO MERCY');
 
-    // TEACH FIRST, then fight. Two quick PAUSED captions explain the mechanics with no
-    // foes on the deck yet - so nothing swarms you while you're reading - then the waves begin.
-    CO.phase='teach';
-    coCaption('The dark climbs the rails - and your hands remember the blade. <b>Attack</b> ('+(isT()?'the <b>⚔</b> button':'Space / K')+'), <b>dash</b> their lunges ('+(isT()?'<b>⤸</b>':'Ctrl / L')+'), and <b>parry</b> a blow ('+(isT()?'<b>◆</b>':'the O key')+').', 6000, {pause:true, onDone:startGuide});
+    // Straight into the hands-on lesson - no wall of text to tap past first. A short beat lets
+    // the storm banner land, then the guided steps take over (each one freezes the action).
+    CO.phase='intro';
+    setTimeout(function(){ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && CO.phase==='intro') startGuide(); }, 1000);
   }
   function isT(){ return (typeof isTouch!=='undefined') && isTouch; }
 
@@ -211,7 +211,7 @@
      lands as a true CANCEL. No foes on the deck yet. Cleared -> the waves begin. */
   var GUIDE_STEPS=[
     { act:'slash', keys:[' ','k'],       btn:'attackBtn',
-      html:'<b>SLASH</b> '+(isT()?'— tap <b>⚔</b>':'— press <b>Space</b> or <b>K</b>'), confirm:'SLASH' },
+      html:'Your hands remember the blade. <b>SLASH</b> '+(isT()?'— tap the glowing <b>⚔</b>':'— press <b>Space</b> or <b>K</b>'), confirm:'SLASH' },
     { act:'dash',  keys:['control','l'], btn:'dodgeBtn',
       html:'Now <b>DASH</b> '+(isT()?'— tap <b>⤸</b>':'— press <b>Ctrl</b> or <b>L</b>')+' <i>while the swing still hangs</i> — that <b>CANCELS</b> the recovery', confirm:'CANCEL!' },
     { act:'slash', keys:[' ','k'],       btn:'attackBtn',
@@ -239,8 +239,7 @@
   function startGuide(){
     CO.phase='guide';
     CO.guide={ i:0 };
-    // one plain-words primer on what chaining IS, then the hands-on steps (each one freezes)
-    coCaption('<b>Chaining</b> is the heart of the blade: strike, then <b>dash or strike again before your swing finishes</b> to skip the recovery and flow straight into the next move. Let\'s walk it - the world holds still for each press.', 0, {pause:true, onDone:presentGuideStep});
+    presentGuideStep();   // no wall of text - the highlighted buttons ARE the lesson
   }
   // Arm one-shot listeners for exactly the input this step teaches. Both are CAPTURE-phase and
   // fully swallow the event so the game's own keydown (window, bubble) and the touch button's own
@@ -250,14 +249,22 @@
     guideKeyH=function(e){ var k=(e.key||'').toLowerCase(); if(e.code==='Space') k=' ';
       if(s.keys.indexOf(k)>=0){ if(e.preventDefault) e.preventDefault(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); doGuideStep(s); } };
     window.addEventListener('keydown', guideKeyH, true);   // capture: beats the game's bubble keydown
-    guidePtrH=function(e){ var btn=document.getElementById(s.btn);
-      if(btn && (e.target===btn || (btn.contains && btn.contains(e.target)))){
-        if(e.preventDefault) e.preventDefault(); if(e.stopPropagation) e.stopPropagation(); doGuideStep(s); } };
-    document.addEventListener('pointerdown', guidePtrH, true);   // capture: fires before the button's own handler
+    // Touch/click on the highlighted button. We must catch BOTH pointerdown AND touchstart: the
+    // button's own touchstart handler calls preventDefault (which suppresses the synthesized
+    // pointerdown), so a pointerdown-only listener would never fire on a phone - the tap would
+    // look dead. Capture-phase + stopPropagation so the button's own handler can't double-fire.
+    guidePtrH=function(e){ var btn=document.getElementById(s.btn); var t=e.target;
+      if(btn && (t===btn || (btn.contains && btn.contains(t)))){
+        if(typeof Snd!=='undefined' && Snd.init) Snd.init();   // first touch may be here now (no captions before)
+        if(e.cancelable && e.preventDefault) e.preventDefault(); if(e.stopPropagation) e.stopPropagation();
+        doGuideStep(s); } };
+    document.addEventListener('pointerdown', guidePtrH, true);
+    document.addEventListener('touchstart', guidePtrH, {capture:true, passive:false});
   }
   function disarmGuideInput(){
     if(guideKeyH){ window.removeEventListener('keydown', guideKeyH, true); guideKeyH=null; }
-    if(guidePtrH){ document.removeEventListener('pointerdown', guidePtrH, true); guidePtrH=null; }
+    if(guidePtrH){ document.removeEventListener('pointerdown', guidePtrH, true);
+                   document.removeEventListener('touchstart', guidePtrH, true); guidePtrH=null; }
     guidePtrEl=null;
   }
   function presentGuideStep(){
@@ -323,7 +330,7 @@
     // no name, no title-card intro - it is just a vast cold shape rising from the black water
     if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
     if(typeof G!=='undefined'){ G.shake=0.9; G.slowmo=Math.max(G.slowmo||0,1.1); }
-    coCaption('The crawlers were only its fingers. The black water heaves, and something vast and cold rises out of it - filling the deck between you and the sky. <b>Throw everything you have at it.</b>', 4500, {pause:false});
+    // no caption - it just rises out of the black water and looms; you throw everything at it
     // the fight is unwinnable - but let the player really wail on it first (see damageMob for
     // the hit count). A long safety timer resolves it even for a passive player.
     setTimeout(function(){ if(CO.phase==='boss') triggerDefeat(); }, 14000);
