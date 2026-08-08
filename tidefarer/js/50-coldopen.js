@@ -52,6 +52,11 @@
         else G.map[y*W+x]=T.DEEP;
       }
     }
+    // switchWorld runs def.gen() but (unlike the isle gens) does NOT bake solids for us,
+    // so without this the sea around the hull is walkable - you stroll right off the deck
+    // onto the water. Bake it here: DEEP/SHALLOW become solid, the PLANK deck stays walkable,
+    // so the bulwark actually keeps you aboard.
+    if(typeof bakeSolids==='function') bakeSolids();
   }
   if(typeof WORLD_DEFS!=='undefined' && !WORLD_DEFS.deck){
     WORLD_DEFS.deck = {
