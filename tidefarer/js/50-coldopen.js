@@ -121,7 +121,7 @@
   function ensureCapCSS(){
     if(document.getElementById('coCapCSS')) return;
     var st=document.createElement('style'); st.id='coCapCSS';
-    st.textContent='#coCap{position:fixed;left:0;right:0;bottom:6%;z-index:58;display:none;'+
+    st.textContent='#coCap{position:fixed;left:0;right:0;bottom:6%;z-index:61;display:none;'+
       'justify-content:center;pointer-events:none;transition:opacity .4s;}'+
       '#coCap .in{max-width:min(760px,88vw);margin:0 16px;padding:14px 22px;border-radius:12px;'+
       'background:linear-gradient(180deg,rgba(18,10,28,.82),rgba(10,6,20,.9));'+
@@ -347,10 +347,13 @@
       ov.style.cssText='position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0;transition:opacity 1.3s ease-in;background:radial-gradient(circle at 50% 55%, rgba(150,80,220,0.92), rgba(10,4,24,0.99));';
       document.body.appendChild(ov); }
     requestAnimationFrame(function(){ ov.style.opacity='1'; });
+    // the caption sits ABOVE the purple wash (z 61 vs 60) so its "tap to continue" cue is
+    // actually visible - without that the screen read as a blank purple hang that needed a
+    // mystery tap. Kept a short beat so the purple lands first, then the words rise on it.
     setTimeout(function(){
       coCaption('The world tips away. Something is torn loose and carried off into the dark - your name, your face, the light behind your eyes. Only the blade stays, locked in your hand.',
         6000, {pause:true, onDone:coldOpenAshore});
-    }, 1400);
+    }, 900);
   }
 
   function coldOpenAshore(){

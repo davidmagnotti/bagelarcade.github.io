@@ -201,7 +201,12 @@
         P._evDashCancel=(typeof G!=='undefined')?G.time:0;   // UI: flash dodge btn green-available
       }
       var beforeEmp = (ready() && P.empowerT) || 0;
+      var rollBefore = (ready() && P.rollT) || 0;
       var r=_tryRoll.apply(this,arguments);
+      // A dash CANCELS the tail of a swing: the instant you dash, clear the attack recovery so
+      // you can strike straight back out of the dash (attack->dash->attack flows freely). Only
+      // when the dash actually fired, and only with the flow learned.
+      if(ON() && ready() && (P.rollT||0) > rollBefore){ P.atkCd=0; }
       if(ON() && ensureStam() && (P.empowerT||0) > beforeEmp){ refund(CFGP.riposteRefund); fx_riposte(); }
       return r;
     };

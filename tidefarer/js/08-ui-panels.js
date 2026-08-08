@@ -483,8 +483,11 @@ function updateMountBtn(){
       const recovering = (P.atkCd||0)>0;
       const foeNear = P.weapon==='melee' && G.mobs && G.mobs.some(m=>!m.dead && !m.sealed && dist(P.x,P.y,m.x,m.y)<2.2);
       const canRestrike = recovering && (P.atkCd||0)<=atkWin && _comboLive && P.weapon==='melee' && foeNear && (P.stam||0) >= atkCost;
-      ab.classList.toggle('cooldown', recovering && !canRestrike);
-      ab.classList.toggle('cancel',   recovering &&  canRestrike);
+      // Mid-dash you can cancel straight into a strike (the dash clears the swing's recovery),
+      // so the attack button reads GREEN-available, never grayed, while you're dashing.
+      const dashCancel = (P.rollT||0)>0 && _comboLive && P.weapon==='melee';
+      ab.classList.toggle('cooldown', recovering && !canRestrike && !dashCancel);
+      ab.classList.toggle('cancel',  (recovering &&  canRestrike) || dashCancel);
     }
     // The moment a cancel/chain actually fires (49-combo-proto stamps P._evCancel /
     // P._evDashCancel = G.time), flash the button bright-green "open again" for a beat.
