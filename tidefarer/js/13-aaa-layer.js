@@ -1240,6 +1240,7 @@ function updateBossUI(){
   let boss=null, bd=12;
   for(const m of G.mobs){
     if(!m.bigBoss||m.dead||m.state!=='chase') continue;
+    if(m.coldBoss) continue;   // the cold-open Deep Maw just rises out of the dark - no bar, no name-card, no subtitle
     const d=dist(P.x,P.y,m.x,m.y);
     if(d<bd){ bd=d; boss=m; }
   }
