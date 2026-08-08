@@ -7703,6 +7703,7 @@ function tryRoll(){
   // CANCEL it (dash again now) reads as a real burst. A perfect dodge and Swiftstep still
   // cut it right back down, so skilled play stays fast.
   P.rollT=0.26; P.rollMax=P.rollT; P.rollCd=(P.unlocked&&P.unlocked.swiftstep)?1.1:1.8; buzz(9);
+  P._dashT=(typeof G!=='undefined'&&G.time!=null)?G.time:0;   // marks a fresh dash, so an attack right after lands a DASH-STRIKE
   Snd.noise(0.16,0.05,600,0.7);
   if(imminent){
     P.empower=1; P.empowerT=3;

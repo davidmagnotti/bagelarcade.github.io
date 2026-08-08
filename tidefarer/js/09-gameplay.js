@@ -599,18 +599,29 @@ function tryAttack(useMouse){
     // the enemy's blow arrives to parry it. (Also active during Rask's drill.)
     if((P.unlocked&&P.unlocked.parry) || P.parryDrill){ P.parryT=PARRY_WIN; P.parryMax=PARRY_WIN; }   // swing on the WHITE flash to turn the blow
     const finisher=(P.combo||0)>=2;
-    const dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
+    // DASH-STRIKE: swing straight out of a dash and it lands as a heavier, further-reaching
+    // lunge - the standout "flow" move. A dash clears atkCd, so attacking right after a dash
+    // (within 0.4s) triggers it. Gated on the flow being learned (always true post-intro).
+    const dashStrike = !!(P.unlocked&&P.unlocked.combos) && (G.time - (P._dashT||-9) < 0.4);
+    let dmgBase= finisher? Math.round(meleeDmg()*1.5) : meleeDmg();
+    if(dashStrike) dmgBase = Math.round(dmgBase*1.6);
     // Cleaver perk (melee L5): the finisher sweeps a wide, deep arc instead of a lunge
     const cleave = finisher && P.perks && P.perks.cleaver;
     let hitAny=false;
     for(const m of G.mobs){
       if(m.dead||m.sealed) continue;
       const dx=m.x-P.x, dy=m.y-P.y, d=Math.hypot(dx,dy);
-      const reach = finisher? (cleave?2.7:2.1) : 1.65; // the finisher lunges; cleaver reaches further
+      const reach = finisher? (cleave?2.7:2.1) : (dashStrike? 2.2 : 1.65); // finisher & dash-strike lunge further
       const arc = cleave? -0.15 : 0.15;                // cleaver widens the arc past 90 degrees
       if(d<reach && (dx*aim.x+dy*aim.y)/Math.max(d,0.01) > arc){
         damageMob(m, dmgBase, aim, 'melee'); hitAny=true;
       }
+    }
+    // the dash-strike drives you forward a touch and lands with extra weight
+    if(dashStrike){
+      P.lungeT=0.1; P.lungeMax=0.1; P.lungeDir={x:aim.x,y:aim.y}; P._dashT=-9;   // consume so the next ordinary swing isn't one too
+      G.shake=Math.max(G.shake,0.2);
+      if(hitAny){ G.hitStop=Math.max(G.hitStop,0.09); if(typeof addFloat==='function') addFloat('DASH-STRIKE!', P.x, P.y-2.7, '#bfe8ff', 1.35); if(Snd.crit) Snd.crit(); }
     }
     if(hitAny){
       G.shake=Math.max(G.shake,0.12);
@@ -1716,6 +1727,14 @@ function updatePlayer(dt){
     if(Math.random()<0.6) G.parts.push({x:P.x,y:P.y,vx:-P.dir.x*0.8,vy:-P.dir.y*0.8,
       life:0.25,color:'rgba(210,200,175,0.5)',size:2.2});
   } else if(P.z){ P.z=0; }   // grounded again once the roll ends
+  // DASH-STRIKE lunge: a short forward drive on the heavier strike out of a dash (juice + a
+  // touch of gap-close). Collision-aware via moveEntity, so it never shoves you through a wall.
+  if((P.lungeT||0)>0){
+    P.lungeT-=dt;
+    const _ls=P.speed*2.5*dt, ld=P.lungeDir||P.dir;
+    moveEntity(P, ld.x*_ls, ld.y*_ls, 0.28);
+    P.moving=true; P.anim+=_ls*3.2;
+  }
   let mx=0,my=0;
   if(keys['w']||keys['arrowup']) { mx-=1; my-=1; }
   if(keys['s']||keys['arrowdown']) { mx+=1; my+=1; }
