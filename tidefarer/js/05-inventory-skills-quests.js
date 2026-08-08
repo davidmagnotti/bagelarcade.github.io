@@ -100,7 +100,9 @@ function npcHasReadyTurnIn(npc){
 function acceptQuest(id){
   P.quests[id]='active'; P.prog[id]=0;
   if(id==='kit'){ // Bram hands over the tools on the spot; the sword is the reward for finishing
-    P.kit=true; if(typeof buildHotbar==='function') buildHotbar();
+    P.kit=true; P.tools=P.tools||{axe:0,pick:0};
+    P.tools.axe=Math.max(P.tools.axe||0,1); P.tools.pick=Math.max(P.tools.pick||0,1);
+    if(typeof buildHotbar==='function') buildHotbar();
     addFloat('+ Woodsman\'s Axe & Pick', P.x,P.y-1.4,'#ffe9a8');
     setTimeout(()=>toast('<b style="color:var(--ember)">Axe &amp; pick in hand!</b> You can <b>chop trees</b> and <b>mine stone</b> now. Bring Bram <b>1 wood</b> and <b>1 stone</b> and he\'ll forge your iron sword.',5600),400); }
   if(id==='fish' && typeof giveRod==='function') giveRod();   // Finn hands over the rod as he sets you to fish
@@ -138,7 +140,8 @@ function completeQuest(id){
     toast('<b style="color:var(--ember)">Iron Sword forged!</b> Your first true weapon - tap the sword slot to wield it.'); }
   if(rw.armor){ const t=rw.armor; P.armorOwn=Math.max(P.armorOwn||0,t); P.armor=Math.max(P.armor||0,t); if(typeof refreshUI==='function') refreshUI();
     toast('<b style="color:var(--ember)">Armor forged!</b> Bram fits you with sturdy plate - blows land softer now.'); }
-  if(rw.kit){ P.kit=true;
+  if(rw.kit){ P.kit=true; P.tools=P.tools||{axe:0,pick:0};
+    P.tools.axe=Math.max(P.tools.axe||0,1); P.tools.pick=Math.max(P.tools.pick||0,1);
     setTimeout(()=>toast('<b style="color:var(--ember)">Woodsman\'s kit received!</b> You can now <b>chop trees</b> and <b>mine stone</b>.',4800),1200); }
   if(rw.bow){ P.unlocked.bow=true; P.maxArrows=P.maxArrows||20; P.arrows=P.maxArrows; buildHotbar(); refreshUI();
     if(typeof storyCard==='function') storyCard('<b style="color:var(--ember)">Bow unlocked!</b><br><br>'+((typeof isTouch!=='undefined'&&isTouch)?'Tap the bow slot':'Press 2')+' to draw it, and loose arrows at range. Each shaft hits <b>hard</b> - but your <b>quiver holds 20</b> and does <b>not</b> refill on its own, so pick your shots. Gather dropped shafts and quiver bundles to restock.', {label:'OK'});

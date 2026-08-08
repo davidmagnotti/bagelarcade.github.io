@@ -417,24 +417,29 @@ function giveRod(){
 }
 function hitNode(n){
   facePoint(n.x,n.y);
-  // hold gathering behind the smith - hack a tree or a rock before seeing Bram and you're
-  // told to go find him first (a soft nag, throttled so it doesn't spam every swing).
-  if((n.kind==='tree' || n.kind==='rock') && !hasMetBram()){
-    if(!P._bramNagT || G.time>P._bramNagT){ P._bramNagT=G.time+3;
-      toastErr('You\'ve nothing to work it with yet - see <b>Bram the Smith</b> at the forge first.',3600); }
-    P.click=null; return;
+  // hold gathering behind the actual tool - a sword (or bare hands) cannot fell wood or
+  // split stone. You need the Woodsman's Kit from Bram: an axe for trees, a pick for stone.
+  // Grandfathered generously - holds the kit, finished the quest, or has long sailed off
+  // Emberwick - so no returning player is suddenly locked out.
+  if(n.kind==='tree' || n.kind==='rock'){
+    const haveAxe  = !!P.kit || (P.tools && P.tools.axe>0);
+    const havePick = !!P.kit || (P.tools && P.tools.pick>0);
+    const offIsle  = (typeof G!=='undefined' && G.worldId && G.worldId!=='isle');
+    const kitDone  = qs('kit')==='done';
+    const haveTool = kitDone || offIsle || (n.kind==='tree' ? haveAxe : havePick);
+    if(!haveTool){
+      if(!P._bramNagT || G.time>P._bramNagT){ P._bramNagT=G.time+3;
+        toastErr(n.kind==='tree'
+          ? 'A sword won\'t fell a tree - you need an <b>axe</b>. See <b>Bram the Smith</b> at the forge for a Woodsman\'s Kit.'
+          : 'A sword won\'t split stone - you need a <b>pick</b>. See <b>Bram the Smith</b> at the forge for a Woodsman\'s Kit.', 3800); }
+      P.click=null; P.gatherAuto=null; return;
+    }
   }
   // GATED MATERIAL: ironwood pines / basalt stone bounce your current tool until
   // you carry the right tier (a dungeon-forged Rivenedge Axe / Cragbreaker Pick).
   // gateBlocked() shows the "your tool barely marks it" feedback itself.
   if((n.kind==='tree'||n.kind==='rock') && n.gate && typeof gateBlocked==='function' && gateBlocked(n)){ P.click=null; return; }
   if(n.kind==='tree' || n.kind==='rock'){
-    // No proper tool - bare hands, or just a sword? You can still hack at it, but it's
-    // stupid weak (see the power formula below): a slow chip that takes many times as
-    // long. A real axe/pick from Bram's forge fells wood and stone far faster.
-    if(!P.kit) hintOnce('needtool', n.kind==='tree'
-      ? 'You hack at the trunk with what you have - it barely marks. A proper <b>axe</b> from <b>Bram</b>\'s forge would make short work of it.'
-      : 'You scrape at the stone with what you have - it barely chips. A proper <b>pick</b> from <b>Bram</b>\'s forge would split it far faster.');
     P.gatherT=0.32; P.gatherKind = n.kind==='tree'? 'axe':'pick';   // a touch quicker swing cadence - wood & stone come in a little faster
     P.swing=Math.max(P.swing||0, 0.26);
   }
@@ -465,8 +470,12 @@ function hitNode(n){
   // set entirely by the tool. A basic iron axe/pick (tier 1) fells a tree or stone in a
   // handful of swings; a dungeon-forged one (tier 2) bites far deeper. With no proper tool
   // at all - bare hands, or a sword - it's stupid weak: a slow chip many times as long.
-  const tier = isTree ? (P.tools.axe||0) : (P.tools.pick||0);
-  const power = tier>=4 ? 9 : tier>=3 ? 7 : tier>=2 ? 5 : tier>=1 ? 2 : 0.34;
+  // Past the tool gate above you always hold at least the basic kit (or are grandfathered),
+  // so treat the kit as tier-1: a proper axe/pick fells in a handful of swings, never the
+  // pathetic bare-hands chip of old.
+  const rawTier = isTree ? (P.tools.axe||0) : (P.tools.pick||0);
+  const tier = Math.max(rawTier, 1);
+  const power = tier>=4 ? 9 : tier>=3 ? 7 : tier>=2 ? 5 : 2;
   n.hp-=power;
   if(isTree){ Snd.chop(); burst(n.x,n.y-1.2,'#4f9457',5,1.6); n.shake=0.22; }
   else { Snd.mine(); burst(n.x,n.y-0.5,'#c9ced6',5,1.6); n.shake=0.18; }
