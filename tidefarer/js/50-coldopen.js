@@ -201,7 +201,8 @@
     // Straight into the hands-on lesson - no wall of text to tap past first. A short beat lets
     // the storm banner land, then the guided steps take over (each one freezes the action).
     CO.phase='intro';
-    setTimeout(function(){ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && CO.phase==='intro') startGuide(); }, 1000);
+    // dive straight into the highlighted-button lesson - just a short beat for the banner
+    setTimeout(function(){ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && CO.phase==='intro') startGuide(); }, 450);
   }
   function isT(){ return (typeof isTouch!=='undefined') && isTouch; }
 
@@ -211,7 +212,7 @@
      lands as a true CANCEL. No foes on the deck yet. Cleared -> the waves begin. */
   var GUIDE_STEPS=[
     { act:'slash', keys:[' ','k'],       btn:'attackBtn',
-      html:'Your hands remember the blade. <b>SLASH</b> '+(isT()?'— tap the glowing <b>⚔</b>':'— press <b>Space</b> or <b>K</b>'), confirm:'SLASH' },
+      html:'<b>SLASH</b> '+(isT()?'— tap the glowing <b>⚔</b>':'— press <b>Space</b> or <b>K</b>'), confirm:'SLASH' },
     { act:'dash',  keys:['control','l'], btn:'dodgeBtn',
       html:'Now <b>DASH</b> '+(isT()?'— tap <b>⤸</b>':'— press <b>Ctrl</b> or <b>L</b>')+' <i>while the swing still hangs</i> — that <b>CANCELS</b> the recovery', confirm:'CANCEL!' },
     { act:'slash', keys:[' ','k'],       btn:'attackBtn',
@@ -355,13 +356,8 @@
       ov.style.cssText='position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0;transition:opacity 1.3s ease-in;background:radial-gradient(circle at 50% 55%, rgba(150,80,220,0.92), rgba(10,4,24,0.99));';
       document.body.appendChild(ov); }
     requestAnimationFrame(function(){ ov.style.opacity='1'; });
-    // the caption sits ABOVE the purple wash (z 61 vs 60) so its "tap to continue" cue is
-    // actually visible - without that the screen read as a blank purple hang that needed a
-    // mystery tap. Kept a short beat so the purple lands first, then the words rise on it.
-    setTimeout(function(){
-      coCaption('The world tips away. Something is torn loose and carried off into the dark - your name, your face, the light behind your eyes. Only the blade stays, locked in your hand.',
-        6000, {pause:true, onDone:coldOpenAshore});
-    }, 900);
+    // no caption here - the purple wash swells, then we go straight to the shore (Elder Maren).
+    setTimeout(function(){ coldOpenAshore(); }, 1500);
   }
 
   function coldOpenAshore(){
