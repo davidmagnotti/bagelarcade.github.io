@@ -35,6 +35,10 @@ function openDialog(npc){
   }
   const dl=dist(P.x,P.y,npc.x,npc.y)||1;
   npc.face={x:(P.x-npc.x)/dl, y:(P.y-npc.y)/dl};
+  // and turn the hero to face whoever they're speaking to (they were only facing the NPC by
+  // chance before - e.g. waking to Elder Maren after the intro, you'd often face away from her)
+  P.dir={x:(npc.x-P.x)/dl, y:(npc.y-P.y)/dl};
+  P.moving=false; P.click=null;
   dlg.open=true; dlg.npc=npc;
   document.getElementById('dialog').style.display='block';
   document.getElementById('dname').textContent=npcDisplayName(npc);

@@ -241,6 +241,9 @@ function startIntro(){
   }
   greeter.wander=0;
   greeter.face={x:(P.x>=greeter.x?1:-1), y:(P.y>=greeter.y?1:-1)};
+  // turn the castaway to face the elder she's waking to (she'd been left facing the sea)
+  { const _dx=greeter.x-P.x, _dy=greeter.y-P.y, _dl=Math.hypot(_dx,_dy);
+    if(_dl>0.001){ P.dir={x:_dx/_dl, y:_dy/_dl}; P.moving=false; } }
   P.click=null;
   dlg.open=true; dlg.npc=greeter;
   document.getElementById('dialog').style.display='block';
