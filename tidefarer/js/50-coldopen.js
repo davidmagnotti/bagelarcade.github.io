@@ -339,6 +339,7 @@
   function triggerDefeat(){ if(CO.phase==='defeat'||CO.phase==='done') return; CO.phase='defeat'; coldOpenDefeat(); }
   function coldOpenDefeat(){
     try{ (G.mobs||[]).forEach(function(m){ if(m&&m.coldBoss){ m.state='idle'; m.frozen=1; } }); }catch(e){}
+    try{ if(G.floats) G.floats.length=0; }catch(e){}   // no stray combat numbers linger over the cutscene
     P.hurtT=0.6;
     if(typeof G!=='undefined'){ G.shake=1.0; G.slowmo=Math.max(G.slowmo||0,1.3); }
     if(typeof Snd!=='undefined' && Snd.boss) Snd.boss();
@@ -525,12 +526,18 @@
     };
   }
 
-  // hurtPlayer: keep the hero alive through the cold open.
+  // hurtPlayer: keep the hero alive through the cold open - and DON'T show a "-N" damage
+  // number. HP is unlimited here, so a floating "-18" is meaningless clutter (it even lingers
+  // over the memory-loss cutscene). The red hurt-flash still sells the blow.
   if(typeof window.hurtPlayer==='function'){
     var _hurtPlayer=window.hurtPlayer;
     window.hurtPlayer=function(dmg, src){
+      var nBefore = (ON() && typeof G!=='undefined' && G.worldId==='deck' && G.floats) ? G.floats.length : -1;
       var r=_hurtPlayer.apply(this, arguments);
-      try{ if(ON() && typeof G!=='undefined' && G.worldId==='deck' && P && P.hp>0 && P.hp<P.maxhp) P.hp=P.maxhp; }catch(e){}
+      try{ if(ON() && typeof G!=='undefined' && G.worldId==='deck'){
+        if(P && P.hp>0 && P.hp<P.maxhp) P.hp=P.maxhp;
+        if(nBefore>=0 && G.floats && G.floats.length>nBefore) G.floats.length=nBefore;   // drop the "-N" it just added
+      } }catch(e){}
       return r;
     };
   }

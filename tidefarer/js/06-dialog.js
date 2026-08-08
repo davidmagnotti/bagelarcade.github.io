@@ -198,21 +198,14 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
-  // The Hollow Spirit is gated behind a fighter's full craft, not steel alone. If the
-  // traveler comes to Maren with a sword but no parry, she will not speak the causeway
-  // gate open - she sends them east to Rask the Bladesworn first, to learn the turning.
-  if(npc.id==='maren' && qs('king')==='avail' && !(P.unlocked&&P.unlocked.parry)){
-    setDialog('<i>Maren\'s face goes grave at the mention of the graveyard.</i> “The Hollow Spirit - aye, it stirs, and I\'ll speak the gate open for the one who\'ll face it. But not for a swinging arm alone. Whatever woke in that graveyard strikes back, and hard - you\'ll not last if all you know is how to hit. It is its rising that cursed the strait - its spite reaches out into the water and drags down any hull that dares the crossing, the same water that wrecked you. Put it down and the sea loosens its grip; Emberwick can sail again.” <i>She looks east, past the meadow.</i> “Go and find <b>Rask</b>. The old Bladesworn keeps the quiet out there - let him teach you to <b>turn a strike aside</b>. Come back to me when you can <b>parry</b>, and then we\'ll talk about facing it.”',
-      shopButtons(npc,[{label:'I\'ll find Rask', ghost:true, fn:closeDialog}]));
-    return;
-  }
-  // A parry alone is not enough: the traveler also needs the footwork Orin teaches.
-  // If the turning is learned but the dash is not, Maren sends them up to the tower to
-  // help Orin - his errand grants the dash. She doesn't name the mechanic; the gate is
-  // held by this condition (!dash) re-showing until they have it.
-  if(npc.id==='maren' && qs('king')==='avail' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.dash)){
-    setDialog('<i>Maren looks you over, and her brows lift.</i> “Rask taught you the turning already? Steel in your hand and you know what to do with it - that\'s more than most manage. Not bad at all.” <i>She nods up the north road, toward the tower.</i> “Go see if you can lend <b>Sage Orin</b> a hand - the old man mentioned he\'s been needing an extra one. Help him out, then come back to me and we\'ll talk about the causeway.”',
-      shopButtons(npc,[{label:'Off to see Orin', ghost:true, fn:closeDialog}]));
+  // You wash ashore already a fighter (the flow carried through the wreck), so Maren doesn't
+  // re-teach the basics - she points you to the isle's old master on the far NE headland for
+  // the KILLING COUNTER (the riposte, taught by the Drowned Knight) and to Orin for a hand.
+  // Shown ONCE, then she speaks with you as normal (quests, the causeway/Hollow Spirit).
+  if(npc.id==='maren' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.riposte) && !(P.story&&P.story.marenSent)){
+    P.story=P.story||{}; P.story.marenSent=1;
+    setDialog('<i>Maren watches the way you hold the blade, even half-drowned, and nods slowly.</i> “You already fight like the tide itself - a sword, quick feet, a guard. But dark things have woken off our shores, and hitting hard will not be enough; you must turn their blows into openings.” <i>She looks to the far north-east headland, where the wind never quite settles.</i> “There\'s an old… <i>protector</i> up on that headland - been there longer than the stones. Go and find him; let him teach you to answer a turned blade with a killing stroke. And lend <b>Sage Orin</b> a hand up the north road while you\'re about it - the old man\'s been wanting one. Come back when you\'ve the <b>counter</b> in your hands.”',
+      shopButtons(npc,[{label:'I\'ll seek the headland', ghost:true, fn:closeDialog}]));
     return;
   }
   // After the Hollow Spirit falls, the elder does more than thank you: she names the
@@ -650,35 +643,28 @@ function buildDialogContent(npc){
       shopButtons(npc,[{label:'I\'ll find Bram', ghost:true, fn:closeDialog}]));
     return;
   }
-  // Sage Orin's off-the-cuff nudge toward the Drowned Knight. Once the traveller can
-  // both turn a blade (parry) and dart aside (dash) - i.e. after Rask and Orin's own
-  // lesson - the old sage half-remembers "an old friend" up the far north-east headland.
-  // Shown ONCE (flag), then flows straight on into Orin's normal dialogue/quests.
-  if(npc.id==='orin' && (P.unlocked&&P.unlocked.parry) && (P.unlocked&&P.unlocked.dash) &&
-     !(P.unlocked&&P.unlocked.combos) && !(P.story&&P.story.knightHint)){
+  // Sage Orin's off-the-cuff nudge toward the Drowned Knight. You already fight well (the flow
+  // carried over from the wreck), but there's one more thing the old master can give you - the
+  // riposte. Shown ONCE (flag), then flows straight on into Orin's normal dialogue/quests.
+  if(npc.id==='orin' && !(P.unlocked&&P.unlocked.riposte) && !(P.story&&P.story.knightHint)){
     P.story=P.story||{}; P.story.knightHint=1;
-    setDialog('<i>As you make to leave, Orin waves a hand as though something has just surfaced.</i> “Oh - before you wander off. If you\'ve a taste for fighting <i>well</i>, and not merely fighting… there\'s an old friend of mine who keeps to the far <b>north-east headland</b>. Cantankerous sort. I\'ve not laid eyes on him in - hah - longer than I\'ll admit to. Go and poke about up there, would you? Tell him <b>Orin sent you</b>. He\'ll know what to make of someone like you.” <i>He has already turned back to his books, as if he never spoke.</i>',
+    setDialog('<i>As you make to leave, Orin waves a hand as though something has just surfaced.</i> “Oh - before you wander off. You fight well enough already… but if you\'d fight <i>deadly</i>, there\'s an old friend of mine who keeps to the far <b>north-east headland</b>. Cantankerous sort - been there longer than I\'ll admit to. Go and poke about up there, would you? Tell him <b>Orin sent you</b>. He knows a trick with a turned blade that will make believers of your enemies.” <i>He has already turned back to his books, as if he never spoke.</i>',
       [{label:'…the far north-east', fn:()=>buildDialogContent(npc)}]);
     return;
   }
-  // The Drowned Knight - the ancient spirit-protector who teaches the flow of blades
-  // (cancels, chains, guard). The drill and the unlock live in 50-ancient-knight.js.
-  if(npc.id==='knight' && !(P.unlocked&&P.unlocked.combos)){
+  // The Drowned Knight - the ancient spirit-protector. You already carry the FLOW from the
+  // wreck (cancels, chains, the timed parry); what he teaches is the RIPOSTE - the killing
+  // answer to a turned blade. The drill and the unlock live in 50-ancient-knight.js.
+  if(npc.id==='knight' && !(P.unlocked&&P.unlocked.riposte)){
     P.story=P.story||{};
-    // Not yet a proper fighter: send them back to earn the basics first (mirrors Rask).
-    if(!((P.unlocked&&P.unlocked.parry) && (P.unlocked&&P.unlocked.dash))){
-      setDialog('<i>The spirit\'s gaze passes over you and finds you wanting.</i> “You\'ve the will - but not yet the craft. Come back when you can <b>turn a blade</b> and <b>dart aside</b>, and there\'ll be something in you worth the sharpening.”',
-        [{label:'I\'ll return', ghost:true, fn:closeDialog}]);
-      return;
-    }
-    // the training pitch (the three lessons), leading into the hands-on drill
+    // the training pitch (the riposte), leading into the hands-on drill
     var knightOffer=function(){
-      setDialog('<b style="color:#bcd8ee">“Any fool can swing. The trade is in the seams - the breath between one blow and the next, where a fight is truly won and lost.”</b> <i>He turns his spectral blade in the low light.</i> “I\'ll teach you to <b>cancel</b> a stroke you have already begun, to <b>chain</b> your footwork past its natural end, and to <b>set your guard</b> in the half-instant you are given. Three lessons. Then you will move like water - and the isles will learn to fear the tide again. Will you learn?”',
+      setDialog('<b style="color:#bcd8ee">“You already move like water - the cancels, the chains, the turned blade. Whoever drowned your name did not drown your craft.”</b> <i>He turns his spectral blade in the low light.</i> “But you throw a parry away - you turn a blow, and then you simply… stand there. A blade turned is an <b>open door</b>. I will teach you the <b>riposte</b>: parry, and let your next stroke fall like the tide come home. Defence into death, one motion. Will you learn?”',
         [{label:'Teach me', cls:'gold', fn:()=>{ closeDialog(); if(typeof beginKnightDrill==='function') beginKnightDrill(); }},
          {label:'Not yet', ghost:true, fn:closeDialog}]);
     };
     if(P.knightDrill){
-      setDialog('<b>“The lesson stands. When your feet are ready, so am I.”</b>',
+      setDialog('<b>“The lesson stands. Parry me, then answer - when you\'re ready, so am I.”</b>',
         [{label:'I\'m ready', cls:'gold', fn:()=>{ closeDialog(); if(typeof knightDrillNudge==='function') knightDrillNudge(); }},
          {label:'A moment', ghost:true, fn:closeDialog}]);
       return;
@@ -686,16 +672,16 @@ function buildDialogContent(npc){
     if(!P.story.knightMet){
       P.story.knightMet=1;
       if(typeof knightRevealFx==='function') knightRevealFx();
-      setDialog('<i>You crest the headland expecting a person - Orin\'s "old friend." There is no one. Then the air goes cold, the light bends, and a knight in drowned armour stands where the wind had been, watching you with a quiet, dreadful patience.</i><br><b style="color:#bcd8ee">“You were expecting a pulse. Orin always did leave out the interesting part.”</b> <i>Something like a smile crosses the ruined helm.</i> “I am what remains of this isle\'s first protector - I have kept this rock since before your grandmother\'s grandmother drew her first breath. And you: curse-broken, nameless, and already quicker than you have any right to be.”',
+      setDialog('<i>You crest the headland expecting a person - the "old protector" they spoke of. There is no one. Then the air goes cold, the light bends, and a knight in drowned armour stands where the wind had been, watching you with a quiet, dreadful patience.</i><br><b style="color:#bcd8ee">“You were expecting a pulse. They always do leave out the interesting part.”</b> <i>Something like a smile crosses the ruined helm.</i> “I am what remains of this isle\'s first protector - I have kept this rock since before your grandmother\'s grandmother drew her first breath. And you: curse-broken, nameless, and already quicker than you have any right to be.”',
         [{label:'…you\'re a ghost?', fn:knightOffer}]);
       return;
     }
     knightOffer();
     return;
   }
-  // After the flow is learned, the knight keeps the headland as a wry old mentor.
-  if(npc.id==='knight' && (P.unlocked&&P.unlocked.combos)){
-    setDialog('<i>The knight rests his spectral blade point-down, both hands folded on the pommel.</i> <b style="color:#bcd8ee">“You carry the flow now - wear it lightly, and it will not fail you.”</b> “Go on, tide-child. Break his curses off these islands, one by one. I have kept this headland a long age, and I will keep it yet - come back to me when an old sword\'s counsel would serve.”',
+  // Once the riposte is learned, the knight keeps the headland as a wry old mentor.
+  if(npc.id==='knight' && (P.unlocked&&P.unlocked.riposte)){
+    setDialog('<i>The knight rests his spectral blade point-down, both hands folded on the pommel.</i> <b style="color:#bcd8ee">“You carry the counter now - turn a blade, then answer it, and few things on these waters will stand long against you.”</b> “Go on, tide-child. Break his curses off these islands, one by one. I have kept this headland a long age, and I will keep it yet - come back to me when an old sword\'s counsel would serve.”',
       [{label:'Thank you', ghost:true, fn:closeDialog}]);
     return;
   }

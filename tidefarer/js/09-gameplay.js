@@ -722,6 +722,9 @@ function onParry(sx,sy){
   shockwave(mx,my,'rgba(255,235,170,0.95)',30); burst(mx,my-0.3,'#fff2c0',14,2.6);
   G.hitStop=Math.max(G.hitStop||0,0.07); G.shake=Math.max(G.shake||0,0.18);
   Snd.crit&&Snd.crit(); buzz(14);
+  // RIPOSTE (the Drowned Knight's lesson): a turned blade leaves its owner wide open, so your
+  // NEXT strike lands as an empowered counter - the same 1.8x empower a perfect dodge grants.
+  if(P.unlocked && P.unlocked.riposte){ P.empower=1; P.empowerT=Math.max(P.empowerT||0, 2.5); }
   return true;
 }
 /* DEFLECT on its own key (O): a trained defensive flick that opens the parry timing

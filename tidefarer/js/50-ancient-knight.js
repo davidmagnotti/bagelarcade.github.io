@@ -29,22 +29,20 @@ function isTouchDev(){ return (typeof isTouch!=='undefined') && isTouch; }
 
 // The three lessons. `hint` is the instruction toast; `check(D,dt)` returns true the
 // moment the lesson is satisfied. Kept data-driven so the feel is easy to retune.
+// You already carry the flow from the wreck (cancels, chains, the timed parry). What the
+// Drowned Knight teaches now is the RIPOSTE - the killing answer to a turned blade - in two
+// beats: PARRY his practice strike, then STRIKE BACK into the opening.
 var LESSONS = [
-  { key:'cancel', title:'CANCEL',
-    hint:function(){ return 'Lesson one - <b>CANCEL</b>. '+(isTouchDev()?'Tap <b>⚔</b>, then <b>⤷</b>':'Press <b>attack</b> (Space), then <b>dash</b> (Ctrl / L)')+' - strike, then <b>break the swing early with a dash</b> before it lands you flat-footed.'; },
-    done:'The recovery is yours to spend, not the enemy\'s.',
-    // a dash begun within a breath of a swing = the stroke cancelled into footwork
-    check:function(D){ return D._dashStarted && D._lastAtk>0 && (now()-D._lastAtk) < 0.6; } },
-  { key:'chain', title:'CHAIN',
-    hint:function(){ return 'Lesson two - <b>CHAIN</b>. '+(isTouchDev()?'Tap <b>⤷</b>, then <b>⤷</b> again':'<b>Dash</b> (Ctrl / L), then <b>dash again</b>')+' - carry your footwork <b>past its natural end</b>. Watch your <b>stamina</b>.'; },
-    done:'Twice-quick. Few living feet manage it.',
-    // two dash-starts inside a short window = a chained dash
-    check:function(D){ var t=D.dashTimes; return t.length>=2 && (t[t.length-1]-t[t.length-2]) < 0.85; } },
   { key:'deflect', title:'PARRY',
-    hint:function(){ return 'Lesson three - <b>PARRY</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ parry</b> button':'press <b>O</b> (or attack)')+' <b>the instant my blow reaches you</b> to turn it aside. Timing, not flailing - a blade well-met needs no shield.'; },
-    done:'Turned clean. That is the whole of it.',
+    hint:function(){ return 'First - the <b>PARRY</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ parry</b> button':'press <b>O</b> (or time a slash)')+' <b>the instant my blow reaches you</b> to turn it aside.'; },
+    done:'Turned clean. Now feel what it opens.',
     // hands-on: driven by the throw-cycle in updateKnightDrill (parry the knight's strike)
     check:function(D){ return !!D._deflected; } },
+  { key:'riposte', title:'RIPOSTE',
+    hint:function(){ return 'Now the <b>RIPOSTE</b>. A blade turned leaves its owner wide open - '+(isTouchDev()?'<b>strike back (⚔)</b>':'<b>strike back</b> (Space / K)')+' at once, before I recover. That answering blow is a killing one.'; },
+    done:'That is the riposte. Defence and death in one motion.',
+    // a fresh swing after the parry beat (D._lastAtk was reset to -99 at the hand-off)
+    check:function(D){ return (D._lastAtk||-99) > 0; } },
 ];
 
 /* ---------- keep the training ground clear (slimes shooed, stray clutter felled) ----------
@@ -94,7 +92,7 @@ function beginKnightDrill(){
   // top the tank so the chain/guard lessons never stall on an empty bar
   P.stamMax = P.stamMax || (window.COMBO && window.COMBO.cfg ? window.COMBO.cfg.stamMax : 100);
   P.stam = P.stamMax;
-  if(typeof banner==='function') banner('THE FLOW OF BLADES', 'Three lessons - watch, and do');
+  if(typeof banner==='function') banner('THE RIPOSTE', 'Turn a blade - then answer it');
   // let the banner read first, then the first instruction eases in (no detection until lockT clears)
   setTimeout(function(){ if(P.knightDrill && P.knightDrill.lesson===0) announceLesson(); }, 1000);
 }
@@ -105,21 +103,17 @@ function finishKnightDrill(){
   if(!ready()) return;
   P.knightDrill = null;
   P.unlocked = P.unlocked || {};
-  P.unlocked.combos = true;     // <-- this is what graduates the prototype for real players
+  P.unlocked.riposte = true;    // the NEW ability the knight teaches (the flow itself came from the wreck)
   P.story = P.story || {}; P.story.flowLearned = 1;
   if(typeof G!=='undefined'){ G.slowmo=Math.max(G.slowmo||0,0.4); if(P) { } }
-  if(typeof banner==='function') banner('THE FLOW IS YOURS', 'Move like water');
+  if(typeof banner==='function') banner('THE RIPOSTE IS YOURS', 'Turn a blade - then answer it');
   if(typeof Snd!=='undefined' && Snd.levelup) Snd.levelup();
   if(typeof burst==='function' && ready()) burst(P.x, P.y-0.6, '#bfe0ff', 26, 3.2);
-  // the lesson, distilled - a click-through card so the controls can't be missed
-  var msg = '<b style="color:#bcd8ee">The Drowned Knight\'s lesson is yours.</b><br><br>'+
-    'A new <b style="color:#8fe8cf">stamina</b> gauge sits under your health - the fuel for the flow. Ordinary fighting never touches it; only the <i>advanced</i> moves do, and it refills fast when you let it.<br><br>'+
-    '• <b>Cancel</b> - '+(isTouchDev()?'attack, then dash':'attack, then dash (Ctrl / L)')+' to break a swing\'s recovery.<br>'+
-    '• <b>Chain</b> - dash again mid-cooldown to keep moving (costs stamina).<br>'+
-    '• <b>Re-strike</b> - '+(isTouchDev()?'tap attack again quickly':'tap attack again faster than the rhythm')+' to cut your recovery short (costs stamina).<br>'+
-    '• <b>Parry</b> - '+(isTouchDev()?'time the <b>◆</b> button':'press <b>O</b> (or time a strike)')+' to an incoming blow to <b>turn it aside</b>, and it <b>refunds stamina</b>.<br>'+
-    '• A <b>perfect dodge</b> refunds stamina too - reading a blow pays for your next flourish.';
-  var showCard = function(){ if(typeof storyCard==='function') storyCard(msg,{label:'Move like water'}); else toastMsg(msg, 9000); };
+  // the lesson, distilled - a click-through card so the technique can't be missed
+  var msg = '<b style="color:#bcd8ee">The Drowned Knight\'s riposte is yours.</b><br><br>'+
+    'When you <b>parry</b> a blow, the striker is thrown wide open - and your <b style="color:#bfe8ff">next strike lands as a RIPOSTE</b>: a heavy counter that bites far deeper than a clean blow.<br><br>'+
+    'Read the tell, <b>turn the blade</b> ('+(isTouchDev()?'the <b>◆</b> button':'the <b>O</b> key')+'), then <b>strike at once</b>. Your defence becomes your deadliest attack.';
+  var showCard = function(){ if(typeof storyCard==='function') storyCard(msg,{label:'Turn and answer'}); else toastMsg(msg, 9000); };
   // if the finish lands mid-dialogue, hold the card until it closes (mirrors unlockDash)
   if(typeof dlg!=='undefined' && dlg.open){ P._dashCardPending = showCard; } else showCard();
   if(typeof refreshUI==='function') refreshUI();
