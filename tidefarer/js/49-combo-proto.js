@@ -38,6 +38,7 @@
     regenRate:    45,     // stamina per second once regen kicks in
     atkCancel:  { window: 0.36, cost: 14 },   // re-swing anywhere in the recovery (a forgiving cancel window)
     dashChain:  { cost: 14 },                 // stamina per chained (2nd+) dash - kept cheap so combos flow
+    airSlash:   { cost: 18 },                 // stamina per Air Slash (the ranged crescent, see 09-gameplay tryAirSlash)
     riposteRefund: 60,    // stamina handed back on a perfect-dodge riposte
     deflectRefund: 45,    // stamina handed back on a timed DEFLECT (a turned blow)
   };

@@ -33,7 +33,7 @@ window.addEventListener('keydown',e=>{
   // Slash is Space OR K; deflect is O; dash is Ctrl OR L - so the right hand can rest on
   // O / K / L for the timing combos while the left drives WASD.
   if(k===' '||k==='k'){ if(k===' ') e.preventDefault(); input.attack=true; }
-  if(k==='o' && !e.repeat){ if(typeof tryDeflect==='function') tryDeflect(); }
+  if(k==='o' && !e.repeat){ if(typeof tryAirSlash==='function') tryAirSlash(); }   // O = Air Slash (parry is now sword-timing)
   if(k==='1') selectWeapon('melee');
   if(k==='2') selectWeapon('bow');
   if(k==='4') useItem(P.quickItem||'potion');

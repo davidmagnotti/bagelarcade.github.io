@@ -4388,6 +4388,16 @@ function drawProj(p,s){
     cx.strokeStyle='#c9a06a'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-9,0); cx.lineTo(7,0); cx.stroke();
     cx.fillStyle='#dfe0d8'; cx.beginPath(); cx.moveTo(10,0); cx.lineTo(5,-3); cx.lineTo(5,3); cx.closePath(); cx.fill();
     cx.restore();
+  } else if(p.kind==='airslash'){
+    // a crescent of cut air, its convex edge leading the way it travels
+    const a=Math.atan2((p.vx+p.vy)*TH/2,(p.vx-p.vy)*TW/2);
+    cx.save(); cx.translate(s.x,s.y-12); cx.rotate(a);
+    cx.lineCap='round';
+    cx.strokeStyle='rgba(200,232,255,0.9)'; cx.lineWidth=3.4;
+    cx.beginPath(); cx.arc(-7,0,12,-0.95,0.95); cx.stroke();
+    cx.strokeStyle='rgba(242,250,255,0.7)'; cx.lineWidth=1.6;
+    cx.beginPath(); cx.arc(-5,0,9.5,-0.7,0.7); cx.stroke();
+    cx.restore();
   } else if(p.kind==='snarebolt'){
     cx.fillStyle='rgba(111,224,200,0.35)'; cx.beginPath(); cx.arc(s.x,s.y-12,10,0,TAU); cx.fill();
     cx.fillStyle='#8ff0dc'; cx.beginPath(); cx.arc(s.x,s.y-12,5,0,TAU); cx.fill();

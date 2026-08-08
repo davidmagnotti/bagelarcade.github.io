@@ -494,12 +494,14 @@ function updateMountBtn(){
     const _now = (typeof G!=='undefined')? G.time : 0;
     if(ab) ab.classList.toggle('cancelFlash', (_now-(P._evCancel||-9)) >= 0 && (_now-(P._evCancel||-9)) < 0.32);
     if(db) db.classList.toggle('cancelFlash', (_now-(P._evDashCancel||-9)) >= 0 && (_now-(P._evDashCancel||-9)) < 0.32);
-    // DEFLECT / parry - the third combat button, once the turning is learned. Grays during
-    // its brief recovery and lights back up the instant it's ready to time to the next blow.
+    // AIR SLASH - the third combat button (parry is now sword-timing). Shows once it's learned;
+    // grays during its brief recovery or when you're short of the stamina it costs.
     const cb=document.getElementById('deflectBtn');
     if(cb){
-      cb.style.display = (hide || !(P.unlocked && P.unlocked.parry))?'none':'';
-      cb.classList.toggle('cooldown', (P.deflectCd||0)>0 || (P.rollT||0)>0);
+      cb.style.display = (hide || !(P.unlocked && P.unlocked.airslash))?'none':'';
+      const airCost = _cfg && _cfg.airSlash ? _cfg.airSlash.cost : 18;
+      const airReady = (P.airCd||0)<=0 && (P.rollT||0)<=0 && (!_comboLive || (P.stam||0) >= airCost);
+      cb.classList.toggle('cooldown', !airReady);
     }
   }
   const btn=document.getElementById('mountBtn'); if(!btn) return;

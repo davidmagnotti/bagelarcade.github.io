@@ -706,7 +706,7 @@ function unlockParry(msg){
   if(P.unlocked.parry) return;
   P.unlocked.parry=true;
   Snd.quest&&Snd.quest();
-  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> It\'s all <b>timing</b>. Against a <b>melee</b> foe, a red <b style="color:#ff5a4a">!</b> builds as it winds up, then flares <b style="color:#fff">WHITE</b> - <b>parry on that white flash</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn the blow and leave the striker staggered wide open. You can parry a <b>thrown shot</b> just as well - an arrow, a bone, a bomb: it <b style="color:#fff">flares WHITE</b> as it closes, so <b>parry on the incoming shot</b> and you\'ll bat it <b>right back at whoever threw it</b>. (A well-timed slash still turns a blow too; a hair early or late is fine.)';
+  const parryMsg = msg || '<b style="color:#ffe08a">Parry learned!</b> It\'s all <b>timing</b>, no separate button - it lives in your <b>swing</b>. Against a <b>melee</b> foe, a red <b style="color:#ff5a4a">!</b> builds as it winds up, then flares <b style="color:#fff">WHITE</b> - <b>attack on that white flash</b> to turn the blow and leave the striker staggered wide open. You can parry a <b>thrown shot</b> just as well - an arrow, a bone, a bomb: it <b style="color:#fff">flares WHITE</b> as it closes, so <b>swing on the incoming shot</b> and you\'ll bat it <b>right back at whoever threw it</b>. (A hair early or late is fine - just don\'t swing during the red build-up.)';
   if(typeof storyCard==='function') storyCard(parryMsg, {label:'OK'});
   else toast(parryMsg, 5200);
   if(typeof questReadySweep==='function') questReadySweep();
@@ -753,6 +753,35 @@ function tryDeflect(){
   P.lastCombat=G.time;
   Snd.tone&&Snd.tone(520,0.05,'triangle',0.03,120);
 }
+/* AIR SLASH (the third combat art): a crescent of cut air that flies a few tiles and slices
+   whatever it passes. A stamina-costing FLOW move with a short cooldown - the offensive third
+   button (parry is now sword-timing: swing on the tell to turn a blow). Reuses the melee
+   auto-aim, so it flies at the nearest foe or straight ahead, and pierces (a whole line). */
+function tryAirSlash(){
+  if(P.dead || G.state!=='play' || dlg.open || G.interior || (P.stunT||0)>0 || (P.rollT||0)>0 || P.riding) return;
+  if(!(P.unlocked && P.unlocked.airslash)) return;
+  if((P.airCd||0)>0) return;
+  // stamina: costs wind when the flow layer is live (always, post-intro). No wind -> no slash.
+  const comboOn = !!((typeof window!=='undefined' && window.COMBO && window.COMBO.on) || (P.unlocked && P.unlocked.combos));
+  const COST = (typeof window!=='undefined' && window.COMBO && window.COMBO.cfg && window.COMBO.cfg.airSlash) ? window.COMBO.cfg.airSlash.cost : 18;
+  if(comboOn){
+    if((P.stam||0) < COST) return;
+    P.stam=Math.max(0,(P.stam||0)-COST);
+    P.stamRegenT=(typeof window!=='undefined' && window.COMBO && window.COMBO.cfg) ? window.COMBO.cfg.regenDelay : 0.7;
+  }
+  let bm=null, bd=8;
+  for(const m of G.mobs){ if(m.dead||m.sealed) continue; const d=dist(P.x,P.y,m.x,m.y); if(d<bd){bd=d;bm=m;} }
+  let aim = bm? {x:bm.x-P.x,y:bm.y-P.y} : {x:P.dir.x,y:P.dir.y};
+  const l=Math.hypot(aim.x,aim.y)||1; aim.x/=l; aim.y/=l;
+  P.dir={x:aim.x,y:aim.y};
+  P.airCd=0.5; P.swing=Math.max(P.swing||0,0.28); P.lastCombat=G.time;
+  G.projs.push({ kind:'airslash', x:P.x, y:P.y-0.4, vx:aim.x*11, vy:aim.y*11, life:0.42,
+    dmg:Math.max(1,Math.round(meleeDmg()*0.9)), from:'player', skill:'melee',
+    pierce:1, hitR:0.95, _hit:[], ang:Math.atan2(aim.y,aim.x) });
+  if(Snd.noise) Snd.noise(0.16,0.05,760,0.9);
+  burst(P.x+aim.x*0.7, P.y+aim.y*0.7-0.3, '#cfeaff', 9, 2.6);
+  G.shake=Math.max(G.shake||0,0.1);
+}
 /* Rask's parry lesson - a hands-on DRILL, not a lecture. He PITCHES a practice billet
    (a length of wood) at you; watch it close, and ATTACK as it reaches you to turn it
    back. Land 3 clean parries and the guard is yours. A billet that gets past your
@@ -771,7 +800,7 @@ function beginParryDrill(){
   P.parryDrill={count:0, need:3, phase:'rest', t:1.0, proj:null};
   rask.drillWarn=0;
   if(typeof banner==='function') banner('THE TURNING','Parry Rask\'s billet - three times');
-  toast('Rask <b>pitches a wooden billet</b> at you: watch it close, and <b>parry as it reaches you</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') to turn it back. A white ring flares on the billet at the instant to catch it. (A well-timed <b>slash</b> turns it too.) <b>Parry 3.</b>',7000);
+  toast('Rask <b>pitches a wooden billet</b> at you: watch it close, and <b>swing as it reaches you</b> ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>⚔</b>':'<b>Space</b> / <b>K</b>')+') to turn it back - your blade meets it. A white ring flares on the billet at the instant to catch it. <b>Parry 3.</b>',7000);
 }
 // Rask hurls a practice billet at the student. It's a normal enemy projectile, so the
 // existing shot-parry (updateProjs) turns it back and the shot-tell (drawProj) flares
@@ -831,7 +860,7 @@ function finishParryDrill(){
     document.getElementById('dialog').style.display='block';
     document.getElementById('dname').textContent = (typeof npcDisplayName==='function')? npcDisplayName(rask) : rask.name;
     if(typeof drawPortrait==='function') drawPortrait(rask);
-    setDialog('<i>Rask lowers his billet and gives a short, satisfied nod.</i> “Nice work - that\'s the turning. It\'s all in the eye: when a foe winds up, a red mark builds and then flares <b>white</b> - that flash is your moment. <b>Parry</b> then ('+((typeof isTouch!=='undefined'&&isTouch)?'tap <b>◆</b>':'the <b>O</b> key')+') and you\'ll catch the blow on your blade, turn it aside, and leave the striker wide open - a clean catch even feeds your <b>vigor</b> back. A thrown shot\'s the same: parry on the white flash and you\'ll bat it right back the way it came. A slash on the beat still turns a blow - but the parry is surer, and costs you no swing.”',
+    setDialog('<i>Rask lowers his billet and gives a short, satisfied nod.</i> “Nice work - that\'s the turning. No button to it; it lives in your <b>swing</b>. When a foe winds up, a red mark builds and then flares <b>white</b> - that flash is your moment. <b>Swing on it</b> and you\'ll catch the blow on your blade, turn it aside, and leave the striker wide open - a clean catch even feeds your <b>vigor</b> back. A thrown shot\'s the same: swing on the white flash and you\'ll bat it right back the way it came.”',
       [{label:'Got it', ghost:true, fn:closeDialog}]);
   }
 }
@@ -1853,6 +1882,7 @@ function updatePlayer(dt){
   P.healCd=Math.max(0,(P.healCd||0)-dt);   // draughts share a short cooldown - no chugging mid-swing
   if((P.empowerT||0)>0){ P.empowerT-=dt; if(P.empowerT<=0){ P.empowerT=0; P.empower=0; } } // a riposte window that lapses if unused
   if((P.superStamT||0)>0){ P.superStamT-=dt; if(P.superStamT<=0){ P.superStamT=0; addFloat('vigor fades',P.x,P.y-1.7,'#8fe8cf',0.9); } } // Orin's Vigor Draught: stamina drains half as fast while it holds
+  P.airCd=Math.max(0,(P.airCd||0)-dt);   // air-slash recovery
   if(P.cheerT) P.cheerT=Math.max(0,P.cheerT-dt);
   if(input.attack || (input.mouseDown && !isTouch)) tryAttack(input.mouseDown);
   // scorpion venom: damage over time, never lethal, times out on its own
@@ -2465,7 +2495,14 @@ function updateProjs(dt){
       for(const m of G.mobs){
         if(m.dead||m.sealed) continue;
         if(p.homeTo && m!==p.homeTo) continue;   // seeking the thrower - ignore bystanders
-        if(dist(p.x,p.y,m.x,m.y-0.3)<0.6){
+        if(dist(p.x,p.y,m.x,m.y-0.3) < (p.hitR||0.6)){
+          // AIR SLASH (a piercing crescent): slice each foe in its path ONCE and keep flying,
+          // instead of dying on the first hit like an arrow.
+          if(p.pierce){ if(p._hit && p._hit.indexOf(m)>=0) continue;
+            damageMob(m, p.dmg, {x:p.vx/11, y:p.vy/11}, p.skill);
+            if(p._hit) p._hit.push(m);
+            burst(m.x, m.y-0.3, '#bfe8ff', 7, 2.4);
+            continue; }
           // A warden that TURNS ARROWS: the Drowned Minotaur bats a loosed shaft straight
           // back at the archer (arrows only - magic still bites). It becomes a mob shot, so
           // you must PARRY the returned shaft or eat it - the bow alone won't win this fight.

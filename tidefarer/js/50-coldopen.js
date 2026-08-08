@@ -177,7 +177,7 @@
     P.unlocked = P.unlocked || {};
     // The intro is a flash of your SKILLED self - the full flow is yours here (stamina,
     // cancels, chains, deflect), which is what the Deep Maw tears away below (coldOpenAshore).
-    P.unlocked.melee=true; P.unlocked.dash=true; P.unlocked.parry=true; P.unlocked.combos=true;
+    P.unlocked.melee=true; P.unlocked.dash=true; P.unlocked.parry=true; P.unlocked.combos=true; P.unlocked.airslash=true;
     P.weapon='melee'; P.swordTier=Math.max(P.swordTier||0,1);
     P.hp=P.maxhp;
     CO.phase='intro'; CO.smallsLeft=SMALLS; CO.bossT=0; CO.bossHits=0;

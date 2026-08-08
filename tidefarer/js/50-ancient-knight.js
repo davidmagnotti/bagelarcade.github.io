@@ -34,7 +34,7 @@ function isTouchDev(){ return (typeof isTouch!=='undefined') && isTouch; }
 // beats: PARRY his practice strike, then STRIKE BACK into the opening.
 var LESSONS = [
   { key:'deflect', title:'PARRY',
-    hint:function(){ return 'First - the <b>PARRY</b>. I will strike; '+(isTouchDev()?'tap the <b>◆ parry</b> button':'press <b>O</b> (or time a slash)')+' <b>the instant my blow reaches you</b> to turn it aside.'; },
+    hint:function(){ return 'First - the <b>PARRY</b>. I will strike; <b>swing</b> ('+(isTouchDev()?'tap <b>⚔</b>':'<b>Space</b> / <b>K</b>')+') <b>the instant my blow reaches you</b> to turn it aside - your blade meets it, no separate guard.'; },
     done:'Turned clean. Now feel what it opens.',
     // hands-on: driven by the throw-cycle in updateKnightDrill (parry the knight's strike)
     check:function(D){ return !!D._deflected; } },
@@ -112,7 +112,7 @@ function finishKnightDrill(){
   // the lesson, distilled - a click-through card so the technique can't be missed
   var msg = '<b style="color:#bcd8ee">The Drowned Knight\'s riposte is yours.</b><br><br>'+
     'When you <b>parry</b> a blow, the striker is thrown wide open - and your <b style="color:#bfe8ff">next strike lands as a RIPOSTE</b>: a heavy counter that bites far deeper than a clean blow.<br><br>'+
-    'Read the tell, <b>turn the blade</b> ('+(isTouchDev()?'the <b>◆</b> button':'the <b>O</b> key')+'), then <b>strike at once</b>. Your defence becomes your deadliest attack.';
+    'Read the tell, <b>swing on the white flash</b> to turn the blade, then <b>strike at once</b>. Your defence becomes your deadliest attack.';
   var showCard = function(){ if(typeof storyCard==='function') storyCard(msg,{label:'Turn and answer'}); else toastMsg(msg, 9000); };
   // if the finish lands mid-dialogue, hold the card until it closes (mirrors unlockDash)
   if(typeof dlg!=='undefined' && dlg.open){ P._dashCardPending = showCard; } else showCard();

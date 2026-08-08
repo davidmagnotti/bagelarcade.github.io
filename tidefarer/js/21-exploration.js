@@ -187,12 +187,12 @@ function boot(){
   for(let i=0;i<6;i++) G.clouds.push({x:Math.random()*MAPW, y:Math.random()*MAPH,
     vx:rnd(0.25,0.5), vy:rnd(-0.12,0.12), r:rnd(48,90)});
   pressable(document.getElementById('dodgeBtn'), ()=>{ tryRoll(); });
-  { const _db=document.getElementById('deflectBtn'); if(_db) pressable(_db, ()=>{ if(typeof tryDeflect==='function') tryDeflect(); }); }
+  { const _db=document.getElementById('deflectBtn'); if(_db) pressable(_db, ()=>{ if(typeof tryAirSlash==='function') tryAirSlash(); }); }   // the 3rd button is now Air Slash
   buildHotbar(); refreshUI();
   // controls blurb on title
   document.getElementById('ovControls').innerHTML = isTouch
-    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>◆</b> - parry (time it to a foe\'s blow) · <b>green button</b> - talk, fish, harvest'
-    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> · <b>Space</b>/<b>K</b> attack · <b>Ctrl</b>/<b>L</b> dash · <b>O</b> parry (time it to a foe\'s blow) · <b>E</b> interact · in dialog, <b>Enter</b>/<b>number keys</b> · <b>gamepad supported</b>';
+    ? '<b>Left thumb</b> - joystick to move · <b>⚔</b> - attack / gather · <b>⤸</b> - dodge roll · <b>◆</b> - air slash · <b>green button</b> - talk, fish, harvest · <b>parry</b>: swing on a foe\'s white flash'
+    : '<b>Click</b> to walk, gather, talk, fight - or <b>WASD</b> · <b>Space</b>/<b>K</b> attack · <b>Ctrl</b>/<b>L</b> dash · <b>O</b> air slash · <b>E</b> interact · <b>parry</b>: attack on a foe\'s white flash · in dialog, <b>Enter</b>/<b>number keys</b> · <b>gamepad supported</b>';
   if(isTouch) document.getElementById('touchUI').style.display='block';
   // snap camera
   G.cam.x=isoX(P.x,P.y)-VW/2; G.cam.y=isoY(P.x,P.y)-VH/2-20;
