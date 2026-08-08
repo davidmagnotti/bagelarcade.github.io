@@ -684,6 +684,19 @@ function buildDialogContent(npc){
       [{label:'Thank you', ghost:true, fn:closeDialog}]);
     return;
   }
+  // Foss the Woodcutter - keeps the far-east grove (Rask's old spot). Bram sends new hands to
+  // him to learn the axe; he explains the one-tap auto-chop, then points them back for the pick.
+  if(npc.id==='foss'){
+    P.story=P.story||{};
+    if(!P.story.fossMet){ P.story.fossMet=1;
+      setDialog('<i>A broad woodcutter looks up from a half-felled pine, chips in his beard.</i> “Bram\'s new hand, is it? Cutting\'s no mystery - <b>line up a tree and take one good swing</b> ('+(isTouch?'tap the <b>⚔</b> button':'<b>Space</b> or click')+'), then <b>let the axe do the rest</b>. Stand your ground and it\'ll drop the tree on its own - no need to hammer away at it. Fell a few here to get the feel, then take your wood back to <b>Bram</b>. He\'ll be wanting stone off you next - bring that pick down just as sure.”',
+        [{label:'Thanks, Foss', ghost:true, fn:closeDialog}]);
+      return;
+    }
+    setDialog('<i>Foss squints down a fresh-cut log.</i> “One good swing and let it fall - that\'s the whole of it. Bram\'s your man for the forge; I only bring the trees down.”',
+      [{label:'Right', ghost:true, fn:closeDialog}]);
+    return;
+  }
   // 1) talk-quest completion
   for(const id in P.quests){
     if(P.quests[id]==='active' && QUESTS[id].kind==='talk' && QUESTS[id].talkTo===npc.id){

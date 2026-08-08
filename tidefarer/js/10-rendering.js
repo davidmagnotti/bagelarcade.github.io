@@ -727,6 +727,17 @@ function render(){
     cx.strokeStyle='#ffd76a'; cx.lineWidth=3.4;
     cx.beginPath(); cx.arc(csn.x,csn.y-24,13,-Math.PI/2,-Math.PI/2+cpr*TAU); cx.stroke();
   }
+  // chop / mine progress ring - the same single-action feel as opening a chest: one tap starts
+  // it and the ring fills as the tree falls / the stone splits, so there's no need to keep tapping.
+  { const gnode = P.gatherAuto || (P.click && P.click.type==='gather' ? P.click.n : null);
+    if(gnode && !gnode.dead && gnode.maxhp && (gnode.kind==='tree' || gnode.kind==='rock')){
+      const gsn=worldToScreen(gnode.x,gnode.y), gpr=Math.max(0,Math.min(1,(gnode.maxhp-gnode.hp)/gnode.maxhp));
+      cx.strokeStyle='rgba(20,14,8,0.7)'; cx.lineWidth=5;
+      cx.beginPath(); cx.arc(gsn.x,gsn.y-22,12,0,TAU); cx.stroke();
+      cx.strokeStyle=(gnode.kind==='tree'?'#7fd08a':'#c9ced6'); cx.lineWidth=3.2;
+      cx.beginPath(); cx.arc(gsn.x,gsn.y-22,12,-Math.PI/2,-Math.PI/2+gpr*TAU); cx.stroke();
+    }
+  }
   // 2.5-D depth: aerial-perspective haze veil - washes the far field toward the
   // atmosphere colour so distance recedes, while the foreground stays crisp.
   // Drawn over the world & weather but UNDER the UI markers so quest arrows and

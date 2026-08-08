@@ -366,7 +366,7 @@ function doInteract(){
     return;
   }
   if(it.type==='petcat'){ facePoint(it.o.x,it.o.y); addFloat('meow',it.o.x,it.o.y-1,'#ffd76a'); if(Snd.pickup)Snd.pickup(); return; }
-  if(it.type==='node') hitNode(it.o);
+  if(it.type==='node'){ hitNode(it.o); if(it.o.kind==='tree'||it.o.kind==='rock') P.gatherAuto=it.o; }   // one tap -> auto-chop to the finish
   if(it.type==='plot') usePlot(it.o);
 }
 // The interact button found nothing in reach. Rather than fail silently, word the

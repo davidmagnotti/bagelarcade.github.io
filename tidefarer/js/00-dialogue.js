@@ -583,7 +583,7 @@ const DIALOGUE = {
       doneText: "Maren sent you? Ha! She only sends me the promising ones."
     },
     "kit": {
-      brief: "You'll get nowhere on this isle bare-handed - take these, a woodsman's axe and a miner's pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I'll forge you a proper iron sword.",
+      brief: "You'll get nowhere on this isle bare-handed - take these, a woodsman's axe and a miner's pick off my own rack. For the wood, go see old <b>Foss</b> east past the meadow; he'll show you the swing - fell a tree and bring the log. Then break a rock for stone with the pick and bring that too. Prove you can use them and I'll forge you a proper iron sword.",
       log: "Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.",
       doneText: "Good hands - I can see the work in them already. *CLANG* - here's your steel, balanced and mean. Now go back and see <b>Elder Maren</b> - she'll know where a blade like yours is needed. And if you'd sharpen it, there's a nest of slimes gone to seed out east past the meadow - no better place to drill."
     },

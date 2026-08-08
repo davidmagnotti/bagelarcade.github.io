@@ -67,7 +67,7 @@ const QUESTS = {
     doneText:'Maren sent you? Ha! She only sends me the promising ones.',
     rw:{gold:10, item:{potion:1}, xp:{melee:30}}, unlocks:['kit','fish','harvest','cat','shells','springs'] },
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
-    brief:'You\'ll get nowhere on this isle bare-handed - take these, a woodsman\'s axe and a miner\'s pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I\'ll forge you a proper iron sword.',
+    brief:'You\'ll get nowhere on this isle bare-handed - take these, a woodsman\'s axe and a miner\'s pick off my own rack. For the wood, go see old <b>Foss</b> east past the meadow; he\'ll show you the swing - fell a tree and bring the log. Then break a rock for stone with the pick and bring that too. Prove you can use them and I\'ll forge you a proper iron sword.',
     log:'Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.',
     doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Now go back and see <b>Elder Maren</b> - she\'ll know where a blade like yours is needed. And if you\'d sharpen it, there\'s a nest of slimes gone to seed out east past the meadow - no better place to drill.',
     rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['mushrooms'] },
@@ -203,9 +203,13 @@ function spawnNPCs(){
       f.nightOwl=true; return f; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
-    // (Rask the Bladesworn is retired - the parry is sword-timing now, and the Drowned Knight
-    //  on the NE headland is the isle's combat mentor. His old grove at the far east is a live
-    //  training ground now: a nest of slimes to practise the flow on - see spawnGroveSlimes.)
+    // Foss the woodcutter keeps Rask's old grove at the isle's FAR EAST now (Rask is retired -
+    //  the parry is sword-timing, and the Drowned Knight trains the flow). Bram sends new hands
+    //  out to Foss to learn the axe; he teaches the chop, then points them back for the pick.
+    (()=>{ const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:96,y:50};
+      const sp=(typeof findOpenNear==='function' && findOpenNear(g.x,g.y,5)) || [g.x,g.y];
+      return makeNPC('foss','Foss the Woodcutter',sp[0],sp[1],{skin:'#c8965f',hair:'#6a5236',shirt:'#5c6b3a',pants:'#3a3326',hairstyle:'short',beard:'#6a5236',weapon:'axe',size:1.08,build:{w:1.02,head:0.9}},
+      ['A tree doesn\'t fear a fast arm - it fears a patient one.','Let the axe do the falling. You just keep it swinging true.','Green wood, dry wood, heartwood - they all come down the same. Line it up and let it drop.','Slimes moved into the meadow, did you hear? Bounce all day, those things.'],0.3); })(),
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long',build:{w:0.9,head:1.16}},
