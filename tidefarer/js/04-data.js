@@ -69,8 +69,8 @@ const QUESTS = {
   kit:{ giver:'bram', title:'Tools of the Trade', kind:'gather', need:{wood:1, stone:1},
     brief:'You\'ll get nowhere on this isle bare-handed - take these, a woodsman\'s axe and a miner\'s pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I\'ll forge you a proper iron sword.',
     log:'Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.',
-    doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Now, a blade\'s only half of it - anyone can swing. Go east, past the meadow, and find old <b>Rask</b>. Bladesworn, before he came to keep the quiet out there. He\'ll teach you to TURN a strike aside - the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you.',
-    rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['bladeoath'] },
+    doneText:'Good hands - I can see the work in them already. *CLANG* - here\'s your steel, balanced and mean. Now go back and see <b>Elder Maren</b> - she\'ll know where a blade like yours is needed. And if you\'d sharpen it, there\'s a nest of slimes gone to seed out east past the meadow - no better place to drill.',
+    rw:{sword:1, gold:5, xp:{woodcut:40, mining:40, melee:60}}, unlocks:['mushrooms'] },
   bladeoath:{ giver:'rask', title:'The Turning of the Blade', kind:'special',
     brief:'So Bram sent me another one with a new sword and no idea what to do when it\'s the OTHER fellow swinging. Anyone can hack away - the trade is knowing what to do when the blow comes back at YOU. You PARRY: watch the strike, and meet it with your own edge at the very instant it lands. Time it true and you turn the blow - an arrow flies back the way it came, a swordsman\'s left staggered on his own missed swing. No trick to it but timing. Take up your steel - I\'ll pitch a practice billet at you, and you\'ll turn it back on your edge. Do it three times and it\'s yours.',
     log:'Learn to parry from Rask, in his grove at the island\'s far east - past the Slime Meadow.',
@@ -161,7 +161,7 @@ const QUESTS = {
   mushrooms:{ giver:'orin', title:'Light in the Dark', kind:'gather', need:{mushroom:3},
     brief:'Ah - a new blade on the isle, and green as spring grass. Let old Orin do you a kindness before the ruins do you an unkindness. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I\'ll brew you a vigor draught: it keeps your wind long and your legs under you when a fight drags on. Bring me three caps any time you want another.',
     log:'Gather 3 bluecaps from the Whisperwood for Orin\'s vigor draught.',
-    doneText:'Bluecaps crushed, essence bound, and… there. <i>He corks a small teal flask, still fizzing, and presses it into your hand.</i> A <b>Vigor Draught</b>. Down it before a hard fight and your stamina holds <b>twice as long</b> - cancel and chain to your heart\'s content. I brew them cheap for anyone with the sense to gather: three caps and I\'ll set another boiling. Now take that down to <b>Elder Maren</b> - tell her old Orin says you\'re ready for the Hollow Spirit.',
+    doneText:'Bluecaps crushed, essence bound, and… there. <i>He corks a small teal flask, still fizzing, and presses it into your hand.</i> A <b>Vigor Draught</b>. Down it before a hard fight and your stamina holds <b>twice as long</b>. Three caps any time you want another. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, quick with a blade… you know, I\'ve an <b>old friend</b> who ought to meet you - keeps to the far <b>north-east headland</b>. Go and find him; tell him <b>Orin sent you</b>. He\'ll make a proper fighter of you yet.',
     rw:{item:{vigor:1}, xp:{melee:120}}, unlocks:['king'] },
   skeletons:{ giver:'orin', title:'Restless Bones', kind:'kill', kill:{skeleton:3},
     brief:'The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I\'ll give you a charm I\'ve been saving for someone reckless.',
@@ -169,7 +169,7 @@ const QUESTS = {
     doneText:'Quieter already. This ember charm rides your strikes - every blow burns a little brighter now.',
     rw:{item:{charm:1}, gold:20, xp:{melee:80, archery:80, magic:80}}, unlocks:['king'] },
   king:{ giver:'maren', title:'The Hollow Spirit', kind:'kill', kill:{boss:1},
-    brief:'Rask says you can turn a blade, and Orin says your feet are quick - after not even a WEEK ashore? <i>Elder Maren\'s brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I\'ll speak the warded gate open for you.',
+    brief:'Orin sings your praises, and word drifts down even from that old ghost on the headland - after not even a WEEK ashore? <i>Elder Maren\'s brow climbs.</i> Neither is easily impressed, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I\'ll speak the warded gate open for you.',
     log:'Elder Maren will open the warded gate: defeat the Hollow Spirit in the old graveyard at the isle\'s north tip.',
     doneText:'The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit\'s curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing.',
     rw:{gold:100, xp:{melee:150,archery:150,magic:150,mining:100,woodcut:100,fishing:100,farming:100}} }
@@ -203,12 +203,9 @@ function spawnNPCs(){
       f.nightOwl=true; return f; })(),
     makeNPC('willa','Willa the Farmer',58,69,{skin:'#c98d5f',hair:'#5a3d24',shirt:'#b0763a',pants:'#4f6032',hat:'straw',hairstyle:'long',apron:'#6e5738',build:{w:1.03,head:0.96}},
       ['Wheat here grows in minutes, not months. Old island magic.','Rain does half my work and takes all the credit.','You can eat wheat raw in a pinch. Farmer\'s secret.'],0.7),
-    // Rask the Bladesworn - an old sword-master who keeps a wooded clearing in the
-    // grove at the island's FAR EAST. Bram sends new blades out here to learn the parry.
-    (()=>{ const g=(typeof ZONES!=='undefined'&&ZONES.grove)||{x:89,y:50};
-      const sp=(typeof findOpenNear==='function' && findOpenNear(g.x,g.y,5)) || [g.x,g.y];
-      return makeNPC('rask','Rask the Bladesworn',sp[0],sp[1],{skin:'#c08a5a',hair:'#8f8a80',shirt:'#3a4048',pants:'#33342e',hairstyle:'short',beard:'#8f8a80',weapon:'sword',wtier:2,size:1.06,build:{w:0.94,head:0.88}},
-      ['A blade that only knows how to swing knows half its trade.','A parry is only a strike with perfect timing - meet their blade with yours.','I turned strikes on three isles before this one. My hands still remember every one.','Late. Always parry LATE - meet the strike, don\'t reach for it.'],0.3); })(),
+    // (Rask the Bladesworn is retired - the parry is sword-timing now, and the Drowned Knight
+    //  on the NE headland is the isle's combat mentor. His old grove at the far east is a live
+    //  training ground now: a nest of slimes to practise the flow on - see spawnGroveSlimes.)
     makeNPC('orin','Sage Orin',56.5,36.5,{skin:'#e6c39a',hair:'#8a93a8',shirt:'#3a4a6f',pants:'#2c3852',hat:'wizard',hatColor:'#2c3852',robe:'#33415e',trim:'#7fd4ff',rune:true,beard:'#cfcfd6',beardLong:true,size:1.05,build:{w:0.97,head:0.9,stoop:0.9}},
       ['Magic is just patience, pronounced quickly.','The ruins hum at dusk. Listen, but don\'t answer.','Mana returns with calm breath. Stop flailing.'],0.3),
     makeNPC('nia','Nia',52,62,{skin:'#e2b184',hair:'#2c2018',shirt:'#c96f8a',pants:'#5a4632',size:0.72,hairstyle:'long',build:{w:0.9,head:1.16}},

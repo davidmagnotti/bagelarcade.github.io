@@ -13,7 +13,7 @@ let ZONES = {
   ruins:  {x:46,y:20,r:9,  name:'Old Ruins'},
   meadow: {x:69,y:49,r:7,  name:'Slime Meadow'},
   forest: {x:33,y:38,r:9,  name:'Whisperwood'},
-  grove:  {x:96,y:50,r:6,  name:"Rask's Grove"}
+  grove:  {x:96,y:50,r:6,  name:"The Grove (training)"}
 };
 // The Tideward Crypt was moved off the northern Old Ruins to the isle's SOUTHERN shore - a
 // founders' ruin at the bottom of Emberwick, past Willa's farm. genWorld carves this clearing
@@ -368,6 +368,12 @@ function placeObjects(){
   spawnMob('slime',Math.floor(cv2.x-2),Math.floor(cv2.y-1));
   spawnMob('slime',Math.floor(cv2.x+3),Math.floor(cv2.y+3));
   spawnMob('slime',Math.floor(cv2.x-1),Math.floor(cv2.y+4));
+  // Rask's old grove is a TRAINING GROUND now: a nest of slimes to drill the flow on (cancels,
+  // dash-strike, riposte). Ringed around the clearing on open tiles so the approach stays clear.
+  if(typeof ZONES!=='undefined' && ZONES.grove){ const gg=ZONES.grove;
+    const gpts=[[gg.x-3,gg.y-2],[gg.x+3,gg.y-1],[gg.x-2,gg.y+3],[gg.x+3,gg.y+2],[gg.x,gg.y-3],[gg.x+1,gg.y+3]];
+    for(let gi=0;gi<gpts.length;gi++){ const sp=findOpenNear(Math.round(gpts[gi][0]),Math.round(gpts[gi][1]),3); if(sp) spawnMob('slime',sp[0],sp[1]); }
+  }
   // (the old readable marker-stone by the springs is gone - the hot spring itself
   // is now a place to REST: fully heal and take on a warm +10 buffer. See the
   // 'springrest' interact in 09-gameplay.js / 07-input.js.)

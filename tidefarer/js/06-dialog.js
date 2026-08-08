@@ -198,14 +198,13 @@ function buildDialogContent(npc){
       [{label:'Continue', fn:()=>buildDialogContent(npc)}]);
     return;
   }
-  // You wash ashore already a fighter (the flow carried through the wreck), so Maren doesn't
-  // re-teach the basics - she points you to the isle's old master on the far NE headland for
-  // the KILLING COUNTER (the riposte, taught by the Drowned Knight) and to Orin for a hand.
-  // Shown ONCE, then she speaks with you as normal (quests, the causeway/Hollow Spirit).
-  if(npc.id==='maren' && (P.unlocked&&P.unlocked.parry) && !(P.unlocked&&P.unlocked.riposte) && !(P.story&&P.story.marenSent)){
+  // Bram sends the new arrival to Maren; Maren sends them on to Sage Orin (up the north road at
+  // his tower). Orin's errand, in turn, hands them off to the headland ghost - so the chain runs
+  // Bram -> Maren -> Orin -> the Drowned Knight. Shown ONCE, then Maren speaks with you as normal.
+  if(npc.id==='maren' && (P.unlocked&&P.unlocked.parry) && !(P.story&&P.story.marenSent)){
     P.story=P.story||{}; P.story.marenSent=1;
-    setDialog('<i>Maren watches the way you hold the blade, even half-drowned, and nods slowly.</i> “You already fight like the tide itself - a sword, quick feet, a guard. But dark things have woken off our shores, and hitting hard will not be enough; you must turn their blows into openings.” <i>She looks to the far north-east headland, where the wind never quite settles.</i> “There\'s an old… <i>protector</i> up on that headland - been there longer than the stones. Go and find him; let him teach you to answer a turned blade with a killing stroke. And lend <b>Sage Orin</b> a hand up the north road while you\'re about it - the old man\'s been wanting one. Come back when you\'ve the <b>counter</b> in your hands.”',
-      shopButtons(npc,[{label:'I\'ll seek the headland', ghost:true, fn:closeDialog}]));
+    setDialog('<i>Maren watches the way you hold the blade, even half-drowned, and nods slowly.</i> “You already fight like the tide itself - a sword, quick feet, a guard. But dark things have woken off our shores, and there\'s more to keeping your skin than a strong arm.” <i>She nods up the north road, toward the tower.</i> “Go and see <b>Sage Orin</b> - the old man\'s been wanting a hand, and he has a way of pointing folk where they need to go. Help him out, then come back to me and we\'ll talk about what haunts the graveyard.”',
+      shopButtons(npc,[{label:'Off to see Orin', ghost:true, fn:closeDialog}]));
     return;
   }
   // After the Hollow Spirit falls, the elder does more than thank you: she names the
@@ -643,12 +642,12 @@ function buildDialogContent(npc){
       shopButtons(npc,[{label:'I\'ll find Bram', ghost:true, fn:closeDialog}]));
     return;
   }
-  // Sage Orin's off-the-cuff nudge toward the Drowned Knight. You already fight well (the flow
-  // carried over from the wreck), but there's one more thing the old master can give you - the
-  // riposte. Shown ONCE (flag), then flows straight on into Orin's normal dialogue/quests.
-  if(npc.id==='orin' && !(P.unlocked&&P.unlocked.riposte) && !(P.story&&P.story.knightHint)){
+  // Once you've finished Orin's errand (the bluecap draught), the old sage hands you on to his
+  // "old friend" on the far NE headland - who turns out to be the Drowned Knight. Shown ONCE
+  // after the quest, then flows straight on into Orin's normal dialogue.
+  if(npc.id==='orin' && qs('mushrooms')==='done' && !(P.unlocked&&P.unlocked.riposte) && !(P.story&&P.story.knightHint)){
     P.story=P.story||{}; P.story.knightHint=1;
-    setDialog('<i>As you make to leave, Orin waves a hand as though something has just surfaced.</i> “Oh - before you wander off. You fight well enough already… but if you\'d fight <i>deadly</i>, there\'s an old friend of mine who keeps to the far <b>north-east headland</b>. Cantankerous sort - been there longer than I\'ll admit to. Go and poke about up there, would you? Tell him <b>Orin sent you</b>. He knows a trick with a turned blade that will make believers of your enemies.” <i>He has already turned back to his books, as if he never spoke.</i>',
+    setDialog('<i>As you make to leave, Orin waves a hand as though something has just surfaced.</i> “Oh - and one more thing, now I\'ve seen you move. You fight well enough already… but if you\'d fight <i>deadly</i>, there\'s an old friend of mine who keeps to the far <b>north-east headland</b>. Cantankerous sort - been there longer than I\'ll admit to. Go and poke about up there, would you? Tell him <b>Orin sent you</b>. He knows a trick with a turned blade that will make believers of your enemies.” <i>He has already turned back to his books, as if he never spoke.</i>',
       [{label:'…the far north-east', fn:()=>buildDialogContent(npc)}]);
     return;
   }

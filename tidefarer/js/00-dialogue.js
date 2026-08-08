@@ -585,7 +585,7 @@ const DIALOGUE = {
     "kit": {
       brief: "You'll get nowhere on this isle bare-handed - take these, a woodsman's axe and a miner's pick off my own rack. Fell a tree for wood, break a rock for stone, then bring them back. Prove you can use them and I'll forge you a proper iron sword.",
       log: "Chop a tree for 1 wood and mine a rock for 1 stone with your new tools, then bring them to Bram.",
-      doneText: "Good hands - I can see the work in them already. *CLANG* - here's your steel, balanced and mean. Now, a blade's only half of it - anyone can swing. Go east, past the meadow, and find old <b>Rask</b>. Bladesworn, before he came to keep the quiet out there. He'll teach you to TURN a strike aside - the thing that keeps you breathing when they come at you two and three at once. Then Maren will have work worthy of you."
+      doneText: "Good hands - I can see the work in them already. *CLANG* - here's your steel, balanced and mean. Now go back and see <b>Elder Maren</b> - she'll know where a blade like yours is needed. And if you'd sharpen it, there's a nest of slimes gone to seed out east past the meadow - no better place to drill."
     },
     "bladeoath": {
       brief: "So Bram sent me another one with a new sword and no idea what to do when it's the OTHER fellow swinging. Anyone can hack away - the trade is knowing what to do when the blow comes back at YOU. You PARRY: watch the strike, and meet it with your own edge at the very instant it lands. Time it true and you turn the blow - an arrow flies back the way it came, a swordsman's left staggered on his own missed swing. No trick to it but timing. Take up your steel - I'll pitch a practice billet at you, and you'll turn it back on your edge. Do it three times and it's yours.",
@@ -675,7 +675,7 @@ const DIALOGUE = {
     "mushrooms": {
       brief: "Ah - a new blade on the isle, and green as spring grass. Let old Orin do you a kindness before the ruins do you an unkindness. Fetch me three bluecap mushrooms from the Whisperwood - they only glow where the shade is honest - and I'll brew you a vigor draught: it keeps your wind long and your legs under you when a fight drags on. Bring me three caps any time you want another.",
       log: "Gather 3 bluecaps from the Whisperwood for Orin's vigor draught.",
-      doneText: "Bluecaps crushed, essence bound, and… there. <i>He corks a small teal flask, still fizzing, and presses it into your hand.</i> A <b>Vigor Draught</b>. Down it before a hard fight and your stamina holds <b>twice as long</b> - cancel and chain to your heart's content. I brew them cheap for anyone with the sense to gather: three caps and I'll set another boiling. Now take that down to <b>Elder Maren</b> - tell her old Orin says you're ready for the Hollow Spirit."
+      doneText: "Bluecaps crushed, essence bound, and… there. <i>He corks a small teal flask, still fizzing, and presses it into your hand.</i> A <b>Vigor Draught</b>. Down it before a hard fight and your stamina holds <b>twice as long</b>. Three caps any time you want another. <i>He studies you a moment longer than is polite.</i> Fearless, curse-broken, quick with a blade… you know, I've an <b>old friend</b> who ought to meet you - keeps to the far <b>north-east headland</b>. Go and find him; tell him <b>Orin sent you</b>. He'll make a proper fighter of you yet."
     },
     "skeletons": {
       brief: "The old ruins north of my tower are rattling again. Skeletons - rude ones. Put three of them back to sleep and I'll give you a charm I've been saving for someone reckless.",
@@ -683,7 +683,7 @@ const DIALOGUE = {
       doneText: "Quieter already. This ember charm rides your strikes - every blow burns a little brighter now."
     },
     "king": {
-      brief: "Rask says you can turn a blade, and Orin says your feet are quick - after not even a WEEK ashore? <i>Elder Maren's brow climbs.</i> Neither man warms to strangers, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I'll speak the warded gate open for you.",
+      brief: "Orin sings your praises, and word drifts down even from that old ghost on the headland - after not even a WEEK ashore? <i>Elder Maren's brow climbs.</i> Neither is easily impressed, and here they both stand vouching for you. They must see something in you... and neither is a fool. All right, then: put down the <b>Hollow Spirit</b> that woke in the old north graveyard - the curse that took your ship and sealed our strait - and I'll speak the warded gate open for you.",
       log: "Elder Maren will open the warded gate: defeat the Hollow Spirit in the old graveyard at the isle's north tip.",
       doneText: "The lanterns burn brighter tonight because of you. Rise, traveler - Champion of Emberwick. The isle is free, the Hollow Spirit's curse breaks with him, and the strait beyond lies calm at last - a ship can finally make the crossing."
     },
